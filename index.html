@@ -46,48 +46,59 @@
 
   <!-- Core Feature Cards -->
   <div class="admin-card"><div class="icon-placeholder">P</div><div class="card-content"><h3>Packing Process</h3><p>Scan tote → scan items → assign items → confirm completion.</p><button class="btn-primary" onclick="startPacking()">Start Packing</button></div></div>
-
   <div class="admin-card"><div class="icon-placeholder">U</div><div class="card-content"><h3>Update Item</h3><p>Edit item attributes or perform bulk updates.</p><button class="btn-primary" onclick="updateItems()">Update Items</button></div></div>
-
   <div class="admin-card"><div class="icon-placeholder">D</div><div class="card-content"><h3>Delete Item</h3><p>Permanently delete or archive items.</p><button class="btn-danger" onclick="deleteItems()">Delete Items</button></div></div>
 
   <!-- Additional Feature Cards -->
   <div class="admin-card"><div class="icon-placeholder">T</div><div class="card-content"><h3>Tote Management</h3><p>Create, update, delete totes. Move items and track details.</p><button class="btn-primary" onclick="manageTotes()">Manage Totes</button></div></div>
-
   <div class="admin-card"><div class="icon-placeholder">B</div><div class="card-content"><h3>Bulk Import / Export</h3><p>Import/export CSV/JSON, optional DynamoDB integration.</p><button class="btn-primary" onclick="bulkImportExport()">Import / Export</button></div></div>
-
   <div class="admin-card"><div class="icon-placeholder">A</div><div class="card-content"><h3>Inventory Audit</h3><p>Filter items, check missing or duplicate items.</p><button class="btn-primary" onclick="inventoryAudit()">Audit Inventory</button></div></div>
-
   <div class="admin-card"><div class="icon-placeholder">R</div><div class="card-content"><h3>Repair / Maintenance Tracker</h3><p>Track items needing repair; optional priority and notes; optional dashboard view.</p><button class="btn-primary" onclick="repairDashboard()">Repair Dashboard</button></div></div>
-
   <div class="admin-card"><div class="icon-placeholder">H</div><div class="card-content"><h3>History / Audit Logs</h3><p>View user actions with timestamps.</p><button class="btn-primary" onclick="viewLogs()">View Logs</button></div></div>
-
   <div class="admin-card"><div class="icon-placeholder">S</div><div class="card-content"><h3>Search & Filter</h3><p>Quick search and advanced filters.</p><input type="text" class="search-input" placeholder="Search items..."></div></div>
-
   <div class="admin-card"><div class="icon-placeholder">C</div><div class="card-content"><h3>Seasonal Prep / Cleanup</h3><p>Start season, archive old items, prep shopping list.</p><button class="btn-primary" onclick="startSeason()">Start Season</button><button class="btn-primary" onclick="archiveOldItems()">Archive Old Items</button><button class="btn-primary" onclick="prepShoppingList()">Prep Shopping List</button></div></div>
-
   <div class="admin-card"><div class="icon-placeholder">📷</div><div class="card-content"><h3>Photo Management</h3><p>Upload and view photos of items and totes.</p><button class="btn-primary" onclick="managePhotos()">Manage Photos</button></div></div>
-
 </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@5.2.7/dist/amazon-cognito-identity.min.js"></script>
 <script>
   // ---------- Cognito Config ----------
-  const poolData = { UserPoolId:'YOUR_USER_POOL_ID', ClientId:'YOUR_CLIENT_ID' };
+  const poolData = { 
+    UserPoolId:'YOUR_USER_POOL_ID', // Replace with your User Pool ID
+    ClientId:'YOUR_APP_CLIENT_ID'   // Replace with your App Client ID
+  };
   const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
 
   const loginForm = document.getElementById('loginForm');
   const loginError = document.getElementById('loginError');
   const adminDashboard = document.getElementById('adminDashboard');
 
+  // ---------- Check for existing JWT on page load ----------
+  window.addEventListener('load', () => {
+    const token = localStorage.getItem('jwtToken');
+    if (token) {
+      // Optionally: validate token expiration here
+      loginForm.style.display = 'none';
+      adminDashboard.style.display = 'flex';
+    }
+  });
+
+  // ---------- Handle login ----------
   loginForm.addEventListener('submit', function(event){
     event.preventDefault();
     loginError.textContent = '';
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
-    const authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({Username:username, Password:password});
-    const cognitoUser = new AmazonCognitoIdentity.CognitoUser({Username:username, Pool:userPool});
+
+    const authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({
+      Username: username, 
+      Password: password
+    });
+    const cognitoUser = new AmazonCognitoIdentity.CognitoUser({
+      Username: username, 
+      Pool: userPool
+    });
 
     cognitoUser.authenticateUser(authenticationDetails, {
       onSuccess: function(result){
@@ -116,6 +127,6 @@
   function managePhotos(){ alert("Manage Photos clicked! Connect Lambda API here."); }
 </script>
 
-  <footer>© 2025 spookydecs.com | Beware the 404s 👻</footer>
+<footer>© 2025 spookydecs.com | Beware the 404s 👻</footer>
 </body>
 </html>
