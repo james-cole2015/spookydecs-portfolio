@@ -13,6 +13,8 @@ phases:
           echo "DEPLOY_ENV not set. Aborting deployment.";
           exit 1;
         fi
+      - echo "Setting environment variables" 
+      - echo $DEPLOY_ENV "is the environment"
       - export ENV=$DEPLOY_ENV
       - echo "Fetching configuration from Parameter Store"
       - export TARGET_BUCKET=$(aws ssm get-parameter --name /spooky-decs/admin/$ENV/s3-bucket --query 'Parameter.Value' --output text)
