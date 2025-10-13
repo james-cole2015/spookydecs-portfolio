@@ -91,26 +91,47 @@
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
 
-    const authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({
-      Username: username, 
-      Password: password
-    });
-    const cognitoUser = new AmazonCognitoIdentity.CognitoUser({
-      Username: username, 
-      Pool: userPool
-    });
+const authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({
+  Username: username,
+  Password: password,
+});
 
-    cognitoUser.authenticateUser(authenticationDetails, {
-      onSuccess: function(result){
-        localStorage.setItem('jwtToken', result.getIdToken().getJwtToken());
-        loginForm.style.display='none';
-        adminDashboard.style.display='flex';
+const userData = {
+  Username: username,
+  Pool: userPool,
+};
+
+const cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+cognitoUser.authenticateUser(authenticationDetails, {
+  onSuccess: (result) => {
+    console.log("Login success:", result);
+    alert("Login successful!");
+  },
+
+  onFailure: (err) => {
+    console.error("Login error:", err);
+    alert(err.message || JSON.stringify(err));
+  },
+
+  newPasswordRequired: (userAttributes, requiredAttributes) => {
+    console.log("New password required:", userAttributes);
+    // Remove attributes not needed
+    delete userAttributes.email_verified;
+
+    const newPassword = prompt("Please enter a new password:");
+    cognitoUser.completeNewPasswordChallenge(newPassword, userAttributes, {
+      onSuccess: (result) => {
+        console.log("Password changed successfully", result);
+        alert("Password updated. You are now logged in.");
       },
-      onFailure: function(err){
-        loginError.textContent = err.message || JSON.stringify(err);
-      }
+      onFailure: (err) => {
+        console.error("Error updating password:", err);
+        alert(err.message || JSON.stringify(err));
+      },
     });
-  });
+  },
+});
+
 
   // ---------- Placeholder functions for admin cards ----------
   function startPacking(){ alert("Start Packing clicked! Connect Lambda API here."); }
