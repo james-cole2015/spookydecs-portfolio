@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spooky Site — Under Construction</title>
+<style>
+  body {
+    background-color: #0b0b0d;
+    color: #f9f9f9;
+    font-family: 'Trebuchet MS', sans-serif;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    overflow: hidden;
+  }
+
+  h1 {
+    font-size: 3em;
+    margin-top: 2em;
+    color: #ff7518;
+    text-shadow: 0 0 10px #ff7518;
+  }
+
+  p {
+    font-size: 1.3em;
+    color: #f2f2f2;
+    margin-bottom: 2em;
+  }
+
+  .pumpkin {
+    font-size: 5em;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  footer {
+    position: absolute;
+    bottom: 10px;
+    width: 100%;
+    font-size: 0.9em;
+    color: #888;
+  }
+
+  /* Fog effect */
+  .fog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.05), transparent 70%);
+    animation: drift 20s linear infinite;
+  }
+
+  @keyframes drift {
+    from { transform: translate(-25%, -25%) scale(1); }
+    to { transform: translate(-50%, -50%) scale(1.2); }
+  }
+
+</style>
+</head>
+<body>
+  <div class="fog"></div>
+  <div class="pumpkin">🎃</div>
+  <h1>Something Spooky Is Coming...</h1>
+  <p>Our haunted domain is under construction. Beware — new features will rise soon!</p>
+  <footer>© 2025 spookydecs.com | Beware the 404s 👻</footer>
+</body>
+</html>
