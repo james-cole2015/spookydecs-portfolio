@@ -3,72 +3,119 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Spooky Site — Under Construction</title>
+<title>Admin Dashboard</title>
 <style>
-  body {
-    background-color: #0b0b0d;
-    color: #f9f9f9;
-    font-family: 'Trebuchet MS', sans-serif;
-    margin: 0;
-    padding: 0;
-    text-align: center;
-    overflow: hidden;
-  }
-
-  h1 {
-    font-size: 3em;
-    margin-top: 2em;
-    color: #ff7518;
-    text-shadow: 0 0 10px #ff7518;
-  }
-
-  p {
-    font-size: 1.3em;
-    color: #f2f2f2;
-    margin-bottom: 2em;
-  }
-
-  .pumpkin {
-    font-size: 5em;
-    animation: float 3s ease-in-out infinite;
-  }
-
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-  }
-
-  footer {
-    position: absolute;
-    bottom: 10px;
-    width: 100%;
-    font-size: 0.9em;
-    color: #888;
-  }
-
-  /* Fog effect */
-  .fog {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.05), transparent 70%);
-    animation: drift 20s linear infinite;
-  }
-
-  @keyframes drift {
-    from { transform: translate(-25%, -25%) scale(1); }
-    to { transform: translate(-50%, -50%) scale(1.2); }
-  }
-
+  body { font-family: Arial, sans-serif; background-color: #f0f2f5; margin:0; padding:0; }
+  .container { padding: 20px; }
+  /* Login Form */
+  #loginForm { max-width: 300px; margin: 50px auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1); display:flex; flex-direction:column; gap:10px;}
+  #loginForm input { padding:8px; border-radius:4px; border:1px solid #ccc;}
+  #loginForm button { padding:8px; border-radius:4px; border:none; background-color:#007bff; color:white; cursor:pointer;}
+  #loginForm button:hover { opacity:0.9; }
+  /* Dashboard */
+  .admin-dashboard { display:none; flex-direction: column; gap: 20px; }
+  .admin-dashboard h1 { font-size:2rem; margin-bottom:20px; }
+  .admin-card { background-color:#fff; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1); padding:16px; display:flex; align-items:center; gap:16px; transition: box-shadow 0.2s ease; }
+  .admin-card:hover { box-shadow:0 4px 12px rgba(0,0,0,0.15); }
+  .icon-placeholder { width:40px; height:40px; background-color:#ccc; border-radius:50%; display:flex; justify-content:center; align-items:center; font-weight:bold; font-size:1rem; }
+  .card-content h3 { margin:0 0 4px 0; font-size:1.2rem; }
+  .card-content p { margin:0 0 8px 0; color:#555; }
+  button { padding:6px 12px; border:none; border-radius:4px; cursor:pointer; margin-right:8px; }
+  button:hover { opacity:0.9; }
+  .btn-primary { background-color:#007bff; color:white; }
+  .btn-danger { background-color:#dc3545; color:white; }
+  .search-input { padding:6px 10px; border-radius:4px; border:1px solid #ccc; width:100%; }
+  @media (max-width: 768px) { .admin-card { flex-direction: column; align-items:flex-start; } }
 </style>
 </head>
 <body>
-  <div class="fog"></div>
-  <div class="pumpkin">🎃</div>
-  <h1>Something Spooky Is Coming...</h1>
-  <p>Our haunted domain is under construction. Beware — new features will rise soon!</p>
+<div class="container">
+
+<!-- Login Form -->
+<form id="loginForm">
+  <h2>Admin Login</h2>
+  <input type="text" id="username" placeholder="Username" required>
+  <input type="password" id="password" placeholder="Password" required>
+  <button type="submit">Login</button>
+  <p id="loginError" style="color:red;"></p>
+</form>
+
+<!-- Admin Dashboard -->
+<div id="adminDashboard" class="admin-dashboard">
+  <h1>Admin Dashboard</h1>
+
+  <!-- Core Feature Cards -->
+  <div class="admin-card"><div class="icon-placeholder">P</div><div class="card-content"><h3>Packing Process</h3><p>Scan tote → scan items → assign items → confirm completion.</p><button class="btn-primary" onclick="startPacking()">Start Packing</button></div></div>
+
+  <div class="admin-card"><div class="icon-placeholder">U</div><div class="card-content"><h3>Update Item</h3><p>Edit item attributes or perform bulk updates.</p><button class="btn-primary" onclick="updateItems()">Update Items</button></div></div>
+
+  <div class="admin-card"><div class="icon-placeholder">D</div><div class="card-content"><h3>Delete Item</h3><p>Permanently delete or archive items.</p><button class="btn-danger" onclick="deleteItems()">Delete Items</button></div></div>
+
+  <!-- Additional Feature Cards -->
+  <div class="admin-card"><div class="icon-placeholder">T</div><div class="card-content"><h3>Tote Management</h3><p>Create, update, delete totes. Move items and track details.</p><button class="btn-primary" onclick="manageTotes()">Manage Totes</button></div></div>
+
+  <div class="admin-card"><div class="icon-placeholder">B</div><div class="card-content"><h3>Bulk Import / Export</h3><p>Import/export CSV/JSON, optional DynamoDB integration.</p><button class="btn-primary" onclick="bulkImportExport()">Import / Export</button></div></div>
+
+  <div class="admin-card"><div class="icon-placeholder">A</div><div class="card-content"><h3>Inventory Audit</h3><p>Filter items, check missing or duplicate items.</p><button class="btn-primary" onclick="inventoryAudit()">Audit Inventory</button></div></div>
+
+  <div class="admin-card"><div class="icon-placeholder">R</div><div class="card-content"><h3>Repair / Maintenance Tracker</h3><p>Track items needing repair; optional priority and notes; optional dashboard view.</p><button class="btn-primary" onclick="repairDashboard()">Repair Dashboard</button></div></div>
+
+  <div class="admin-card"><div class="icon-placeholder">H</div><div class="card-content"><h3>History / Audit Logs</h3><p>View user actions with timestamps.</p><button class="btn-primary" onclick="viewLogs()">View Logs</button></div></div>
+
+  <div class="admin-card"><div class="icon-placeholder">S</div><div class="card-content"><h3>Search & Filter</h3><p>Quick search and advanced filters.</p><input type="text" class="search-input" placeholder="Search items..."></div></div>
+
+  <div class="admin-card"><div class="icon-placeholder">C</div><div class="card-content"><h3>Seasonal Prep / Cleanup</h3><p>Start season, archive old items, prep shopping list.</p><button class="btn-primary" onclick="startSeason()">Start Season</button><button class="btn-primary" onclick="archiveOldItems()">Archive Old Items</button><button class="btn-primary" onclick="prepShoppingList()">Prep Shopping List</button></div></div>
+
+  <div class="admin-card"><div class="icon-placeholder">📷</div><div class="card-content"><h3>Photo Management</h3><p>Upload and view photos of items and totes.</p><button class="btn-primary" onclick="managePhotos()">Manage Photos</button></div></div>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@5.2.7/dist/amazon-cognito-identity.min.js"></script>
+<script>
+  // ---------- Cognito Config ----------
+  const poolData = { UserPoolId:'YOUR_USER_POOL_ID', ClientId:'YOUR_CLIENT_ID' };
+  const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+
+  const loginForm = document.getElementById('loginForm');
+  const loginError = document.getElementById('loginError');
+  const adminDashboard = document.getElementById('adminDashboard');
+
+  loginForm.addEventListener('submit', function(event){
+    event.preventDefault();
+    loginError.textContent = '';
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({Username:username, Password:password});
+    const cognitoUser = new AmazonCognitoIdentity.CognitoUser({Username:username, Pool:userPool});
+
+    cognitoUser.authenticateUser(authenticationDetails, {
+      onSuccess: function(result){
+        localStorage.setItem('jwtToken', result.getIdToken().getJwtToken());
+        loginForm.style.display='none';
+        adminDashboard.style.display='flex';
+      },
+      onFailure: function(err){
+        loginError.textContent = err.message || JSON.stringify(err);
+      }
+    });
+  });
+
+  // ---------- Placeholder functions for admin cards ----------
+  function startPacking(){ alert("Start Packing clicked! Connect Lambda API here."); }
+  function updateItems(){ alert("Update Items clicked! Connect Lambda API here."); }
+  function deleteItems(){ alert("Delete Items clicked! Connect Lambda API here."); }
+  function manageTotes(){ alert("Manage Totes clicked! Connect Lambda API here."); }
+  function bulkImportExport(){ alert("Bulk Import/Export clicked! Connect Lambda API here."); }
+  function inventoryAudit(){ alert("Inventory Audit clicked! Connect Lambda API here."); }
+  function repairDashboard(){ alert("Repair Dashboard clicked! Connect Lambda API here."); }
+  function viewLogs(){ alert("View Logs clicked! Connect Lambda API here."); }
+  function startSeason(){ alert("Start Season clicked! Connect Lambda API here."); }
+  function archiveOldItems(){ alert("Archive Old Items clicked! Connect Lambda API here."); }
+  function prepShoppingList(){ alert("Prep Shopping List clicked! Connect Lambda API here."); }
+  function managePhotos(){ alert("Manage Photos clicked! Connect Lambda API here."); }
+</script>
+
   <footer>© 2025 spookydecs.com | Beware the 404s 👻</footer>
 </body>
 </html>
