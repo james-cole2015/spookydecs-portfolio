@@ -1,0 +1,41 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo "Installing AWS CLI dependencies"
+      - pip install --upgrade awscli
+
+  pre_build:
+    commands:
+      - echo "Source version (branch) is $CODEBUILD_SOURCE_VERSION"
+      - |
+        case "$CODEBUILD_SOURCE_VERSION" in
+          refs/heads/admin-dev-001)
+            export ENV="dev"
+            ;;
+          refs/heads/main)
+            export ENV="prod"
+            ;;
+          *)
+            echo "Unknown branch ($CODEBUILD_SOURCE_VERSION), aborting deployment."
+            exit 1
+            ;;
+        esac
+      - echo "Environment is $ENV"
+      - echo "Fetching configuration from Parameter Store"
+      - export TARGET_BUCKET=$(aws ssm get-parameter --name /spooky-decs/admin/$ENV/s3-bucket --query 'Parameter.Value' --output text)
+      - export DISTRIBUTION_ID=$(aws ssm get-parameter --name /spooky-decs/admin/$ENV/cf-distribution --query 'Parameter.Value' --output text)
+      - echo "Will deploy to $TARGET_BUCKET with CloudFront $DISTRIBUTION_ID"
+
+  build:
+    commands:
+      - echo "Syncing files to S3"
+      - aws s3 sync . s3://$TARGET_BUCKET --delete --exclude ".git/*" --exclude "buildspec.yml" --exclude ".gitignore" --exclude "README.md" --exclude "test.txt"
+      - echo "S3 sync complete"
+
+  post_build:
+    commands:
+      - echo "Creating CloudFront invalidation"
+      - aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
+      - echo "Deployment complete"
