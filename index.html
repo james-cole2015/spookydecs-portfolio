@@ -25,6 +25,13 @@
   .btn-primary { background-color:#007bff; color:white; }
   .btn-danger { background-color:#dc3545; color:white; }
   .search-input { padding:6px 10px; border-radius:4px; border:1px solid #ccc; width:100%; }
+  .create-preview { background:#fff; padding:12px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.08); margin-top:12px; }
+  .mini-card { padding:8px; border-radius:6px; background:#fafafa; display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+  .mini-card img { width:48px; height:48px; object-fit:cover; border-radius:4px; }
+  .full-card img { max-width: 320px; height:auto; display:block; margin-bottom:8px; border-radius:6px; }
+  .field-row { margin-bottom:6px; font-size:0.95rem; color:#333; }
+  .field-label { font-weight:600; margin-right:6px; }
+  .action-row { margin-top:10px; }
   @media (max-width: 768px) { .admin-card { flex-direction: column; align-items:flex-start; } }
 </style>
 </head>
@@ -46,6 +53,7 @@
 
   <!-- Core Feature Cards -->
   <div class="admin-card"><div class="icon-placeholder">P</div><div class="card-content"><h3>Packing Process</h3><p>Scan tote → scan items → assign items → confirm completion.</p><button class="btn-primary" onclick="startPacking()">Start Packing</button></div></div>
+  <div class="admin-card"><div class="icon-placeholder">C</div><div class="card-content"><h3>Create Item</h3><p>Prompt-driven item creation with image upload and preview.</p><button class="btn-primary" onclick="startCreateItem()">Create Item</button></div></div>
   <div class="admin-card"><div class="icon-placeholder">U</div><div class="card-content"><h3>Update Item</h3><p>Edit item attributes or perform bulk updates.</p><button class="btn-primary" onclick="updateItems()">Update Items</button></div></div>
   <div class="admin-card"><div class="icon-placeholder">D</div><div class="card-content"><h3>Delete Item</h3><p>Permanently delete or archive items.</p><button class="btn-danger" onclick="deleteItems()">Delete Items</button></div></div>
 
@@ -58,96 +66,164 @@
   <div class="admin-card"><div class="icon-placeholder">S</div><div class="card-content"><h3>Search & Filter</h3><p>Quick search and advanced filters.</p><input type="text" class="search-input" placeholder="Search items..."></div></div>
   <div class="admin-card"><div class="icon-placeholder">C</div><div class="card-content"><h3>Seasonal Prep / Cleanup</h3><p>Start season, archive old items, prep shopping list.</p><button class="btn-primary" onclick="startSeason()">Start Season</button><button class="btn-primary" onclick="archiveOldItems()">Archive Old Items</button><button class="btn-primary" onclick="prepShoppingList()">Prep Shopping List</button></div></div>
   <div class="admin-card"><div class="icon-placeholder">📷</div><div class="card-content"><h3>Photo Management</h3><p>Upload and view photos of items and totes.</p><button class="btn-primary" onclick="managePhotos()">Manage Photos</button></div></div>
+
+  <!-- Create Item Preview area -->
+  <div id="createPreview" style="display:none;" class="create-preview">
+    <div id="miniCard" class="mini-card"></div>
+    <div id="fullCard" class="full-card"></div>
+    <div class="action-row">
+      <button id="editBtn" class="btn-primary">Edit</button>
+      <button id="doneBtn" class="btn-primary">Done</button>
+      <button id="cancelBtn" class="btn-danger">Cancel</button>
+      <span id="createStatus" style="margin-left:12px;color:#333;"></span>
+    </div>
+  </div>
+
 </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@5.2.7/dist/amazon-cognito-identity.min.js"></script>
 <script>
-  // ---------- Cognito Config ----------
- const poolData = { 
-    UserPoolId:'us-east-2_BnxSu5LEt', // Replace with your User Pool ID
-    ClientId:'11er9f8qa7jkvgelm6hernb2ed'   // Replace with your App Client ID
-  };
-  const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+/* ---------- Cognito Setup ---------- */
+const poolData = { 
+  UserPoolId:'us-east-2_BnxSu5LEt',
+  ClientId:'11er9f8qa7jkvgelm6hernb2ed'
+};
+const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
 
-  const loginForm = document.getElementById('loginForm');
-  const loginError = document.getElementById('loginError');
-  const adminDashboard = document.getElementById('adminDashboard');
+const loginForm = document.getElementById('loginForm');
+const loginError = document.getElementById('loginError');
+const adminDashboard = document.getElementById('adminDashboard');
 
-  // ---------- Check for existing JWT on page load ----------
-  window.addEventListener('load', () => {
-    const token = localStorage.getItem('jwtToken');
-    if (token) {
+/* ---------- Check existing login ---------- */
+window.addEventListener('load', () => {
+  const token = localStorage.getItem('jwtToken');
+  if (token) {
+    loginForm.style.display = 'none';
+    adminDashboard.style.display = 'flex';
+  }
+});
+
+/* ---------- Handle login ---------- */
+loginForm.addEventListener('submit', function(event){
+  event.preventDefault();
+  loginError.textContent = '';
+
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+
+  const authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({ Username: username, Password: password });
+  const userData = { Username: username, Pool: userPool };
+  const cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+
+  cognitoUser.authenticateUser(authenticationDetails, {
+    onSuccess: (result) => {
+      const idToken = result.getIdToken().getJwtToken();
+      localStorage.setItem('jwtToken', idToken);
       loginForm.style.display = 'none';
       adminDashboard.style.display = 'flex';
-    }
+    },
+    onFailure: (err) => {
+      loginError.textContent = err.message || JSON.stringify(err);
+    },
+    newPasswordRequired: (userAttributes) => {
+      delete userAttributes.email_verified;
+      const newPassword = prompt("Please enter a new password:");
+      cognitoUser.completeNewPasswordChallenge(newPassword, userAttributes, {
+        onSuccess: (result) => {
+          const idToken = result.getIdToken().getJwtToken();
+          localStorage.setItem('jwtToken', idToken);
+          loginForm.style.display = 'none';
+          adminDashboard.style.display = 'flex';
+        },
+        onFailure: (err) => {
+          loginError.textContent = err.message || JSON.stringify(err);
+        },
+      });
+    },
   });
+});
 
-  // ---------- Handle login ----------
-  loginForm.addEventListener('submit', function(event){
-    event.preventDefault();
-    loginError.textContent = '';
+/* ---------- Utility Functions ---------- */
+function getJwt() { return localStorage.getItem('jwtToken'); }
+function getEmailFromJwt() {
+  const token = getJwt();
+  if(!token) return null;
+  try { return JSON.parse(atob(token.split('.')[1])).email; } catch(e){ return null; }
+}
+function createHiddenFileInput(){
+  const input = document.createElement('input'); input.type='file'; input.accept='image/*'; input.capture='environment'; input.style.display='none'; document.body.appendChild(input); return input;
+}
 
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
+/* ---------- Create Item Flow with Authorization Headers ---------- */
+const API_BASE = ''; // <-- Set your API Gateway base URL
+const DEFAULT_STAGE = 'dev'; // or 'prod'
 
-    const authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({
-      Username: username,
-      Password: password,
+function getApiUrlForStage(stage){ return `${API_BASE}/${stage}`; }
+
+async function startCreateItem(){
+  const jwt = getJwt();
+  if(!jwt){ alert('You must be logged in.'); return; }
+
+  try {
+    const attrs = {};
+    attrs['Short Name'] = prompt('Short Name') || '';
+    attrs['Category'] = prompt('Category') || '';
+    attrs['Type'] = prompt('Type') || '';
+
+    const fileInput = createHiddenFileInput();
+    const filePromise = new Promise((resolve,reject)=>{fileInput.onchange=()=>fileInput.files[0]?resolve(fileInput.files[0]):reject('No file');fileInput.click();});
+    const rawFile = await filePromise;
+    fileInput.remove();
+
+    const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); const bitmap=await createImageBitmap(rawFile);
+    canvas.width=bitmap.width; canvas.height=bitmap.height; ctx.drawImage(bitmap,0,0); 
+    const webpBlob = await new Promise(res=>canvas.toBlob(res,'image/webp',0.8));
+
+    const payload = { attributes: attrs };
+
+    const stage = DEFAULT_STAGE;
+    const apiUrl = getApiUrlForStage(stage);
+
+    // Create item record + get presigned URL
+    const createResp = await fetch(`${apiUrl}/items`,{
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${jwt}` },
+      body: JSON.stringify(payload)
+    });
+    const { itemId, uploadUrl } = await createResp.json();
+
+    // Upload image to presigned URL (with proper headers)
+    await fetch(uploadUrl, { method:'PUT', headers:{'Content-Type':'image/webp'}, body:webpBlob });
+
+    // Finalize image URL (PUT with Authorization header)
+    await fetch(`${apiUrl}/items/${encodeURIComponent(itemId)}/image`, {
+      method:'PUT',
+      headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${jwt}` },
+      body: JSON.stringify({ imageUrl: uploadUrl.split('?')[0] })
     });
 
-    const userData = {
-      Username: username,
-      Pool: userPool,
-    };
+    document.getElementById('createPreview').style.display='block';
+    document.getElementById('createStatus').textContent = `Created itemId: ${itemId}`;
 
-    const cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
-    cognitoUser.authenticateUser(authenticationDetails, {
-      onSuccess: (result) => {
-        console.log("Login success:", result);
-        const idToken = result.getIdToken().getJwtToken();
-        localStorage.setItem('jwtToken', idToken);
-        loginForm.style.display = 'none';
-        adminDashboard.style.display = 'flex';
-      },
+  } catch(e){
+    console.error('Create Item error:', e); alert('Create Item failed.');
+  }
+}
 
-      onFailure: (err) => {
-        console.error("Login error:", err);
-        loginError.textContent = err.message || JSON.stringify(err);
-      },
-
-      newPasswordRequired: (userAttributes) => {
-        delete userAttributes.email_verified;
-        const newPassword = prompt("Please enter a new password:");
-        cognitoUser.completeNewPasswordChallenge(newPassword, userAttributes, {
-          onSuccess: (result) => {
-            const idToken = result.getIdToken().getJwtToken();
-            localStorage.setItem('jwtToken', idToken);
-            loginForm.style.display = 'none';
-            adminDashboard.style.display = 'flex';
-          },
-          onFailure: (err) => {
-            console.error("Error updating password:", err);
-            loginError.textContent = err.message || JSON.stringify(err);
-          },
-        });
-      },
-    });
-  });
-
-  // ---------- Admin feature placeholder functions ----------
-  function startPacking(){ alert("Start Packing clicked! Connect Lambda API here."); }
-  function updateItems(){ alert("Update Items clicked! Connect Lambda API here."); }
-  function deleteItems(){ alert("Delete Items clicked! Connect Lambda API here."); }
-  function manageTotes(){ alert("Manage Totes clicked! Connect Lambda API here."); }
-  function bulkImportExport(){ alert("Bulk Import/Export clicked! Connect Lambda API here."); }
-  function inventoryAudit(){ alert("Inventory Audit clicked! Connect Lambda API here."); }
-  function repairDashboard(){ alert("Repair Dashboard clicked! Connect Lambda API here."); }
-  function viewLogs(){ alert("View Logs clicked! Connect Lambda API here."); }
-  function startSeason(){ alert("Start Season clicked! Connect Lambda API here."); }
-  function archiveOldItems(){ alert("Archive Old Items clicked! Connect Lambda API here."); }
-  function prepShoppingList(){ alert("Prep Shopping List clicked! Connect Lambda API here."); }
-  function managePhotos(){ alert("Manage Photos clicked! Connect Lambda API here."); }
+/* ---------- Placeholder functions (kept unchanged) ---------- */
+function startPacking(){ alert("Start Packing clicked! Connect Lambda API here."); }
+function updateItems(){ alert("Update Items clicked! Connect Lambda API here."); }
+function deleteItems(){ alert("Delete Items clicked! Connect Lambda API here."); }
+function manageTotes(){ alert("Manage Totes clicked! Connect Lambda API here."); }
+function bulkImportExport(){ alert("Bulk Import/Export clicked! Connect Lambda API here."); }
+function inventoryAudit(){ alert("Inventory Audit clicked! Connect Lambda API here."); }
+function repairDashboard(){ alert("Repair Dashboard clicked! Connect Lambda API here."); }
+function viewLogs(){ alert("View Logs clicked! Connect Lambda API here."); }
+function startSeason(){ alert("Start Season clicked! Connect Lambda API here."); }
+function archiveOldItems(){ alert("Archive Old Items clicked! Connect Lambda API here."); }
+function prepShoppingList(){ alert("Prep Shopping List clicked! Connect Lambda API here."); }
+function managePhotos(){ alert("Manage Photos clicked! Connect Lambda API here."); }
 </script>
 
 <footer>© 2025 spookydecs.com | Beware the 404s 👻</footer>
