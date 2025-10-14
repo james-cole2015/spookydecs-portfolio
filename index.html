@@ -51,6 +51,7 @@
     width: 300px;
     display: flex;
     flex-direction: column;
+    justify-content: space-between; /* ensures buttons stick to bottom */
     gap: 12px;
     transition: box-shadow 0.2s ease;
   }
@@ -66,6 +67,10 @@
     justify-content: center;
     font-weight: bold;
     font-size: 1rem;
+    transition: transform 0.3s ease;
+  }
+  .icon-placeholder:hover {
+    transform: scale(1.2) rotate(15deg); /* subtle hover animation */
   }
   .card h3 { font-size: 1.2rem; margin-bottom: 4px; }
   .card p { color: #555; font-size: 0.9rem; }
@@ -76,7 +81,8 @@
     cursor: pointer;
     background-color: #007bff;
     color: #fff;
-    align-self: flex-start; /* align all buttons to left */
+    align-self: center; /* center horizontally */
+    margin-top: auto; /* push to bottom of card */
   }
   .card button.danger { background-color: #dc3545; }
   input.search-input {
@@ -99,8 +105,8 @@
     font-size: 0.9rem;
   }
   footer img {
-    height: 32px;
-    width: 32px;
+    height: 48px; /* larger ghost */
+    width: 48px;
     animation: ghost-float 2s infinite alternate;
   }
   @keyframes ghost-float {
@@ -228,21 +234,4 @@
 
   // ==========================
   // Feature placeholders
-  // ==========================
-  function goToCreate(){ window.location.href='/create.html'; }
-  function startPacking(){ alert("Start Packing clicked!"); }
-  function updateItems(){ alert("Update Items clicked!"); }
-  function deleteItems(){ alert("Delete Items clicked!"); }
-  function manageTotes(){ alert("Manage Totes clicked!"); }
-  function bulkImportExport(){ alert("Bulk Import/Export clicked!"); }
-  function inventoryAudit(){ alert("Inventory Audit clicked!"); }
-  function repairDashboard(){ alert("Repair Dashboard clicked!"); }
-  function viewLogs(){ alert("View Logs clicked!"); }
-  function startSeason(){ alert("Start Season clicked!"); }
-  function archiveOldItems(){ alert("Archive Old Items clicked!"); }
-  function prepShoppingList(){ alert("Prep Shopping List clicked!"); }
-  function managePhotos(){ alert("Manage Photos clicked!"); }
-</script>
-
-</body>
-</html>
+  //
