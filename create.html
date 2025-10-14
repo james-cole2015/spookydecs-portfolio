@@ -221,4 +221,80 @@ typeSelect.addEventListener('change', () => {
       </div>`;
   } else if(type === 'PROP'){
     dynamicFields.innerHTML = `
-      <div class="field-row"><label class="field-label
+      <div class="field-row"><label class="field-label">Description</label><input type="text" id="description"></div>`;
+  }
+});
+
+/* ---------- Image Preview ---------- */
+imageUpload.addEventListener('change', () => {
+  imagePreview.innerHTML = '';
+  const file = imageUpload.files[0];
+  if(file){
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(file);
+    imagePreview.appendChild(img);
+  }
+});
+
+/* ---------- ID Generation ---------- */
+function generateItemId(attrs){
+  let countKey = `count_${attrs.Type}`; 
+  let count = parseInt(localStorage.getItem(countKey) || '0') + 1;
+  localStorage.setItem(countKey, count);
+
+  if(attrs.Type==='INF') return `INF-${attrs.Stakes}S${attrs.Tethers}T-${String(count).padStart(3,'0')}`;
+  if(attrs.Type==='C') return `C-${attrs.Length}-${attrs.MaleEnds}M${attrs.FemaleEnds}F-${count}`;
+  if(attrs.Type==='P') return `P-${attrs.Length}-${attrs.MaleEnds}M${attrs.FemaleEnds}F-${count}`;
+  if(attrs.Type==='O') return `O-${attrs.Receptacles}R-${count}`;
+  if(attrs.Type==='STR_LT') return `${attrs.Location}-${attrs.Category}-${count}`;
+  if(attrs.Type==='SP_LT') return `SP_LT-${count}`;
+  if(attrs.Type==='PROP') return `${attrs.ShortName}-${count}`;
+  return `UNKNOWN-${count}`;
+}
+
+/* ---------- Create Item ---------- */
+createBtn.addEventListener('click', async () => {
+  const jwt = localStorage.getItem('jwtToken');
+  if(!jwt){ alert('You must be logged in.'); return; }
+
+  const attrs = {
+    ShortName: shortName.value,
+    Category: category.value,
+    Type: typeSelect.value,
+    Height: document.getElementById('height')?.value,
+    Tethers: document.getElementById('tethers')?.value,
+    Stakes: document.getElementById('stakes')?.value,
+    DateAcquired: document.getElementById('dateAcquired')?.value,
+    Status: document.getElementById('status')?.value,
+    Length: document.getElementById('length')?.value,
+    MaleEnds: document.getElementById('maleEnds')?.value,
+    FemaleEnds: document.getElementById('femaleEnds')?.value,
+    Receptacles: document.getElementById('receptacles')?.value,
+    SmartOutlet: document.getElementById('smartOutlet')?.value,
+    Location: document.getElementById('location')?.value,
+    PowerReq: document.getElementById('powerReq')?.value,
+    LEDCtrl: document.getElementById('ledCtrl')?.value,
+    Colors: document.getElementById('colors')?.value,
+    BulbType: document.getElementById('bulbType')?.value,
+    Description: document.getElementById('description')?.value
+  };
+
+  const itemId = generateItemId(attrs);
+  createStatus.textContent = `Creating item ${itemId}...`;
+
+  setTimeout(() => {
+    createStatus.textContent = `Item "${itemId}" created successfully!`;
+    shortName.value=''; category.value=''; typeSelect.value=''; dynamicFields.innerHTML=''; imageUpload.value=''; imagePreview.innerHTML='';
+  }, 1000);
+});
+
+/* ---------- Cancel Button ---------- */
+cancelBtn.addEventListener('click', () => { 
+  shortName.value=''; category.value=''; typeSelect.value=''; dynamicFields.innerHTML=''; imageUpload.value=''; imagePreview.innerHTML=''; 
+  createStatus.textContent=''; 
+});
+</script>
+
+<footer>© 2025 spookydecs.com | Beware the 404s 👻</footer>
+</body>
+</html>
