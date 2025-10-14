@@ -18,11 +18,10 @@ body {
   flex-direction: column;
   color: #f0f0f0;
 }
-
 .container {
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   min-height: calc(100vh - 150px);
   margin: 0 auto;
 }
@@ -46,8 +45,7 @@ header button:hover { opacity:0.9; }
 .offcanvas .footer { font-size:0.8rem; color:#ccc; margin-top:auto; }
 
 /* ---------- Create Item Card ---------- */
-/* ---------- Create Item Card ---------- */
-#createCard { 
+#createCard, #previewCard { 
   background: #2b2b2b; 
   padding: 25px 20px; 
   border-radius: 12px; 
@@ -56,10 +54,11 @@ header button:hover { opacity:0.9; }
   flex-direction:column; 
   gap:15px; 
   width:100%; 
-  max-width:600px; /* increased from 480px */ 
+  max-width:600px; 
+  margin-top:20px;
 }
 
-#createCard h2 { text-align:center; margin-bottom:15px; color:#ff7518; text-shadow:1px 1px 2px #000; }
+#createCard h2, #previewCard h2 { text-align:center; margin-bottom:15px; color:#ff7518; text-shadow:1px 1px 2px #000; }
 
 .field-row { margin-bottom:14px; display:flex; flex-direction:column; }
 .field-label { font-weight:600; margin-bottom:6px; text-align:left; color:#fff; }
@@ -71,12 +70,13 @@ button:hover { transform:scale(1.05); }
 .btn-primary { background: linear-gradient(45deg, #ff7518, #ffb347); color:#fff; box-shadow:0 3px 6px rgba(0,0,0,0.3); }
 .btn-danger { background: linear-gradient(45deg, #ff0000, #990000); color:#fff; box-shadow:0 3px 6px rgba(0,0,0,0.3); display:none; }
 
-.preview { margin-top:12px; text-align:center; }
-.preview img { max-width:320px; height:auto; border-radius:6px; display:block; margin:auto; }
-.status { margin-top:12px; font-weight:500; color:#ccc; text-align:center; }
-
 .dynamic-group { border:1px dashed #555; padding:12px; border-radius:8px; margin-top:12px; }
 .dynamic-group h3 { color:#ff7518; margin-bottom:10px; }
+
+/* Preview Card Rows */
+#previewCard .preview-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #555; }
+#previewCard .preview-row span.label { font-weight:600; color:#ccc; }
+#previewCard .preview-row span.value { color:#fff; }
 
 /* ---------- Footer ---------- */
 footer { width:100%; box-sizing:border-box; background-color:#1f1f1f; color:#fff; padding:25px 40px; font-family:Arial,sans-serif; border-top:1px solid #888; display:flex; justify-content:center; align-items:center; }
@@ -170,15 +170,22 @@ window.env = {
       <input type="text" id="generatedId" readonly>
     </div>
 
-    <!-- Preview -->
-    <div class="preview" id="imagePreview"></div>
-
+    <!-- Buttons -->
     <div class="button-row">
       <button class="btn-primary" id="createBtn">Create</button>
       <button class="btn-danger" id="cancelBtn">Cancel</button>
     </div>
 
     <div class="status" id="createStatus"></div>
+  </div>
+
+  <!-- Preview Card -->
+  <div id="previewCard" style="display:none;">
+    <h2>Item Preview</h2>
+    <div id="previewContent"></div>
+    <div class="button-row" style="justify-content:center;">
+      <button class="btn-danger" id="closePreviewBtn">Close Preview</button>
+    </div>
   </div>
 </div>
 
@@ -189,15 +196,18 @@ window.env = {
 </footer>
 
 <script>
-const cancelBtn = document.getElementById('cancelBtn');
 const createBtn = document.getElementById('createBtn');
+const cancelBtn = document.getElementById('cancelBtn');
 const dynamicFields = document.getElementById('dynamicFields');
 const typeSelect = document.getElementById('type');
 const inputs = document.querySelectorAll('#createCard input, #createCard select');
 const idField = document.getElementById('idField');
 const generatedId = document.getElementById('generatedId');
-const preview = document.getElementById('imagePreview');
 const status = document.getElementById('createStatus');
+
+const previewCard = document.getElementById('previewCard');
+const previewContent = document.getElementById('previewContent');
+const closePreviewBtn = document.getElementById('closePreviewBtn');
 
 const fieldDefinitions = {
   INF: [
@@ -238,7 +248,7 @@ const fieldDefinitions = {
   ]
 };
 
-// Show dynamic fields on type selection
+// Dynamic fields
 typeSelect.addEventListener('change', () => {
   dynamicFields.innerHTML = '';
   const type = typeSelect.value;
@@ -283,28 +293,20 @@ typeSelect.addEventListener('change', () => {
   dynamicFields.appendChild(group);
 });
 
-// Cancel button logic
-inputs.forEach(el=>{
-  el.addEventListener('input', ()=>{ cancelBtn.style.display='inline-block'; });
-});
-
+// Cancel button
 cancelBtn.addEventListener('click', ()=>{
   inputs.forEach(el=>el.value='');
   dynamicFields.innerHTML='';
   idField.style.display='none';
-  preview.innerHTML='';
-  cancelBtn.style.display='none';
+  previewCard.style.display='none';
   status.innerText='';
 });
 
-// Create button logic
+// Create button
 createBtn.addEventListener('click', ()=>{
   status.innerText='';
   const type = typeSelect.value;
-  if(!type){
-    status.innerText='Please select a Type';
-    return;
-  }
+  if(!type){ status.innerText='Please select a Type'; return; }
 
   let valid = true;
   const data = {};
@@ -322,21 +324,27 @@ createBtn.addEventListener('click', ()=>{
   if(!valid){ status.innerText='Please fill all required fields'; return; }
 
   // Generate ID placeholder
-  let id = type+'-001'; // placeholder logic
+  let id = type+'-001';
   generatedId.value = id;
   idField.style.display='block';
 
-  // Show preview
-  let previewHTML = '<h3>Preview:</h3><ul>';
+  // Show preview card
+  previewContent.innerHTML='';
   for(let key in data){
-    previewHTML+=`<li><strong>${key}</strong>: ${data[key]}</li>`;
+    const row = document.createElement('div');
+    row.className='preview-row';
+    const label = document.createElement('span'); label.className='label'; label.innerText=key;
+    const value = document.createElement('span'); value.className='value'; value.innerText=data[key];
+    row.appendChild(label);
+    row.appendChild(value);
+    previewContent.appendChild(row);
   }
-  previewHTML+='</ul>';
-  if(data.image) previewHTML+=`<p>Image uploaded: ${data.image}</p>`;
-  preview.innerHTML=previewHTML;
+  previewCard.style.display='flex';
+});
 
-  cancelBtn.style.display='inline-block';
-  status.innerText='Item created (placeholder ID)';
+// Close Preview
+closePreviewBtn.addEventListener('click', ()=>{
+  previewCard.style.display='none';
 });
 </script>
 
