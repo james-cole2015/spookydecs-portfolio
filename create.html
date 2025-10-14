@@ -45,7 +45,7 @@ header button:hover { opacity:0.9; }
 .offcanvas .footer { font-size:0.8rem; color:#ccc; margin-top:auto; }
 
 /* ---------- Create Item Card ---------- */
-#createCard, #previewCard { 
+#createCard { 
   background: #2b2b2b; 
   padding: 25px 20px; 
   border-radius: 12px; 
@@ -57,8 +57,7 @@ header button:hover { opacity:0.9; }
   max-width:600px; 
   margin-top:20px;
 }
-
-#createCard h2, #previewCard h2 { text-align:center; margin-bottom:15px; color:#ff7518; text-shadow:1px 1px 2px #000; }
+#createCard h2 { text-align:center; margin-bottom:15px; color:#ff7518; text-shadow:1px 1px 2px #000; }
 
 .field-row { margin-bottom:14px; display:flex; flex-direction:column; }
 .field-label { font-weight:600; margin-bottom:6px; text-align:left; color:#fff; }
@@ -73,10 +72,15 @@ button:hover { transform:scale(1.05); }
 .dynamic-group { border:1px dashed #555; padding:12px; border-radius:8px; margin-top:12px; }
 .dynamic-group h3 { color:#ff7518; margin-bottom:10px; }
 
-/* Preview Card Rows */
-#previewCard .preview-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #555; }
-#previewCard .preview-row span.label { font-weight:600; color:#ccc; }
-#previewCard .preview-row span.value { color:#fff; }
+/* ---------- Preview Modal ---------- */
+#previewCard { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:#2b2b2b; padding:35px 30px; border-radius:16px; box-shadow:0 8px 20px rgba(0,0,0,0.7); flex-direction:column; gap:20px; max-width:700px; width:90%; z-index:999; }
+#previewCard h2 { text-align:center; margin-bottom:15px; color:#ff7518; text-shadow:1px 1px 2px #000; }
+.preview-row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #555; }
+.preview-row span.label { font-weight:600; color:#ccc; flex:1; }
+.preview-row span.value { color:#fff; flex:2; text-align:right; }
+
+/* Overlay background */
+.preview-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:998; }
 
 /* ---------- Footer ---------- */
 footer { width:100%; box-sizing:border-box; background-color:#1f1f1f; color:#fff; padding:25px 40px; font-family:Arial,sans-serif; border-top:1px solid #888; display:flex; justify-content:center; align-items:center; }
@@ -178,14 +182,15 @@ window.env = {
 
     <div class="status" id="createStatus"></div>
   </div>
+</div>
 
-  <!-- Preview Card -->
-  <div id="previewCard" style="display:none;">
-    <h2>Item Preview</h2>
-    <div id="previewContent"></div>
-    <div class="button-row" style="justify-content:center;">
-      <button class="btn-danger" id="closePreviewBtn">Close Preview</button>
-    </div>
+<!-- Preview Modal & Overlay -->
+<div class="preview-overlay" id="previewOverlay"></div>
+<div id="previewCard">
+  <h2>Item Preview</h2>
+  <div id="previewContent"></div>
+  <div class="button-row" style="justify-content:center;">
+    <button class="btn-danger" id="closePreviewBtn">Close Preview</button>
   </div>
 </div>
 
@@ -208,10 +213,11 @@ const status = document.getElementById('createStatus');
 const previewCard = document.getElementById('previewCard');
 const previewContent = document.getElementById('previewContent');
 const closePreviewBtn = document.getElementById('closePreviewBtn');
+const previewOverlay = document.getElementById('previewOverlay');
 
 const fieldDefinitions = {
   INF: [
-    {label:'Height / Length', type:'number', id:'height', min:1, required:true},
+    {label:'Height / Length', type:'number', id:'height', min:1, max:99,required:true},
     {label:'Tethers', type:'number', id:'tethers', min:1, required:true},
     {label:'Stakes', type:'number', id:'stakes', min:1, required:true},
     {label:'Date Acquired', type:'number', id:'dateAcquired', min:1900, max:2099, required:true},
@@ -233,7 +239,7 @@ const fieldDefinitions = {
     {label:'Smart outlet', type:'select', id:'smartOutlet', options:['','True','False'], required:true}
   ],
   STR_LT: [
-    {label:'Location', type:'select', id:'location', options:['','FY','SY','FN','TR'], required:true},
+    {label:'Location', type:'select', id:'location', options:['','Front Yard','Side Yard','Fence','Tree'], required:true},
     {label:'Power Requirements', type:'text', id:'powerReq', required:true},
     {label:'LED Controller', type:'select', id:'ledController', options:['','True','False'], required:true},
     {label:'Color(s)', type:'text', id:'colors', required:true}
@@ -247,6 +253,15 @@ const fieldDefinitions = {
     {label:'Description', type:'text', id:'description', required:true}
   ]
 };
+
+// Map field ID to display label
+function getFieldLabel(type, id){
+  if(fieldDefinitions[type]){
+    const f = fieldDefinitions[type].find(x=>x.id===id);
+    return f ? f.label : id;
+  }
+  return id;
+}
 
 // Dynamic fields
 typeSelect.addEventListener('change', () => {
@@ -299,6 +314,7 @@ cancelBtn.addEventListener('click', ()=>{
   dynamicFields.innerHTML='';
   idField.style.display='none';
   previewCard.style.display='none';
+  previewOverlay.style.display='none';
   status.innerText='';
 });
 
@@ -328,23 +344,35 @@ createBtn.addEventListener('click', ()=>{
   generatedId.value = id;
   idField.style.display='block';
 
-  // Show preview card
+  // Show preview modal
   previewContent.innerHTML='';
   for(let key in data){
     const row = document.createElement('div');
     row.className='preview-row';
-    const label = document.createElement('span'); label.className='label'; label.innerText=key;
-    const value = document.createElement('span'); value.className='value'; value.innerText=data[key];
+    const label = document.createElement('span'); 
+    label.className='label'; 
+    label.innerText = getFieldLabel(type, key);
+    const value = document.createElement('span'); 
+    value.className='value'; 
+    value.innerText = data[key];
     row.appendChild(label);
     row.appendChild(value);
     previewContent.appendChild(row);
   }
+  previewOverlay.style.display='block';
   previewCard.style.display='flex';
 });
 
 // Close Preview
 closePreviewBtn.addEventListener('click', ()=>{
   previewCard.style.display='none';
+  previewOverlay.style.display='none';
+});
+
+// Clicking overlay closes preview
+previewOverlay.addEventListener('click', ()=>{
+  previewCard.style.display='none';
+  previewOverlay.style.display='none';
 });
 </script>
 
