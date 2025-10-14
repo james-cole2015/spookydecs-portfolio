@@ -176,65 +176,40 @@ window.env = {
 </header>
 
 <div class="offcanvas" id="offcanvas">
-  <button id="off-signout">Sign Out</button>
-  <a href="#" id="off-admin-link">Return to Admin</a>
-  <a href="#" id="off-main-link">Main Site</a>
-  <div class="footer">&copy; 2025 SpookyDecs Network | Admin Portal</div>
+  <a href="#" id="off-admin">Admin</a>
+  <a href="#" id="off-main">Main Site</a>
+  <button id="off-signOut">Sign Out</button>
+  <div class="footer">SpookyDecs &copy; 2025</div>
 </div>
 
 <div class="container">
-  <!-- Create Card -->
   <div id="createCard">
     <h2>Create New Item</h2>
-
     <div class="field-row">
-      <label class="field-label" for="shortName">Short Name</label>
-      <input type="text" id="shortName" required>
-    </div>
-
-    <div class="field-row">
-      <label class="field-label" for="type">Type</label>
-      <select id="type" required>
-        <option value="">Select Type</option>
+      <label for="typeSelect" class="field-label">Item Type</label>
+      <select id="typeSelect" required>
+        <option value="">--Select Type--</option>
         <option value="INF">Inflatable</option>
-        <option value="C">Cord</option>
-        <option value="P">Plug</option>
-        <option value="O">Outlet</option>
+        <option value="C">Chain</option>
+        <option value="P">Pole</option>
+        <option value="O">Other</option>
         <option value="STR_LT">String Light</option>
         <option value="SP_LT">Spot Light</option>
         <option value="PROP">Prop</option>
       </select>
     </div>
-
     <div class="field-row">
-      <label class="field-label" for="category">Category</label>
-      <select id="category" required>
-        <option value="">Select Category</option>
-        <option value="Halloween">Halloween</option>
-        <option value="Christmas">Christmas</option>
-        <option value="Cord">Cord</option>
-        <option value="Plug">Plug</option>
-        <option value="Outlet">Outlet</option>
-      </select>
+      <label for="shortName" class="field-label">Short Name</label>
+      <input type="text" id="shortName" required>
     </div>
-
-    <!-- Dynamic Fields -->
-    <div id="dynamicFields"></div>
-
-    <!-- ID Display -->
+    <div class="button-row">
+      <button class="btn-primary" id="createBtn">Preview</button>
+    </div>
     <div class="field-row" id="idField" style="display:none;">
-      <label class="field-label" for="generatedId">Generated ID</label>
+      <label class="field-label">Generated ID</label>
       <input type="text" id="generatedId" readonly>
     </div>
-
-    <!-- Buttons -->
-    <div class="button-row">
-      <button class="btn-primary" id="createBtn">Create</button>
-      <button class="btn-danger" id="cancelBtn">Cancel</button>
-      <button class="btn-danger" id="clearBtn">Clear</button>
-    </div>
-
-    <div class="status" id="createStatus"></div>
+    <div id="status" style="color:red; font-weight:bold;"></div>
   </div>
 </div>
 
@@ -243,187 +218,86 @@ window.env = {
   <div id="previewCard">
     <h2>Item Preview</h2>
     <div id="previewContent"></div>
-    <div class="button-row" style="justify-content:center;">
+    <div class="button-row" style="justify-content:center; gap: 10px;">
+      <button class="btn-primary" id="returnEditBtn">Return to Edit</button>
+      <button class="btn-primary" id="finishBtn">Finish</button>
       <button class="btn-danger" id="closePreviewBtn">Close Preview</button>
     </div>
   </div>
 </div>
 
 <footer>
-  <div>&copy; 2025 SpookyDecs Network | Admin Area
-    <img src="https://assets.spookydecs.com/icons/ghost_icon.svg" alt="Ghost Icon" class="icon">
+  <div>
+    <img src="https://assets.spookydecs.com/icons/frankenstein_icon.svg" class="icon"> SpookyDecs Inventory Portal
   </div>
 </footer>
 
 <script>
+// ---------- Hamburger ----------
+const hamburger = document.getElementById('hamburger');
+const offcanvas = document.getElementById('offcanvas');
+hamburger.addEventListener('click', ()=>{ offcanvas.classList.toggle('open'); });
+
+// ---------- Buttons ----------
 const createBtn = document.getElementById('createBtn');
-const cancelBtn = document.getElementById('cancelBtn');
-const clearBtn = document.getElementById('clearBtn');
-const dynamicFields = document.getElementById('dynamicFields');
-const typeSelect = document.getElementById('type');
-const inputs = document.querySelectorAll('#createCard input, #createCard select');
-const idField = document.getElementById('idField');
+const typeSelect = document.getElementById('typeSelect');
 const generatedId = document.getElementById('generatedId');
-const status = document.getElementById('createStatus');
+const idField = document.getElementById('idField');
 const previewOverlay = document.getElementById('previewOverlay');
-const previewCard = document.getElementById('previewCard');
 const previewContent = document.getElementById('previewContent');
+const status = document.getElementById('status');
+
+const returnEditBtn = document.getElementById('returnEditBtn');
+const finishBtn = document.getElementById('finishBtn');
 const closePreviewBtn = document.getElementById('closePreviewBtn');
 
-const fieldDefinitions = {
-  INF: [
-    {label:'Height / Length', type:'number', id:'height', min:1, required:true},
-    {label:'Tethers', type:'number', id:'tethers', min:1, required:true},
-    {label:'Stakes', type:'number', id:'stakes', min:1, required:true},
-    {label:'Date Acquired', type:'number', id:'dateAcquired', min:1900, max:2099, required:true},
-    {label:'Status', type:'select', id:'status', options:['','active','needs repair','packed','retired'], required:true},
-    {label:'Image', type:'file', id:'image', required:false}
-  ],
-  C: [
-    {label:'Length', type:'number', id:'length', min:1, required:true},
-    {label:'Male Ends', type:'number', id:'maleEnds', min:1, required:true},
-    {label:'Female Ends', type:'number', id:'femaleEnds', min:1, required:true}
-  ],
-  P: [
-    {label:'Length', type:'number', id:'length', min:1, required:true},
-    {label:'Male Ends', type:'number', id:'maleEnds', min:1, required:true},
-    {label:'Female Ends', type:'number', id:'femaleEnds', min:1, required:true}
-  ],
-  O: [
-    {label:'Receptacles', type:'number', id:'receptacles', min:1, required:true},
-    {label:'Smart outlet', type:'select', id:'smartOutlet', options:['','True','False'], required:true}
-  ],
-  STR_LT: [
-    {label:'Location', type:'select', id:'location', options:['','FY','SY','FN','TR'], required:true},
-    {label:'Power Requirements', type:'text', id:'powerReq', required:true},
-    {label:'LED Controller', type:'select', id:'ledController', options:['','True','False'], required:true},
-    {label:'Color(s)', type:'text', id:'colors', required:true}
-  ],
-  SP_LT: [
-    {label:'Power Requirements', type:'text', id:'powerReq', required:true},
-    {label:'LED Controller', type:'select', id:'ledController', options:['','True','False'], required:true},
-    {label:'Bulb Type', type:'select', id:'bulbType', options:['','PAR 38','Built-in'], required:true}
-  ],
-  PROP: [
-    {label:'Description', type:'text', id:'description', required:true}
-  ]
-};
-
-// --- Helper: Update Cancel/Clear buttons visibility ---
-function updateActionButtons() {
-  const hasData = Array.from(inputs).some(input => input.value);
-  if(hasData){
-    cancelBtn.style.display = 'inline-block';
-    clearBtn.style.display = 'inline-block';
-  } else {
-    cancelBtn.style.display = 'none';
-    clearBtn.style.display = 'none';
-  }
-}
-
-// --- Dynamic fields ---
-typeSelect.addEventListener('change', () => {
-  dynamicFields.innerHTML = '';
-  updateActionButtons();
-  const type = typeSelect.value;
-  if(!type || !fieldDefinitions[type]) return;
-
-  const group = document.createElement('div');
-  group.className = 'dynamic-group';
-  const heading = document.createElement('h3');
-  heading.innerText = 'Type Attributes';
-  group.appendChild(heading);
-
-  fieldDefinitions[type].forEach(field=>{
-    const row = document.createElement('div');
-    row.className = 'field-row';
-    const label = document.createElement('label');
-    label.className = 'field-label';
-    label.htmlFor = field.id;
-    label.innerText = field.label;
-    row.appendChild(label);
-
-    let input;
-    if(field.type==='select'){
-      input = document.createElement('select');
-      field.options.forEach(opt=>{
-        const option = document.createElement('option');
-        option.value = opt;
-        option.text = opt;
-        input.appendChild(option);
-      });
-    } else {
-      input = document.createElement('input');
-      input.type = field.type;
-      if(field.min) input.min = field.min;
-      if(field.max) input.max = field.max;
-    }
-    input.id = field.id;
-    input.required = field.required;
-    input.addEventListener('input', updateActionButtons);
-    row.appendChild(input);
-    group.appendChild(row);
-  });
-
-  dynamicFields.appendChild(group);
-});
-
-// --- Input event for static fields ---
-inputs.forEach(input => input.addEventListener('input', updateActionButtons));
-
-// --- Cancel button ---
-cancelBtn.addEventListener('click', ()=>{
-  inputs.forEach(el=>el.value='');
-  dynamicFields.innerHTML='';
-  idField.style.display='none';
-  previewCard.style.display='none';
-  updateActionButtons();
-});
-
-// --- Clear button ---
-clearBtn.addEventListener('click', ()=>{
-  inputs.forEach(el=>el.value='');
-  dynamicFields.innerHTML='';
-  updateActionButtons();
-});
-
-// --- Create button ---
 createBtn.addEventListener('click', ()=>{
   status.innerText='';
   const type = typeSelect.value;
   if(!type){ status.innerText='Please select a Type'; return; }
 
-  let valid = true;
-  const data = {};
-  const allFields = document.querySelectorAll('#createCard input, #createCard select');
-  allFields.forEach(f=>{
-    if(f.required && !f.value){
-      f.style.border='2px solid red';
-      valid=false;
-    } else {
-      f.style.border='1px solid #555';
-      data[f.id] = f.type==='file' && f.files[0]?f.files[0].name:f.value;
-    }
-  });
+  let data = {};
+  const shortName = document.getElementById('shortName').value;
+  if(!shortName){ status.innerText='Please provide Short Name'; return; }
+  data.shortName = shortName;
 
-  if(!valid){ status.innerText='Please fill all required fields'; return; }
+  // --- Generate ID based on type ---
+  let id = '';
+  switch(type){
+    case 'INF':
+      id = `INF-0S0T-001`; // placeholder, can extend with real fields
+      break;
+    case 'C':
+    case 'P':
+      id = `${type}-0M0F-001`;
+      break;
+    case 'O':
+      id = `O-0R-001`;
+      break;
+    case 'STR_LT':
+      id = `LOC-CAT-001`;
+      break;
+    case 'SP_LT':
+      id = `SP_LT-001`;
+      break;
+    case 'PROP':
+      id = `${shortName}-001`;
+      break;
+    default:
+      id = `${type}-001`;
+  }
 
-  // Generate ID placeholder
-  let id = type+'-001';
   generatedId.value = id;
   idField.style.display='block';
 
-  // Show preview card
+  // --- Show preview modal ---
   previewContent.innerHTML='';
   for(let key in data){
-    const fieldDef = Object.values(fieldDefinitions).flat().find(f=>f.id===key);
-    const labelText = fieldDef ? fieldDef.label : key;
     const row = document.createElement('div');
     row.className='preview-row';
-    const label = document.createElement('span'); label.className='label'; label.innerText=labelText;
+    const label = document.createElement('span'); label.className='label'; label.innerText=key;
     const value = document.createElement('span'); value.className='value'; value.innerText=data[key];
-    row.appendChild(label);
-    row.appendChild(value);
+    row.appendChild(label); row.appendChild(value);
     previewContent.appendChild(row);
   }
 
@@ -431,12 +305,25 @@ createBtn.addEventListener('click', ()=>{
   previewCard.style.display='flex';
 });
 
-// --- Close Preview ---
+// ---------- Return to Edit ----------
+returnEditBtn.addEventListener('click', ()=>{
+  previewOverlay.style.display='none';
+  previewCard.style.display='none';
+  document.getElementById('shortName').focus();
+});
+
+// ---------- Finish ----------
+finishBtn.addEventListener('click', ()=>{
+  console.log('Finish triggered, data ready for submission.');
+  previewOverlay.style.display='none';
+  previewCard.style.display='none';
+});
+
+// ---------- Close ----------
 closePreviewBtn.addEventListener('click', ()=>{
   previewOverlay.style.display='none';
   previewCard.style.display='none';
 });
 </script>
-
 </body>
 </html>
