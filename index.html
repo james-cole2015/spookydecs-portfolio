@@ -1,146 +1,170 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SpookyDecs Admin Portal</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f0f2f5;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SpookyDecs Admin Dashboard</title>
+<style>
+  /* ====== Reset & Base ====== */
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+  body { background-color: #f0f2f5; color: #333; }
+  a { text-decoration: none; }
 
-    header {
-      background-color: #1f1f1f;
-      color: #f5f5f5;
-      text-align: center;
-      padding: 15px 0;
-      position: relative;
-      font-size: 1.3rem;
-      font-weight: bold;
-    }
+  /* ====== Header ====== */
+  header { background-color: #2e2e2e; color: #fff; padding: 15px 40px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #888; }
+  header img { height: 40px; margin-right: 12px; }
+  header h1 { font-size: 1.4rem; color: #ccc; }
+  header nav ul { list-style: none; display: flex; gap: 20px; }
+  header nav a { color: #fff; font-size: 1rem; }
+  header nav a.settings { color: #ccc; }
 
-    header img#spiderweb {
-      position: absolute;
-      top: 0;
-      right: 0;
-      height: 100%;
-      animation: swing 5s ease-in-out infinite alternate;
-    }
+  /* ====== Container & Cards ====== */
+  .container { padding: 20px; display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
+  .card { background-color: #fff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); padding: 16px; width: 300px; display: flex; flex-direction: column; gap: 12px; transition: box-shadow 0.2s ease; }
+  .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+  .card-header { display: flex; align-items: center; gap: 12px; }
+  .icon-placeholder { width: 40px; height: 40px; background-color: #ccc; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1rem; }
+  .card h3 { font-size: 1.2rem; margin-bottom: 4px; }
+  .card p { color: #555; font-size: 0.9rem; }
+  .card button { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; margin-top: 6px; background-color: #007bff; color: #fff; }
+  .card button.danger { background-color: #dc3545; }
+  input.search-input { padding: 6px 10px; border-radius: 4px; border: 1px solid #ccc; width: 100%; }
 
-    @keyframes swing {
-      0% { transform: rotate(0deg); }
-      50% { transform: rotate(3deg); }
-      100% { transform: rotate(-3deg); }
-    }
+  /* ====== Footer ====== */
+  footer { background-color: #1f1f1f; color: #fff; padding: 25px 40px; border-top: 1px solid #888; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.9rem; }
 
-    main {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-      text-align: center;
-    }
-
-    footer {
-      background: #1f1f1f;
-      color: #ccc;
-      text-align: center;
-      padding: 20px;
-      width: 100%;
-      position: relative;
-    }
-
-    footer img {
-      height: 16px;
-      width: 16px;
-      vertical-align: middle;
-      margin-left: 6px;
-      animation: floatIcon 3s ease-in-out infinite alternate;
-    }
-
-    @keyframes floatIcon {
-      0%,100% { transform: translateY(0); }
-      50% { transform: translateY(-3px); }
-    }
-
-    button {
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 10px 20px;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-
-    button:hover {
-      opacity: 0.9;
-    }
-  </style>
+  /* ====== Responsive ====== */
+  @media (max-width: 768px) { .card { width: 100%; } }
+</style>
 </head>
 <body>
 
-  <header>
-    SpookyDecs Admin Portal
-    <img id="spiderweb" src="https://assets.spookydecs.com/icons/spiderweb_icon.svg" alt="Spider Web Icon" />
-  </header>
+<!-- ====== Header ====== -->
+<header>
+  <div style="display:flex; align-items:center;">
+    <img src="https://www.spookydecs.com/icons/pumpkin-svgrepo-com.svg" alt="SpookyDecs Logo">
+    <h1>SpookyDecs Portal</h1>
+  </div>
+  <nav>
+    <ul>
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="/inventory">Inventory</a></li>
+      <li><a href="/reports">Reports</a></li>
+      <li><a href="/settings" class="settings">Settings</a></li>
+      <li><a href="/logout">Logout</a></li>
+    </ul>
+  </nav>
+</header>
 
-  <main>
-    <div>
-      <h2>Welcome to the SpookyDecs Admin</h2>
-      <p>Select an application to begin.</p>
-      <button onclick="logout()">Sign Out</button>
-    </div>
-  </main>
+<!-- ====== Dashboard Cards ====== -->
+<div class="container">
 
-  <footer>
-    &copy; 2025 SpookyDecs Network | Admin Area
-    <img src="https://www.svgrepo.com/show/277704/ghost.svg" alt="Ghost Icon" />
-  </footer>
+  <!-- Core Features -->
+  <div class="card">
+    <div class="card-header"><div class="icon-placeholder">P</div><h3>Packing Process</h3></div>
+    <p>Scan tote → scan items → assign items → confirm completion.</p>
+    <button onclick="startPacking()">Start Packing</button>
+  </div>
 
-  <script>
-    // --- ENVIRONMENT DETECTION ---
-    const origin = window.location.origin;
-    const isDev = origin.includes("dev-");
-    const COGNITO_DOMAIN = "us-east-2bnxsu5let.auth.us-east-2.amazoncognito.com";
-    const CLIENT_ID = "11er9f8qa7jkvgelm6hernb2ed";
-    const REDIRECT_URI = encodeURIComponent(isDev ? "https://dev-admin.spookydecs.com" : "https://admin.spookydecs.com");
+  <div class="card">
+    <div class="card-header"><div class="icon-placeholder">U</div><h3>Update Item</h3></div>
+    <p>Edit name, category, condition, location, tote ID, last used date, notes. Bulk update supported.</p>
+    <button onclick="updateItems()">Update Items</button>
+  </div>
 
-    const LOGIN_URL = `https://${COGNITO_DOMAIN}/login?response_type=token&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}`;
-    const LOGOUT_URL = `https://${COGNITO_DOMAIN}/logout?client_id=${CLIENT_ID}&logout_uri=${REDIRECT_URI}`;
+  <div class="card">
+    <div class="card-header"><div class="icon-placeholder">D</div><h3>Delete Item</h3></div>
+    <p>Permanent delete with optional archive/undo.</p>
+    <button class="danger" onclick="deleteItems()">Delete Items</button>
+  </div>
 
-    // --- PARSE TOKEN FROM URL HASH ---
-    function parseCognitoHash() {
-      const hash = window.location.hash.substring(1);
-      const params = new URLSearchParams(hash);
-      const idToken = params.get("id_token");
-      if (idToken) {
-        localStorage.setItem("id_token", idToken);
-        window.location.hash = "";
-        return idToken;
-      }
-      return null;
-    }
+  <!-- Additional Features -->
+  <div class="card">
+    <div class="card-header"><div class="icon-placeholder">T</div><h3>Tote Management</h3></div>
+    <p>Create, update, delete totes; view contents; move items; track condition/location/photos.</p>
+    <button onclick="manageTotes()">Manage Totes</button>
+  </div>
 
-    // --- CHECK LOGIN STATE ---
-    const token = parseCognitoHash() || localStorage.getItem("id_token");
-    if (!token) {
-      window.location.href = LOGIN_URL;
-    }
+  <div class="card">
+    <div class="card-header"><div class="icon-placeholder">B</div><h3>Bulk Import/Export</h3></div>
+    <p>CSV/JSON support, optional DynamoDB integration.</p>
+    <button onclick="bulkImportExport()">Import / Export</button>
+  </div>
 
-    // --- LOGOUT HANDLER ---
-    function logout() {
-      localStorage.removeItem("id_token");
-      window.location.href = LOGOUT_URL;
-    }
-  </script>
+  <div class="card">
+    <div class="card-header"><div class="icon-placeholder">A</div><h3>Inventory Audit</h3></div>
+    <p>Filter items by category, location, condition, packed/unpacked. Highlight missing/duplicates.</p>
+    <button onclick="inventoryAudit()">Audit Inventory</button>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="icon-placeholder">R</div><h3>Repair / Maintenance</h3></div>
+    <p>Track items needing repair; optional priority, notes, and dashboard view.</p>
+    <button onclick="repairDashboard()">Repair Dashboard</button>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="icon-placeholder">H</div><h3>History / Audit Logs</h3></div>
+    <p>Track add/update/delete/pack actions with timestamps and user info.</p>
+    <button onclick="viewLogs()">View Logs</button>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="icon-placeholder">S</div><h3>Search & Filter</h3></div>
+    <input type="text" class="search-input" placeholder="Search items...">
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="icon-placeholder">C</div><h3>Seasonal Prep / Cleanup</h3></div>
+    <p>Start packing season, archive old items, prep shopping list.</p>
+    <button onclick="startSeason()">Start Season</button>
+    <button onclick="archiveOldItems()">Archive Old Items</button>
+    <button onclick="prepShoppingList()">Prep Shopping List</button>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="icon-placeholder">📷</div><h3>Photo Management</h3></div>
+    <p>Upload/view photos for items or totes.</p>
+    <button onclick="managePhotos()">Manage Photos</button>
+  </div>
+
+</div>
+
+<!-- ====== Footer ====== -->
+<footer>
+  &copy; 2025 SpookyDecs Network | Admin Area
+  <img src="https://www.svgrepo.com/show/277704/ghost.svg" alt="Ghost Icon" style="height:16px;width:16px;">
+</footer>
+
+<!-- ====== JS Placeholder Functions ====== -->
+<script>
+  // ==========================
+  // Authentication & API placeholders
+  // ==========================
+  // Replace with actual Cognito authentication check
+  function checkAuth() {
+    // Example: validate id_token in localStorage
+    // if invalid, redirect to Cognito login
+    console.log("Auth check placeholder");
+  }
+  checkAuth();
+
+  // ==========================
+  // Feature placeholders
+  // ==========================
+  function startPacking(){ alert("Start Packing clicked! Hook API here."); }
+  function updateItems(){ alert("Update Items clicked! Hook API here."); }
+  function deleteItems(){ alert("Delete Items clicked! Hook API here."); }
+  function manageTotes(){ alert("Manage Totes clicked! Hook API here."); }
+  function bulkImportExport(){ alert("Bulk Import/Export clicked! Hook API here."); }
+  function inventoryAudit(){ alert("Inventory Audit clicked! Hook API here."); }
+  function repairDashboard(){ alert("Repair Dashboard clicked! Hook API here."); }
+  function viewLogs(){ alert("View Logs clicked! Hook API here."); }
+  function startSeason(){ alert("Start Season clicked! Hook API here."); }
+  function archiveOldItems(){ alert("Archive Old Items clicked! Hook API here."); }
+  function prepShoppingList(){ alert("Prep Shopping List clicked! Hook API here."); }
+  function managePhotos(){ alert("Manage Photos clicked! Hook API here."); }
+</script>
 
 </body>
 </html>
