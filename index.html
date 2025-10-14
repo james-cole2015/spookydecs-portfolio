@@ -29,6 +29,48 @@
 </style>
 </head>
 <body>
+
+<script>
+(function() {
+  const TOKEN_KEY = 'spookydecs_id_token';
+  const LOGIN_PATH = '/login.html'; // adjust if hosted elsewhere
+
+  // helper to build admin root/login URL correctly for dev/prod
+  const host = window.location.hostname.toLowerCase();
+  const isDev = host.includes('dev-') || host.includes('dev.');
+  const adminBase = isDev ? 'https://dev-admin.spookydecs.com' : 'https://admin.spookydecs.com';
+  const loginUrlBase = adminBase + LOGIN_PATH;
+
+  function redirectToLogin() {
+    // include full current location as returnUrl (encoded)
+    const returnUrl = encodeURIComponent(window.location.href);
+    window.location.href = loginUrlBase + '?returnUrl=' + returnUrl;
+  }
+
+  try {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) {
+      redirectToLogin();
+      return;
+    }
+    // quick expiry check
+    const parts = token.split('.');
+    if (parts.length !== 3) { redirectToLogin(); return; }
+    const payload = JSON.parse(atob(parts[1]));
+    const now = Math.floor(Date.now() / 1000);
+    if (!payload || !payload.exp || payload.exp < (now + 15)) {
+      // expired or close to expiring -> force login
+      redirectToLogin();
+      return;
+    }
+    // token appears valid — allow page to load
+  } catch (e) {
+    // any error -> redirect to login
+    redirectToLogin();
+  }
+})();
+</script>
+
 <div class="container">
 
 <!-- Login Form -->
