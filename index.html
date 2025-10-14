@@ -1,140 +1,146 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<div id="logoutContainer" style="display:flex; justify-content:flex-end; margin-bottom:10px;">
-  <button class="btn-danger" onclick="logout()">Logout</button>
-</div>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SpookyDecs Admin Portal</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f2f5;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
 
-<title>Admin Dashboard</title>
-<style>
-  body { font-family: Arial, sans-serif; background-color: #f0f2f5; margin:0; padding:0; }
-  .container { padding: 20px; }
-  /* Dashboard */
-  .admin-dashboard { display:none; flex-direction: column; gap: 20px; }
-  .admin-dashboard h1 { font-size:2rem; margin-bottom:20px; }
-  .admin-card { background-color:#fff; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1); padding:16px; display:flex; align-items:center; gap:16px; transition: box-shadow 0.2s ease; }
-  .admin-card:hover { box-shadow:0 4px 12px rgba(0,0,0,0.15); }
-  .icon-placeholder { width:40px; height:40px; background-color:#ccc; border-radius:50%; display:flex; justify-content:center; align-items:center; font-weight:bold; font-size:1rem; }
-  .card-content h3 { margin:0 0 4px 0; font-size:1.2rem; }
-  .card-content p { margin:0 0 8px 0; color:#555; }
-  button { padding:6px 12px; border:none; border-radius:4px; cursor:pointer; margin-right:8px; }
-  button:hover { opacity:0.9; }
-  .btn-primary { background-color:#007bff; color:white; }
-  .btn-danger { background-color:#dc3545; color:white; }
-  .search-input { padding:6px 10px; border-radius:4px; border:1px solid #ccc; width:100%; }
-  @media (max-width: 768px) { .admin-card { flex-direction: column; align-items:flex-start; } }
-</style>
+    header {
+      background-color: #1f1f1f;
+      color: #f5f5f5;
+      text-align: center;
+      padding: 15px 0;
+      position: relative;
+      font-size: 1.3rem;
+      font-weight: bold;
+    }
+
+    header img#spiderweb {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+      animation: swing 5s ease-in-out infinite alternate;
+    }
+
+    @keyframes swing {
+      0% { transform: rotate(0deg); }
+      50% { transform: rotate(3deg); }
+      100% { transform: rotate(-3deg); }
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      text-align: center;
+    }
+
+    footer {
+      background: #1f1f1f;
+      color: #ccc;
+      text-align: center;
+      padding: 20px;
+      width: 100%;
+      position: relative;
+    }
+
+    footer img {
+      height: 16px;
+      width: 16px;
+      vertical-align: middle;
+      margin-left: 6px;
+      animation: floatIcon 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes floatIcon {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 10px 20px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+  </style>
 </head>
 <body>
 
-<div class="container">
+  <header>
+    SpookyDecs Admin Portal
+    <img id="spiderweb" src="https://assets.spookydecs.com/icons/spiderweb_icon.svg" alt="Spider Web Icon" />
+  </header>
 
-<!-- Admin Dashboard -->
-<div id="adminDashboard" class="admin-dashboard">
-  <h1>Admin Dashboard</h1>
+  <main>
+    <div>
+      <h2>Welcome to the SpookyDecs Admin</h2>
+      <p>Select an application to begin.</p>
+      <button onclick="logout()">Sign Out</button>
+    </div>
+  </main>
 
-  <!-- Core Feature Cards -->
-  <div class="admin-card"><div class="icon-placeholder">P</div><div class="card-content"><h3>Packing Process</h3><p>Scan tote → scan items → assign items → confirm completion.</p><button class="btn-primary" onclick="startPacking()">Start Packing</button></div></div>
-  <div class="admin-card"><div class="icon-placeholder">C</div><div class="card-content"><h3>Create Item</h3><p>Use the dedicated item creation page with card-style entry and image upload.</p><button class="btn-primary" onclick="goToCreate()">Create Item</button></div></div>
-  <div class="admin-card"><div class="icon-placeholder">U</div><div class="card-content"><h3>Update Item</h3><p>Edit item attributes or perform bulk updates.</p><button class="btn-primary" onclick="updateItems()">Update Items</button></div></div>
-  <div class="admin-card"><div class="icon-placeholder">D</div><div class="card-content"><h3>Delete Item</h3><p>Permanently delete or archive items.</p><button class="btn-danger" onclick="deleteItems()">Delete Items</button></div></div>
+  <footer>
+    &copy; 2025 SpookyDecs Network | Admin Area
+    <img src="https://www.svgrepo.com/show/277704/ghost.svg" alt="Ghost Icon" />
+  </footer>
 
-  <!-- Additional Feature Cards -->
-  <div class="admin-card"><div class="icon-placeholder">T</div><div class="card-content"><h3>Tote Management</h3><p>Create, update, delete totes. Move items and track details.</p><button class="btn-primary" onclick="manageTotes()">Manage Totes</button></div></div>
-  <div class="admin-card"><div class="icon-placeholder">B</div><div class="card-content"><h3>Bulk Import / Export</h3><p>Import/export CSV/JSON, optional DynamoDB integration.</p><button class="btn-primary" onclick="bulkImportExport()">Import / Export</button></div></div>
-  <div class="admin-card"><div class="icon-placeholder">A</div><div class="card-content"><h3>Inventory Audit</h3><p>Filter items, check missing or duplicate items.</p><button class="btn-primary" onclick="inventoryAudit()">Audit Inventory</button></div></div>
-  <div class="admin-card"><div class="icon-placeholder">R</div><div class="card-content"><h3>Repair / Maintenance Tracker</h3><p>Track items needing repair; optional priority and notes.</p><button class="btn-primary" onclick="repairDashboard()">Repair Dashboard</button></div></div>
-  <div class="admin-card"><div class="icon-placeholder">H</div><div class="card-content"><h3>History / Audit Logs</h3><p>View user actions with timestamps.</p><button class="btn-primary" onclick="viewLogs()">View Logs</button></div></div>
-  <div class="admin-card"><div class="icon-placeholder">S</div><div class="card-content"><h3>Search & Filter</h3><p>Quick search and advanced filters.</p><input type="text" class="search-input" placeholder="Search items..."></div></div>
-  <div class="admin-card"><div class="icon-placeholder">C</div><div class="card-content"><h3>Seasonal Prep / Cleanup</h3><p>Start season, archive old items, prep shopping list.</p><button class="btn-primary" onclick="startSeason()">Start Season</button><button class="btn-primary" onclick="archiveOldItems()">Archive Old Items</button><button class="btn-primary" onclick="prepShoppingList()">Prep Shopping List</button></div></div>
-  <div class="admin-card"><div class="icon-placeholder">📷</div><div class="card-content"><h3>Photo Management</h3><p>Upload and view photos of items and totes.</p><button class="btn-primary" onclick="managePhotos()">Manage Photos</button></div></div>
+  <script>
+    // --- ENVIRONMENT DETECTION ---
+    const origin = window.location.origin;
+    const isDev = origin.includes("dev-");
+    const COGNITO_DOMAIN = "us-east-2bnxsu5let.auth.us-east-2.amazoncognito.com";
+    const CLIENT_ID = "11er9f8qa7jkvgelm6hernb2ed";
+    const REDIRECT_URI = encodeURIComponent(isDev ? "https://dev-admin.spookydecs.com" : "https://admin.spookydecs.com");
 
-</div>
-</div>
+    const LOGIN_URL = `https://${COGNITO_DOMAIN}/login?response_type=token&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}`;
+    const LOGOUT_URL = `https://${COGNITO_DOMAIN}/logout?client_id=${CLIENT_ID}&logout_uri=${REDIRECT_URI}`;
 
-<script>
-(function() {
-  const USER_POOL_ID = 'us-east-2_BnxSu5LEt';
-  const CLIENT_ID = '11er9f8qa7jkvgelm6hernb2ed';
-  const COGNITO_DOMAIN = 'https://us-east-2bnxsu5let.auth.us-east-2.amazoncognito.com';
-
-  // Hardcode your login/logout redirect URLs to exactly match Cognito settings
-  const LOGIN_REDIRECT_URI = 'https://dev-admin.spookydecs.com';
-  const LOGOUT_REDIRECT_URI = 'https://dev-admin.spookydecs.com';
-
-  const adminDashboard = document.getElementById('adminDashboard');
-
-  function parseCognitoHash() {
-    if (!window.location.hash) return null;
-    const hash = window.location.hash.substring(1);
-    const params = new URLSearchParams(hash);
-    return params.get('id_token');
-  }
-
-  function redirectToCognito() {
-    const url = `https://${COGNITO_DOMAIN}/login?response_type=token&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(LOGIN_REDIRECT_URI)}`;
-    window.location.href = url;
-  }
-
-  // Get token from localStorage or URL hash
-  let token = localStorage.getItem('spookydecs_id_token') || parseCognitoHash();
-  if (!token) {
-    redirectToCognito();
-    return;
-  }
-
-  // Save token if returned via redirect
-  if (window.location.hash && token) {
-    localStorage.setItem('spookydecs_id_token', token);
-    history.replaceState(null, '', window.location.pathname);
-  }
-
-  // Basic token validation
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    const now = Math.floor(Date.now() / 1000);
-    if (!payload || !payload.exp || payload.exp < (now + 15)) {
-      redirectToCognito();
-      return;
+    // --- PARSE TOKEN FROM URL HASH ---
+    function parseCognitoHash() {
+      const hash = window.location.hash.substring(1);
+      const params = new URLSearchParams(hash);
+      const idToken = params.get("id_token");
+      if (idToken) {
+        localStorage.setItem("id_token", idToken);
+        window.location.hash = "";
+        return idToken;
+      }
+      return null;
     }
-    adminDashboard.style.display = 'flex';
-  } catch(e) {
-    redirectToCognito();
-  }
 
-})();
+    // --- CHECK LOGIN STATE ---
+    const token = parseCognitoHash() || localStorage.getItem("id_token");
+    if (!token) {
+      window.location.href = LOGIN_URL;
+    }
 
-function goToCreate(){
-  const baseUrl = window.location.hostname.startsWith('dev-admin') ? 'https://dev-admin.spookydecs.com' : 'https://admin.spookydecs.com';
-  window.location.href = `${baseUrl}/create.html`;
-}
+    // --- LOGOUT HANDLER ---
+    function logout() {
+      localStorage.removeItem("id_token");
+      window.location.href = LOGOUT_URL;
+    }
+  </script>
 
-// Placeholder functions
-function startPacking(){ alert("Start Packing clicked! Connect Lambda API here."); }
-function updateItems(){ alert("Update Items clicked! Connect Lambda API here."); }
-function deleteItems(){ alert("Delete Items clicked! Connect Lambda API here."); }
-function manageTotes(){ alert("Manage Totes clicked! Connect Lambda API here."); }
-function bulkImportExport(){ alert("Bulk Import/Export clicked! Connect Lambda API here."); }
-function inventoryAudit(){ alert("Inventory Audit clicked! Connect Lambda API here."); }
-function repairDashboard(){ alert("Repair Dashboard clicked! Connect Lambda API here."); }
-function viewLogs(){ alert("View Logs clicked! Connect Lambda API here."); }
-function startSeason(){ alert("Start Season clicked! Connect Lambda API here."); }
-function archiveOldItems(){ alert("Archive Old Items clicked! Connect Lambda API here."); }
-function prepShoppingList(){ alert("Prep Shopping List clicked! Connect Lambda API here."); }
-function managePhotos(){ alert("Manage Photos clicked! Connect Lambda API here."); }
-
-function logout() {
-  document.getElementById('adminDashboard').style.display = 'none';
-  document.getElementById('logoutContainer').style.display = 'none';
-  localStorage.removeItem('spookydecs_id_token');
-
-  const url = `https://${COGNITO_DOMAIN}/logout?client_id=${CLIENT_ID}&logout_uri=${encodeURIComponent(LOGOUT_REDIRECT_URI)}`;
-  window.location.href = url;
-}
-</script>
-
-<footer>© 2025 spookydecs.com | Beware the 404s 👻</footer>
 </body>
 </html>
