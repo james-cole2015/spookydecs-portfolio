@@ -30,11 +30,18 @@
   .preview { margin-top:12px; text-align:center; }
   .preview img { max-width:320px; height:auto; border-radius:6px; display:block; margin:auto; }
   .status { margin-top:12px; font-weight:500; color:#333; text-align:center; }
-
-  footer { margin-top:20px; text-align:center; }
 </style>
 </head>
 <body>
+
+<!-- ====== Admin Halloween Header ====== -->
+<header style="background-color: #2e2e2e; color: #fff; padding: 15px 40px; display: flex; align-items: center; justify-content: space-between; font-family: Arial, sans-serif; border-bottom: 1px solid #888;">
+  <div style="display: flex; align-items: center;">
+    <img src="https://www.spookydecs.com/icons/frankenstein_icon.svg" alt="SpookyDecs Logo" style="height: 40px; margin-right: 12px;">
+    <h1 style="margin: 0; font-size: 1.4rem; color: #ccc;">SpookyDecs Portal</h1>
+  </div>
+</header>
+
 <div class="container">
 
 <!-- Login Form -->
@@ -52,12 +59,12 @@
 
   <div class="field-row">
     <label class="field-label" for="shortName">Short Name</label>
-    <input type="text" id="shortName">
+    <input type="text" id="shortName" required>
   </div>
 
   <div class="field-row">
     <label class="field-label" for="category">Category</label>
-    <select id="category">
+    <select id="category" required>
       <option value="">Select Category</option>
       <option value="Halloween">Halloween</option>
       <option value="Christmas">Christmas</option>
@@ -69,19 +76,18 @@
 
   <div class="field-row">
     <label class="field-label" for="type">Type</label>
-    <select id="type">
+    <select id="type" required>
       <option value="">Select Type</option>
-      <option value="INF">Inflatable (INF)</option>
-      <option value="C">Cord (C)</option>
-      <option value="P">Plug (P)</option>
-      <option value="O">Outlet (O)</option>
-      <option value="STR_LT">String Light (STR_LT)</option>
-      <option value="SP_LT">Spot Light (SP_LT)</option>
-      <option value="PROP">Prop (PROP)</option>
+      <option value="INF">Inflatable</option>
+      <option value="C">Cord</option>
+      <option value="P">Plug</option>
+      <option value="O">Outlet</option>
+      <option value="STR_LT">String Light</option>
+      <option value="SP_LT">Spot Light</option>
+      <option value="PROP">Prop</option>
     </select>
   </div>
 
-  <!-- Dynamic Fields -->
   <div id="dynamicFields"></div>
 
   <div class="field-row">
@@ -100,6 +106,14 @@
 </div>
 
 </div>
+
+<!-- ====== Authenticated Page Footer ====== -->
+<footer style="background-color: #1f1f1f; color: #fff; padding: 25px 40px; font-family: Arial, sans-serif; border-top: 1px solid #888;">
+  <div style="text-align: center; font-size: 0.9rem; color: #ccc; display: flex; align-items: center; justify-content: center; gap: 6px;">
+    &copy; 2025 SpookyDecs Network | Admin Area
+    <img src="https://www.spookydecs.com/icons/ghost_icon.svg"" alt="Ghost Icon" style="height: 16px; width: 16px;">
+  </div>
+</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@5.2.7/dist/amazon-cognito-identity.min.js"></script>
 <script>
@@ -172,12 +186,13 @@ typeSelect.addEventListener('change', () => {
 
   if(type === 'INF'){
     dynamicFields.innerHTML = `
-      <div class="field-row"><label class="field-label">Height / Length</label><input type="number" id="height"></div>
-      <div class="field-row"><label class="field-label">Tethers</label><input type="number" id="tethers"></div>
-      <div class="field-row"><label class="field-label">Stakes</label><input type="number" id="stakes"></div>
-      <div class="field-row"><label class="field-label">Date Acquired</label><input type="number" id="dateAcquired" placeholder="YYYY"></div>
+      <div class="field-row"><label class="field-label">Height / Length</label><input type="number" id="height" required></div>
+      <div class="field-row"><label class="field-label">Tethers</label><input type="number" id="tethers" required></div>
+      <div class="field-row"><label class="field-label">Stakes</label><input type="number" id="stakes" required></div>
+      <div class="field-row"><label class="field-label">Date Acquired</label><input type="number" id="dateAcquired" placeholder="YYYY" required></div>
       <div class="field-row"><label class="field-label">Status</label>
-        <select id="status">
+        <select id="status" required>
+          <option value="">Select Status</option>
           <option value="active">Active</option>
           <option value="needs repair">Needs Repair</option>
           <option value="packed">Packed</option>
@@ -186,42 +201,43 @@ typeSelect.addEventListener('change', () => {
       </div>`;
   } else if(type === 'C' || type === 'P'){
     dynamicFields.innerHTML = `
-      <div class="field-row"><label class="field-label">Length</label><input type="number" id="length"></div>
-      <div class="field-row"><label class="field-label">Male Ends</label><input type="number" id="maleEnds"></div>
-      <div class="field-row"><label class="field-label">Female Ends</label><input type="number" id="femaleEnds"></div>`;
+      <div class="field-row"><label class="field-label">Length</label><input type="number" id="length" required></div>
+      <div class="field-row"><label class="field-label">Male Ends</label><input type="number" id="maleEnds" required></div>
+      <div class="field-row"><label class="field-label">Female Ends</label><input type="number" id="femaleEnds" required></div>`;
   } else if(type === 'O'){
     dynamicFields.innerHTML = `
-      <div class="field-row"><label class="field-label">Receptacles</label><input type="number" id="receptacles"></div>
+      <div class="field-row"><label class="field-label">Receptacles</label><input type="number" id="receptacles" required></div>
       <div class="field-row"><label class="field-label">Smart Outlet</label>
-        <select id="smartOutlet"><option value="true">True</option><option value="false">False</option></select>
+        <select id="smartOutlet" required><option value="">Select</option><option value="true">True</option><option value="false">False</option></select>
       </div>`;
   } else if(type === 'STR_LT'){
     dynamicFields.innerHTML = `
       <div class="field-row"><label class="field-label">Location</label>
-        <select id="location">
+        <select id="location" required>
+          <option value="">Select Location</option>
           <option value="FY">Front Yard</option>
           <option value="SY">Side Yard</option>
           <option value="FN">Fence</option>
           <option value="TR">Tree</option>
         </select>
       </div>
-      <div class="field-row"><label class="field-label">Power Requirements</label><input type="text" id="powerReq"></div>
+      <div class="field-row"><label class="field-label">Power Requirements</label><input type="text" id="powerReq" required></div>
       <div class="field-row"><label class="field-label">LED Controller</label>
-        <select id="ledCtrl"><option value="true">True</option><option value="false">False</option></select>
+        <select id="ledCtrl" required><option value="">Select</option><option value="true">True</option><option value="false">False</option></select>
       </div>
-      <div class="field-row"><label class="field-label">Colors</label><input type="text" id="colors" placeholder="comma separated"></div>`;
+      <div class="field-row"><label class="field-label">Colors</label><input type="text" id="colors" placeholder="comma separated" required></div>`;
   } else if(type === 'SP_LT'){
     dynamicFields.innerHTML = `
-      <div class="field-row"><label class="field-label">Power Requirements</label><input type="text" id="powerReq"></div>
+      <div class="field-row"><label class="field-label">Power Requirements</label><input type="text" id="powerReq" required></div>
       <div class="field-row"><label class="field-label">LED Controller</label>
-        <select id="ledCtrl"><option value="true">True</option><option value="false">False</option></select>
+        <select id="ledCtrl" required><option value="">Select</option><option value="true">True</option><option value="false">False</option></select>
       </div>
       <div class="field-row"><label class="field-label">Bulb Type</label>
-        <select id="bulbType"><option value="PAR 38">PAR 38</option><option value="Built-in">Built-in</option></select>
+        <select id="bulbType" required><option value="">Select</option><option value="PAR 38">PAR 38</option><option value="Built-in">Built-in</option></select>
       </div>`;
   } else if(type === 'PROP'){
     dynamicFields.innerHTML = `
-      <div class="field-row"><label class="field-label">Description</label><input type="text" id="description"></div>`;
+      <div class="field-row"><label class="field-label">Description</label><input type="text" id="description" required></div>`;
   }
 });
 
@@ -256,6 +272,15 @@ function generateItemId(attrs){
 createBtn.addEventListener('click', async () => {
   const jwt = localStorage.getItem('jwtToken');
   if(!jwt){ alert('You must be logged in.'); return; }
+
+  const requiredFields = document.querySelectorAll('#createCard input[required], #createCard select[required]');
+  for(const field of requiredFields){
+    if(!field.value){
+      alert('Please fill all required fields.');
+      field.focus();
+      return;
+    }
+  }
 
   const attrs = {
     ShortName: shortName.value,
@@ -294,7 +319,5 @@ cancelBtn.addEventListener('click', () => {
   createStatus.textContent=''; 
 });
 </script>
-
-<footer>© 2025 spookydecs.com | Beware the 404s 👻</footer>
 </body>
 </html>
