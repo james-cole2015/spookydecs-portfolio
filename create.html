@@ -5,56 +5,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Create Item - Admin Dashboard</title>
 <style>
-  /* ---------- Body & Container ---------- */
-  body {
-    font-family: Arial, sans-serif;
-    background-color: #f0f2f5;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-  }
+  /* ---------- Global ---------- */
+  body { font-family: Arial, sans-serif; background-color: #f0f2f5; margin:0; padding:0; display:flex; justify-content:center; align-items:flex-start; min-height:100vh; flex-direction:column; }
+  .container { width:100%; max-width:500px; padding:20px; box-sizing:border-box; }
 
-  .content-wrapper {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    width: 100%;
-  }
+  /* ---------- Header ---------- */
+  header { width:100%; box-sizing:border-box; background-color: #2e2e2e; color: #fff; padding: 15px 40px; display:flex; align-items:center; justify-content:space-between; font-family: Arial, sans-serif; border-bottom:1px solid #888; position:relative; }
+  header .logo-title { display:flex; align-items:center; gap:12px; }
+  header h1 { margin:0; font-size:1.4rem; color:#ccc; }
+  header img.icon { height:40px; animation: floatIcon 3s ease-in-out infinite alternate; }
+  header .spiderweb { height:40px; }
+  header .header-links { display:flex; align-items:center; gap:12px; }
+  header button { padding:6px 12px; border:none; border-radius:4px; cursor:pointer; background:#007bff; color:#fff; }
+  header button:hover { opacity:0.9; }
 
-  .container { width:100%; max-width:500px; }
+  /* Hamburger */
+  .hamburger { display:none; flex-direction:column; justify-content:space-between; width:24px; height:18px; cursor:pointer; }
+  .hamburger div { height:3px; background:#fff; border-radius:2px; }
+  .offcanvas { position:fixed; top:0; left:-260px; width:260px; height:100%; background:#2e2e2e; color:#fff; transition:left 0.3s ease; padding:20px; display:flex; flex-direction:column; gap:20px; z-index:1000; }
+  .offcanvas.open { left:0; }
+  .offcanvas a, .offcanvas button { color:#fff; text-decoration:none; background:none; border:none; text-align:left; font-size:1rem; cursor:pointer; }
+  .offcanvas .footer { font-size:0.8rem; color:#ccc; margin-top:auto; }
 
-  /* ---------- Login Form ---------- */
-  #loginForm {
-    background:#fff;
-    padding:30px;
-    border-radius:8px;
-    box-shadow:0 2px 6px rgba(0,0,0,0.1);
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-    margin:auto;
-  }
-
-  #loginForm input { padding:10px; border-radius:4px; border:1px solid #ccc; }
-  #loginForm button { padding:10px; border-radius:4px; border:none; background-color:#007bff; color:white; cursor:pointer; }
-  #loginForm button:hover { opacity:0.9; }
-
-  /* ---------- Create Card ---------- */
-  #createCard {
-    display:none;
-    background:#fff;
-    padding:30px;
-    border-radius:8px;
-    box-shadow:0 2px 6px rgba(0,0,0,0.1);
-    margin:auto;
-    width:100%;
-  }
-
-  #createCard h2 { text-align:center; margin-bottom:20px; }
+  /* ---------- Login Form & Card ---------- */
+  #loginForm, #createCard { background:#fff; padding:30px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1); display:flex; flex-direction:column; gap:10px; margin:auto; width:100%; }
+  #createCard h2, #loginForm h2 { text-align:center; margin-bottom:20px; }
 
   .field-row { margin-bottom:16px; display:flex; flex-direction:column; }
   .field-label { font-weight:600; margin-bottom:6px; text-align:center; }
@@ -69,367 +44,127 @@
   .preview img { max-width:320px; height:auto; border-radius:6px; display:block; margin:auto; }
   .status { margin-top:12px; font-weight:500; color:#333; text-align:center; }
 
-  /* ---------- Header & Footer ---------- */
-  header, footer {
-    width: 100%;
-    box-sizing: border-box;
-    background-color: #2e2e2e;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-family: Arial, sans-serif;
-    padding: 15px 40px;
-    z-index: 10;
-  }
+  /* ---------- Footer ---------- */
+  footer { width:100%; box-sizing:border-box; background-color:#1f1f1f; color:#fff; padding:25px 40px; font-family:Arial,sans-serif; border-top:1px solid #888; display:flex; justify-content:center; align-items:center; }
+  footer div { text-align:center; font-size:0.9rem; color:#ccc; display:flex; align-items:center; gap:6px; }
+  footer img.icon { height:16px; width:16px; animation: floatIcon 3s ease-in-out infinite alternate; }
 
-  header { border-bottom: 1px solid #888; }
-  footer {
-    background-color: #1f1f1f;
-    border-top: 1px solid #888;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    padding: 25px 40px;
-  }
+  @keyframes floatIcon { transform: translateY(0px); }
+  @media (prefers-reduced-motion: no-preference) { 
+    @keyframes floatIcon { 0%{transform:translateY(0px);} 50%{transform:translateY(-4px);} 100%{transform:translateY(0px);} 
+  } }
 
-  footer div {
-    text-align: center;
-    font-size: 0.9rem;
-    color: #ccc;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-  }
+  /* ---------- Mobile ---------- */
+  @media(max-width:600px){
+    header { justify-content:center; padding:10px 15px; }
+    header .spiderweb { display:none; }
+    header h1 { text-align:center; font-size:1.2rem; }
+    .header-links { display:none; }
+    .hamburger { display:flex; position:absolute; left:15px; top:calc(50% - 9px); }
 
-  /* ---------- Icon Animations ---------- */
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-4px); }
-  }
+    #createCard { padding:20px; }
 
-  header img, footer img {
-    transition: transform 0.3s ease-in-out;
-    animation: float 3s ease-in-out infinite;
+    /* Step form */
+    .field-row { display:none; }
+    .field-row.active { display:flex; flex-direction:column; }
+    .step-nav { display:flex; justify-content:space-between; margin-top:12px; }
   }
-
-  header img:hover, footer img:hover {
-    transform: rotate(-15deg) scale(1.1);
-  }
-
 </style>
 </head>
 <body>
 
+<script>
+  // ---------- Environment config ----------
+  window.env = {
+    env:'dev', // change to 'prod' in production
+    ADMIN_URL:'https://dev-admin.spookydecs.com',
+    MAIN_URL:'https://dev.spookydecs.com'
+  };
+</script>
+
 <!-- ====== Admin Halloween Header ====== -->
 <header>
-  <div style="display: flex; align-items: center;">
-    <img src="https://assets.spookydecs.com/icons/frankenstein_icon.svg" alt="SpookyDecs Logo" style="height: 40px; margin-right: 12px; animation: float 3s ease-in-out infinite;">
-    <h1 style="margin: 0; font-size: 1.4rem; color: #ccc;">SpookyDecs Portal</h1>
+  <div class="hamburger" id="hamburger"><div></div><div></div><div></div></div>
+  <div class="logo-title">
+    <img src="https://assets.spookydecs.com/icons/frankenstein_icon.svg" alt="SpookyDecs Logo" class="icon">
+    <h1>SpookyDecs Portal</h1>
   </div>
-
-  <div style="display: flex; align-items: center; gap: 16px;">
-    <!-- Dynamic Admin Link -->
-    <a id="adminLink" href="#" style="color: #ccc; text-decoration: none; font-weight: 600;">Back to Admin Site</a>
-
-    <!-- Spider Web Icon -->
-    <img src="https://assets.spookydecs.com/icons/spiderweb_icon.svg" alt="Spider Web Icon" style="height: 40px; width: auto; animation: float 3s ease-in-out infinite;">
+  <div class="header-links">
+    <a href="#" id="link-admin" style="color:#fff;margin-right:12px;">Admin</a>
+    <a href="#" id="link-main" style="color:#fff;margin-right:12px;">Main Site</a>
+    <button id="signOutBtn">Sign Out</button>
+    <img src="https://assets.spookydecs.com/icons/spiderweb_icon.svg" class="spiderweb">
   </div>
 </header>
 
-<script>
-  // ---------- Set dynamic admin link ----------
-  (function() {
-    const adminLink = document.getElementById('adminLink');
-    const hostname = window.location.hostname.toLowerCase();
-
-    if(hostname.includes('dev')) {
-      adminLink.href = 'https://dev-admin.spookydecs.com';
-    } else {
-      adminLink.href = 'https://admin.spookydecs.com';
-    }
-  })();
-</script>
-
-
-<div class="content-wrapper">
-  <div class="container">
-
-    <!-- Login Form -->
-    <form id="loginForm">
-      <h2>Admin Login</h2>
-      <input type="text" id="username" placeholder="Username" required>
-      <input type="password" id="password" placeholder="Password" required>
-      <button type="submit">Login</button>
-      <p id="loginError" style="color:red; text-align:center;"></p>
-    </form>
-
-    <!-- Create Item Card -->
-    <div id="createCard">
-      <h2>Create New Item</h2>
-
-      <div class="field-row">
-        <label class="field-label" for="shortName">Short Name</label>
-        <input type="text" id="shortName" required>
-      </div>
-
-      <div class="field-row">
-        <label class="field-label" for="category">Category</label>
-        <select id="category" required>
-          <option value="">Select Category</option>
-          <option value="Halloween">Halloween</option>
-          <option value="Christmas">Christmas</option>
-          <option value="Cord">Cord</option>
-          <option value="Plug">Plug</option>
-          <option value="Outlet">Outlet</option>
-        </select>
-      </div>
-
-      <div class="field-row">
-        <label class="field-label" for="type">Type</label>
-        <select id="type" required>
-          <option value="">Select Type</option>
-          <option value="INF">Inflatable</option>
-          <option value="C">Cord</option>
-          <option value="P">Plug</option>
-          <option value="O">Outlet</option>
-          <option value="STR_LT">String Light</option>
-          <option value="SP_LT">Spot Light</option>
-          <option value="PROP">Prop</option>
-        </select>
-      </div>
-
-      <div id="dynamicFields"></div>
-
-      <div class="field-row">
-        <label class="field-label" for="imageUpload">Upload Image</label>
-        <input type="file" id="imageUpload" accept="image/*" capture="environment">
-      </div>
-
-      <div class="preview" id="imagePreview"></div>
-
-      <div style="text-align:center;">
-        <button class="btn-primary" id="createBtn">Create</button>
-        <button class="btn-danger" id="cancelBtn">Cancel</button>
-      </div>
-
-      <div class="status" id="createStatus"></div>
-    </div>
-
-  </div>
+<!-- Off-canvas menu for mobile -->
+<div class="offcanvas" id="offcanvas">
+  <button id="off-signout">Sign Out</button>
+  <a href="#" id="off-admin-link">Return to Admin</a>
+  <a href="#" id="off-main-link">Main Site</a>
+  <div class="footer">&copy; 2025 SpookyDecs Network | Admin Area</div>
 </div>
 
-<!-- ====== Authenticated Page Footer ====== -->
-<footer>
-  <div>
-    &copy; 2025 SpookyDecs Network | Admin Area
-    <img src="https://assets.spookydecs.com/icons/ghost_icon.svg" alt="Ghost Icon" style="height: 16px; width: 16px;">
+<div class="container">
+
+<!-- Login Form -->
+<form id="loginForm">
+  <h2>Admin Login</h2>
+  <input type="text" id="username" placeholder="Username" required>
+  <input type="password" id="password" placeholder="Password" required>
+  <button type="submit">Login</button>
+  <p id="loginError" style="color:red; text-align:center;"></p>
+</form>
+
+<!-- Create Item Card -->
+<div id="createCard">
+  <h2>Create New Item</h2>
+
+  <!-- Fields will be dynamically stepped in mobile -->
+  <div class="field-row" data-step="1">
+    <label class="field-label" for="shortName">Short Name</label>
+    <input type="text" id="shortName" required>
   </div>
-</footer>
 
-<script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@5.2.7/dist/amazon-cognito-identity.min.js"></script>
-<script>
-const poolData = { 
-  UserPoolId:'us-east-2_BnxSu5LEt',
-  ClientId:'11er9f8qa7jkvgelm6hernb2ed'
-};
-const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+  <div class="field-row" data-step="2">
+    <label class="field-label" for="type">Type</label>
+    <select id="type" required>
+      <option value="">Select Type</option>
+      <option value="INF">Inflatable</option>
+      <option value="C">Cord</option>
+      <option value="P">Plug</option>
+      <option value="O">Outlet</option>
+      <option value="STR_LT">String Light</option>
+      <option value="SP_LT">Spot Light</option>
+      <option value="PROP">Prop</option>
+    </select>
+  </div>
 
-const loginForm = document.getElementById('loginForm');
-const loginError = document.getElementById('loginError');
-const createCard = document.getElementById('createCard');
-const shortName = document.getElementById('shortName');
-const category = document.getElementById('category');
-const typeSelect = document.getElementById('type');
-const dynamicFields = document.getElementById('dynamicFields');
-const imageUpload = document.getElementById('imageUpload');
-const imagePreview = document.getElementById('imagePreview');
-const createBtn = document.getElementById('createBtn');
-const cancelBtn = document.getElementById('cancelBtn');
-const createStatus = document.getElementById('createStatus');
+  <div class="field-row" data-step="3">
+    <label class="field-label" for="category">Category</label>
+    <select id="category" required>
+      <option value="">Select Category</option>
+      <option value="Halloween">Halloween</option>
+      <option value="Christmas">Christmas</option>
+      <option value="Cord">Cord</option>
+      <option value="Plug">Plug</option>
+      <option value="Outlet">Outlet</option>
+    </select>
+  </div>
 
-/* ---------- Check existing login ---------- */
-window.addEventListener('load', () => {
-  const token = localStorage.getItem('jwtToken');
-  if(token){
-    loginForm.style.display = 'none';
-    createCard.style.display = 'block';
-  }
-});
+  <div id="dynamicFields"></div>
 
-/* ---------- Handle login ---------- */
-loginForm.addEventListener('submit', function(event){
-  event.preventDefault();
-  loginError.textContent = '';
+  <div class="preview" id="imagePreview"></div>
 
-  const username = document.getElementById('username').value;
-  const password = document.getElementById('password').value;
+  <!-- Step Navigation (Mobile) -->
+  <div class="step-nav">
+    <button id="prevStep" class="btn-danger">Previous</button>
+    <button id="nextStep" class="btn-primary">Next</button>
+  </div>
 
-  const authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({ Username: username, Password: password });
-  const userData = { Username: username, Pool: userPool };
-  const cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+  <div style="text-align:center;margin-top:12px;">
+    <button class="btn-primary" id="createBtn">Create</button>
+    <button class="btn-danger" id="cancelBtn">Cancel</button>
+  </div>
 
-  cognitoUser.authenticateUser(authenticationDetails, {
-    onSuccess: (result) => {
-      localStorage.setItem('jwtToken', result.getIdToken().getJwtToken());
-      loginForm.style.display = 'none';
-      createCard.style.display = 'block';
-    },
-    onFailure: (err) => { loginError.textContent = err.message || JSON.stringify(err); },
-    newPasswordRequired: (userAttributes) => {
-      delete userAttributes.email_verified;
-      const newPassword = prompt("Please enter a new password:");
-      cognitoUser.completeNewPasswordChallenge(newPassword, userAttributes, {
-        onSuccess: (result) => {
-          localStorage.setItem('jwtToken', result.getIdToken().getJwtToken());
-          loginForm.style.display = 'none';
-          createCard.style.display = 'block';
-        },
-        onFailure: (err) => { loginError.textContent = err.message || JSON.stringify(err); }
-      });
-    },
-  });
-});
-
-/* ---------- Dynamic fields by Type ---------- */
-typeSelect.addEventListener('change', () => {
-  dynamicFields.innerHTML = '';
-  const type = typeSelect.value;
-  if(type === 'INF'){
-    dynamicFields.innerHTML = `
-      <div class="field-row"><label class="field-label">Height / Length</label><input type="number" id="height" required></div>
-      <div class="field-row"><label class="field-label">Tethers</label><input type="number" id="tethers" required></div>
-      <div class="field-row"><label class="field-label">Stakes</label><input type="number" id="stakes" required></div>
-      <div class="field-row"><label class="field-label">Date Acquired</label><input type="number" id="dateAcquired" placeholder="YYYY" required></div>
-      <div class="field-row"><label class="field-label">Status</label>
-        <select id="status" required>
-          <option value="">Select Status</option>
-          <option value="active">Active</option>
-          <option value="needs repair">Needs Repair</option>
-          <option value="packed">Packed</option>
-          <option value="retired">Retired</option>
-        </select>
-      </div>`;
-  } else if(type === 'C' || type === 'P'){
-    dynamicFields.innerHTML = `
-      <div class="field-row"><label class="field-label">Length</label><input type="number" id="length" required></div>
-      <div class="field-row"><label class="field-label">Male Ends</label><input type="number" id="maleEnds" required></div>
-      <div class="field-row"><label class="field-label">Female Ends</label><input type="number" id="femaleEnds" required></div>`;
-  } else if(type === 'O'){
-    dynamicFields.innerHTML = `
-      <div class="field-row"><label class="field-label">Receptacles</label><input type="number" id="receptacles" required></div>
-      <div class="field-row"><label class="field-label">Smart Outlet</label>
-        <select id="smartOutlet" required><option value="">Select</option><option value="true">True</option><option value="false">False</option></select>
-      </div>`;
-  } else if(type === 'STR_LT'){
-    dynamicFields.innerHTML = `
-      <div class="field-row"><label class="field-label">Location</label>
-        <select id="location" required>
-          <option value="">Select Location</option>
-          <option value="FY">Front Yard</option>
-          <option value="SY">Side Yard</option>
-          <option value="FN">Fence</option>
-          <option value="TR">Tree</option>
-        </select>
-      </div>
-      <div class="field-row"><label class="field-label">Power Requirements</label><input type="text" id="powerReq" required></div>
-      <div class="field-row"><label class="field-label">LED Controller</label>
-        <select id="ledCtrl" required><option value="">Select</option><option value="true">True</option><option value="false">False</option></select>
-      </div>
-      <div class="field-row"><label class="field-label">Colors</label><input type="text" id="colors" placeholder="comma separated" required></div>`;
-  } else if(type === 'SP_LT'){
-    dynamicFields.innerHTML = `
-      <div class="field-row"><label class="field-label">Power Requirements</label><input type="text" id="powerReq" required></div>
-      <div class="field-row"><label class="field-label">LED Controller</label>
-        <select id="ledCtrl" required><option value="">Select</option><option value="true">True</option><option value="false">False</option></select>
-      </div>
-      <div class="field-row"><label class="field-label">Bulb Type</label>
-        <select id="bulbType" required><option value="">Select</option><option value="PAR 38">PAR 38</option><option value="Built-in">Built-in</option></select>
-      </div>`;
-  } else if(type === 'PROP'){
-    dynamicFields.innerHTML = `
-      <div class="field-row"><label class="field-label">Description</label><input type="text" id="description" required></div>`;
-  }
-});
-
-/* ---------- Image Preview ---------- */
-imageUpload.addEventListener('change', () => {
-  imagePreview.innerHTML = '';
-  const file = imageUpload.files[0];
-  if(file){
-    const img = document.createElement('img');
-    img.src = URL.createObjectURL(file);
-    imagePreview.appendChild(img);
-  }
-});
-
-/* ---------- ID Generation ---------- */
-function generateItemId(attrs){
-  let countKey = `count_${attrs.Type}`; 
-  let count = parseInt(localStorage.getItem(countKey) || '0') + 1;
-  localStorage.setItem(countKey, count);
-
-  if(attrs.Type==='INF') return `INF-${attrs.Stakes}S${attrs.Tethers}T-${String(count).padStart(3,'0')}`;
-  if(attrs.Type==='C') return `C-${attrs.Length}-${attrs.MaleEnds}M${attrs.FemaleEnds}F-${count}`;
-  if(attrs.Type==='P') return `P-${attrs.Length}-${attrs.MaleEnds}M${attrs.FemaleEnds}F-${count}`;
-  if(attrs.Type==='O') return `O-${attrs.Receptacles}R-${count}`;
-  if(attrs.Type==='STR_LT') return `${attrs.Location}-${attrs.Category}-${count}`;
-  if(attrs.Type==='SP_LT') return `SP_LT-${count}`;
-  if(attrs.Type==='PROP') return `${attrs.ShortName}-${count}`;
-  return `UNKNOWN-${count}`;
-}
-
-/* ---------- Create Item ---------- */
-createBtn.addEventListener('click', async () => {
-  const jwt = localStorage.getItem('jwtToken');
-  if(!jwt){ alert('You must be logged in.'); return; }
-
-  const requiredFields = document.querySelectorAll('#createCard input[required], #createCard select[required]');
-  for(const field of requiredFields){
-    if(!field.value){
-      alert('Please fill all required fields.');
-      field.focus();
-      return;
-    }
-  }
-
-  const attrs = {
-    ShortName: shortName.value,
-    Category: category.value,
-    Type: typeSelect.value,
-    Height: document.getElementById('height')?.value,
-    Tethers: document.getElementById('tethers')?.value,
-    Stakes: document.getElementById('stakes')?.value,
-    DateAcquired: document.getElementById('dateAcquired')?.value,
-    Status: document.getElementById('status')?.value,
-    Length: document.getElementById('length')?.value,
-    MaleEnds: document.getElementById('maleEnds')?.value,
-    FemaleEnds: document.getElementById('femaleEnds')?.value,
-    Receptacles: document.getElementById('receptacles')?.value,
-    SmartOutlet: document.getElementById('smartOutlet')?.value,
-    Location: document.getElementById('location')?.value,
-    PowerReq: document.getElementById('powerReq')?.value,
-    LEDCtrl: document.getElementById('ledCtrl')?.value,
-    Colors: document.getElementById('colors')?.value,
-    BulbType: document.getElementById('bulbType')?.value,
-    Description: document.getElementById('description')?.value
-  };
-
-  const itemId = generateItemId(attrs);
-  createStatus.textContent = `Creating item ${itemId}...`;
-
-  setTimeout(() => {
-    createStatus.textContent = `Item "${itemId}" created successfully!`;
-    shortName.value=''; category.value=''; typeSelect.value=''; dynamicFields.innerHTML=''; imageUpload.value=''; imagePreview.innerHTML='';
-  }, 800);
-});
-
-/* ---------- Cancel ---------- */
-cancelBtn.addEventListener('click', () => {
-  createCard.style.display = 'none';
-  loginForm.style.display = 'block';
-});
-</script>
-</body>
-</html>
+  <div class="status" id="createStatus"></div
