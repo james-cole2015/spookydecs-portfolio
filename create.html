@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Create Item - Admin Dashboard</title>
 <style>
-  body { font-family: Arial, sans-serif; background-color: #f0f2f5; margin:0; padding:0; display:flex; justify-content:center; align-items:center; height:100vh; }
-  .container { width:100%; max-width:500px; }
+  body { font-family: Arial, sans-serif; background-color: #f0f2f5; margin:0; padding:0; display:flex; justify-content:center; min-height:100vh; flex-direction:column; }
+  .container { width:100%; max-width:500px; margin:auto; }
 
   /* Login Form */
   #loginForm { background:#fff; padding:30px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1); display:flex; flex-direction:column; gap:10px; margin:auto; }
@@ -16,7 +16,8 @@
 
   /* Create Card */
   #createCard { display:none; background:#fff; padding:30px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1); margin:auto; }
-  #createCard h2 { text-align:center; margin-bottom:20px; }
+  #createCard h2 { text-align:center; margin-bottom:10px; }
+  .attribute-name { text-align:center; font-weight:600; margin-bottom:20px; font-size:1.1rem; }
   .field-row { margin-bottom:16px; display:flex; flex-direction:column; }
   .field-label { font-weight:600; margin-bottom:6px; }
   input, select { padding:10px; border-radius:4px; border:1px solid #ccc; width:100%; box-sizing:border-box; }
@@ -27,6 +28,7 @@
   .preview { margin-top:12px; text-align:center; }
   .preview img { max-width:320px; height:auto; border-radius:6px; display:block; margin:auto 0; }
   .status { margin-top:12px; font-weight:500; color:#333; text-align:center; }
+  footer { text-align:center; padding:12px 0; margin-top:auto; background:#f0f2f5; }
 </style>
 </head>
 <body>
@@ -44,6 +46,7 @@
 <!-- Create Item Card -->
 <div id="createCard">
   <h2>Create New Item</h2>
+  <div class="attribute-name">Attribute Name</div>
 
   <div class="field-row">
     <label class="field-label" for="shortName">Short Name</label>
@@ -54,17 +57,25 @@
     <label class="field-label" for="category">Category</label>
     <select id="category">
       <option value="">Select Category</option>
-      <option value="Decor">Decor</option>
+      <option value="Decorations">Decorations</option>
       <option value="Lighting">Lighting</option>
       <option value="Props">Props</option>
       <option value="Costumes">Costumes</option>
-      <option value="Misc">Misc</option>
+      <option value="Miscellaneous">Miscellaneous</option>
     </select>
   </div>
 
   <div class="field-row">
     <label class="field-label" for="type">Type</label>
-    <input type="text" id="type">
+    <select id="type">
+      <option value="">Select Type</option>
+      <option value="Pumpkin">Pumpkin</option>
+      <option value="Skeleton">Skeleton</option>
+      <option value="Spider">Spider</option>
+      <option value="Ghost">Ghost</option>
+      <option value="Lighting">Lighting</option>
+      <option value="Other">Other</option>
+    </select>
   </div>
 
   <div class="field-row">
@@ -86,12 +97,9 @@
 
 <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@5.2.7/dist/amazon-cognito-identity.min.js"></script>
 <script>
-const poolData = { 
-  UserPoolId:'us-east-2_BnxSu5LEt',
-  ClientId:'11er9f8qa7jkvgelm6hernb2ed'
-};
+// Cognito & login code unchanged
+const poolData = { UserPoolId:'us-east-2_BnxSu5LEt', ClientId:'11er9f8qa7jkvgelm6hernb2ed' };
 const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
-
 const loginForm = document.getElementById('loginForm');
 const loginError = document.getElementById('loginError');
 const createCard = document.getElementById('createCard');
@@ -104,7 +112,6 @@ const createBtn = document.getElementById('createBtn');
 const cancelBtn = document.getElementById('cancelBtn');
 const createStatus = document.getElementById('createStatus');
 
-/* ---------- Check existing login ---------- */
 window.addEventListener('load', () => {
   const token = localStorage.getItem('jwtToken');
   if(token){
@@ -113,18 +120,14 @@ window.addEventListener('load', () => {
   }
 });
 
-/* ---------- Handle login ---------- */
 loginForm.addEventListener('submit', function(event){
   event.preventDefault();
   loginError.textContent = '';
-
   const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
-
   const authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({ Username: username, Password: password });
   const userData = { Username: username, Pool: userPool };
   const cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
-
   cognitoUser.authenticateUser(authenticationDetails, {
     onSuccess: (result) => {
       localStorage.setItem('jwtToken', result.getIdToken().getJwtToken());
@@ -147,7 +150,6 @@ loginForm.addEventListener('submit', function(event){
   });
 });
 
-/* ---------- Image Preview ---------- */
 imageUpload.addEventListener('change', () => {
   imagePreview.innerHTML = '';
   const file = imageUpload.files[0];
@@ -158,24 +160,17 @@ imageUpload.addEventListener('change', () => {
   }
 });
 
-/* ---------- Create Item Placeholder ---------- */
 createBtn.addEventListener('click', async () => {
   const jwt = localStorage.getItem('jwtToken');
   if(!jwt){ alert('You must be logged in.'); return; }
-  const attrs = {
-    'Short Name': shortName.value,
-    'Category': category.value,
-    'Type': type.value
-  };
+  const attrs = { 'Short Name': shortName.value, 'Category': category.value, 'Type': type.value };
   createStatus.textContent = 'Creating item...';
-
   setTimeout(() => {
     createStatus.textContent = `Item "${attrs['Short Name']}" created successfully!`;
     shortName.value=''; category.value=''; type.value=''; imageUpload.value=''; imagePreview.innerHTML='';
   }, 1000);
 });
 
-/* ---------- Cancel Button ---------- */
 cancelBtn.addEventListener('click', () => { 
   shortName.value=''; category.value=''; type.value=''; imageUpload.value=''; imagePreview.innerHTML=''; 
   createStatus.textContent=''; 
