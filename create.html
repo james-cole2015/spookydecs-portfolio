@@ -125,10 +125,33 @@
 <!-- ====== Admin Halloween Header ====== -->
 <header>
   <div style="display: flex; align-items: center;">
-    <img src="https://www.assets.spookydecs.com/icons/frankenstein_icon.svg" alt="SpookyDecs Logo" style="height: 40px; margin-right: 12px;">
+    <img src="https://assets.spookydecs.com/icons/frankenstein_icon.svg" alt="SpookyDecs Logo" style="height: 40px; margin-right: 12px; animation: float 3s ease-in-out infinite;">
     <h1 style="margin: 0; font-size: 1.4rem; color: #ccc;">SpookyDecs Portal</h1>
   </div>
+
+  <div style="display: flex; align-items: center; gap: 16px;">
+    <!-- Dynamic Admin Link -->
+    <a id="adminLink" href="#" style="color: #ccc; text-decoration: none; font-weight: 600;">Back to Admin Site</a>
+
+    <!-- Spider Web Icon -->
+    <img src="https://assets.spookydecs.com/icons/spiderweb_icon.svg" alt="Spider Web Icon" style="height: 40px; width: auto; animation: float 3s ease-in-out infinite;">
+  </div>
 </header>
+
+<script>
+  // ---------- Set dynamic admin link ----------
+  (function() {
+    const adminLink = document.getElementById('adminLink');
+    const hostname = window.location.hostname.toLowerCase();
+
+    if(hostname.includes('dev')) {
+      adminLink.href = 'https://dev-admin.spookydecs.com';
+    } else {
+      adminLink.href = 'https://admin.spookydecs.com';
+    }
+  })();
+</script>
+
 
 <div class="content-wrapper">
   <div class="container">
@@ -201,7 +224,7 @@
 <footer>
   <div>
     &copy; 2025 SpookyDecs Network | Admin Area
-    <img src="https://www.assets.spookydecs.com/icons/ghost_icon.svg" alt="Ghost Icon" style="height: 16px; width: 16px;">
+    <img src="https://assets.spookydecs.com/icons/ghost_icon.svg" alt="Ghost Icon" style="height: 16px; width: 16px;">
   </div>
 </footer>
 
