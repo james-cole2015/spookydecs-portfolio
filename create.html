@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Create Item - Admin Dashboard</title>
 <style>
-/* ---------- Global ---------- */
+  /* ---------- Global ---------- */
 body {
   font-family: Arial, sans-serif;
   background-color: #1a1a1a;
@@ -24,6 +24,7 @@ body {
   align-items: flex-start;
   min-height: calc(100vh - 150px);
   margin: 0 auto;
+  position: relative;
 }
 
 /* ---------- Header ---------- */
@@ -44,8 +45,8 @@ header button:hover { opacity:0.9; }
 .offcanvas a, .offcanvas button { color:#fff; text-decoration:none; background:none; border:none; text-align:left; font-size:1rem; cursor:pointer; }
 .offcanvas .footer { font-size:0.8rem; color:#ccc; margin-top:auto; }
 
-/* ---------- Create Item Card ---------- */
-#createCard, #previewCard { 
+/* ---------- Create & Preview Cards ---------- */
+#createCard { 
   background: #2b2b2b; 
   padding: 25px 20px; 
   border-radius: 12px; 
@@ -55,7 +56,22 @@ header button:hover { opacity:0.9; }
   gap:15px; 
   width:100%; 
   max-width:600px; 
-  margin-top:20px;
+}
+
+#previewCard {
+  background: #2b2b2b;
+  padding: 35px 25px;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.7);
+  display: none;
+  flex-direction: column;
+  gap: 20px;
+  width:100%;
+  max-width:650px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 100;
 }
 
 #createCard h2, #previewCard h2 { text-align:center; margin-bottom:15px; color:#ff7518; text-shadow:1px 1px 2px #000; }
@@ -73,8 +89,7 @@ button:hover { transform:scale(1.05); }
 .dynamic-group { border:1px dashed #555; padding:12px; border-radius:8px; margin-top:12px; }
 .dynamic-group h3 { color:#ff7518; margin-bottom:10px; }
 
-/* Preview Card Rows */
-#previewCard .preview-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #555; }
+#previewCard .preview-row { display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #555; }
 #previewCard .preview-row span.label { font-weight:600; color:#ccc; }
 #previewCard .preview-row span.value { color:#fff; }
 
@@ -127,6 +142,7 @@ window.env = {
 </div>
 
 <div class="container">
+  <!-- Create Card -->
   <div id="createCard">
     <h2>Create New Item</h2>
 
@@ -181,7 +197,7 @@ window.env = {
   </div>
 
   <!-- Preview Card -->
-  <div id="previewCard" style="display:none;">
+  <div id="previewCard">
     <h2>Item Preview</h2>
     <div id="previewContent"></div>
     <div class="button-row" style="justify-content:center;">
@@ -250,9 +266,22 @@ const fieldDefinitions = {
   ]
 };
 
-// Dynamic fields
+// --- Helper: Update Cancel/Clear buttons visibility ---
+function updateActionButtons() {
+  const hasData = Array.from(inputs).some(input => input.value);
+  if(hasData){
+    cancelBtn.style.display = 'inline-block';
+    clearBtn.style.display = 'inline-block';
+  } else {
+    cancelBtn.style.display = 'none';
+    clearBtn.style.display = 'none';
+  }
+}
+
+// --- Dynamic fields ---
 typeSelect.addEventListener('change', () => {
   dynamicFields.innerHTML = '';
+  updateActionButtons();
   const type = typeSelect.value;
   if(!type || !fieldDefinitions[type]) return;
 
@@ -288,6 +317,7 @@ typeSelect.addEventListener('change', () => {
     }
     input.id = field.id;
     input.required = field.required;
+    input.addEventListener('input', updateActionButtons);
     row.appendChild(input);
     group.appendChild(row);
   });
@@ -295,24 +325,26 @@ typeSelect.addEventListener('change', () => {
   dynamicFields.appendChild(group);
 });
 
-// Cancel button
+// --- Input event for static fields ---
+inputs.forEach(input => input.addEventListener('input', updateActionButtons));
+
+// --- Cancel button ---
 cancelBtn.addEventListener('click', ()=>{
   inputs.forEach(el=>el.value='');
   dynamicFields.innerHTML='';
   idField.style.display='none';
   previewCard.style.display='none';
-  status.innerText='';
+  updateActionButtons();
 });
 
-// Clear button
+// --- Clear button ---
 clearBtn.addEventListener('click', ()=>{
   inputs.forEach(el=>el.value='');
   dynamicFields.innerHTML='';
-  idField.style.display='none';
-  previewCard.style.display='none';
+  updateActionButtons();
 });
 
-// Create button
+// --- Create button ---
 createBtn.addEventListener('click', ()=>{
   status.innerText='';
   const type = typeSelect.value;
@@ -341,9 +373,11 @@ createBtn.addEventListener('click', ()=>{
   // Show preview card
   previewContent.innerHTML='';
   for(let key in data){
+    const fieldDef = Object.values(fieldDefinitions).flat().find(f=>f.id===key);
+    const labelText = fieldDef ? fieldDef.label : key;
     const row = document.createElement('div');
     row.className='preview-row';
-    const label = document.createElement('span'); label.className='label'; label.innerText=key;
+    const label = document.createElement('span'); label.className='label'; label.innerText=labelText;
     const value = document.createElement('span'); value.className='value'; value.innerText=data[key];
     row.appendChild(label);
     row.appendChild(value);
@@ -352,7 +386,7 @@ createBtn.addEventListener('click', ()=>{
   previewCard.style.display='flex';
 });
 
-// Close Preview
+// --- Close Preview ---
 closePreviewBtn.addEventListener('click', ()=>{
   previewCard.style.display='none';
 });
