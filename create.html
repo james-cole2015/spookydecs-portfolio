@@ -12,8 +12,8 @@ body {
   margin: 0;
   padding: 0;
   display: flex;
-  justify-content: center; /* centers horizontally */
-  align-items: flex-start; /* we will use margin-top for spacing */
+  justify-content: center;
+  align-items: flex-start;
   min-height: 100vh;
   flex-direction: column;
   color: #f0f0f0;
@@ -23,241 +23,64 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: calc(100vh - 150px); /* subtract header/footer height */
+  min-height: calc(100vh - 150px);
   margin: 0 auto;
 }
 
+/* ---------- Header ---------- */
+header { width: 100%; box-sizing: border-box; background-color: #2e2e2e; color: #fff; padding: 15px 40px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #888; position:relative; }
+header .logo-title { display:flex; align-items:center; gap:12px; }
+header h1 { margin:0; font-size:1.4rem; color:#ccc; }
+header img.icon { height:40px; animation: floatIcon 3s ease-in-out infinite alternate; }
+header .spiderweb { height:40px; }
+header .header-links { display:flex; align-items:center; gap:12px; }
+header button { padding:6px 12px; border:none; border-radius:4px; cursor:pointer; background:#007bff; color:#fff; }
+header button:hover { opacity:0.9; }
 
+/* ---------- Hamburger ---------- */
+.hamburger { display:none; flex-direction:column; justify-content:space-between; width:24px; height:18px; cursor:pointer; }
+.hamburger div { height:3px; background:#fff; border-radius:2px; }
+.offcanvas { position:fixed; top:0; left:-260px; width:260px; height:100%; background:#2e2e2e; color:#fff; transition:left 0.3s ease; padding:20px; display:flex; flex-direction:column; gap:20px; z-index:1000; }
+.offcanvas.open { left:0; }
+.offcanvas a, .offcanvas button { color:#fff; text-decoration:none; background:none; border:none; text-align:left; font-size:1rem; cursor:pointer; }
+.offcanvas .footer { font-size:0.8rem; color:#ccc; margin-top:auto; }
 
-  /* ---------- Header ---------- */
-  header {
-    width: 100%;
-    box-sizing: border-box;
-    background-color: #2e2e2e;
-    color: #fff;
-    padding: 15px 40px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-family: Arial, sans-serif;
-    border-bottom: 1px solid #888;
-    position: relative;
-  }
-  header .logo-title {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  header h1 {
-    margin: 0;
-    font-size: 1.4rem;
-    color: #ccc;
-  }
-  header img.icon {
-    height: 40px;
-    animation: floatIcon 3s ease-in-out infinite alternate;
-  }
-  header .spiderweb {
-    height: 40px;
-  }
-  header .header-links {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  header button {
-    padding: 6px 12px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    background: #007bff;
-    color: #fff;
-  }
-  header button:hover {
-    opacity: 0.9;
-  }
+/* ---------- Create Item Card ---------- */
+#createCard { background: #2b2b2b; padding: 25px 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); display:flex; flex-direction:column; gap:15px; width:100%; max-width:480px; }
+#createCard h2 { text-align:center; margin-bottom:15px; color:#ff7518; text-shadow:1px 1px 2px #000; }
 
-  /* ---------- Hamburger ---------- */
-  .hamburger {
-    display: none;
-    flex-direction: column;
-    justify-content: space-between;
-    width: 24px;
-    height: 18px;
-    cursor: pointer;
-  }
-  .hamburger div {
-    height: 3px;
-    background: #fff;
-    border-radius: 2px;
-  }
-  .offcanvas {
-    position: fixed;
-    top: 0;
-    left: -260px;
-    width: 260px;
-    height: 100%;
-    background: #2e2e2e;
-    color: #fff;
-    transition: left 0.3s ease;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    z-index: 1000;
-  }
-  .offcanvas.open {
-    left: 0;
-  }
-  .offcanvas a,
-  .offcanvas button {
-    color: #fff;
-    text-decoration: none;
-    background: none;
-    border: none;
-    text-align: left;
-    font-size: 1rem;
-    cursor: pointer;
-  }
-  .offcanvas .footer {
-    font-size: 0.8rem;
-    color: #ccc;
-    margin-top: auto;
-  }
+.field-row { margin-bottom:14px; display:flex; flex-direction:column; }
+.field-label { font-weight:600; margin-bottom:6px; text-align:left; color:#fff; }
+input, select { padding:10px; border-radius:4px; border:1px solid #555; width:100%; box-sizing:border-box; background-color:#1f1f1f; color:#fff; }
 
-  /* ---------- Create Item Card ---------- */
- #createCard {
-  background: #2b2b2b;
-  padding: 25px 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  width: 100%;
-  max-width: 480px;
+.button-row { display:flex; justify-content:center; gap:12px; margin-top:20px; }
+button { padding:10px 16px; border:none; border-radius:6px; cursor:pointer; font-weight:600; transition: transform 0.15s ease; }
+button:hover { transform:scale(1.05); }
+.btn-primary { background: linear-gradient(45deg, #ff7518, #ffb347); color:#fff; box-shadow:0 3px 6px rgba(0,0,0,0.3); }
+.btn-danger { background: linear-gradient(45deg, #ff0000, #990000); color:#fff; box-shadow:0 3px 6px rgba(0,0,0,0.3); display:none; }
+
+.preview { margin-top:12px; text-align:center; }
+.preview img { max-width:320px; height:auto; border-radius:6px; display:block; margin:auto; }
+.status { margin-top:12px; font-weight:500; color:#ccc; text-align:center; }
+
+.dynamic-group { border:1px dashed #555; padding:12px; border-radius:8px; margin-top:12px; }
+.dynamic-group h3 { color:#ff7518; margin-bottom:10px; }
+
+/* ---------- Footer ---------- */
+footer { width:100%; box-sizing:border-box; background-color:#1f1f1f; color:#fff; padding:25px 40px; font-family:Arial,sans-serif; border-top:1px solid #888; display:flex; justify-content:center; align-items:center; }
+footer div { text-align:center; font-size:0.9rem; color:#ccc; display:flex; align-items:center; gap:6px; }
+footer img.icon { height:2em; width:2em; animation: floatIcon 3s ease-in-out infinite alternate; }
+
+@keyframes floatIcon { 0%{transform:translateY(0px);}50%{transform:translateY(-4px);}100%{transform:translateY(0px);} }
+
+@media(max-width:600px){
+  header { justify-content:center; padding:10px 15px; }
+  header .spiderweb { display:none; }
+  header h1 { text-align:center; font-size:1.2rem; }
+  .header-links { display:none; }
+  .hamburger { display:flex; position:absolute; left:15px; top:calc(50% - 9px); }
+  #createCard { padding:15px; }
 }
-  #createCard h2 {
-    text-align: center;
-    margin-bottom: 15px;
-    color: #ff7518; /* Halloween orange */
-    text-shadow: 1px 1px 2px #000;
-  }
-
-  .field-row {
-    margin-bottom: 14px;
-    display: flex;
-    flex-direction: column;
-  }
-  .field-label {
-    font-weight: 600;
-    margin-bottom: 6px;
-    text-align: left;
-    color: #fff;
-  }
-  input,
-  select {
-    padding: 10px;
-    border-radius: 4px;
-    border: 1px solid #555;
-    width: 100%;
-    box-sizing: border-box;
-    background-color: #1f1f1f;
-    color: #fff;
-  }
-
-  .button-row {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    margin-top: 20px;
-  }
-
-  button {
-    padding: 10px 16px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: transform 0.15s ease;
-  }
-  button:hover {
-    transform: scale(1.05);
-  }
-
-  .btn-primary {
-    background: linear-gradient(45deg, #ff7518, #ffb347);
-    color: #fff;
-    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
-  }
-  .btn-danger {
-    background: linear-gradient(45deg, #ff0000, #990000);
-    color: #fff;
-    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
-    display: none; /* hidden by default */
-  }
-
-  .preview {
-    margin-top: 12px;
-    text-align: center;
-  }
-  .preview img {
-    max-width: 320px;
-    height: auto;
-    border-radius: 6px;
-    display: block;
-    margin: auto;
-  }
-  .status {
-    margin-top: 12px;
-    font-weight: 500;
-    color: #ccc;
-    text-align: center;
-  }
-
-  /* ---------- Footer ---------- */
-  footer {
-    width: 100%;
-    box-sizing: border-box;
-    background-color: #1f1f1f;
-    color: #fff;
-    padding: 25px 40px;
-    font-family: Arial, sans-serif;
-    border-top: 1px solid #888;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  footer div {
-    text-align: center;
-    font-size: 0.9rem;
-    color: #ccc;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  footer img.icon { 
-  height: 2em; 
-  width: 2em; 
-  animation: floatIcon 3s ease-in-out infinite alternate; 
-}
-
-
-  @keyframes floatIcon {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-4px); }
-    100% { transform: translateY(0px); }
-  }
-
-  /* ---------- Mobile ---------- */
-  @media(max-width:600px){
-    header { justify-content: center; padding: 10px 15px; }
-    header .spiderweb { display: none; }
-    header h1 { text-align:center; font-size:1.2rem; }
-    .header-links { display: none; }
-    .hamburger { display: flex; position: absolute; left: 15px; top: calc(50% - 9px); }
-    #createCard { padding: 15px; }
-  }
 </style>
 </head>
 <body>
@@ -270,7 +93,6 @@ window.env = {
 };
 </script>
 
-<!-- ====== Header ====== -->
 <header>
   <div class="hamburger" id="hamburger"><div></div><div></div><div></div></div>
   <div class="logo-title">
@@ -296,12 +118,12 @@ window.env = {
   <div id="createCard">
     <h2>Create New Item</h2>
 
-    <div class="field-row" data-step="1">
+    <div class="field-row">
       <label class="field-label" for="shortName">Short Name</label>
       <input type="text" id="shortName" required>
     </div>
 
-    <div class="field-row" data-step="2">
+    <div class="field-row">
       <label class="field-label" for="type">Type</label>
       <select id="type" required>
         <option value="">Select Type</option>
@@ -315,7 +137,7 @@ window.env = {
       </select>
     </div>
 
-    <div class="field-row" data-step="3">
+    <div class="field-row">
       <label class="field-label" for="category">Category</label>
       <select id="category" required>
         <option value="">Select Category</option>
@@ -327,7 +149,16 @@ window.env = {
       </select>
     </div>
 
+    <!-- Dynamic Fields -->
     <div id="dynamicFields"></div>
+
+    <!-- ID Display -->
+    <div class="field-row" id="idField" style="display:none;">
+      <label class="field-label" for="generatedId">Generated ID</label>
+      <input type="text" id="generatedId" readonly>
+    </div>
+
+    <!-- Preview -->
     <div class="preview" id="imagePreview"></div>
 
     <div class="button-row">
@@ -346,19 +177,155 @@ window.env = {
 </footer>
 
 <script>
-  const cancelBtn = document.getElementById('cancelBtn');
-  const inputs = document.querySelectorAll('#createCard input, #createCard select');
+const cancelBtn = document.getElementById('cancelBtn');
+const createBtn = document.getElementById('createBtn');
+const dynamicFields = document.getElementById('dynamicFields');
+const typeSelect = document.getElementById('type');
+const inputs = document.querySelectorAll('#createCard input, #createCard select');
+const idField = document.getElementById('idField');
+const generatedId = document.getElementById('generatedId');
+const preview = document.getElementById('imagePreview');
+const status = document.getElementById('createStatus');
 
-  inputs.forEach(el => {
-    el.addEventListener('input', () => {
-      cancelBtn.style.display = 'inline-block';
-    });
+const fieldDefinitions = {
+  INF: [
+    {label:'Height / Length', type:'number', id:'height', min:1, required:true},
+    {label:'Tethers', type:'number', id:'tethers', min:1, required:true},
+    {label:'Stakes', type:'number', id:'stakes', min:1, required:true},
+    {label:'Date Acquired', type:'number', id:'dateAcquired', min:1900, max:2099, required:true},
+    {label:'Status', type:'select', id:'status', options:['','active','needs repair','packed','retired'], required:true},
+    {label:'Image', type:'file', id:'image', required:true}
+  ],
+  C: [
+    {label:'Length', type:'number', id:'length', min:1, required:true},
+    {label:'Male Ends', type:'number', id:'maleEnds', min:1, required:true},
+    {label:'Female Ends', type:'number', id:'femaleEnds', min:1, required:true}
+  ],
+  P: [
+    {label:'Length', type:'number', id:'length', min:1, required:true},
+    {label:'Male Ends', type:'number', id:'maleEnds', min:1, required:true},
+    {label:'Female Ends', type:'number', id:'femaleEnds', min:1, required:true}
+  ],
+  O: [
+    {label:'Receptacles', type:'number', id:'receptacles', min:1, required:true},
+    {label:'Smart outlet', type:'select', id:'smartOutlet', options:['','True','False'], required:true}
+  ],
+  STR_LT: [
+    {label:'Location', type:'select', id:'location', options:['','FY','SY','FN','TR'], required:true},
+    {label:'Power Requirements', type:'text', id:'powerReq', required:true},
+    {label:'LED Controller', type:'select', id:'ledController', options:['','True','False'], required:true},
+    {label:'Color(s)', type:'text', id:'colors', required:true}
+  ],
+  SP_LT: [
+    {label:'Power Requirements', type:'text', id:'powerReq', required:true},
+    {label:'LED Controller', type:'select', id:'ledController', options:['','True','False'], required:true},
+    {label:'Bulb Type', type:'select', id:'bulbType', options:['','PAR 38','Built-in'], required:true}
+  ],
+  PROP: [
+    {label:'Description', type:'text', id:'description', required:true}
+  ]
+};
+
+// Show dynamic fields on type selection
+typeSelect.addEventListener('change', () => {
+  dynamicFields.innerHTML = '';
+  const type = typeSelect.value;
+  if(!type || !fieldDefinitions[type]) return;
+
+  const group = document.createElement('div');
+  group.className = 'dynamic-group';
+  const heading = document.createElement('h3');
+  heading.innerText = 'Type Attributes';
+  group.appendChild(heading);
+
+  fieldDefinitions[type].forEach(field=>{
+    const row = document.createElement('div');
+    row.className = 'field-row';
+    const label = document.createElement('label');
+    label.className = 'field-label';
+    label.htmlFor = field.id;
+    label.innerText = field.label;
+    row.appendChild(label);
+
+    let input;
+    if(field.type==='select'){
+      input = document.createElement('select');
+      field.options.forEach(opt=>{
+        const option = document.createElement('option');
+        option.value = opt;
+        option.text = opt;
+        input.appendChild(option);
+      });
+    } else {
+      input = document.createElement('input');
+      input.type = field.type;
+      if(field.min) input.min = field.min;
+      if(field.max) input.max = field.max;
+    }
+    input.id = field.id;
+    input.required = field.required;
+    row.appendChild(input);
+    group.appendChild(row);
   });
 
-  cancelBtn.addEventListener('click', () => {
-    inputs.forEach(el => el.value = '');
-    cancelBtn.style.display = 'none';
+  dynamicFields.appendChild(group);
+});
+
+// Cancel button logic
+inputs.forEach(el=>{
+  el.addEventListener('input', ()=>{ cancelBtn.style.display='inline-block'; });
+});
+
+cancelBtn.addEventListener('click', ()=>{
+  inputs.forEach(el=>el.value='');
+  dynamicFields.innerHTML='';
+  idField.style.display='none';
+  preview.innerHTML='';
+  cancelBtn.style.display='none';
+  status.innerText='';
+});
+
+// Create button logic
+createBtn.addEventListener('click', ()=>{
+  status.innerText='';
+  const type = typeSelect.value;
+  if(!type){
+    status.innerText='Please select a Type';
+    return;
+  }
+
+  let valid = true;
+  const data = {};
+  const allFields = document.querySelectorAll('#createCard input, #createCard select');
+  allFields.forEach(f=>{
+    if(f.required && !f.value){
+      f.style.border='2px solid red';
+      valid=false;
+    } else {
+      f.style.border='1px solid #555';
+      data[f.id] = f.type==='file' && f.files[0]?f.files[0].name:f.value;
+    }
   });
+
+  if(!valid){ status.innerText='Please fill all required fields'; return; }
+
+  // Generate ID placeholder
+  let id = type+'-001'; // placeholder logic
+  generatedId.value = id;
+  idField.style.display='block';
+
+  // Show preview
+  let previewHTML = '<h3>Preview:</h3><ul>';
+  for(let key in data){
+    previewHTML+=`<li><strong>${key}</strong>: ${data[key]}</li>`;
+  }
+  previewHTML+='</ul>';
+  if(data.image) previewHTML+=`<p>Image uploaded: ${data.image}</p>`;
+  preview.innerHTML=previewHTML;
+
+  cancelBtn.style.display='inline-block';
+  status.innerText='Item created (placeholder ID)';
+});
 </script>
 
 </body>
