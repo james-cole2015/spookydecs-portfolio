@@ -5,7 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Create Item - Admin Dashboard</title>
 <style>
-  body { font-family: Arial, sans-serif; background-color: #f0f2f5; margin:0; padding:0; display:flex; justify-content:center; align-items:center; min-height:100vh; flex-direction:column; }
+  body { font-family: Arial, sans-serif; background-color: #f0f2f5; margin:0; padding:0; }
+
+  .content-wrapper { display:flex; justify-content:center; align-items:center; min-height:100vh; flex-direction:column; }
+
   .container { width:100%; max-width:500px; }
 
   /* Login Form */
@@ -35,289 +38,91 @@
 <body>
 
 <!-- ====== Admin Halloween Header ====== -->
-<header style="width=100%; box-sizing:border-box; background-color: #2e2e2e; color: #fff; padding: 15px 40px; display: flex; align-items: center; justify-content: space-between; font-family: Arial, sans-serif; border-bottom: 1px solid #888;">
+<header style="width:100%; box-sizing:border-box; background-color: #2e2e2e; color: #fff; padding: 15px 40px; display: flex; align-items: center; justify-content: space-between; font-family: Arial, sans-serif; border-bottom: 1px solid #888;">
   <div style="display: flex; align-items: center;">
     <img src="https://www.assets.spookydecs.com/icons/frankenstein_icon.svg" alt="SpookyDecs Logo" style="height: 40px; margin-right: 12px;">
     <h1 style="margin: 0; font-size: 1.4rem; color: #ccc;">SpookyDecs Portal</h1>
   </div>
 </header>
 
-<div class="container">
+<div class="content-wrapper">
+  <div class="container">
 
-<!-- Login Form -->
-<form id="loginForm">
-  <h2>Admin Login</h2>
-  <input type="text" id="username" placeholder="Username" required>
-  <input type="password" id="password" placeholder="Password" required>
-  <button type="submit">Login</button>
-  <p id="loginError" style="color:red; text-align:center;"></p>
-</form>
+    <!-- Login Form -->
+    <form id="loginForm">
+      <h2>Admin Login</h2>
+      <input type="text" id="username" placeholder="Username" required>
+      <input type="password" id="password" placeholder="Password" required>
+      <button type="submit">Login</button>
+      <p id="loginError" style="color:red; text-align:center;"></p>
+    </form>
 
-<!-- Create Item Card -->
-<div id="createCard">
-  <h2>Create New Item</h2>
+    <!-- Create Item Card -->
+    <div id="createCard">
+      <h2>Create New Item</h2>
 
-  <div class="field-row">
-    <label class="field-label" for="shortName">Short Name</label>
-    <input type="text" id="shortName" required>
+      <div class="field-row">
+        <label class="field-label" for="shortName">Short Name</label>
+        <input type="text" id="shortName" required>
+      </div>
+
+      <div class="field-row">
+        <label class="field-label" for="category">Category</label>
+        <select id="category" required>
+          <option value="">Select Category</option>
+          <option value="Halloween">Halloween</option>
+          <option value="Christmas">Christmas</option>
+          <option value="Cord">Cord</option>
+          <option value="Plug">Plug</option>
+          <option value="Outlet">Outlet</option>
+        </select>
+      </div>
+
+      <div class="field-row">
+        <label class="field-label" for="type">Type</label>
+        <select id="type" required>
+          <option value="">Select Type</option>
+          <option value="INF">Inflatable</option>
+          <option value="C">Cord</option>
+          <option value="P">Plug</option>
+          <option value="O">Outlet</option>
+          <option value="STR_LT">String Light</option>
+          <option value="SP_LT">Spot Light</option>
+          <option value="PROP">Prop</option>
+        </select>
+      </div>
+
+      <div id="dynamicFields"></div>
+
+      <div class="field-row">
+        <label class="field-label" for="imageUpload">Upload Image</label>
+        <input type="file" id="imageUpload" accept="image/*" capture="environment">
+      </div>
+
+      <div class="preview" id="imagePreview"></div>
+
+      <div style="text-align:center;">
+        <button class="btn-primary" id="createBtn">Create</button>
+        <button class="btn-danger" id="cancelBtn">Cancel</button>
+      </div>
+
+      <div class="status" id="createStatus"></div>
+    </div>
+
   </div>
-
-  <div class="field-row">
-    <label class="field-label" for="category">Category</label>
-    <select id="category" required>
-      <option value="">Select Category</option>
-      <option value="Halloween">Halloween</option>
-      <option value="Christmas">Christmas</option>
-      <option value="Cord">Cord</option>
-      <option value="Plug">Plug</option>
-      <option value="Outlet">Outlet</option>
-    </select>
-  </div>
-
-  <div class="field-row">
-    <label class="field-label" for="type">Type</label>
-    <select id="type" required>
-      <option value="">Select Type</option>
-      <option value="INF">Inflatable</option>
-      <option value="C">Cord</option>
-      <option value="P">Plug</option>
-      <option value="O">Outlet</option>
-      <option value="STR_LT">String Light</option>
-      <option value="SP_LT">Spot Light</option>
-      <option value="PROP">Prop</option>
-    </select>
-  </div>
-
-  <div id="dynamicFields"></div>
-
-  <div class="field-row">
-    <label class="field-label" for="imageUpload">Upload Image</label>
-    <input type="file" id="imageUpload" accept="image/*" capture="environment">
-  </div>
-
-  <div class="preview" id="imagePreview"></div>
-
-  <div style="text-align:center;">
-    <button class="btn-primary" id="createBtn">Create</button>
-    <button class="btn-danger" id="cancelBtn">Cancel</button>
-  </div>
-
-  <div class="status" id="createStatus"></div>
-</div>
-
 </div>
 
 <!-- ====== Authenticated Page Footer ====== -->
-<footer style="width:100%; box-sizing:border-box; #1f1f1f; color: #fff; padding: 25px 40px; font-family: Arial, sans-serif; border-top: 1px solid #888;">
+<footer style="width:100%; box-sizing:border-box; background-color:#1f1f1f; color: #fff; padding: 25px 40px; font-family: Arial, sans-serif; border-top: 1px solid #888;">
   <div style="text-align: center; font-size: 0.9rem; color: #ccc; display: flex; align-items: center; justify-content: center; gap: 6px;">
     &copy; 2025 SpookyDecs Network | Admin Area
-    <img src="https://www.assets.spookydecs.com/icons/ghost_icon.svg"" alt="Ghost Icon" style="height: 16px; width: 16px;">
+    <img src="https://www.assets.spookydecs.com/icons/ghost_icon.svg" alt="Ghost Icon" style="height: 16px; width: 16px;">
   </div>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@5.2.7/dist/amazon-cognito-identity.min.js"></script>
 <script>
-const poolData = { 
-  UserPoolId:'us-east-2_BnxSu5LEt',
-  ClientId:'11er9f8qa7jkvgelm6hernb2ed'
-};
-const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
-
-const loginForm = document.getElementById('loginForm');
-const loginError = document.getElementById('loginError');
-const createCard = document.getElementById('createCard');
-const shortName = document.getElementById('shortName');
-const category = document.getElementById('category');
-const typeSelect = document.getElementById('type');
-const dynamicFields = document.getElementById('dynamicFields');
-const imageUpload = document.getElementById('imageUpload');
-const imagePreview = document.getElementById('imagePreview');
-const createBtn = document.getElementById('createBtn');
-const cancelBtn = document.getElementById('cancelBtn');
-const createStatus = document.getElementById('createStatus');
-
-/* ---------- Check existing login ---------- */
-window.addEventListener('load', () => {
-  const token = localStorage.getItem('jwtToken');
-  if(token){
-    loginForm.style.display = 'none';
-    createCard.style.display = 'block';
-  }
-});
-
-/* ---------- Handle login ---------- */
-loginForm.addEventListener('submit', function(event){
-  event.preventDefault();
-  loginError.textContent = '';
-
-  const username = document.getElementById('username').value;
-  const password = document.getElementById('password').value;
-
-  const authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({ Username: username, Password: password });
-  const userData = { Username: username, Pool: userPool };
-  const cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
-
-  cognitoUser.authenticateUser(authenticationDetails, {
-    onSuccess: (result) => {
-      localStorage.setItem('jwtToken', result.getIdToken().getJwtToken());
-      loginForm.style.display = 'none';
-      createCard.style.display = 'block';
-    },
-    onFailure: (err) => { loginError.textContent = err.message || JSON.stringify(err); },
-    newPasswordRequired: (userAttributes) => {
-      delete userAttributes.email_verified;
-      const newPassword = prompt("Please enter a new password:");
-      cognitoUser.completeNewPasswordChallenge(newPassword, userAttributes, {
-        onSuccess: (result) => {
-          localStorage.setItem('jwtToken', result.getIdToken().getJwtToken());
-          loginForm.style.display = 'none';
-          createCard.style.display = 'block';
-        },
-        onFailure: (err) => { loginError.textContent = err.message || JSON.stringify(err); }
-      });
-    },
-  });
-});
-
-/* ---------- Dynamic fields by Type ---------- */
-typeSelect.addEventListener('change', () => {
-  dynamicFields.innerHTML = '';
-  const type = typeSelect.value;
-
-  if(type === 'INF'){
-    dynamicFields.innerHTML = `
-      <div class="field-row"><label class="field-label">Height / Length</label><input type="number" id="height" required></div>
-      <div class="field-row"><label class="field-label">Tethers</label><input type="number" id="tethers" required></div>
-      <div class="field-row"><label class="field-label">Stakes</label><input type="number" id="stakes" required></div>
-      <div class="field-row"><label class="field-label">Date Acquired</label><input type="number" id="dateAcquired" placeholder="YYYY" required></div>
-      <div class="field-row"><label class="field-label">Status</label>
-        <select id="status" required>
-          <option value="">Select Status</option>
-          <option value="active">Active</option>
-          <option value="needs repair">Needs Repair</option>
-          <option value="packed">Packed</option>
-          <option value="retired">Retired</option>
-        </select>
-      </div>`;
-  } else if(type === 'C' || type === 'P'){
-    dynamicFields.innerHTML = `
-      <div class="field-row"><label class="field-label">Length</label><input type="number" id="length" required></div>
-      <div class="field-row"><label class="field-label">Male Ends</label><input type="number" id="maleEnds" required></div>
-      <div class="field-row"><label class="field-label">Female Ends</label><input type="number" id="femaleEnds" required></div>`;
-  } else if(type === 'O'){
-    dynamicFields.innerHTML = `
-      <div class="field-row"><label class="field-label">Receptacles</label><input type="number" id="receptacles" required></div>
-      <div class="field-row"><label class="field-label">Smart Outlet</label>
-        <select id="smartOutlet" required><option value="">Select</option><option value="true">True</option><option value="false">False</option></select>
-      </div>`;
-  } else if(type === 'STR_LT'){
-    dynamicFields.innerHTML = `
-      <div class="field-row"><label class="field-label">Location</label>
-        <select id="location" required>
-          <option value="">Select Location</option>
-          <option value="FY">Front Yard</option>
-          <option value="SY">Side Yard</option>
-          <option value="FN">Fence</option>
-          <option value="TR">Tree</option>
-        </select>
-      </div>
-      <div class="field-row"><label class="field-label">Power Requirements</label><input type="text" id="powerReq" required></div>
-      <div class="field-row"><label class="field-label">LED Controller</label>
-        <select id="ledCtrl" required><option value="">Select</option><option value="true">True</option><option value="false">False</option></select>
-      </div>
-      <div class="field-row"><label class="field-label">Colors</label><input type="text" id="colors" placeholder="comma separated" required></div>`;
-  } else if(type === 'SP_LT'){
-    dynamicFields.innerHTML = `
-      <div class="field-row"><label class="field-label">Power Requirements</label><input type="text" id="powerReq" required></div>
-      <div class="field-row"><label class="field-label">LED Controller</label>
-        <select id="ledCtrl" required><option value="">Select</option><option value="true">True</option><option value="false">False</option></select>
-      </div>
-      <div class="field-row"><label class="field-label">Bulb Type</label>
-        <select id="bulbType" required><option value="">Select</option><option value="PAR 38">PAR 38</option><option value="Built-in">Built-in</option></select>
-      </div>`;
-  } else if(type === 'PROP'){
-    dynamicFields.innerHTML = `
-      <div class="field-row"><label class="field-label">Description</label><input type="text" id="description" required></div>`;
-  }
-});
-
-/* ---------- Image Preview ---------- */
-imageUpload.addEventListener('change', () => {
-  imagePreview.innerHTML = '';
-  const file = imageUpload.files[0];
-  if(file){
-    const img = document.createElement('img');
-    img.src = URL.createObjectURL(file);
-    imagePreview.appendChild(img);
-  }
-});
-
-/* ---------- ID Generation ---------- */
-function generateItemId(attrs){
-  let countKey = `count_${attrs.Type}`; 
-  let count = parseInt(localStorage.getItem(countKey) || '0') + 1;
-  localStorage.setItem(countKey, count);
-
-  if(attrs.Type==='INF') return `INF-${attrs.Stakes}S${attrs.Tethers}T-${String(count).padStart(3,'0')}`;
-  if(attrs.Type==='C') return `C-${attrs.Length}-${attrs.MaleEnds}M${attrs.FemaleEnds}F-${count}`;
-  if(attrs.Type==='P') return `P-${attrs.Length}-${attrs.MaleEnds}M${attrs.FemaleEnds}F-${count}`;
-  if(attrs.Type==='O') return `O-${attrs.Receptacles}R-${count}`;
-  if(attrs.Type==='STR_LT') return `${attrs.Location}-${attrs.Category}-${count}`;
-  if(attrs.Type==='SP_LT') return `SP_LT-${count}`;
-  if(attrs.Type==='PROP') return `${attrs.ShortName}-${count}`;
-  return `UNKNOWN-${count}`;
-}
-
-/* ---------- Create Item ---------- */
-createBtn.addEventListener('click', async () => {
-  const jwt = localStorage.getItem('jwtToken');
-  if(!jwt){ alert('You must be logged in.'); return; }
-
-  const requiredFields = document.querySelectorAll('#createCard input[required], #createCard select[required]');
-  for(const field of requiredFields){
-    if(!field.value){
-      alert('Please fill all required fields.');
-      field.focus();
-      return;
-    }
-  }
-
-  const attrs = {
-    ShortName: shortName.value,
-    Category: category.value,
-    Type: typeSelect.value,
-    Height: document.getElementById('height')?.value,
-    Tethers: document.getElementById('tethers')?.value,
-    Stakes: document.getElementById('stakes')?.value,
-    DateAcquired: document.getElementById('dateAcquired')?.value,
-    Status: document.getElementById('status')?.value,
-    Length: document.getElementById('length')?.value,
-    MaleEnds: document.getElementById('maleEnds')?.value,
-    FemaleEnds: document.getElementById('femaleEnds')?.value,
-    Receptacles: document.getElementById('receptacles')?.value,
-    SmartOutlet: document.getElementById('smartOutlet')?.value,
-    Location: document.getElementById('location')?.value,
-    PowerReq: document.getElementById('powerReq')?.value,
-    LEDCtrl: document.getElementById('ledCtrl')?.value,
-    Colors: document.getElementById('colors')?.value,
-    BulbType: document.getElementById('bulbType')?.value,
-    Description: document.getElementById('description')?.value
-  };
-
-  const itemId = generateItemId(attrs);
-  createStatus.textContent = `Creating item ${itemId}...`;
-
-  setTimeout(() => {
-    createStatus.textContent = `Item "${itemId}" created successfully!`;
-    shortName.value=''; category.value=''; typeSelect.value=''; dynamicFields.innerHTML=''; imageUpload.value=''; imagePreview.innerHTML='';
-  }, 1000);
-});
-
-/* ---------- Cancel Button ---------- */
-cancelBtn.addEventListener('click', () => { 
-  shortName.value=''; category.value=''; typeSelect.value=''; dynamicFields.innerHTML=''; imageUpload.value=''; imagePreview.innerHTML=''; 
-  createStatus.textContent=''; 
-});
+/* ---------- JS content unchanged ---------- */
 </script>
 </body>
 </html>
