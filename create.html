@@ -3,61 +3,171 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Create Item | Admin</title>
+<title>Create Item - Admin Dashboard</title>
 <style>
-  body { font-family: Arial, sans-serif; background-color: #f0f2f5; margin:0; padding:20px; }
-  .create-preview { background:#fff; padding:20px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.08); max-width:500px; margin:auto; }
-  .field-row { margin-bottom:10px; }
-  .field-label { font-weight:600; margin-right:6px; }
-  input { padding:6px 10px; border-radius:4px; border:1px solid #ccc; width:100%; }
-  button { padding:8px 12px; border:none; border-radius:4px; cursor:pointer; background-color:#007bff; color:white; }
+  body { font-family: Arial, sans-serif; background-color: #f0f2f5; margin:0; padding:0; }
+  .container { padding: 20px; max-width:800px; margin:auto; }
+  /* Login Form */
+  #loginForm { max-width: 300px; margin: 50px auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1); display:flex; flex-direction:column; gap:10px;}
+  #loginForm input { padding:8px; border-radius:4px; border:1px solid #ccc;}
+  #loginForm button { padding:8px; border-radius:4px; border:none; background-color:#007bff; color:white; cursor:pointer;}
+  #loginForm button:hover { opacity:0.9; }
+
+  /* Create Card */
+  #createCard { display:none; background:#fff; padding:20px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1); margin-top:20px; }
+  .field-row { margin-bottom:12px; display:flex; flex-direction:column; }
+  .field-label { font-weight:600; margin-bottom:4px; }
+  input, select { padding:8px; border-radius:4px; border:1px solid #ccc; width:100%; }
+  button { padding:8px 12px; border:none; border-radius:4px; cursor:pointer; margin-right:8px; }
   button:hover { opacity:0.9; }
+  .btn-primary { background-color:#007bff; color:white; }
+  .btn-danger { background-color:#dc3545; color:white; }
+  .preview { margin-top:12px; }
+  .preview img { max-width:320px; border-radius:6px; display:block; margin-bottom:8px; }
+  .status { margin-top:12px; font-weight:500; color:#333; }
 </style>
 </head>
 <body>
+<div class="container">
 
-<div class="create-preview">
+<!-- Login Form -->
+<form id="loginForm">
+  <h2>Admin Login</h2>
+  <input type="text" id="username" placeholder="Username" required>
+  <input type="password" id="password" placeholder="Password" required>
+  <button type="submit">Login</button>
+  <p id="loginError" style="color:red;"></p>
+</form>
+
+<!-- Create Item Card -->
+<div id="createCard">
   <h2>Create New Item</h2>
-  <div class="field-row"><span class="field-label">Name:</span><input type="text" id="newItemName" placeholder="Item Name"></div>
-  <div class="field-row"><span class="field-label">Category:</span><input type="text" id="newItemCategory" placeholder="Category"></div>
-  <div class="field-row"><span class="field-label">Tote ID:</span><input type="text" id="newItemTote" placeholder="Tote ID"></div>
-  <div class="field-row"><span class="field-label">Image:</span><input type="file" id="newItemImage" accept="image/*"></div>
-  <div class="field-row"><button onclick="submitNewItem()">Create</button><span id="createItemMessage" style="margin-left:10px;color:#333;"></span></div>
+  <div class="field-row">
+    <label class="field-label" for="shortName">Short Name</label>
+    <input type="text" id="shortName">
+  </div>
+  <div class="field-row">
+    <label class="field-label" for="category">Category</label>
+    <input type="text" id="category">
+  </div>
+  <div class="field-row">
+    <label class="field-label" for="type">Type</label>
+    <input type="text" id="type">
+  </div>
+  <div class="field-row">
+    <label class="field-label" for="imageUpload">Upload Image</label>
+    <input type="file" id="imageUpload" accept="image/*" capture="environment">
+  </div>
+  <div class="preview" id="imagePreview"></div>
+  <button class="btn-primary" id="createBtn">Create</button>
+  <button class="btn-danger" id="cancelBtn">Cancel</button>
+  <div class="status" id="createStatus"></div>
 </div>
 
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@5.2.7/dist/amazon-cognito-identity.min.js"></script>
 <script>
-function getJwt(){ return localStorage.getItem('jwtToken'); }
+/* ---------- Cognito Setup ---------- */
+const poolData = { 
+  UserPoolId:'us-east-2_BnxSu5LEt',
+  ClientId:'11er9f8qa7jkvgelm6hernb2ed'
+};
+const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
 
-async function submitNewItem(){
-  const jwt = getJwt();
-  if(!jwt){ alert('You must be logged in.'); return; }
+const loginForm = document.getElementById('loginForm');
+const loginError = document.getElementById('loginError');
+const createCard = document.getElementById('createCard');
+const shortName = document.getElementById('shortName');
+const category = document.getElementById('category');
+const type = document.getElementById('type');
+const imageUpload = document.getElementById('imageUpload');
+const imagePreview = document.getElementById('imagePreview');
+const createBtn = document.getElementById('createBtn');
+const cancelBtn = document.getElementById('cancelBtn');
+const createStatus = document.getElementById('createStatus');
 
-  const name = document.getElementById('newItemName').value;
-  const category = document.getElementById('newItemCategory').value;
-  const tote = document.getElementById('newItemTote').value;
-  const fileInput = document.getElementById('newItemImage');
-  const msg = document.getElementById('createItemMessage');
-
-  if(!name || !category || !tote || !fileInput.files[0]) { msg.textContent = 'All fields are required.'; return; }
-
-  try {
-    const canvas = document.createElement('canvas'); 
-    const ctx = canvas.getContext('2d'); 
-    const bitmap = await createImageBitmap(fileInput.files[0]);
-    canvas.width=bitmap.width; canvas.height=bitmap.height; 
-    ctx.drawImage(bitmap,0,0); 
-    const webpBlob = await new Promise(res=>canvas.toBlob(res,'image/webp',0.8));
-
-    // TODO: Replace with real API call
-    console.log('Submitting new item:', { name, category, tote, webpBlob });
-
-    msg.textContent = `Item "${name}" ready to upload (simulate Lambda API call).`;
-  } catch(e){
-    console.error('Create Item error:', e); 
-    msg.textContent = 'Failed to process image.';
+/* ---------- Check existing login ---------- */
+window.addEventListener('load', () => {
+  const token = localStorage.getItem('jwtToken');
+  if(token){
+    loginForm.style.display = 'none';
+    createCard.style.display = 'block';
   }
-}
+});
+
+/* ---------- Handle login ---------- */
+loginForm.addEventListener('submit', function(event){
+  event.preventDefault();
+  loginError.textContent = '';
+
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+
+  const authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({ Username: username, Password: password });
+  const userData = { Username: username, Pool: userPool };
+  const cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+
+  cognitoUser.authenticateUser(authenticationDetails, {
+    onSuccess: (result) => {
+      const idToken = result.getIdToken().getJwtToken();
+      localStorage.setItem('jwtToken', idToken);
+      loginForm.style.display = 'none';
+      createCard.style.display = 'block';
+    },
+    onFailure: (err) => { loginError.textContent = err.message || JSON.stringify(err); },
+    newPasswordRequired: (userAttributes) => {
+      delete userAttributes.email_verified;
+      const newPassword = prompt("Please enter a new password:");
+      cognitoUser.completeNewPasswordChallenge(newPassword, userAttributes, {
+        onSuccess: (result) => {
+          const idToken = result.getIdToken().getJwtToken();
+          localStorage.setItem('jwtToken', idToken);
+          loginForm.style.display = 'none';
+          createCard.style.display = 'block';
+        },
+        onFailure: (err) => { loginError.textContent = err.message || JSON.stringify(err); }
+      });
+    },
+  });
+});
+
+/* ---------- Image Preview ---------- */
+imageUpload.addEventListener('change', () => {
+  imagePreview.innerHTML = '';
+  const file = imageUpload.files[0];
+  if(file){
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(file);
+    imagePreview.appendChild(img);
+  }
+});
+
+/* ---------- Create Item (placeholder API flow) ---------- */
+createBtn.addEventListener('click', async () => {
+  const jwt = localStorage.getItem('jwtToken');
+  if(!jwt){ alert('You must be logged in.'); return; }
+  const attrs = {
+    'Short Name': shortName.value,
+    'Category': category.value,
+    'Type': type.value
+  };
+  createStatus.textContent = 'Creating item...';
+
+  // Placeholder for actual API call
+  setTimeout(() => {
+    createStatus.textContent = `Item "${attrs['Short Name']}" created successfully!`;
+    shortName.value=''; category.value=''; type.value=''; imageUpload.value=''; imagePreview.innerHTML='';
+  }, 1000);
+});
+
+/* ---------- Cancel Button ---------- */
+cancelBtn.addEventListener('click', () => { 
+  shortName.value=''; category.value=''; type.value=''; imageUpload.value=''; imagePreview.innerHTML=''; 
+  createStatus.textContent=''; 
+});
 </script>
 
+<footer>© 2025 spookydecs.com | Beware the 404s 👻</footer>
 </body>
 </html>
