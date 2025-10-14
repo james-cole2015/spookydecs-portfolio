@@ -46,7 +46,19 @@ header button:hover { opacity:0.9; }
 .offcanvas .footer { font-size:0.8rem; color:#ccc; margin-top:auto; }
 
 /* ---------- Create Item Card ---------- */
-#createCard { background: #2b2b2b; padding: 25px 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); display:flex; flex-direction:column; gap:15px; width:100%; max-width:480px; }
+/* ---------- Create Item Card ---------- */
+#createCard { 
+  background: #2b2b2b; 
+  padding: 25px 20px; 
+  border-radius: 12px; 
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5); 
+  display:flex; 
+  flex-direction:column; 
+  gap:15px; 
+  width:100%; 
+  max-width:600px; /* increased from 480px */ 
+}
+
 #createCard h2 { text-align:center; margin-bottom:15px; color:#ff7518; text-shadow:1px 1px 2px #000; }
 
 .field-row { margin-bottom:14px; display:flex; flex-direction:column; }
@@ -194,7 +206,7 @@ const fieldDefinitions = {
     {label:'Stakes', type:'number', id:'stakes', min:1, required:true},
     {label:'Date Acquired', type:'number', id:'dateAcquired', min:1900, max:2099, required:true},
     {label:'Status', type:'select', id:'status', options:['','active','needs repair','packed','retired'], required:true},
-    {label:'Image', type:'file', id:'image', required:true}
+    {label:'Image', type:'file', id:'image', required:false}
   ],
   C: [
     {label:'Length', type:'number', id:'length', min:1, required:true},
