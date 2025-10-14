@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Create Item - Admin Dashboard</title>
 <style>
-  body { font-family: Arial, sans-serif; background-color: #f0f2f5; margin:0; padding:0; display:flex; justify-content:center; min-height:100vh; flex-direction:column; }
-  .container { width:100%; max-width:500px; margin:auto; }
+  body { font-family: Arial, sans-serif; background-color: #f0f2f5; margin:0; padding:0; display:flex; justify-content:center; align-items:center; min-height:100vh; flex-direction:column; }
+  .container { width:100%; max-width:500px; }
 
   /* Login Form */
   #loginForm { background:#fff; padding:30px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1); display:flex; flex-direction:column; gap:10px; margin:auto; }
@@ -15,20 +15,23 @@
   #loginForm button:hover { opacity:0.9; }
 
   /* Create Card */
-  #createCard { display:none; background:#fff; padding:30px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1); margin:auto; }
-  #createCard h2 { text-align:center; margin-bottom:10px; }
-  .attribute-name { text-align:center; font-weight:600; margin-bottom:20px; font-size:1.1rem; }
+  #createCard { display:none; background:#fff; padding:30px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1); margin:auto; width:100%; }
+  #createCard h2 { text-align:center; margin-bottom:20px; }
+
   .field-row { margin-bottom:16px; display:flex; flex-direction:column; }
-  .field-label { font-weight:600; margin-bottom:6px; }
+  .field-label { font-weight:600; margin-bottom:6px; text-align:center; }
   input, select { padding:10px; border-radius:4px; border:1px solid #ccc; width:100%; box-sizing:border-box; }
+
   button { padding:8px 14px; border:none; border-radius:4px; cursor:pointer; margin-right:8px; }
   button:hover { opacity:0.9; }
   .btn-primary { background-color:#007bff; color:white; }
   .btn-danger { background-color:#dc3545; color:white; }
+
   .preview { margin-top:12px; text-align:center; }
-  .preview img { max-width:320px; height:auto; border-radius:6px; display:block; margin:auto 0; }
+  .preview img { max-width:320px; height:auto; border-radius:6px; display:block; margin:auto; }
   .status { margin-top:12px; font-weight:500; color:#333; text-align:center; }
-  footer { text-align:center; padding:12px 0; margin-top:auto; background:#f0f2f5; }
+
+  footer { margin-top:20px; text-align:center; }
 </style>
 </head>
 <body>
@@ -46,7 +49,6 @@
 <!-- Create Item Card -->
 <div id="createCard">
   <h2>Create New Item</h2>
-  <div class="attribute-name">Attribute Name</div>
 
   <div class="field-row">
     <label class="field-label" for="shortName">Short Name</label>
@@ -57,11 +59,11 @@
     <label class="field-label" for="category">Category</label>
     <select id="category">
       <option value="">Select Category</option>
-      <option value="Decorations">Decorations</option>
-      <option value="Lighting">Lighting</option>
-      <option value="Props">Props</option>
-      <option value="Costumes">Costumes</option>
-      <option value="Miscellaneous">Miscellaneous</option>
+      <option value="Halloween">Halloween</option>
+      <option value="Christmas">Christmas</option>
+      <option value="Cord">Cord</option>
+      <option value="Plug">Plug</option>
+      <option value="Outlet">Outlet</option>
     </select>
   </div>
 
@@ -69,14 +71,18 @@
     <label class="field-label" for="type">Type</label>
     <select id="type">
       <option value="">Select Type</option>
-      <option value="Pumpkin">Pumpkin</option>
-      <option value="Skeleton">Skeleton</option>
-      <option value="Spider">Spider</option>
-      <option value="Ghost">Ghost</option>
-      <option value="Lighting">Lighting</option>
-      <option value="Other">Other</option>
+      <option value="INF">Inflatable (INF)</option>
+      <option value="C">Cord (C)</option>
+      <option value="P">Plug (P)</option>
+      <option value="O">Outlet (O)</option>
+      <option value="STR_LT">String Light (STR_LT)</option>
+      <option value="SP_LT">Spot Light (SP_LT)</option>
+      <option value="PROP">Prop (PROP)</option>
     </select>
   </div>
+
+  <!-- Dynamic Fields -->
+  <div id="dynamicFields"></div>
 
   <div class="field-row">
     <label class="field-label" for="imageUpload">Upload Image</label>
@@ -97,21 +103,26 @@
 
 <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@5.2.7/dist/amazon-cognito-identity.min.js"></script>
 <script>
-// Cognito & login code unchanged
-const poolData = { UserPoolId:'us-east-2_BnxSu5LEt', ClientId:'11er9f8qa7jkvgelm6hernb2ed' };
+const poolData = { 
+  UserPoolId:'us-east-2_BnxSu5LEt',
+  ClientId:'11er9f8qa7jkvgelm6hernb2ed'
+};
 const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+
 const loginForm = document.getElementById('loginForm');
 const loginError = document.getElementById('loginError');
 const createCard = document.getElementById('createCard');
 const shortName = document.getElementById('shortName');
 const category = document.getElementById('category');
-const type = document.getElementById('type');
+const typeSelect = document.getElementById('type');
+const dynamicFields = document.getElementById('dynamicFields');
 const imageUpload = document.getElementById('imageUpload');
 const imagePreview = document.getElementById('imagePreview');
 const createBtn = document.getElementById('createBtn');
 const cancelBtn = document.getElementById('cancelBtn');
 const createStatus = document.getElementById('createStatus');
 
+/* ---------- Check existing login ---------- */
 window.addEventListener('load', () => {
   const token = localStorage.getItem('jwtToken');
   if(token){
@@ -120,14 +131,18 @@ window.addEventListener('load', () => {
   }
 });
 
+/* ---------- Handle login ---------- */
 loginForm.addEventListener('submit', function(event){
   event.preventDefault();
   loginError.textContent = '';
+
   const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
+
   const authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({ Username: username, Password: password });
   const userData = { Username: username, Pool: userPool };
   const cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+
   cognitoUser.authenticateUser(authenticationDetails, {
     onSuccess: (result) => {
       localStorage.setItem('jwtToken', result.getIdToken().getJwtToken());
@@ -150,33 +165,60 @@ loginForm.addEventListener('submit', function(event){
   });
 });
 
-imageUpload.addEventListener('change', () => {
-  imagePreview.innerHTML = '';
-  const file = imageUpload.files[0];
-  if(file){
-    const img = document.createElement('img');
-    img.src = URL.createObjectURL(file);
-    imagePreview.appendChild(img);
-  }
-});
+/* ---------- Dynamic fields by Type ---------- */
+typeSelect.addEventListener('change', () => {
+  dynamicFields.innerHTML = '';
+  const type = typeSelect.value;
 
-createBtn.addEventListener('click', async () => {
-  const jwt = localStorage.getItem('jwtToken');
-  if(!jwt){ alert('You must be logged in.'); return; }
-  const attrs = { 'Short Name': shortName.value, 'Category': category.value, 'Type': type.value };
-  createStatus.textContent = 'Creating item...';
-  setTimeout(() => {
-    createStatus.textContent = `Item "${attrs['Short Name']}" created successfully!`;
-    shortName.value=''; category.value=''; type.value=''; imageUpload.value=''; imagePreview.innerHTML='';
-  }, 1000);
-});
-
-cancelBtn.addEventListener('click', () => { 
-  shortName.value=''; category.value=''; type.value=''; imageUpload.value=''; imagePreview.innerHTML=''; 
-  createStatus.textContent=''; 
-});
-</script>
-
-<footer>© 2025 spookydecs.com | Beware the 404s 👻</footer>
-</body>
-</html>
+  if(type === 'INF'){
+    dynamicFields.innerHTML = `
+      <div class="field-row"><label class="field-label">Height / Length</label><input type="number" id="height"></div>
+      <div class="field-row"><label class="field-label">Tethers</label><input type="number" id="tethers"></div>
+      <div class="field-row"><label class="field-label">Stakes</label><input type="number" id="stakes"></div>
+      <div class="field-row"><label class="field-label">Date Acquired</label><input type="number" id="dateAcquired" placeholder="YYYY"></div>
+      <div class="field-row"><label class="field-label">Status</label>
+        <select id="status">
+          <option value="active">Active</option>
+          <option value="needs repair">Needs Repair</option>
+          <option value="packed">Packed</option>
+          <option value="retired">Retired</option>
+        </select>
+      </div>`;
+  } else if(type === 'C' || type === 'P'){
+    dynamicFields.innerHTML = `
+      <div class="field-row"><label class="field-label">Length</label><input type="number" id="length"></div>
+      <div class="field-row"><label class="field-label">Male Ends</label><input type="number" id="maleEnds"></div>
+      <div class="field-row"><label class="field-label">Female Ends</label><input type="number" id="femaleEnds"></div>`;
+  } else if(type === 'O'){
+    dynamicFields.innerHTML = `
+      <div class="field-row"><label class="field-label">Receptacles</label><input type="number" id="receptacles"></div>
+      <div class="field-row"><label class="field-label">Smart Outlet</label>
+        <select id="smartOutlet"><option value="true">True</option><option value="false">False</option></select>
+      </div>`;
+  } else if(type === 'STR_LT'){
+    dynamicFields.innerHTML = `
+      <div class="field-row"><label class="field-label">Location</label>
+        <select id="location">
+          <option value="FY">Front Yard</option>
+          <option value="SY">Side Yard</option>
+          <option value="FN">Fence</option>
+          <option value="TR">Tree</option>
+        </select>
+      </div>
+      <div class="field-row"><label class="field-label">Power Requirements</label><input type="text" id="powerReq"></div>
+      <div class="field-row"><label class="field-label">LED Controller</label>
+        <select id="ledCtrl"><option value="true">True</option><option value="false">False</option></select>
+      </div>
+      <div class="field-row"><label class="field-label">Colors</label><input type="text" id="colors" placeholder="comma separated"></div>`;
+  } else if(type === 'SP_LT'){
+    dynamicFields.innerHTML = `
+      <div class="field-row"><label class="field-label">Power Requirements</label><input type="text" id="powerReq"></div>
+      <div class="field-row"><label class="field-label">LED Controller</label>
+        <select id="ledCtrl"><option value="true">True</option><option value="false">False</option></select>
+      </div>
+      <div class="field-row"><label class="field-label">Bulb Type</label>
+        <select id="bulbType"><option value="PAR 38">PAR 38</option><option value="Built-in">Built-in</option></select>
+      </div>`;
+  } else if(type === 'PROP'){
+    dynamicFields.innerHTML = `
+      <div class="field-row"><label class="field-label
