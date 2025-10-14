@@ -59,24 +59,31 @@
 <!-- ====== Dashboard Cards ====== -->
 <div class="container">
 
-  <!-- Core Features -->
-  <div class="card">
-    <div class="card-header"><div class="icon-placeholder">P</div><h3>Packing Process</h3></div>
-    <p>Scan tote → scan items → assign items → confirm completion.</p>
-    <button onclick="startPacking()">Start Packing</button>
-  </div>
+ <!-- Core Features -->
+<div class="card">
+  <div class="card-header"><div class="icon-placeholder">C</div><h3>Create Item</h3></div>
+  <p>Add a new holiday decoration to the inventory. Include name, category, condition, location, tote ID, and optional photo.</p>
+  <button onclick="goToCreate()">Create Item</button>
+</div>
 
-  <div class="card">
-    <div class="card-header"><div class="icon-placeholder">U</div><h3>Update Item</h3></div>
-    <p>Edit name, category, condition, location, tote ID, last used date, notes. Bulk update supported.</p>
-    <button onclick="updateItems()">Update Items</button>
-  </div>
+<div class="card">
+  <div class="card-header"><div class="icon-placeholder">P</div><h3>Packing Process</h3></div>
+  <p>Scan tote → scan items → assign items → confirm completion.</p>
+  <button onclick="startPacking()">Start Packing</button>
+</div>
 
-  <div class="card">
-    <div class="card-header"><div class="icon-placeholder">D</div><h3>Delete Item</h3></div>
-    <p>Permanent delete with optional archive/undo.</p>
-    <button class="danger" onclick="deleteItems()">Delete Items</button>
-  </div>
+<div class="card">
+  <div class="card-header"><div class="icon-placeholder">U</div><h3>Update Item</h3></div>
+  <p>Edit name, category, condition, location, tote ID, last used date, notes. Bulk update supported.</p>
+  <button onclick="updateItems()">Update Items</button>
+</div>
+
+<div class="card">
+  <div class="card-header"><div class="icon-placeholder">D</div><h3>Delete Item</h3></div>
+  <p>Permanent delete with optional archive/undo.</p>
+  <button class="danger" onclick="deleteItems()">Delete Items</button>
+</div>
+
 
   <!-- Additional Features -->
   <div class="card">
@@ -133,7 +140,7 @@
 <!-- ====== Footer ====== -->
 <footer>
   &copy; 2025 SpookyDecs Network | Admin Area
-  <img src="https://www.svgrepo.com/show/277704/ghost.svg" alt="Ghost Icon" style="height:16px;width:16px;">
+  <img src="https://assets.spookydecs.com/icons/ghost_icon.svg" alt="Ghost Icon" style="height:16px;width:16px;">
 </footer>
 
 <!-- ====== JS Placeholder Functions ====== -->
@@ -164,6 +171,11 @@
   function archiveOldItems(){ alert("Archive Old Items clicked! Hook API here."); }
   function prepShoppingList(){ alert("Prep Shopping List clicked! Hook API here."); }
   function managePhotos(){ alert("Manage Photos clicked! Hook API here."); }
+  function goToCreate() {
+  // Replace with actual create page URL
+  window.location.href = '/create.html';
+}
+
 </script>
 
 </body>
