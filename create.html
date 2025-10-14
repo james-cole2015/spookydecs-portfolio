@@ -27,9 +27,9 @@
   .offcanvas a, .offcanvas button { color:#fff; text-decoration:none; background:none; border:none; text-align:left; font-size:1rem; cursor:pointer; }
   .offcanvas .footer { font-size:0.8rem; color:#ccc; margin-top:auto; }
 
-  /* ---------- Login Form & Card ---------- */
-  #loginForm, #createCard { background:#fff; padding:30px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1); display:flex; flex-direction:column; gap:10px; margin:auto; width:100%; }
-  #createCard h2, #loginForm h2 { text-align:center; margin-bottom:20px; }
+  /* ---------- Create Item Card ---------- */
+  #createCard { background:#fff; padding:30px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1); display:flex; flex-direction:column; gap:10px; margin:auto; width:100%; }
+  #createCard h2 { text-align:center; margin-bottom:20px; }
 
   .field-row { margin-bottom:16px; display:flex; flex-direction:column; }
   .field-label { font-weight:600; margin-bottom:6px; text-align:center; }
@@ -64,7 +64,6 @@
 
     #createCard { padding:20px; }
 
-    /* Step form */
     .field-row { display:none; }
     .field-row.active { display:flex; flex-direction:column; }
     .step-nav { display:flex; justify-content:space-between; margin-top:12px; }
@@ -74,12 +73,11 @@
 <body>
 
 <script>
-  // ---------- Environment config ----------
-  window.env = {
-    env:'dev', // change to 'prod' in production
-    ADMIN_URL:'https://dev-admin.spookydecs.com',
-    MAIN_URL:'https://dev.spookydecs.com'
-  };
+window.env = {
+  env:'dev', // change to 'prod' in production
+  ADMIN_URL:'https://dev-admin.spookydecs.com',
+  MAIN_URL:'https://dev.spookydecs.com'
+};
 </script>
 
 <!-- ====== Admin Halloween Header ====== -->
@@ -97,7 +95,6 @@
   </div>
 </header>
 
-<!-- Off-canvas menu for mobile -->
 <div class="offcanvas" id="offcanvas">
   <button id="off-signout">Sign Out</button>
   <a href="#" id="off-admin-link">Return to Admin</a>
@@ -106,65 +103,62 @@
 </div>
 
 <div class="container">
+  <div id="createCard">
+    <h2>Create New Item</h2>
 
-<!-- Login Form -->
-<form id="loginForm">
-  <h2>Admin Login</h2>
-  <input type="text" id="username" placeholder="Username" required>
-  <input type="password" id="password" placeholder="Password" required>
-  <button type="submit">Login</button>
-  <p id="loginError" style="color:red; text-align:center;"></p>
-</form>
+    <div class="field-row" data-step="1">
+      <label class="field-label" for="shortName">Short Name</label>
+      <input type="text" id="shortName" required>
+    </div>
 
-<!-- Create Item Card -->
-<div id="createCard">
-  <h2>Create New Item</h2>
+    <div class="field-row" data-step="2">
+      <label class="field-label" for="type">Type</label>
+      <select id="type" required>
+        <option value="">Select Type</option>
+        <option value="INF">Inflatable</option>
+        <option value="C">Cord</option>
+        <option value="P">Plug</option>
+        <option value="O">Outlet</option>
+        <option value="STR_LT">String Light</option>
+        <option value="SP_LT">Spot Light</option>
+        <option value="PROP">Prop</option>
+      </select>
+    </div>
 
-  <!-- Fields will be dynamically stepped in mobile -->
-  <div class="field-row" data-step="1">
-    <label class="field-label" for="shortName">Short Name</label>
-    <input type="text" id="shortName" required>
+    <div class="field-row" data-step="3">
+      <label class="field-label" for="category">Category</label>
+      <select id="category" required>
+        <option value="">Select Category</option>
+        <option value="Halloween">Halloween</option>
+        <option value="Christmas">Christmas</option>
+        <option value="Cord">Cord</option>
+        <option value="Plug">Plug</option>
+        <option value="Outlet">Outlet</option>
+      </select>
+    </div>
+
+    <div id="dynamicFields"></div>
+    <div class="preview" id="imagePreview"></div>
+
+    <div class="step-nav">
+      <button id="prevStep" class="btn-danger">Previous</button>
+      <button id="nextStep" class="btn-primary">Next</button>
+    </div>
+
+    <div style="text-align:center;margin-top:12px;">
+      <button class="btn-primary" id="createBtn">Create</button>
+      <button class="btn-danger" id="cancelBtn">Cancel</button>
+    </div>
+
+    <div class="status" id="createStatus"></div>
   </div>
+</div>
 
-  <div class="field-row" data-step="2">
-    <label class="field-label" for="type">Type</label>
-    <select id="type" required>
-      <option value="">Select Type</option>
-      <option value="INF">Inflatable</option>
-      <option value="C">Cord</option>
-      <option value="P">Plug</option>
-      <option value="O">Outlet</option>
-      <option value="STR_LT">String Light</option>
-      <option value="SP_LT">Spot Light</option>
-      <option value="PROP">Prop</option>
-    </select>
+<footer>
+  <div>&copy; 2025 SpookyDecs Network | Admin Area
+    <img src="https://www.svgrepo.com/show/277704/ghost.svg" alt="Ghost Icon" class="icon">
   </div>
+</footer>
 
-  <div class="field-row" data-step="3">
-    <label class="field-label" for="category">Category</label>
-    <select id="category" required>
-      <option value="">Select Category</option>
-      <option value="Halloween">Halloween</option>
-      <option value="Christmas">Christmas</option>
-      <option value="Cord">Cord</option>
-      <option value="Plug">Plug</option>
-      <option value="Outlet">Outlet</option>
-    </select>
-  </div>
-
-  <div id="dynamicFields"></div>
-
-  <div class="preview" id="imagePreview"></div>
-
-  <!-- Step Navigation (Mobile) -->
-  <div class="step-nav">
-    <button id="prevStep" class="btn-danger">Previous</button>
-    <button id="nextStep" class="btn-primary">Next</button>
-  </div>
-
-  <div style="text-align:center;margin-top:12px;">
-    <button class="btn-primary" id="createBtn">Create</button>
-    <button class="btn-danger" id="cancelBtn">Cancel</button>
-  </div>
-
-  <div class="status" id="createStatus"></div
+</body>
+</html>
