@@ -1,60 +1,134 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Admin Login - SpookyDecs</title>
-<style>
-  body { font-family: Arial, sans-serif; background-color: #f0f2f5; margin:0; padding:0; display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh; }
-  #loginForm { background:#fff; padding:30px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1); width:90%; max-width:400px; }
-  h2 { text-align:center; color:#333; }
-  input { width:100%; padding:10px; margin:10px 0; border:1px solid #ccc; border-radius:4px; }
-  button { width:100%; padding:10px; background:#007bff; color:white; border:none; border-radius:4px; cursor:pointer; }
-  button:hover { opacity:0.9; }
-  p#error { color:red; text-align:center; margin-top:10px; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SpookyDecs Admin Login</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #111;
+      color: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+    }
 
-  footer { background:#1f1f1f; color:#ccc; text-align:center; padding:20px; position:fixed; bottom:0; width:100%; }
-  footer img { height:16px; width:16px; animation: floatIcon 3s ease-in-out infinite alternate; }
+    .login-container {
+      background: rgba(34, 34, 34, 0.95);
+      border: 2px solid #f47c3c;
+      border-radius: 10px;
+      padding: 40px;
+      width: 320px;
+      box-shadow: 0 0 20px rgba(255, 140, 0, 0.4);
+      text-align: center;
+      animation: fadeIn 0.8s ease-in-out;
+    }
 
-  @keyframes floatIcon { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-3px);} }
-</style>
+    h2 {
+      margin-bottom: 20px;
+      color: #f47c3c;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #555;
+      border-radius: 5px;
+      background-color: #222;
+      color: #f4f4f4;
+    }
+
+    button {
+      background-color: #f47c3c;
+      border: none;
+      border-radius: 5px;
+      padding: 10px 20px;
+      cursor: pointer;
+      color: #111;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #ff9248;
+    }
+
+    .error {
+      color: #ff4c4c;
+      font-size: 0.9em;
+      margin-top: 10px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  </style>
 </head>
 <body>
+  <div class="login-container">
+    <h2>SpookyDecs Admin Login</h2>
+    <input type="text" id="username" placeholder="Username" required />
+    <input type="password" id="password" placeholder="Password" required />
+    <button id="loginButton">Login</button>
+    <div id="errorMessage" class="error"></div>
+  </div>
 
-<form id="loginForm">
-  <h2>SpookyDecs Admin Login</h2>
-  <input type="text" id="username" placeholder="Username" required />
-  <input type="password" id="password" placeholder="Password" required />
-  <button type="submit">Sign In</button>
-  <p id="error"></p>
-</form>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/amazon-cognito-identity-js/6.3.3/amazon-cognito-identity.min.js" integrity="sha512-53D4GicBo3JfQfKzrhJxQmDA0v4SLaQdJcZ+z9NwEi5iKpZrDkF4w5X9y0Q5NYVZ+gbLwE3r+k4d2Hkb4YMN4A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>
+    const poolData = {
+      UserPoolId: "us-east-2_BnxSu5LEt",
+      ClientId: "11er9f8qa7jkvgelm6hernb2ed"
+    };
+    const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
 
-<footer>
-  &copy; 2025 SpookyDecs Network | Admin Area
-  <img src="https://www.svgrepo.com/show/277704/ghost.svg" alt="Ghost Icon" />
-</footer>
+    document.getElementById("loginButton").addEventListener("click", () => {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const errorMessage = document.getElementById("errorMessage");
+      errorMessage.textContent = "";
 
-<script>
-  const env = 'dev'; // change to 'prod' later
-  const ADMIN_URL = env === 'dev' ? 'https://dev-admin.spookydecs.com/create.html' : 'https://admin.spookydecs.com/create.html';
-
-  document.getElementById('loginForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const user = document.getElementById('username').value.trim();
-    const pass = document.getElementById('password').value.trim();
-    
-    try {
-      // TODO: Replace with AWS Cognito authentication
-      if (user && pass) {
-        localStorage.setItem('authenticated', 'true');
-        window.location.href = ADMIN_URL;
-      } else {
-        throw new Error('Invalid credentials');
+      if (!username || !password) {
+        errorMessage.textContent = "Please enter both username and password.";
+        return;
       }
-    } catch (err) {
-      document.getElementById('error').textContent = 'Login failed. Try again.';
-    }
-  });
-</script>
+
+      const authenticationData = { Username: username, Password: password };
+      const authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails(authenticationData);
+      const userData = { Username: username, Pool: userPool };
+      const cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+
+      cognitoUser.authenticateUser(authenticationDetails, {
+        onSuccess: (result) => {
+          console.log("Login successful:", result);
+          const idToken = result.getIdToken().getJwtToken();
+
+          // Store token securely
+          localStorage.setItem("spookydecs_id_token", idToken);
+          localStorage.setItem("spookydecs_username", username);
+
+          // Redirect to create.html after login
+          window.location.href = "create.html";
+        },
+
+        onFailure: (err) => {
+          console.error("Login failed:", err);
+          if (err.code === "NotAuthorizedException") {
+            errorMessage.textContent = "Incorrect username or password.";
+          } else if (err.code === "UserNotFoundException") {
+            errorMessage.textContent = "User does not exist.";
+          } else {
+            errorMessage.textContent = "Login failed. Please try again.";
+          }
+        }
+      });
+    });
+  </script>
 </body>
 </html>
