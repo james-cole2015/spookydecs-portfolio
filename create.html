@@ -178,6 +178,7 @@ window.env = {
     <div class="button-row">
       <button class="btn-primary" id="createBtn">Create</button>
       <button class="btn-danger" id="cancelBtn">Cancel</button>
+      <button class="btn-danger" id="clearBtn">Clear All</button>
     </div>
 
     <div class="status" id="createStatus"></div>
@@ -317,6 +318,18 @@ cancelBtn.addEventListener('click', ()=>{
   previewOverlay.style.display='none';
   status.innerText='';
 });
+
+const clearBtn = document.getElementById('clearBtn');
+
+clearBtn.addEventListener('click', ()=>{
+  inputs.forEach(el => el.value = '');
+  dynamicFields.innerHTML = '';
+  idField.style.display = 'none';
+  previewCard.style.display = 'none';
+  previewOverlay.style.display = 'none';
+  status.innerText = '';
+});
+
 
 // Create button
 createBtn.addEventListener('click', ()=>{
