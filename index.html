@@ -1,48 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SpookyDecs Admin Dashboard</title>
-<style>
-  /* ====== Reset & Base ====== */
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
-  body { background-color: #f0f2f5; color: #333; }
-  a { text-decoration: none; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpookyDecs Admin Dashboard</title>
+  <style>
+    /* ====== Reset & Base ====== */
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+    body { background-color: #f0f2f5; color: #333; display: flex; flex-direction: column; min-height: 100vh; }
+    a { text-decoration: none; }
 
-  /* ====== Header ====== */
-  header { background-color: #2e2e2e; color: #fff; padding: 15px 40px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #888; }
-  header img { height: 40px; margin-right: 12px; animation: float 2s ease-in-out infinite; }
-  header h1 { font-size: 1.4rem; color: #ccc; }
-  header nav ul { list-style: none; display: flex; gap: 20px; }
-  header nav a { color: #fff; font-size: 1rem; }
-  header nav a.settings { color: #ccc; }
+    /* ====== Header ====== */
+    header { background-color: #2e2e2e; color: #fff; padding: 15px 40px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #888; position: relative; }
+    header img { height: 40px; margin-right: 12px; animation: float 2s ease-in-out infinite; }
+    header h1 { font-size: 1.4rem; color: #ccc; }
+    header nav ul { list-style: none; display: flex; gap: 20px; }
+    header nav a { color: #fff; font-size: 1rem; }
+    header nav a.settings { color: #ccc; }
 
-  /* ====== Container & Cards ====== */
-  .container { padding: 20px; display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
-  .card { background-color: #fff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); padding: 16px; width: 300px; display: flex; flex-direction: column; justify-content: space-between; transition: box-shadow 0.2s ease; }
-  .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-  .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
-  .icon-placeholder { width: 40px; height: 40px; background-color: #ccc; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1rem; }
-  .card h3 { font-size: 1.2rem; }
-  .card p { color: #555; font-size: 0.9rem; margin-bottom: 12px; }
-  .card button { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; background-color: #007bff; color: #fff; align-self: center; margin-top: auto; }
-  .card button.danger { background-color: #dc3545; }
-  input.search-input { padding: 6px 10px; border-radius: 4px; border: 1px solid #ccc; width: 100%; }
+    /* ====== Container & Cards ====== */
+    .container { padding: 20px; display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; flex: 1; }
+    .card { background-color: #fff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); padding: 16px; width: 300px; display: flex; flex-direction: column; justify-content: space-between; transition: box-shadow 0.2s ease; }
+    .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .icon-placeholder { width: 40px; height: 40px; background-color: #ccc; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1rem; }
+    .card h3 { font-size: 1.2rem; }
+    .card p { color: #555; font-size: 0.9rem; margin-bottom: 12px; }
+    .card button { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; background-color: #007bff; color: #fff; align-self: center; margin-top: auto; }
+    .card button.danger { background-color: #dc3545; }
+    input.search-input { padding: 6px 10px; border-radius: 4px; border: 1px solid #ccc; width: 100%; }
 
-  /* ====== Footer ====== */
-  footer { background-color: #1f1f1f; color: #fff; padding: 25px 40px; border-top: 1px solid #888; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.9rem; }
-  footer img { height: 32px; width: 32px; animation: float 3s ease-in-out infinite; }
+    /* ====== Footer ====== */
+    footer { background-color: #1f1f1f; color: #fff; padding: 25px 40px; border-top: 1px solid #888; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.9rem; }
+    footer img { height: 32px; width: 32px; animation: float 3s ease-in-out infinite; }
 
-  /* ====== Animations ====== */
-  @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-8px); }
-  }
+    /* ====== Animations ====== */
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
 
-  /* ====== Responsive ====== */
-  @media (max-width: 768px) { .card { width: 100%; } }
-</style>
+    /* ====== Responsive ====== */
+    @media (max-width: 768px) { .card { width: 100%; } }
+  </style>
 </head>
 <body>
 
@@ -58,7 +58,7 @@
       <li><a href="/inventory">Inventory</a></li>
       <li><a href="/reports">Reports</a></li>
       <li><a href="/settings" class="settings">Settings</a></li>
-      <li><a href="/logout">Logout</a></li>
+      <li><a href="#" onclick="logout()">Logout</a></li>
     </ul>
   </nav>
 </header>
@@ -149,15 +149,42 @@
   <img src="https://assets.spookydecs.com/icons/ghost_icon.svg" alt="Ghost Icon">
 </footer>
 
-<!-- ====== JS Placeholder Functions ====== -->
+<!-- ====== JS ====== -->
 <script>
-  // ==========================
-  // Authentication placeholder
-  // ==========================
-  function checkAuth() {
-    console.log("Auth check placeholder. Integrate Cognito here.");
+  // --- ENVIRONMENT DETECTION ---
+  const origin = window.location.origin;
+  const isDev = origin.includes("dev-");
+  const COGNITO_DOMAIN = "us-east-2bnxsu5let.auth.us-east-2.amazoncognito.com";
+  const CLIENT_ID = "11er9f8qa7jkvgelm6hernb2ed";
+  const REDIRECT_URI = encodeURIComponent(isDev ? "https://dev-admin.spookydecs.com" : "https://admin.spookydecs.com");
+
+  const LOGIN_URL = `https://${COGNITO_DOMAIN}/login?response_type=token&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}`;
+  const LOGOUT_URL = `https://${COGNITO_DOMAIN}/logout?client_id=${CLIENT_ID}&logout_uri=${REDIRECT_URI}`;
+
+  // --- PARSE TOKEN FROM URL HASH ---
+  function parseCognitoHash() {
+    const hash = window.location.hash.substring(1);
+    const params = new URLSearchParams(hash);
+    const idToken = params.get("id_token");
+    if (idToken) {
+      localStorage.setItem("id_token", idToken);
+      window.location.hash = "";
+      return idToken;
+    }
+    return null;
   }
-  checkAuth();
+
+  // --- CHECK LOGIN STATE ---
+  const token = parseCognitoHash() || localStorage.getItem("id_token");
+  if (!token) {
+    window.location.href = LOGIN_URL;
+  }
+
+  // --- LOGOUT HANDLER ---
+  function logout() {
+    localStorage.removeItem("id_token");
+    window.location.href = LOGOUT_URL;
+  }
 
   // ==========================
   // Feature placeholders
