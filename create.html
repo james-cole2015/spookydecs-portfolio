@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Create Item - Admin Dashboard</title>
+<title>Create Item - Admin Portal</title>
 <style>
-  /* ---------- Global ---------- */
+/* ---------- Global ---------- */
 body {
   font-family: Arial, sans-serif;
   background-color: #1a1a1a;
@@ -18,6 +18,7 @@ body {
   flex-direction: column;
   color: #f0f0f0;
 }
+
 .container {
   display: flex;
   justify-content: center;
@@ -27,35 +28,18 @@ body {
   position: relative;
 }
 
-/* ---------- Header ---------- */
-header { width: 100%; box-sizing: border-box; background-color: #2e2e2e; color: #fff; padding: 15px 40px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #888; position:relative; }
-header .logo-title { display:flex; align-items:center; gap:12px; }
-header h1 { margin:0; font-size:1.4rem; color:#ccc; }
-header img.icon { height:40px; animation: floatIcon 3s ease-in-out infinite alternate; }
-header .spiderweb { height:40px; }
-header .header-links { display:flex; align-items:center; gap:12px; }
-header button { padding:6px 12px; border:none; border-radius:4px; cursor:pointer; background:#007bff; color:#fff; }
-header button:hover { opacity:0.9; }
-
-/* ---------- Hamburger ---------- */
-.hamburger { display:none; flex-direction:column; justify-content:space-between; width:24px; height:18px; cursor:pointer; }
-.hamburger div { height:3px; background:#fff; border-radius:2px; }
-.offcanvas { position:fixed; top:0; left:-260px; width:260px; height:100%; background:#2e2e2e; color:#fff; transition:left 0.3s ease; padding:20px; display:flex; flex-direction:column; gap:20px; z-index:1000; }
-.offcanvas.open { left:0; }
-.offcanvas a, .offcanvas button { color:#fff; text-decoration:none; background:none; border:none; text-align:left; font-size:1rem; cursor:pointer; }
-.offcanvas .footer { font-size:0.8rem; color:#ccc; margin-top:auto; }
-
-/* ---------- Create & Preview Cards ---------- */
-#createCard { 
-  background: #2b2b2b; 
-  padding: 25px 20px; 
-  border-radius: 12px; 
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5); 
-  display:flex; 
-  flex-direction:column; 
-  gap:15px; 
-  width:100%; 
-  max-width:600px; 
+/* ---------- Overlay + Preview Modal ---------- */
+#previewOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1500;
 }
 
 #previewCard {
@@ -66,37 +50,94 @@ header button:hover { opacity:0.9; }
   display: none;
   flex-direction: column;
   gap: 20px;
-  width:100%;
-  max-width:650px;
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 100;
+  width: 100%;
+  max-width: 650px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2000;
 }
 
-#createCard h2, #previewCard h2 { text-align:center; margin-bottom:15px; color:#ff7518; text-shadow:1px 1px 2px #000; }
+/* ---------- Header ---------- */
+header {
+  width: 100%;
+  box-sizing: border-box;
+  background-color: #2e2e2e;
+  color: #fff;
+  padding: 15px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #888;
+  position: relative;
+}
+header .logo-title { display: flex; align-items: center; gap: 12px; }
+header h1 { margin: 0; font-size: 1.4rem; color: #ccc; }
+header img.icon { height: 40px; animation: floatIcon 3s ease-in-out infinite alternate; }
+header .spiderweb { height: 40px; }
+header .header-links { display: flex; align-items: center; gap: 12px; }
+header button { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; background: #007bff; color: #fff; }
+header button:hover { opacity: 0.9; }
 
-.field-row { margin-bottom:14px; display:flex; flex-direction:column; }
-.field-label { font-weight:600; margin-bottom:6px; text-align:left; color:#fff; }
-input, select { padding:10px; border-radius:4px; border:1px solid #555; width:100%; box-sizing:border-box; background-color:#1f1f1f; color:#fff; }
+/* ---------- Hamburger ---------- */
+.hamburger { display: none; flex-direction: column; justify-content: space-between; width: 24px; height: 18px; cursor: pointer; }
+.hamburger div { height: 3px; background: #fff; border-radius: 2px; }
+.offcanvas {
+  position: fixed;
+  top: 0;
+  left: -260px;
+  width: 260px;
+  height: 100%;
+  background: #2e2e2e;
+  color: #fff;
+  transition: left 0.3s ease;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  z-index: 1000;
+}
+.offcanvas.open { left: 0; }
+.offcanvas a, .offcanvas button { color: #fff; text-decoration: none; background: none; border: none; text-align: left; font-size: 1rem; cursor: pointer; }
+.offcanvas .footer { font-size: 0.8rem; color: #ccc; margin-top: auto; }
 
-.button-row { display:flex; justify-content:center; gap:12px; margin-top:20px; }
-button { padding:10px 16px; border:none; border-radius:6px; cursor:pointer; font-weight:600; transition: transform 0.15s ease; }
-button:hover { transform:scale(1.05); }
-.btn-primary { background: linear-gradient(45deg, #ff7518, #ffb347); color:#fff; box-shadow:0 3px 6px rgba(0,0,0,0.3); }
-.btn-danger { background: linear-gradient(45deg, #ff0000, #990000); color:#fff; box-shadow:0 3px 6px rgba(0,0,0,0.3); display:none; }
+/* ---------- Create Card ---------- */
+#createCard { 
+  background: #2b2b2b; 
+  padding: 25px 20px; 
+  border-radius: 12px; 
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5); 
+  display: flex; 
+  flex-direction: column; 
+  gap: 15px; 
+  width: 100%; 
+  max-width: 600px; 
+}
 
-.dynamic-group { border:1px dashed #555; padding:12px; border-radius:8px; margin-top:12px; }
-.dynamic-group h3 { color:#ff7518; margin-bottom:10px; }
+#createCard h2, #previewCard h2 { text-align: center; margin-bottom: 15px; color: #ff7518; text-shadow: 1px 1px 2px #000; }
 
-#previewCard .preview-row { display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #555; }
-#previewCard .preview-row span.label { font-weight:600; color:#ccc; }
-#previewCard .preview-row span.value { color:#fff; }
+.field-row { margin-bottom: 14px; display: flex; flex-direction: column; }
+.field-label { font-weight: 600; margin-bottom: 6px; text-align: left; color: #fff; }
+input, select { padding: 10px; border-radius: 4px; border: 1px solid #555; width: 100%; box-sizing: border-box; background-color: #1f1f1f; color: #fff; }
+
+.button-row { display: flex; justify-content: center; gap: 12px; margin-top: 20px; }
+button { padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: transform 0.15s ease; }
+button:hover { transform: scale(1.05); }
+.btn-primary { background: linear-gradient(45deg, #ff7518, #ffb347); color: #fff; box-shadow: 0 3px 6px rgba(0,0,0,0.3); }
+.btn-danger { background: linear-gradient(45deg, #ff0000, #990000); color: #fff; box-shadow: 0 3px 6px rgba(0,0,0,0.3); display: none; }
+
+.dynamic-group { border: 1px dashed #555; padding: 12px; border-radius: 8px; margin-top: 12px; }
+.dynamic-group h3 { color: #ff7518; margin-bottom: 10px; }
+
+#previewCard .preview-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #555; }
+#previewCard .preview-row span.label { font-weight: 600; color: #ccc; }
+#previewCard .preview-row span.value { color: #fff; }
 
 /* ---------- Footer ---------- */
-footer { width:100%; box-sizing:border-box; background-color:#1f1f1f; color:#fff; padding:25px 40px; font-family:Arial,sans-serif; border-top:1px solid #888; display:flex; justify-content:center; align-items:center; }
-footer div { text-align:center; font-size:0.9rem; color:#ccc; display:flex; align-items:center; gap:6px; }
-footer img.icon { height:2em; width:2em; animation: floatIcon 3s ease-in-out infinite alternate; }
+footer { width: 100%; box-sizing: border-box; background-color: #1f1f1f; color: #fff; padding: 25px 40px; font-family: Arial,sans-serif; border-top: 1px solid #888; display: flex; justify-content: center; align-items: center; }
+footer div { text-align: center; font-size: 0.9rem; color: #ccc; display: flex; align-items: center; gap: 6px; }
+footer img.icon { height: 2em; width: 2em; animation: floatIcon 3s ease-in-out infinite alternate; }
 
 @keyframes floatIcon { 0%{transform:translateY(0px);}50%{transform:translateY(-4px);}100%{transform:translateY(0px);} }
 
@@ -138,7 +179,7 @@ window.env = {
   <button id="off-signout">Sign Out</button>
   <a href="#" id="off-admin-link">Return to Admin</a>
   <a href="#" id="off-main-link">Main Site</a>
-  <div class="footer">&copy; 2025 SpookyDecs Network | Admin Area</div>
+  <div class="footer">&copy; 2025 SpookyDecs Network | Admin Portal</div>
 </div>
 
 <div class="container">
@@ -195,8 +236,10 @@ window.env = {
 
     <div class="status" id="createStatus"></div>
   </div>
+</div>
 
-  <!-- Preview Card -->
+<!-- Preview Modal -->
+<div id="previewOverlay">
   <div id="previewCard">
     <h2>Item Preview</h2>
     <div id="previewContent"></div>
@@ -222,7 +265,7 @@ const inputs = document.querySelectorAll('#createCard input, #createCard select'
 const idField = document.getElementById('idField');
 const generatedId = document.getElementById('generatedId');
 const status = document.getElementById('createStatus');
-
+const previewOverlay = document.getElementById('previewOverlay');
 const previewCard = document.getElementById('previewCard');
 const previewContent = document.getElementById('previewContent');
 const closePreviewBtn = document.getElementById('closePreviewBtn');
@@ -383,11 +426,14 @@ createBtn.addEventListener('click', ()=>{
     row.appendChild(value);
     previewContent.appendChild(row);
   }
+
+  previewOverlay.style.display='flex';
   previewCard.style.display='flex';
 });
 
 // --- Close Preview ---
 closePreviewBtn.addEventListener('click', ()=>{
+  previewOverlay.style.display='none';
   previewCard.style.display='none';
 });
 </script>
