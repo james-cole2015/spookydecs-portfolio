@@ -3,15 +3,14 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<div id="logoutContainer" style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+  <button class="btn-danger" onclick="logout()">Logout</button>
+</div>
+
 <title>Admin Dashboard</title>
 <style>
   body { font-family: Arial, sans-serif; background-color: #f0f2f5; margin:0; padding:0; }
   .container { padding: 20px; }
-  /* Login Form */
-  #loginForm { max-width: 300px; margin: 50px auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1); display:flex; flex-direction:column; gap:10px;}
-  #loginForm input { padding:8px; border-radius:4px; border:1px solid #ccc;}
-  #loginForm button { padding:8px; border-radius:4px; border:none; background-color:#007bff; color:white; cursor:pointer;}
-  #loginForm button:hover { opacity:0.9; }
   /* Dashboard */
   .admin-dashboard { display:none; flex-direction: column; gap: 20px; }
   .admin-dashboard h1 { font-size:2rem; margin-bottom:20px; }
@@ -30,57 +29,7 @@
 </head>
 <body>
 
-<script>
-(function() {
-  const TOKEN_KEY = 'spookydecs_id_token';
-  const LOGIN_PATH = '/login.html'; // adjust if hosted elsewhere
-
-  // helper to build admin root/login URL correctly for dev/prod
-  const host = window.location.hostname.toLowerCase();
-  const isDev = host.includes('dev-') || host.includes('dev.');
-  const adminBase = isDev ? 'https://dev-admin.spookydecs.com' : 'https://admin.spookydecs.com';
-  const loginUrlBase = adminBase + LOGIN_PATH;
-
-  function redirectToLogin() {
-    // include full current location as returnUrl (encoded)
-    const returnUrl = encodeURIComponent(window.location.href);
-    window.location.href = loginUrlBase + '?returnUrl=' + returnUrl;
-  }
-
-  try {
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (!token) {
-      redirectToLogin();
-      return;
-    }
-    // quick expiry check
-    const parts = token.split('.');
-    if (parts.length !== 3) { redirectToLogin(); return; }
-    const payload = JSON.parse(atob(parts[1]));
-    const now = Math.floor(Date.now() / 1000);
-    if (!payload || !payload.exp || payload.exp < (now + 15)) {
-      // expired or close to expiring -> force login
-      redirectToLogin();
-      return;
-    }
-    // token appears valid — allow page to load
-  } catch (e) {
-    // any error -> redirect to login
-    redirectToLogin();
-  }
-})();
-</script>
-
 <div class="container">
-
-<!-- Login Form -->
-<form id="loginForm">
-  <h2>Admin Login</h2>
-  <input type="text" id="username" placeholder="Username" required>
-  <input type="password" id="password" placeholder="Password" required>
-  <button type="submit">Login</button>
-  <p id="loginError" style="color:red;"></p>
-</form>
 
 <!-- Admin Dashboard -->
 <div id="adminDashboard" class="admin-dashboard">
@@ -88,10 +37,7 @@
 
   <!-- Core Feature Cards -->
   <div class="admin-card"><div class="icon-placeholder">P</div><div class="card-content"><h3>Packing Process</h3><p>Scan tote → scan items → assign items → confirm completion.</p><button class="btn-primary" onclick="startPacking()">Start Packing</button></div></div>
-
-  <!-- Redirect Create Item -->
   <div class="admin-card"><div class="icon-placeholder">C</div><div class="card-content"><h3>Create Item</h3><p>Use the dedicated item creation page with card-style entry and image upload.</p><button class="btn-primary" onclick="goToCreate()">Create Item</button></div></div>
-
   <div class="admin-card"><div class="icon-placeholder">U</div><div class="card-content"><h3>Update Item</h3><p>Edit item attributes or perform bulk updates.</p><button class="btn-primary" onclick="updateItems()">Update Items</button></div></div>
   <div class="admin-card"><div class="icon-placeholder">D</div><div class="card-content"><h3>Delete Item</h3><p>Permanently delete or archive items.</p><button class="btn-danger" onclick="deleteItems()">Delete Items</button></div></div>
 
@@ -105,70 +51,63 @@
   <div class="admin-card"><div class="icon-placeholder">C</div><div class="card-content"><h3>Seasonal Prep / Cleanup</h3><p>Start season, archive old items, prep shopping list.</p><button class="btn-primary" onclick="startSeason()">Start Season</button><button class="btn-primary" onclick="archiveOldItems()">Archive Old Items</button><button class="btn-primary" onclick="prepShoppingList()">Prep Shopping List</button></div></div>
   <div class="admin-card"><div class="icon-placeholder">📷</div><div class="card-content"><h3>Photo Management</h3><p>Upload and view photos of items and totes.</p><button class="btn-primary" onclick="managePhotos()">Manage Photos</button></div></div>
 
+  
+
 </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@5.2.7/dist/amazon-cognito-identity.min.js"></script>
 <script>
-/* ---------- Cognito Setup ---------- */
-const poolData = { 
-  UserPoolId:'us-east-2_BnxSu5LEt',
-  ClientId:'11er9f8qa7jkvgelm6hernb2ed'
-};
-const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+(function() {
+  const USER_POOL_ID = 'us-east-2_BnxSu5LEt';
+  const CLIENT_ID = '11er9f8qa7jkvgelm6hernb2ed';
+  const COGNITO_DOMAIN = 'spookydecs.auth.us-east-2.amazoncognito.com'; // replace with your Cognito domain
+  const adminBase = window.location.hostname.includes('dev-') ? 'https://dev-admin.spookydecs.com' : 'https://admin.spookydecs.com';
 
-const loginForm = document.getElementById('loginForm');
-const loginError = document.getElementById('loginError');
-const adminDashboard = document.getElementById('adminDashboard');
+  const adminDashboard = document.getElementById('adminDashboard');
 
-/* ---------- Check existing login ---------- */
-window.addEventListener('load', () => {
-  const token = localStorage.getItem('jwtToken');
-  if (token) {
-    loginForm.style.display = 'none';
-    adminDashboard.style.display = 'flex';
+  // Helper to parse hash token from Cognito redirect
+  function parseCognitoHash() {
+    if (!window.location.hash) return null;
+    const hash = window.location.hash.substring(1); // remove #
+    const params = new URLSearchParams(hash);
+    const idToken = params.get('id_token');
+    return idToken;
   }
-});
 
-/* ---------- Handle login ---------- */
-loginForm.addEventListener('submit', function(event){
-  event.preventDefault();
-  loginError.textContent = '';
+  function redirectToCognito() {
+    const redirectUri = encodeURIComponent(window.location.origin);
+    const url = `https://${COGNITO_DOMAIN}/login?response_type=token&client_id=${CLIENT_ID}&redirect_uri=${redirectUri}`;
+    window.location.href = url;
+  }
 
-  const username = document.getElementById('username').value;
-  const password = document.getElementById('password').value;
+  // Main auth check
+  const token = localStorage.getItem('spookydecs_id_token') || parseCognitoHash();
+  if (!token) {
+    redirectToCognito();
+    return;
+  }
 
-  const authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({ Username: username, Password: password });
-  const userData = { Username: username, Pool: userPool };
-  const cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+  // Save token if returned from Cognito
+  if (window.location.hash && token) {
+    localStorage.setItem('spookydecs_id_token', token);
+    // Clean URL hash
+    history.replaceState(null, '', window.location.pathname);
+  }
 
-  cognitoUser.authenticateUser(authenticationDetails, {
-    onSuccess: (result) => {
-      const idToken = result.getIdToken().getJwtToken();
-      localStorage.setItem('jwtToken', idToken);
-      loginForm.style.display = 'none';
-      adminDashboard.style.display = 'flex';
-    },
-    onFailure: (err) => {
-      loginError.textContent = err.message || JSON.stringify(err);
-    },
-    newPasswordRequired: (userAttributes) => {
-      delete userAttributes.email_verified;
-      const newPassword = prompt("Please enter a new password:");
-      cognitoUser.completeNewPasswordChallenge(newPassword, userAttributes, {
-        onSuccess: (result) => {
-          const idToken = result.getIdToken().getJwtToken();
-          localStorage.setItem('jwtToken', idToken);
-          loginForm.style.display = 'none';
-          adminDashboard.style.display = 'flex';
-        },
-        onFailure: (err) => {
-          loginError.textContent = err.message || JSON.stringify(err);
-        },
-      });
-    },
-  });
-});
+  // Decode token for basic validation
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const now = Math.floor(Date.now() / 1000);
+    if (!payload || !payload.exp || payload.exp < (now + 15)) {
+      redirectToCognito();
+      return;
+    }
+    // token valid -> show dashboard
+    adminDashboard.style.display = 'flex';
+  } catch(e) {
+    redirectToCognito();
+  }
+})();
 
 /* ---------- Redirect to create page dynamically ---------- */
 function goToCreate(){
@@ -192,6 +131,22 @@ function startSeason(){ alert("Start Season clicked! Connect Lambda API here.");
 function archiveOldItems(){ alert("Archive Old Items clicked! Connect Lambda API here."); }
 function prepShoppingList(){ alert("Prep Shopping List clicked! Connect Lambda API here."); }
 function managePhotos(){ alert("Manage Photos clicked! Connect Lambda API here."); }
+function logout() {
+  // Immediately hide dashboard and logout button
+  document.getElementById('adminDashboard').style.display = 'none';
+  document.getElementById('logoutContainer').style.display = 'none';
+
+  // Clear local storage
+  localStorage.removeItem('spookydecs_id_token');
+
+  // Redirect to Cognito logout endpoint
+  const CLIENT_ID = '11er9f8qa7jkvgelm6hernb2ed';
+  const COGNITO_DOMAIN = 'spookydecs.auth.us-east-2.amazoncognito.com';
+  const REDIRECT_URI = encodeURIComponent(window.location.origin);
+
+  window.location.href = `https://${COGNITO_DOMAIN}/logout?client_id=${CLIENT_ID}&logout_uri=${REDIRECT_URI}`;
+}
+
 </script>
 
 <footer>© 2025 spookydecs.com | Beware the 404s 👻</footer>
