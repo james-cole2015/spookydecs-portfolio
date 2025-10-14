@@ -59,9 +59,13 @@
   const USER_POOL_ID = 'us-east-2_BnxSu5LEt';
   const CLIENT_ID = '11er9f8qa7jkvgelm6hernb2ed';
   const COGNITO_DOMAIN = 'spookydecs.auth.us-east-2.amazoncognito.com';
+
+  // Hardcode your login/logout redirect URLs to exactly match Cognito settings
+  const LOGIN_REDIRECT_URI = 'https://dev-admin.spookydecs.com';
+  const LOGOUT_REDIRECT_URI = 'https://dev-admin.spookydecs.com';
+
   const adminDashboard = document.getElementById('adminDashboard');
 
-  // Parse token from Cognito redirect
   function parseCognitoHash() {
     if (!window.location.hash) return null;
     const hash = window.location.hash.substring(1);
@@ -69,24 +73,12 @@
     return params.get('id_token');
   }
 
-  // Redirect to Cognito login
   function redirectToCognito() {
-    const redirectUri = encodeURIComponent(window.location.origin);
-    const url = `https://${COGNITO_DOMAIN}/login?response_type=token&client_id=${CLIENT_ID}&redirect_uri=${redirectUri}`;
+    const url = `https://${COGNITO_DOMAIN}/login?response_type=token&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(LOGIN_REDIRECT_URI)}`;
     window.location.href = url;
   }
 
-  // Validate callback URL against Cognito app client settings
-  const validCallbackURLs = [
-    'https://dev-admin.spookydecs.com',
-    'https://admin.spookydecs.com'
-  ];
-  const currentOrigin = window.location.origin;
-  if (!validCallbackURLs.includes(currentOrigin)) {
-    console.error('Current origin not in Cognito callback URLs. Add it in Cognito App client settings.');
-  }
-
-  // Get token from localStorage or redirect hash
+  // Get token from localStorage or URL hash
   let token = localStorage.getItem('spookydecs_id_token') || parseCognitoHash();
   if (!token) {
     redirectToCognito();
@@ -114,10 +106,8 @@
 
 })();
 
-// Redirect to create page
 function goToCreate(){
-  const hostname = window.location.hostname;
-  let baseUrl = hostname.startsWith('dev-admin') ? 'https://dev-admin.spookydecs.com' : 'https://admin.spookydecs.com';
+  const baseUrl = window.location.hostname.startsWith('dev-admin') ? 'https://dev-admin.spookydecs.com' : 'https://admin.spookydecs.com';
   window.location.href = `${baseUrl}/create.html`;
 }
 
@@ -134,13 +124,14 @@ function startSeason(){ alert("Start Season clicked! Connect Lambda API here.");
 function archiveOldItems(){ alert("Archive Old Items clicked! Connect Lambda API here."); }
 function prepShoppingList(){ alert("Prep Shopping List clicked! Connect Lambda API here."); }
 function managePhotos(){ alert("Manage Photos clicked! Connect Lambda API here."); }
+
 function logout() {
   document.getElementById('adminDashboard').style.display = 'none';
   document.getElementById('logoutContainer').style.display = 'none';
   localStorage.removeItem('spookydecs_id_token');
 
-  const REDIRECT_URI = encodeURIComponent(window.location.origin);
-  window.location.href = `https://${COGNITO_DOMAIN}/logout?client_id=${CLIENT_ID}&logout_uri=${REDIRECT_URI}`;
+  const url = `https://${COGNITO_DOMAIN}/logout?client_id=${CLIENT_ID}&logout_uri=${encodeURIComponent(LOGOUT_REDIRECT_URI)}`;
+  window.location.href = url;
 }
 </script>
 
