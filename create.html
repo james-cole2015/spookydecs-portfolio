@@ -60,7 +60,7 @@ header button:hover { opacity:0.9; }
 
 /* Preview Modal */
 #previewCard {
-  display: none; /* hidden by default */
+  display: none;
   position: fixed;
   top: 50%;
   left: 50%;
@@ -78,16 +78,15 @@ header button:hover { opacity:0.9; }
 
 /* Modal overlay background */
 #modalOverlay {
-  display: none; /* hidden by default */
+  display: none;
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.6); /* semi-transparent dark background */
+  background: rgba(0,0,0,0.6);
   z-index: 9999;
 }
-
 
 #createCard h2, #previewCard h2 { text-align:center; margin-bottom:15px; color:#ff7518; text-shadow:1px 1px 2px #000; }
 
@@ -97,7 +96,8 @@ input, select { padding:10px; border-radius:4px; border:1px solid #555; width:10
 
 .button-row { display:flex; justify-content:center; gap:12px; margin-top:20px; }
 button { padding:10px 16px; border:none; border-radius:6px; cursor:pointer; font-weight:600; transition: transform 0.15s ease; }
-button:hover { transform:scale(1.05); }
+button:hover:not(:disabled) { transform:scale(1.05); }
+button:disabled { opacity:0.6; cursor:not-allowed; }
 .btn-primary { background: linear-gradient(45deg, #ff7518, #ffb347); color:#fff; box-shadow:0 3px 6px rgba(0,0,0,0.3); }
 .btn-danger { background: linear-gradient(45deg, #ff0000, #990000); color:#fff; box-shadow:0 3px 6px rgba(0,0,0,0.3); display:none; }
 
@@ -107,6 +107,10 @@ button:hover { transform:scale(1.05); }
 #previewCard .preview-row { display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #555; }
 #previewCard .preview-row span.label { font-weight:600; color:#ccc; }
 #previewCard .preview-row span.value { color:#fff; }
+
+.status { margin-top:10px; padding:10px; border-radius:4px; text-align:center; font-weight:600; }
+.status.error { background:#ff000033; color:#ff6666; border:1px solid #ff0000; }
+.status.success { background:#00ff0033; color:#66ff66; border:1px solid #00ff00; }
 
 /* ---------- Footer ---------- */
 footer { width:100%; box-sizing:border-box; background-color:#1f1f1f; color:#fff; padding:25px 40px; font-family:Arial,sans-serif; border-top:1px solid #888; display:flex; justify-content:center; align-items:center; }
@@ -212,7 +216,7 @@ window.env = {
   </div>
 </div>
 
-<!-- Modal overlay and preview card moved outside the container -->
+<!-- Modal overlay and preview card -->
 <div id="modalOverlay"></div>
 <div id="previewCard">
   <h2>Item Preview</h2>
@@ -224,27 +228,32 @@ window.env = {
 </div>
 
 <footer>
-  <div>&copy; 2025 SpookyDecs Network | Admin Area
+  <div>&copy; 2025 SpookyDecs Network | Admin Portal
     <img src="https://assets.spookydecs.com/icons/ghost_icon.svg" alt="Ghost Icon" class="icon">
   </div>
 </footer>
 
 <script>
+// ============================================
+// DOM ELEMENT REFERENCES
+// ============================================
 const modalOverlay = document.getElementById('modalOverlay');
 const createBtn = document.getElementById('createBtn');
 const cancelBtn = document.getElementById('cancelBtn');
 const clearBtn = document.getElementById('clearBtn');
 const dynamicFields = document.getElementById('dynamicFields');
 const typeSelect = document.getElementById('type');
-const inputs = document.querySelectorAll('#createCard input, #createCard select');
 const idField = document.getElementById('idField');
 const generatedId = document.getElementById('generatedId');
 const status = document.getElementById('createStatus');
-
 const previewCard = document.getElementById('previewCard');
 const previewContent = document.getElementById('previewContent');
 const closePreviewBtn = document.getElementById('closePreviewBtn');
+const finishBtn = document.getElementById('finishBtn');
 
+// ============================================
+// FIELD DEFINITIONS
+// ============================================
 const fieldDefinitions = {
   INF: [
     {label:'Height / Length', type:'number', id:'height', min:1, required:true},
@@ -284,34 +293,54 @@ const fieldDefinitions = {
   ]
 };
 
-// --- Helper: Update Cancel/Clear buttons visibility ---
-function updateActionButtons() {
-  const hasData = Array.from(inputs).some(input => input.value);
-  if(hasData){
-    cancelBtn.style.display = 'inline-block';
-    clearBtn.style.display = 'inline-block';
-  } else {
-    cancelBtn.style.display = 'none';
-    clearBtn.style.display = 'none';
-  }
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
+
+function showStatus(message, type = 'error') {
+  status.innerText = message;
+  status.className = `status ${type}`;
+  status.style.display = 'block';
 }
 
-// --- Dynamic fields ---
-typeSelect.addEventListener('change', () => {
+function clearStatus() {
+  status.innerText = '';
+  status.className = 'status';
+  status.style.display = 'none';
+}
+
+function updateActionButtons() {
+  const allInputs = document.querySelectorAll('#createCard input:not([readonly]), #createCard select, #dynamicFields input, #dynamicFields select');
+  const hasData = Array.from(allInputs).some(input => input.value);
+  
+  cancelBtn.style.display = hasData ? 'inline-block' : 'none';
+  clearBtn.style.display = hasData ? 'inline-block' : 'none';
+}
+
+function renderDynamicFields() {
   dynamicFields.innerHTML = '';
-  updateActionButtons();
+  clearStatus();
+  
   const type = typeSelect.value;
-  if(!type || !fieldDefinitions[type]) return;
+  console.log('Rendering fields for type:', type);
+  
+  if(!type || !fieldDefinitions[type]) {
+    console.log('No field definitions for type:', type);
+    updateActionButtons();
+    return;
+  }
 
   const group = document.createElement('div');
   group.className = 'dynamic-group';
+  
   const heading = document.createElement('h3');
   heading.innerText = 'Type Attributes';
   group.appendChild(heading);
 
-  fieldDefinitions[type].forEach(field=>{
+  fieldDefinitions[type].forEach(field => {
     const row = document.createElement('div');
     row.className = 'field-row';
+    
     const label = document.createElement('label');
     label.className = 'field-label';
     label.htmlFor = field.id;
@@ -319,9 +348,9 @@ typeSelect.addEventListener('change', () => {
     row.appendChild(label);
 
     let input;
-    if(field.type==='select'){
+    if(field.type === 'select'){
       input = document.createElement('select');
-      field.options.forEach(opt=>{
+      field.options.forEach(opt => {
         const option = document.createElement('option');
         option.value = opt;
         option.text = opt;
@@ -330,157 +359,235 @@ typeSelect.addEventListener('change', () => {
     } else {
       input = document.createElement('input');
       input.type = field.type;
-      if(field.min) input.min = field.min;
-      if(field.max) input.max = field.max;
+      if(field.min !== undefined) input.min = field.min;
+      if(field.max !== undefined) input.max = field.max;
     }
+    
     input.id = field.id;
     input.required = field.required;
     input.addEventListener('input', updateActionButtons);
+    
     row.appendChild(input);
     group.appendChild(row);
   });
 
   dynamicFields.appendChild(group);
-});
-
-// --- Input event for static fields ---
-inputs.forEach(input => input.addEventListener('input', updateActionButtons));
-
-// --- Cancel button ---
-cancelBtn.addEventListener('click', ()=>{
-  inputs.forEach(el=>el.value='');
-  dynamicFields.innerHTML='';
-  idField.style.display='none';
-  previewCard.style.display='none';
+  console.log('Dynamic fields rendered successfully');
   updateActionButtons();
-});
+}
 
-// --- Clear button ---
-clearBtn.addEventListener('click', ()=>{
-  inputs.forEach(el=>el.value='');
-  dynamicFields.innerHTML='';
-  updateActionButtons();
-});
-
-// --- Create button ---
-createBtn.addEventListener('click', ()=>{
-  status.innerText='';
-  const type = typeSelect.value;
-  if(!type){ status.innerText='Please select a Type'; return; }
-
-  let valid = true;
-  const data = {};
-  const allFields = document.querySelectorAll('#createCard input, #createCard select, #dynamicFields input, #dynamicFields select');
-  allFields.forEach(f=>{
-    if(f.required && !f.value){
-      f.style.border='2px solid red';
-      valid=false;
-    } else {
-      f.style.border='1px solid #555';
-      data[f.id] = f.type==='file' && f.files[0]?f.files[0].name:f.value;
-    }
-  });
-
-  if(!valid){ status.innerText='Please fill all required fields'; return; }
-
-  // Generate ID placeholder
-  let id = type+'-001';
-  generatedId.value = id;
-  idField.style.display='block';
-
-  // Show preview card
-  previewContent.innerHTML='';
-  for(let key in data){
-    const fieldDef = Object.values(fieldDefinitions).flat().find(f=>f.id===key);
-    const labelText = fieldDef ? fieldDef.label : key;
-    const row = document.createElement('div');
-    row.className='preview-row';
-    const label = document.createElement('span'); label.className='label'; label.innerText=labelText;
-    const value = document.createElement('span'); value.className='value'; value.innerText=data[key];
-    row.appendChild(label);
-    row.appendChild(value);
-    previewContent.appendChild(row);
-  }
-
-  modalOverlay.style.display = 'block';
-  previewCard.style.display = 'flex';
-});
-
-// --- Close Preview ---
 function closeModal() {
   previewCard.style.display = 'none';
   modalOverlay.style.display = 'none';
 }
 
+function resetForm() {
+  const allInputs = document.querySelectorAll('#createCard input:not([readonly]), #createCard select');
+  allInputs.forEach(el => {
+    el.value = '';
+    el.style.border = '1px solid #555';
+  });
+  dynamicFields.innerHTML = '';
+  idField.style.display = 'none';
+  clearStatus();
+  updateActionButtons();
+}
+
+function getAllFormData() {
+  const data = {
+    shortName: document.getElementById('shortName').value,
+    type: document.getElementById('type').value,
+    category: document.getElementById('category').value
+  };
+  
+  // Add dynamic fields
+  const dynamicInputs = document.querySelectorAll('#dynamicFields input, #dynamicFields select');
+  dynamicInputs.forEach(input => {
+    if(input.value) {
+      // Convert numbers appropriately
+      if(input.type === 'number') {
+        data[input.id] = parseInt(input.value) || parseFloat(input.value);
+      } else if(input.type === 'file' && input.files[0]) {
+        data[input.id] = input.files[0].name;
+      } else {
+        data[input.id] = input.value;
+      }
+    }
+  });
+  
+  return data;
+}
+
+// ============================================
+// EVENT LISTENERS
+// ============================================
+
+// Dynamic field rendering when type changes
+typeSelect.addEventListener('change', renderDynamicFields);
+
+// Update buttons on input
+const staticInputs = document.querySelectorAll('#createCard input:not([readonly]), #createCard select');
+staticInputs.forEach(input => input.addEventListener('input', updateActionButtons));
+
+// Cancel button
+cancelBtn.addEventListener('click', () => {
+  resetForm();
+  closeModal();
+});
+
+// Clear button
+clearBtn.addEventListener('click', resetForm);
+
+// Preview button
+createBtn.addEventListener('click', () => {
+  clearStatus();
+  
+  const type = typeSelect.value;
+  if(!type) {
+    showStatus('Please select a Type', 'error');
+    return;
+  }
+
+  let valid = true;
+  const allFields = document.querySelectorAll('#createCard input:not([readonly]), #createCard select, #dynamicFields input, #dynamicFields select');
+  
+  allFields.forEach(f => {
+    if(f.required && !f.value) {
+      f.style.border = '2px solid red';
+      valid = false;
+    } else {
+      f.style.border = '1px solid #555';
+    }
+  });
+
+  if(!valid) {
+    showStatus('Please fill all required fields', 'error');
+    return;
+  }
+
+  // Get all data
+  const data = getAllFormData();
+
+  // Generate ID placeholder
+  const id = type + '-001';
+  generatedId.value = id;
+  idField.style.display = 'block';
+
+  // Build preview
+  previewContent.innerHTML = '';
+  
+  // Basic fields first
+  const basicFields = [
+    {key: 'shortName', label: 'Short Name'},
+    {key: 'type', label: 'Type'},
+    {key: 'category', label: 'Category'}
+  ];
+  
+  basicFields.forEach(({key, label}) => {
+    if(data[key]) {
+      const row = document.createElement('div');
+      row.className = 'preview-row';
+      const labelSpan = document.createElement('span');
+      labelSpan.className = 'label';
+      labelSpan.innerText = label;
+      const valueSpan = document.createElement('span');
+      valueSpan.className = 'value';
+      valueSpan.innerText = data[key];
+      row.appendChild(labelSpan);
+      row.appendChild(valueSpan);
+      previewContent.appendChild(row);
+    }
+  });
+  
+  // Dynamic fields
+  for(let key in data) {
+    if(['shortName', 'type', 'category'].includes(key)) continue;
+    
+    const fieldDef = Object.values(fieldDefinitions).flat().find(f => f.id === key);
+    const labelText = fieldDef ? fieldDef.label : key;
+    
+    const row = document.createElement('div');
+    row.className = 'preview-row';
+    const label = document.createElement('span');
+    label.className = 'label';
+    label.innerText = labelText;
+    const value = document.createElement('span');
+    value.className = 'value';
+    value.innerText = data[key];
+    row.appendChild(label);
+    row.appendChild(value);
+    previewContent.appendChild(row);
+  }
+
+  // Show modal
+  modalOverlay.style.display = 'block';
+  previewCard.style.display = 'flex';
+});
+
+// Close preview
 closePreviewBtn.addEventListener('click', closeModal);
-modalOverlay.addEventListener('click', closeModal); // optional: click outside closes modal
+modalOverlay.addEventListener('click', closeModal);
 
-const finishBtn = document.getElementById('finishBtn');
-
-finishBtn.addEventListener('click', ()=>{
-  alert('Finish button clicked! (submission not yet implemented)');
+// Finish button - Submit to Lambda
 finishBtn.addEventListener('click', async () => {
   try {
-    // Gather data from preview (or directly from form fields if needed)
-    const data = {
-      type: document.getElementById('type').value,
-      short_name: document.getElementById('short_name').value,
-      category: document.getElementById('category').value,
-      length: parseInt(document.getElementById('length').value) || 0,
-      maleEnds: parseInt(document.getElementById('maleEnds').value) || 0,
-      femaleEnds: parseInt(document.getElementById('femaleEnds').value) || 0,
-      stakes: parseInt(document.getElementById('stakes').value) || 0,
-      tethers: parseInt(document.getElementById('tethers').value) || 0,
-      acquired: document.getElementById('acquired').value || null,
-      power: document.getElementById('power').value || null,
-      connects_to: document.getElementById('connects_to').value || null,
-      icon: document.getElementById('icon').value || null,
-      nfc_tag_id: document.getElementById('nfc_tag_id').value || null
-    };
+    // Gather all form data
+    const formData = getAllFormData();
 
-    console.log("Submitting item data:", data);
+    console.log("Submitting item data:", formData);
 
-    // Disable Finish button to prevent duplicate submissions
+    // Disable button
     finishBtn.disabled = true;
     finishBtn.textContent = "Submitting...";
 
-    // --- ENVIRONMENT LOGIC ---
-    const isProd = window.location.href.includes("/prod/");
-    const apiBase = isProd
+    // Determine environment
+    const env = window.env?.env || 'dev';
+    const apiBase = env === 'prod'
       ? "https://miinu7boec.execute-api.us-east-2.amazonaws.com/prod"
       : "https://miinu7boec.execute-api.us-east-2.amazonaws.com/dev";
 
-    const response = await fetch(`${apiBase}/item`, {
+    console.log(`Using ${env} environment: ${apiBase}`);
+
+    const response = await fetch(`${apiBase}/items`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "x-env": env
       },
-      body: JSON.stringify(data)
+      body: JSON.stringify(formData)
     });
 
     const result = await response.json();
     console.log("Lambda response:", result);
 
     if (!response.ok) {
-      alert(`❌ Error: ${result.error || 'Failed to create item'}`);
+      const errorMsg = result.error || result.message || 'Failed to create item';
+      console.error('API Error:', errorMsg);
+      alert(`❌ Error: ${errorMsg}`);
       return;
     }
 
-    // --- Show success ---
-    alert(`✅ Item created successfully!\nID: ${result.item.id}`);
+    // Success
+    const itemId = result.id || result.item?.id || generatedId.value;
+    alert(`✅ Item created successfully!\nID: ${itemId}`);
 
-    // Reset form & close modal
-    document.getElementById('createForm').reset();
+    // Reset form
+    resetForm();
     closeModal();
 
   } catch (err) {
     console.error("Error submitting item:", err);
-    alert("❌ An unexpected error occurred.");
+    alert(`❌ Network error: ${err.message}`);
   } finally {
     finishBtn.disabled = false;
     finishBtn.textContent = "Finish";
   }
 });
+
+// Initialize
+updateActionButtons();
+
+console.log('Create form initialized successfully');
 </script>
 
 </body>
