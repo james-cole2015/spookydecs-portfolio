@@ -363,6 +363,7 @@ clearBtn.addEventListener('click', ()=>{
 });
 
 // --- Create button ---
+// --- Create button ---
 createBtn.addEventListener('click', ()=>{
   status.innerText='';
   const type = typeSelect.value;
@@ -370,7 +371,7 @@ createBtn.addEventListener('click', ()=>{
 
   let valid = true;
   const data = {};
-  const allFields = document.querySelectorAll('#createCard input, #createCard select');
+  const allFields = document.querySelectorAll('#createCard input, #createCard select, #dynamicFields input, #dynamicFields select');
   allFields.forEach(f=>{
     if(f.required && !f.value){
       f.style.border='2px solid red';
@@ -382,6 +383,7 @@ createBtn.addEventListener('click', ()=>{
   });
 
   if(!valid){ status.innerText='Please fill all required fields'; return; }
+
 
   // Generate ID placeholder
   let id = type+'-001';
