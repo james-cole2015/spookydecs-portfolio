@@ -421,22 +421,65 @@ const finishBtn = document.getElementById('finishBtn');
 
 finishBtn.addEventListener('click', async () => {
   try {
-    // Gather data from preview (or directly from form fields if needed)
-    const data = {
-      type: document.getElementById('type').value,
-      short_name: document.getElementById('short_name').value,
-      category: document.getElementById('category').value,
-      length: parseInt(document.getElementById('length').value) || 0,
-      maleEnds: parseInt(document.getElementById('maleEnds').value) || 0,
-      femaleEnds: parseInt(document.getElementById('femaleEnds').value) || 0,
-      stakes: parseInt(document.getElementById('stakes').value) || 0,
-      tethers: parseInt(document.getElementById('tethers').value) || 0,
-      acquired: document.getElementById('acquired').value || null,
-      power: document.getElementById('power').value || null,
-      connects_to: document.getElementById('connects_to').value || null,
-      icon: document.getElementById('icon').value || null,
-      nfc_tag_id: document.getElementById('nfc_tag_id').value || null
-    };
+    finishBtn.disabled = true;
+    finishBtn.textContent = "Submitting...";
+
+    // Gather all visible form inputs/selects (static + dynamic)
+    const allFields = document.querySelectorAll('#createCard input, #createCard select, #dynamicFields input, #dynamicFields select');
+    const data = {};
+
+    allFields.forEach(f => {
+      if (f.type === 'file') {
+        data[f.id] = f.files[0] ? f.files[0].name : null;
+      } else if (f.type === 'number') {
+        data[f.id] = f.value ? parseFloat(f.value) : null;
+      } else {
+        data[f.id] = f.value || null;
+      }
+    });
+
+    console.log("Submitting item data:", data);
+
+    // --- Environment logic ---
+    const isProd = window.location.href.includes("/prod/");
+    const apiBase = isProd
+      ? "https://miinu7boec.execute-api.us-east-2.amazonaws.com/prod"
+      : "https://miinu7boec.execute-api.us-east-2.amazonaws.com/dev";
+
+    const response = await fetch(`${apiBase}/items`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-env": isProd ? "prod" : "dev"
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("Lambda raw error:", errText);
+      alert(`❌ Failed to create item: ${errText}`);
+      return;
+    }
+
+    const result = await response.json();
+    console.log("Lambda response:", result);
+    alert(`✅ Item created successfully!\n${result.item?.id ? "ID: " + result.item.id : ""}`);
+
+    // Reset form & modal
+    inputs.forEach(el => (el.value = ""));
+    dynamicFields.innerHTML = "";
+    idField.style.display = "none";
+    closeModal();
+
+  } catch (err) {
+    console.error("Error submitting item:", err);
+    alert("❌ An unexpected error occurred.");
+  } finally {
+    finishBtn.disabled = false;
+    finishBtn.textContent = "Finish";
+  }
+});
 
     console.log("Submitting item data:", data);
 
