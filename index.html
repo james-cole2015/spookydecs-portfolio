@@ -49,7 +49,7 @@
 <!-- ====== Header ====== -->
 <header>
   <div style="display:flex; align-items:center;">
-    <img src="https://assets.spookydecs.com/icons/halloween_icon.svg" alt="SpookyDecs Logo">
+    <img src="https://www.spookydecs.com/icons/pumpkin-svgrepo-com.svg" alt="SpookyDecs Logo">
     <h1>SpookyDecs Portal</h1>
   </div>
   <nav>
@@ -152,7 +152,7 @@
   // --- ENVIRONMENT DETECTION ---
   const origin = window.location.origin;
   const isDev = origin.includes("dev-");
-  const COGNITO_DOMAIN = "auth.spookydecs.com";
+  const COGNITO_DOMAIN = "us-east-2bnxsu5let.auth.us-east-2.amazoncognito.com";
   const CLIENT_ID = "11er9f8qa7jkvgelm6hernb2ed";
   const REDIRECT_URI = encodeURIComponent(isDev ? "https://dev-admin.spookydecs.com" : "https://admin.spookydecs.com");
 
