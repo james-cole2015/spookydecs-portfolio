@@ -128,7 +128,6 @@ footer img.icon { height:2em; width:2em; animation: floatIcon 3s ease-in-out inf
 <body>
 
 <script>
-
 window.env = {
   env:'dev',
   ADMIN_URL:'https://dev-admin.spookydecs.com',
@@ -211,15 +210,16 @@ window.env = {
 
     <div class="status" id="createStatus"></div>
   </div>
+</div>
 
-  <!-- Preview Card -->
-  <div id="previewCard">
-    <h2>Item Preview</h2>
-    <div id="previewContent"></div>
-    <div class="button-row" style="justify-content:center; gap:12px;">
-      <button class="btn-danger" id="closePreviewBtn" style="display:inline-block;">Close Preview</button>
-      <button class="btn-primary" id="finishBtn">Finish</button>
-    </div>
+<!-- Modal overlay and preview card moved outside the container -->
+<div id="modalOverlay"></div>
+<div id="previewCard">
+  <h2>Item Preview</h2>
+  <div id="previewContent"></div>
+  <div class="button-row" style="justify-content:center; gap:12px;">
+    <button class="btn-danger" id="closePreviewBtn" style="display:inline-block;">Close Preview</button>
+    <button class="btn-primary" id="finishBtn">Finish</button>
   </div>
 </div>
 
@@ -363,7 +363,6 @@ clearBtn.addEventListener('click', ()=>{
 });
 
 // --- Create button ---
-// --- Create button ---
 createBtn.addEventListener('click', ()=>{
   status.innerText='';
   const type = typeSelect.value;
@@ -383,7 +382,6 @@ createBtn.addEventListener('click', ()=>{
   });
 
   if(!valid){ status.innerText='Please fill all required fields'; return; }
-
 
   // Generate ID placeholder
   let id = type+'-001';
@@ -417,17 +415,12 @@ function closeModal() {
 closePreviewBtn.addEventListener('click', closeModal);
 modalOverlay.addEventListener('click', closeModal); // optional: click outside closes modal
 
-
 const finishBtn = document.getElementById('finishBtn');
 
 finishBtn.addEventListener('click', ()=>{
   alert('Finish button clicked! (submission not yet implemented)');
 });
-
 </script>
-<div id="modalOverlay"></div>
 
 </body>
 </html>
-
-<!--SAVE POINT for finish / close button -->
