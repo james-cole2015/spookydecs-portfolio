@@ -200,8 +200,9 @@ window.env = {
   <div id="previewCard">
     <h2>Item Preview</h2>
     <div id="previewContent"></div>
-    <div class="button-row" style="justify-content:center;">
+    <div class="button-row" style="justify-content:center; gap:12px;">
       <button class="btn-danger" id="closePreviewBtn">Close Preview</button>
+      <button class="btn-primary" id="Finish"></button>
     </div>
   </div>
 </div>
@@ -390,6 +391,13 @@ createBtn.addEventListener('click', ()=>{
 closePreviewBtn.addEventListener('click', ()=>{
   previewCard.style.display='none';
 });
+
+const finishBtn = document.getElementById('finishBtn');
+
+finishBtn.addEventListener('click', ()=>{
+  alert('Finish button clicked! (submission not yet implemented)');
+});
+
 </script>
 
 </body>
