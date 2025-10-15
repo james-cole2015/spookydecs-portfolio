@@ -551,8 +551,7 @@ finishBtn.addEventListener('click', async () => {
     const response = await fetch(`${apiBase}/items`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        "x-env": env
+        "Content-Type": "application/json"
       },
       body: JSON.stringify(formData)
     });
