@@ -415,11 +415,73 @@ function closeModal() {
 closePreviewBtn.addEventListener('click', closeModal);
 modalOverlay.addEventListener('click', closeModal); // optional: click outside closes modal
 
+ // SUBMITTING to Dynamo DB via Lambda // 
+
 const finishBtn = document.getElementById('finishBtn');
 
-finishBtn.addEventListener('click', ()=>{
-  alert('Finish button clicked! (submission not yet implemented)');
+finishBtn.addEventListener('click', async () => {
+  try {
+    // Gather data from preview (or directly from form fields if needed)
+    const data = {
+      type: document.getElementById('type').value,
+      short_name: document.getElementById('short_name').value,
+      category: document.getElementById('category').value,
+      length: parseInt(document.getElementById('length').value) || 0,
+      maleEnds: parseInt(document.getElementById('maleEnds').value) || 0,
+      femaleEnds: parseInt(document.getElementById('femaleEnds').value) || 0,
+      stakes: parseInt(document.getElementById('stakes').value) || 0,
+      tethers: parseInt(document.getElementById('tethers').value) || 0,
+      acquired: document.getElementById('acquired').value || null,
+      power: document.getElementById('power').value || null,
+      connects_to: document.getElementById('connects_to').value || null,
+      icon: document.getElementById('icon').value || null,
+      nfc_tag_id: document.getElementById('nfc_tag_id').value || null
+    };
+
+    console.log("Submitting item data:", data);
+
+    // Disable Finish button to prevent duplicate submissions
+    finishBtn.disabled = true;
+    finishBtn.textContent = "Submitting...";
+
+    // --- ENVIRONMENT LOGIC ---
+    const isProd = window.location.href.includes("/prod/");
+    const apiBase = isProd
+      ? "https://miinu7boec.execute-api.us-east-2.amazonaws.com/prod"
+      : "https://miinu7boec.execute-api.us-east-2.amazonaws.com/dev";
+
+    const response = await fetch(`${apiBase}/create-item`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(data)
+    });
+
+    const result = await response.json();
+    console.log("Lambda response:", result);
+
+    if (!response.ok) {
+      alert(`❌ Error: ${result.error || 'Failed to create item'}`);
+      return;
+    }
+
+    // --- Show success ---
+    alert(`✅ Item created successfully!\nID: ${result.item.id}`);
+
+    // Reset form & close modal
+    document.getElementById('createForm').reset();
+    closeModal();
+
+  } catch (err) {
+    console.error("Error submitting item:", err);
+    alert("❌ An unexpected error occurred.");
+  } finally {
+    finishBtn.disabled = false;
+    finishBtn.textContent = "Finish";
+  }
 });
+
 </script>
 
 </body>
