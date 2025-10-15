@@ -58,21 +58,36 @@ header button:hover { opacity:0.9; }
   max-width:600px; 
 }
 
+/* Preview Modal */
 #previewCard {
+  display: none; /* hidden by default */
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   background: #2b2b2b;
   padding: 35px 25px;
   border-radius: 12px;
   box-shadow: 0 6px 20px rgba(0,0,0,0.7);
-  display: none;
   flex-direction: column;
   gap: 20px;
-  width:100%;
-  max-width:650px;
-  position: absolute;
+  width: 90%;
+  max-width: 650px;
+  z-index: 10000;
+}
+
+/* Modal overlay background */
+#modalOverlay {
+  display: none; /* hidden by default */
+  position: fixed;
   top: 0;
   left: 0;
-  z-index: 100;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6); /* semi-transparent dark background */
+  z-index: 9999;
 }
+
 
 #createCard h2, #previewCard h2 { text-align:center; margin-bottom:15px; color:#ff7518; text-shadow:1px 1px 2px #000; }
 
@@ -113,6 +128,7 @@ footer img.icon { height:2em; width:2em; animation: floatIcon 3s ease-in-out inf
 <body>
 
 <script>
+
 window.env = {
   env:'dev',
   ADMIN_URL:'https://dev-admin.spookydecs.com',
@@ -188,7 +204,7 @@ window.env = {
 
     <!-- Buttons -->
     <div class="button-row">
-      <button class="btn-primary" id="createBtn">Create</button>
+      <button class="btn-primary" id="createBtn">Preview</button>
       <button class="btn-danger" id="cancelBtn">Cancel</button>
       <button class="btn-danger" id="clearBtn">Clear</button>
     </div>
@@ -214,6 +230,7 @@ window.env = {
 </footer>
 
 <script>
+const modalOverlay = document.getElementById('modalOverlay');
 const createBtn = document.getElementById('createBtn');
 const cancelBtn = document.getElementById('cancelBtn');
 const clearBtn = document.getElementById('clearBtn');
@@ -384,13 +401,20 @@ createBtn.addEventListener('click', ()=>{
     row.appendChild(value);
     previewContent.appendChild(row);
   }
-  previewCard.style.display='flex';
+
+  modalOverlay.style.display = 'block';
+  previewCard.style.display = 'flex';
 });
 
 // --- Close Preview ---
-closePreviewBtn.addEventListener('click', ()=>{
-  previewCard.style.display='none';
-});
+function closeModal() {
+  previewCard.style.display = 'none';
+  modalOverlay.style.display = 'none';
+}
+
+closePreviewBtn.addEventListener('click', closeModal);
+modalOverlay.addEventListener('click', closeModal); // optional: click outside closes modal
+
 
 const finishBtn = document.getElementById('finishBtn');
 
@@ -399,6 +423,7 @@ finishBtn.addEventListener('click', ()=>{
 });
 
 </script>
+<div id="modalOverlay"></div>
 
 </body>
 </html>
