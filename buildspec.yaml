@@ -8,7 +8,7 @@ phases:
 
   pre_build:
     commands:
-      - echo "Deploying to environment $DEPLOY_ENV"
+      - echo "Deploying to environment $DEPLOY_ENV" #this variable is set in the CodeBuild console under advanced settings
       - if [[ -z "$DEPLOY_ENV" ]]; then
           echo "DEPLOY_ENV not set. Aborting deployment.";
           exit 1;
