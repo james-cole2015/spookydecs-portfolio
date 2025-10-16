@@ -29,7 +29,7 @@ body {
 
 /* ---------- Header ---------- */
 header { width: 100%; box-sizing: border-box; background-color: #2e2e2e; color: #fff; padding: 15px 40px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #888; position:relative; }
-header .logo-title { display:flex; align-items:center; gap:12px; }
+/*header .logo-title { display:flex; align-items:center; gap:12px; }*/
 header h1 { margin:0; font-size:1.4rem; color:#ccc; }
 header img.icon { height:40px; animation: floatIcon 3s ease-in-out infinite alternate; }
 header .spiderweb { height:40px; }
@@ -37,13 +37,16 @@ header .header-links { display:flex; align-items:center; gap:12px; }
 header button { padding:6px 12px; border:none; border-radius:4px; cursor:pointer; background:#007bff; color:#fff; }
 header button:hover { opacity:0.9; }
 
-/* ---------- Hamburger ---------- */
-.hamburger { display:none; flex-direction:column; justify-content:space-between; width:24px; height:18px; cursor:pointer; }
+/* ---------- Hamburger ---------- 
+.hamburger { display:none; flex-direction:column; justify-content:space-between; width:24px; height:18px; cursor:pointer; z-index:1001; }
 .hamburger div { height:3px; background:#fff; border-radius:2px; }
-.offcanvas { position:fixed; top:0; left:-260px; width:260px; height:100%; background:#2e2e2e; color:#fff; transition:left 0.3s ease; padding:20px; display:flex; flex-direction:column; gap:20px; z-index:1000; }
+.offcanvas { position:fixed; top:0; left:-260px; width:260px; height:100%; background:rgba(46,46,46,0.95); color:#fff; transition:left 0.3s ease; padding:20px; display:flex; flex-direction:column; gap:20px; z-index:1000; }
 .offcanvas.open { left:0; }
-.offcanvas a, .offcanvas button { color:#fff; text-decoration:none; background:none; border:none; text-align:left; font-size:1rem; cursor:pointer; }
+.offcanvas a, .offcanvas button { color:#fff; text-decoration:none; background:none; border:none; text-align:left; font-size:1rem; cursor:pointer; padding:8px 0; }
+.offcanvas a:hover, .offcanvas button:hover { opacity:0.8; }
 .offcanvas .footer { font-size:0.8rem; color:#ccc; margin-top:auto; }
+
+*/
 
 /* ---------- Create & Preview Cards ---------- */
 #createCard { 
@@ -124,7 +127,7 @@ footer img.icon { height:2em; width:2em; animation: floatIcon 3s ease-in-out inf
   header .spiderweb { display:none; }
   header h1 { text-align:center; font-size:1.2rem; }
   .header-links { display:none; }
-  .hamburger { display:flex; position:absolute; left:15px; top:calc(50% - 9px); }
+  /*.hamburger { display:flex; position:absolute; left:15px; top:calc(50% - 9px); }*/
   #createCard { padding:15px; }
 }
 </style>
@@ -140,7 +143,7 @@ window.env = {
 </script>
 
 <header>
-  <div class="hamburger" id="hamburger"><div></div><div></div><div></div></div>
+  <!--<div class="hamburger" id="hamburger"><div></div><div></div><div></div></div>-->
   <div class="logo-title">
     <img src="https://assets.spookydecs.com/icons/frankenstein_icon.svg" alt="SpookyDecs Logo" class="icon">
     <h1>SpookyDecs Portal</h1>
@@ -153,12 +156,14 @@ window.env = {
   </div>
 </header>
 
+<!-- 
 <div class="offcanvas" id="offcanvas">
+  <a href="#" id="off-admin-link">Admin</a>
+  <a href="#" id="off-inventory-link">Inventory</a>
   <button id="off-signout">Sign Out</button>
-  <a href="#" id="off-admin-link">Return to Admin</a>
-  <a href="#" id="off-main-link">Main Site</a>
   <div class="footer">&copy; 2025 SpookyDecs Network | Admin Portal</div>
 </div>
+-->
 
 <div class="container">
   <!-- Create Card -->
@@ -228,7 +233,7 @@ window.env = {
 </div>
 
 <footer>
-  <div>&copy; 2025 SpookyDecs Network | Admin Portal
+  <div>&copy; 2025 SpookyDecs Network | Admin Area
     <img src="https://assets.spookydecs.com/icons/ghost_icon.svg" alt="Ghost Icon" class="icon">
   </div>
 </footer>
@@ -551,7 +556,8 @@ finishBtn.addEventListener('click', async () => {
     const response = await fetch(`${apiBase}/items`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "x-env": env
       },
       body: JSON.stringify(formData)
     });
@@ -586,8 +592,39 @@ finishBtn.addEventListener('click', async () => {
 // Initialize
 updateActionButtons();
 
+// Set up environment-based navigation
+const adminUrl = window.env?.ADMIN_URL || 'https://admin.spookydecs.com';
+const inventoryUrl = window.env?.MAIN_URL || 'https://spookydecs.com';
+
+document.getElementById('link-admin').href = adminUrl;
+document.getElementById('link-main').href = inventoryUrl;
+
+// document.getElementById('off-admin-link').href = adminUrl;
+// document.getElementById('off-inventory-link').href = inventoryUrl;
+
+
+/*
+// Hamburger menu toggle
+const hamburger = document.getElementById('hamburger');
+const offcanvas = document.getElementById('offcanvas');
+
+if (hamburger && offcanvas) {
+  hamburger.addEventListener('click', () => {
+    offcanvas.classList.toggle('open');
+  });
+  
+  // Close menu when clicking outside
+  document.addEventListener('click', (e) => {
+    if (offcanvas.classList.contains('open') && 
+        !offcanvas.contains(e.target) && 
+        !hamburger.contains(e.target)) {
+      offcanvas.classList.remove('open');
+    }
+  });
+}
+*/
 console.log('Create form initialized successfully');
 </script>
-<!-- SAVE POINT THE CREATE WORKS!!-->
+
 </body>
 </html>
