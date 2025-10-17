@@ -149,15 +149,34 @@
 
 <!-- ====== JS ====== -->
 <script>
-  // --- ENVIRONMENT DETECTION ---
-  const origin = window.location.origin;
-  const isDev = origin.includes("dev-");
-  const COGNITO_DOMAIN = "us-east-2bnxsu5let.auth.us-east-2.amazoncognito.com";
-  const CLIENT_ID = "11er9f8qa7jkvgelm6hernb2ed";
-  const REDIRECT_URI = encodeURIComponent(isDev ? "https://dev-admin.spookydecs.com" : "https://admin.spookydecs.com");
+  let CONFIG = null;
+  let COGNITO_DOMAIN = null;
+  let CLIENT_ID = null;
+  let REDIRECT_URI = null;
+  let LOGIN_URL = null;
+  let LOGOUT_URL = null;
 
-  const LOGIN_URL = `https://${COGNITO_DOMAIN}/login?response_type=token&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}`;
-  const LOGOUT_URL = `https://${COGNITO_DOMAIN}/logout?client_id=${CLIENT_ID}&logout_uri=${REDIRECT_URI}`;
+  // --- LOAD CONFIG AND INITIALIZE ---
+  async function loadConfig() {
+    try {
+      const response = await fetch('/config.json');
+      CONFIG = await response.json();
+      
+      // Set up Cognito variables from config
+      COGNITO_DOMAIN = CONFIG.COGNITO_DOMAIN;
+      CLIENT_ID = CONFIG.COGNITO_CLIENT_ID;
+      REDIRECT_URI = encodeURIComponent(CONFIG.ADMIN_URL);
+      
+      LOGIN_URL = `https://${COGNITO_DOMAIN}/login?response_type=token&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}`;
+      LOGOUT_URL = `https://${COGNITO_DOMAIN}/logout?client_id=${CLIENT_ID}&logout_uri=${REDIRECT_URI}`;
+      
+      // Check authentication
+      checkAuth();
+    } catch (error) {
+      console.error('Failed to load config:', error);
+      alert('Configuration error. Please contact support.');
+    }
+  }
 
   // --- PARSE TOKEN FROM URL HASH ---
   function parseCognitoHash() {
@@ -173,9 +192,11 @@
   }
 
   // --- CHECK LOGIN STATE ---
-  const token = parseCognitoHash() || localStorage.getItem("id_token");
-  if (!token) {
-    window.location.href = LOGIN_URL;
+  function checkAuth() {
+    const token = parseCognitoHash() || localStorage.getItem("id_token");
+    if (!token) {
+      window.location.href = LOGIN_URL;
+    }
   }
 
   // --- LOGOUT HANDLER ---
@@ -200,6 +221,9 @@
   function archiveOldItems(){ alert("Archive Old Items clicked! Hook API here."); }
   function prepShoppingList(){ alert("Prep Shopping List clicked! Hook API here."); }
   function managePhotos(){ alert("Manage Photos clicked! Hook API here."); }
+
+  // Initialize on page load
+  loadConfig();
 </script>
 
 </body>
