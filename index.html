@@ -73,6 +73,18 @@
   </div>
 
   <div class="card">
+    <div class="card-header"><div class="icon-placeholder">I</div><h3>Submit Idea</h3></div>
+    <p>Add a new idea for tracking in the offseason</p>
+    <button onclick="createIdea()">Add Idea</button>
+  </div>
+
+    <div class="card">
+    <div class="card-header"><div class="icon-placeholder">I</div><h3>Manage Inspiration</h3></div>
+    <p>Submit holiday inspiration!</p>
+    <button onclick="manageInspirations()">Update Inspirations</button>
+  </div>
+
+  <div class="card">
     <div class="card-header"><div class="icon-placeholder">P</div><h3>Packing Process</h3></div>
     <p>Scan tote → scan items → assign items → confirm completion.</p>
     <button onclick="startPacking()">Start Packing</button>
@@ -221,9 +233,28 @@
   function archiveOldItems(){ alert("Archive Old Items clicked! Hook API here."); }
   function prepShoppingList(){ alert("Prep Shopping List clicked! Hook API here."); }
   function managePhotos(){ alert("Manage Photos clicked! Hook API here."); }
+  function createIdeas(){ alert("Create Ideas clicked! Hook API here."); }
+  function manageInspirations(){ alert("Manage Inspirations clicked! Hook API here."); }
 
   // Initialize on page load
   loadConfig();
+
+
+    function addFavicon(url) {
+      const existingIcons = document.querySelectorAll('link[rel="icon"], link[rel="shortcut icon"]');
+      existingIcons.forEach(icon => icon.parentNode.removeChild(icon));
+
+      const link = document.createElement('link');
+      link.rel = 'icon';
+      link.type = 'image/png';
+      link.href = url;
+
+      document.head.appendChild(link);
+    }
+
+    addFavicon('https://assets.spookydecs.com/icons/admin-gear-icon.svg');
+
+
 </script>
 
 </body>
