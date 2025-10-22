@@ -163,28 +163,29 @@
   let LOGOUT_URL = null;
   let IDEAS_URL = null;
 
-  // --- LOAD CONFIG AND INITIALIZE ---
-  async function loadConfig() {
-    try {
-      const response = await fetch('/config.json');
-      CONFIG = await response.json();
-      
-      // Set up Cognito variables from config
-      COGNITO_DOMAIN = CONFIG.COGNITO_DOMAIN;
-      CLIENT_ID = CONFIG.COGNITO_CLIENT_ID;
-      REDIRECT_URI = encodeURIComponent(CONFIG.ADMIN_URL);
-      
-      LOGIN_URL = `https://${COGNITO_DOMAIN}/login?response_type=token&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}`;
-      LOGOUT_URL = `https://${COGNITO_DOMAIN}/logout?client_id=${CLIENT_ID}&logout_uri=${REDIRECT_URI}`;
-      window.IDEAS_URL = config.IDEAS_URL;
-      
-      // Check authentication
-      checkAuth();
-    } catch (error) {
-      console.error('Failed to load config:', error);
-      alert('Configuration error. Please contact support.');
-    }
+// --- LOAD CONFIG AND INITIALIZE ---
+async function loadConfig() {
+  try {
+    const response = await fetch('/config.json');
+    CONFIG = await response.json();
+    
+    // Set up Cognito variables from config
+    COGNITO_DOMAIN = CONFIG.COGNITO_DOMAIN;
+    CLIENT_ID = CONFIG.COGNITO_CLIENT_ID;
+    REDIRECT_URI = encodeURIComponent(CONFIG.ADMIN_URL);
+    
+    LOGIN_URL = `https://${COGNITO_DOMAIN}/login?response_type=token&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}`;
+    LOGOUT_URL = `https://${COGNITO_DOMAIN}/logout?client_id=${CLIENT_ID}&logout_uri=${REDIRECT_URI}`;
+    window.IDEAS_URL = CONFIG.IDEAS_URL;
+    
+    // Check authentication
+    checkAuth();
+  } catch (error) {
+    console.error('Failed to load config:', error);
+    alert('Configuration error. Please contact support.');
   }
+}
+
 
   // --- PARSE TOKEN FROM URL HASH ---
   function parseCognitoHash() {
