@@ -1,0 +1,7 @@
+# Auto-generated .gitignore
+.DS_Store
+node_modules/
+.env
+*..sh
+*..py
+*..DS_Store
