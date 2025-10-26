@@ -340,8 +340,8 @@
         grid-template-columns: 1fr;
         gap: 16px;
       }
-      .expanded-grid {
-        grid-template-columns: 1fr;
+      .expanded-content > div[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
       }
     }
   </style>
@@ -605,25 +605,25 @@
       <button onclick="closeModal('viewModal')" style="background:transparent;border:none;font-size:20px;cursor:pointer;">&times;</button>
     </div>
     
-    <div class="view-item-id" id="viewItemId">ID: ITEM-XXX-XXXX</div>
+    <div class="view-item-id" id="viewItemId">ITEM-XXX-XXXX</div>
     
     <div class="view-content">
       <div class="view-section">
         <h3>Basic Information</h3>
         <div class="view-field">
-          <div class="view-field-label">Name</div>
+          <div class="view-field-label">Name:</div>
           <div class="view-field-value" id="view-short-name">-</div>
         </div>
         <div class="view-field">
-          <div class="view-field-label">Season</div>
+          <div class="view-field-label">Season:</div>
           <div class="view-field-value" id="view-season">-</div>
         </div>
         <div class="view-field">
-          <div class="view-field-label">Class</div>
+          <div class="view-field-label">Class:</div>
           <div class="view-field-value" id="view-class">-</div>
         </div>
         <div class="view-field">
-          <div class="view-field-label">Type</div>
+          <div class="view-field-label">Type:</div>
           <div class="view-field-value" id="view-class-type">-</div>
         </div>
       </div>
@@ -631,23 +631,23 @@
       <div class="view-section">
         <h3>Status & Location</h3>
         <div class="view-field">
-          <div class="view-field-label">Status</div>
+          <div class="view-field-label">Status:</div>
           <div class="view-field-value" id="view-status">-</div>
         </div>
         <div class="view-field">
-          <div class="view-field-label">Needs Repair</div>
+          <div class="view-field-label">Needs Repair:</div>
           <div class="view-field-value" id="view-needs-repair">-</div>
         </div>
         <div class="view-field">
-          <div class="view-field-label">Item Notes</div>
+          <div class="view-field-label">Item Notes:</div>
           <div class="view-field-value" id="view-general-notes">-</div>
         </div>
         <div class="view-field">
-          <div class="view-field-label">Storage Location</div>
+          <div class="view-field-label">Storage Location:</div>
           <div class="view-field-value" id="view-tote-location">-</div>
         </div>
         <div class="view-field">
-          <div class="view-field-label">Last Deployment</div>
+          <div class="view-field-label">Last Deployment:</div>
           <div class="view-field-value" id="view-last-deployment">-</div>
         </div>
       </div>
@@ -655,8 +655,13 @@
     
     <div class="expanded-content" id="expandedContent">
       <h3 style="margin-bottom: 16px;">Additional Information</h3>
-      <div class="expanded-grid" id="expandedGrid">
-        <!-- Additional fields will be populated here -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+        <div id="expandedLeft">
+          <!-- Left side sections -->
+        </div>
+        <div id="expandedRight">
+          <!-- Right side sections -->
+        </div>
       </div>
     </div>
     
@@ -717,6 +722,17 @@
   // Load config and set admin link
   let config = {};
   let allItems = [];
+  
+  // Icon mapping for class types (placeholder icons - easily updatable)
+  const CLASS_TYPE_ICONS = {
+    'Cord': '🔌',
+    'Inflatable': '🎈',
+    'Plug': '⚡',
+    'Static Prop': '🎃',
+    'Animatronic': '🤖',
+    'Light': '💡',
+    'Adapter': '🔧'
+  };
   
   async function loadConfig() {
     try {
@@ -857,12 +873,19 @@
       return;
     }
     
+    // Populate ID (without "ID:" prefix)
+    document.getElementById('viewItemId').textContent = item.id || 'N/A';
+    
     // Populate basic fields
-    document.getElementById('viewItemId').textContent = `ID: ${item.id || 'N/A'}`;
     document.getElementById('view-short-name').textContent = item.short_name || 'N/A';
     document.getElementById('view-season').textContent = item.season || 'N/A';
     document.getElementById('view-class').textContent = item.class || 'N/A';
-    document.getElementById('view-class-type').textContent = item.class_type || 'N/A';
+    
+    // Class type with icon
+    const classTypeEl = document.getElementById('view-class-type');
+    const icon = CLASS_TYPE_ICONS[item.class_type] || '📦';
+    classTypeEl.innerHTML = `<span class="type-icon">${icon}</span> ${item.class_type || 'N/A'}`;
+    
     document.getElementById('view-status').textContent = item.status || 'N/A';
     document.getElementById('view-general-notes').textContent = item.general_notes || 'N/A';
     
@@ -901,99 +924,198 @@
   }
   
   function populateExpandedContent(item) {
-    const expandedGrid = document.getElementById('expandedGrid');
-    expandedGrid.innerHTML = '';
+    const expandedLeft = document.getElementById('expandedLeft');
+    const expandedRight = document.getElementById('expandedRight');
+    expandedLeft.innerHTML = '';
+    expandedRight.innerHTML = '';
     
-    // List of fields to exclude (already shown above)
-    const excludeFields = ['id', 'short_name', 'season', 'class', 'class_type', 
-                          'status', 'general_notes', 'repair_status', 'packing_data', 
-                          'deployment_data'];
+    // LEFT SIDE - Deployment Information
+    const deploySection = document.createElement('div');
+    deploySection.className = 'expanded-section';
     
-    // Add all other fields
-    Object.keys(item).forEach(key => {
-      if (!excludeFields.includes(key)) {
-        const fieldDiv = document.createElement('div');
-        fieldDiv.className = 'view-field';
-        
-        const label = document.createElement('div');
-        label.className = 'view-field-label';
-        label.textContent = formatFieldName(key);
-        
-        const value = document.createElement('div');
-        value.className = 'view-field-value';
-        value.textContent = formatFieldValue(item[key]);
-        
-        fieldDiv.appendChild(label);
-        fieldDiv.appendChild(value);
-        expandedGrid.appendChild(fieldDiv);
-      }
-    });
+    const deployTitle = document.createElement('h4');
+    deployTitle.textContent = 'Deployment Information';
+    deploySection.appendChild(deployTitle);
     
-    // Add nested repair_status fields
-    if (item.repair_status) {
-      Object.keys(item.repair_status).forEach(key => {
-        if (key !== 'needs_repair') {
-          const fieldDiv = document.createElement('div');
-          fieldDiv.className = 'view-field';
-          
-          const label = document.createElement('div');
-          label.className = 'view-field-label';
-          label.textContent = `Repair: ${formatFieldName(key)}`;
-          
-          const value = document.createElement('div');
-          value.className = 'view-field-value';
-          value.textContent = formatFieldValue(item.repair_status[key]);
-          
-          fieldDiv.appendChild(label);
-          fieldDiv.appendChild(value);
-          expandedGrid.appendChild(fieldDiv);
-        }
+    if (item.deployment_data?.previous_deployments && 
+        Array.isArray(item.deployment_data.previous_deployments) && 
+        item.deployment_data.previous_deployments.length > 0) {
+      item.deployment_data.previous_deployments.forEach(dep => {
+        const listItem = document.createElement('div');
+        listItem.className = 'list-item';
+        listItem.style.paddingLeft = '12px';
+        listItem.textContent = dep;
+        deploySection.appendChild(listItem);
       });
+    } else {
+      const noData = document.createElement('div');
+      noData.className = 'list-item';
+      noData.style.paddingLeft = '12px';
+      noData.textContent = 'No previous deployments';
+      deploySection.appendChild(noData);
     }
     
-    // Add nested packing_data fields
-    if (item.packing_data) {
-      Object.keys(item.packing_data).forEach(key => {
-        if (key !== 'tote_location') {
-          const fieldDiv = document.createElement('div');
-          fieldDiv.className = 'view-field';
-          
-          const label = document.createElement('div');
-          label.className = 'view-field-label';
-          label.textContent = `Packing: ${formatFieldName(key)}`;
-          
-          const value = document.createElement('div');
-          value.className = 'view-field-value';
-          value.textContent = formatFieldValue(item.packing_data[key]);
-          
-          fieldDiv.appendChild(label);
-          fieldDiv.appendChild(value);
-          expandedGrid.appendChild(fieldDiv);
-        }
-      });
-    }
+    expandedLeft.appendChild(deploySection);
     
-    // Add nested deployment_data fields
-    if (item.deployment_data) {
-      Object.keys(item.deployment_data).forEach(key => {
-        if (key !== 'last_deployment_id') {
-          const fieldDiv = document.createElement('div');
-          fieldDiv.className = 'view-field';
-          
-          const label = document.createElement('div');
-          label.className = 'view-field-label';
-          label.textContent = `Deployment: ${formatFieldName(key)}`;
-          
-          const value = document.createElement('div');
-          value.className = 'view-field-value';
-          value.textContent = formatFieldValue(item.deployment_data[key]);
-          
-          fieldDiv.appendChild(label);
-          fieldDiv.appendChild(value);
-          expandedGrid.appendChild(fieldDiv);
-        }
-      });
-    }
+    // LEFT SIDE - Repair Information
+    const repairSection = document.createElement('div');
+    repairSection.className = 'expanded-section';
+    
+    const repairTitle = document.createElement('h4');
+    repairTitle.textContent = 'Repair Information';
+    repairSection.appendChild(repairTitle);
+    
+    // Last Repair Date
+    const repairDateField = document.createElement('div');
+    repairDateField.className = 'expanded-field';
+    const repairDateLabel = document.createElement('div');
+    repairDateLabel.className = 'expanded-field-label';
+    repairDateLabel.textContent = 'Last Repair Date:';
+    const repairDateValue = document.createElement('div');
+    repairDateValue.className = 'expanded-field-value';
+    repairDateValue.textContent = item.repair_status?.last_repair_date || 'N/A';
+    repairDateField.appendChild(repairDateLabel);
+    repairDateField.appendChild(repairDateValue);
+    repairSection.appendChild(repairDateField);
+    
+    // Repair Notes
+    const repairNotesField = document.createElement('div');
+    repairNotesField.className = 'expanded-field';
+    const repairNotesLabel = document.createElement('div');
+    repairNotesLabel.className = 'expanded-field-label';
+    repairNotesLabel.textContent = 'Repair Notes:';
+    const repairNotesValue = document.createElement('div');
+    repairNotesValue.className = 'expanded-field-value';
+    repairNotesValue.textContent = item.repair_status?.repair_notes || 'N/A';
+    repairNotesField.appendChild(repairNotesLabel);
+    repairNotesField.appendChild(repairNotesValue);
+    repairSection.appendChild(repairNotesField);
+    
+    // Repair Criticality
+    const repairCritField = document.createElement('div');
+    repairCritField.className = 'expanded-field';
+    const repairCritLabel = document.createElement('div');
+    repairCritLabel.className = 'expanded-field-label';
+    repairCritLabel.textContent = 'Repair Criticality:';
+    const repairCritValue = document.createElement('div');
+    repairCritValue.className = 'expanded-field-value';
+    repairCritValue.textContent = item.repair_status?.last_criticality || 'N/A';
+    repairCritField.appendChild(repairCritLabel);
+    repairCritField.appendChild(repairCritValue);
+    repairSection.appendChild(repairCritField);
+    
+    expandedLeft.appendChild(repairSection);
+    
+    // RIGHT SIDE - Item Information
+    const itemSection = document.createElement('div');
+    itemSection.className = 'expanded-section';
+    
+    const itemTitle = document.createElement('h4');
+    itemTitle.textContent = 'Item Information';
+    itemSection.appendChild(itemTitle);
+    
+    // # of Tethers
+    const tethersField = document.createElement('div');
+    tethersField.className = 'expanded-field';
+    const tethersLabel = document.createElement('div');
+    tethersLabel.className = 'expanded-field-label';
+    tethersLabel.textContent = '# of Tethers:';
+    const tethersValue = document.createElement('div');
+    tethersValue.className = 'expanded-field-value';
+    tethersValue.textContent = item.tethers || 'N/A';
+    tethersField.appendChild(tethersLabel);
+    tethersField.appendChild(tethersValue);
+    itemSection.appendChild(tethersField);
+    
+    // # of Stakes
+    const stakesField = document.createElement('div');
+    stakesField.className = 'expanded-field';
+    const stakesLabel = document.createElement('div');
+    stakesLabel.className = 'expanded-field-label';
+    stakesLabel.textContent = '# of Stakes:';
+    const stakesValue = document.createElement('div');
+    stakesValue.className = 'expanded-field-value';
+    stakesValue.textContent = item.stakes || 'N/A';
+    stakesField.appendChild(stakesLabel);
+    stakesField.appendChild(stakesValue);
+    itemSection.appendChild(stakesField);
+    
+    // Item Height / Length
+    const heightField = document.createElement('div');
+    heightField.className = 'expanded-field';
+    const heightLabel = document.createElement('div');
+    heightLabel.className = 'expanded-field-label';
+    heightLabel.textContent = 'Item Height / Length:';
+    const heightValue = document.createElement('div');
+    heightValue.className = 'expanded-field-value';
+    heightValue.textContent = item.height_length || 'N/A';
+    heightField.appendChild(heightLabel);
+    heightField.appendChild(heightValue);
+    itemSection.appendChild(heightField);
+    
+    expandedRight.appendChild(itemSection);
+    
+    // RIGHT SIDE - Vendor Information
+    const vendorSection = document.createElement('div');
+    vendorSection.className = 'expanded-section';
+    
+    const vendorTitle = document.createElement('h4');
+    vendorTitle.textContent = 'Vendor Information';
+    vendorSection.appendChild(vendorTitle);
+    
+    // Cost
+    const costField = document.createElement('div');
+    costField.className = 'expanded-field';
+    const costLabel = document.createElement('div');
+    costLabel.className = 'expanded-field-label';
+    costLabel.textContent = 'Cost:';
+    const costValue = document.createElement('div');
+    costValue.className = 'expanded-field-value';
+    costValue.textContent = item.vendor_metadata?.cost || 'N/A';
+    costField.appendChild(costLabel);
+    costField.appendChild(costValue);
+    vendorSection.appendChild(costField);
+    
+    // Value
+    const valueField = document.createElement('div');
+    valueField.className = 'expanded-field';
+    const valueLabel = document.createElement('div');
+    valueLabel.className = 'expanded-field-label';
+    valueLabel.textContent = 'Value:';
+    const valueValue = document.createElement('div');
+    valueValue.className = 'expanded-field-value';
+    valueValue.textContent = item.vendor_metadata?.value || 'N/A';
+    valueField.appendChild(valueLabel);
+    valueField.appendChild(valueValue);
+    vendorSection.appendChild(valueField);
+    
+    // Manufacturer
+    const mfgField = document.createElement('div');
+    mfgField.className = 'expanded-field';
+    const mfgLabel = document.createElement('div');
+    mfgLabel.className = 'expanded-field-label';
+    mfgLabel.textContent = 'Manufacturer:';
+    const mfgValue = document.createElement('div');
+    mfgValue.className = 'expanded-field-value';
+    mfgValue.textContent = item.vendor_metadata?.manufacturer || 'N/A';
+    mfgField.appendChild(mfgLabel);
+    mfgField.appendChild(mfgValue);
+    vendorSection.appendChild(mfgField);
+    
+    // Store
+    const storeField = document.createElement('div');
+    storeField.className = 'expanded-field';
+    const storeLabel = document.createElement('div');
+    storeLabel.className = 'expanded-field-label';
+    storeLabel.textContent = 'Store:';
+    const storeValue = document.createElement('div');
+    storeValue.className = 'expanded-field-value';
+    storeValue.textContent = item.vendor_metadata?.vendor_store || 'N/A';
+    storeField.appendChild(storeLabel);
+    storeField.appendChild(storeValue);
+    vendorSection.appendChild(storeField);
+    
+    expandedRight.appendChild(vendorSection);
   }
   
   function formatFieldName(key) {
