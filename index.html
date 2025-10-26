@@ -1,121 +1,715 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Under Construction - Spooky Decs</title>
-  <!-- Favicon -->
-<link rel="icon" href="data:image/svg+xml,
-  <svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22>
-    <text y=%22.9em%22 font-size=%2290%22>🎃</text>
-  </svg>">
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpookyDecs — Items Management</title>
   <style>
-    /* ---------- Base ---------- */
+    /* Neutral theme (Halloween + Christmas fusion) */
     :root {
-      --bg: #0a0a0a;
-      --orange: #ff7518;
-      --text: #f5f5f5;
-      --shadow: rgba(255, 117, 24, 0.6);
+      --accent: #9146ff;
+      --accent2: #0ea5e9;
+      --neutral-bg: linear-gradient(135deg, #fafafa 0%, #fff8f0 100%);
+      --text-dark: #1f2937;
+      --halloween: #e87c1e;
+      --christmas: #2b7a0b;
     }
-
-    html, body {
-      height: 100%;
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Cinzel', 'Creepster', serif;
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, Segoe UI, Roboto, Arial;
+      margin: 16px;
+      background: var(--neutral-bg);
+      color: var(--text-dark);
+      min-height: 100vh;
+    }
+    header {
+      padding: 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: linear-gradient(90deg, #b3e5fc 0%, #81d4fa 100%);
+      border: 1px solid white;
+      color: #0f172a;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+    }
+    h1 { margin: 0; font-size: 20px; }
+    h2 { margin: 0 0 12px 0; font-size: 16px; color: #374151; }
+    
+    /* Stats Cards Section */
+    .stats-section { margin-bottom: 16px; }
+    .stats-label { font-size: 13px; font-weight: 600; color: #6b7280; margin-bottom: 8px; }
+    .cards { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+    .card {
+      background: white;
+      padding: 12px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+      min-width: 140px;
+      transition: transform .15s;
+      flex: 1;
+      min-width: 100px;
+    }
+    .card:hover { transform: translateY(-3px); }
+    .card-value { font-size: 24px; font-weight: 700; color: #1f2937; margin-bottom: 4px; }
+    .card-label { font-size: 12px; color: #6b7280; }
+    
+    /* Controls */
+    .controls { 
+      display: flex; 
+      gap: 8px; 
+      align-items: center; 
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    button { 
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+      background: white;
+      cursor: pointer;
+      transition: all .12s;
+      font-size: 14px;
+    }
+    button:hover { background: #f3f4f6; }
+    button.btn-primary,
+    button.btn-create {
+      background: #b3e5fc;
+      color: #0f172a;
+      border: 1px solid white;
+      font-weight: 500;
+    }
+    button.btn-primary:hover,
+    button.btn-create:hover {
+      background: #81d4fa;
+    }
+    button.btn-secondary {
+      background: #e0e0e0;
+      color: #0f172a;
+      border: 1px solid #ccc;
+    }
+    button.btn-secondary:hover {
+      background: #d0d0d0;
+    }
+    button.btn-danger {
+      background: #fee;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
+    button.btn-danger:hover {
+      background: #fdd;
+    }
+    
+    /* Table */
+    .table { 
+      background: white;
+      border-radius: 8px;
+      overflow: auto;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 8px; border-bottom: 1px solid #eee; text-align: left; }
+    th { background: #fafafa; font-size: 13px; font-weight: 600; }
+    td { font-size: 14px; }
+    
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .badge.active { background: #e6ffed; color: #065f46; }
+    .badge.inactive { background: #f3f4f6; color: #6b7280; }
+    .badge.halloween { background: #fed7aa; color: #9a3412; }
+    .badge.christmas { background: #d1fae5; color: #065f46; }
+    .badge.shared { background: #dbeafe; color: #1e40af; }
+    .badge.needs-repair { background: #fee2e2; color: #991b1b; }
+    .badge.ok { background: #e6ffed; color: #065f46; }
+    
+    /* Action Buttons */
+    .action-buttons { display: flex; gap: 4px; }
+    .btn-small { 
+      padding: 4px 8px; 
+      font-size: 12px;
+      border-radius: 4px;
+    }
+    
+    /* Modal */
+    .modal {
+      position: fixed;
+      left: 0;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,.4);
       display: flex;
       align-items: center;
       justify-content: center;
-      overflow: hidden;
+      z-index: 1000;
     }
-
-    /* ---------- Fog Background ---------- */
-    .fog {
-      position: absolute;
-      top: 0; left: 0;
-      width: 200%;
-      height: 200%;
-      background: url('https://www.transparenttextures.com/patterns/foggy-birds.png') repeat;
-      opacity: 0.05;
-      animation: fogMove 60s linear infinite;
-      z-index: 0;
+    .modal .panel {
+      background: white;
+      padding: 16px;
+      border-radius: 8px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 85vh;
+      overflow-y: auto;
+      border-top: 6px solid var(--halloween);
     }
-
-    @keyframes fogMove {
-      0% { transform: translate(0, 0); }
-      100% { transform: translate(-50%, -50%); }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
     }
-
-    /* ---------- Content ---------- */
-    .container {
-      text-align: center;
-      position: relative;
-      z-index: 1;
-      padding: 2rem;
+    .modal-footer {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #eee;
     }
-
-    h1 {
-      font-size: 3rem;
-      color: var(--orange);
-      text-shadow: 0 0 15px var(--shadow), 0 0 30px var(--orange);
-      animation: flicker 2s infinite alternate;
+    
+    /* Mobile Cards */
+    .item-cards { display: none; }
+    .item-card {
+      background: white;
+      padding: 12px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+      margin-bottom: 12px;
     }
-
-    @keyframes flicker {
-      0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
-        opacity: 1;
+    .item-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 8px;
+    }
+    .item-card-name {
+      font-weight: 600;
+      font-size: 16px;
+      color: #1f2937;
+    }
+    .item-card-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      font-size: 13px;
+    }
+    .item-card-label {
+      color: #6b7280;
+      font-weight: 500;
+    }
+    
+    .small { font-size: 12px; color: #6b7280; }
+    .muted { opacity: .9; color: rgba(255,255,255,0.9); }
+    
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .table { display: none; }
+      .item-cards { display: block; }
+      .cards { gap: 8px; }
+      .card { 
+        min-width: 80px;
+        padding: 8px;
       }
-      20%, 24%, 55% {
-        opacity: 0.5;
-      }
-    }
-
-    p {
-      font-size: 1.25rem;
-      color: var(--text);
-      margin-top: 1rem;
-      letter-spacing: 1px;
-    }
-
-    .pumpkin {
-      font-size: 4rem;
-      margin-top: 1.5rem;
-      animation: float 3s ease-in-out infinite;
-      filter: drop-shadow(0 0 10px var(--shadow));
-    }
-
-    @keyframes float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
-    }
-
-    /* ---------- Footer ---------- */
-    footer {
-      position: absolute;
-      bottom: 10px;
-      width: 100%;
-      text-align: center;
-      font-size: 0.9rem;
-      opacity: 0.6;
-    }
-
-    footer a {
-      color: var(--orange);
-      text-decoration: none;
+      .card-value { font-size: 20px; }
+      .card-label { font-size: 11px; }
+      .stats-label { font-size: 12px; }
+      h1 { font-size: 18px; }
+      header { flex-wrap: wrap; }
     }
   </style>
 </head>
 <body>
-  <div class="fog"></div>
-  <div class="container">
-    <h1>🎃 Spooky Things Brewing...</h1>
-    <p>Our haunted site is under construction. Check back soon — if you dare!</p>
-    <div class="pumpkin">🕸️🕷️</div>
+
+<header>
+  <h1>SpookyDecs — Items Management</h1>
+  <div style="flex:1"></div>
+  <div id="authInfo" class="small muted">Admin User</div>
+  <a id="adminLink" href="#" style="color:#0f172a;text-decoration:none;padding:8px 10px;background:white;border-radius:6px;font-size:14px;border:1px solid #ddd;">Admin</a>
+  <button id="btnLogout" style="background:#2b2b2b;color:white;">Logout</button>
+</header>
+
+<!-- Season Stats -->
+<div class="stats-section">
+  <div class="stats-label">By Season</div>
+  <div class="cards">
+    <div class="card">
+      <div class="card-value" id="stat-halloween">12</div>
+      <div class="card-label">Halloween</div>
+    </div>
+    <div class="card">
+      <div class="card-value" id="stat-christmas">8</div>
+      <div class="card-label">Christmas</div>
+    </div>
+    <div class="card">
+      <div class="card-value" id="stat-shared">5</div>
+      <div class="card-label">Shared</div>
+    </div>
   </div>
-  <footer>
-    &copy; 2025 <a href="https://spookydecs.com">Spooky Decs</a> | Halloween vibes only
-  </footer>
+</div>
+
+<!-- Class Type Stats -->
+<div class="stats-section">
+  <div class="stats-label">By Class Type</div>
+  <div class="cards">
+    <div class="card">
+      <div class="card-value" id="stat-cord">3</div>
+      <div class="card-label">Cord</div>
+    </div>
+    <div class="card">
+      <div class="card-value" id="stat-inflatable">4</div>
+      <div class="card-label">Inflatable</div>
+    </div>
+    <div class="card">
+      <div class="card-value" id="stat-plug">2</div>
+      <div class="card-label">Plug</div>
+    </div>
+    <div class="card">
+      <div class="card-value" id="stat-static">5</div>
+      <div class="card-label">Static Prop</div>
+    </div>
+    <div class="card">
+      <div class="card-value" id="stat-animatronic">3</div>
+      <div class="card-label">Animatronic</div>
+    </div>
+    <div class="card">
+      <div class="card-value" id="stat-light">6</div>
+      <div class="card-label">Light</div>
+    </div>
+    <div class="card">
+      <div class="card-value" id="stat-adapter">2</div>
+      <div class="card-label">Adapter</div>
+    </div>
+  </div>
+</div>
+
+<!-- Class Stats -->
+<div class="stats-section">
+  <div class="stats-label">By Class</div>
+  <div class="cards">
+    <div class="card">
+      <div class="card-value" id="stat-accessory">8</div>
+      <div class="card-label">Accessory</div>
+    </div>
+    <div class="card">
+      <div class="card-value" id="stat-decoration">12</div>
+      <div class="card-label">Decoration</div>
+    </div>
+    <div class="card">
+      <div class="card-value" id="stat-light-class">5</div>
+      <div class="card-label">Light</div>
+    </div>
+  </div>
+</div>
+
+<!-- Controls -->
+<div class="controls">
+  <button class="btn-create" id="btnCreateItem">+ Create Item</button>
+  <button class="btn-danger" id="btnDeleteItem">Delete Item</button>
+  <div style="flex:1"></div>
+  <input type="text" id="searchInput" placeholder="Search items..." style="min-width: 200px;">
+</div>
+
+<!-- Desktop Table View -->
+<div class="table">
+  <table id="itemsTable">
+    <thead>
+      <tr>
+        <th>Status</th>
+        <th>Name</th>
+        <th>Season</th>
+        <th>Class Type</th>
+        <th>Repair Status</th>
+        <th>Location</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody">
+      <!-- Sample Data -->
+      <tr>
+        <td><span class="badge active">Active</span></td>
+        <td>12ft Skeleton</td>
+        <td><span class="badge halloween">Halloween</span></td>
+        <td>Static Prop</td>
+        <td><span class="badge ok">OK</span></td>
+        <td>Garage - A3</td>
+        <td>
+          <div class="action-buttons">
+            <button class="btn-small btn-primary" onclick="viewItem(1)">View</button>
+            <button class="btn-small btn-secondary" onclick="editItem(1)">Edit</button>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td><span class="badge active">Active</span></td>
+        <td>Santa Inflatable</td>
+        <td><span class="badge christmas">Christmas</span></td>
+        <td>Inflatable</td>
+        <td><span class="badge needs-repair">Needs Repair</span></td>
+        <td>Basement - B1</td>
+        <td>
+          <div class="action-buttons">
+            <button class="btn-small btn-primary" onclick="viewItem(2)">View</button>
+            <button class="btn-small btn-secondary" onclick="editItem(2)">Edit</button>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td><span class="badge active">Active</span></td>
+        <td>LED String Lights</td>
+        <td><span class="badge shared">Shared</span></td>
+        <td>Light</td>
+        <td><span class="badge ok">OK</span></td>
+        <td>Attic - C2</td>
+        <td>
+          <div class="action-buttons">
+            <button class="btn-small btn-primary" onclick="viewItem(3)">View</button>
+            <button class="btn-small btn-secondary" onclick="editItem(3)">Edit</button>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td><span class="badge inactive">Inactive</span></td>
+        <td>Pumpkin Animatronic</td>
+        <td><span class="badge halloween">Halloween</span></td>
+        <td>Animatronic</td>
+        <td><span class="badge ok">OK</span></td>
+        <td>Garage - A1</td>
+        <td>
+          <div class="action-buttons">
+            <button class="btn-small btn-primary" onclick="viewItem(4)">View</button>
+            <button class="btn-small btn-secondary" onclick="editItem(4)">Edit</button>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Mobile Card View -->
+<div class="item-cards" id="itemCards">
+  <div class="item-card">
+    <div class="item-card-header">
+      <div class="item-card-name">12ft Skeleton</div>
+      <span class="badge active">Active</span>
+    </div>
+    <div class="item-card-row">
+      <span class="item-card-label">Season:</span>
+      <span class="badge halloween">Halloween</span>
+    </div>
+    <div class="item-card-row">
+      <span class="item-card-label">Class Type:</span>
+      <span>Static Prop</span>
+    </div>
+    <div class="item-card-row">
+      <span class="item-card-label">Repair Status:</span>
+      <span class="badge ok">OK</span>
+    </div>
+    <div class="item-card-row">
+      <span class="item-card-label">Location:</span>
+      <span>Garage - A3</span>
+    </div>
+    <div class="action-buttons" style="margin-top: 8px;">
+      <button class="btn-small btn-primary" onclick="viewItem(1)">View</button>
+      <button class="btn-small btn-secondary" onclick="editItem(1)">Edit</button>
+    </div>
+  </div>
+  
+  <div class="item-card">
+    <div class="item-card-header">
+      <div class="item-card-name">Santa Inflatable</div>
+      <span class="badge active">Active</span>
+    </div>
+    <div class="item-card-row">
+      <span class="item-card-label">Season:</span>
+      <span class="badge christmas">Christmas</span>
+    </div>
+    <div class="item-card-row">
+      <span class="item-card-label">Class Type:</span>
+      <span>Inflatable</span>
+    </div>
+    <div class="item-card-row">
+      <span class="item-card-label">Repair Status:</span>
+      <span class="badge needs-repair">Needs Repair</span>
+    </div>
+    <div class="item-card-row">
+      <span class="item-card-label">Location:</span>
+      <span>Basement - B1</span>
+    </div>
+    <div class="action-buttons" style="margin-top: 8px;">
+      <button class="btn-small btn-primary" onclick="viewItem(2)">View</button>
+      <button class="btn-small btn-secondary" onclick="editItem(2)">Edit</button>
+    </div>
+  </div>
+  
+  <div class="item-card">
+    <div class="item-card-header">
+      <div class="item-card-name">LED String Lights</div>
+      <span class="badge active">Active</span>
+    </div>
+    <div class="item-card-row">
+      <span class="item-card-label">Season:</span>
+      <span class="badge shared">Shared</span>
+    </div>
+    <div class="item-card-row">
+      <span class="item-card-label">Class Type:</span>
+      <span>Light</span>
+    </div>
+    <div class="item-card-row">
+      <span class="item-card-label">Repair Status:</span>
+      <span class="badge ok">OK</span>
+    </div>
+    <div class="item-card-row">
+      <span class="item-card-label">Location:</span>
+      <span>Attic - C2</span>
+    </div>
+    <div class="action-buttons" style="margin-top: 8px;">
+      <button class="btn-small btn-primary" onclick="viewItem(3)">View</button>
+      <button class="btn-small btn-secondary" onclick="editItem(3)">Edit</button>
+    </div>
+  </div>
+</div>
+
+<!-- View Modal (Placeholder) -->
+<div id="viewModal" class="modal" style="display:none;">
+  <div class="panel">
+    <div class="modal-header">
+      <h2>View Item Details</h2>
+      <button onclick="closeModal('viewModal')" style="background:transparent;border:none;font-size:20px;cursor:pointer;">&times;</button>
+    </div>
+    <p>Item details will be displayed here...</p>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('viewModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal (Placeholder) -->
+<div id="editModal" class="modal" style="display:none;">
+  <div class="panel">
+    <div class="modal-header">
+      <h2>Edit Item</h2>
+      <button onclick="closeModal('editModal')" style="background:transparent;border:none;font-size:20px;cursor:pointer;">&times;</button>
+    </div>
+    <p>Edit form will be displayed here...</p>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('editModal')">Cancel</button>
+      <button class="btn-primary">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Modal (Placeholder) -->
+<div id="createModal" class="modal" style="display:none;">
+  <div class="panel">
+    <div class="modal-header">
+      <h2>Create New Item</h2>
+      <button onclick="closeModal('createModal')" style="background:transparent;border:none;font-size:20px;cursor:pointer;">&times;</button>
+    </div>
+    <p>Create item form will be displayed here...</p>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('createModal')">Cancel</button>
+      <button class="btn-primary">Create Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Modal (Placeholder) -->
+<div id="deleteModal" class="modal" style="display:none;">
+  <div class="panel">
+    <div class="modal-header">
+      <h2>Delete Item</h2>
+      <button onclick="closeModal('deleteModal')" style="background:transparent;border:none;font-size:20px;cursor:pointer;">&times;</button>
+    </div>
+    <p>Select items to delete...</p>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('deleteModal')">Cancel</button>
+      <button class="btn-danger">Delete Selected</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Load config and set admin link
+  let config = {};
+  let allItems = [];
+  
+  async function loadConfig() {
+    try {
+      const response = await fetch('config.json');
+      config = await response.json();
+      
+      // Set admin link
+      if (config.ADMIN_URL) {
+        document.getElementById('adminLink').href = config.ADMIN_URL;
+      }
+      
+      // Load items after config is loaded
+      await loadItems();
+    } catch (error) {
+      console.error('Failed to load config:', error);
+    }
+  }
+  
+  async function loadItems() {
+    try {
+      const apiUrl = config.API_GATEWAY_URL || '';
+      if (!apiUrl) {
+        console.error('API_GATEWAY_URL not found in config');
+        return;
+      }
+      
+      const response = await fetch(`${apiUrl}/items`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      allItems = data.items || [];
+      
+      // Filter out Storage and Deployment items
+      allItems = allItems.filter(item => 
+        item.class !== 'Storage' && item.class !== 'Deployment'
+      );
+      
+      updateStats();
+      renderItems();
+    } catch (error) {
+      console.error('Failed to load items:', error);
+    }
+  }
+  
+  function updateStats() {
+    // Season stats
+    const halloween = allItems.filter(i => i.season === 'Halloween').length;
+    const christmas = allItems.filter(i => i.season === 'Christmas').length;
+    const shared = allItems.filter(i => i.season === 'Shared').length;
+    
+    document.getElementById('stat-halloween').textContent = halloween;
+    document.getElementById('stat-christmas').textContent = christmas;
+    document.getElementById('stat-shared').textContent = shared;
+    
+    // Class Type stats
+    document.getElementById('stat-cord').textContent = allItems.filter(i => i.class_type === 'Cord').length;
+    document.getElementById('stat-inflatable').textContent = allItems.filter(i => i.class_type === 'Inflatable').length;
+    document.getElementById('stat-plug').textContent = allItems.filter(i => i.class_type === 'Plug').length;
+    document.getElementById('stat-static').textContent = allItems.filter(i => i.class_type === 'Static Prop').length;
+    document.getElementById('stat-animatronic').textContent = allItems.filter(i => i.class_type === 'Animatronic').length;
+    document.getElementById('stat-light').textContent = allItems.filter(i => i.class_type === 'Light').length;
+    document.getElementById('stat-adapter').textContent = allItems.filter(i => i.class_type === 'Adapter').length;
+    
+    // Class stats
+    document.getElementById('stat-accessory').textContent = allItems.filter(i => i.class === 'Accessory').length;
+    document.getElementById('stat-decoration').textContent = allItems.filter(i => i.class === 'Decoration').length;
+    document.getElementById('stat-light-class').textContent = allItems.filter(i => i.class === 'Light').length;
+  }
+  
+  function renderItems() {
+    const tableBody = document.getElementById('tableBody');
+    const itemCards = document.getElementById('itemCards');
+    
+    tableBody.innerHTML = '';
+    itemCards.innerHTML = '';
+    
+    allItems.forEach(item => {
+      // Render table row
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td><span class="badge ${item.status === 'Active' ? 'active' : 'inactive'}">${item.status || 'Unknown'}</span></td>
+        <td>${item.short_name || 'N/A'}</td>
+        <td><span class="badge ${(item.season || '').toLowerCase()}">${item.season || 'N/A'}</span></td>
+        <td>${item.class_type || 'N/A'}</td>
+        <td><span class="badge ${item.repair_status?.needs_repair ? 'needs-repair' : 'ok'}">${item.repair_status?.needs_repair ? 'Needs Repair' : 'OK'}</span></td>
+        <td>${item.packing_data?.tote_location || 'N/A'}</td>
+        <td>
+          <div class="action-buttons">
+            <button class="btn-small btn-primary" onclick="viewItem('${item.id}')">View</button>
+            <button class="btn-small btn-secondary" onclick="editItem('${item.id}')">Edit</button>
+          </div>
+        </td>
+      `;
+      tableBody.appendChild(row);
+      
+      // Render mobile card
+      const card = document.createElement('div');
+      card.className = 'item-card';
+      card.innerHTML = `
+        <div class="item-card-header">
+          <div class="item-card-name">${item.short_name || 'N/A'}</div>
+          <span class="badge ${item.status === 'Active' ? 'active' : 'inactive'}">${item.status || 'Unknown'}</span>
+        </div>
+        <div class="item-card-row">
+          <span class="item-card-label">Season:</span>
+          <span class="badge ${(item.season || '').toLowerCase()}">${item.season || 'N/A'}</span>
+        </div>
+        <div class="item-card-row">
+          <span class="item-card-label">Class Type:</span>
+          <span>${item.class_type || 'N/A'}</span>
+        </div>
+        <div class="item-card-row">
+          <span class="item-card-label">Repair Status:</span>
+          <span class="badge ${item.repair_status?.needs_repair ? 'needs-repair' : 'ok'}">${item.repair_status?.needs_repair ? 'Needs Repair' : 'OK'}</span>
+        </div>
+        <div class="item-card-row">
+          <span class="item-card-label">Location:</span>
+          <span>${item.packing_data?.tote_location || 'N/A'}</span>
+        </div>
+        <div class="action-buttons" style="margin-top: 8px;">
+          <button class="btn-small btn-primary" onclick="viewItem('${item.id}')">View</button>
+          <button class="btn-small btn-secondary" onclick="editItem('${item.id}')">Edit</button>
+        </div>
+      `;
+      itemCards.appendChild(card);
+    });
+  }
+  
+  loadConfig();
+  
+  // Modal functions
+  function viewItem(id) {
+    document.getElementById('viewModal').style.display = 'flex';
+  }
+  
+  function editItem(id) {
+    document.getElementById('editModal').style.display = 'flex';
+  }
+  
+  function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+  }
+  
+  // Button handlers
+  document.getElementById('btnCreateItem').addEventListener('click', () => {
+    document.getElementById('createModal').style.display = 'flex';
+  });
+  
+  document.getElementById('btnDeleteItem').addEventListener('click', () => {
+    document.getElementById('deleteModal').style.display = 'flex';
+  });
+  
+  document.getElementById('btnLogout').addEventListener('click', () => {
+    alert('Logout clicked');
+  });
+  
+  // Search functionality (placeholder)
+  document.getElementById('searchInput').addEventListener('input', (e) => {
+    console.log('Search:', e.target.value);
+  });
+  
+  // Close modals when clicking outside
+  window.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal')) {
+      e.target.style.display = 'none';
+    }
+  });
+</script>
+
 </body>
 </html>
