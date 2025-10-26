@@ -361,6 +361,18 @@
   <button id="btnLogout" style="background:#2b2b2b;color:white;">Logout</button>
 </header>
 
+<script>
+(function() {
+  const faviconUrl = "https://assets.spookydecs.com/icons/person-gear_icon.svg";
+  const link = document.createElement('link');
+  link.rel = 'icon';
+  link.type = 'image/svg+xml';
+  link.href = faviconUrl;
+  document.head.appendChild(link);
+})();
+
+</script>
+
 <!-- Season Stats -->
 <div class="stats-section">
   <div class="stats-label">By Season</div>
