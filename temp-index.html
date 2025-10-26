@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpookyDecs — Items Management</title>
+  <style>
+    /* Neutral theme (Halloween + Christmas fusion) */
+    :root {
+      --accent: #9146ff;
+      --accent2: #0ea5e9;
+      --neutral-bg: linear-gradient(135deg, #fafafa 0%, #fff8f0 100%);
+      --text-dark: #1f2937;
+      --halloween: #e87c1e;
+      --christmas: #2b7a0b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, Segoe UI, Roboto, Arial;
+      margin: 16px;
+      background: var(--neutral-bg);
+      color: var(--text-dark);
+      min-height: 100vh;
+    }
+    header {
+      padding: 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: linear-gradient(90deg, #b3e5fc 0%, #81d4fa 100%);
+      border: 1px solid white;
+      color: #0f172a;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+    }
+    h1 { margin: 0; font-size: 20px; }
+    h2 { margin: 0 0 12px 0; font-size: 16px; color: #374151; }
+    
+    /* Stats Cards Section */
+    .stats-section { margin-bottom: 16px; }
+    .stats-label { font-size: 13px; font-weight: 600; color: #6b7280; margin-bottom: 8px; }
+    .cards { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+    .card {
+      background: white;
+      padding: 12px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+      min-width: 140px;
+      transition: transform .15s;
+      flex: 1;
+      min-width: 100px;
+    }
+    .card:hover { transform: translateY(-3px); }
+    .card-value { font-size: 24px; font-weight: 700; color: #1f2937; margin-bottom: 4px; }
+    .card-label { font-size: 12px; color: #6b7280; }
+    
+    /* Controls */
+    .controls { 
+      display: flex; 
+      gap: 8px; 
+      align-items: center; 
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    button { 
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+      background: white;
+      cursor: pointer;
+      transition: all .12s;
+      font-size: 14px;
+    }
+    button:hover { background: #f3f4f6; }
+    button.btn-primary,
+    button.btn-create {
+      background: #b3e5fc;
+      color: #0f172a;
+      border: 1px solid white;
+      font-weight: 500;
+    }
+    button.btn-primary:hover,
+    button.btn-create:hover {
+      background: #81d4fa;
+    }
+    button.btn-secondary {
+      background: #e0e0e0;
+      color: #0f172a;
+      border: 1px solid #ccc;
+    }
+    button.btn-secondary:hover {
+      background: #d0d0d0;
+    }
+    button.btn-danger {
+      background: #fee;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
+    button.btn-danger:hover {
+      background: #fdd;
+    }
+    
+    /* Table */
+    .table { 
+      background: white;
+      border-radius: 8px;
+      overflow: auto;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 8px; border-bottom: 1px solid #eee; text-align: left; }
+    th { background: #fafafa; font-size: 13px; font-weight: 600; }
+    td { font-size: 14px; }
+    
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .badge.active { background: #e6ffed; color: #065f46; }
+    .badge.inactive { background: #f3f4f6; color: #6b7280; }
+    .badge.halloween { background: #fed7aa; color: #9a3412; }
+    .badge.christmas { background: #d1fae5; color: #065f46; }
+    .badge.shared { background: #dbeafe; color: #1e40af; }
+    .badge.needs-repair { background: #fee2e2; color: #991b1b; }
+    .badge.ok { background: #e6ffed; color: #065f46; }
+    
+    /* Action Buttons */
+    .action-buttons { display: flex; gap: 4px; }
+    .btn-small { 
+      padding: 4px 8px; 
+      font-size: 12px;
+      border-radius: 4px;
+    }
+    
+    /* Modal */
+    .modal {
+      position: fixed;
+      left: 0;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal .panel {
+      background: white;
+      padding: 16px;
+      border-radius: 8px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 85vh;
+      overflow-y: auto;
+      border-top: 6px solid var(--halloween);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .modal-footer {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #eee;
+    }
+    
+    /* Mobile Cards */
+    .item-cards { display: none; }
+    .item-card {
+      background: white;
+      padding: 12px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+      margin-bottom: 12px;
+    }
+    .item-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 8px;
+    }
+    .item-card-name {
+      font-weight: 600;
+      font-size: 16px;
+      color: #1f2937;
+    }
+    .item-card-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      font-size: 13px;
+    }
+    .item-card-label {
+      color: #6b7280;
+      font-weight: 500;
+    }
+    
+    .small { font-size: 12px; color: #6b7280; }
+    .muted { opacity: .9; color: rgba(255,255,255,0.9); }
+    
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .table { display: none; }
+      .item-cards { display: block; }
+      .cards { gap: 8px; }
+      .card { 
+        min-width: 80px;
+        padding: 8px;
+      }
+      .card-value { font-size: 20px; }
+      .card-label { font-size: 11px; }
+      .stats-label { font-size: 12px; }
+      h1 { font-size: 18px; }
+      header { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>SpookyDecs — Items Management</h1>
+  <div style="flex:1"></div>
+  <div id="authInfo" class="small muted">Admin User</div>
+  <button id="btnLogout" style="background:#2b2b2b;color:white;">Logout</button>
+</header>
+
+<!-- Season Stats -->
+<div class="stats-section">
+  <div class="stats-label">By Season</div>
+  <div class="cards">
+    <div class="card">
+      <div class="card-value" id="stat-halloween">12</div>
+      <div class="card-label">Halloween</div>
+    </div>
+    <div class="card">
+      <div class="card-value" id="stat-christmas">8</div>
+      <div class="card-label">Christmas</div>
+    </div>
+    <div class="card">
+      <div class="card-value" id="stat-shared">5</div>
+      <div class="card-label">Shared</div>
+    </div>
+  </div>
+</div>
+
+<!-- Class Type Stats -->
+<div class="stats-section">
+  <div class="stats-label">By Class Type</div>
+  <div class="cards">
+    <div class="card">
+      <div class="card-value" id="stat-cord">3</div>
+      <div class="card-label">Cord</div>
+    </div>
+    <div class="card">
+      <div class="card-value" id="stat-inflatable">4</div>
+      <div class="card-label">Inflatable</div>
+    </div>
+    <div class="card">
+      <div class="card-value" id="stat-plug">2</div>
+      <div class="card-label">Plug</div>
+    </div>
+    <div class="card">
+      <div class="card-value" id="stat-static">5</div>
+      <div class="card-label">Static Prop</div>
+    </div>
+    <div class="card">
+      <div class="card-value" id="stat-animatronic">3</div>
+      <div class="card-label">Animatronic</div>
+    </div>
+    <div class="card">
+      <div class="card-value" id="stat-light">6</div>
+      <div class="card-label">Light</div>
+    </div>
+    <div class="card">
+      <div class="card-value" id="stat-adapter">2</div>
+      <div class="card-label">Adapter</div>
+    </div>
+  </div>
+</div>
+
+<!-- Class Stats -->
+<div class="stats-section">
+  <div class="stats-label">By Class</div>
+  <div class="cards">
+    <div class="card">
+      <div class="card-value" id="stat-accessory">8</div>
+      <div class="card-label">Accessory</div>
+    </div>
+    <div class="card">
+      <div class="card-value" id="stat-decoration">12</div>
+      <div class="card-label">Decoration</div>
+    </div>
+    <div class="card">
+      <div class="card-value" id="stat-light-class">5</div>
+      <div class="card-label">Light</div>
+    </div>
+  </div>
+</div>
+
+<!-- Controls -->
+<div class="controls">
+  <button class="btn-create" id="btnCreateItem">+ Create Item</button>
+  <button class="btn-danger" id="btnDeleteItem">Delete Item</button>
+  <div style="flex:1"></div>
+  <input type="text" id="searchInput" placeholder="Search items..." style="min-width: 200px;">
+</div>
+
+<!-- Desktop Table View -->
+<div class="table">
+  <table id="itemsTable">
+    <thead>
+      <tr>
+        <th>Status</th>
+        <th>Name</th>
+        <th>Season</th>
+        <th>Class Type</th>
+        <th>Repair Status</th>
+        <th>Location</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody">
+      <!-- Sample Data -->
+      <tr>
+        <td><span class="badge active">Active</span></td>
+        <td>12ft Skeleton</td>
+        <td><span class="badge halloween">Halloween</span></td>
+        <td>Static Prop</td>
+        <td><span class="badge ok">OK</span></td>
+        <td>Garage - A3</td>
+        <td>
+          <div class="action-buttons">
+            <button class="btn-small btn-primary" onclick="viewItem(1)">View</button>
+            <button class="btn-small btn-secondary" onclick="editItem(1)">Edit</button>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td><span class="badge active">Active</span></td>
+        <td>Santa Inflatable</td>
+        <td><span class="badge christmas">Christmas</span></td>
+        <td>Inflatable</td>
+        <td><span class="badge needs-repair">Needs Repair</span></td>
+        <td>Basement - B1</td>
+        <td>
+          <div class="action-buttons">
+            <button class="btn-small btn-primary" onclick="viewItem(2)">View</button>
+            <button class="btn-small btn-secondary" onclick="editItem(2)">Edit</button>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td><span class="badge active">Active</span></td>
+        <td>LED String Lights</td>
+        <td><span class="badge shared">Shared</span></td>
+        <td>Light</td>
+        <td><span class="badge ok">OK</span></td>
+        <td>Attic - C2</td>
+        <td>
+          <div class="action-buttons">
+            <button class="btn-small btn-primary" onclick="viewItem(3)">View</button>
+            <button class="btn-small btn-secondary" onclick="editItem(3)">Edit</button>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td><span class="badge inactive">Inactive</span></td>
+        <td>Pumpkin Animatronic</td>
+        <td><span class="badge halloween">Halloween</span></td>
+        <td>Animatronic</td>
+        <td><span class="badge ok">OK</span></td>
+        <td>Garage - A1</td>
+        <td>
+          <div class="action-buttons">
+            <button class="btn-small btn-primary" onclick="viewItem(4)">View</button>
+            <button class="btn-small btn-secondary" onclick="editItem(4)">Edit</button>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Mobile Card View -->
+<div class="item-cards" id="itemCards">
+  <div class="item-card">
+    <div class="item-card-header">
+      <div class="item-card-name">12ft Skeleton</div>
+      <span class="badge active">Active</span>
+    </div>
+    <div class="item-card-row">
+      <span class="item-card-label">Season:</span>
+      <span class="badge halloween">Halloween</span>
+    </div>
+    <div class="item-card-row">
+      <span class="item-card-label">Class Type:</span>
+      <span>Static Prop</span>
+    </div>
+    <div class="item-card-row">
+      <span class="item-card-label">Repair Status:</span>
+      <span class="badge ok">OK</span>
+    </div>
+    <div class="item-card-row">
+      <span class="item-card-label">Location:</span>
+      <span>Garage - A3</span>
+    </div>
+    <div class="action-buttons" style="margin-top: 8px;">
+      <button class="btn-small btn-primary" onclick="viewItem(1)">View</button>
+      <button class="btn-small btn-secondary" onclick="editItem(1)">Edit</button>
+    </div>
+  </div>
+  
+  <div class="item-card">
+    <div class="item-card-header">
+      <div class="item-card-name">Santa Inflatable</div>
+      <span class="badge active">Active</span>
+    </div>
+    <div class="item-card-row">
+      <span class="item-card-label">Season:</span>
+      <span class="badge christmas">Christmas</span>
+    </div>
+    <div class="item-card-row">
+      <span class="item-card-label">Class Type:</span>
+      <span>Inflatable</span>
+    </div>
+    <div class="item-card-row">
+      <span class="item-card-label">Repair Status:</span>
+      <span class="badge needs-repair">Needs Repair</span>
+    </div>
+    <div class="item-card-row">
+      <span class="item-card-label">Location:</span>
+      <span>Basement - B1</span>
+    </div>
+    <div class="action-buttons" style="margin-top: 8px;">
+      <button class="btn-small btn-primary" onclick="viewItem(2)">View</button>
+      <button class="btn-small btn-secondary" onclick="editItem(2)">Edit</button>
+    </div>
+  </div>
+  
+  <div class="item-card">
+    <div class="item-card-header">
+      <div class="item-card-name">LED String Lights</div>
+      <span class="badge active">Active</span>
+    </div>
+    <div class="item-card-row">
+      <span class="item-card-label">Season:</span>
+      <span class="badge shared">Shared</span>
+    </div>
+    <div class="item-card-row">
+      <span class="item-card-label">Class Type:</span>
+      <span>Light</span>
+    </div>
+    <div class="item-card-row">
+      <span class="item-card-label">Repair Status:</span>
+      <span class="badge ok">OK</span>
+    </div>
+    <div class="item-card-row">
+      <span class="item-card-label">Location:</span>
+      <span>Attic - C2</span>
+    </div>
+    <div class="action-buttons" style="margin-top: 8px;">
+      <button class="btn-small btn-primary" onclick="viewItem(3)">View</button>
+      <button class="btn-small btn-secondary" onclick="editItem(3)">Edit</button>
+    </div>
+  </div>
+</div>
+
+<!-- View Modal (Placeholder) -->
+<div id="viewModal" class="modal" style="display:none;">
+  <div class="panel">
+    <div class="modal-header">
+      <h2>View Item Details</h2>
+      <button onclick="closeModal('viewModal')" style="background:transparent;border:none;font-size:20px;cursor:pointer;">&times;</button>
+    </div>
+    <p>Item details will be displayed here...</p>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('viewModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal (Placeholder) -->
+<div id="editModal" class="modal" style="display:none;">
+  <div class="panel">
+    <div class="modal-header">
+      <h2>Edit Item</h2>
+      <button onclick="closeModal('editModal')" style="background:transparent;border:none;font-size:20px;cursor:pointer;">&times;</button>
+    </div>
+    <p>Edit form will be displayed here...</p>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('editModal')">Cancel</button>
+      <button class="btn-primary">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Modal (Placeholder) -->
+<div id="createModal" class="modal" style="display:none;">
+  <div class="panel">
+    <div class="modal-header">
+      <h2>Create New Item</h2>
+      <button onclick="closeModal('createModal')" style="background:transparent;border:none;font-size:20px;cursor:pointer;">&times;</button>
+    </div>
+    <p>Create item form will be displayed here...</p>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('createModal')">Cancel</button>
+      <button class="btn-primary">Create Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Modal (Placeholder) -->
+<div id="deleteModal" class="modal" style="display:none;">
+  <div class="panel">
+    <div class="modal-header">
+      <h2>Delete Item</h2>
+      <button onclick="closeModal('deleteModal')" style="background:transparent;border:none;font-size:20px;cursor:pointer;">&times;</button>
+    </div>
+    <p>Select items to delete...</p>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('deleteModal')">Cancel</button>
+      <button class="btn-danger">Delete Selected</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Modal functions
+  function viewItem(id) {
+    document.getElementById('viewModal').style.display = 'flex';
+  }
+  
+  function editItem(id) {
+    document.getElementById('editModal').style.display = 'flex';
+  }
+  
+  function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+  }
+  
+  // Button handlers
+  document.getElementById('btnCreateItem').addEventListener('click', () => {
+    document.getElementById('createModal').style.display = 'flex';
+  });
+  
+  document.getElementById('btnDeleteItem').addEventListener('click', () => {
+    document.getElementById('deleteModal').style.display = 'flex';
+  });
+  
+  document.getElementById('btnLogout').addEventListener('click', () => {
+    alert('Logout clicked');
+  });
+  
+  // Search functionality (placeholder)
+  document.getElementById('searchInput').addEventListener('input', (e) => {
+    console.log('Search:', e.target.value);
+  });
+  
+  // Close modals when clicking outside
+  window.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal')) {
+      e.target.style.display = 'none';
+    }
+  });
+</script>
+
+</body>
+</html>
