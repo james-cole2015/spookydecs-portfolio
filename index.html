@@ -160,6 +160,12 @@
       overflow-y: auto;
       border-top: 6px solid var(--halloween);
     }
+    .modal .panel.view-panel {
+      max-width: 800px;
+    }
+    .modal .panel.view-panel.expanded {
+      max-width: 1000px;
+    }
     .modal-header {
       display: flex;
       justify-content: space-between;
@@ -173,6 +179,67 @@
       margin-top: 16px;
       padding-top: 16px;
       border-top: 1px solid #eee;
+    }
+    
+    /* View Modal Specific Styles */
+    .view-item-id {
+      text-align: center;
+      font-size: 14px;
+      color: #6b7280;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #eee;
+      font-weight: 600;
+    }
+    .view-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 16px;
+    }
+    .view-section h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #374151;
+      margin: 0 0 12px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .view-field {
+      margin-bottom: 12px;
+    }
+    .view-field-label {
+      font-size: 12px;
+      color: #6b7280;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    .view-field-value {
+      font-size: 14px;
+      color: #1f2937;
+      font-weight: 400;
+    }
+    .view-field-value.needs-repair-yes {
+      background: #fee;
+      color: #991b1b;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      display: inline-block;
+    }
+    .expanded-content {
+      display: none;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 2px solid #eee;
+    }
+    .expanded-content.show {
+      display: block;
+    }
+    .expanded-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
     }
     
     /* Mobile Cards */
@@ -223,6 +290,18 @@
       .stats-label { font-size: 12px; }
       h1 { font-size: 18px; }
       header { flex-wrap: wrap; }
+      
+      .modal .panel {
+        width: 95%;
+        max-height: 95vh;
+      }
+      .view-content {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      .expanded-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -479,13 +558,70 @@
 
 <!-- View Modal (Placeholder) -->
 <div id="viewModal" class="modal" style="display:none;">
-  <div class="panel">
+  <div class="panel view-panel" id="viewPanel">
     <div class="modal-header">
-      <h2>View Item Details</h2>
+      <h2>Item Details</h2>
       <button onclick="closeModal('viewModal')" style="background:transparent;border:none;font-size:20px;cursor:pointer;">&times;</button>
     </div>
-    <p>Item details will be displayed here...</p>
+    
+    <div class="view-item-id" id="viewItemId">ID: ITEM-XXX-XXXX</div>
+    
+    <div class="view-content">
+      <div class="view-section">
+        <h3>Basic Information</h3>
+        <div class="view-field">
+          <div class="view-field-label">Name</div>
+          <div class="view-field-value" id="view-short-name">-</div>
+        </div>
+        <div class="view-field">
+          <div class="view-field-label">Season</div>
+          <div class="view-field-value" id="view-season">-</div>
+        </div>
+        <div class="view-field">
+          <div class="view-field-label">Class</div>
+          <div class="view-field-value" id="view-class">-</div>
+        </div>
+        <div class="view-field">
+          <div class="view-field-label">Type</div>
+          <div class="view-field-value" id="view-class-type">-</div>
+        </div>
+      </div>
+      
+      <div class="view-section">
+        <h3>Status & Location</h3>
+        <div class="view-field">
+          <div class="view-field-label">Status</div>
+          <div class="view-field-value" id="view-status">-</div>
+        </div>
+        <div class="view-field">
+          <div class="view-field-label">Needs Repair</div>
+          <div class="view-field-value" id="view-needs-repair">-</div>
+        </div>
+        <div class="view-field">
+          <div class="view-field-label">Item Notes</div>
+          <div class="view-field-value" id="view-general-notes">-</div>
+        </div>
+        <div class="view-field">
+          <div class="view-field-label">Storage Location</div>
+          <div class="view-field-value" id="view-tote-location">-</div>
+        </div>
+        <div class="view-field">
+          <div class="view-field-label">Last Deployment</div>
+          <div class="view-field-value" id="view-last-deployment">-</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="expanded-content" id="expandedContent">
+      <h3 style="margin-bottom: 16px;">Additional Information</h3>
+      <div class="expanded-grid" id="expandedGrid">
+        <!-- Additional fields will be populated here -->
+      </div>
+    </div>
+    
     <div class="modal-footer">
+      <button class="btn-secondary" onclick="editItemFromView()">Edit</button>
+      <button class="btn-primary" id="btnMoreInfo" onclick="toggleMoreInfo()">More Information</button>
       <button class="btn-secondary" onclick="closeModal('viewModal')">Close</button>
     </div>
   </div>
@@ -543,7 +679,7 @@
   
   async function loadConfig() {
     try {
-      const response = await fetch('/config.json');
+      const response = await fetch('config.json');
       config = await response.json();
       
       // Set admin link
@@ -674,7 +810,187 @@
   
   // Modal functions
   function viewItem(id) {
+    const item = allItems.find(i => i.id === id);
+    if (!item) {
+      console.error('Item not found:', id);
+      return;
+    }
+    
+    // Populate basic fields
+    document.getElementById('viewItemId').textContent = `ID: ${item.id || 'N/A'}`;
+    document.getElementById('view-short-name').textContent = item.short_name || 'N/A';
+    document.getElementById('view-season').textContent = item.season || 'N/A';
+    document.getElementById('view-class').textContent = item.class || 'N/A';
+    document.getElementById('view-class-type').textContent = item.class_type || 'N/A';
+    document.getElementById('view-status').textContent = item.status || 'N/A';
+    document.getElementById('view-general-notes').textContent = item.general_notes || 'N/A';
+    
+    // Needs Repair
+    const needsRepairEl = document.getElementById('view-needs-repair');
+    if (item.repair_status?.needs_repair === true) {
+      needsRepairEl.textContent = 'YES';
+      needsRepairEl.className = 'view-field-value needs-repair-yes';
+    } else {
+      needsRepairEl.textContent = 'NO';
+      needsRepairEl.className = 'view-field-value';
+    }
+    
+    // Storage Location
+    document.getElementById('view-tote-location').textContent = 
+      item.packing_data?.tote_location || 'N/A';
+    
+    // Last Deployment - extract last 4 characters
+    const lastDeployment = item.deployment_data?.last_deployment_id;
+    if (lastDeployment) {
+      const last4 = lastDeployment.slice(-4);
+      document.getElementById('view-last-deployment').textContent = last4;
+    } else {
+      document.getElementById('view-last-deployment').textContent = 'N/A';
+    }
+    
+    // Populate expanded content with all other fields
+    populateExpandedContent(item);
+    
+    // Reset expanded state
+    document.getElementById('expandedContent').classList.remove('show');
+    document.getElementById('viewPanel').classList.remove('expanded');
+    document.getElementById('btnMoreInfo').textContent = 'More Information';
+    
     document.getElementById('viewModal').style.display = 'flex';
+  }
+  
+  function populateExpandedContent(item) {
+    const expandedGrid = document.getElementById('expandedGrid');
+    expandedGrid.innerHTML = '';
+    
+    // List of fields to exclude (already shown above)
+    const excludeFields = ['id', 'short_name', 'season', 'class', 'class_type', 
+                          'status', 'general_notes', 'repair_status', 'packing_data', 
+                          'deployment_data'];
+    
+    // Add all other fields
+    Object.keys(item).forEach(key => {
+      if (!excludeFields.includes(key)) {
+        const fieldDiv = document.createElement('div');
+        fieldDiv.className = 'view-field';
+        
+        const label = document.createElement('div');
+        label.className = 'view-field-label';
+        label.textContent = formatFieldName(key);
+        
+        const value = document.createElement('div');
+        value.className = 'view-field-value';
+        value.textContent = formatFieldValue(item[key]);
+        
+        fieldDiv.appendChild(label);
+        fieldDiv.appendChild(value);
+        expandedGrid.appendChild(fieldDiv);
+      }
+    });
+    
+    // Add nested repair_status fields
+    if (item.repair_status) {
+      Object.keys(item.repair_status).forEach(key => {
+        if (key !== 'needs_repair') {
+          const fieldDiv = document.createElement('div');
+          fieldDiv.className = 'view-field';
+          
+          const label = document.createElement('div');
+          label.className = 'view-field-label';
+          label.textContent = `Repair: ${formatFieldName(key)}`;
+          
+          const value = document.createElement('div');
+          value.className = 'view-field-value';
+          value.textContent = formatFieldValue(item.repair_status[key]);
+          
+          fieldDiv.appendChild(label);
+          fieldDiv.appendChild(value);
+          expandedGrid.appendChild(fieldDiv);
+        }
+      });
+    }
+    
+    // Add nested packing_data fields
+    if (item.packing_data) {
+      Object.keys(item.packing_data).forEach(key => {
+        if (key !== 'tote_location') {
+          const fieldDiv = document.createElement('div');
+          fieldDiv.className = 'view-field';
+          
+          const label = document.createElement('div');
+          label.className = 'view-field-label';
+          label.textContent = `Packing: ${formatFieldName(key)}`;
+          
+          const value = document.createElement('div');
+          value.className = 'view-field-value';
+          value.textContent = formatFieldValue(item.packing_data[key]);
+          
+          fieldDiv.appendChild(label);
+          fieldDiv.appendChild(value);
+          expandedGrid.appendChild(fieldDiv);
+        }
+      });
+    }
+    
+    // Add nested deployment_data fields
+    if (item.deployment_data) {
+      Object.keys(item.deployment_data).forEach(key => {
+        if (key !== 'last_deployment_id') {
+          const fieldDiv = document.createElement('div');
+          fieldDiv.className = 'view-field';
+          
+          const label = document.createElement('div');
+          label.className = 'view-field-label';
+          label.textContent = `Deployment: ${formatFieldName(key)}`;
+          
+          const value = document.createElement('div');
+          value.className = 'view-field-value';
+          value.textContent = formatFieldValue(item.deployment_data[key]);
+          
+          fieldDiv.appendChild(label);
+          fieldDiv.appendChild(value);
+          expandedGrid.appendChild(fieldDiv);
+        }
+      });
+    }
+  }
+  
+  function formatFieldName(key) {
+    return key
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  }
+  
+  function formatFieldValue(value) {
+    if (value === null || value === undefined) return 'N/A';
+    if (typeof value === 'object') return JSON.stringify(value, null, 2);
+    if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+    return String(value);
+  }
+  
+  function toggleMoreInfo() {
+    const expandedContent = document.getElementById('expandedContent');
+    const viewPanel = document.getElementById('viewPanel');
+    const btn = document.getElementById('btnMoreInfo');
+    
+    if (expandedContent.classList.contains('show')) {
+      expandedContent.classList.remove('show');
+      viewPanel.classList.remove('expanded');
+      btn.textContent = 'More Information';
+    } else {
+      expandedContent.classList.add('show');
+      viewPanel.classList.add('expanded');
+      btn.textContent = 'Less Information';
+    }
+  }
+  
+  function editItemFromView() {
+    closeModal('viewModal');
+    // Get the current item ID from the view modal
+    const idText = document.getElementById('viewItemId').textContent;
+    const id = idText.replace('ID: ', '');
+    editItem(id);
   }
   
   function editItem(id) {
