@@ -258,6 +258,7 @@
       margin: 0 0 8px 0;
       text-transform: uppercase;
       letter-spacing: 0.5px;
+      min-height: 18px;
     }
     .expanded-field {
       margin-bottom: 8px;
@@ -654,7 +655,7 @@
     </div>
     
     <div class="expanded-content" id="expandedContent">
-      <h3 style="margin-bottom: 16px;">Additional Information</h3>
+      <h3 style="margin-bottom: 16px; text-align: center;">Additional Information</h3>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
         <div id="expandedLeft">
           <!-- Left side sections -->
@@ -753,9 +754,9 @@
   
   async function loadItems() {
     try {
-      const apiUrl = config.API_ENDPOINT || '';
+      const apiUrl = config.API_GATEWAY_URL || '';
       if (!apiUrl) {
-        console.error('API_ENDPOINT not found in config');
+        console.error('API_GATEWAY_URL not found in config');
         return;
       }
       
@@ -934,7 +935,7 @@
     deploySection.className = 'expanded-section';
     
     const deployTitle = document.createElement('h4');
-    deployTitle.textContent = 'Deployment Information';
+    deployTitle.textContent = 'Previous Deployments';
     deploySection.appendChild(deployTitle);
     
     if (item.deployment_data?.previous_deployments && 
