@@ -696,9 +696,9 @@
   
   async function loadItems() {
     try {
-      const apiUrl = config.API_GATEWAY_URL || '';
+      const apiUrl = config.API_ENDPOINT || '';
       if (!apiUrl) {
-        console.error('API_GATEWAY_URL not found in config');
+        console.error('API_ENDPOINT not found in config');
         return;
       }
       
