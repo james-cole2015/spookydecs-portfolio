@@ -184,12 +184,12 @@
     /* View Modal Specific Styles */
     .view-item-id {
       text-align: center;
-      font-size: 14px;
-      color: #6b7280;
+      font-size: 18px;
+      color: #1f2937;
       margin-bottom: 16px;
       padding-bottom: 12px;
       border-bottom: 2px solid #eee;
-      font-weight: 600;
+      font-weight: 700;
     }
     .view-content {
       display: grid;
@@ -207,17 +207,25 @@
     }
     .view-field {
       margin-bottom: 12px;
+      display: flex;
+      align-items: start;
+      gap: 8px;
     }
     .view-field-label {
-      font-size: 12px;
+      font-size: 13px;
       color: #6b7280;
-      font-weight: 500;
-      margin-bottom: 4px;
+      font-weight: 600;
+      min-width: 120px;
+      flex-shrink: 0;
     }
     .view-field-value {
       font-size: 14px;
       color: #1f2937;
       font-weight: 400;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
     .view-field-value.needs-repair-yes {
       background: #fee;
@@ -225,7 +233,11 @@
       padding: 4px 8px;
       border-radius: 4px;
       font-weight: 700;
-      display: inline-block;
+      display: inline-flex;
+      width: fit-content;
+    }
+    .type-icon {
+      font-size: 16px;
     }
     .expanded-content {
       display: none;
@@ -236,10 +248,39 @@
     .expanded-content.show {
       display: block;
     }
-    .expanded-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 16px;
+    .expanded-section {
+      margin-bottom: 20px;
+    }
+    .expanded-section h4 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+      margin: 0 0 8px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .expanded-field {
+      margin-bottom: 8px;
+      display: flex;
+      align-items: start;
+      gap: 8px;
+      padding-left: 12px;
+    }
+    .expanded-field-label {
+      font-size: 12px;
+      color: #6b7280;
+      font-weight: 500;
+      min-width: 100px;
+    }
+    .expanded-field-value {
+      font-size: 13px;
+      color: #1f2937;
+      flex: 1;
+    }
+    .list-item {
+      padding: 4px 0;
+      font-size: 13px;
+      color: #1f2937;
     }
     
     /* Mobile Cards */
