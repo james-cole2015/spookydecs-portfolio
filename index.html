@@ -195,19 +195,18 @@
     }
     .view-content {
       display: grid;
-      /*grid-template-columns: 1fr 1fr;*/
-      grid-template-columns: repeat(2, max-content); /* columns only as wide as their content, from chat gpt */
-      gap: 200px;
-      justify-content: center; /*chat gpt add */
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
       margin-bottom: 16px;
-    
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
     }
     .view-section h3 {
       font-size: 14px;
       font-weight: 600;
       color: #374151;
       margin: 0 0 12px 0;
-      align-items: center; /* chat gpt add */
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
@@ -250,9 +249,6 @@
       margin-top: 16px;
       padding-top: 16px;
       border-top: 2px solid #eee;
-      gap: 200px;
-      justify-content: center;
-      grid-template-columns:  repeat(2, max-content);
     }
     .expanded-content.show {
       display: block;
@@ -365,18 +361,6 @@
   <a id="adminLink" href="#" style="color:#0f172a;text-decoration:none;padding:8px 10px;background:white;border-radius:6px;font-size:14px;border:1px solid #ddd;">Admin</a>
   <button id="btnLogout" style="background:#2b2b2b;color:white;">Logout</button>
 </header>
-
-<script>
-(function() {
-  const faviconUrl = "https://assets.spookydecs.com/icons/person-gear_icon.svg";
-  const link = document.createElement('link');
-  link.rel = 'icon';
-  link.type = 'image/svg+xml';
-  link.href = faviconUrl;
-  document.head.appendChild(link);
-})();
-
-</script>
 
 <!-- Season Stats -->
 <div class="stats-section">
@@ -677,7 +661,7 @@
     
     <div class="expanded-content" id="expandedContent">
       <h3 style="margin-bottom: 16px; text-align: center;">Additional Information</h3>
-      <div style="display: grid; grid-template-columns: repeat(2,max-content); justify-content: center; gap: 200px; max-width: 900px; margin: 0 auto;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 900px; margin: 0 auto;">
         <div id="expandedLeft">
           <!-- Left side sections -->
         </div>
@@ -753,7 +737,39 @@
     'Static Prop': '🎃',
     'Animatronic': '🤖',
     'Light': '💡',
+    'String Light': '💡',
+    'Spot Light': '💡',
     'Adapter': '🔧'
+  };
+  
+  // Define which attributes to show for each class_type
+  const CLASS_TYPE_ATTRIBUTES = {
+    'Static Prop': ['stakes', 'tethers', 'height_length', 'date_acquired'],
+    'Inflatable': ['stakes', 'tethers', 'height_length', 'date_acquired', 'adapter'],
+    'Animatronic': ['stakes', 'tethers', 'height_length', 'date_acquired', 'adapter'],
+    'String Light': ['color', 'length', 'bulb_type', 'notes'],
+    'Spot Light': ['color', 'bulb_type', 'notes'],
+    'Plug': ['length', 'male_ends', 'female_ends'],
+    'Cord': ['length', 'male_ends', 'female_ends'],
+    'Adapter': []
+  };
+  
+  // Define which class_types have repair tracking
+  const HAS_REPAIR_TRACKING = ['Static Prop', 'Inflatable', 'Animatronic', 'String Light', 'Spot Light'];
+  
+  // Attribute display names
+  const ATTRIBUTE_LABELS = {
+    'stakes': '# of Stakes',
+    'tethers': '# of Tethers',
+    'height_length': 'Item Height / Length',
+    'date_acquired': 'Date Acquired',
+    'adapter': 'Adapter',
+    'color': 'Color',
+    'length': 'Length',
+    'bulb_type': 'Bulb Type',
+    'notes': 'Notes',
+    'male_ends': 'Male Ends',
+    'female_ends': 'Female Ends'
   };
   
   async function loadConfig() {
@@ -951,7 +967,10 @@
     expandedLeft.innerHTML = '';
     expandedRight.innerHTML = '';
     
-    // LEFT SIDE - Deployment Information
+    const classType = item.class_type;
+    const hasRepairTracking = HAS_REPAIR_TRACKING.includes(classType);
+    
+    // LEFT SIDE - Previous Deployments
     const deploySection = document.createElement('div');
     deploySection.className = 'expanded-section';
     
@@ -979,103 +998,87 @@
     
     expandedLeft.appendChild(deploySection);
     
-    // LEFT SIDE - Repair Information
-    const repairSection = document.createElement('div');
-    repairSection.className = 'expanded-section';
+    // LEFT SIDE - Repair Information (only for items with repair tracking)
+    if (hasRepairTracking) {
+      const repairSection = document.createElement('div');
+      repairSection.className = 'expanded-section';
+      
+      const repairTitle = document.createElement('h4');
+      repairTitle.textContent = 'Repair Information';
+      repairSection.appendChild(repairTitle);
+      
+      // Last Repair Date
+      const repairDateField = document.createElement('div');
+      repairDateField.className = 'expanded-field';
+      const repairDateLabel = document.createElement('div');
+      repairDateLabel.className = 'expanded-field-label';
+      repairDateLabel.textContent = 'Last Repair Date:';
+      const repairDateValue = document.createElement('div');
+      repairDateValue.className = 'expanded-field-value';
+      repairDateValue.textContent = item.repair_status?.last_repair_date || 'N/A';
+      repairDateField.appendChild(repairDateLabel);
+      repairDateField.appendChild(repairDateValue);
+      repairSection.appendChild(repairDateField);
+      
+      // Repair Notes
+      const repairNotesField = document.createElement('div');
+      repairNotesField.className = 'expanded-field';
+      const repairNotesLabel = document.createElement('div');
+      repairNotesLabel.className = 'expanded-field-label';
+      repairNotesLabel.textContent = 'Repair Notes:';
+      const repairNotesValue = document.createElement('div');
+      repairNotesValue.className = 'expanded-field-value';
+      repairNotesValue.textContent = item.repair_status?.repair_notes || 'N/A';
+      repairNotesField.appendChild(repairNotesLabel);
+      repairNotesField.appendChild(repairNotesValue);
+      repairSection.appendChild(repairNotesField);
+      
+      // Repair Criticality
+      const repairCritField = document.createElement('div');
+      repairCritField.className = 'expanded-field';
+      const repairCritLabel = document.createElement('div');
+      repairCritLabel.className = 'expanded-field-label';
+      repairCritLabel.textContent = 'Repair Criticality:';
+      const repairCritValue = document.createElement('div');
+      repairCritValue.className = 'expanded-field-value';
+      repairCritValue.textContent = item.repair_status?.last_criticality || 'N/A';
+      repairCritField.appendChild(repairCritLabel);
+      repairCritField.appendChild(repairCritValue);
+      repairSection.appendChild(repairCritField);
+      
+      expandedLeft.appendChild(repairSection);
+    }
     
-    const repairTitle = document.createElement('h4');
-    repairTitle.textContent = 'Repair Information';
-    repairSection.appendChild(repairTitle);
+    // RIGHT SIDE - Item Information (dynamic based on class_type)
+    const attributesToShow = CLASS_TYPE_ATTRIBUTES[classType] || [];
     
-    // Last Repair Date
-    const repairDateField = document.createElement('div');
-    repairDateField.className = 'expanded-field';
-    const repairDateLabel = document.createElement('div');
-    repairDateLabel.className = 'expanded-field-label';
-    repairDateLabel.textContent = 'Last Repair Date:';
-    const repairDateValue = document.createElement('div');
-    repairDateValue.className = 'expanded-field-value';
-    repairDateValue.textContent = item.repair_status?.last_repair_date || 'N/A';
-    repairDateField.appendChild(repairDateLabel);
-    repairDateField.appendChild(repairDateValue);
-    repairSection.appendChild(repairDateField);
-    
-    // Repair Notes
-    const repairNotesField = document.createElement('div');
-    repairNotesField.className = 'expanded-field';
-    const repairNotesLabel = document.createElement('div');
-    repairNotesLabel.className = 'expanded-field-label';
-    repairNotesLabel.textContent = 'Repair Notes:';
-    const repairNotesValue = document.createElement('div');
-    repairNotesValue.className = 'expanded-field-value';
-    repairNotesValue.textContent = item.repair_status?.repair_notes || 'N/A';
-    repairNotesField.appendChild(repairNotesLabel);
-    repairNotesField.appendChild(repairNotesValue);
-    repairSection.appendChild(repairNotesField);
-    
-    // Repair Criticality
-    const repairCritField = document.createElement('div');
-    repairCritField.className = 'expanded-field';
-    const repairCritLabel = document.createElement('div');
-    repairCritLabel.className = 'expanded-field-label';
-    repairCritLabel.textContent = 'Repair Criticality:';
-    const repairCritValue = document.createElement('div');
-    repairCritValue.className = 'expanded-field-value';
-    repairCritValue.textContent = item.repair_status?.last_criticality || 'N/A';
-    repairCritField.appendChild(repairCritLabel);
-    repairCritField.appendChild(repairCritValue);
-    repairSection.appendChild(repairCritField);
-    
-    expandedLeft.appendChild(repairSection);
-    
-    // RIGHT SIDE - Item Information
-    const itemSection = document.createElement('div');
-    itemSection.className = 'expanded-section';
-    
-    const itemTitle = document.createElement('h4');
-    itemTitle.textContent = 'Item Information';
-    itemSection.appendChild(itemTitle);
-    
-    // # of Tethers
-    const tethersField = document.createElement('div');
-    tethersField.className = 'expanded-field';
-    const tethersLabel = document.createElement('div');
-    tethersLabel.className = 'expanded-field-label';
-    tethersLabel.textContent = '# of Tethers:';
-    const tethersValue = document.createElement('div');
-    tethersValue.className = 'expanded-field-value';
-    tethersValue.textContent = item.tethers || 'N/A';
-    tethersField.appendChild(tethersLabel);
-    tethersField.appendChild(tethersValue);
-    itemSection.appendChild(tethersField);
-    
-    // # of Stakes
-    const stakesField = document.createElement('div');
-    stakesField.className = 'expanded-field';
-    const stakesLabel = document.createElement('div');
-    stakesLabel.className = 'expanded-field-label';
-    stakesLabel.textContent = '# of Stakes:';
-    const stakesValue = document.createElement('div');
-    stakesValue.className = 'expanded-field-value';
-    stakesValue.textContent = item.stakes || 'N/A';
-    stakesField.appendChild(stakesLabel);
-    stakesField.appendChild(stakesValue);
-    itemSection.appendChild(stakesField);
-    
-    // Item Height / Length
-    const heightField = document.createElement('div');
-    heightField.className = 'expanded-field';
-    const heightLabel = document.createElement('div');
-    heightLabel.className = 'expanded-field-label';
-    heightLabel.textContent = 'Item Height / Length:';
-    const heightValue = document.createElement('div');
-    heightValue.className = 'expanded-field-value';
-    heightValue.textContent = item.height_length || 'N/A';
-    heightField.appendChild(heightLabel);
-    heightField.appendChild(heightValue);
-    itemSection.appendChild(heightField);
-    
-    expandedRight.appendChild(itemSection);
+    if (attributesToShow.length > 0) {
+      const itemSection = document.createElement('div');
+      itemSection.className = 'expanded-section';
+      
+      const itemTitle = document.createElement('h4');
+      itemTitle.textContent = 'Item Information';
+      itemSection.appendChild(itemTitle);
+      
+      attributesToShow.forEach(attr => {
+        const field = document.createElement('div');
+        field.className = 'expanded-field';
+        
+        const label = document.createElement('div');
+        label.className = 'expanded-field-label';
+        label.textContent = (ATTRIBUTE_LABELS[attr] || formatFieldName(attr)) + ':';
+        
+        const value = document.createElement('div');
+        value.className = 'expanded-field-value';
+        value.textContent = item[attr] || 'N/A';
+        
+        field.appendChild(label);
+        field.appendChild(value);
+        itemSection.appendChild(field);
+      });
+      
+      expandedRight.appendChild(itemSection);
+    }
     
     // RIGHT SIDE - Vendor Information
     const vendorSection = document.createElement('div');
