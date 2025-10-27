@@ -195,18 +195,18 @@
     }
     .view-content {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
+      /*grid-template-columns: 1fr 1fr;*/
+      grid-template-columns: repeat(2, max-content); /* columns only as wide as their content, from chat gpt */
+      gap: 200px;
+      justify-content: center; /*chat gpt add */
       margin-bottom: 16px;
-      max-width: 900px;
-      margin-left: auto;
-      margin-right: auto;
     }
     .view-section h3 {
       font-size: 14px;
       font-weight: 600;
       color: #374151;
       margin: 0 0 12px 0;
+      align-items: center; /* chat gpt add */
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
@@ -249,6 +249,9 @@
       margin-top: 16px;
       padding-top: 16px;
       border-top: 2px solid #eee;
+      gap: 200px;
+      justify-content: center;
+      grid-template-columns:  repeat(2, max-content);
     }
     .expanded-content.show {
       display: block;
@@ -661,7 +664,7 @@
     
     <div class="expanded-content" id="expandedContent">
       <h3 style="margin-bottom: 16px; text-align: center;">Additional Information</h3>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 900px; margin: 0 auto;">
+      <div style="display: grid; grid-template-columns: repeat(2,max-content); justify-content: center; gap: 200px; max-width: 900px; margin: 0 auto;">
         <div id="expandedLeft">
           <!-- Left side sections -->
         </div>
