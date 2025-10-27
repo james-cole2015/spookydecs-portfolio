@@ -99,23 +99,22 @@ function updateStats() {
   const christmas = allItems.filter(i => i.season === 'Christmas').length;
   const shared = allItems.filter(i => i.season === 'Shared').length;
   
-  document.getElementById('stat-halloween').textContent = halloween;
-  document.getElementById('stat-christmas').textContent = christmas;
-  document.getElementById('stat-shared').textContent = shared;
+  const halloweenEl = document.getElementById('stat-halloween');
+  const christmasEl = document.getElementById('stat-christmas');
+  const sharedEl = document.getElementById('stat-shared');
   
-  // Class Type stats
-  document.getElementById('stat-cord').textContent = allItems.filter(i => i.class_type === 'Cord').length;
-  document.getElementById('stat-inflatable').textContent = allItems.filter(i => i.class_type === 'Inflatable').length;
-  document.getElementById('stat-plug').textContent = allItems.filter(i => i.class_type === 'Plug').length;
-  document.getElementById('stat-static').textContent = allItems.filter(i => i.class_type === 'Static Prop').length;
-  document.getElementById('stat-animatronic').textContent = allItems.filter(i => i.class_type === 'Animatronic').length;
-  document.getElementById('stat-light').textContent = allItems.filter(i => i.class_type === 'Light').length;
-  document.getElementById('stat-adapter').textContent = allItems.filter(i => i.class_type === 'Adapter').length;
+  if (halloweenEl) halloweenEl.textContent = halloween;
+  if (christmasEl) christmasEl.textContent = christmas;
+  if (sharedEl) sharedEl.textContent = shared;
   
   // Class stats
-  document.getElementById('stat-accessory').textContent = allItems.filter(i => i.class === 'Accessory').length;
-  document.getElementById('stat-decoration').textContent = allItems.filter(i => i.class === 'Decoration').length;
-  document.getElementById('stat-light-class').textContent = allItems.filter(i => i.class === 'Light').length;
+  const accessoryEl = document.getElementById('stat-accessory');
+  const decorationEl = document.getElementById('stat-decoration');
+  const lightClassEl = document.getElementById('stat-light-class');
+  
+  if (accessoryEl) accessoryEl.textContent = allItems.filter(i => i.class === 'Accessory').length;
+  if (decorationEl) decorationEl.textContent = allItems.filter(i => i.class === 'Decoration').length;
+  if (lightClassEl) lightClassEl.textContent = allItems.filter(i => i.class === 'Light').length;
 }
 
 // Render items in table and cards
