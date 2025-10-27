@@ -1,4 +1,456 @@
-// Global variables
+// Edit item
+function editItem(id) {
+  const item = allItems.find(i => i.id === id);
+  if (!item) {
+    console.error('Item not found:', id);
+    return;
+  }
+  
+  // Store current item for comparison later
+  window.currentEditItem = JSON.parse(JSON.stringify(item));
+  
+  // Populate form with item data
+  populateEditForm(item);
+  
+  // Show form view, hide preview view
+  document.getElementById('editFormView').style.display = 'block';
+  document.getElementById('editPreviewView').style.display = 'none';
+  document.getElementById('editPreviewBtn').style.display = 'inline-block';
+  document.getElementById('editBackBtn').style.display = 'none';
+  document.getElementById('editSaveBtn').style.display = 'none';
+  document.getElementById('editCancelBtn').style.display = 'inline-block';
+  
+  // Update modal title
+  document.getElementById('editModalTitle').textContent = `Edit Item: ${item.short_name}`;
+  
+  // Open all accordion sections by default
+  document.querySelectorAll('.accordion-content').forEach(content => {
+    content.classList.add('active');
+  });
+  document.querySelectorAll('.accordion-header').forEach(header => {
+    header.classList.remove('collapsed');
+  });
+  
+  document.getElementById('editModal').style.display = 'flex';
+}
+
+// Populate edit form with item data
+function populateEditForm(item) {
+  // Basic Information
+  document.getElementById('edit-short-name').value = item.short_name || '';
+  document.getElementById('edit-season').value = item.season || '';
+  document.getElementById('edit-class').value = item.class || '';
+  document.getElementById('edit-class-type').value = item.class_type || '';
+  document.getElementById('edit-status').value = item.status || '';
+  
+  // Vendor Information
+  document.getElementById('edit-cost').value = item.vendor_metadata?.cost || '';
+  document.getElementById('edit-value').value = item.vendor_metadata?.value || '';
+  document.getElementById('edit-manufacturer').value = item.vendor_metadata?.manufacturer || '';
+  document.getElementById('edit-store').value = item.vendor_metadata?.vendor_store || '';
+  
+  // Storage & Deployment
+  document.getElementById('edit-tote-location').value = item.packing_data?.tote_location || '';
+  document.getElementById('edit-general-notes').value = item.general_notes || '';
+  const lastDeployment = item.deployment_data?.last_deployment_id;
+  document.getElementById('edit-last-deployment').value = lastDeployment ? lastDeployment.slice(-4) : 'N/A';
+  
+  // Generate dynamic fields based on class_type
+  generateDynamicFields(item);
+}
+
+// Generate dynamic fields based on class_type
+function generateDynamicFields(item) {
+  const dynamicFieldsContainer = document.getElementById('dynamicFields');
+  const classType = item.class_type;
+  const attributesToShow = CLASS_TYPE_ATTRIBUTES[classType] || [];
+  
+  dynamicFieldsContainer.innerHTML = '';
+  
+  if (attributesToShow.length === 0) {
+    const noFields = document.createElement('div');
+    noFields.className = 'field-hint';
+    noFields.textContent = 'No additional fields for this class type';
+    noFields.style.textAlign = 'center';
+    noFields.style.padding = '20px';
+    dynamicFieldsContainer.appendChild(noFields);
+    return;
+  }
+  
+  attributesToShow.forEach(attr => {
+    const formGroup = document.createElement('div');
+    formGroup.className = 'form-group';
+    
+    const label = document.createElement('label');
+    label.setAttribute('for', `edit-${attr}`);
+    label.textContent = ATTRIBUTE_LABELS[attr] || formatFieldName(attr);
+    
+    let input;
+    if (attr === 'notes') {
+      input = document.createElement('textarea');
+      input.rows = 3;
+    } else {
+      input = document.createElement('input');
+      input.type = 'text';
+    }
+    
+    input.id = `edit-${attr}`;
+    input.name = attr;
+    input.value = item[attr] || '';
+    
+    // Add placeholder for numeric fields
+    if (['stakes', 'tethers', 'length', 'height_length', 'male_ends', 'female_ends'].includes(attr)) {
+      input.placeholder = 'Enter a number';
+    }
+    
+    formGroup.appendChild(label);
+    formGroup.appendChild(input);
+    dynamicFieldsContainer.appendChild(formGroup);
+  });
+}
+
+// Toggle accordion sections
+function toggleAccordion(button) {
+  const content = button.nextElementSibling;
+  const isActive = content.classList.contains('active');
+  
+  if (isActive) {
+    content.classList.remove('active');
+    button.classList.add('collapsed');
+  } else {
+    content.classList.add('active');
+    button.classList.remove('collapsed');
+  }
+}
+
+// Show edit preview
+function showEditPreview() {
+  // Validate form first
+  const form = document.getElementById('editForm');
+  if (!form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
+  
+  // Additional custom validation
+  const validationErrors = validateEditForm();
+  if (validationErrors.length > 0) {
+    showToast('error', 'Validation Error', validationErrors[0]);
+    return;
+  }
+  
+  // Get form data
+  const formData = getEditFormData();
+  
+  // Generate preview
+  generateEditPreview(formData);
+  
+  // Switch views
+  document.getElementById('editFormView').style.display = 'none';
+  document.getElementById('editPreviewView').style.display = 'block';
+  document.getElementById('editPreviewBtn').style.display = 'none';
+  document.getElementById('editBackBtn').style.display = 'inline-block';
+  document.getElementById('editSaveBtn').style.display = 'inline-block';
+  document.getElementById('editCancelBtn').style.display = 'none';
+  
+  // Update modal title
+  document.getElementById('editModalTitle').textContent = 'Preview Changes';
+}
+
+// Validate edit form
+function validateEditForm() {
+  const errors = [];
+  
+  // Validate numeric fields
+  const numericFields = ['edit-cost', 'edit-value'];
+  
+  // Add dynamic numeric fields
+  const classType = window.currentEditItem.class_type;
+  const attributesToShow = CLASS_TYPE_ATTRIBUTES[classType] || [];
+  attributesToShow.forEach(attr => {
+    if (['stakes', 'tethers', 'length', 'height_length', 'male_ends', 'female_ends'].includes(attr)) {
+      numericFields.push(`edit-${attr}`);
+    }
+  });
+  
+  numericFields.forEach(fieldId => {
+    const field = document.getElementById(fieldId);
+    if (field && field.value.trim() !== '') {
+      // Remove currency symbols and whitespace
+      const cleanValue = field.value.replace(/[$,\s]/g, '');
+      if (isNaN(cleanValue) || cleanValue === '') {
+        const label = field.previousElementSibling?.textContent.replace(' *', '') || fieldId;
+        errors.push(`${label} must be a valid number`);
+      }
+    }
+  });
+  
+  return errors;
+}
+
+// Get form data
+function getEditFormData() {
+  const formData = {
+    short_name: document.getElementById('edit-short-name').value.trim(),
+    season: document.getElementById('edit-season').value,
+    class: document.getElementById('edit-class').value,
+    class_type: document.getElementById('edit-class-type').value,
+    status: document.getElementById('edit-status').value,
+    general_notes: document.getElementById('edit-general-notes').value.trim(),
+    vendor_metadata: {
+      cost: document.getElementById('edit-cost').value.trim(),
+      value: document.getElementById('edit-value').value.trim(),
+      manufacturer: document.getElementById('edit-manufacturer').value.trim(),
+      vendor_store: document.getElementById('edit-store').value.trim()
+    },
+    packing_data: {
+      tote_location: document.getElementById('edit-tote-location').value.trim()
+    }
+  };
+  
+  // Add dynamic fields
+  const classType = window.currentEditItem.class_type;
+  const attributesToShow = CLASS_TYPE_ATTRIBUTES[classType] || [];
+  attributesToShow.forEach(attr => {
+    const field = document.getElementById(`edit-${attr}`);
+    if (field) {
+      formData[attr] = field.value.trim();
+    }
+  });
+  
+  return formData;
+}
+
+// Generate edit preview
+function generateEditPreview(formData) {
+  const previewContainer = document.getElementById('editPreviewView');
+  const originalItem = window.currentEditItem;
+  
+  // Detect changes
+  const changes = detectChanges(originalItem, formData);
+  
+  let previewHTML = '';
+  
+  // Show warning if ID would change (not applicable since class_type is readonly, but keeping for future)
+  // This section can be used if other ID-changing fields become editable
+  
+  // Basic Information Section
+  previewHTML += generatePreviewSection('Basic Information', [
+    { label: 'Name', original: originalItem.short_name, new: formData.short_name, field: 'short_name' },
+    { label: 'Season', original: originalItem.season, new: formData.season, field: 'season' },
+    { label: 'Class', original: originalItem.class, new: formData.class, field: 'class' },
+    { label: 'Class Type', original: originalItem.class_type, new: formData.class_type, field: 'class_type' },
+    { label: 'Status', original: originalItem.status, new: formData.status, field: 'status' }
+  ], changes);
+  
+  // Item Details Section
+  const classType = originalItem.class_type;
+  const attributesToShow = CLASS_TYPE_ATTRIBUTES[classType] || [];
+  if (attributesToShow.length > 0) {
+    const itemDetailsFields = attributesToShow.map(attr => ({
+      label: ATTRIBUTE_LABELS[attr] || formatFieldName(attr),
+      original: originalItem[attr],
+      new: formData[attr],
+      field: attr
+    }));
+    previewHTML += generatePreviewSection('Item Details', itemDetailsFields, changes);
+  }
+  
+  // Vendor Information Section
+  previewHTML += generatePreviewSection('Vendor Information', [
+    { label: 'Cost', original: originalItem.vendor_metadata?.cost, new: formData.vendor_metadata.cost, field: 'vendor_metadata.cost' },
+    { label: 'Value', original: originalItem.vendor_metadata?.value, new: formData.vendor_metadata.value, field: 'vendor_metadata.value' },
+    { label: 'Manufacturer', original: originalItem.vendor_metadata?.manufacturer, new: formData.vendor_metadata.manufacturer, field: 'vendor_metadata.manufacturer' },
+    { label: 'Store', original: originalItem.vendor_metadata?.vendor_store, new: formData.vendor_metadata.vendor_store, field: 'vendor_metadata.vendor_store' }
+  ], changes);
+  
+  // Storage & Deployment Section
+  previewHTML += generatePreviewSection('Storage & Deployment', [
+    { label: 'Storage Location', original: originalItem.packing_data?.tote_location, new: formData.packing_data.tote_location, field: 'packing_data.tote_location' },
+    { label: 'Item Notes', original: originalItem.general_notes, new: formData.general_notes, field: 'general_notes' }
+  ], changes);
+  
+  previewContainer.innerHTML = previewHTML;
+}
+
+// Generate preview section
+function generatePreviewSection(title, fields, changes) {
+  let html = `
+    <div class="preview-section">
+      <div class="preview-section-header">
+        <span>${title}</span>
+      </div>
+      <div class="preview-section-content">
+  `;
+  
+  fields.forEach(field => {
+    const isChanged = changes.has(field.field);
+    const displayValue = field.new || 'N/A';
+    const changedClass = isChanged ? 'changed' : '';
+    
+    html += `
+      <div class="preview-field ${changedClass}">
+        <div class="preview-field-label">${field.label}:</div>
+        <div class="preview-field-value">
+          ${displayValue}
+          ${isChanged ? '<span class="change-indicator">Changed</span>' : ''}
+        </div>
+      </div>
+    `;
+  });
+  
+  html += `
+      </div>
+    </div>
+  `;
+  
+  return html;
+}
+
+// Detect changes between original and new data
+function detectChanges(original, updated) {
+  const changes = new Set();
+  
+  // Check top-level fields
+  ['short_name', 'season', 'class', 'status', 'general_notes'].forEach(field => {
+    if ((original[field] || '') !== (updated[field] || '')) {
+      changes.add(field);
+    }
+  });
+  
+  // Check dynamic fields
+  const classType = original.class_type;
+  const attributesToShow = CLASS_TYPE_ATTRIBUTES[classType] || [];
+  attributesToShow.forEach(attr => {
+    if ((original[attr] || '') !== (updated[attr] || '')) {
+      changes.add(attr);
+    }
+  });
+  
+  // Check vendor_metadata
+  if ((original.vendor_metadata?.cost || '') !== (updated.vendor_metadata.cost || '')) {
+    changes.add('vendor_metadata.cost');
+  }
+  if ((original.vendor_metadata?.value || '') !== (updated.vendor_metadata.value || '')) {
+    changes.add('vendor_metadata.value');
+  }
+  if ((original.vendor_metadata?.manufacturer || '') !== (updated.vendor_metadata.manufacturer || '')) {
+    changes.add('vendor_metadata.manufacturer');
+  }
+  if ((original.vendor_metadata?.vendor_store || '') !== (updated.vendor_metadata.vendor_store || '')) {
+    changes.add('vendor_metadata.vendor_store');
+  }
+  
+  // Check packing_data
+  if ((original.packing_data?.tote_location || '') !== (updated.packing_data.tote_location || '')) {
+    changes.add('packing_data.tote_location');
+  }
+  
+  return changes;
+}
+
+// Back to edit form
+function backToEditForm() {
+  document.getElementById('editFormView').style.display = 'block';
+  document.getElementById('editPreviewView').style.display = 'none';
+  document.getElementById('editPreviewBtn').style.display = 'inline-block';
+  document.getElementById('editBackBtn').style.display = 'none';
+  document.getElementById('editSaveBtn').style.display = 'none';
+  document.getElementById('editCancelBtn').style.display = 'inline-block';
+  
+  document.getElementById('editModalTitle').textContent = `Edit Item: ${window.currentEditItem.short_name}`;
+}
+
+// Save edit changes
+async function saveEditChanges() {
+  const formData = getEditFormData();
+  const itemId = window.currentEditItem.id;
+  
+  try {
+    const apiUrl = config.API_ENDPOINT || '';
+    if (!apiUrl) {
+      throw new Error('API endpoint not configured');
+    }
+    
+    // Prepare the update payload - merge with original item
+    const updatePayload = {
+      ...window.currentEditItem,
+      ...formData,
+      vendor_metadata: {
+        ...window.currentEditItem.vendor_metadata,
+        ...formData.vendor_metadata
+      },
+      packing_data: {
+        ...window.currentEditItem.packing_data,
+        ...formData.packing_data
+      }
+    };
+    
+    const response = await fetch(`${apiUrl}/items/${itemId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(updatePayload)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Failed to update item: ${response.status}`);
+    }
+    
+    // Success!
+    showToast('success', 'Success!', 'Item updated successfully');
+    
+    // Close edit modal
+    closeModal('editModal');
+    
+    // Reload items
+    await loadItems();
+    
+    // If view modal was open, refresh it
+    const viewModal = document.getElementById('viewModal');
+    if (viewModal.style.display === 'flex') {
+      viewItem(itemId);
+    }
+    
+  } catch (error) {
+    console.error('Failed to save changes:', error);
+    showToast('error', 'Error', error.message || 'Failed to update item');
+  }
+}
+
+// Show toast notification
+function showToast(type, title, message) {
+  // Remove any existing toasts
+  const existingToast = document.querySelector('.toast');
+  if (existingToast) {
+    existingToast.remove();
+  }
+  
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  
+  const icon = type === 'success' ? '✅' : '❌';
+  
+  toast.innerHTML = `
+    <div class="toast-icon">${icon}</div>
+    <div class="toast-content">
+      <div class="toast-title">${title}</div>
+      <div class="toast-message">${message}</div>
+    </div>
+    <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+  `;
+  
+  document.body.appendChild(toast);
+  
+  // Auto-remove after 4 seconds
+  setTimeout(() => {
+    if (toast.parentElement) {
+      toast.remove();
+    }
+  }, 4000);
+}// Global variables
 let config = {};
 let allItems = [];
 
