@@ -335,16 +335,8 @@ function detectChanges(original, updated) {
     changes.add('vendor_metadata.vendor_store');
   }
   
-  return changes;
-}d.vendor_metadata.manufacturer || '')) {
-    changes.add('vendor_metadata.manufacturer');
-  }
-  if ((original.vendor_metadata?.vendor_store || '') !== (updated.vendor_metadata.vendor_store || '')) {
-    changes.add('vendor_metadata.vendor_store');
-  }
-  
   // Check packing_data
-  if ((original.packing_data?.tote_location || '') !== (updated.packing_data.tote_location || '')) {
+  if ((original.packing_data?.tote_location || '') !== (updated.packing_data?.tote_location || '')) {
     changes.add('packing_data.tote_location');
   }
   
