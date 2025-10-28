@@ -20,8 +20,8 @@ function editItem(id) {
   document.getElementById('editSaveBtn').style.display = 'none';
   document.getElementById('editCancelBtn').style.display = 'inline-block';
   
-  // Update modal title
-  document.getElementById('editModalTitle').textContent = `Edit Item: ${item.short_name}`;
+  // Update modal title with ID
+  document.getElementById('editModalTitle').textContent = `Edit Item - ${item.id}`;
   
   // Open all accordion sections by default
   document.querySelectorAll('.accordion-content').forEach(content => {
@@ -42,6 +42,7 @@ function populateEditForm(item) {
   document.getElementById('edit-class').value = item.class || '';
   document.getElementById('edit-class-type').value = item.class_type || '';
   document.getElementById('edit-status').value = item.status || '';
+  document.getElementById('edit-general-notes').value = item.general_notes || '';
   
   // Vendor Information
   document.getElementById('edit-cost').value = item.vendor_metadata?.cost || '';
@@ -49,11 +50,15 @@ function populateEditForm(item) {
   document.getElementById('edit-manufacturer').value = item.vendor_metadata?.manufacturer || '';
   document.getElementById('edit-store').value = item.vendor_metadata?.vendor_store || '';
   
-  // Storage & Deployment
+  // Storage & Deployment (all read-only)
   document.getElementById('edit-tote-location').value = item.packing_data?.tote_location || '';
-  document.getElementById('edit-general-notes').value = item.general_notes || '';
   const lastDeployment = item.deployment_data?.last_deployment_id;
   document.getElementById('edit-last-deployment').value = lastDeployment ? lastDeployment.slice(-4) : 'N/A';
+  
+  // Previous deployments
+  const previousDeployments = item.deployment_data?.previous_deployments || [];
+  document.getElementById('edit-previous-deployments').value = 
+    previousDeployments.length > 0 ? previousDeployments.join('\n') : 'No previous deployments';
   
   // Generate dynamic fields based on class_type
   generateDynamicFields(item);
@@ -202,9 +207,6 @@ function getEditFormData() {
       value: document.getElementById('edit-value').value.trim(),
       manufacturer: document.getElementById('edit-manufacturer').value.trim(),
       vendor_store: document.getElementById('edit-store').value.trim()
-    },
-    packing_data: {
-      tote_location: document.getElementById('edit-tote-location').value.trim()
     }
   };
   
@@ -231,16 +233,14 @@ function generateEditPreview(formData) {
   
   let previewHTML = '';
   
-  // Show warning if ID would change (not applicable since class_type is readonly, but keeping for future)
-  // This section can be used if other ID-changing fields become editable
-  
   // Basic Information Section
   previewHTML += generatePreviewSection('Basic Information', [
-    { label: 'Name', original: originalItem.short_name, new: formData.short_name, field: 'short_name' },
+    { label: 'Short Name', original: originalItem.short_name, new: formData.short_name, field: 'short_name' },
     { label: 'Season', original: originalItem.season, new: formData.season, field: 'season' },
     { label: 'Class', original: originalItem.class, new: formData.class, field: 'class' },
     { label: 'Class Type', original: originalItem.class_type, new: formData.class_type, field: 'class_type' },
-    { label: 'Status', original: originalItem.status, new: formData.status, field: 'status' }
+    { label: 'Status', original: originalItem.status, new: formData.status, field: 'status' },
+    { label: 'Item Notes', original: originalItem.general_notes, new: formData.general_notes, field: 'general_notes' }
   ], changes);
   
   // Item Details Section
@@ -262,12 +262,6 @@ function generateEditPreview(formData) {
     { label: 'Value', original: originalItem.vendor_metadata?.value, new: formData.vendor_metadata.value, field: 'vendor_metadata.value' },
     { label: 'Manufacturer', original: originalItem.vendor_metadata?.manufacturer, new: formData.vendor_metadata.manufacturer, field: 'vendor_metadata.manufacturer' },
     { label: 'Store', original: originalItem.vendor_metadata?.vendor_store, new: formData.vendor_metadata.vendor_store, field: 'vendor_metadata.vendor_store' }
-  ], changes);
-  
-  // Storage & Deployment Section
-  previewHTML += generatePreviewSection('Storage & Deployment', [
-    { label: 'Storage Location', original: originalItem.packing_data?.tote_location, new: formData.packing_data.tote_location, field: 'packing_data.tote_location' },
-    { label: 'Item Notes', original: originalItem.general_notes, new: formData.general_notes, field: 'general_notes' }
   ], changes);
   
   previewContainer.innerHTML = previewHTML;
@@ -341,6 +335,14 @@ function detectChanges(original, updated) {
     changes.add('vendor_metadata.vendor_store');
   }
   
+  return changes;
+}d.vendor_metadata.manufacturer || '')) {
+    changes.add('vendor_metadata.manufacturer');
+  }
+  if ((original.vendor_metadata?.vendor_store || '') !== (updated.vendor_metadata.vendor_store || '')) {
+    changes.add('vendor_metadata.vendor_store');
+  }
+  
   // Check packing_data
   if ((original.packing_data?.tote_location || '') !== (updated.packing_data.tote_location || '')) {
     changes.add('packing_data.tote_location');
@@ -358,7 +360,7 @@ function backToEditForm() {
   document.getElementById('editSaveBtn').style.display = 'none';
   document.getElementById('editCancelBtn').style.display = 'inline-block';
   
-  document.getElementById('editModalTitle').textContent = `Edit Item: ${window.currentEditItem.short_name}`;
+  document.getElementById('editModalTitle').textContent = `Edit Item - ${window.currentEditItem.id}`;
 }
 
 // Save edit changes
@@ -380,10 +382,9 @@ async function saveEditChanges() {
         ...window.currentEditItem.vendor_metadata,
         ...formData.vendor_metadata
       },
-      packing_data: {
-        ...window.currentEditItem.packing_data,
-        ...formData.packing_data
-      }
+      // Keep original packing_data and deployment_data (read-only)
+      packing_data: window.currentEditItem.packing_data,
+      deployment_data: window.currentEditItem.deployment_data
     };
     
     const response = await fetch(`${apiUrl}/items/${itemId}`, {
