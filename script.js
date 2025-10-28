@@ -336,7 +336,7 @@ function detectChanges(original, updated) {
   }
   
   // Check packing_data
-  if ((original.packing_data?.tote_location || '') !== (updated.packing_data?.tote_location || '')) {
+  if ((original.packing_data?.tote_location || '') !== (updated.packing_data.tote_location || '')) {
     changes.add('packing_data.tote_location');
   }
   
