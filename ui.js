@@ -114,6 +114,7 @@ function renderTable() {
       </td>
       <td>
         <div class="actions">
+          <button class="btn-edit" style="background: #64748b;" onclick="showViewModal('${img.imageId}')">View</button>
           <button class="btn-edit" onclick="showEditModal('${img.imageId}')">Edit</button>
         </div>
       </td>

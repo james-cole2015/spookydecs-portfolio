@@ -1,9 +1,9 @@
 // API functions
 const API = {
-  // Get all images
+  // Get all images (admin - includes hidden)
   async getImages() {
-    const apiUrl = config.API_ENDPOINT || 'https://miinu7boec.execute-api.us-east-2.amazonaws.com/dev';
-    const endpoint = `${apiUrl}/gallery/images`;
+    const apiUrl = config.API_ENDPOINT;
+    const endpoint = `${apiUrl}/admin/gallery/images`;
     
     console.log('📷 Fetching images from:', endpoint);
     
@@ -21,17 +21,15 @@ const API = {
 
   // Update image attributes
   async updateImage(imageId, updates) {
-    const apiUrl = config.API_ENDPOINT || 'https://miinu7boec.execute-api.us-east-2.amazonaws.com/dev';
-    const endpoint = `${apiUrl}/gallery/images/${imageId}`;
+    const apiUrl = config.API_ENDPOINT;
+    const endpoint = `${apiUrl}/admin/gallery/images/${imageId}`;
     
     console.log('✏️ Updating image:', imageId, updates);
     
     const response = await fetch(endpoint, {
       method: 'PUT',
       headers: {
-        'Content-Type': 'application/json',
-        // TODO: Add Cognito auth token
-        // 'Authorization': `Bearer ${authToken}`
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(updates)
     });
@@ -49,17 +47,13 @@ const API = {
 
   // Delete image
   async deleteImage(imageId) {
-    const apiUrl = config.API_ENDPOINT || 'https://miinu7boec.execute-api.us-east-2.amazonaws.com/dev';
-    const endpoint = `${apiUrl}/gallery/images/${imageId}`;
+    const apiUrl = config.API_ENDPOINT;
+    const endpoint = `${apiUrl}/admin/gallery/images/${imageId}`;
     
     console.log('🗑️ Deleting image:', imageId);
     
     const response = await fetch(endpoint, {
-      method: 'DELETE',
-      headers: {
-        // TODO: Add Cognito auth token
-        // 'Authorization': `Bearer ${authToken}`
-      }
+      method: 'DELETE'
     });
     
     if (!response.ok) {

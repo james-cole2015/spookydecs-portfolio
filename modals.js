@@ -1,5 +1,99 @@
 // Modal management functions
 
+// Show view modal
+function showViewModal(imageId) {
+  const image = allImages.find(img => img.imageId === imageId);
+  if (!image) {
+    showToast('Image not found', 'error');
+    return;
+  }
+  
+  const modal = document.getElementById('editModal');
+  const body = document.getElementById('editModalBody');
+  
+  body.innerHTML = `
+    <div class="modal-thumbnail">
+      <img src="${image.thumbnailUrl}" alt="${image.title}">
+      <div style="margin-top: 8px;">
+        <a href="${image.originalUrl}" target="_blank" style="color: #3b82f6; text-decoration: none; font-size: 13px;">
+          🔍 View Full Size Image
+        </a>
+      </div>
+    </div>
+    
+    <div class="modal-content-grid">
+      <div class="form-section">
+        <h3>Image Attributes</h3>
+        
+        <div class="metadata-item">
+          <span class="metadata-label">Title:</span>
+          <span class="metadata-value">${image.title}</span>
+        </div>
+        
+        <div class="metadata-item">
+          <span class="metadata-label">Year:</span>
+          <span class="metadata-value">${image.year}</span>
+        </div>
+        
+        <div class="metadata-item">
+          <span class="metadata-label">Category:</span>
+          <span class="metadata-value">${image.category}</span>
+        </div>
+        
+        <div class="metadata-item">
+          <span class="metadata-label">Season:</span>
+          <span class="metadata-value">${image.season}</span>
+        </div>
+        
+        <div class="metadata-item">
+          <span class="metadata-label">Tags:</span>
+          <span class="metadata-value">${(image.tags || []).join(', ') || 'None'}</span>
+        </div>
+        
+        <div class="metadata-item">
+          <span class="metadata-label">Visible:</span>
+          <span class="metadata-value">${image.isVisible ? 'Yes' : 'No'}</span>
+        </div>
+      </div>
+      
+      <div class="metadata-section">
+        <h3>Image Metadata</h3>
+        <div class="metadata-item">
+          <span class="metadata-label">Image ID:</span>
+          <span class="metadata-value">${image.imageId}</span>
+        </div>
+        <div class="metadata-item">
+          <span class="metadata-label">Dimensions:</span>
+          <span class="metadata-value">${image.metadata?.dimensions || 'N/A'}</span>
+        </div>
+        <div class="metadata-item">
+          <span class="metadata-label">Format:</span>
+          <span class="metadata-value">${image.metadata?.format || 'N/A'}</span>
+        </div>
+        <div class="metadata-item">
+          <span class="metadata-label">File Size:</span>
+          <span class="metadata-value">${formatFileSize(image.metadata?.originalSize)}</span>
+        </div>
+        <div class="metadata-item">
+          <span class="metadata-label">Upload Date:</span>
+          <span class="metadata-value">${new Date(image.uploadDate).toLocaleDateString()}</span>
+        </div>
+        <div class="metadata-item">
+          <span class="metadata-label">Sequence:</span>
+          <span class="metadata-value">${image.sequence}</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeEditModal()">Close</button>
+      <button class="btn-primary" onclick="closeEditModal(); showEditModal('${imageId}')">Edit</button>
+    </div>
+  `;
+  
+  modal.style.display = 'flex';
+}
+
 // Show edit modal
 function showEditModal(imageId) {
   const image = allImages.find(img => img.imageId === imageId);
