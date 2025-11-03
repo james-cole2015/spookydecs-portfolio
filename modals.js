@@ -164,7 +164,7 @@ function showEditModal(imageId) {
       </div>
       
       <div class="metadata-section">
-        <h3>Metadata (Read-only)</h3>
+        <h3>Image Metadata</h3>
         <div class="metadata-item">
           <span class="metadata-label">Image ID:</span>
           <span class="metadata-value">${image.imageId}</span>
@@ -342,8 +342,48 @@ function closeUploadModal() {
 
 async function handleUpload(e) {
   e.preventDefault();
-  showToast('Upload functionality is not yet implemented', 'warning');
-  // TODO: Implement S3 upload
+  
+  const file = document.getElementById('uploadFile').files[0];
+  const title = document.getElementById('uploadTitle').value.trim();
+  const year = parseInt(document.getElementById('uploadYear').value);
+  const category = document.getElementById('uploadCategory').value;
+  const season = document.getElementById('uploadSeason').value;
+  const tagsInput = document.getElementById('uploadTags').value.trim();
+  
+  // Validation
+  if (!file) {
+    showToast('Please select an image file', 'error');
+    return;
+  }
+  
+  if (!title || title.length > 25) {
+    showToast('Title is required (max 25 characters)', 'error');
+    return;
+  }
+  
+  const tags = tagsInput ? tagsInput.split(',').map(t => t.trim()).filter(t => t) : [];
+  
+  const metadata = {
+    title,
+    year,
+    category,
+    season,
+    tags,
+    isVisible: true
+  };
+  
+  try {
+    showToast('Uploading image...', 'info');
+    await API.uploadImage(file, metadata);
+    showToast('Image uploaded successfully!', 'success');
+    closeUploadModal();
+    
+    // Reload images
+    await loadImages();
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    showToast('Failed to upload image: ' + error.message, 'error');
+  }
 }
 
 // Confirmation modal
