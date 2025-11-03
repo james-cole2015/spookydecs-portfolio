@@ -9,7 +9,7 @@ function closeModal(modalId) {
 function initializeEventListeners() {
   // Create button
   document.getElementById('btnCreateItem').addEventListener('click', () => {
-    document.getElementById('createModal').style.display = 'flex';
+    openCreateModal();
   });
 
   // Delete button
@@ -39,4 +39,4 @@ function initializeEventListeners() {
 document.addEventListener('DOMContentLoaded', () => {
   initializeEventListeners();
   loadConfig();
-}); 
+});

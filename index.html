@@ -306,15 +306,143 @@
 
 <!-- Create Modal -->
 <div id="createModal" class="modal" style="display:none;">
-  <div class="panel">
+  <div class="panel edit-panel">
     <div class="modal-header">
-      <h2>Create New Item</h2>
+      <h2 id="createModalTitle">Create New Item</h2>
       <button onclick="closeModal('createModal')" style="background:transparent;border:none;font-size:20px;cursor:pointer;">&times;</button>
     </div>
-    <p>Create item form will be displayed here...</p>
+    
+    <!-- Create Form View -->
+    <div id="createFormView" class="edit-view">
+      <form id="createForm">
+        
+        <!-- Basic Information Section -->
+        <div class="accordion-section">
+          <button type="button" class="accordion-header" onclick="toggleAccordion(this)">
+            <span>Basic Information</span>
+            <span class="accordion-icon">▼</span>
+          </button>
+          <div class="accordion-content active">
+            <div class="form-group">
+              <label for="create-short-name">Name <span class="required">*</span></label>
+              <input type="text" id="create-short-name" name="short_name" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="create-season">Season <span class="required">*</span></label>
+              <select id="create-season" name="season" required>
+                <option value="">Select Season</option>
+                <option value="Halloween">Halloween</option>
+                <option value="Christmas">Christmas</option>
+                <option value="Shared">Shared</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="create-class">Class <span class="required">*</span></label>
+              <select id="create-class" name="class" required onchange="onCreateClassChange()">
+                <option value="">Select Class</option>
+                <option value="Decoration">Decoration</option>
+                <option value="Accessory">Accessory</option>
+                <option value="Light">Light</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="create-class-type">Class Type <span class="required">*</span></label>
+              <select id="create-class-type" name="class_type" required disabled onchange="onCreateClassTypeChange()">
+                <option value="">Select Class Type</option>
+              </select>
+              <div class="field-hint">Select a Class first</div>
+            </div>
+            
+            <div class="form-group">
+              <label for="create-status">Status</label>
+              <select id="create-status" name="status">
+                <option value="Active" selected>Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+              <div class="field-hint">Defaults to Active</div>
+            </div>
+            
+            <div class="form-group">
+              <label for="create-general-notes">Item Notes</label>
+              <textarea id="create-general-notes" name="general_notes" rows="3"></textarea>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Item Details Section (Dynamic) -->
+        <div class="accordion-section" id="createItemDetailsSection">
+          <button type="button" class="accordion-header" onclick="toggleAccordion(this)">
+            <span>Item Details</span>
+            <span class="accordion-icon">▼</span>
+          </button>
+          <div class="accordion-content">
+            <div id="createDynamicFields">
+              <div class="field-hint" style="text-align: center; padding: 20px;">
+                Select a Class Type to see additional fields
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Vendor Information Section -->
+        <div class="accordion-section">
+          <button type="button" class="accordion-header" onclick="toggleAccordion(this)">
+            <span>Vendor Information</span>
+            <span class="accordion-icon">▼</span>
+          </button>
+          <div class="accordion-content">
+            <div class="form-group">
+              <label for="create-cost">Cost</label>
+              <input type="text" id="create-cost" name="cost" placeholder="e.g., $29.99">
+            </div>
+            
+            <div class="form-group">
+              <label for="create-value">Value</label>
+              <input type="text" id="create-value" name="value" placeholder="e.g., $50.00">
+            </div>
+            
+            <div class="form-group">
+              <label for="create-manufacturer">Manufacturer</label>
+              <input type="text" id="create-manufacturer" name="manufacturer">
+            </div>
+            
+            <div class="form-group">
+              <label for="create-store">Store</label>
+              <input type="text" id="create-store" name="vendor_store">
+            </div>
+          </div>
+        </div>
+        
+        <!-- Storage Section -->
+        <div class="accordion-section">
+          <button type="button" class="accordion-header" onclick="toggleAccordion(this)">
+            <span>Storage</span>
+            <span class="accordion-icon">▼</span>
+          </button>
+          <div class="accordion-content">
+            <div class="form-group">
+              <label for="create-tote-location">Storage Location</label>
+              <input type="text" id="create-tote-location" name="tote_location" placeholder="e.g., Garage - A3">
+            </div>
+          </div>
+        </div>
+        
+      </form>
+    </div>
+    
+    <!-- Preview View -->
+    <div id="createPreviewView" class="edit-view" style="display:none;">
+      <!-- Preview content will be generated dynamically -->
+    </div>
+    
     <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('createModal')">Cancel</button>
-      <button class="btn-primary">Create Item</button>
+      <button class="btn-secondary" id="createCancelBtn" onclick="closeModal('createModal')">Cancel</button>
+      <button class="btn-primary" id="createPreviewBtn" onclick="showCreatePreview()">Preview</button>
+      <button class="btn-secondary" id="createBackBtn" onclick="backToCreateForm()" style="display:none;">Back to Edit</button>
+      <button class="btn-primary" id="createSaveBtn" onclick="saveNewItem()" style="display:none;">Create Item</button>
     </div>
   </div>
 </div>
@@ -342,6 +470,7 @@
 <script src="edit-form.js"></script>
 <script src="edit-preview.js"></script>
 <script src="edit-save.js"></script>
+<script src="create-modal.js"></script>
 <script src="event-handlers.js"></script>
 
 </body>
