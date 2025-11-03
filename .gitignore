@@ -2,6 +2,8 @@
 .DS_Store
 node_modules/
 .env
-*..DS_Store
-*..py
-*..sh
+*.DS_Store
+*.py
+*.sh
+.vscode/settings.json
+merge.sh
