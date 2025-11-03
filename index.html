@@ -72,6 +72,12 @@
     <button onclick="goToCreate()">Create Item</button>
   </div>
 
+    <div class="card">
+    <div class="card-header"><div class="icon-placeholder">C</div><h3>Deployment Management</h3></div>
+    <p>Create, manage, and update holiday deployments. Manage deployment maps and inventory configurations. </p>
+    <button onclick="deploymentManagement()">Manage Deployments</button>
+  </div>
+
   <div class="card">
     <div class="card-header"><div class="icon-placeholder">I</div><h3>Ideas and Inspirations Administration</h3></div>
     <p>Add a new idea for tracking in the offseason</p>
@@ -89,13 +95,13 @@
     <p>Edit name, category, condition, location, tote ID, last used date, notes.</p>
     <button onclick="updateItems()">Update Items</button>
   </div>
-
+<!--
   <div class="card">
     <div class="card-header"><div class="icon-placeholder">D</div><h3>Delete Item</h3></div>
     <p>Permanent delete with optional archive/undo.</p>
     <button class="danger" onclick="deleteItems()">Delete Items</button>
   </div>
-
+-->
     <div class="card">
     <div class="card-header"><div class="icon-placeholder">📷</div><h3>Photo Management</h3></div>
     <p>Upload/view photos for items or totes.</p>
@@ -106,12 +112,6 @@
     <div class="card-header"><div class="icon-placeholder">T</div><h3>Tote Management</h3></div>
     <p>Create, update, delete totes; view contents; move items; track condition/location/photos.</p>
     <button onclick="manageTotes()">Manage Totes</button>
-  </div>
-
-  <div class="card">
-    <div class="card-header"><div class="icon-placeholder">B</div><h3>Bulk Import/Export</h3></div>
-    <p>CSV/JSON support, optional DynamoDB integration.</p>
-    <button onclick="bulkImportExport()">Import / Export</button>
   </div>
 
   <div class="card">
@@ -247,9 +247,9 @@ async function loadConfig() {
     }
     window.location.href = window.STR_ADM_URL;
   }
-  function bulkImportExport(){ alert("Bulk Import/Export clicked! Hook API here."); }
   function inventoryAudit(){ alert("Inventory Audit clicked! Hook API here."); }
   function repairDashboard(){ alert("Repair Dashboard clicked! Hook API here."); }
+  function deploymentManagement() {alert("Not yet implemented, Hook API here."); }
   function viewLogs(){ alert("View Logs clicked! Hook API here."); }
   function startSeason(){ alert("Start Season clicked! Hook API here."); }
   function archiveOldItems(){ alert("Archive Old Items clicked! Hook API here."); }
