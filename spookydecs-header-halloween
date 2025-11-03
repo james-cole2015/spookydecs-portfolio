@@ -1,0 +1,53 @@
+<!-- ====== SpookyDecs Halloween Header ====== -->
+<header style="background: linear-gradient(90deg, #2a0d0d, #5c0000); color: #fff; padding: 20px 40px; display: flex; align-items: center; justify-content: space-between; font-family: Arial, sans-serif;">
+  <!-- Logo / Site Title -->
+  <div style="display: flex; align-items: center;">
+    <img src="https://www.spookydecs.com/icons/pumpkin-svgrepo-com.svg" alt="SpookyDecs Logo" class="animated-pumpkin" style="height: 50px; margin-right: 15px;">
+    <h1 style="margin: 0; font-size: 1.8rem; font-family: 'Fredericka the Great', cursive;">SpookyDecs</h1>
+  </div>
+</header>
+
+<!-- ====== SpookyDecs Footer ====== -->
+<footer style="background: #1a0a0a; color: #fff; padding: 30px 40px; font-family: Arial, sans-serif;">
+  <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+    <!-- Quick Links -->
+    <!-- Add any other footer sections here -->
+  </div>
+
+  <div style="text-align: center; margin-top: 20px; font-size: 0.9rem; color: #aaa; display: flex; align-items: center; justify-content: center; gap: 8px;">
+    &copy; 2025 SpookyDecs Network | beware of 404s
+    <img src="https://www.svgrepo.com/show/277704/ghost.svg" alt="Ghost Icon" class="floating-ghost" style="height: 16px; width: 16px;">
+  </div>
+</footer>
+
+<!-- Add Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Fredericka+the+Great&family=Nosifer&display=swap" rel="stylesheet">
+
+<!-- Animations -->
+<style>
+  /* Ghost floating + wobble */
+  @keyframes floatWobble {
+    0% { transform: translate(0, 0) rotate(0deg); }
+    25% { transform: translate(2px, -3px) rotate(-5deg); }
+    50% { transform: translate(0, -5px) rotate(0deg); }
+    75% { transform: translate(-2px, -3px) rotate(5deg); }
+    100% { transform: translate(0, 0) rotate(0deg); }
+  }
+
+  .floating-ghost {
+    animation: floatWobble 2s ease-in-out infinite;
+  }
+
+  /* Pumpkin bob + rotate */
+  @keyframes pumpkinBounce {
+    0% { transform: translateY(0) rotate(0deg); }
+    25% { transform: translateY(-3px) rotate(-3deg); }
+    50% { transform: translateY(0) rotate(0deg); }
+    75% { transform: translateY(-3px) rotate(3deg); }
+    100% { transform: translateY(0) rotate(0deg); }
+  }
+
+  .animated-pumpkin {
+    animation: pumpkinBounce 3s ease-in-out infinite;
+  }
+</style>

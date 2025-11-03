@@ -1,0 +1,48 @@
+<!-- ====== Public Christmas Header ====== -->
+<header style="background: linear-gradient(90deg, #004d00, #009900); color: #fff; padding: 20px 40px; display: flex; align-items: center; justify-content: space-between; font-family: Arial, sans-serif;">
+  <!-- Logo / Site Title -->
+  <div style="display: flex; align-items: center;">
+    <img src="https://www.spookydecs.com/icons/christmas-tree-svgrepo-com.svg" alt="Christmas Logo" style="height: 50px; margin-right: 15px;" class="animated-tree">
+    <h1 style="margin: 0; font-size: 1.8rem; color: #ffcc00; font-family: 'Fredericka the Great', cursive;">SpookyDecs Christmas</h1>
+  </div>
+
+  <!-- Navigation -->
+  <nav>
+    <ul style="list-style: none; display: flex; gap: 25px; margin: 0; padding: 0; font-size: 1.1rem;">
+      <li><a href="/home" style="color: #fff; text-decoration: none;">Home</a></li>
+      <li><a href="/projects" style="color: #fff; text-decoration: none;">Projects</a></li>
+      <li><a href="/shop" style="color: #ffcc00; text-decoration: none;">Shop</a></li>
+      <li><a href="/contact" style="color: #fff; text-decoration: none;">Contact</a></li>
+    </ul>
+  </nav>
+</header>
+
+<!-- ====== Public Christmas Footer ====== -->
+<footer style="background-color: #003300; color: #fff; padding: 30px 40px; font-family: Arial, sans-serif;">
+  <div style="text-align: center; font-size: 0.9rem; color: #fff; display: flex; align-items: center; justify-content: center; gap: 8px;">
+    &copy; 2025 SpookyDecs Christmas | Merry Christmas!
+    <img src="https://www.svgrepo.com/show/307240/snowflake.svg" alt="Snowflake Icon" style="height: 18px; width: 18px;" class="animated-snowflake">
+  </div>
+</footer>
+
+<!-- Animations -->
+<style>
+  @keyframes treeBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+  }
+
+  .animated-tree {
+    animation: treeBounce 3s ease-in-out infinite;
+  }
+
+  @keyframes snowSpin {
+    0% { transform: rotate(0deg); }
+    50% { transform: rotate(15deg); }
+    100% { transform: rotate(0deg); }
+  }
+
+  .animated-snowflake {
+    animation: snowSpin 2s ease-in-out infinite;
+  }
+</style>

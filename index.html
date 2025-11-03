@@ -72,6 +72,18 @@
     <button onclick="goToCreate()">Create Item</button>
   </div>
 
+    <div class="card">
+    <div class="card-header"><div class="icon-placeholder">C</div><h3>Deployment Management</h3></div>
+    <p>Create, manage, and update holiday deployments. Manage deployment maps and inventory configurations. </p>
+    <button onclick="deploymentManagement()">Manage Deployments</button>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="icon-placeholder">I</div><h3>Ideas and Inspirations Administration</h3></div>
+    <p>Add a new idea for tracking in the offseason</p>
+    <button onclick="manageideas_Inspirations()">Manage Ideas & Inspirations</button>
+  </div>
+
   <div class="card">
     <div class="card-header"><div class="icon-placeholder">P</div><h3>Packing Process</h3></div>
     <p>Scan tote → scan items → assign items → confirm completion.</p>
@@ -79,27 +91,27 @@
   </div>
 
   <div class="card">
-    <div class="card-header"><div class="icon-placeholder">U</div><h3>Update Item</h3></div>
-    <p>Edit name, category, condition, location, tote ID, last used date, notes. Bulk update supported.</p>
+    <div class="card-header"><div class="icon-placeholder">U</div><h3>Manage Item</h3></div>
+    <p>Edit name, category, condition, location, tote ID, last used date, notes.</p>
     <button onclick="updateItems()">Update Items</button>
   </div>
-
+<!--
   <div class="card">
     <div class="card-header"><div class="icon-placeholder">D</div><h3>Delete Item</h3></div>
     <p>Permanent delete with optional archive/undo.</p>
     <button class="danger" onclick="deleteItems()">Delete Items</button>
+  </div>
+-->
+    <div class="card">
+    <div class="card-header"><div class="icon-placeholder">📷</div><h3>Photo Management</h3></div>
+    <p>Upload/view photos for items or totes.</p>
+    <button onclick="managePhotos()">Manage Photos</button>
   </div>
 
   <div class="card">
     <div class="card-header"><div class="icon-placeholder">T</div><h3>Tote Management</h3></div>
     <p>Create, update, delete totes; view contents; move items; track condition/location/photos.</p>
     <button onclick="manageTotes()">Manage Totes</button>
-  </div>
-
-  <div class="card">
-    <div class="card-header"><div class="icon-placeholder">B</div><h3>Bulk Import/Export</h3></div>
-    <p>CSV/JSON support, optional DynamoDB integration.</p>
-    <button onclick="bulkImportExport()">Import / Export</button>
   </div>
 
   <div class="card">
@@ -133,12 +145,6 @@
     <button onclick="prepShoppingList()">Prep Shopping List</button>
   </div>
 
-  <div class="card">
-    <div class="card-header"><div class="icon-placeholder">📷</div><h3>Photo Management</h3></div>
-    <p>Upload/view photos for items or totes.</p>
-    <button onclick="managePhotos()">Manage Photos</button>
-  </div>
-
 </div>
 
 <!-- ====== Footer ====== -->
@@ -155,28 +161,42 @@
   let REDIRECT_URI = null;
   let LOGIN_URL = null;
   let LOGOUT_URL = null;
+  let IDEAS_ADMIN_URL = null;
+  let STR_ADM_URL = null;
+  let GALLERY_ADM_URL = null;
+  let ITEMS_ADMIN = null;
 
-  // --- LOAD CONFIG AND INITIALIZE ---
-  async function loadConfig() {
-    try {
-      const response = await fetch('/config.json');
-      CONFIG = await response.json();
-      
-      // Set up Cognito variables from config
-      COGNITO_DOMAIN = CONFIG.COGNITO_DOMAIN;
-      CLIENT_ID = CONFIG.COGNITO_CLIENT_ID;
-      REDIRECT_URI = encodeURIComponent(CONFIG.ADMIN_URL);
-      
-      LOGIN_URL = `https://${COGNITO_DOMAIN}/login?response_type=token&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}`;
-      LOGOUT_URL = `https://${COGNITO_DOMAIN}/logout?client_id=${CLIENT_ID}&logout_uri=${REDIRECT_URI}`;
-      
-      // Check authentication
-      checkAuth();
-    } catch (error) {
-      console.error('Failed to load config:', error);
-      alert('Configuration error. Please contact support.');
-    }
+// --- LOAD CONFIG AND INITIALIZE ---
+async function loadConfig() {
+  try {
+    const response = await fetch('/config.json');
+    CONFIG = await response.json();
+    
+    // Set up Cognito variables from config
+    COGNITO_DOMAIN = CONFIG.COGNITO_DOMAIN;
+    CLIENT_ID = CONFIG.COGNITO_CLIENT_ID;
+    
+    // Login returns to admin portal
+    REDIRECT_URI = encodeURIComponent(CONFIG.ADMIN_URL);
+    // Logout redirects to main site
+    FRONTEND_URI = encodeURIComponent(CONFIG.MAIN_URL);
+    
+    LOGIN_URL = `https://${COGNITO_DOMAIN}/login?response_type=token&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}`;
+    LOGOUT_URL = `https://${COGNITO_DOMAIN}/logout?client_id=${CLIENT_ID}&logout_uri=${FRONTEND_URI}`;
+    
+    window.IDEAS_ADMIN_URL = CONFIG.IDEAS_ADMIN_URL;
+    window.STR_ADM_URL = CONFIG.STR_ADM_URL;
+    window.GALLERY_ADM_URL = CONFIG.GALLERY_ADM_URL;
+    window.ITEMS_ADMIN = CONFIG.ITEMS_ADMIN;
+    
+    // Check authentication
+    checkAuth();
+  } catch (error) {
+    console.error('Failed to load config:', error);
+    alert('Configuration error. Please contact support.');
   }
+}
+
 
   // --- PARSE TOKEN FROM URL HASH ---
   function parseCognitoHash() {
@@ -210,20 +230,67 @@
   // ==========================
   function goToCreate() { window.location.href = '/create.html'; }
   function startPacking(){ alert("Start Packing clicked! Hook API here."); }
-  function updateItems(){ alert("Update Items clicked! Hook API here."); }
+  function updateItems(){ 
+    if (!window.ITEMS_ADMIN) {
+      console.error('ITEMS_ADMIN not set in config.');
+      alert('Unable to navigate: ITEMS_ADMIN not configured.');
+      return;
+    }
+    window.location.href = window.ITEMS_ADMIN;
+  }
   function deleteItems(){ alert("Delete Items clicked! Hook API here."); }
-  function manageTotes(){ alert("Manage Totes clicked! Hook API here."); }
-  function bulkImportExport(){ alert("Bulk Import/Export clicked! Hook API here."); }
+  function manageTotes(){ 
+    if (!window.STR_ADM_URL) {
+      console.error('STR_ADM_URL not set in config.');
+      alert('Unable to navigate: STR_ADM_URL not configured.');
+      return;
+    }
+    window.location.href = window.STR_ADM_URL;
+  }
   function inventoryAudit(){ alert("Inventory Audit clicked! Hook API here."); }
   function repairDashboard(){ alert("Repair Dashboard clicked! Hook API here."); }
+  function deploymentManagement() {alert("Not yet implemented, Hook API here."); }
   function viewLogs(){ alert("View Logs clicked! Hook API here."); }
   function startSeason(){ alert("Start Season clicked! Hook API here."); }
   function archiveOldItems(){ alert("Archive Old Items clicked! Hook API here."); }
   function prepShoppingList(){ alert("Prep Shopping List clicked! Hook API here."); }
-  function managePhotos(){ alert("Manage Photos clicked! Hook API here."); }
+  function managePhotos(){ 
+    if (!window.GALLERY_ADM_URL) {
+      console.error('GALLERY_ADM_URL not set in config.');
+      alert('Unable to navigate: GALLERY_ADM_URL not configured.');
+      return;
+    }
+    window.location.href = window.GALLERY_ADM_URL;
+  }
+  function manageideas_Inspirations() {
+    if (!window.IDEAS_ADMIN_URL) {
+      console.error('IDEAS_ADMIN_URL not set in config.');
+      alert('Unable to navigate: IDEAS_ADMIN_URL not configured.');
+      return;
+    }
+    window.location.href = window.IDEAS_ADMIN_URL;
+}
+
 
   // Initialize on page load
   loadConfig();
+
+
+    function addFavicon(url) {
+      const existingIcons = document.querySelectorAll('link[rel="icon"], link[rel="shortcut icon"]');
+      existingIcons.forEach(icon => icon.parentNode.removeChild(icon));
+
+      const link = document.createElement('link');
+      link.rel = 'icon';
+      link.type = 'image/png';
+      link.href = url;
+
+      document.head.appendChild(link);
+    }
+
+    addFavicon('https://assets.spookydecs.com/icons/admin-gear-icon.svg');
+
+
 </script>
 
 </body>
