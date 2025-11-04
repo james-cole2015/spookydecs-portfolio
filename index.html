@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Under Construction - Spooky Decs</title>
+  <!-- Favicon -->
+<link rel="icon" href="data:image/svg+xml,
+  <svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22>
+    <text y=%22.9em%22 font-size=%2290%22>🎃</text>
+  </svg>">
+
+  <style>
+    /* ---------- Base ---------- */
+    :root {
+      --bg: #0a0a0a;
+      --orange: #ff7518;
+      --text: #f5f5f5;
+      --shadow: rgba(255, 117, 24, 0.6);
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Cinzel', 'Creepster', serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* ---------- Fog Background ---------- */
+    .fog {
+      position: absolute;
+      top: 0; left: 0;
+      width: 200%;
+      height: 200%;
+      background: url('https://www.transparenttextures.com/patterns/foggy-birds.png') repeat;
+      opacity: 0.05;
+      animation: fogMove 60s linear infinite;
+      z-index: 0;
+    }
+
+    @keyframes fogMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(-50%, -50%); }
+    }
+
+    /* ---------- Content ---------- */
+    .container {
+      text-align: center;
+      position: relative;
+      z-index: 1;
+      padding: 2rem;
+    }
+
+    h1 {
+      font-size: 3rem;
+      color: var(--orange);
+      text-shadow: 0 0 15px var(--shadow), 0 0 30px var(--orange);
+      animation: flicker 2s infinite alternate;
+    }
+
+    @keyframes flicker {
+      0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+        opacity: 1;
+      }
+      20%, 24%, 55% {
+        opacity: 0.5;
+      }
+    }
+
+    p {
+      font-size: 1.25rem;
+      color: var(--text);
+      margin-top: 1rem;
+      letter-spacing: 1px;
+    }
+
+    .pumpkin {
+      font-size: 4rem;
+      margin-top: 1.5rem;
+      animation: float 3s ease-in-out infinite;
+      filter: drop-shadow(0 0 10px var(--shadow));
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* ---------- Footer ---------- */
+    footer {
+      position: absolute;
+      bottom: 10px;
+      width: 100%;
+      text-align: center;
+      font-size: 0.9rem;
+      opacity: 0.6;
+    }
+
+    footer a {
+      color: var(--orange);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="fog"></div>
+  <div class="container">
+    <h1>🎃 Spooky Things Brewing...</h1>
+    <p>Our haunted site is under construction. Check back soon — if you dare!</p>
+    <div class="pumpkin">🕸️🕷️</div>
+  </div>
+  <footer>
+    &copy; 2025 <a href="https://spookydecs.com">Spooky Decs</a> | Halloween vibes only
+  </footer>
+</body>
+</html>
