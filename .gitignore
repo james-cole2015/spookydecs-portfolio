@@ -9,3 +9,6 @@ node_modules/
 merge.sh
 ID Generation: Should the Lambda auto-ge.md
 .gitignore
+config.json
+.gitignore
+Modal Form: Should the create modal use .md
