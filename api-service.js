@@ -55,7 +55,7 @@ async function saveItemToAPI(itemId, updatePayload) {
       throw new Error('API endpoint not configured');
     }
     
-    const response = await fetch(`${apiUrl}/items/${itemId}`, {
+    const response = await fetch(`${apiUrl}/admin/items/${itemId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json'
