@@ -32,7 +32,7 @@ let CONFIG = {
 // Load configuration from config.json
 async function loadConfig() {
   try {
-    const response = await fetch('/config.json');
+    const response = await fetch('config.json');
     const config = await response.json();
     
     CONFIG.API_BASE_URL = config.API_ENDPOINT;
