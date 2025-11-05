@@ -20,6 +20,7 @@
     <div class="tabs">
       <button class="tab active" data-view="queue">Repair Queue</button>
       <button class="tab" data-view="flag">Flag for Repair</button>
+      <button class="tab" data-view="history">Repair History</button>
       <button class="tab" data-view="analytics">Analytics</button>
     </div>
 
@@ -74,8 +75,8 @@
       </div>
     </div>
 
-    <!-- View: Flag for Repair -->
-    <div id="viewFlag" class="view">
+    <!-- View: Analytics -->
+    <div id="viewAnalytics" class="view">
       <div class="view-header">
         <h2>Flag Item for Repair</h2>
       </div>
@@ -122,6 +123,41 @@
             <button id="btnCancelFlag" class="btn-secondary">Cancel</button>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- View: Repair History -->
+    <div id="viewHistory" class="view">
+      <div class="view-header">
+        <h2>Repair History</h2>
+        <div class="filters">
+          <select id="filterHistoryType" class="filter-select">
+            <option value="">All Types</option>
+            <option value="repair">Repairs</option>
+            <option value="inspection">Inspections</option>
+            <option value="retired">Retired</option>
+          </select>
+          <input type="text" id="searchHistoryItem" class="filter-select" placeholder="Search by item ID or name..." style="min-width: 200px;">
+        </div>
+      </div>
+
+      <div id="historyStatsRow" class="stats-row" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="stat-card">
+          <div class="stat-value">0</div>
+          <div class="stat-label">Total Repairs</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">$0.00</div>
+          <div class="stat-label">Total Cost</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">0</div>
+          <div class="stat-label">Items Serviced</div>
+        </div>
+      </div>
+
+      <div id="repairHistoryContainer">
+        <div class="loading">Loading repair history...</div>
       </div>
     </div>
 
@@ -289,6 +325,7 @@
   <script src="repairs-api.js"></script>
   <script src="repairs-ui.js"></script>
   <script src="repairs-queue.js"></script>
+  <script src="repairs-history.js"></script>
   <script src="repairs-analytics.js"></script>
   <script src="repairs-main.js"></script>
 </body>

@@ -58,6 +58,13 @@ const API = {
   },
 
   /**
+   * Get all items with repair history
+   */
+  async getRepairHistory() {
+    return this.request(CONFIG.ENDPOINTS.GET_HISTORY);
+  },
+
+  /**
    * Start repair on an item
    */
   async startRepair(itemId) {

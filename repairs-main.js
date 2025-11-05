@@ -51,6 +51,7 @@ document.addEventListener('DOMContentLoaded', async () => {
  * Setup filter dropdowns
  */
 function setupFilters() {
+  // Repair Queue filters
   const filterCriticality = document.getElementById('filterCriticality');
   const filterStatus = document.getElementById('filterStatus');
   const filterClassType = document.getElementById('filterClassType');
@@ -65,6 +66,18 @@ function setupFilters() {
 
   filterClassType.addEventListener('change', (e) => {
     RepairQueue.applyFilters({ class_type: e.target.value });
+  });
+
+  // History filters
+  const filterHistoryType = document.getElementById('filterHistoryType');
+  const searchHistoryItem = document.getElementById('searchHistoryItem');
+
+  filterHistoryType.addEventListener('change', (e) => {
+    RepairHistory.applyFilters({ type: e.target.value });
+  });
+
+  searchHistoryItem.addEventListener('input', (e) => {
+    RepairHistory.applyFilters({ search: e.target.value });
   });
 }
 
