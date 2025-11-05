@@ -218,6 +218,15 @@ function setupTabs() {
     tab.addEventListener('click', (e) => {
       const viewName = e.target.dataset.view;
       UI.switchView(viewName);
+      
+      // Load data when switching to specific views
+      if (viewName === 'flag') {
+        FlagItemTable.load();
+      } else if (viewName === 'history') {
+        RepairHistory.load();
+      } else if (viewName === 'analytics') {
+        Analytics.load();
+      }
     });
   });
 }
