@@ -357,55 +357,6 @@ main {
   border-radius: 4px;
 }
 
-/* Button Styles */
-.btn-primary {
-  background: #b3e5fc;
-  color: #0f172a;
-  border: 1px solid white;
-  font-weight: 500;
-}
-
-.btn-primary:hover {
-  background: #81d4fa;
-}
-
-.btn-secondary {
-  background: #e0e0e0;
-  color: #0f172a;
-  border: 1px solid #ccc;
-}
-
-.btn-secondary:hover {
-  background: #d0d0d0;
-}
-
-.btn-success {
-  background: #d1fae5;
-  color: #065f46;
-  border: 1px solid #6ee7b7;
-  font-weight: 500;
-}
-
-.btn-success:hover {
-  background: #a7f3d0;
-}
-
-.btn-danger {
-  background: #fee;
-  color: #991b1b;
-  border: 1px solid #fca5a5;
-}
-
-.btn-danger:hover {
-  background: #fdd;
-}
-
-.btn-small {
-  padding: 4px 8px;
-  font-size: 12px;
-  border-radius: 4px;
-}
-
 /* Form Styles */
 .form-container {
   background: white;
@@ -544,6 +495,68 @@ main {
 .preview-details {
   font-size: 14px;
   color: var(--text-muted);
+}
+
+/* Flag for Repair Layout */
+.flag-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.flag-search-section {
+  /* Left column - search form */
+}
+
+.flag-table-section {
+  background: white;
+  padding: 24px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.flag-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.flag-table-header h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-dark);
+}
+
+.flag-browse-table {
+  margin-bottom: 16px;
+}
+
+.flag-browse-table code {
+  background: var(--bg-light);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  gap: 12px;
+}
+
+.page-info {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-weight: 500;
 }
 
 /* Accordion Sections */
@@ -832,77 +845,6 @@ main {
   color: var(--text-muted);
 }
 
-/* Toast Notification */
-.toast {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  padding: 16px;
-  max-width: 350px;
-  z-index: 2000;
-  display: flex;
-  align-items: start;
-  gap: 12px;
-  animation: slideIn 0.3s ease-out;
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(400px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-.toast.success {
-  border-left: 4px solid #10b981;
-}
-
-.toast.error {
-  border-left: 4px solid #ef4444;
-}
-
-.toast-icon {
-  font-size: 20px;
-  flex-shrink: 0;
-}
-
-.toast-content {
-  flex: 1;
-}
-
-.toast-title {
-  font-weight: 600;
-  font-size: 14px;
-  color: #1f2937;
-  margin-bottom: 4px;
-}
-
-.toast-message {
-  font-size: 13px;
-  color: #6b7280;
-}
-
-.toast-close {
-  background: transparent;
-  border: none;
-  font-size: 18px;
-  color: #9ca3af;
-  cursor: pointer;
-  padding: 0;
-  line-height: 1;
-}
-
-.toast-close:hover {
-  color: #6b7280;
-}
-
 .small { font-size: 12px; color: #6b7280; }
 .muted { opacity: .9; color: rgba(255,255,255,0.9); }
 
@@ -1026,11 +968,42 @@ main {
   .form-section textarea {
     font-size: 16px; /* Prevents zoom on iOS */
   }
+}
+
+/* Mobile - Table only below 640px for Flag view */
+@media (max-width: 640px) {
+  .flag-layout {
+    grid-template-columns: 1fr;
+  }
   
-  .toast {
-    bottom: 16px;
-    right: 16px;
-    left: 16px;
-    max-width: none;
+  .flag-search-section {
+    order: 2;
+  }
+  
+  .flag-table-section {
+    order: 1;
+  }
+
+  .flag-browse-table {
+    font-size: 13px;
+  }
+
+  .flag-browse-table th,
+  .flag-browse-table td {
+    padding: 10px 8px;
+  }
+
+  .flag-table-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .flag-table-header h3 {
+    font-size: 16px;
+  }
+
+  #filterFlagTable {
+    width: 100%;
+    max-width: 100% !important;
   }
 }

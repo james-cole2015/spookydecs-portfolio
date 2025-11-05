@@ -83,6 +83,8 @@ const UI = {
     // Load data for the view
     if (viewName === 'queue') {
       RepairQueue.load();
+    } else if (viewName === 'flag') {
+      FlagItemTable.load();
     } else if (viewName === 'history') {
       RepairHistory.load();
     } else if (viewName === 'analytics') {

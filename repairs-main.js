@@ -7,41 +7,155 @@
 let currentItem = null;
 
 /**
+ * Flag Item Table Manager
+ */
+const FlagItemTable = {
+  allItems: [],
+  filteredItems: [],
+  currentPage: 1,
+  itemsPerPage: 10,
+  filterText: '',
+
+  async load() {
+    try {
+      const response = await API.listItemsByClass(['Decoration', 'Light']);
+      this.allItems = response.items || [];
+      this.applyFilter();
+      this.render();
+    } catch (error) {
+      console.error('Error loading flag table:', error);
+      document.getElementById('flagTableContainer').innerHTML = 
+        '<div class="empty-state"><p>Failed to load items</p></div>';
+    }
+  },
+
+  applyFilter() {
+    const searchTerm = this.filterText.toLowerCase();
+    this.filteredItems = this.allItems.filter(item => {
+      const shortName = (item.short_name || '').toLowerCase();
+      return shortName.includes(searchTerm);
+    });
+    this.currentPage = 1;
+  },
+
+  render() {
+    const container = document.getElementById('flagTableContainer');
+    const pagination = document.getElementById('flagTablePagination');
+
+    if (this.filteredItems.length === 0) {
+      container.innerHTML = '<div class="empty-state"><p>No items found</p></div>';
+      pagination.style.display = 'none';
+      return;
+    }
+
+    // Calculate pagination
+    const totalPages = Math.ceil(this.filteredItems.length / this.itemsPerPage);
+    const startIdx = (this.currentPage - 1) * this.itemsPerPage;
+    const endIdx = startIdx + this.itemsPerPage;
+    const pageItems = this.filteredItems.slice(startIdx, endIdx);
+
+    // Render table
+    const tableHTML = `
+      <table class="repair-table flag-browse-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Short Name</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${pageItems.map(item => `
+            <tr>
+              <td><code>${item.id}</code></td>
+              <td>${item.short_name || 'N/A'}</td>
+              <td>${UI.getStatusBadge(item.status || 'Active')}</td>
+              <td>
+                <button class="btn-small btn-primary" onclick="FlagItemTable.selectItem('${item.id}')">
+                  Select
+                </button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+
+    container.innerHTML = tableHTML;
+
+    // Update pagination
+    document.getElementById('flagPageInfo').textContent = `Page ${this.currentPage} of ${totalPages}`;
+    document.getElementById('btnFlagPrev').disabled = this.currentPage === 1;
+    document.getElementById('btnFlagNext').disabled = this.currentPage === totalPages;
+    pagination.style.display = 'flex';
+  },
+
+  async selectItem(itemId) {
+    try {
+      const response = await API.getRepairDetail(itemId);
+      const item = response.item;
+
+      // Populate form
+      document.getElementById('flagItemId').value = item.id;
+      document.getElementById('previewName').textContent = item.short_name || 'Unknown';
+      document.getElementById('previewClass').textContent = item.class || 'N/A';
+      document.getElementById('previewType').textContent = item.class_type || 'N/A';
+      document.getElementById('previewStatus').textContent = item.status || 'N/A';
+      document.getElementById('flagItemPreview').style.display = 'block';
+      
+      currentItem = item;
+
+      // On mobile, scroll form into view
+      if (window.innerWidth <= 640) {
+        document.querySelector('.flag-search-section').scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
+      }
+    } catch (error) {
+      UI.showToast('Failed to load item: ' + error.message, 'error');
+    }
+  },
+
+  nextPage() {
+    const totalPages = Math.ceil(this.filteredItems.length / this.itemsPerPage);
+    if (this.currentPage < totalPages) {
+      this.currentPage++;
+      this.render();
+    }
+  },
+
+  prevPage() {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.render();
+    }
+  }
+};
+
+/**
  * Initialize the application
  */
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('SpookyDecs Repair Management initializing...');
 
-  // Load configuration first
   const configLoaded = await loadConfig();
   if (!configLoaded) {
     console.error('Failed to load configuration. Cannot start application.');
     return;
   }
 
-  // Check authentication
   if (!AUTH.isAuthenticated()) {
-    // Redirect to login if not authenticated
-    // window.location.href = '/login.html';
     console.log('Auth check skipped (not implemented yet)');
   }
 
-  // Initialize filters
   setupFilters();
-
-  // Initialize tab navigation
   setupTabs();
-
-  // Initialize action buttons
   setupActionButtons();
-
-  // Initialize flag form
   setupFlagForm();
-
-  // Initialize complete repair form
   setupCompleteRepairForm();
 
-  // Load initial view
   RepairQueue.load();
   
   console.log('SpookyDecs Repair Management initialized successfully');
@@ -51,7 +165,6 @@ document.addEventListener('DOMContentLoaded', async () => {
  * Setup filter dropdowns
  */
 function setupFilters() {
-  // Repair Queue filters
   const filterCriticality = document.getElementById('filterCriticality');
   const filterStatus = document.getElementById('filterStatus');
   const filterClassType = document.getElementById('filterClassType');
@@ -68,7 +181,6 @@ function setupFilters() {
     RepairQueue.applyFilters({ class_type: e.target.value });
   });
 
-  // History filters
   const filterHistoryType = document.getElementById('filterHistoryType');
   const searchHistoryItem = document.getElementById('searchHistoryItem');
 
@@ -78,6 +190,23 @@ function setupFilters() {
 
   searchHistoryItem.addEventListener('input', (e) => {
     RepairHistory.applyFilters({ search: e.target.value });
+  });
+
+  // Flag table filter
+  const filterFlagTable = document.getElementById('filterFlagTable');
+  filterFlagTable.addEventListener('input', (e) => {
+    FlagItemTable.filterText = e.target.value;
+    FlagItemTable.applyFilter();
+    FlagItemTable.render();
+  });
+
+  // Flag table pagination
+  document.getElementById('btnFlagPrev').addEventListener('click', () => {
+    FlagItemTable.prevPage();
+  });
+
+  document.getElementById('btnFlagNext').addEventListener('click', () => {
+    FlagItemTable.nextPage();
   });
 }
 
@@ -97,7 +226,6 @@ function setupTabs() {
  * Setup action buttons in detail modal
  */
 function setupActionButtons() {
-  // Start Repair button
   document.getElementById('btnStartRepair').addEventListener('click', async () => {
     if (!RepairDetailModal.currentItem) return;
 
@@ -107,18 +235,15 @@ function setupActionButtons() {
       
       UI.showToast('Repair started successfully!', 'success');
       
-      // Reload detail view
       const response = await API.getRepairDetail(itemId);
       RepairDetailModal.open(response.item);
       
-      // Reload queue
       RepairQueue.load();
     } catch (error) {
       UI.showToast('Failed to start repair: ' + error.message, 'error');
     }
   });
 
-  // Complete Repair button
   document.getElementById('btnCompleteRepair').addEventListener('click', () => {
     if (!RepairDetailModal.currentItem) return;
     
@@ -126,7 +251,6 @@ function setupActionButtons() {
     CompleteRepairModal.open(itemId);
   });
 
-  // Retire Item button
   document.getElementById('btnRetireItem').addEventListener('click', async () => {
     if (!RepairDetailModal.currentItem) return;
 
@@ -148,15 +272,12 @@ function setupActionButtons() {
     }
   });
 
-  // Logout button
   document.getElementById('btnLogout').addEventListener('click', () => {
     AUTH.logout();
   });
 
-  // Admin link
   document.getElementById('adminLink').addEventListener('click', (e) => {
     e.preventDefault();
-    // Navigate to admin page from config
     if (CONFIG.ADMIN_URL) {
       window.location.href = CONFIG.ADMIN_URL;
     } else {
@@ -173,7 +294,6 @@ function setupFlagForm() {
   const flagBtn = document.getElementById('btnFlagItem');
   const cancelBtn = document.getElementById('btnCancelFlag');
 
-  // Search for item
   searchBtn.addEventListener('click', async () => {
     const itemId = document.getElementById('flagItemId').value.trim();
     
@@ -186,7 +306,6 @@ function setupFlagForm() {
       const response = await API.getRepairDetail(itemId);
       const item = response.item;
       
-      // Show preview
       document.getElementById('previewName').textContent = item.short_name || 'Unknown';
       document.getElementById('previewClass').textContent = item.class || 'N/A';
       document.getElementById('previewType').textContent = item.class_type || 'N/A';
@@ -200,7 +319,6 @@ function setupFlagForm() {
     }
   });
 
-  // Flag item
   flagBtn.addEventListener('click', async () => {
     if (!currentItem) return;
 
@@ -217,21 +335,18 @@ function setupFlagForm() {
 
       UI.showToast('Item flagged for repair successfully!', 'success');
       
-      // Reset form
       document.getElementById('flagItemId').value = '';
       document.getElementById('flagNotes').value = '';
       document.getElementById('flagEstimatedCost').value = '';
       document.getElementById('flagItemPreview').style.display = 'none';
       currentItem = null;
 
-      // Switch to queue view
       UI.switchView('queue');
     } catch (error) {
       UI.showToast('Failed to flag item: ' + error.message, 'error');
     }
   });
 
-  // Cancel flag
   cancelBtn.addEventListener('click', () => {
     document.getElementById('flagItemId').value = '';
     document.getElementById('flagNotes').value = '';

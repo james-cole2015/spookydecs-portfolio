@@ -75,52 +75,75 @@
       </div>
     </div>
 
-    <!-- View: Flag -->
+    <!-- View: Flag for Repair -->
     <div id="viewFlag" class="view">
       <div class="view-header">
         <h2>Flag Item for Repair</h2>
       </div>
 
-      <div class="form-container">
-        <div class="form-section">
-          <label for="flagItemId">Item ID</label>
-          <input type="text" id="flagItemId" placeholder="e.g., INF-4S-8T-001" />
-          <button id="btnSearchItem" class="btn-secondary">Search Item</button>
-        </div>
+      <div class="flag-layout">
+        <!-- Left: Search Form -->
+        <div class="flag-search-section">
+          <div class="form-container">
+            <div class="form-section">
+              <label for="flagItemId">Search by Item ID</label>
+              <input type="text" id="flagItemId" placeholder="e.g., INF-4S-8T-001" />
+              <button id="btnSearchItem" class="btn-secondary">Search Item</button>
+            </div>
 
-        <div id="flagItemPreview" style="display:none;">
-          <div class="item-preview-card">
-            <h3 id="previewName">Item Name</h3>
-            <div class="preview-details">
-              <span id="previewClass">Class</span> • 
-              <span id="previewType">Type</span> • 
-              <span id="previewStatus">Status</span>
+            <div id="flagItemPreview" style="display:none;">
+              <div class="item-preview-card">
+                <h3 id="previewName">Item Name</h3>
+                <div class="preview-details">
+                  <span id="previewClass">Class</span> • 
+                  <span id="previewType">Type</span> • 
+                  <span id="previewStatus">Status</span>
+                </div>
+              </div>
+
+              <div class="form-section">
+                <label for="flagCriticality">Criticality Level *</label>
+                <select id="flagCriticality" required>
+                  <option value="Medium">Medium</option>
+                  <option value="Low">Low</option>
+                  <option value="High">High</option>
+                  <option value="Critical">Critical</option>
+                </select>
+              </div>
+
+              <div class="form-section">
+                <label for="flagNotes">Inspection Notes</label>
+                <textarea id="flagNotes" rows="4" placeholder="Describe the issue..."></textarea>
+              </div>
+
+              <div class="form-section">
+                <label for="flagEstimatedCost">Estimated Repair Cost ($)</label>
+                <input type="number" id="flagEstimatedCost" step="0.01" min="0" placeholder="0.00" />
+              </div>
+
+              <div class="form-actions">
+                <button id="btnFlagItem" class="btn-primary">Flag for Repair</button>
+                <button id="btnCancelFlag" class="btn-secondary">Cancel</button>
+              </div>
             </div>
           </div>
+        </div>
 
-          <div class="form-section">
-            <label for="flagCriticality">Criticality Level *</label>
-            <select id="flagCriticality" required>
-              <option value="Medium">Medium</option>
-              <option value="Low">Low</option>
-              <option value="High">High</option>
-              <option value="Critical">Critical</option>
-            </select>
+        <!-- Right: Browse Items Table -->
+        <div class="flag-table-section">
+          <div class="flag-table-header">
+            <h3>Browse Items</h3>
+            <input type="text" id="filterFlagTable" class="filter-select" placeholder="Filter by name..." style="max-width: 250px;">
           </div>
 
-          <div class="form-section">
-            <label for="flagNotes">Inspection Notes</label>
-            <textarea id="flagNotes" rows="4" placeholder="Describe the issue..."></textarea>
+          <div id="flagTableContainer">
+            <div class="loading">Loading items...</div>
           </div>
 
-          <div class="form-section">
-            <label for="flagEstimatedCost">Estimated Repair Cost ($)</label>
-            <input type="number" id="flagEstimatedCost" step="0.01" min="0" placeholder="0.00" />
-          </div>
-
-          <div class="form-actions">
-            <button id="btnFlagItem" class="btn-primary">Flag for Repair</button>
-            <button id="btnCancelFlag" class="btn-secondary">Cancel</button>
+          <div id="flagTablePagination" class="pagination" style="display:none;">
+            <button id="btnFlagPrev" class="btn-small btn-secondary">← Previous</button>
+            <span id="flagPageInfo" class="page-info">Page 1 of 1</span>
+            <button id="btnFlagNext" class="btn-small btn-secondary">Next →</button>
           </div>
         </div>
       </div>

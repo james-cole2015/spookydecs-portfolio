@@ -50,6 +50,30 @@ const API = {
   },
 
   /**
+   * List items by class (for flag table)
+   */
+  async listItemsByClass(classes = ['Decoration', 'Light']) {
+    try {
+      // Fetch all items and filter client-side since we need multiple classes
+      const response = await this.request(CONFIG.ENDPOINTS.LIST_REPAIRS);
+      
+      if (!response.items) {
+        return { items: [] };
+      }
+
+      // Filter items by class
+      const filteredItems = response.items.filter(item => 
+        classes.includes(item.class)
+      );
+
+      return { items: filteredItems };
+    } catch (error) {
+      console.error('Error fetching items by class:', error);
+      throw error;
+    }
+  },
+
+  /**
    * Get detailed repair information for a specific item
    */
   async getRepairDetail(itemId) {
