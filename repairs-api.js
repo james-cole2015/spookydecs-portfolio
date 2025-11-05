@@ -54,8 +54,8 @@ const API = {
    */
   async listItemsByClass(classes = ['Decoration', 'Light']) {
     try {
-      // Fetch all items and filter client-side since we need multiple classes
-      const response = await this.request(CONFIG.ENDPOINTS.LIST_REPAIRS);
+      // Fetch all items from inventory
+      const response = await this.request('/items');
       
       if (!response.items) {
         return { items: [] };
