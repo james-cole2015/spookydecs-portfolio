@@ -17,33 +17,66 @@ const Analytics = {
       document.getElementById('totalRepairsCompleted').textContent = '...';
       document.getElementById('totalEstimatedCost').textContent = '...';
 
-      // Get all items needing repair
+      // Get repair history data (items with repair records)
+      const historyResponse = await API.getRepairHistory();
+      const historyItems = historyResponse.items || [];
+
+      // Get all items needing repair (current queue)
       const repairsResponse = await API.listRepairs();
-      const repairItems = repairsResponse.items || [];
+      const queueItems = repairsResponse.items || [];
+
+      // Combine both datasets, avoiding duplicates
+      const itemsMap = new Map();
+      
+      // Add history items
+      historyItems.forEach(item => {
+        itemsMap.set(item.id, item);
+      });
+      
+      // Add/update with queue items
+      queueItems.forEach(item => {
+        itemsMap.set(item.id, item);
+      });
+
+      // Convert map back to array
+      const allRepairItems = Array.from(itemsMap.values());
+      
+      console.log('Analytics loaded:', {
+        historyItems: historyItems.length,
+        queueItems: queueItems.length,
+        combined: allRepairItems.length
+      });
 
       // Store for analysis
-      this.allItems = repairItems;
+      this.allItems = allRepairItems;
 
       // Calculate and display metrics
-      this.calculateSummary(repairItems);
-      this.renderFrequentRepairs(repairItems);
-      this.renderCriticalityChart(repairItems);
-      this.calculateAvgRepairTime(repairItems);
+      this.calculateSummary(allRepairItems, queueItems);
+      this.renderFrequentRepairs(allRepairItems);
+      this.renderCriticalityChart(queueItems); // Only current queue items have criticality
+      this.calculateAvgRepairTime(allRepairItems);
     } catch (error) {
       console.error('Failed to load analytics:', error);
+      
+      // Show error state
+      document.getElementById('totalNeedingRepair').textContent = 'Error';
+      document.getElementById('totalInRepair').textContent = 'Error';
+      document.getElementById('totalRepairsCompleted').textContent = 'Error';
+      document.getElementById('totalEstimatedCost').textContent = 'Error';
     }
   },
 
   /**
    * Calculate summary statistics
    */
-  calculateSummary(items) {
+  calculateSummary(allItems, queueItems) {
     let totalNeedingRepair = 0;
     let totalInRepair = 0;
     let totalEstimatedCost = 0;
     let totalRepairsCompleted = 0;
 
-    items.forEach(item => {
+    // Count items needing repair and in repair from queue
+    queueItems.forEach(item => {
       const repairStatus = item.repair_status || {};
       
       if (repairStatus.needs_repair) {
@@ -57,9 +90,11 @@ const Analytics = {
       if (repairStatus.estimated_repair_cost) {
         totalEstimatedCost += parseFloat(repairStatus.estimated_repair_cost);
       }
+    });
 
-      // Count completed repairs from history
-      const notes = repairStatus.repair_notes || [];
+    // Count completed repairs from all items
+    allItems.forEach(item => {
+      const notes = item.repair_status?.repair_notes || [];
       totalRepairsCompleted += notes.filter(n => n.type === 'repair').length;
     });
 
