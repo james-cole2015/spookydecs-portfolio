@@ -1,121 +1,197 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Under Construction - Spooky Decs</title>
-  <!-- Favicon -->
-<link rel="icon" href="data:image/svg+xml,
-  <svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22>
-    <text y=%22.9em%22 font-size=%2290%22>🎃</text>
-  </svg>">
-
-  <style>
-    /* ---------- Base ---------- */
-    :root {
-      --bg: #0a0a0a;
-      --orange: #ff7518;
-      --text: #f5f5f5;
-      --shadow: rgba(255, 117, 24, 0.6);
-    }
-
-    html, body {
-      height: 100%;
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Cinzel', 'Creepster', serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-
-    /* ---------- Fog Background ---------- */
-    .fog {
-      position: absolute;
-      top: 0; left: 0;
-      width: 200%;
-      height: 200%;
-      background: url('https://www.transparenttextures.com/patterns/foggy-birds.png') repeat;
-      opacity: 0.05;
-      animation: fogMove 60s linear infinite;
-      z-index: 0;
-    }
-
-    @keyframes fogMove {
-      0% { transform: translate(0, 0); }
-      100% { transform: translate(-50%, -50%); }
-    }
-
-    /* ---------- Content ---------- */
-    .container {
-      text-align: center;
-      position: relative;
-      z-index: 1;
-      padding: 2rem;
-    }
-
-    h1 {
-      font-size: 3rem;
-      color: var(--orange);
-      text-shadow: 0 0 15px var(--shadow), 0 0 30px var(--orange);
-      animation: flicker 2s infinite alternate;
-    }
-
-    @keyframes flicker {
-      0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
-        opacity: 1;
-      }
-      20%, 24%, 55% {
-        opacity: 0.5;
-      }
-    }
-
-    p {
-      font-size: 1.25rem;
-      color: var(--text);
-      margin-top: 1rem;
-      letter-spacing: 1px;
-    }
-
-    .pumpkin {
-      font-size: 4rem;
-      margin-top: 1.5rem;
-      animation: float 3s ease-in-out infinite;
-      filter: drop-shadow(0 0 10px var(--shadow));
-    }
-
-    @keyframes float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
-    }
-
-    /* ---------- Footer ---------- */
-    footer {
-      position: absolute;
-      bottom: 10px;
-      width: 100%;
-      text-align: center;
-      font-size: 0.9rem;
-      opacity: 0.6;
-    }
-
-    footer a {
-      color: var(--orange);
-      text-decoration: none;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpookyDecs — Deployment Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-  <div class="fog"></div>
-  <div class="container">
-    <h1>🎃 Spooky Things Brewing...</h1>
-    <p>Our haunted site is under construction. Check back soon — if you dare!</p>
-    <div class="pumpkin">🕸️🕷️</div>
-  </div>
-  <footer>
-    &copy; 2025 <a href="https://spookydecs.com">Spooky Decs</a> | Halloween vibes only
-  </footer>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header>
+        <h1>SpookyDecs — Deployment Management</h1>
+        <div style="flex:1"></div>
+        <div id="authInfo" class="small muted">Admin User</div>
+        <a id="adminLink" href="#" style="color:#0f172a;text-decoration:none;padding:8px 10px;background:white;border-radius:6px;font-size:14px;border:1px solid #ddd;">Admin</a>
+        <button id="btnLogout" style="background:#2b2b2b;color:white;">Logout</button>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex space-x-8 overflow-x-auto">
+                    <button class="nav-btn px-3 py-2 text-sm font-medium border-b-2 border-blue-500 text-blue-600" data-view="deployments">
+                        Deployments
+                    </button>
+                    <button class="nav-btn px-3 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-view="graph">
+                        Graph
+                    </button>
+                    <button class="nav-btn px-3 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-view="statistics">
+                        Statistics
+                    </button>
+                    <button class="nav-btn px-3 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-view="historical">
+                        Historical Deployments
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Deployments View -->
+        <div id="deployments-view" class="view">
+            <!-- Start Deployment Section -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h2 class="text-2xl font-bold mb-6">Start Deployment</h2>
+                <p class="text-gray-600 mb-6">Create a new deployment to start decorating</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Year</label>
+                        <input type="text" id="create-year" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100" readonly>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Season</label>
+                        <select id="create-season" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">Select season...</option>
+                            <option value="halloween">Halloween</option>
+                            <option value="christmas">Christmas</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                        <input type="text" id="create-location" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., Front Yard">
+                    </div>
+                </div>
+
+                <button id="start-decorating-btn" class="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                    Start Decorating
+                </button>
+            </div>
+
+            <!-- Load Deployment Section -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold">Load Deployment</h2>
+                        <p class="text-gray-600 mt-1">Pick up where you left off</p>
+                    </div>
+                    <button id="refresh-deployments-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm">
+                        Refresh
+                    </button>
+                </div>
+                
+                <div id="deployments-list" class="space-y-4">
+                    <p class="text-gray-500 text-center py-8">Loading deployments...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Connection Builder View (Hidden by default) -->
+        <div id="connection-builder-view" class="view hidden">
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold">Connection Builder</h2>
+                        <p class="text-gray-600" id="current-deployment-info">Loading...</p>
+                    </div>
+                    <button id="back-to-deployments-btn" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">
+                        Back to Deployments
+                    </button>
+                </div>
+
+                <!-- Connection Form -->
+                <div class="border-t pt-6">
+                    <h3 class="text-lg font-semibold mb-4">Add Connection</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">From Item</label>
+                            <select id="from-item" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">Select item...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">From Port</label>
+                            <select id="from-port" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" disabled>
+                                <option value="">Select from item first...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">To Item</label>
+                            <select id="to-item" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">Select item...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">To Port</label>
+                            <select id="to-port" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" disabled>
+                                <option value="">Select to item first...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Notes (optional)</label>
+                        <textarea id="notes" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Add any notes about this connection..."></textarea>
+                    </div>
+                    <button id="add-connection-btn" class="w-full md:w-auto px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                        Add Connection
+                    </button>
+                </div>
+
+                <!-- Existing Connections -->
+                <div class="border-t pt-6 mt-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold">Existing Connections</h3>
+                        <button id="validate-btn" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-sm">
+                            Validate Connections
+                        </button>
+                    </div>
+                    <div id="connections-list" class="space-y-3">
+                        <p class="text-gray-500 text-sm">No connections yet. Add one above to get started.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Validation Results -->
+            <div id="validation-results" class="hidden bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold mb-4">Validation Results</h3>
+                <div id="validation-content"></div>
+            </div>
+        </div>
+
+        <!-- Graph View -->
+        <div id="graph-view" class="view hidden">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-2xl font-bold mb-4">Connection Graph</h2>
+                <p class="text-gray-600">Visual graph coming soon...</p>
+            </div>
+        </div>
+
+        <!-- Statistics View -->
+        <div id="statistics-view" class="view hidden">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-2xl font-bold mb-4">Statistics</h2>
+                <p class="text-gray-600">Statistics dashboard coming soon...</p>
+            </div>
+        </div>
+
+        <!-- Historical Deployments View -->
+        <div id="historical-view" class="view hidden">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-2xl font-bold mb-4">Historical Deployments</h2>
+                <p class="text-gray-600">Completed deployments coming soon...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg transform translate-y-20 transition-transform duration-300 z-50"></div>
+
+    <script src="config.js"></script>
+    <script src="api.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
