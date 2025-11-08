@@ -74,27 +74,23 @@ function initNavigation() {
 async function createDeployment() {
     const year = document.getElementById('create-year').value;
     const season = document.getElementById('create-season').value;
-    const location = document.getElementById('create-location').value.trim();
 
-    if (!season || !location) {
-        showToast('Please select a season and enter a location', 'error');
+    if (!season) {
+        showToast('Please select a season', 'error');
         return;
     }
 
     try {
-        const result = await API.createDeploymentAdmin(parseInt(year), season, location);
+        // Note: We're not passing location anymore since the deployment creates all zones
+        const result = await API.createDeploymentAdmin(parseInt(year), season, 'Front Yard');
         
-        showToast('Deployment created successfully!');
+        showToast('Deployment created successfully! Select a zone to continue.');
         
         // Clear form
         document.getElementById('create-season').value = '';
-        document.getElementById('create-location').value = '';
         
-        // Extract deployment ID from the nested response
-        const deploymentId = result.deployment.id;
-        
-        // Load the new deployment into connection builder
-        await loadDeploymentIntoBuilder(deploymentId, location);
+        // Refresh deployments list to show the new deployment
+        await loadInProgressDeployments();
         
     } catch (error) {
         showToast(`Failed to create deployment: ${error.message}`, 'error');
@@ -128,12 +124,20 @@ function renderDeploymentsList() {
     }
 
     listContainer.innerHTML = state.inProgressDeployments.map(deployment => {
-        // Count items by type
-        const items = deployment.items || [];
-        const decorations = items.filter(i => i.item_type === 'decoration').length;
-        const lights = items.filter(i => i.item_type === 'light').length;
-        const accessories = items.filter(i => i.item_type === 'accessory').length;
-        const total = items.length;
+        // Get all locations for this deployment
+        const locations = deployment.locations || [];
+        
+        // Calculate total items across all locations
+        let totalItems = 0;
+        let totalDecorations = 0;
+        let totalLights = 0;
+        let totalAccessories = 0;
+        
+        locations.forEach(location => {
+            const items = location.items_deployed || [];
+            totalItems += items.length;
+            // Note: You'd need item details to count by type - this is a placeholder
+        });
 
         return `
             <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
@@ -141,44 +145,34 @@ function renderDeploymentsList() {
                     <div class="flex-1">
                         <h3 class="text-lg font-semibold text-gray-900">${deployment.id}</h3>
                         <p class="text-sm text-gray-600 mt-1">
-                            <span class="font-medium">${deployment.locations?.[0]?.name || 'Multiple Locations'}</span> • 
                             ${deployment.season} ${deployment.year}
                         </p>
-                        <div class="flex gap-4 mt-3 text-sm">
-                            <span class="text-gray-600">
-                                <span class="font-medium">${total}</span> total items
-                            </span>
-                            <span class="text-gray-600">
-                                <span class="font-medium">${decorations}</span> decorations
-                            </span>
-                            <span class="text-gray-600">
-                                <span class="font-medium">${lights}</span> lights
-                            </span>
-                            <span class="text-gray-600">
-                                <span class="font-medium">${accessories}</span> accessories
-                            </span>
+                        <div class="mt-3">
+                            <p class="text-sm font-medium text-gray-700 mb-2">Select a zone to work on:</p>
+                            <div class="flex flex-wrap gap-2">
+                                ${locations.map(location => `
+                                    <button 
+                                        class="px-3 py-1.5 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-sm"
+                                        onclick="loadDeploymentIntoBuilder('${deployment.id}', '${location.name}')"
+                                    >
+                                        ${location.name} (${location.items_deployed?.length || 0} items)
+                                    </button>
+                                `).join('')}
+                            </div>
                         </div>
                     </div>
-                    <button 
-                        class="ml-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm whitespace-nowrap"
-                        onclick="loadDeploymentIntoBuilder('${deployment.id}', '${deployment.locations?.[0]?.name || ''}')"
-                    >
-                        Continue
-                    </button>
                 </div>
             </div>
         `;
     }).join('');
 }
 
-
-
 async function loadDeploymentIntoBuilder(deploymentId, locationName) {
     try {
         const deployment = await API.getDeployment(deploymentId, locationName);
         
         if (!deployment.items || deployment.items.length === 0) {
-            showToast('No items found in this deployment. Add items first.', 'error');
+            showToast('No items found in this zone. Add items first.', 'error');
             return;
         }
 
@@ -409,11 +403,6 @@ function initEventListeners() {
 
     document.getElementById('to-item').addEventListener('change', (e) => {
         updatePortDropdown(e.target.value, 'to-port');
-    });
-
-    // Allow Enter key to submit location for new deployment
-    document.getElementById('create-location').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') createDeployment();
     });
 }
 
