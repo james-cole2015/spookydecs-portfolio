@@ -90,8 +90,11 @@ async function createDeployment() {
         document.getElementById('create-season').value = '';
         document.getElementById('create-location').value = '';
         
+        // Extract deployment ID from the nested response
+        const deploymentId = result.deployment.id;
+        
         // Load the new deployment into connection builder
-        await loadDeploymentIntoBuilder(result.deployment_id, location);
+        await loadDeploymentIntoBuilder(deploymentId, location);
         
     } catch (error) {
         showToast(`Failed to create deployment: ${error.message}`, 'error');
@@ -136,9 +139,9 @@ function renderDeploymentsList() {
             <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
                 <div class="flex justify-between items-start">
                     <div class="flex-1">
-                        <h3 class="text-lg font-semibold text-gray-900">${deployment.deployment_id}</h3>
+                        <h3 class="text-lg font-semibold text-gray-900">${deployment.id}</h3>
                         <p class="text-sm text-gray-600 mt-1">
-                            <span class="font-medium">${deployment.location}</span> • 
+                            <span class="font-medium">${deployment.locations?.[0]?.name || 'Multiple Locations'}</span> • 
                             ${deployment.season} ${deployment.year}
                         </p>
                         <div class="flex gap-4 mt-3 text-sm">
@@ -158,7 +161,7 @@ function renderDeploymentsList() {
                     </div>
                     <button 
                         class="ml-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm whitespace-nowrap"
-                        onclick="loadDeploymentIntoBuilder('${deployment.deployment_id}', '${deployment.location}')"
+                        onclick="loadDeploymentIntoBuilder('${deployment.id}', '${deployment.locations?.[0]?.name || ''}')"
                     >
                         Continue
                     </button>
@@ -167,6 +170,8 @@ function renderDeploymentsList() {
         `;
     }).join('');
 }
+
+
 
 async function loadDeploymentIntoBuilder(deploymentId, locationName) {
     try {
