@@ -24,6 +24,22 @@ const API = {
         }
     },
 
+    // Item Management
+    async getItem(itemId) {
+        return this.request(`/items/${itemId}`);
+    },
+
+    async listItems() {
+        return this.request('/items');
+    },
+
+    async updateItem(itemId, updates) {
+        return this.request(`/admin/items/${itemId}`, {
+            method: 'PUT',
+            body: JSON.stringify(updates),
+        });
+    },
+
     // Deployment Management
     async createDeploymentAdmin(year, season, location) {
         return this.request('/admin/deployments', {
@@ -36,57 +52,8 @@ const API = {
         return this.request(`/admin/deployments/${deploymentId}/locations/${locationName}`);
     },
 
-    async createDeployment(deploymentData) {
-        return this.request('/admin/deployments', {
-            method: 'POST',
-            body: JSON.stringify(deploymentData),
-        });
-    },
-
-    async updateDeployment(deploymentId, locationName, updates) {
-        return this.request(`/admin/deployments/${deploymentId}/locations/${locationName}`, {
-            method: 'PUT',
-            body: JSON.stringify(updates),
-        });
-    },
-
-    async deleteDeployment(deploymentId, locationName) {
-        return this.request(`/admin/deployments/${deploymentId}/locations/${locationName}`, {
-            method: 'DELETE',
-        });
-    },
-
     async listDeployments() {
         return this.request('/admin/deployments');
-    },
-
-    // Session Management
-    async getSession(sessionId) {
-        return this.request(`/admin/sessions/${sessionId}`);
-    },
-
-    async createSession(sessionData) {
-        return this.request('/admin/sessions', {
-            method: 'POST',
-            body: JSON.stringify(sessionData),
-        });
-    },
-
-    async updateSession(sessionId, updates) {
-        return this.request(`/admin/sessions/${sessionId}`, {
-            method: 'PUT',
-            body: JSON.stringify(updates),
-        });
-    },
-
-    async deleteSession(sessionId) {
-        return this.request(`/admin/sessions/${sessionId}`, {
-            method: 'DELETE',
-        });
-    },
-
-    async listSessions() {
-        return this.request('/admin/sessions');
     },
 
     // Connection Management

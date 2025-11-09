@@ -3,6 +3,7 @@ const state = {
     currentDeploymentId: null,
     currentLocationName: null,
     items: [],
+    allItems: [], // All items from the database
     connections: [],
     inProgressDeployments: [],
 };
@@ -81,7 +82,7 @@ async function createDeployment() {
     }
 
     try {
-        // Note: We're not passing location anymore since the deployment creates all zones
+        // Note: We're passing location but backend creates all zones
         const result = await API.createDeploymentAdmin(parseInt(year), season, 'Front Yard');
         
         showToast('Deployment created successfully! Select a zone to continue.');
@@ -126,18 +127,6 @@ function renderDeploymentsList() {
     listContainer.innerHTML = state.inProgressDeployments.map(deployment => {
         // Get all locations for this deployment
         const locations = deployment.locations || [];
-        
-        // Calculate total items across all locations
-        let totalItems = 0;
-        let totalDecorations = 0;
-        let totalLights = 0;
-        let totalAccessories = 0;
-        
-        locations.forEach(location => {
-            const items = location.items_deployed || [];
-            totalItems += items.length;
-            // Note: You'd need item details to count by type - this is a placeholder
-        });
 
         return `
             <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
@@ -169,17 +158,30 @@ function renderDeploymentsList() {
 
 async function loadDeploymentIntoBuilder(deploymentId, locationName) {
     try {
-        const deployment = await API.getDeployment(deploymentId, locationName);
+        // Load all items from the database
+        showToast('Loading available items...', 'info');
+        const allItems = await API.listItems();
         
-        if (!deployment.items || deployment.items.length === 0) {
-            showToast('No items found in this zone. Add items first.', 'error');
+        // Filter for available items: deployed=false AND class NOT IN ['Storage', 'Deployment']
+        const availableItems = allItems.filter(item => {
+            const deployed = item.deployment_data?.deployed || false;
+            const itemClass = item.class || '';
+            return !deployed && itemClass !== 'Storage' && itemClass !== 'Deployment';
+        });
+
+        if (availableItems.length === 0) {
+            showToast('No available items to deploy. All items are currently deployed or in storage.', 'error');
             return;
         }
 
+        // Load the deployment location data
+        const locationData = await API.getDeployment(deploymentId, locationName);
+        
         state.currentDeploymentId = deploymentId;
         state.currentLocationName = locationName;
-        state.items = deployment.items;
-        state.connections = deployment.connections || [];
+        state.items = availableItems;
+        state.allItems = allItems; // Keep all items for reference
+        state.connections = locationData.location?.connections || [];
 
         // Update UI
         document.getElementById('current-deployment-info').textContent = 
@@ -192,7 +194,7 @@ async function loadDeploymentIntoBuilder(deploymentId, locationName) {
         document.getElementById('deployments-view').classList.add('hidden');
         document.getElementById('connection-builder-view').classList.remove('hidden');
         
-        showToast('Deployment loaded successfully');
+        showToast(`Loaded ${availableItems.length} available items`);
     } catch (error) {
         showToast(`Failed to load deployment: ${error.message}`, 'error');
     }
@@ -219,20 +221,20 @@ function populateItemDropdowns() {
     // Add items to dropdowns
     state.items.forEach(item => {
         const option1 = document.createElement('option');
-        option1.value = item.item_id;
-        option1.textContent = `${item.item_id} (${item.item_type})`;
+        option1.value = item.id;
+        option1.textContent = `${item.id} - ${item.name} (${item.class})`;
         fromItemSelect.appendChild(option1);
 
         const option2 = document.createElement('option');
-        option2.value = item.item_id;
-        option2.textContent = `${item.item_id} (${item.item_type})`;
+        option2.value = item.id;
+        option2.textContent = `${item.id} - ${item.name} (${item.class})`;
         toItemSelect.appendChild(option2);
     });
 }
 
 function updatePortDropdown(itemId, portSelectId) {
     const portSelect = document.getElementById(portSelectId);
-    const item = state.items.find(i => i.item_id === itemId);
+    const item = state.items.find(i => i.id === itemId);
 
     portSelect.innerHTML = '<option value="">Select port...</option>';
     portSelect.disabled = false;
@@ -247,6 +249,64 @@ function updatePortDropdown(itemId, portSelectId) {
     }
 }
 
+async function promptSpotlightIllumination() {
+    // Get deployed decorations that can be illuminated (Inflatables, Static Props, Animatronics)
+    const decorations = state.allItems.filter(item => {
+        const deployed = item.deployment_data?.deployed || false;
+        const itemClass = item.class || '';
+        return deployed && ['Inflatable', 'Static Prop', 'Animatronic'].includes(itemClass);
+    });
+
+    if (decorations.length === 0) {
+        return null; // No decorations to illuminate
+    }
+
+    // Create modal for selection
+    return new Promise((resolve) => {
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+        modal.innerHTML = `
+            <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                <h3 class="text-lg font-semibold mb-4">What does this spotlight illuminate?</h3>
+                <p class="text-sm text-gray-600 mb-4">Select up to 2 decorations (optional)</p>
+                <div class="space-y-2 max-h-64 overflow-y-auto mb-4">
+                    ${decorations.map(dec => `
+                        <label class="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                            <input type="checkbox" value="${dec.id}" class="spotlight-decoration-check">
+                            <span class="text-sm">${dec.id} - ${dec.name} (${dec.class})</span>
+                        </label>
+                    `).join('')}
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300" onclick="this.closest('.fixed').remove(); window.resolveSpotlight(null);">
+                        Skip
+                    </button>
+                    <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" onclick="window.confirmSpotlight()">
+                        Confirm
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Store resolve function globally so buttons can access it
+        window.resolveSpotlight = resolve;
+        window.confirmSpotlight = () => {
+            const checkboxes = modal.querySelectorAll('.spotlight-decoration-check:checked');
+            
+            if (checkboxes.length > 2) {
+                showToast('Maximum 2 decorations can be illuminated', 'error');
+                return;
+            }
+            
+            const selected = Array.from(checkboxes).map(cb => cb.value);
+            modal.remove();
+            resolve(selected.length > 0 ? selected : null);
+        };
+    });
+}
+
 async function addConnection() {
     const fromItem = document.getElementById('from-item').value;
     const fromPort = document.getElementById('from-port').value;
@@ -259,6 +319,16 @@ async function addConnection() {
         return;
     }
 
+    // Check if either item is a spotlight
+    const fromItemObj = state.items.find(i => i.id === fromItem);
+    const toItemObj = state.items.find(i => i.id === toItem);
+    
+    let illuminates = null;
+    
+    if (fromItemObj?.class === 'Spotlight' || toItemObj?.class === 'Spotlight') {
+        illuminates = await promptSpotlightIllumination();
+    }
+
     const connectionData = {
         connection_id: generateId(),
         from_item: fromItem,
@@ -267,6 +337,11 @@ async function addConnection() {
         to_port: toPort,
         notes: notes || undefined,
     };
+
+    // Add illuminates array if spotlight selected decorations
+    if (illuminates && illuminates.length > 0) {
+        connectionData.illuminates = illuminates;
+    }
 
     try {
         await API.addConnection(state.currentDeploymentId, state.currentLocationName, connectionData);
@@ -285,6 +360,9 @@ async function addConnection() {
         
         renderConnections();
         showToast('Connection added successfully');
+        
+        // Reload deployment to refresh available items (since items are now deployed)
+        await loadDeploymentIntoBuilder(state.currentDeploymentId, state.currentLocationName);
     } catch (error) {
         showToast(`Failed to add connection: ${error.message}`, 'error');
     }
@@ -316,33 +394,45 @@ function renderConnections() {
         return;
     }
 
-    connectionsList.innerHTML = state.connections.map(conn => `
-        <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
-            <div class="flex justify-between items-start">
-                <div class="flex-1">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm mb-2">
-                        <div>
-                            <span class="font-medium text-gray-700">From:</span>
-                            <span class="text-gray-600">${conn.from_item}</span>
-                            <span class="text-gray-500">(${conn.from_port})</span>
+    connectionsList.innerHTML = state.connections.map(conn => {
+        let illuminatesHtml = '';
+        if (conn.illuminates && conn.illuminates.length > 0) {
+            const illuminatedItems = conn.illuminates.map(id => {
+                const item = state.allItems.find(i => i.id === id);
+                return item ? `${item.id} - ${item.name}` : id;
+            }).join(', ');
+            illuminatesHtml = `<p class="text-sm text-gray-600 mt-2"><span class="font-medium">Illuminates:</span> ${illuminatedItems}</p>`;
+        }
+
+        return `
+            <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm mb-2">
+                            <div>
+                                <span class="font-medium text-gray-700">From:</span>
+                                <span class="text-gray-600">${conn.from_item}</span>
+                                <span class="text-gray-500">(${conn.from_port})</span>
+                            </div>
+                            <div>
+                                <span class="font-medium text-gray-700">To:</span>
+                                <span class="text-gray-600">${conn.to_item}</span>
+                                <span class="text-gray-500">(${conn.to_port})</span>
+                            </div>
                         </div>
-                        <div>
-                            <span class="font-medium text-gray-700">To:</span>
-                            <span class="text-gray-600">${conn.to_item}</span>
-                            <span class="text-gray-500">(${conn.to_port})</span>
-                        </div>
+                        ${conn.notes ? `<p class="text-sm text-gray-600 mt-2"><span class="font-medium">Notes:</span> ${conn.notes}</p>` : ''}
+                        ${illuminatesHtml}
                     </div>
-                    ${conn.notes ? `<p class="text-sm text-gray-600 mt-2"><span class="font-medium">Notes:</span> ${conn.notes}</p>` : ''}
+                    <button 
+                        class="ml-4 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm whitespace-nowrap"
+                        onclick="deleteConnection('${conn.connection_id}')"
+                    >
+                        Delete
+                    </button>
                 </div>
-                <button 
-                    class="ml-4 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm whitespace-nowrap"
-                    onclick="deleteConnection('${conn.connection_id}')"
-                >
-                    Delete
-                </button>
             </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 async function validateConnections() {
