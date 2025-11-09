@@ -1,0 +1,48 @@
+name: Deploy Dev Deployments Report (OIDC)
+
+on:
+  push:
+    branches:
+      - main  # adjust to match your deployment branch
+  workflow_dispatch:
+
+permissions:
+  id-token: write    # required for OIDC
+  contents: read     # required for repo checkout
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::186543873814:role/GitHubOIDCDeployRole
+          aws-region: us-east-2  # change if needed
+
+      - name: Verify AWS identity
+        run: aws sts get-caller-identity
+
+      - name: Sync files to S3
+        run: |
+          aws s3 sync ./ s3://deployments-dev-spookydecs/ \
+            --delete \
+            --exclude ".git/*" \
+            --exclude ".github/*" \
+            --exclude ".gitignore" \
+            --exclude "README.md" \
+            --cache-control "no-cache, no-store, must-revalidate"
+
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"
+
+      - name: Confirm deployment
+        run: echo "✅ Deployment completed successfully."
