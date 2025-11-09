@@ -160,7 +160,10 @@ async function loadDeploymentIntoBuilder(deploymentId, locationName) {
     try {
         // Load all items from the database
         showToast('Loading available items...', 'info');
-        const allItems = await API.listItems();
+        const itemsResponse = await API.listItems();
+        
+        // Handle response structure - could be array or object with items property
+        const allItems = Array.isArray(itemsResponse) ? itemsResponse : (itemsResponse.items || []);
         
         // Filter for available items: deployed=false AND class NOT IN ['Storage', 'Deployment']
         const availableItems = allItems.filter(item => {
