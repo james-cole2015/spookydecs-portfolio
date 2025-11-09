@@ -3,6 +3,7 @@ const API = {
     // Helper function for fetch requests
     async request(endpoint, options = {}) {
         const url = `${CONFIG.API_ENDPOINT}${endpoint}`;
+        console.log('API Request URL:', url); // DEBUG
         const defaultOptions = {
             headers: {
                 'Content-Type': 'application/json',
@@ -11,6 +12,7 @@ const API = {
 
         try {
             const response = await fetch(url, { ...defaultOptions, ...options });
+            console.log('API Response status:', response.status); // DEBUG
             const data = await response.json();
 
             if (!response.ok) {
@@ -49,7 +51,10 @@ const API = {
     },
 
     async getDeployment(deploymentId, locationName) {
-        return this.request(`/admin/deployments/${deploymentId}/locations/${locationName}`);
+        const response = await this.request(`/admin/deployments/${deploymentId}/locations/${locationName}`);
+        // The response structure from locations-operations Lambda is:
+        // { deployment_id, deployment_name, location: { name, connections, work_sessions, notes, last_updated } }
+        return response;
     },
 
     async listDeployments() {
