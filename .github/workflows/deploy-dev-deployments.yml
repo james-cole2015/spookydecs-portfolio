@@ -3,7 +3,7 @@ name: Deploy Dev Deployments Report (OIDC)
 on:
   push:
     branches:
-      - depoly-dev-001  # adjust to match your deployment branch
+      - deploy-dev-001  # adjust to match your deployment branch
   workflow_dispatch:
 
 permissions:
