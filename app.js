@@ -53,10 +53,10 @@ function getUsedPorts(itemId, connections) {
     };
     
     connections.forEach(conn => {
-        if (conn.from_item === itemId) {
+        if (conn.from_item_id === itemId) {
             usedPorts.female.push(conn.from_port);
         }
-        if (conn.to_item === itemId) {
+        if (conn.to_item_id === itemId) {
             usedPorts.male.push(conn.to_port);
         }
     });
@@ -528,13 +528,15 @@ async function addConnection() {
     const illuminates = state.destinationItem.illuminates || [];
 
     const connectionData = {
-        connection_id: generateId(),
-        from_item: state.sourceItem.id,
+        from_item_id: state.sourceItem.id,
         from_port: sourcePort,
-        to_item: state.destinationItem.id,
+        to_item_id: state.destinationItem.id,
         to_port: 'Male_1',
-        notes: notes || undefined,
     };
+
+    if (notes) {
+        connectionData.notes = notes;
+    }
 
     if (illuminates.length > 0) {
         connectionData.illuminates = illuminates;
@@ -543,9 +545,10 @@ async function addConnection() {
     console.log('Sending connection data:', connectionData); // DEBUG
 
     try {
-        await API.addConnection(state.currentDeploymentId, state.currentLocationName, connectionData);
+        const result = await API.addConnection(state.currentDeploymentId, state.currentLocationName, connectionData);
         
-        state.connections.push(connectionData);
+        // Add to local state with the returned connection
+        state.connections.push(result.connection);
         
         clearConnectionForm();
         renderConnections();
@@ -594,11 +597,11 @@ function renderConnections() {
     }
 
     connectionsList.innerHTML = state.connections.map(conn => {
-        const fromItem = state.allItems.find(i => i.id === conn.from_item);
-        const toItem = state.allItems.find(i => i.id === conn.to_item);
+        const fromItem = state.allItems.find(i => i.id === conn.from_item_id);
+        const toItem = state.allItems.find(i => i.id === conn.to_item_id);
         
-        const fromDisplay = fromItem ? `${fromItem.short_name} (${conn.from_port})` : `${conn.from_item} (${conn.from_port})`;
-        const toDisplay = toItem ? `${toItem.short_name} - ${toItem.class_type}` : conn.to_item;
+        const fromDisplay = fromItem ? `${fromItem.short_name} (${conn.from_port})` : `${conn.from_item_id} (${conn.from_port})`;
+        const toDisplay = toItem ? `${toItem.short_name} - ${toItem.class_type}` : conn.to_item_id;
         
         let illuminatesHtml = '';
         if (conn.illuminates && conn.illuminates.length > 0) {
@@ -623,7 +626,7 @@ function renderConnections() {
                     </div>
                     <button 
                         class="ml-4 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm whitespace-nowrap"
-                        onclick="deleteConnection('${conn.connection_id}')"
+                        onclick="deleteConnection('${conn.id}')"
                     >
                         Delete
                     </button>
