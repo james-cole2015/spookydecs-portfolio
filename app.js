@@ -540,6 +540,8 @@ async function addConnection() {
         connectionData.illuminates = illuminates;
     }
 
+    console.log('Sending connection data:', connectionData); // DEBUG
+
     try {
         await API.addConnection(state.currentDeploymentId, state.currentLocationName, connectionData);
         
@@ -551,6 +553,7 @@ async function addConnection() {
         
         await loadDeploymentIntoBuilder(state.currentDeploymentId, state.currentLocationName);
     } catch (error) {
+        console.error('Full connection error:', error); // DEBUG
         showToast(`Failed to add connection: ${error.message}`, 'error');
     }
 }
