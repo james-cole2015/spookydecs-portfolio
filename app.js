@@ -2,10 +2,20 @@
 const state = {
     currentDeploymentId: null,
     currentLocationName: null,
+    currentZone: null,
+    sourceItem: null,
+    destinationItem: null,
     items: [],
-    allItems: [], // All items from the database
+    allItems: [],
     connections: [],
     inProgressDeployments: [],
+};
+
+// Zone to receptacle mapping
+const ZONE_RECEPTACLES = {
+    'Front Yard': 'REC-003',
+    'Side Yard': 'REC-002',
+    'Back Yard': 'REC-001'
 };
 
 // Utility Functions
@@ -18,12 +28,10 @@ function showToast(message, type = 'success') {
         'bg-blue-600 text-white'
     }`;
     
-    // Show toast
     setTimeout(() => {
         toast.style.transform = 'translateY(0)';
     }, 10);
     
-    // Hide toast after 3 seconds
     setTimeout(() => {
         toast.style.transform = 'translateY(8rem)';
     }, 3000);
@@ -37,6 +45,65 @@ function getCurrentYear() {
     return new Date().getFullYear();
 }
 
+// Port Calculation Functions
+function getUsedPorts(itemId, connections) {
+    const usedPorts = {
+        male: [],
+        female: []
+    };
+    
+    connections.forEach(conn => {
+        if (conn.from_item === itemId) {
+            usedPorts.female.push(conn.from_port);
+        }
+        if (conn.to_item === itemId) {
+            usedPorts.male.push(conn.to_port);
+        }
+    });
+    
+    return usedPorts;
+}
+
+function getAvailableFemalePorts(item, connections) {
+    const totalFemale = parseInt(item.female_ends) || 0;
+    const usedPorts = getUsedPorts(item.id, connections);
+    
+    const available = [];
+    for (let i = 1; i <= totalFemale; i++) {
+        const portName = `Female_${i}`;
+        if (!usedPorts.female.includes(portName)) {
+            available.push(portName);
+        }
+    }
+    
+    return available;
+}
+
+function generatePortOptions(item, connections, portType = 'female') {
+    if (portType === 'female') {
+        const totalFemale = parseInt(item.female_ends) || 0;
+        const usedPorts = getUsedPorts(item.id, connections);
+        
+        const ports = [];
+        for (let i = 1; i <= totalFemale; i++) {
+            const portName = `Female_${i}`;
+            const isUsed = usedPorts.female.includes(portName);
+            ports.push({
+                name: portName,
+                available: !isUsed
+            });
+        }
+        return ports;
+    } else {
+        // Male ports - items only have 1 male port
+        const totalMale = parseInt(item.male_ends) || 0;
+        if (totalMale > 0) {
+            return [{ name: 'Male_1', available: true }];
+        }
+        return [];
+    }
+}
+
 // Navigation
 function initNavigation() {
     const navButtons = document.querySelectorAll('.nav-btn');
@@ -46,7 +113,6 @@ function initNavigation() {
         button.addEventListener('click', () => {
             const targetView = button.getAttribute('data-view');
             
-            // Update button styles
             navButtons.forEach(btn => {
                 btn.classList.remove('border-blue-500', 'text-blue-600');
                 btn.classList.add('border-transparent', 'text-gray-500');
@@ -54,7 +120,6 @@ function initNavigation() {
             button.classList.remove('border-transparent', 'text-gray-500');
             button.classList.add('border-blue-500', 'text-blue-600');
             
-            // Show/hide views
             views.forEach(view => {
                 if (view.id === `${targetView}-view`) {
                     view.classList.remove('hidden');
@@ -63,7 +128,6 @@ function initNavigation() {
                 }
             });
 
-            // Hide connection builder when navigating away
             if (targetView !== 'connection-builder') {
                 document.getElementById('connection-builder-view').classList.add('hidden');
             }
@@ -82,15 +146,12 @@ async function createDeployment() {
     }
 
     try {
-        // Note: We're passing location but backend creates all zones
         const result = await API.createDeploymentAdmin(parseInt(year), season, 'Front Yard');
         
         showToast('Deployment created successfully! Select a zone to continue.');
         
-        // Clear form
         document.getElementById('create-season').value = '';
         
-        // Refresh deployments list to show the new deployment
         await loadInProgressDeployments();
         
     } catch (error) {
@@ -102,7 +163,6 @@ async function loadInProgressDeployments() {
     try {
         const deployments = await API.listDeployments();
         
-        // Filter for in-progress deployments only
         state.inProgressDeployments = deployments.filter(d => d.status !== 'complete');
         
         renderDeploymentsList();
@@ -125,7 +185,6 @@ function renderDeploymentsList() {
     }
 
     listContainer.innerHTML = state.inProgressDeployments.map(deployment => {
-        // Get all locations for this deployment
         const locations = deployment.locations || [];
 
         return `
@@ -158,125 +217,273 @@ function renderDeploymentsList() {
 
 async function loadDeploymentIntoBuilder(deploymentId, locationName) {
     try {
-        // Load all items from the database
         showToast('Loading available items...', 'info');
-        const itemsResponse = await API.listItems();
         
-        // Handle response structure - could be array or object with items property
+        const itemsResponse = await API.listItems();
         const allItems = Array.isArray(itemsResponse) ? itemsResponse : (itemsResponse.items || []);
         
-        // Filter for available items: deployed=false AND class NOT IN ['Storage', 'Deployment']
-        const availableItems = allItems.filter(item => {
-            const deployed = item.deployment_data?.deployed || false;
-            const itemClass = item.class || '';
-            return !deployed && itemClass !== 'Storage' && itemClass !== 'Deployment';
-        });
-
-        if (availableItems.length === 0) {
-            showToast('No available items to deploy. All items are currently deployed or in storage.', 'error');
-            return;
-        }
-
-        // Load the deployment location data
         const locationData = await API.getDeployment(deploymentId, locationName);
         
         state.currentDeploymentId = deploymentId;
         state.currentLocationName = locationName;
-        state.items = availableItems;
-        state.allItems = allItems; // Keep all items for reference
+        state.currentZone = locationName;
+        state.allItems = allItems;
         state.connections = locationData.location?.connections || [];
-
-        // Update UI
+        state.sourceItem = null;
+        state.destinationItem = null;
+        
         document.getElementById('current-deployment-info').textContent = 
             `${deploymentId} • ${locationName}`;
         
-        populateItemDropdowns();
+        clearConnectionForm();
         renderConnections();
         
-        // Show connection builder, hide deployments view
         document.getElementById('deployments-view').classList.add('hidden');
         document.getElementById('connection-builder-view').classList.remove('hidden');
         
-        showToast(`Loaded ${availableItems.length} available items`);
+        showToast(`Connection builder loaded for ${locationName}`);
     } catch (error) {
         showToast(`Failed to load deployment: ${error.message}`, 'error');
     }
 }
 
 function backToDeployments() {
-    // Hide connection builder, show deployments view
     document.getElementById('connection-builder-view').classList.add('hidden');
     document.getElementById('deployments-view').classList.remove('hidden');
     
-    // Refresh deployments list
     loadInProgressDeployments();
 }
 
 // Connection Builder Functions
-function populateItemDropdowns() {
-    const fromItemSelect = document.getElementById('from-item');
-    const toItemSelect = document.getElementById('to-item');
-
-    // Clear existing options except first
-    fromItemSelect.innerHTML = '<option value="">Select item...</option>';
-    toItemSelect.innerHTML = '<option value="">Select item...</option>';
-
-    // Add items to dropdowns
-    state.items.forEach(item => {
-        const option1 = document.createElement('option');
-        option1.value = item.id;
-        option1.textContent = `${item.id} - ${item.name} (${item.class})`;
-        fromItemSelect.appendChild(option1);
-
-        const option2 = document.createElement('option');
-        option2.value = item.id;
-        option2.textContent = `${item.id} - ${item.name} (${item.class})`;
-        toItemSelect.appendChild(option2);
-    });
+function openItemSelector(selectorType) {
+    const modal = document.getElementById('item-selector-modal');
+    const classTypeSelect = document.getElementById('modal-class-type');
+    
+    modal.dataset.selectorType = selectorType;
+    
+    // Set class type options based on selector type
+    if (selectorType === 'source') {
+        classTypeSelect.innerHTML = `
+            <option value="">Select class type...</option>
+            <option value="Receptacle">Receptacle</option>
+            <option value="Outlet">Outlet</option>
+            <option value="Plug">Plug</option>
+            <option value="Cord">Cord</option>
+        `;
+    } else {
+        classTypeSelect.innerHTML = `
+            <option value="">Select class type...</option>
+            <option value="Outlet">Outlet</option>
+            <option value="Plug">Plug</option>
+            <option value="Cord">Cord</option>
+            <option value="Inflatable">Inflatable</option>
+            <option value="Static Prop">Static Prop</option>
+            <option value="Animatronic">Animatronic</option>
+            <option value="Spot Light">Spot Light</option>
+            <option value="String Light">String Light</option>
+        `;
+    }
+    
+    modal.classList.remove('hidden');
+    document.getElementById('item-search').value = '';
+    document.getElementById('items-table-body').innerHTML = '';
 }
 
-function updatePortDropdown(itemId, portSelectId) {
-    const portSelect = document.getElementById(portSelectId);
-    const item = state.items.find(i => i.id === itemId);
+function closeItemSelector() {
+    document.getElementById('item-selector-modal').classList.add('hidden');
+}
 
-    portSelect.innerHTML = '<option value="">Select port...</option>';
-    portSelect.disabled = false;
-
-    if (item && item.ports) {
-        item.ports.forEach(port => {
-            const option = document.createElement('option');
-            option.value = port.port_id;
-            option.textContent = `${port.port_id} (${port.port_type})`;
-            portSelect.appendChild(option);
-        });
+function filterItemsByClassType() {
+    const classType = document.getElementById('modal-class-type').value;
+    const selectorType = document.getElementById('item-selector-modal').dataset.selectorType;
+    
+    if (!classType) {
+        document.getElementById('items-table-body').innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">Please select a class type</td></tr>';
+        return;
     }
+    
+    let filteredItems = state.allItems.filter(item => item.class_type === classType);
+    
+    if (selectorType === 'source') {
+        // Source items must have female_ends > 0 and available ports
+        filteredItems = filteredItems.filter(item => {
+            const femaleEnds = parseInt(item.female_ends) || 0;
+            if (femaleEnds === 0) return false;
+            
+            const availablePorts = getAvailableFemalePorts(item, state.connections);
+            if (availablePorts.length === 0) return false;
+            
+            // If receptacle, must be this zone's receptacle
+            if (item.class_type === 'Receptacle') {
+                const designatedReceptacle = ZONE_RECEPTACLES[state.currentZone];
+                return item.id === designatedReceptacle;
+            }
+            
+            return true;
+        });
+    } else {
+        // Destination items - exclude source item (no self-connection)
+        if (state.sourceItem) {
+            filteredItems = filteredItems.filter(item => item.id !== state.sourceItem.id);
+        }
+    }
+    
+    renderItemsTable(filteredItems, selectorType);
+}
+
+function searchItems() {
+    const searchTerm = document.getElementById('item-search').value.toLowerCase();
+    const classType = document.getElementById('modal-class-type').value;
+    const selectorType = document.getElementById('item-selector-modal').dataset.selectorType;
+    
+    if (!classType) return;
+    
+    let filteredItems = state.allItems.filter(item => {
+        return item.class_type === classType && 
+               (item.short_name?.toLowerCase().includes(searchTerm) || 
+                item.id.toLowerCase().includes(searchTerm));
+    });
+    
+    if (selectorType === 'source') {
+        filteredItems = filteredItems.filter(item => {
+            const femaleEnds = parseInt(item.female_ends) || 0;
+            if (femaleEnds === 0) return false;
+            
+            const availablePorts = getAvailableFemalePorts(item, state.connections);
+            if (availablePorts.length === 0) return false;
+            
+            if (item.class_type === 'Receptacle') {
+                const designatedReceptacle = ZONE_RECEPTACLES[state.currentZone];
+                return item.id === designatedReceptacle;
+            }
+            
+            return true;
+        });
+    } else {
+        if (state.sourceItem) {
+            filteredItems = filteredItems.filter(item => item.id !== state.sourceItem.id);
+        }
+    }
+    
+    renderItemsTable(filteredItems, selectorType);
+}
+
+function renderItemsTable(items, selectorType) {
+    const tbody = document.getElementById('items-table-body');
+    
+    if (items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">No items found</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = items.map(item => {
+        const availablePorts = getAvailableFemalePorts(item, state.connections);
+        const deployed = item.deployment_data?.deployed || false;
+        
+        let statusBadge = '';
+        if (item.class_type === 'Receptacle' && item.id === ZONE_RECEPTACLES[state.currentZone]) {
+            statusBadge = '<span class="text-yellow-600">⭐ Zone receptacle</span>';
+        } else if (deployed && availablePorts.length > 0) {
+            statusBadge = `<span class="text-blue-600">⚡ ${availablePorts.length} ports</span>`;
+        }
+        
+        return `
+            <tr class="hover:bg-gray-50 cursor-pointer" onclick="selectItem('${item.id}', '${selectorType}')">
+                <td class="px-4 py-3 text-sm">${item.short_name || 'N/A'}</td>
+                <td class="px-4 py-3 text-sm">${item.id}</td>
+                <td class="px-4 py-3 text-sm">${item.class_type}</td>
+                <td class="px-4 py-3 text-sm">${statusBadge}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function selectItem(itemId, selectorType) {
+    const item = state.allItems.find(i => i.id === itemId);
+    
+    if (selectorType === 'source') {
+        state.sourceItem = item;
+        updateSourceDisplay();
+        populateSourcePortDropdown();
+    } else {
+        state.destinationItem = item;
+        updateDestinationDisplay();
+        
+        // Check if spotlight
+        if (item.class_type === 'Spot Light') {
+            setTimeout(() => promptSpotlightIllumination(), 300);
+        }
+    }
+    
+    closeItemSelector();
+}
+
+function updateSourceDisplay() {
+    const display = document.getElementById('source-item-display');
+    if (state.sourceItem) {
+        display.textContent = `${state.sourceItem.short_name} (${state.sourceItem.id}) - ${state.sourceItem.class_type}`;
+    } else {
+        display.textContent = 'Click to select';
+    }
+}
+
+function updateDestinationDisplay() {
+    const display = document.getElementById('destination-item-display');
+    if (state.destinationItem) {
+        display.textContent = `${state.destinationItem.short_name} (${state.destinationItem.id}) - ${state.destinationItem.class_type}`;
+    } else {
+        display.textContent = 'Click to select';
+    }
+}
+
+function populateSourcePortDropdown() {
+    const portSelect = document.getElementById('source-port');
+    
+    if (!state.sourceItem) {
+        portSelect.innerHTML = '<option value="">Select source item first</option>';
+        portSelect.disabled = true;
+        return;
+    }
+    
+    const ports = generatePortOptions(state.sourceItem, state.connections, 'female');
+    
+    if (ports.length === 0) {
+        portSelect.innerHTML = '<option value="">No output ports available</option>';
+        portSelect.disabled = true;
+        return;
+    }
+    
+    portSelect.disabled = false;
+    portSelect.innerHTML = '<option value="">Select port...</option>' + 
+        ports.map(port => {
+            const status = port.available ? '✓ Available' : '⚠️ In use';
+            return `<option value="${port.name}" ${!port.available ? 'disabled' : ''}>${port.name} ${status}</option>`;
+        }).join('');
 }
 
 async function promptSpotlightIllumination() {
-    // Get deployed decorations that can be illuminated (Inflatables, Static Props, Animatronics)
-    const decorations = state.allItems.filter(item => {
+    const deployedDecorations = state.allItems.filter(item => {
         const deployed = item.deployment_data?.deployed || false;
-        const itemClass = item.class || '';
+        const itemClass = item.class_type || '';
         return deployed && ['Inflatable', 'Static Prop', 'Animatronic'].includes(itemClass);
     });
 
-    if (decorations.length === 0) {
-        return null; // No decorations to illuminate
+    if (deployedDecorations.length === 0) {
+        return null;
     }
 
-    // Create modal for selection
     return new Promise((resolve) => {
         const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
         modal.innerHTML = `
-            <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-                <h3 class="text-lg font-semibold mb-4">What does this spotlight illuminate?</h3>
+            <div class="bg-white rounded-lg p-6 max-w-md w-full mx-auto max-h-[80vh] overflow-y-auto">
+                <h3 class="text-lg font-semibold mb-2">What does this spotlight illuminate?</h3>
                 <p class="text-sm text-gray-600 mb-4">Select up to 2 decorations (optional)</p>
-                <div class="space-y-2 max-h-64 overflow-y-auto mb-4">
-                    ${decorations.map(dec => `
+                <div class="space-y-2 mb-4">
+                    ${deployedDecorations.map(dec => `
                         <label class="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
-                            <input type="checkbox" value="${dec.id}" class="spotlight-decoration-check">
-                            <span class="text-sm">${dec.id} - ${dec.name} (${dec.class})</span>
+                            <input type="checkbox" value="${dec.id}" class="spotlight-decoration-check w-5 h-5">
+                            <span class="text-sm">${dec.short_name} (${dec.id}) - ${dec.class_type}</span>
                         </label>
                     `).join('')}
                 </div>
@@ -293,7 +500,6 @@ async function promptSpotlightIllumination() {
         
         document.body.appendChild(modal);
         
-        // Store resolve function globally so buttons can access it
         window.resolveSpotlight = resolve;
         window.confirmSpotlight = () => {
             const checkboxes = modal.querySelectorAll('.spotlight-decoration-check:checked');
@@ -311,64 +517,52 @@ async function promptSpotlightIllumination() {
 }
 
 async function addConnection() {
-    const fromItem = document.getElementById('from-item').value;
-    const fromPort = document.getElementById('from-port').value;
-    const toItem = document.getElementById('to-item').value;
-    const toPort = document.getElementById('to-port').value;
+    const sourcePort = document.getElementById('source-port').value;
     const notes = document.getElementById('notes').value.trim();
 
-    if (!fromItem || !fromPort || !toItem || !toPort) {
-        showToast('Please fill in all connection fields', 'error');
+    if (!state.sourceItem || !sourcePort || !state.destinationItem) {
+        showToast('Please select source item, port, and destination item', 'error');
         return;
     }
 
-    // Check if either item is a spotlight
-    const fromItemObj = state.items.find(i => i.id === fromItem);
-    const toItemObj = state.items.find(i => i.id === toItem);
-    
-    let illuminates = null;
-    
-    if (fromItemObj?.class === 'Spotlight' || toItemObj?.class === 'Spotlight') {
-        illuminates = await promptSpotlightIllumination();
-    }
+    const illuminates = state.destinationItem.illuminates || [];
 
     const connectionData = {
         connection_id: generateId(),
-        from_item: fromItem,
-        from_port: fromPort,
-        to_item: toItem,
-        to_port: toPort,
+        from_item: state.sourceItem.id,
+        from_port: sourcePort,
+        to_item: state.destinationItem.id,
+        to_port: 'Male_1',
         notes: notes || undefined,
     };
 
-    // Add illuminates array if spotlight selected decorations
-    if (illuminates && illuminates.length > 0) {
+    if (illuminates.length > 0) {
         connectionData.illuminates = illuminates;
     }
 
     try {
         await API.addConnection(state.currentDeploymentId, state.currentLocationName, connectionData);
         
-        // Add to local state
         state.connections.push(connectionData);
         
-        // Clear form
-        document.getElementById('from-item').value = '';
-        document.getElementById('from-port').value = '';
-        document.getElementById('from-port').disabled = true;
-        document.getElementById('to-item').value = '';
-        document.getElementById('to-port').value = '';
-        document.getElementById('to-port').disabled = true;
-        document.getElementById('notes').value = '';
-        
+        clearConnectionForm();
         renderConnections();
         showToast('Connection added successfully');
         
-        // Reload deployment to refresh available items (since items are now deployed)
         await loadDeploymentIntoBuilder(state.currentDeploymentId, state.currentLocationName);
     } catch (error) {
         showToast(`Failed to add connection: ${error.message}`, 'error');
     }
+}
+
+function clearConnectionForm() {
+    state.sourceItem = null;
+    state.destinationItem = null;
+    document.getElementById('source-item-display').textContent = 'Click to select';
+    document.getElementById('destination-item-display').textContent = 'Click to select';
+    document.getElementById('source-port').innerHTML = '<option value="">Select source item first</option>';
+    document.getElementById('source-port').disabled = true;
+    document.getElementById('notes').value = '';
 }
 
 async function deleteConnection(connectionId) {
@@ -379,7 +573,6 @@ async function deleteConnection(connectionId) {
     try {
         await API.deleteConnection(state.currentDeploymentId, state.currentLocationName, connectionId);
         
-        // Remove from local state
         state.connections = state.connections.filter(c => c.connection_id !== connectionId);
         
         renderConnections();
@@ -398,11 +591,17 @@ function renderConnections() {
     }
 
     connectionsList.innerHTML = state.connections.map(conn => {
+        const fromItem = state.allItems.find(i => i.id === conn.from_item);
+        const toItem = state.allItems.find(i => i.id === conn.to_item);
+        
+        const fromDisplay = fromItem ? `${fromItem.short_name} (${conn.from_port})` : `${conn.from_item} (${conn.from_port})`;
+        const toDisplay = toItem ? `${toItem.short_name} - ${toItem.class_type}` : conn.to_item;
+        
         let illuminatesHtml = '';
         if (conn.illuminates && conn.illuminates.length > 0) {
             const illuminatedItems = conn.illuminates.map(id => {
                 const item = state.allItems.find(i => i.id === id);
-                return item ? `${item.id} - ${item.name}` : id;
+                return item ? `${item.short_name}` : id;
             }).join(', ');
             illuminatesHtml = `<p class="text-sm text-gray-600 mt-2"><span class="font-medium">Illuminates:</span> ${illuminatedItems}</p>`;
         }
@@ -411,17 +610,10 @@ function renderConnections() {
             <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
                 <div class="flex justify-between items-start">
                     <div class="flex-1">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm mb-2">
-                            <div>
-                                <span class="font-medium text-gray-700">From:</span>
-                                <span class="text-gray-600">${conn.from_item}</span>
-                                <span class="text-gray-500">(${conn.from_port})</span>
-                            </div>
-                            <div>
-                                <span class="font-medium text-gray-700">To:</span>
-                                <span class="text-gray-600">${conn.to_item}</span>
-                                <span class="text-gray-500">(${conn.to_port})</span>
-                            </div>
+                        <div class="text-sm mb-2">
+                            <span class="font-medium text-gray-900">${fromDisplay}</span>
+                            <span class="text-gray-500"> → </span>
+                            <span class="font-medium text-gray-900">${toDisplay}</span>
                         </div>
                         ${conn.notes ? `<p class="text-sm text-gray-600 mt-2"><span class="font-medium">Notes:</span> ${conn.notes}</p>` : ''}
                         ${illuminatesHtml}
@@ -481,36 +673,31 @@ async function validateConnections() {
 
 // Event Listeners
 function initEventListeners() {
-    // Deployment creation
     document.getElementById('start-decorating-btn').addEventListener('click', createDeployment);
     document.getElementById('refresh-deployments-btn').addEventListener('click', loadInProgressDeployments);
     
-    // Connection builder
     document.getElementById('back-to-deployments-btn').addEventListener('click', backToDeployments);
     document.getElementById('add-connection-btn').addEventListener('click', addConnection);
     document.getElementById('validate-btn').addEventListener('click', validateConnections);
-
-    document.getElementById('from-item').addEventListener('change', (e) => {
-        updatePortDropdown(e.target.value, 'from-port');
-    });
-
-    document.getElementById('to-item').addEventListener('change', (e) => {
-        updatePortDropdown(e.target.value, 'to-port');
-    });
+    
+    document.getElementById('source-item-selector').addEventListener('click', () => openItemSelector('source'));
+    document.getElementById('destination-item-selector').addEventListener('click', () => openItemSelector('destination'));
+    document.getElementById('close-modal-btn').addEventListener('click', closeItemSelector);
+    document.getElementById('modal-class-type').addEventListener('change', filterItemsByClassType);
+    document.getElementById('item-search').addEventListener('input', searchItems);
 }
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
-    // Set current year
     document.getElementById('create-year').value = getCurrentYear();
     
     initNavigation();
     initEventListeners();
     
-    // Load in-progress deployments on startup
     loadInProgressDeployments();
 });
 
 // Make functions available globally for onclick handlers
 window.deleteConnection = deleteConnection;
 window.loadDeploymentIntoBuilder = loadDeploymentIntoBuilder;
+window.selectItem = selectItem;
