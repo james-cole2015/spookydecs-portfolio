@@ -79,6 +79,25 @@ const API = {
         return this.request(`/admin/deployments/${deploymentId}/locations/${locationName}/validate`);
     },
 
+    // Deployment Lifecycle
+    async startSetup(deploymentId) {
+        return this.request(`/admin/deployments/${deploymentId}/start-setup`, {
+            method: 'PUT',
+            body: JSON.stringify({})
+        });
+    },
+
+    async getReviewData(deploymentId) {
+        return this.request(`/admin/deployments/${deploymentId}/review`);
+    },
+
+    async completeSetup(deploymentId) {
+        return this.request(`/admin/deployments/${deploymentId}/complete-setup`, {
+            method: 'PUT',
+            body: JSON.stringify({})
+        });
+    },
+
     // Statistics and Analysis
     async getStatistics(deploymentId, locationName) {
         return this.request(`/admin/deployments/${deploymentId}/locations/${locationName}/statistics`);
