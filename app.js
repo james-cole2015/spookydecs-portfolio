@@ -713,9 +713,8 @@ function populateSourcePortDropdown() {
 
 async function promptSpotlightIllumination() {
     const deployedDecorations = state.allItems.filter(item => {
-        const deployed = item.deployment_data?.deployed || false;
         const itemClass = item.class_type || '';
-        return deployed && ['Inflatable', 'Static Prop', 'Animatronic'].includes(itemClass);
+        return ['Inflatable', 'Static Prop', 'Animatronic'].includes(itemClass);
     });
 
     if (deployedDecorations.length === 0) {
