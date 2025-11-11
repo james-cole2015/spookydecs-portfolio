@@ -92,7 +92,7 @@ const API = {
     },
 
     async completeSetup(deploymentId) {
-        return this.request(`/admin/deployments/${deploymentId}/complete-setup`, {
+        return this.request(`/admin/deployments/${deploymentId}/setup-complete`, {
             method: 'PUT',
             body: JSON.stringify({})
         });
