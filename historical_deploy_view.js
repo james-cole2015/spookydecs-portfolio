@@ -19,16 +19,8 @@ class HistoricalDeploymentsView {
     try {
       showToast('Loading completed deployments...', 'info');
       
-      // Fetch all deployments
-      const response = await fetch(`${API_ENDPOINT}/admin/deployments`, {
-       headers: typeof getAuthHeaders === 'function' ? getAuthHeaders() : {}
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch deployments');
-      }
-
-      const data = await response.json();
+      // Fetch all deployments using API service layer
+      const data = await API.listDeployments();
       
       // Filter for completed deployments only
       this.deployments = data
@@ -270,15 +262,8 @@ class HistoricalDeploymentsView {
       const idsArray = Array.from(itemIds);
       const idsParam = idsArray.join(',');
       
-      const response = await fetch(`${API_ENDPOINT}/admin/items?ids=${idsParam}`, {
-        headers: typeof getAuthHeaders === 'function' ? getAuthHeaders() : {}
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch items');
-      }
-
-      const data = await response.json();
+      // Use API service layer to fetch items
+      const data = await API.request(`/admin/items?ids=${idsParam}`);
       
       // Map items to zones
       const enrichedItems = this.mapItemsToZones(data.items, deployment);
