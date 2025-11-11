@@ -131,6 +131,9 @@ function initNavigation() {
             if (targetView !== 'connection-builder') {
                 document.getElementById('connection-builder-view').classList.add('hidden');
             }
+            if (targetView === 'historical') {
+                initHistoricalView();
+}   
         });
     });
 }
