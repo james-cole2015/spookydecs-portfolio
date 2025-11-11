@@ -21,7 +21,7 @@ class HistoricalDeploymentsView {
       
       // Fetch all deployments
       const response = await fetch(`${API_ENDPOINT}/admin/deployments`, {
-        headers: typeof getAuthHeaders === 'function' ? getAuthHeaders() : {}
+       headers: typeof getAuthHeaders === 'function' ? getAuthHeaders() : {}
       });
 
       if (!response.ok) {
@@ -31,7 +31,7 @@ class HistoricalDeploymentsView {
       const data = await response.json();
       
       // Filter for completed deployments only
-      this.deployments = data.deployments
+      this.deployments = data
         .filter(dep => dep.status === 'complete')
         .sort((a, b) => {
           const dateA = new Date(a.setup_completed_at || a.updated_at);
