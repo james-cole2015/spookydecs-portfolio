@@ -21,7 +21,7 @@ class HistoricalDeploymentsView {
       
       // Fetch all deployments
       const response = await fetch(`${API_ENDPOINT}/admin/deployments`, {
-        headers: getAuthHeaders()
+        headers: typeof getAuthHeaders === 'function' ? getAuthHeaders() : {}
       });
 
       if (!response.ok) {
@@ -271,7 +271,7 @@ class HistoricalDeploymentsView {
       const idsParam = idsArray.join(',');
       
       const response = await fetch(`${API_ENDPOINT}/admin/items?ids=${idsParam}`, {
-        headers: getAuthHeaders()
+        headers: typeof getAuthHeaders === 'function' ? getAuthHeaders() : {}
       });
 
       if (!response.ok) {
