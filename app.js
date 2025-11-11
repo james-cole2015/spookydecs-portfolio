@@ -658,11 +658,14 @@ function selectItem(itemId, selectorType) {
         
         // Check if spotlight
         if (item.class_type === 'Spot Light') {
-            setTimeout(() => promptSpotlightIllumination(), 300);
+            setTimeout(async () => {
+                const illuminates = await promptSpotlightIllumination();
+                if (illuminates) {
+                    state.destinationItem.illuminates = illuminates;
+                }
+            }, 300);
         }
     }
-    
-    closeItemSelector();
 }
 
 function updateSourceDisplay() {
