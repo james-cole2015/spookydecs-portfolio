@@ -258,15 +258,15 @@ class HistoricalDeploymentsView {
         return;
       }
 
-      // Batch fetch items
-      const idsArray = Array.from(itemIds);
-      const idsParam = idsArray.join(',');
+      // Fetch all items then filter to only those in this deployment
+      const itemsResponse = await API.listItems();
+      const allItems = Array.isArray(itemsResponse) ? itemsResponse : (itemsResponse.items || []);
       
-      // Use API service layer to fetch items
-      const data = await API.request(`/admin/items?ids=${idsParam}`);
+      // Filter to only items in this deployment
+      const deploymentItems = allItems.filter(item => itemIds.has(item.id));
       
       // Map items to zones
-      const enrichedItems = this.mapItemsToZones(data.items, deployment);
+      const enrichedItems = this.mapItemsToZones(deploymentItems, deployment);
       
       // Sort by class_type
       enrichedItems.sort((a, b) => {
