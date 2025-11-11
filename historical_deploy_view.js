@@ -4,6 +4,7 @@ class HistoricalDeploymentsView {
     this.deployments = [];
     this.itemCache = {};
     this.currentExpandedCard = null;
+    this.pagination = {}; // Store pagination state per deployment: { deploymentId: { currentPage, totalPages } }
     this.init();
   }
 
@@ -319,13 +320,28 @@ class HistoricalDeploymentsView {
   renderItemsTable(card, items) {
     const tableSection = card.querySelector('.deployment-table-section');
     const tableContent = tableSection.querySelector('.table-content');
+    const deploymentId = card.dataset.deploymentId;
 
     if (items.length === 0) {
       tableContent.innerHTML = '<div class="table-loading">No items found</div>';
       return;
     }
 
-    const tableRows = items.map(item => `
+    // Initialize pagination for this deployment if not exists
+    if (!this.pagination[deploymentId]) {
+      this.pagination[deploymentId] = {
+        currentPage: 1,
+        itemsPerPage: 10
+      };
+    }
+
+    const pageData = this.pagination[deploymentId];
+    const totalPages = Math.ceil(items.length / pageData.itemsPerPage);
+    const startIndex = (pageData.currentPage - 1) * pageData.itemsPerPage;
+    const endIndex = startIndex + pageData.itemsPerPage;
+    const paginatedItems = items.slice(startIndex, endIndex);
+
+    const tableRows = paginatedItems.map(item => `
       <tr>
         <td>${this.escapeHtml(item.short_name)}</td>
         <td>${this.escapeHtml(item.class)}</td>
@@ -334,29 +350,93 @@ class HistoricalDeploymentsView {
       </tr>
     `).join('');
 
+    const prevDisabled = pageData.currentPage === 1 ? 'disabled' : '';
+    const nextDisabled = pageData.currentPage === totalPages ? 'disabled' : '';
+
     tableContent.innerHTML = `
-      <div class="items-table-container">
-        <table class="items-table">
-          <thead>
-            <tr>
-              <th>Short Name</th>
-              <th>Class</th>
-              <th>Type</th>
-              <th>Zone</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${tableRows}
-          </tbody>
-        </table>
+      <div class="items-table-wrapper">
+        <div class="items-table-header">
+          <span class="items-count">${items.length} item${items.length !== 1 ? 's' : ''}</span>
+          <div class="pagination-controls">
+            <span class="page-info">Page ${pageData.currentPage} of ${totalPages}</span>
+            <button 
+              class="pagination-btn" 
+              data-action="prev" 
+              data-deployment-id="${deploymentId}"
+              ${prevDisabled}
+            >◀</button>
+            <button 
+              class="pagination-btn" 
+              data-action="next" 
+              data-deployment-id="${deploymentId}"
+              ${nextDisabled}
+            >▶</button>
+          </div>
+        </div>
+        <div class="items-table-container">
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th>Short Name</th>
+                <th>Class</th>
+                <th>Type</th>
+                <th>Zone</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tableRows}
+            </tbody>
+          </table>
+        </div>
       </div>
     `;
+
+    // Attach pagination event listeners
+    const prevBtn = tableContent.querySelector('[data-action="prev"]');
+    const nextBtn = tableContent.querySelector('[data-action="next"]');
+
+    if (prevBtn) {
+      prevBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.changePage(deploymentId, -1);
+      });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.changePage(deploymentId, 1);
+      });
+    }
   }
 
   escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  changePage(deploymentId, direction) {
+    const pageData = this.pagination[deploymentId];
+    if (!pageData) return;
+
+    const cachedItems = this.itemCache[deploymentId];
+    if (!cachedItems) return;
+
+    const totalPages = Math.ceil(cachedItems.length / pageData.itemsPerPage);
+    const newPage = pageData.currentPage + direction;
+
+    // Validate page bounds
+    if (newPage < 1 || newPage > totalPages) return;
+
+    // Update page
+    pageData.currentPage = newPage;
+
+    // Re-render the table
+    const card = document.querySelector(`.deployment-card[data-deployment-id="${deploymentId}"]`);
+    if (card) {
+      this.renderItemsTable(card, cachedItems);
+    }
   }
 
   refresh() {
