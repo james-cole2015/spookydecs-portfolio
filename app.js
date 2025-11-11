@@ -904,13 +904,29 @@ function initEventListeners() {
 }
 
 // Initialize app
-document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('create-year').value = getCurrentYear();
-    
-    initNavigation();
-    initEventListeners();
-    
-    loadInProgressDeployments();
+// Initialize app
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        // Load configuration first
+        await loadConfig();
+        
+        // Set global API_ENDPOINT for backward compatibility
+        API_ENDPOINT = getApiEndpoint();
+        
+        console.log('Configuration loaded. API Endpoint:', API_ENDPOINT);
+        
+        // Now initialize the rest of the app
+        document.getElementById('create-year').value = getCurrentYear();
+        
+        initNavigation();
+        initEventListeners();
+        
+        loadInProgressDeployments();
+        
+    } catch (error) {
+        console.error('Failed to initialize app:', error);
+        showToast('Failed to load configuration. Please refresh the page.', 'error');
+    }
 });
 
 // Make functions available globally for onclick handlers
