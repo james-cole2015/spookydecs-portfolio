@@ -35,6 +35,12 @@ function initializeEventListeners() {
   });
 }
 
+// Initialize the filter system when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize filter system
+  FilterSystem.init();
+  });
+
 // Initialize application
 document.addEventListener('DOMContentLoaded', () => {
   initializeEventListeners();
