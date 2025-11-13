@@ -364,6 +364,16 @@
               </select>
               <div class="field-hint">Defaults to Active</div>
             </div>
+            <!-- Add this checkbox field in your create form's "Basic Information" section -->
+            <!-- Place it AFTER the "Status" dropdown and BEFORE the "Item Notes" textarea -->
+
+            <div class="form-group">
+              <label for="create-deployed">
+                <input type="checkbox" id="create-deployed" name="deployed" style="width: auto; margin-right: 8px;">
+                Currently Deployed
+              </label>
+              <div class="field-hint">Check if this item is currently deployed in your display</div>
+            </div>
             
             <div class="form-group">
               <label for="create-general-notes">Item Notes</label>

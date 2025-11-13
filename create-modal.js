@@ -7,6 +7,43 @@ const CLASS_TYPE_OPTIONS = {
   'Light': ['String Light', 'Spot Light']
 };
 
+// Attributes to show for each class type
+const CLASS_TYPE_ATTRIBUTES = {
+  'Inflatable': ['stakes', 'tethers', 'height_length', 'adapter', 'date_acquired', 'watts', 'amps'],
+  'Static Prop': ['stakes', 'tethers', 'height_length', 'date_acquired'],
+  'Animatronic': ['stakes', 'tethers', 'height_length', 'adapter', 'date_acquired', 'watts', 'amps'],
+  'Plug': ['length', 'male_ends', 'female_ends'],
+  'Cord': ['length', 'male_ends', 'female_ends'],
+  'Adapter': [],
+  'String Light': ['color', 'bulb_type', 'length', 'notes', 'watts', 'amps'],
+  'Spot Light': ['color', 'bulb_type', 'notes', 'watts', 'amps']
+};
+
+// Human-readable labels for attributes
+const ATTRIBUTE_LABELS = {
+  'stakes': 'Stakes',
+  'tethers': 'Tethers',
+  'height_length': 'Height/Length',
+  'adapter': 'Adapter',
+  'date_acquired': 'Date Acquired',
+  'length': 'Length (ft)',
+  'male_ends': 'Male Ends',
+  'female_ends': 'Female Ends',
+  'color': 'Color',
+  'bulb_type': 'Bulb Type',
+  'notes': 'Notes',
+  'watts': 'Power (Watts)',
+  'amps': 'Current (Amps)'
+};
+
+// Typical power values for placeholders
+const POWER_PLACEHOLDERS = {
+  'Inflatable': { watts: 'e.g., 120 for typical inflatable', amps: 'e.g., 1.0 for typical inflatable' },
+  'Animatronic': { watts: 'e.g., 100 for typical animatronic', amps: 'e.g., 0.8 for typical animatronic' },
+  'String Light': { watts: 'e.g., 50 for typical string light', amps: 'e.g., 0.4 for typical string light' },
+  'Spot Light': { watts: 'e.g., 75 for typical spot light', amps: 'e.g., 0.6 for typical spot light' }
+};
+
 // Open create modal
 function openCreateModal() {
   // Reset form
@@ -113,7 +150,32 @@ function generateCreateDynamicFields(classType) {
       input.rows = 3;
     } else {
       input = document.createElement('input');
-      input.type = 'text';
+      
+      // Set input type based on attribute
+      if (attr === 'watts') {
+        input.type = 'number';
+        input.min = '1';
+        input.max = '2000';
+        input.step = '1';
+        // Add placeholder based on class type
+        if (POWER_PLACEHOLDERS[classType]) {
+          input.placeholder = POWER_PLACEHOLDERS[classType].watts;
+        }
+      } else if (attr === 'amps') {
+        input.type = 'number';
+        input.min = '0.1';
+        input.max = '20';
+        input.step = '0.1';
+        // Add placeholder based on class type
+        if (POWER_PLACEHOLDERS[classType]) {
+          input.placeholder = POWER_PLACEHOLDERS[classType].amps;
+        }
+      } else if (['stakes', 'tethers', 'length', 'height_length', 'male_ends', 'female_ends'].includes(attr)) {
+        input.type = 'text';
+        input.placeholder = 'Enter a number';
+      } else {
+        input.type = 'text';
+      }
     }
     
     input.id = `create-${attr}`;
@@ -122,11 +184,6 @@ function generateCreateDynamicFields(classType) {
     // Mark as required if needed
     if (requiredFields.includes(attr)) {
       input.required = true;
-    }
-    
-    // Add placeholder for numeric fields
-    if (['stakes', 'tethers', 'length', 'height_length', 'male_ends', 'female_ends'].includes(attr)) {
-      input.placeholder = 'Enter a number';
     }
     
     formGroup.appendChild(label);
@@ -158,6 +215,7 @@ function getCreateFormData() {
     class: document.getElementById('create-class').value,
     class_type: document.getElementById('create-class-type').value,
     status: document.getElementById('create-status').value || 'Active',
+    deployed: document.getElementById('create-deployed').checked,
     general_notes: document.getElementById('create-general-notes').value.trim(),
     cost: document.getElementById('create-cost').value.trim(),
     value: document.getElementById('create-value').value.trim(),
@@ -241,6 +299,24 @@ function validateCreateForm() {
     }
   });
   
+  // Validate power fields
+  const wattsField = document.getElementById('create-watts');
+  const ampsField = document.getElementById('create-amps');
+  
+  if (wattsField && wattsField.value.trim() !== '') {
+    const watts = parseInt(wattsField.value);
+    if (isNaN(watts) || watts < 1 || watts > 2000) {
+      errors.push('Power (Watts) must be between 1 and 2000');
+    }
+  }
+  
+  if (ampsField && ampsField.value.trim() !== '') {
+    const amps = parseFloat(ampsField.value);
+    if (isNaN(amps) || amps < 0.1 || amps > 20) {
+      errors.push('Current (Amps) must be between 0.1 and 20');
+    }
+  }
+  
   return errors;
 }
 
@@ -257,6 +333,7 @@ function generateCreatePreview(formData) {
     { label: 'Class', value: formData.class },
     { label: 'Class Type', value: formData.class_type },
     { label: 'Status', value: formData.status },
+    { label: 'Currently Deployed', value: formData.deployed ? 'Yes' : 'No' },
     { label: 'Item Notes', value: formData.general_notes }
   ]);
   
@@ -264,10 +341,21 @@ function generateCreatePreview(formData) {
   const classType = formData.class_type;
   const attributesToShow = CLASS_TYPE_ATTRIBUTES[classType] || [];
   if (attributesToShow.length > 0) {
-    const itemDetailsFields = attributesToShow.map(attr => ({
-      label: ATTRIBUTE_LABELS[attr] || formatFieldName(attr),
-      value: formData[attr]
-    }));
+    const itemDetailsFields = attributesToShow.map(attr => {
+      let value = formData[attr];
+      
+      // Add units for power fields
+      if (attr === 'watts' && value) {
+        value = `${value}W`;
+      } else if (attr === 'amps' && value) {
+        value = `${value}A`;
+      }
+      
+      return {
+        label: ATTRIBUTE_LABELS[attr] || formatFieldName(attr),
+        value: value
+      };
+    });
     previewHTML += generateCreatePreviewSection('Item Details', itemDetailsFields);
   }
   
