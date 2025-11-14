@@ -116,3 +116,67 @@ function showToast(type, title, message) {
     }
   }, 4000);
 }
+
+// UIRenderer object for FilterSystem compatibility
+const UIRenderer = {
+  renderTableRows(items) {
+    const tableBody = document.getElementById('tableBody');
+    tableBody.innerHTML = '';
+    
+    items.forEach(item => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td><span class="badge ${item.status === 'Active' ? 'active' : 'inactive'}">${item.status || 'Unknown'}</span></td>
+        <td>${item.short_name || 'N/A'}</td>
+        <td><span class="badge ${(item.season || '').toLowerCase()}">${item.season || 'N/A'}</span></td>
+        <td>${item.class_type || 'N/A'}</td>
+        <td><span class="badge ${item.repair_status?.needs_repair ? 'needs-repair' : 'ok'}">${item.repair_status?.needs_repair ? 'Needs Repair' : 'OK'}</span></td>
+        <td>${item.packing_data?.tote_location || 'N/A'}</td>
+        <td>
+          <div class="action-buttons">
+            <button class="btn-small btn-primary" onclick="viewItem('${item.id}')">View</button>
+            <button class="btn-small btn-secondary" onclick="editItem('${item.id}')">Edit</button>
+          </div>
+        </td>
+      `;
+      tableBody.appendChild(row);
+    });
+  },
+  
+  renderMobileCards(items) {
+    const itemCards = document.getElementById('itemCards');
+    itemCards.innerHTML = '';
+    
+    items.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'item-card';
+      card.innerHTML = `
+        <div class="item-card-header">
+          <div class="item-card-name">${item.short_name || 'N/A'}</div>
+          <span class="badge ${item.status === 'Active' ? 'active' : 'inactive'}">${item.status || 'Unknown'}</span>
+        </div>
+        <div class="item-card-row">
+          <span class="item-card-label">Season:</span>
+          <span class="badge ${(item.season || '').toLowerCase()}">${item.season || 'N/A'}</span>
+        </div>
+        <div class="item-card-row">
+          <span class="item-card-label">Class Type:</span>
+          <span>${item.class_type || 'N/A'}</span>
+        </div>
+        <div class="item-card-row">
+          <span class="item-card-label">Repair Status:</span>
+          <span class="badge ${item.repair_status?.needs_repair ? 'needs-repair' : 'ok'}">${item.repair_status?.needs_repair ? 'Needs Repair' : 'OK'}</span>
+        </div>
+        <div class="item-card-row">
+          <span class="item-card-label">Location:</span>
+          <span>${item.packing_data?.tote_location || 'N/A'}</span>
+        </div>
+        <div class="action-buttons" style="margin-top: 8px;">
+          <button class="btn-small btn-primary" onclick="viewItem('${item.id}')">View</button>
+          <button class="btn-small btn-secondary" onclick="editItem('${item.id}')">Edit</button>
+        </div>
+      `;
+      itemCards.appendChild(card);
+    });
+  }
+};
