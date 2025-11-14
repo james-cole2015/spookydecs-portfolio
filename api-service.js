@@ -42,6 +42,7 @@ async function loadItems() {
     
     updateStats();
     renderItems();
+    FilterSystem.setItems(allItems);
   } catch (error) {
     console.error('Failed to load items:', error);
   }

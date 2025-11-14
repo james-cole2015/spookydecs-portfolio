@@ -22,11 +22,6 @@ function initializeEventListeners() {
     alert('Logout clicked');
   });
 
-  // Search functionality
-  document.getElementById('searchInput').addEventListener('input', (e) => {
-    console.log('Search:', e.target.value);
-  });
-
   // Close modals when clicking outside
   window.addEventListener('click', (e) => {
     if (e.target.classList.contains('modal')) {
