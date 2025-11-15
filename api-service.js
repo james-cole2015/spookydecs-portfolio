@@ -39,6 +39,7 @@ async function loadItems() {
     allItems = allItems.filter(item => 
       item.class !== 'Storage' && item.class !== 'Deployment'
     );
+    console.log('Sample item:', allItems[0]);
     
     updateStats();
     renderItems();
