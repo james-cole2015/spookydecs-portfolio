@@ -43,6 +43,8 @@ const FilterSystem = {
         
         <select id="filterLocation" class="filter-select">
           <option value="all">All Locations</option>
+          <option value="Shed">Shed</option>
+          <option value="Crawl Space">Crawl Space</option>
         </select>
         
         <button id="btnClearFilters" class="btn-clear-filters">Clear Filters</button>
@@ -146,7 +148,7 @@ const FilterSystem = {
       }
       // Location filter
       if (this.activeFilters.location !== 'all') {
-        if (item.tote_location !== this.activeFilters.location) return false;
+        if (item.packing_data?.tote_location !== this.activeFilters.location) return false;
       }
       
       return true;
