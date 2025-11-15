@@ -140,10 +140,10 @@ const FilterSystem = {
       
       // Repair Status filter
       if (this.activeFilters.repairStatus !== 'all') {
-        const needsRepair = item.needs_repair === 'Yes' ? 'Needs Repair' : 'Good';
-        if (needsRepair !== this.activeFilters.repairStatus) return false;
+        const needsRepair = item.repair_status?.needs_repair === true;
+        const filterWantsRepair = this.activeFilters.repairStatus === 'Needs Repair';
+        if (needsRepair !== filterWantsRepair) return false;
       }
-      
       // Location filter
       if (this.activeFilters.location !== 'all') {
         if (item.tote_location !== this.activeFilters.location) return false;
