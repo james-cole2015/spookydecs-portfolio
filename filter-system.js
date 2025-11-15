@@ -96,6 +96,7 @@ const FilterSystem = {
     this.applyFilters();
   },
   
+  /*
   populateFilterOptions() {
     // Extract unique values for dynamic filters
     const classTypes = new Set();
@@ -120,7 +121,7 @@ const FilterSystem = {
       locationSelect.innerHTML += `<option value="${loc}">${loc}</option>`;
     });
   },
-  
+  */
   applyFilters() {
     const filteredItems = this.allItems.filter(item => {
       // Search filter (checks name)
