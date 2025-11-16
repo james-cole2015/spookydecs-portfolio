@@ -41,3 +41,5 @@ document.addEventListener('DOMContentLoaded', () => {
   initializeEventListeners();
   loadConfig();
 });
+
+document.getElementById('btnDeleteItem').addEventListener('click', openDeleteModal);

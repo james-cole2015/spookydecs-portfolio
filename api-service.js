@@ -75,3 +75,18 @@ async function saveItemToAPI(itemId, updatePayload) {
     throw error;
   }
 }
+
+async function deleteItem(itemId) {
+  const response = await fetch(`${API_ENDPOINT}/items/${itemId}`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Failed to delete item: ${response.statusText}`);
+  }
+  
+  return response.json();
+}
