@@ -163,20 +163,24 @@ const FilterSystem = {
       return true;
     });
     
-    // Update the UI with filtered items
+    // Update the UI with filtered items using pagination
     this.updateDisplay(filteredItems);
     this.updateFilterCount(filteredItems.length);
   },
   
   updateDisplay(items) {
-    // Update table view
-    if (typeof UIRenderer !== 'undefined' && UIRenderer.renderTableRows) {
-      UIRenderer.renderTableRows(items);
-    }
-    
-    // Update mobile card view
-    if (typeof UIRenderer !== 'undefined' && UIRenderer.renderMobileCards) {
-      UIRenderer.renderMobileCards(items);
+    // Use pagination system if available
+    if (typeof PaginationSystem !== 'undefined') {
+      PaginationSystem.setItems(items);
+    } else {
+      // Fallback to direct rendering if pagination not loaded yet
+      if (typeof UIRenderer !== 'undefined' && UIRenderer.renderTableRows) {
+        UIRenderer.renderTableRows(items);
+      }
+      
+      if (typeof UIRenderer !== 'undefined' && UIRenderer.renderMobileCards) {
+        UIRenderer.renderMobileCards(items);
+      }
     }
   },
   
