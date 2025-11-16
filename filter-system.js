@@ -33,14 +33,14 @@ const FilterSystem = {
         
         <select id="filterClassType" class="filter-select">
           <option value="all">All Class Types</option>
-          <option value="Inflatables">Inflatables</option>
-          <option value="Static Props">Static Props</option>
-          <option value="Animatronics">Animatronics</option>
-          <option value="Cords">Cords</option>
-          <option value="Plugs">Plugs</option>
-          <option value="Outlets">Outlets</option>
-          <option value="Spot Lights">Spot Lights</option>
-          <option value="String Lights">String Lights</option>
+          <option value="Inflatable">Inflatables</option>
+          <option value="Static Prop">Static Props</option>
+          <option value="Animatronic">Animatronics</option>
+          <option value="Cord">Cords</option>
+          <option value="Plug">Plugs</option>
+          <option value="Outlet">Outlets</option>
+          <option value="Spot Light">Spot Lights</option>
+          <option value="String Light">String Lights</option>
         </select>
         
         <select id="filterRepairStatus" class="filter-select">
