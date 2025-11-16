@@ -74,7 +74,7 @@ async function populateDeleteTable() {
   const tbody = document.getElementById('deleteTableBody');
   
   try {
-    const items = await apiService.loadItems();
+    const items = await apiService.getItems();
     
     if (!items || items.length === 0) {
       tbody.innerHTML = `
@@ -91,19 +91,19 @@ async function populateDeleteTable() {
     items.sort((a, b) => (a.short_name || '').localeCompare(b.short_name || ''));
     
     tbody.innerHTML = items.map(item => `
-      <tr style="border-bottom: 1px solid #f3f4f6;" data-item-id="${item.id}">
+      <tr style="border-bottom: 1px solid #f3f4f6;" data-item-id="${item.item_id}">
         <td style="padding: 10px 8px;">
           <input type="checkbox" 
             class="delete-item-checkbox" 
-            value="${item.id}"
-            onchange="toggleItemSelection('${item.id}')"
+            value="${item.item_id}"
+            onchange="toggleItemSelection('${item.item_id}')"
             style="cursor: pointer; width: 16px; height: 16px;">
         </td>
         <td style="padding: 10px 8px; font-size: 14px; color: #1f2937; font-weight: 500;">
           ${item.short_name || 'Unnamed Item'}
         </td>
         <td style="padding: 10px 8px; font-size: 13px; color: #6b7280; font-family: monospace;">
-          ${item.id}
+          ${item.item_id}
         </td>
         <td style="padding: 10px 8px;">
           <span class="badge ${(item.season || '').toLowerCase()}" style="font-size: 11px;">
@@ -237,7 +237,7 @@ async function confirmDelete() {
     // Delete items one by one
     for (const itemId of itemIds) {
       try {
-        await apiService.deleteItem(itemId);
+        await deleteItem(itemId);
         successCount++;
       } catch (error) {
         console.error(`Failed to delete item ${itemId}:`, error);

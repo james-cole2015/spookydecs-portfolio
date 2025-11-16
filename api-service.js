@@ -77,7 +77,12 @@ async function saveItemToAPI(itemId, updatePayload) {
 }
 
 async function deleteItem(itemId) {
-  const response = await fetch(`${API_ENDPOINT}/items/${itemId}`, {
+  const apiUrl = config.API_ENDPOINT || '';
+  if (!apiUrl) {
+    throw new Error('API endpoint not configured');
+  }
+  
+  const response = await fetch(`${apiUrl}/items/${itemId}`, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
