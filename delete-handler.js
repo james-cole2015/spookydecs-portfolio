@@ -91,19 +91,19 @@ async function populateDeleteTable() {
     items.sort((a, b) => (a.short_name || '').localeCompare(b.short_name || ''));
     
     tbody.innerHTML = items.map(item => `
-      <tr style="border-bottom: 1px solid #f3f4f6;" data-item-id="${item.item_id}">
+      <tr style="border-bottom: 1px solid #f3f4f6;" data-item-id="${item.id}">
         <td style="padding: 10px 8px;">
           <input type="checkbox" 
             class="delete-item-checkbox" 
-            value="${item.item_id}"
-            onchange="toggleItemSelection('${item.item_id}')"
+            value="${item.id}"
+            onchange="toggleItemSelection('${item.id}')"
             style="cursor: pointer; width: 16px; height: 16px;">
         </td>
         <td style="padding: 10px 8px; font-size: 14px; color: #1f2937; font-weight: 500;">
           ${item.short_name || 'Unnamed Item'}
         </td>
         <td style="padding: 10px 8px; font-size: 13px; color: #6b7280; font-family: monospace;">
-          ${item.item_id}
+          ${item.id}
         </td>
         <td style="padding: 10px 8px;">
           <span class="badge ${(item.season || '').toLowerCase()}" style="font-size: 11px;">
