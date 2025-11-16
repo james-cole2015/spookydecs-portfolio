@@ -7,35 +7,6 @@ const CLASS_TYPE_OPTIONS = {
   'Light': ['String Light', 'Spot Light']
 };
 
-// Attributes to show for each class type
-const CLASS_TYPE_ATTRIBUTES = {
-  'Inflatable': ['stakes', 'tethers', 'height_length', 'adapter', 'date_acquired', 'watts', 'amps'],
-  'Static Prop': ['stakes', 'tethers', 'height_length', 'date_acquired'],
-  'Animatronic': ['stakes', 'tethers', 'height_length', 'adapter', 'date_acquired', 'watts', 'amps'],
-  'Plug': ['length', 'male_ends', 'female_ends'],
-  'Cord': ['length', 'male_ends', 'female_ends'],
-  'Adapter': [],
-  'String Light': ['color', 'bulb_type', 'length', 'notes', 'watts', 'amps'],
-  'Spot Light': ['color', 'bulb_type', 'notes', 'watts', 'amps']
-};
-
-// Human-readable labels for attributes
-const ATTRIBUTE_LABELS = {
-  'stakes': 'Stakes',
-  'tethers': 'Tethers',
-  'height_length': 'Height/Length',
-  'adapter': 'Adapter',
-  'date_acquired': 'Date Acquired',
-  'length': 'Length (ft)',
-  'male_ends': 'Male Ends',
-  'female_ends': 'Female Ends',
-  'color': 'Color',
-  'bulb_type': 'Bulb Type',
-  'notes': 'Notes',
-  'watts': 'Power (Watts)',
-  'amps': 'Current (Amps)'
-};
-
 // Typical power values for placeholders
 const POWER_PLACEHOLDERS = {
   'Inflatable': { watts: 'e.g., 120 for typical inflatable', amps: 'e.g., 1.0 for typical inflatable' },

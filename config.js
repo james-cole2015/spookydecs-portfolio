@@ -19,14 +19,14 @@ const CLASS_TYPE_ICONS = {
 
 // Define which attributes to show for each class_type
 const CLASS_TYPE_ATTRIBUTES = {
+  'Inflatable': ['stakes', 'tethers', 'height_length', 'adapter', 'date_acquired', 'watts', 'amps'],
   'Static Prop': ['stakes', 'tethers', 'height_length', 'date_acquired'],
-  'Inflatable': ['stakes', 'tethers', 'height_length', 'date_acquired', 'adapter'],
-  'Animatronic': ['stakes', 'tethers', 'height_length', 'date_acquired', 'adapter'],
-  'String Light': ['color', 'length', 'bulb_type', 'notes'],
-  'Spot Light': ['color', 'bulb_type', 'notes'],
+  'Animatronic': ['stakes', 'tethers', 'height_length', 'adapter', 'date_acquired', 'watts', 'amps'],
   'Plug': ['length', 'male_ends', 'female_ends'],
   'Cord': ['length', 'male_ends', 'female_ends'],
-  'Adapter': []
+  'Adapter': [],
+  'String Light': ['color', 'bulb_type', 'length', 'notes', 'watts', 'amps'],
+  'Spot Light': ['color', 'bulb_type', 'notes', 'watts', 'amps']
 };
 
 // Define which class_types have repair tracking
@@ -34,19 +34,20 @@ const HAS_REPAIR_TRACKING = ['Static Prop', 'Inflatable', 'Animatronic', 'String
 
 // Attribute display names
 const ATTRIBUTE_LABELS = {
-  'stakes': '# of Stakes',
-  'tethers': '# of Tethers',
-  'height_length': 'Item Height / Length',
-  'date_acquired': 'Date Acquired',
+  'stakes': 'Stakes',
+  'tethers': 'Tethers',
+  'height_length': 'Height/Length',
   'adapter': 'Adapter',
+  'date_acquired': 'Date Acquired',
+  'length': 'Length (ft)',
+  'male_ends': 'Male Ends',
+  'female_ends': 'Female Ends',
   'color': 'Color',
-  'length': 'Length',
   'bulb_type': 'Bulb Type',
   'notes': 'Notes',
-  'male_ends': 'Male Ends',
-  'female_ends': 'Female Ends'
+  'watts': 'Power (Watts)',
+  'amps': 'Current (Amps)'
 };
-
 // Helper function to format field names
 function formatFieldName(key) {
   return key
