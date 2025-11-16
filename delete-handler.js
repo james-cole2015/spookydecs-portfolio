@@ -74,7 +74,7 @@ async function populateDeleteTable() {
   const tbody = document.getElementById('deleteTableBody');
   
   try {
-    const items = await apiService.getItems();
+    const items = allItems || [];
     
     if (!items || items.length === 0) {
       tbody.innerHTML = `
