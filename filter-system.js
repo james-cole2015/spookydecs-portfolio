@@ -92,7 +92,7 @@ const FilterSystem = {
   
   setItems(items) {
     this.allItems = items;
-    this.populateFilterOptions();
+    //this.populateFilterOptions();
     this.applyFilters();
   },
   
