@@ -144,7 +144,7 @@ const PaginationSystem = {
     // Page info
     const startItem = (this.currentPage - 1) * this.itemsPerPage + 1;
     const endItem = Math.min(this.currentPage * this.itemsPerPage, this.totalItems);
-    html += `<span class="pagination-info" style="margin-left: ${isMobile ? '8px' : '12px'}; color: #64748b; font-size: ${isMobile ? '13px' : '14px'};">
+    html += `<span class="pagination-info" style="margin-left: ${isMobile ? '4px' : '12px'}; color: #64748b; font-size: ${isMobile ? '12px' : '14px'}; white-space: nowrap; flex-shrink: 0;">
       ${startItem}-${endItem} of ${this.totalItems}
     </span>`;
     
@@ -193,8 +193,12 @@ paginationStyles.textContent = `
   .pagination-controls {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     flex-wrap: wrap;
+  }
+  
+  .pagination-controls.mobile-pagination {
+    flex-wrap: nowrap;
   }
   
   .pagination-btn {
@@ -235,25 +239,31 @@ paginationStyles.textContent = `
     font-size: 14px;
     color: #64748b;
     white-space: nowrap;
+    flex-shrink: 0;
   }
   
   /* Mobile styles */
   .mobile-pagination {
     justify-content: center;
     padding: 0 16px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
   }
   
   .pagination-btn-mobile {
-    padding: 10px 16px;
+    padding: 8px 12px;
     background: white;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
     color: #334155;
-    font-size: 16px;
+    font-size: 14px;
     cursor: pointer;
     transition: all 0.2s;
-    min-width: 44px;
+    min-width: 40px;
     font-weight: 500;
+    flex-shrink: 0;
   }
   
   .pagination-btn-mobile:hover:not(:disabled) {
