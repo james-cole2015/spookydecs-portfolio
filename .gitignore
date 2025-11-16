@@ -4,7 +4,6 @@ node_modules/
 .env
 *.DS_Store
 *.py
-*.sh
 .vscode/settings.json
 merge.sh
 ID Generation: Should the Lambda auto-ge.md
