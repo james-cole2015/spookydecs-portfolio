@@ -7,6 +7,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="historical_deploy_styles.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<link rel="stylesheet" href="graph-view/graph-styles.css">
 </head>
 <body class="bg-gray-50 min-h-screen">
     <!-- Header -->
@@ -283,5 +288,13 @@
         </div>
     </div>
 </div>
+
+<script type="text/babel" src="graph-view/NodeTooltip.jsx"></script>
+<script type="text/babel" src="graph-view/Legend.jsx"></script>
+<script type="text/babel" src="graph-view/NetworkGraphRenderer.jsx"></script>
+<script type="text/babel" src="graph-view/TreeGraphRenderer.jsx"></script>
+<script type="text/babel" src="graph-view/GraphControls.jsx"></script>
+<script type="text/babel" src="graph-view/DeploymentSelector.jsx"></script>
+<script type="text/babel" src="graph-view/GraphView.jsx"></script>
 </body>
 </html>

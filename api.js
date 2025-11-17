@@ -110,4 +110,22 @@ const API = {
     async getConnectionGraph(deploymentId, locationName) {
         return this.request(`/admin/deployments/${deploymentId}/locations/${locationName}/graph`);
     },
+
+    // Graph Visualization (NEW)
+    async listCompletedDeployments() {
+        // Returns list of deployments with status='completed'
+        const response = await this.request('/admin/deployments');
+        // Filter for completed deployments only
+        return response.deployments.filter(d => d.status === 'completed');
+    },
+
+    async getVisualization(deploymentId, type = 'network', zone = null) {
+        // type: 'network' or 'tree'
+        // zone: null (all zones) or specific zone name like 'Front Yard'
+        let endpoint = `/admin/deployments/${deploymentId}/visualization?type=${type}`;
+        if (zone) {
+            endpoint += `&zone=${encodeURIComponent(zone)}`;
+        }
+        return this.request(endpoint);
+    },
 };

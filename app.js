@@ -131,11 +131,33 @@ function initNavigation() {
             if (targetView !== 'connection-builder') {
                 document.getElementById('connection-builder-view').classList.add('hidden');
             }
+            
+            // Handle Graph View
+            if (targetView === 'graph') {
+                showGraphView();
+            }
+            
             if (targetView === 'historical') {
                 initHistoricalView();
-}   
+            }
         });
     });
+}
+
+// Graph View Integration
+let graphViewRoot = null;
+
+function showGraphView() {
+    const graphViewContainer = document.getElementById('graph-view');
+    
+    // Clear and create root element
+    graphViewContainer.innerHTML = '<div id="graph-view-root"></div>';
+    
+    // Create React root and render GraphView component
+    if (!graphViewRoot) {
+        graphViewRoot = ReactDOM.createRoot(document.getElementById('graph-view-root'));
+    }
+    graphViewRoot.render(React.createElement(GraphView));
 }
 
 // Deployment Management Functions
@@ -903,7 +925,6 @@ function initEventListeners() {
     document.getElementById('item-search').addEventListener('input', searchItems);
 }
 
-// Initialize app
 // Initialize app
 document.addEventListener('DOMContentLoaded', async () => {
     try {
