@@ -144,11 +144,21 @@ function initNavigation() {
     });
 }
 
-// Graph View Integration
+// Graph View Integration - UPDATED
 let graphViewRoot = null;
 
 function showGraphView() {
     const graphViewContainer = document.getElementById('graph-view');
+    
+    // Check if GraphView component is loaded
+    if (typeof GraphView === 'undefined') {
+        // Components not loaded yet, show loading message and retry
+        graphViewContainer.innerHTML = '<div class="flex items-center justify-center h-full"><p class="text-gray-600">Loading graph components...</p></div>';
+        
+        // Retry after a short delay
+        setTimeout(showGraphView, 100);
+        return;
+    }
     
     // Clear and create root element
     graphViewContainer.innerHTML = '<div id="graph-view-root"></div>';
