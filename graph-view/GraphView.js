@@ -6,6 +6,7 @@ const GraphView = () => {
     const [graphData, setGraphData] = React.useState(null);
     const [loading, setLoading] = React.useState(false);
     const [error, setError] = React.useState(null);
+    const [selectedNode, setSelectedNode] = React.useState(null); // NEW
 
     // Load completed deployments on mount
     React.useEffect(() => {
@@ -18,6 +19,11 @@ const GraphView = () => {
             loadGraphData();
         }
     }, [selectedDeployment, visualizationType, selectedZone]);
+
+    // Clear selected node when graph data changes
+    React.useEffect(() => {
+        setSelectedNode(null);
+    }, [graphData]);
 
     const loadDeployments = async () => {
         try {
@@ -89,13 +95,26 @@ const GraphView = () => {
                 <div className="graph-main">
                     <div className="graph-canvas">
                         {visualizationType === 'network' ? (
-                            <NetworkGraphRenderer data={graphData} />
+                            <NetworkGraphRenderer 
+                                data={graphData} 
+                                selectedNodeId={selectedNode?.id}
+                                onNodeClick={setSelectedNode}
+                            />
                         ) : (
-                            <TreeGraphRenderer data={graphData} />
+                            <TreeGraphRenderer 
+                                data={graphData}
+                                selectedNodeId={selectedNode?.id}
+                                onNodeClick={setSelectedNode}
+                            />
                         )}
                     </div>
                     <div className="graph-sidebar">
                         <Legend data={graphData} />
+                        <NodeDetailPanel 
+                            node={selectedNode}
+                            edges={graphData.graph.edges}
+                            allNodes={graphData.graph.nodes}
+                        />
                     </div>
                 </div>
             )}

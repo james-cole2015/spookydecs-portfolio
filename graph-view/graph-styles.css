@@ -343,6 +343,168 @@
     font-weight: 600;
 }
 
+/* Node Detail Panel */
+.node-detail-panel {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid #e5e7eb;
+}
+
+.node-detail-empty {
+    text-align: center;
+    padding: 2rem 1rem;
+}
+
+.detail-panel-title {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.detail-panel-empty-text {
+    color: #9ca3af;
+    font-size: 0.813rem;
+    font-style: italic;
+}
+
+.detail-panel-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.detail-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.detail-item-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+}
+
+.detail-class-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: white;
+    text-transform: uppercase;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.813rem;
+    padding: 0.25rem 0;
+}
+
+.detail-label {
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.detail-value {
+    color: #111827;
+    font-weight: 600;
+}
+
+.detail-section {
+    margin-top: 0.75rem;
+}
+
+.detail-section-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #374151;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    margin: 0 0 0.5rem 0;
+}
+
+.detail-connections {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.detail-connection {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.5rem;
+    background-color: #f9fafb;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+}
+
+.connection-arrow {
+    color: #3b82f6;
+    font-weight: 700;
+    font-size: 0.875rem;
+    margin-right: 0.25rem;
+}
+
+.connection-name {
+    color: #111827;
+    font-weight: 600;
+}
+
+.connection-ports {
+    color: #6b7280;
+    font-size: 0.688rem;
+    margin-left: 0.25rem;
+}
+
+.connection-type-badge {
+    display: inline-block;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-left: 0.25rem;
+}
+
+.connection-illuminates {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-top: 0.25rem;
+    padding-left: 1.25rem;
+}
+
+.illuminates-label {
+    color: #6b7280;
+    font-size: 0.688rem;
+    font-weight: 500;
+}
+
+.illuminates-item {
+    color: #facc15;
+    font-size: 0.688rem;
+    font-weight: 600;
+    background-color: #fef3c7;
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+}
+
+.detail-no-connections {
+    color: #9ca3af;
+    font-size: 0.813rem;
+    font-style: italic;
+    text-align: center;
+    padding: 1rem 0;
+}
+
 /* D3 Graph Elements */
 .node {
     transition: opacity 0.2s;
@@ -350,6 +512,10 @@
 
 .node:hover {
     opacity: 0.9;
+}
+
+.node-selected circle {
+    filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.3));
 }
 
 .edge {

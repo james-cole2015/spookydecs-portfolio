@@ -1,4 +1,4 @@
-const NetworkGraphRenderer = ({ data }) => {
+const NetworkGraphRenderer = ({ data, selectedNodeId, onNodeClick }) => {
     const svgRef = React.useRef();
     const [tooltip, setTooltip] = React.useState(null);
 
@@ -6,7 +6,7 @@ const NetworkGraphRenderer = ({ data }) => {
         if (!data || !svgRef.current) return;
 
         renderGraph();
-    }, [data]);
+    }, [data, selectedNodeId]);
 
     const renderGraph = () => {
         const svg = d3.select(svgRef.current);
@@ -75,17 +75,19 @@ const NetworkGraphRenderer = ({ data }) => {
         // Draw nodes
         const nodeGroup = g.append('g').attr('class', 'nodes');
         nodes.forEach(node => {
+            const isSelected = node.id === selectedNodeId;
+            
             const nodeEl = nodeGroup.append('g')
                 .attr('transform', `translate(${node.x}, ${node.y})`)
-                .attr('class', 'node')
+                .attr('class', `node ${isSelected ? 'node-selected' : ''}`)
                 .style('cursor', 'pointer');
 
             // Node circle
             nodeEl.append('circle')
                 .attr('r', node.size / 2)
                 .attr('fill', node.color)
-                .attr('stroke', '#fff')
-                .attr('stroke-width', 2);
+                .attr('stroke', isSelected ? '#000' : '#fff')
+                .attr('stroke-width', isSelected ? 3 : 2);
 
             // Node label (acronym)
             nodeEl.append('text')
@@ -96,11 +98,19 @@ const NetworkGraphRenderer = ({ data }) => {
                 .attr('fill', '#1f2937')
                 .text(node.class_acronym);
 
+            // Click handler
+            nodeEl.on('click', (event) => {
+                event.stopPropagation();
+                onNodeClick(node);
+            });
+
             // Hover interactions
             nodeEl.on('mouseenter', (event) => {
-                d3.select(event.currentTarget).select('circle')
-                    .attr('stroke-width', 3)
-                    .attr('stroke', '#000');
+                if (!isSelected) {
+                    d3.select(event.currentTarget).select('circle')
+                        .attr('stroke-width', 3)
+                        .attr('stroke', '#000');
+                }
                 
                 setTooltip({
                     node,
@@ -109,9 +119,11 @@ const NetworkGraphRenderer = ({ data }) => {
                 });
             })
             .on('mouseleave', (event) => {
-                d3.select(event.currentTarget).select('circle')
-                    .attr('stroke-width', 2)
-                    .attr('stroke', '#fff');
+                if (!isSelected) {
+                    d3.select(event.currentTarget).select('circle')
+                        .attr('stroke-width', 2)
+                        .attr('stroke', '#fff');
+                }
                 
                 setTooltip(null);
             });
@@ -125,6 +137,11 @@ const NetworkGraphRenderer = ({ data }) => {
             });
 
         svg.call(zoom);
+        
+        // Click on background to deselect
+        svg.on('click', () => {
+            onNodeClick(null);
+        });
     };
 
     return (
