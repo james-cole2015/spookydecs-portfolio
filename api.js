@@ -116,7 +116,7 @@ const API = {
         // Returns list of deployments with status='completed'
         const response = await this.request('/admin/deployments');
         // Filter for completed deployments only
-        return response.deployments.filter(d => d.status === 'complete');
+        return response.filter(d => d.status === 'complete');
     },
 
     async getVisualization(deploymentId, type = 'network', zone = null) {
