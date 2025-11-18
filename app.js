@@ -11,11 +11,11 @@ const state = {
     inProgressDeployments: [],
 };
 
-// Zone to receptacle mapping
+// Zone to receptacle mapping - FIXED
 const ZONE_RECEPTACLES = {
-    'Front Yard': 'REC-003',
-    'Side Yard': 'REC-002',
-    'Back Yard': 'REC-001'
+    'Front Yard': 'REC-FY-001',
+    'Side Yard': 'REC-SY-001',
+    'Back Yard': 'REC-BY-001'
 };
 
 // Utility Functions
