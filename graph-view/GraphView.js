@@ -25,7 +25,7 @@ const GraphView = () => {
             const completed = await API.listCompletedDeployments();
             setDeployments(completed);
             if (completed.length > 0) {
-                setSelectedDeployment(completed[0].deployment_id);
+                setSelectedDeployment(completed[0].id);
             }
         } catch (err) {
             setError(`Failed to load deployments: ${err.message}`);

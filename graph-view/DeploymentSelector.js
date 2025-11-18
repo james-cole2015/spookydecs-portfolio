@@ -14,8 +14,8 @@ const DeploymentSelector = ({ deployments, selectedDeployment, onSelect }) => {
                     <option value="">No completed deployments</option>
                 )}
                 {deployments.map((deployment) => (
-                    <option key={deployment.deployment_id} value={deployment.deployment_id}>
-                        {deployment.deployment_name || `${deployment.year} ${deployment.season}`}
+                    <option key={deployment.id} value={deployment.id}>
+                        {deployment.id || `${deployment.year} ${deployment.season}`}
                     </option>
                 ))}
             </select>
