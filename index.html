@@ -107,6 +107,52 @@
                     <button id="back-to-deployments-btn" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">
                         Back to Deployments
                     </button>
+                    <div id="connection-builder-view" class="view hidden">
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h2 class="text-2xl font-bold">Connection Builder</h2>
+                <p class="text-gray-600" id="current-deployment-info">Loading...</p>
+            </div>
+            <button id="back-to-deployments-btn" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">
+                Back to Deployments
+            </button>
+        </div>
+
+        <!-- MAIN CONTENT AREA WITH SESSION WIDGET -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- LEFT SIDE: Connection Builder (spans 3 columns) -->
+            <div class="lg:col-span-3">
+                <!-- Connection Form -->
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h2 class="text-xl font-semibold mb-4">Add Connection</h2>
+                    
+                    <!-- ... your existing connection form ... -->
+                </div>
+
+                <!-- Connections List -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-xl font-semibold mb-4">Connections</h2>
+                    
+                    <div id="connections-list" class="space-y-3">
+                        <p class="text-gray-500 text-sm">No connections yet. Add one above to get started.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT SIDE: Session Widget (spans 1 column) -->
+            <div class="lg:col-span-1">
+                <div id="session-widget" class="sticky top-4">
+                    <!-- Session widget content will be rendered here by JavaScript -->
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <p class="text-gray-500 text-sm">Loading session info...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
                 </div>
 
                 <!-- Connection Form -->

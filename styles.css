@@ -654,3 +654,13 @@
       display: block !important;
     }
   }
+
+#session-widget {
+    position: sticky;
+    top: 1rem;
+}
+
+#session-timer {
+    font-family: monospace;
+    font-weight: 600;
+}

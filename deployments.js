@@ -144,15 +144,27 @@ function handleZoneClick(deploymentId, locationName, status) {
 }
 
 async function startSetup(deploymentId) {
-    if (!confirm('Start setup for this deployment? You will be able to build connections across all zones.')) {
+    if (!confirm('Start setup for this deployment? This will create your first work session.')) {
         return;
     }
     
     try {
         UIUtils.showToast('Starting setup...', 'info');
+        
+        // Start setup (changes status to in_progress)
         const result = await API.startSetup(deploymentId);
-        UIUtils.showToast('Setup started! You can now build connections.');
-        await loadInProgressDeployments();
+        
+        // Auto-start first session for Front Yard (default location)
+        const firstLocation = 'Front Yard';
+        const sessionResult = await API.startSession(deploymentId, firstLocation, {
+            notes: 'Initial setup session'
+        });
+        
+        UIUtils.showToast(`Setup started! Session ${sessionResult.session.id} is now active.`);
+        
+        // Load the deployment into builder
+        await loadDeploymentIntoBuilder(deploymentId, firstLocation);
+        
     } catch (error) {
         UIUtils.showToast(`Failed to start setup: ${error.message}`, 'error');
     }
@@ -162,6 +174,17 @@ async function reviewAndFinish(deploymentId) {
     try {
         UIUtils.showToast('Loading deployment summary...', 'info');
         const reviewData = await API.getReviewData(deploymentId);
+        
+        // Check if there's an active session
+        const deployment = await API.getDeployment(deploymentId);
+        const hasActiveSession = deployment.locations.some(loc => {
+            const sessions = loc.work_sessions || [];
+            return sessions.some(s => !s.end_time);
+        });
+        
+        if (hasActiveSession) {
+            reviewData.hasActiveSession = true;
+        }
         
         // Show review modal
         showReviewModal(reviewData);
@@ -191,9 +214,17 @@ function showReviewModal(reviewData) {
     `).join('');
     
     const canFinish = reviewData.total_connections > 0;
-    const warningMessage = !canFinish 
-        ? '<div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4"><p class="text-red-800 text-sm">⚠️ Cannot finish setup with no connections. Please add at least one connection.</p></div>'
-        : '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4"><p class="text-yellow-800 text-sm">⚠️ Finishing setup will mark all ' + reviewData.total_unique_items + ' items as deployed and this cannot be undone from this interface.</p></div>';
+    
+    let warningMessage = '';
+    if (reviewData.hasActiveSession) {
+        warningMessage = '<div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4"><p class="text-blue-800 text-sm">ℹ️ You have an active session. It will be automatically ended when you finish setup.</p></div>';
+    }
+    
+    if (!canFinish) {
+        warningMessage += '<div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4"><p class="text-red-800 text-sm">⚠️ Cannot finish setup with no connections. Please add at least one connection.</p></div>';
+    } else {
+        warningMessage += '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4"><p class="text-yellow-800 text-sm">⚠️ Finishing setup will mark all ' + reviewData.total_unique_items + ' items as deployed and this cannot be undone from this interface.</p></div>';
+    }
     
     modal.innerHTML = `
         <div class="min-h-screen px-4 flex items-center justify-center">
@@ -320,11 +351,16 @@ async function loadDeploymentIntoBuilder(deploymentId, locationName) {
         AppState.sourceItem = null;
         AppState.destinationItem = null;
         
+        // Check for active session
+        const sessions = locationData.location?.work_sessions || [];
+        AppState.activeSession = sessions.find(s => !s.end_time) || null;
+        
         document.getElementById('current-deployment-info').textContent = 
             `${deploymentId} • ${locationName}`;
         
         clearConnectionForm();
         renderConnections();
+        renderSessionWidget();
         
         document.getElementById('deployments-view').classList.add('hidden');
         document.getElementById('connection-builder-view').classList.remove('hidden');
@@ -335,7 +371,203 @@ async function loadDeploymentIntoBuilder(deploymentId, locationName) {
     }
 }
 
+function renderSessionWidget() {
+    const widget = document.getElementById('session-widget');
+    if (!widget) return;
+    
+    if (AppState.activeSession) {
+        // Show active session
+        const startTime = new Date(AppState.activeSession.start_time);
+        const itemsCount = AppState.activeSession.items_deployed?.length || 0;
+        const connectionsCount = AppState.activeSession.connections_created?.length || 0;
+        
+        widget.innerHTML = `
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div class="flex justify-between items-start mb-2">
+                    <h3 class="text-sm font-semibold text-green-900">🟢 Session Active</h3>
+                    <span class="text-xs text-green-700" id="session-timer">00:00:00</span>
+                </div>
+                <div class="text-sm text-green-800 space-y-1">
+                    <p>Session: ${AppState.activeSession.id}</p>
+                    <p>Items: ${itemsCount} | Connections: ${connectionsCount}</p>
+                </div>
+                <button 
+                    class="mt-3 w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+                    onclick="endSession()"
+                >
+                    End Session
+                </button>
+            </div>
+        `;
+        
+        // Start timer
+        startSessionTimer(startTime);
+    } else {
+        // Show start session button
+        widget.innerHTML = `
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <h3 class="text-sm font-semibold text-gray-700 mb-2">No Active Session</h3>
+                <p class="text-xs text-gray-600 mb-3">Start a session to track your work</p>
+                <button 
+                    class="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                    onclick="startSession()"
+                >
+                    Start Work Session
+                </button>
+            </div>
+        `;
+    }
+}
+
+let sessionTimerInterval = null;
+
+function startSessionTimer(startTime) {
+    // Clear any existing timer
+    if (sessionTimerInterval) {
+        clearInterval(sessionTimerInterval);
+    }
+    
+    sessionTimerInterval = setInterval(() => {
+        const now = new Date();
+        const elapsed = Math.floor((now - startTime) / 1000);
+        
+        const hours = Math.floor(elapsed / 3600);
+        const minutes = Math.floor((elapsed % 3600) / 60);
+        const seconds = elapsed % 60;
+        
+        const timerEl = document.getElementById('session-timer');
+        if (timerEl) {
+            timerEl.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+    }, 1000);
+}
+
+async function startSession() {
+    try {
+        UIUtils.showToast('Starting session...', 'info');
+        
+        const result = await API.startSession(
+            AppState.currentDeploymentId,
+            AppState.currentLocationName,
+            { notes: '' }
+        );
+        
+        AppState.activeSession = result.session;
+        renderSessionWidget();
+        UIUtils.showToast(`Session ${result.session.id} started!`);
+    } catch (error) {
+        UIUtils.showToast(`Failed to start session: ${error.message}`, 'error');
+    }
+}
+
+async function endSession() {
+    if (!AppState.activeSession) {
+        UIUtils.showToast('No active session', 'error');
+        return;
+    }
+    
+    // Show modal for notes
+    showEndSessionModal();
+}
+
+function showEndSessionModal() {
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center';
+    modal.id = 'end-session-modal';
+    
+    const itemsCount = AppState.activeSession.items_deployed?.length || 0;
+    const connectionsCount = AppState.activeSession.connections_created?.length || 0;
+    
+    modal.innerHTML = `
+        <div class="bg-white rounded-lg w-full max-w-md mx-4 p-6">
+            <h2 class="text-xl font-semibold mb-4">End Session</h2>
+            
+            <div class="mb-4">
+                <p class="text-sm text-gray-600 mb-2">Session Summary:</p>
+                <div class="bg-gray-50 rounded p-3 text-sm">
+                    <p><strong>Session ID:</strong> ${AppState.activeSession.id}</p>
+                    <p><strong>Items Deployed:</strong> ${itemsCount}</p>
+                    <p><strong>Connections Created:</strong> ${connectionsCount}</p>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Session Notes (optional)
+                </label>
+                <textarea 
+                    id="session-notes-input"
+                    rows="3"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    placeholder="Add notes about what you accomplished..."
+                >${AppState.activeSession.notes || ''}</textarea>
+            </div>
+            
+            <div class="flex gap-2">
+                <button 
+                    class="flex-1 px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+                    onclick="closeEndSessionModal()"
+                >
+                    Cancel
+                </button>
+                <button 
+                    class="flex-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                    onclick="confirmEndSession()"
+                >
+                    End Session
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+function closeEndSessionModal() {
+    const modal = document.getElementById('end-session-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+async function confirmEndSession() {
+    const notes = document.getElementById('session-notes-input').value.trim();
+    
+    try {
+        closeEndSessionModal();
+        UIUtils.showToast('Ending session...', 'info');
+        
+        const result = await API.endSession(
+            AppState.currentDeploymentId,
+            AppState.currentLocationName,
+            AppState.activeSession.id,
+            { notes }
+        );
+        
+        // Clear timer
+        if (sessionTimerInterval) {
+            clearInterval(sessionTimerInterval);
+            sessionTimerInterval = null;
+        }
+        
+        AppState.activeSession = null;
+        renderSessionWidget();
+        
+        const duration = result.session.duration_seconds;
+        const minutes = Math.floor(duration / 60);
+        UIUtils.showToast(`Session ended! Duration: ${minutes} minutes`);
+    } catch (error) {
+        UIUtils.showToast(`Failed to end session: ${error.message}`, 'error');
+    }
+}
+
 function backToDeployments() {
+    // Clear timer
+    if (sessionTimerInterval) {
+        clearInterval(sessionTimerInterval);
+        sessionTimerInterval = null;
+    }
+    
     document.getElementById('connection-builder-view').classList.add('hidden');
     document.getElementById('deployments-view').classList.remove('hidden');
     
@@ -360,3 +592,7 @@ window.reviewAndFinish = reviewAndFinish;
 window.closeReviewModal = closeReviewModal;
 window.completeSetup = completeSetup;
 window.loadDeploymentIntoBuilder = loadDeploymentIntoBuilder;
+window.startSession = startSession;
+window.endSession = endSession;
+window.closeEndSessionModal = closeEndSessionModal;
+window.confirmEndSession = confirmEndSession;

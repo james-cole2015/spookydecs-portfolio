@@ -98,6 +98,21 @@ const API = {
         });
     },
 
+    // Session Management (NEW)
+    async startSession(deploymentId, locationName, data = {}) {
+        return this.request(`/admin/deployments/${deploymentId}/locations/${encodeURIComponent(locationName)}/sessions`, {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    },
+
+    async endSession(deploymentId, locationName, sessionId, data = {}) {
+        return this.request(`/admin/deployments/${deploymentId}/locations/${encodeURIComponent(locationName)}/sessions/${sessionId}`, {
+            method: 'PATCH',
+            body: JSON.stringify(data)
+        });
+    },
+
     // Statistics and Analysis
     async getStatistics(deploymentId, locationName) {
         return this.request(`/admin/deployments/${deploymentId}/locations/${locationName}/statistics`);
@@ -111,12 +126,12 @@ const API = {
         return this.request(`/admin/deployments/${deploymentId}/locations/${locationName}/graph`);
     },
 
-    // Graph Visualization (NEW)
+    // Graph Visualization
     async listCompletedDeployments() {
-        // Returns list of deployments with status='completed'
+        // Returns list of deployments with status='complete' or 'in_progress'
         const response = await this.request('/admin/deployments');
-        // Filter for completed deployments only
-        return response.filter(d => d.status === 'complete');
+        // Filter for visualizable deployments (both in_progress and complete)
+        return response.filter(d => d.status === 'complete' || d.status === 'in_progress');
     },
 
     async getVisualization(deploymentId, type = 'network', zone = null) {
