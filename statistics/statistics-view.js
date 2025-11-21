@@ -48,27 +48,27 @@ class StatisticsView {
         container.innerHTML = `
             <div class="bg-white rounded-lg shadow">
                 <!-- Header -->
-                <div class="border-b border-gray-200 px-6 py-4">
-                    <h2 class="text-2xl font-bold text-gray-900">Statistics Dashboard</h2>
+                <div class="border-b border-gray-200 px-4 sm:px-6 py-4">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Statistics Dashboard</h2>
                 </div>
 
                 <!-- Tabs -->
-                <div class="border-b border-gray-200 px-6">
-                    <nav class="flex space-x-8" aria-label="Tabs">
+                <div class="border-b border-gray-200 px-4 sm:px-6 overflow-x-auto">
+                    <nav class="flex space-x-4 sm:space-x-8 min-w-max" aria-label="Tabs">
                         <button 
-                            class="stats-tab py-4 px-1 border-b-2 font-medium text-sm ${this.currentTab === 'overview' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
+                            class="stats-tab py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${this.currentTab === 'overview' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
                             data-tab="overview"
                         >
                             Overview
                         </button>
                         <button 
-                            class="stats-tab py-4 px-1 border-b-2 font-medium text-sm ${this.currentTab === 'sessions' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
+                            class="stats-tab py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${this.currentTab === 'sessions' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
                             data-tab="sessions"
                         >
                             Sessions
                         </button>
                         <button 
-                            class="stats-tab py-4 px-1 border-b-2 font-medium text-sm ${this.currentTab === 'zones' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
+                            class="stats-tab py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${this.currentTab === 'zones' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
                             data-tab="zones"
                         >
                             Zones
@@ -77,19 +77,19 @@ class StatisticsView {
                 </div>
 
                 <!-- Content -->
-                <div class="p-6">
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="p-4 sm:p-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                         <!-- Left Column: In-Progress -->
-                        <div class="space-y-4">
-                            <h3 class="text-lg font-semibold text-gray-900">In-Progress Deployment</h3>
+                        <div>
+                            <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">In-Progress Deployment</h3>
                             <div id="stats-left-column">
                                 ${this.renderLeftColumn()}
                             </div>
                         </div>
 
                         <!-- Right Column: Completed -->
-                        <div class="space-y-4">
-                            <h3 class="text-lg font-semibold text-gray-900">Completed Deployment</h3>
+                        <div>
+                            <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Completed Deployment</h3>
                             <div id="stats-right-column">
                                 ${this.renderRightColumn()}
                             </div>
@@ -112,16 +112,32 @@ class StatisticsView {
 
         const deployment = this.inProgressDeployment;
         
+        // Deployment header (consistent with right column)
+        const headerHTML = `
+            <div class="mb-4">
+                <div class="bg-white border border-gray-200 rounded-lg px-4 py-3">
+                    <p class="font-semibold text-gray-900">${deployment.id}</p>
+                    <p class="text-sm text-gray-600">${deployment.season} ${deployment.year}</p>
+                </div>
+            </div>
+        `;
+        
+        let contentHTML = '';
         switch (this.currentTab) {
             case 'overview':
-                return this.renderInProgressOverview(deployment);
+                contentHTML = this.renderInProgressOverview(deployment);
+                break;
             case 'sessions':
-                return this.renderInProgressSessions(deployment);
+                contentHTML = this.renderInProgressSessions(deployment);
+                break;
             case 'zones':
-                return this.renderInProgressZones(deployment);
+                contentHTML = this.renderInProgressZones(deployment);
+                break;
             default:
-                return '';
+                contentHTML = '';
         }
+        
+        return headerHTML + contentHTML;
     }
 
     renderRightColumn() {
@@ -179,47 +195,55 @@ class StatisticsView {
         const activeSession = sessions.find(s => !s.end_time);
         
         return `
-            <div class="space-y-4">
+            <div class="space-y-3 sm:space-y-4">
                 <!-- Time Elapsed -->
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <p class="text-sm text-blue-600 font-medium">Time Elapsed</p>
-                    <p class="text-3xl font-bold text-blue-900 mt-1">${elapsedTime}</p>
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+                    <p class="text-xs sm:text-sm text-blue-600 font-medium">Time Elapsed</p>
+                    <p class="text-2xl sm:text-3xl font-bold text-blue-900 mt-1">${elapsedTime}</p>
                     <p class="text-xs text-blue-600 mt-1">Since ${StatisticsCalculations.formatDateShort(deployment.setup_started_at)}</p>
                 </div>
 
-                <!-- Sessions Completed -->
-                <div class="bg-white border border-gray-200 rounded-lg p-4">
-                    <p class="text-sm text-gray-600 font-medium">Sessions</p>
-                    <p class="text-3xl font-bold text-gray-900 mt-1">${sessionCounts.total}</p>
-                    <p class="text-xs text-gray-500 mt-1">${sessionCounts.completed} completed, ${sessionCounts.active} active</p>
+                <!-- Grid for smaller metrics -->
+                <div class="grid grid-cols-2 gap-3 sm:gap-4">
+                    <!-- Sessions -->
+                    <div class="bg-white border border-gray-200 rounded-lg p-3 sm:p-4">
+                        <p class="text-xs sm:text-sm text-gray-600 font-medium">Sessions</p>
+                        <p class="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">${sessionCounts.total}</p>
+                        <p class="text-xs text-gray-500 mt-1">${sessionCounts.completed} done, ${sessionCounts.active} active</p>
+                    </div>
+
+                    <!-- Total Items -->
+                    <div class="bg-white border border-gray-200 rounded-lg p-3 sm:p-4">
+                        <p class="text-xs sm:text-sm text-gray-600 font-medium">Items</p>
+                        <p class="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">${totals.totalItems}</p>
+                        <p class="text-xs text-gray-500 mt-1">Deployed</p>
+                    </div>
                 </div>
 
-                <!-- Total Items -->
-                <div class="bg-white border border-gray-200 rounded-lg p-4">
-                    <p class="text-sm text-gray-600 font-medium">Items Deployed</p>
-                    <p class="text-3xl font-bold text-gray-900 mt-1">${totals.totalItems}</p>
-                </div>
-
-                <!-- Total Connections -->
-                <div class="bg-white border border-gray-200 rounded-lg p-4">
-                    <p class="text-sm text-gray-600 font-medium">Connections Created</p>
-                    <p class="text-3xl font-bold text-gray-900 mt-1">${totals.totalConnections}</p>
+                <!-- Connections (full width) -->
+                <div class="bg-white border border-gray-200 rounded-lg p-3 sm:p-4">
+                    <p class="text-xs sm:text-sm text-gray-600 font-medium">Connections</p>
+                    <p class="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">${totals.totalConnections}</p>
+                    <p class="text-xs text-gray-500 mt-1">Created</p>
                 </div>
 
                 ${activeSession ? `
                     <!-- Active Session Card -->
-                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
                         <div class="flex items-center justify-between mb-2">
-                            <p class="text-sm text-green-600 font-medium">🟢 Active Session</p>
-                            <span class="text-xs text-green-700">${activeSession.location_name}</span>
+                            <p class="text-xs sm:text-sm text-green-600 font-medium flex items-center">
+                                <span class="inline-block w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                                Active Session
+                            </p>
+                            <span class="text-xs text-green-700 bg-green-100 px-2 py-1 rounded">${activeSession.location_name}</span>
                         </div>
-                        <p class="text-sm text-green-800">${activeSession.id}</p>
-                        <div class="grid grid-cols-2 gap-2 mt-3 text-xs text-green-700">
-                            <div>
+                        <p class="text-xs sm:text-sm text-green-800 font-mono mb-3">${activeSession.id}</p>
+                        <div class="grid grid-cols-2 gap-2 text-xs text-green-700">
+                            <div class="bg-green-100 rounded p-2">
                                 <p class="font-medium">Items</p>
                                 <p class="text-lg font-bold">${StatisticsCalculations.getUniqueSessionItems(activeSession).length}</p>
                             </div>
-                            <div>
+                            <div class="bg-green-100 rounded p-2">
                                 <p class="font-medium">Connections</p>
                                 <p class="text-lg font-bold">${(activeSession.connections_created || []).length}</p>
                             </div>
@@ -244,43 +268,49 @@ class StatisticsView {
         const totalSessionTime = StatisticsCalculations.formatDuration(totalSessionSeconds);
         
         return `
-            <div class="space-y-4">
-                <!-- Setup Time (Elapsed) -->
-                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <p class="text-sm text-green-600 font-medium">Total Setup Time (Elapsed)</p>
-                    <p class="text-3xl font-bold text-green-900 mt-1">${elapsedTime}</p>
-                    <p class="text-xs text-green-600 mt-1">Start to completion</p>
+            <div class="space-y-3 sm:space-y-4">
+                <!-- Time cards in grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <!-- Setup Time (Elapsed) -->
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
+                        <p class="text-xs sm:text-sm text-green-600 font-medium">Setup Time</p>
+                        <p class="text-2xl sm:text-3xl font-bold text-green-900 mt-1">${elapsedTime}</p>
+                        <p class="text-xs text-green-600 mt-1">Total elapsed</p>
+                    </div>
+
+                    <!-- Actual Work Time -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+                        <p class="text-xs sm:text-sm text-blue-600 font-medium">Work Time</p>
+                        <p class="text-2xl sm:text-3xl font-bold text-blue-900 mt-1">${totalSessionTime}</p>
+                        <p class="text-xs text-blue-600 mt-1">Session total</p>
+                    </div>
                 </div>
 
-                <!-- Actual Work Time -->
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <p class="text-sm text-blue-600 font-medium">Actual Work Time</p>
-                    <p class="text-3xl font-bold text-blue-900 mt-1">${totalSessionTime}</p>
-                    <p class="text-xs text-blue-600 mt-1">Total session time</p>
-                </div>
+                <!-- Count metrics in grid -->
+                <div class="grid grid-cols-3 gap-2 sm:gap-3">
+                    <!-- Sessions -->
+                    <div class="bg-white border border-gray-200 rounded-lg p-2 sm:p-3">
+                        <p class="text-xs text-gray-600 font-medium">Sessions</p>
+                        <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">${sessionCounts.total}</p>
+                    </div>
 
-                <!-- Sessions -->
-                <div class="bg-white border border-gray-200 rounded-lg p-4">
-                    <p class="text-sm text-gray-600 font-medium">Sessions</p>
-                    <p class="text-3xl font-bold text-gray-900 mt-1">${sessionCounts.total}</p>
-                </div>
+                    <!-- Total Items -->
+                    <div class="bg-white border border-gray-200 rounded-lg p-2 sm:p-3">
+                        <p class="text-xs text-gray-600 font-medium">Items</p>
+                        <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">${totals.totalItems}</p>
+                    </div>
 
-                <!-- Total Items -->
-                <div class="bg-white border border-gray-200 rounded-lg p-4">
-                    <p class="text-sm text-gray-600 font-medium">Items Deployed</p>
-                    <p class="text-3xl font-bold text-gray-900 mt-1">${totals.totalItems}</p>
-                </div>
-
-                <!-- Total Connections -->
-                <div class="bg-white border border-gray-200 rounded-lg p-4">
-                    <p class="text-sm text-gray-600 font-medium">Connections Created</p>
-                    <p class="text-3xl font-bold text-gray-900 mt-1">${totals.totalConnections}</p>
+                    <!-- Total Connections -->
+                    <div class="bg-white border border-gray-200 rounded-lg p-2 sm:p-3">
+                        <p class="text-xs text-gray-600 font-medium">Connects</p>
+                        <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">${totals.totalConnections}</p>
+                    </div>
                 </div>
 
                 <!-- Completion Date -->
-                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                    <p class="text-sm text-gray-600 font-medium">Completed</p>
-                    <p class="text-sm font-semibold text-gray-900 mt-1">${StatisticsCalculations.formatDate(deployment.setup_completed_at)}</p>
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4">
+                    <p class="text-xs sm:text-sm text-gray-600 font-medium">Completed</p>
+                    <p class="text-sm sm:text-base font-semibold text-gray-900 mt-1">${StatisticsCalculations.formatDate(deployment.setup_completed_at)}</p>
                 </div>
             </div>
         `;
@@ -301,28 +331,28 @@ class StatisticsView {
             const isActive = !session.end_time;
             const duration = session.duration_seconds 
                 ? StatisticsCalculations.formatDuration(session.duration_seconds)
-                : 'In Progress';
+                : 'Active';
             const itemsCount = StatisticsCalculations.getUniqueSessionItems(session).length;
             const connectionsCount = (session.connections_created || []).length;
             
             const rowClass = isActive ? 'bg-green-50' : '';
-            const activeIndicator = isActive ? '🟢 ' : '';
+            const activeIndicator = isActive ? '<span class="inline-block w-2 h-2 bg-green-500 rounded-full mr-1"></span>' : '';
             
             return `
                 <tr class="${rowClass}">
-                    <td class="px-4 py-3 text-sm font-medium text-gray-900">
-                        ${activeIndicator}${StatisticsCalculations.formatSessionNumber(index)}
+                    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm font-medium text-gray-900 whitespace-nowrap">
+                        ${activeIndicator}S${index + 1}
                     </td>
-                    <td class="px-4 py-3 text-sm text-gray-600">
+                    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap">
                         ${StatisticsCalculations.formatDate(session.start_time)}
                     </td>
-                    <td class="px-4 py-3 text-sm text-gray-600">
+                    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap">
                         ${session.end_time ? StatisticsCalculations.formatDate(session.end_time) : '—'}
                     </td>
-                    <td class="px-4 py-3 text-sm text-gray-900 font-medium">${duration}</td>
-                    <td class="px-4 py-3 text-sm text-gray-900 text-center">${itemsCount}</td>
-                    <td class="px-4 py-3 text-sm text-gray-900 text-center">${connectionsCount}</td>
-                    <td class="px-4 py-3 text-sm text-gray-600">${session.location_name}</td>
+                    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-900 font-medium whitespace-nowrap">${duration}</td>
+                    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-900 text-center">${itemsCount}</td>
+                    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-900 text-center">${connectionsCount}</td>
+                    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap">${session.location_name}</td>
                 </tr>
             `;
         }).join('');
@@ -330,22 +360,26 @@ class StatisticsView {
         return `
             <div class="border border-gray-200 rounded-lg overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="w-full">
+                    <table class="w-full min-w-max">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Session</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Start Time</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">End Time</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Duration</th>
-                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Items</th>
-                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Connections</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Zone</th>
+                                <th class="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Session</th>
+                                <th class="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start</th>
+                                <th class="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End</th>
+                                <th class="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
+                                <th class="px-3 sm:px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
+                                <th class="px-3 sm:px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Conns</th>
+                                <th class="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Zone</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             ${tableRows}
                         </tbody>
                     </table>
+                </div>
+                <div class="bg-gray-50 px-4 py-2 text-xs text-gray-600 border-t border-gray-200">
+                    <span class="inline-block w-2 h-2 bg-green-500 rounded-full mr-1 align-middle"></span>
+                    Active session • Scroll horizontally on mobile
                 </div>
             </div>
         `;
@@ -371,23 +405,23 @@ class StatisticsView {
             
             const isMostProductive = mostProductive && session.id === mostProductive.id;
             const rowClass = isMostProductive ? 'bg-yellow-50' : '';
-            const productiveIndicator = isMostProductive ? '⭐ ' : '';
+            const productiveIndicator = isMostProductive ? '<span class="text-yellow-600 mr-1">⭐</span>' : '';
             
             return `
                 <tr class="${rowClass}">
-                    <td class="px-4 py-3 text-sm font-medium text-gray-900">
-                        ${productiveIndicator}${StatisticsCalculations.formatSessionNumber(index)}
+                    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm font-medium text-gray-900 whitespace-nowrap">
+                        ${productiveIndicator}S${index + 1}
                     </td>
-                    <td class="px-4 py-3 text-sm text-gray-600">
+                    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap">
                         ${StatisticsCalculations.formatDate(session.start_time)}
                     </td>
-                    <td class="px-4 py-3 text-sm text-gray-600">
+                    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap">
                         ${StatisticsCalculations.formatDate(session.end_time)}
                     </td>
-                    <td class="px-4 py-3 text-sm text-gray-900 font-medium">${duration}</td>
-                    <td class="px-4 py-3 text-sm text-gray-900 text-center">${itemsCount}</td>
-                    <td class="px-4 py-3 text-sm text-gray-900 text-center">${connectionsCount}</td>
-                    <td class="px-4 py-3 text-sm text-gray-600">${session.location_name}</td>
+                    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-900 font-medium whitespace-nowrap">${duration}</td>
+                    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-900 text-center">${itemsCount}</td>
+                    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-900 text-center">${connectionsCount}</td>
+                    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap">${session.location_name}</td>
                 </tr>
             `;
         }).join('');
@@ -395,22 +429,25 @@ class StatisticsView {
         return `
             <div class="border border-gray-200 rounded-lg overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="w-full">
+                    <table class="w-full min-w-max">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Session</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Start Time</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">End Time</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Duration</th>
-                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Items</th>
-                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Connections</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Zone</th>
+                                <th class="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Session</th>
+                                <th class="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start</th>
+                                <th class="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End</th>
+                                <th class="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
+                                <th class="px-3 sm:px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
+                                <th class="px-3 sm:px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Conns</th>
+                                <th class="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Zone</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             ${tableRows}
                         </tbody>
                     </table>
+                </div>
+                <div class="bg-gray-50 px-4 py-2 text-xs text-gray-600 border-t border-gray-200">
+                    ⭐ Most productive session • Scroll horizontally on mobile
                 </div>
             </div>
         `;
@@ -420,22 +457,22 @@ class StatisticsView {
         const zoneStats = StatisticsCalculations.calculateZoneStats(deployment);
         
         return `
-            <div class="space-y-4">
+            <div class="space-y-3">
                 ${zoneStats.map(zone => `
-                    <div class="border border-gray-200 rounded-lg p-4">
-                        <h4 class="font-semibold text-gray-900 mb-3">${zone.name}</h4>
-                        <div class="grid grid-cols-3 gap-4">
-                            <div>
-                                <p class="text-xs text-gray-500 uppercase font-medium">Items</p>
-                                <p class="text-2xl font-bold text-blue-600">${zone.items_count}</p>
+                    <div class="border border-gray-200 rounded-lg p-3 sm:p-4">
+                        <h4 class="font-semibold text-gray-900 text-sm sm:text-base mb-2 sm:mb-3">${zone.name}</h4>
+                        <div class="grid grid-cols-3 gap-2 sm:gap-3">
+                            <div class="text-center">
+                                <p class="text-xs text-gray-500 uppercase font-medium mb-1">Items</p>
+                                <p class="text-xl sm:text-2xl font-bold text-blue-600">${zone.items_count}</p>
                             </div>
-                            <div>
-                                <p class="text-xs text-gray-500 uppercase font-medium">Connections</p>
-                                <p class="text-2xl font-bold text-green-600">${zone.connections_count}</p>
+                            <div class="text-center">
+                                <p class="text-xs text-gray-500 uppercase font-medium mb-1">Conns</p>
+                                <p class="text-xl sm:text-2xl font-bold text-green-600">${zone.connections_count}</p>
                             </div>
-                            <div>
-                                <p class="text-xs text-gray-500 uppercase font-medium">Sessions</p>
-                                <p class="text-2xl font-bold text-purple-600">${zone.sessions_count}</p>
+                            <div class="text-center">
+                                <p class="text-xs text-gray-500 uppercase font-medium mb-1">Sessions</p>
+                                <p class="text-xl sm:text-2xl font-bold text-purple-600">${zone.sessions_count}</p>
                             </div>
                         </div>
                     </div>
@@ -448,22 +485,22 @@ class StatisticsView {
         const zoneStats = StatisticsCalculations.calculateZoneStats(deployment);
         
         return `
-            <div class="space-y-4">
+            <div class="space-y-3">
                 ${zoneStats.map(zone => `
-                    <div class="border border-gray-200 rounded-lg p-4">
-                        <h4 class="font-semibold text-gray-900 mb-3">${zone.name}</h4>
-                        <div class="grid grid-cols-3 gap-4">
-                            <div>
-                                <p class="text-xs text-gray-500 uppercase font-medium">Items</p>
-                                <p class="text-2xl font-bold text-blue-600">${zone.items_count}</p>
+                    <div class="border border-gray-200 rounded-lg p-3 sm:p-4">
+                        <h4 class="font-semibold text-gray-900 text-sm sm:text-base mb-2 sm:mb-3">${zone.name}</h4>
+                        <div class="grid grid-cols-3 gap-2 sm:gap-3">
+                            <div class="text-center">
+                                <p class="text-xs text-gray-500 uppercase font-medium mb-1">Items</p>
+                                <p class="text-xl sm:text-2xl font-bold text-blue-600">${zone.items_count}</p>
                             </div>
-                            <div>
-                                <p class="text-xs text-gray-500 uppercase font-medium">Connections</p>
-                                <p class="text-2xl font-bold text-green-600">${zone.connections_count}</p>
+                            <div class="text-center">
+                                <p class="text-xs text-gray-500 uppercase font-medium mb-1">Conns</p>
+                                <p class="text-xl sm:text-2xl font-bold text-green-600">${zone.connections_count}</p>
                             </div>
-                            <div>
-                                <p class="text-xs text-gray-500 uppercase font-medium">Sessions</p>
-                                <p class="text-2xl font-bold text-purple-600">${zone.completed_sessions}</p>
+                            <div class="text-center">
+                                <p class="text-xs text-gray-500 uppercase font-medium mb-1">Sessions</p>
+                                <p class="text-xl sm:text-2xl font-bold text-purple-600">${zone.completed_sessions}</p>
                             </div>
                         </div>
                     </div>
