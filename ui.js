@@ -35,6 +35,7 @@ function initNavigation() {
         button.addEventListener('click', () => {
             const targetView = button.getAttribute('data-view');
             
+            // Update navigation button styles
             navButtons.forEach(btn => {
                 btn.classList.remove('border-blue-500', 'text-blue-600');
                 btn.classList.add('border-transparent', 'text-gray-500');
@@ -42,6 +43,7 @@ function initNavigation() {
             button.classList.remove('border-transparent', 'text-gray-500');
             button.classList.add('border-blue-500', 'text-blue-600');
             
+            // Show/hide views
             views.forEach(view => {
                 if (view.id === `${targetView}-view`) {
                     view.classList.remove('hidden');
@@ -50,6 +52,7 @@ function initNavigation() {
                 }
             });
 
+            // Hide connection builder if switching to other views
             if (targetView !== 'connection-builder') {
                 document.getElementById('connection-builder-view').classList.add('hidden');
             }
@@ -59,10 +62,12 @@ function initNavigation() {
                 showGraphView();
             }
 
-            if (viewName === 'statistics') {
+            // Handle Statistics View
+            if (targetView === 'statistics') {
                 initStatisticsView();
-}
+            }
             
+            // Handle Historical View
             if (targetView === 'historical') {
                 initHistoricalView();
             }
