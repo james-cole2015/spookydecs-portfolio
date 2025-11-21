@@ -1,4 +1,4 @@
-// Statistics View Controller - Revised Version
+// Statistics View Controller - Updated Version
 
 class StatisticsView {
     constructor() {
@@ -8,6 +8,7 @@ class StatisticsView {
         this.autoRefreshEnabled = false;
         this.expandedZone = null;
         this.expandedItems = false;
+        this.expandedSessions = new Set(); // Track which sessions are expanded
         this.isLoading = true;
         
         this.init();
@@ -333,47 +334,89 @@ class StatisticsView {
                     <h5 class="text-sm font-semibold text-gray-700 mb-2">Sessions (${sessions.length})</h5>
                     <div class="space-y-2">
                         ${sessions.map((session, index) => {
+                            const sessionKey = `${zone.name}-${session.id}`;
+                            const isSessionExpanded = this.expandedSessions.has(sessionKey);
                             const isMostProductive = mostProductive && session.id === mostProductive.id;
                             const duration = session.duration_seconds 
                                 ? StatisticsCalculations.formatDuration(session.duration_seconds)
                                 : 'Active';
-                            const itemsCount = StatisticsCalculations.getUniqueSessionItems(session).length;
-                            const connectionsCount = (session.connections_created || []).length;
+                            const sessionItems = StatisticsCalculations.getUniqueSessionItems(session);
+                            const itemsCount = sessionItems.length;
+                            const sessionConnections = session.connections_created || [];
+                            const connectionsCount = sessionConnections.length;
                             const isActive = !session.end_time;
                             
                             return `
-                                <div class="border rounded-lg p-3 text-sm ${isActive ? 'bg-green-50 border-green-200' : isMostProductive ? 'bg-yellow-50 border-yellow-200' : 'bg-white'}">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <span class="font-medium">
-                                            ${isMostProductive ? '⭐ ' : ''}${isActive ? '<span class="inline-block w-2 h-2 bg-green-500 rounded-full mr-1"></span>' : ''}Session ${index + 1}
-                                        </span>
-                                        <span class="text-xs text-gray-500">${duration}</span>
+                                <div class="border rounded-lg overflow-hidden ${isActive ? 'bg-green-50 border-green-200' : isMostProductive ? 'bg-yellow-50 border-yellow-200' : 'bg-white'}">
+                                    <!-- Session Header (always visible, clickable) -->
+                                    <div 
+                                        class="p-3 cursor-pointer hover:bg-opacity-70 transition-colors"
+                                        onclick="statisticsView.toggleSession('${sessionKey}')"
+                                    >
+                                        <div class="flex justify-between items-start mb-2">
+                                            <span class="font-medium text-sm">
+                                                ${isMostProductive ? '⭐ ' : ''}${isActive ? '<span class="inline-block w-2 h-2 bg-green-500 rounded-full mr-1"></span>' : ''}Session ${index + 1}
+                                            </span>
+                                            <span class="text-gray-400 text-xs">${isSessionExpanded ? '▲' : '▼'}</span>
+                                        </div>
+                                        <p class="text-xs text-gray-600 mb-1">
+                                            ${StatisticsCalculations.formatDate(session.start_time)}
+                                            ${session.end_time ? '<br>' + StatisticsCalculations.formatDate(session.end_time) : ''}
+                                        </p>
+                                        <p class="text-xs text-gray-500 mb-2">${duration}</p>
+                                        <div class="grid grid-cols-2 gap-2 text-xs">
+                                            <div><span class="text-gray-500">Items:</span> <strong>${itemsCount}</strong></div>
+                                            <div><span class="text-gray-500">Connections:</span> <strong>${connectionsCount}</strong></div>
+                                        </div>
                                     </div>
-                                    <p class="text-xs text-gray-600 mb-2">
-                                        ${StatisticsCalculations.formatDate(session.start_time)}
-                                        ${session.end_time ? ' - ' + StatisticsCalculations.formatDate(session.end_time) : ''}
-                                    </p>
-                                    <div class="grid grid-cols-2 gap-2 text-xs">
-                                        <div><span class="text-gray-500">Items:</span> <strong>${itemsCount}</strong></div>
-                                        <div><span class="text-gray-500">Connections:</span> <strong>${connectionsCount}</strong></div>
-                                    </div>
+                                    
+                                    <!-- Session Expanded Content -->
+                                    ${isSessionExpanded ? `
+                                        <div class="border-t border-gray-200 p-3 bg-white bg-opacity-50 space-y-3">
+                                            <!-- Items List -->
+                                            ${itemsCount > 0 ? `
+                                                <div>
+                                                    <p class="text-xs font-semibold text-gray-700 mb-2">Items (${itemsCount})</p>
+                                                    <div class="space-y-1 max-h-32 overflow-y-auto">
+                                                        ${sessionItems.map(itemId => `
+                                                            <div class="text-xs text-gray-600 font-mono pl-2">${itemId}</div>
+                                                        `).join('')}
+                                                    </div>
+                                                </div>
+                                            ` : '<p class="text-xs text-gray-500">No items in this session</p>'}
+                                            
+                                            <!-- Connections List -->
+                                            ${connectionsCount > 0 ? `
+                                                <div>
+                                                    <p class="text-xs font-semibold text-gray-700 mb-2">Connections (${connectionsCount})</p>
+                                                    <div class="space-y-1 max-h-32 overflow-y-auto">
+                                                        ${sessionConnections.map(conn => `
+                                                            <div class="text-xs text-gray-600 font-mono pl-2">
+                                                                ${conn.from_item_id} → ${conn.to_item_id}
+                                                            </div>
+                                                        `).join('')}
+                                                    </div>
+                                                </div>
+                                            ` : '<p class="text-xs text-gray-500">No connections in this session</p>'}
+                                        </div>
+                                    ` : ''}
                                 </div>
                             `;
                         }).join('')}
                     </div>
                 </div>
                 
-                <!-- Collapsible Items List -->
+                <!-- Collapsible Items List (Zone-level) -->
                 ${items.length > 0 ? `
                     <div>
                         <button 
-                            onclick="event.stopPropagation(); this.nextElementSibling.classList.toggle('hidden')"
-                            class="text-sm font-semibold text-gray-700 hover:text-gray-900 flex items-center gap-1"
+                            onclick="event.stopPropagation(); this.nextElementSibling.classList.toggle('hidden'); this.querySelector('span:last-child').textContent = this.nextElementSibling.classList.contains('hidden') ? '▼' : '▲';"
+                            class="text-sm font-semibold text-gray-700 hover:text-gray-900 flex items-center gap-2 w-full"
                         >
-                            <span>Items (${items.length})</span>
+                            <span>All Items in Zone (${items.length})</span>
                             <span class="text-xs">▼</span>
                         </button>
-                        <div class="hidden mt-2 space-y-1 max-h-32 overflow-y-auto">
+                        <div class="hidden mt-3 space-y-1 max-h-40 overflow-y-auto bg-gray-50 rounded p-2">
                             ${items.map(itemId => `
                                 <div class="text-xs text-gray-600 font-mono pl-2">${itemId}</div>
                             `).join('')}
@@ -381,17 +424,17 @@ class StatisticsView {
                     </div>
                 ` : ''}
                 
-                <!-- Collapsible Connections List -->
+                <!-- Collapsible Connections List (Zone-level) -->
                 ${connections.length > 0 ? `
                     <div>
                         <button 
-                            onclick="event.stopPropagation(); this.nextElementSibling.classList.toggle('hidden')"
-                            class="text-sm font-semibold text-gray-700 hover:text-gray-900 flex items-center gap-1"
+                            onclick="event.stopPropagation(); this.nextElementSibling.classList.toggle('hidden'); this.querySelector('span:last-child').textContent = this.nextElementSibling.classList.contains('hidden') ? '▼' : '▲';"
+                            class="text-sm font-semibold text-gray-700 hover:text-gray-900 flex items-center gap-2 w-full"
                         >
-                            <span>Connections (${connections.length})</span>
+                            <span>All Connections in Zone (${connections.length})</span>
                             <span class="text-xs">▼</span>
                         </button>
-                        <div class="hidden mt-2 space-y-1 max-h-32 overflow-y-auto">
+                        <div class="hidden mt-3 space-y-1 max-h-40 overflow-y-auto bg-gray-50 rounded p-2">
                             ${connections.map(conn => `
                                 <div class="text-xs text-gray-600 font-mono pl-2">
                                     ${conn.from_item_id} → ${conn.to_item_id}
@@ -402,6 +445,16 @@ class StatisticsView {
                 ` : ''}
             </div>
         `;
+    }
+
+    // Session expansion toggle
+    toggleSession(sessionKey) {
+        if (this.expandedSessions.has(sessionKey)) {
+            this.expandedSessions.delete(sessionKey);
+        } else {
+            this.expandedSessions.add(sessionKey);
+        }
+        this.updateContent();
     }
 
     // Zone interaction methods
