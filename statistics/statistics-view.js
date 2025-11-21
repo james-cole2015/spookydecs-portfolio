@@ -350,8 +350,8 @@ class StatisticsView {
                                 <div class="border rounded-lg overflow-hidden ${isActive ? 'bg-green-50 border-green-200' : isMostProductive ? 'bg-yellow-50 border-yellow-200' : 'bg-white'}">
                                     <!-- Session Header (always visible, clickable) -->
                                     <div 
-                                        class="p-3 cursor-pointer hover:bg-opacity-70 transition-colors"
-                                        onclick="statisticsView.toggleSession('${sessionKey}')"
+                                        class="p-3 cursor-pointer hover:bg-opacity-70 transition-colors session-toggle"
+                                        data-session-key="${sessionKey}"
                                     >
                                         <div class="flex justify-between items-start mb-2">
                                             <span class="font-medium text-sm">
@@ -617,7 +617,20 @@ class StatisticsView {
         const contentDiv = document.getElementById('stats-content');
         if (contentDiv) {
             contentDiv.innerHTML = this.renderContent();
+            // Re-attach event listeners for session toggles after content update
+            this.attachSessionToggleListeners();
         }
+    }
+
+    attachSessionToggleListeners() {
+        // Session toggles
+        document.querySelectorAll('.session-toggle').forEach(toggle => {
+            toggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const sessionKey = toggle.dataset.sessionKey;
+                this.toggleSession(sessionKey);
+            });
+        });
     }
 
     attachEventListeners() {
@@ -638,6 +651,15 @@ class StatisticsView {
                 this.toggleAutoRefresh();
             });
         }
+
+        // Session toggles
+        document.querySelectorAll('.session-toggle').forEach(toggle => {
+            toggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const sessionKey = toggle.dataset.sessionKey;
+                this.toggleSession(sessionKey);
+            });
+        });
     }
 
     async refresh() {
