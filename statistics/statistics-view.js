@@ -1,20 +1,26 @@
-// Statistics View Controller
+// Statistics View Controller - Revised Version
 
 class StatisticsView {
     constructor() {
         this.currentTab = 'overview';
         this.inProgressDeployment = null;
-        this.selectedCompletedDeployment = null;
-        this.completedDeployments = [];
+        this.autoRefreshInterval = null;
+        this.autoRefreshEnabled = false;
+        this.expandedZone = null;
+        this.expandedItems = false;
+        this.isLoading = true;
         
         this.init();
     }
 
     async init() {
         console.log('Initializing Statistics View');
+        this.renderView(); // Show skeleton immediately
         await this.loadDeployments();
+        this.isLoading = false;
         this.renderView();
         this.attachEventListeners();
+        this.attachResizeListener();
     }
 
     async loadDeployments() {
@@ -24,17 +30,7 @@ class StatisticsView {
             // Find in-progress deployment
             this.inProgressDeployment = deployments.find(d => d.status === 'in_progress') || null;
             
-            // Get completed deployments
-            this.completedDeployments = deployments
-                .filter(d => d.status === 'complete')
-                .sort((a, b) => {
-                    const dateA = new Date(a.setup_completed_at || a.updated_at);
-                    const dateB = new Date(b.setup_completed_at || b.updated_at);
-                    return dateB - dateA; // Most recent first
-                });
-            
             console.log('In-progress:', this.inProgressDeployment?.id || 'None');
-            console.log('Completed:', this.completedDeployments.length);
         } catch (error) {
             console.error('Failed to load deployments:', error);
             UIUtils.showToast('Failed to load deployments', 'error');
@@ -49,7 +45,22 @@ class StatisticsView {
             <div class="bg-white rounded-lg shadow">
                 <!-- Header -->
                 <div class="border-b border-gray-200 px-4 sm:px-6 py-4">
-                    <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Statistics Dashboard</h2>
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Statistics Dashboard</h2>
+                        ${this.inProgressDeployment ? `
+                            <button 
+                                id="auto-refresh-toggle"
+                                class="text-sm px-3 py-1.5 rounded-lg border transition-colors ${
+                                    this.autoRefreshEnabled 
+                                        ? 'bg-green-50 border-green-300 text-green-700' 
+                                        : 'bg-gray-50 border-gray-300 text-gray-600 hover:bg-gray-100'
+                                }"
+                            >
+                                <span class="inline-block mr-1">${this.autoRefreshEnabled ? '🔄' : '⏸'}</span>
+                                Auto-refresh ${this.autoRefreshEnabled ? 'ON' : 'OFF'}
+                            </button>
+                        ` : ''}
+                    </div>
                 </div>
 
                 <!-- Tabs -->
@@ -62,62 +73,47 @@ class StatisticsView {
                             Overview
                         </button>
                         <button 
-                            class="stats-tab py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${this.currentTab === 'sessions' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
-                            data-tab="sessions"
+                            class="stats-tab py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${this.currentTab === 'activity' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
+                            data-tab="activity"
                         >
-                            Sessions
-                        </button>
-                        <button 
-                            class="stats-tab py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${this.currentTab === 'zones' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
-                            data-tab="zones"
-                        >
-                            Zones
+                            Activity
                         </button>
                     </nav>
                 </div>
 
-                <!-- Content -->
+                <!-- Content (Single Column, Full Width) -->
                 <div class="p-4 sm:p-6">
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                        <!-- Left Column: In-Progress -->
-                        <div>
-                            <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">In-Progress Deployment</h3>
-                            <div id="stats-left-column">
-                                ${this.renderLeftColumn()}
-                            </div>
-                        </div>
-
-                        <!-- Right Column: Completed -->
-                        <div>
-                            <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Completed Deployment</h3>
-                            <div id="stats-right-column">
-                                ${this.renderRightColumn()}
-                            </div>
-                        </div>
+                    <div id="stats-content">
+                        ${this.renderContent()}
                     </div>
+                </div>
+            </div>
+            
+            <!-- Zone Drawer (Desktop only) -->
+            <div id="zone-drawer" class="hidden fixed inset-0 z-50">
+                <div class="drawer-backdrop absolute inset-0 bg-black bg-opacity-50" onclick="statisticsView.closeZoneDrawer()"></div>
+                <div class="drawer-content absolute right-0 inset-y-0 bg-white shadow-2xl w-full lg:w-3/5 xl:w-1/2 transform translate-x-full transition-transform duration-300 ease-in-out overflow-y-auto">
+                    <div id="drawer-content-body"></div>
                 </div>
             </div>
         `;
     }
 
-    renderLeftColumn() {
+    renderContent() {
+        if (this.isLoading) {
+            return this.renderLoadingSkeleton();
+        }
+        
         if (!this.inProgressDeployment) {
-            return `
-                <div class="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
-                    <p class="text-gray-500">No active deployment</p>
-                    <p class="text-sm text-gray-400 mt-2">Start a new deployment to see statistics</p>
-                </div>
-            `;
+            return this.renderEmptyState();
         }
 
-        const deployment = this.inProgressDeployment;
-        
-        // Deployment header (consistent with right column)
+        // Deployment header
         const headerHTML = `
-            <div class="mb-4">
+            <div class="mb-4 sm:mb-6">
                 <div class="bg-white border border-gray-200 rounded-lg px-4 py-3">
-                    <p class="font-semibold text-gray-900">${deployment.id}</p>
-                    <p class="text-sm text-gray-600">${deployment.season} ${deployment.year}</p>
+                    <p class="font-semibold text-gray-900">${this.inProgressDeployment.id}</p>
+                    <p class="text-sm text-gray-600">${this.inProgressDeployment.season} ${this.inProgressDeployment.year}</p>
                 </div>
             </div>
         `;
@@ -125,13 +121,10 @@ class StatisticsView {
         let contentHTML = '';
         switch (this.currentTab) {
             case 'overview':
-                contentHTML = this.renderInProgressOverview(deployment);
+                contentHTML = this.renderOverview(this.inProgressDeployment);
                 break;
-            case 'sessions':
-                contentHTML = this.renderInProgressSessions(deployment);
-                break;
-            case 'zones':
-                contentHTML = this.renderInProgressZones(deployment);
+            case 'activity':
+                contentHTML = this.renderActivity(this.inProgressDeployment);
                 break;
             default:
                 contentHTML = '';
@@ -140,51 +133,48 @@ class StatisticsView {
         return headerHTML + contentHTML;
     }
 
-    renderRightColumn() {
-        // Dropdown selector
-        const dropdownHTML = `
-            <div class="mb-4">
-                <select 
-                    id="completed-deployment-select" 
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                    <option value="">Select a completed deployment...</option>
-                    ${this.completedDeployments.map(d => `
-                        <option value="${d.id}" ${this.selectedCompletedDeployment?.id === d.id ? 'selected' : ''}>
-                            ${d.id} - ${d.season} ${d.year}
-                        </option>
-                    `).join('')}
-                </select>
+    renderLoadingSkeleton() {
+        return `
+            <div class="space-y-4 animate-pulse">
+                <!-- Header skeleton -->
+                <div class="h-16 bg-gray-200 rounded-lg"></div>
+                
+                <!-- Large card skeleton -->
+                <div class="h-24 bg-gray-200 rounded-lg"></div>
+                
+                <!-- Grid skeleton -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="h-20 bg-gray-200 rounded-lg"></div>
+                    <div class="h-20 bg-gray-200 rounded-lg"></div>
+                </div>
+                
+                <!-- Another card -->
+                <div class="h-20 bg-gray-200 rounded-lg"></div>
             </div>
         `;
-
-        if (!this.selectedCompletedDeployment) {
-            return dropdownHTML + `
-                <div class="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
-                    <p class="text-gray-500">Select a deployment to view statistics</p>
-                </div>
-            `;
-        }
-
-        const deployment = this.selectedCompletedDeployment;
-        let contentHTML = '';
-
-        switch (this.currentTab) {
-            case 'overview':
-                contentHTML = this.renderCompletedOverview(deployment);
-                break;
-            case 'sessions':
-                contentHTML = this.renderCompletedSessions(deployment);
-                break;
-            case 'zones':
-                contentHTML = this.renderCompletedZones(deployment);
-                break;
-        }
-
-        return dropdownHTML + contentHTML;
     }
 
-    renderInProgressOverview(deployment) {
+    renderEmptyState() {
+        return `
+            <div class="text-center py-12 px-4">
+                <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+                <h3 class="mt-4 text-lg font-medium text-gray-900">No Active Deployment</h3>
+                <p class="mt-2 text-sm text-gray-500">There's no deployment in progress.<br>Start a new deployment to see statistics.</p>
+                <div class="mt-6">
+                    <button 
+                        onclick="document.querySelector('[data-view=deployments]').click()"
+                        class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                        Start New Deployment
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    renderOverview(deployment) {
         const sessions = StatisticsCalculations.getAllSessions(deployment);
         const sessionCounts = StatisticsCalculations.countSessions(sessions);
         const totals = StatisticsCalculations.getDeploymentTotals(deployment);
@@ -193,6 +183,13 @@ class StatisticsView {
         
         // Get active session if any
         const activeSession = sessions.find(s => !s.end_time);
+        
+        // Get items for expandable card
+        const allItems = new Set();
+        deployment.locations.forEach(location => {
+            (location.items_deployed || []).forEach(itemId => allItems.add(itemId));
+        });
+        const itemsList = Array.from(allItems);
         
         return `
             <div class="space-y-3 sm:space-y-4">
@@ -212,13 +209,33 @@ class StatisticsView {
                         <p class="text-xs text-gray-500 mt-1">${sessionCounts.completed} done, ${sessionCounts.active} active</p>
                     </div>
 
-                    <!-- Total Items -->
-                    <div class="bg-white border border-gray-200 rounded-lg p-3 sm:p-4">
-                        <p class="text-xs sm:text-sm text-gray-600 font-medium">Items</p>
+                    <!-- Total Items (Expandable) -->
+                    <div class="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 cursor-pointer hover:bg-gray-50 transition-colors" onclick="statisticsView.toggleItems()">
+                        <div class="flex justify-between items-start">
+                            <p class="text-xs sm:text-sm text-gray-600 font-medium">Items</p>
+                            <span class="text-gray-400 text-sm">${this.expandedItems ? '▲' : '▼'}</span>
+                        </div>
                         <p class="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">${totals.totalItems}</p>
                         <p class="text-xs text-gray-500 mt-1">Deployed</p>
                     </div>
                 </div>
+                
+                <!-- Expanded Items List -->
+                ${this.expandedItems ? `
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4">
+                        <p class="text-sm font-medium text-gray-700 mb-2">Items Deployed</p>
+                        <div class="space-y-1 max-h-48 overflow-y-auto">
+                            ${itemsList.slice(0, 10).map(itemId => `
+                                <div class="text-xs text-gray-600 font-mono">${itemId}</div>
+                            `).join('')}
+                            ${itemsList.length > 10 ? `
+                                <button onclick="statisticsView.showAllItems()" class="text-xs text-blue-600 hover:text-blue-700 font-medium mt-2">
+                                    View all ${itemsList.length} items →
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                ` : ''}
 
                 <!-- Connections (full width) -->
                 <div class="bg-white border border-gray-200 rounded-lg p-3 sm:p-4">
@@ -254,259 +271,300 @@ class StatisticsView {
         `;
     }
 
-    renderCompletedOverview(deployment) {
+    renderActivity(deployment) {
+        const zoneStats = StatisticsCalculations.calculateZoneStats(deployment);
         const sessions = StatisticsCalculations.getAllSessions(deployment);
-        const sessionCounts = StatisticsCalculations.countSessions(sessions);
-        const totals = StatisticsCalculations.getDeploymentTotals(deployment);
-        const elapsedSeconds = StatisticsCalculations.calculateElapsedTime(
-            deployment.setup_started_at, 
-            deployment.setup_completed_at
-        );
-        const elapsedTime = StatisticsCalculations.formatDuration(elapsedSeconds);
-        
-        const totalSessionSeconds = StatisticsCalculations.calculateTotalSessionTime(sessions);
-        const totalSessionTime = StatisticsCalculations.formatDuration(totalSessionSeconds);
-        
-        return `
-            <div class="space-y-3 sm:space-y-4">
-                <!-- Time cards in grid -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <!-- Setup Time (Elapsed) -->
-                    <div class="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
-                        <p class="text-xs sm:text-sm text-green-600 font-medium">Setup Time</p>
-                        <p class="text-2xl sm:text-3xl font-bold text-green-900 mt-1">${elapsedTime}</p>
-                        <p class="text-xs text-green-600 mt-1">Total elapsed</p>
-                    </div>
-
-                    <!-- Actual Work Time -->
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
-                        <p class="text-xs sm:text-sm text-blue-600 font-medium">Work Time</p>
-                        <p class="text-2xl sm:text-3xl font-bold text-blue-900 mt-1">${totalSessionTime}</p>
-                        <p class="text-xs text-blue-600 mt-1">Session total</p>
-                    </div>
-                </div>
-
-                <!-- Count metrics in grid -->
-                <div class="grid grid-cols-3 gap-2 sm:gap-3">
-                    <!-- Sessions -->
-                    <div class="bg-white border border-gray-200 rounded-lg p-2 sm:p-3">
-                        <p class="text-xs text-gray-600 font-medium">Sessions</p>
-                        <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">${sessionCounts.total}</p>
-                    </div>
-
-                    <!-- Total Items -->
-                    <div class="bg-white border border-gray-200 rounded-lg p-2 sm:p-3">
-                        <p class="text-xs text-gray-600 font-medium">Items</p>
-                        <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">${totals.totalItems}</p>
-                    </div>
-
-                    <!-- Total Connections -->
-                    <div class="bg-white border border-gray-200 rounded-lg p-2 sm:p-3">
-                        <p class="text-xs text-gray-600 font-medium">Connects</p>
-                        <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">${totals.totalConnections}</p>
-                    </div>
-                </div>
-
-                <!-- Completion Date -->
-                <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4">
-                    <p class="text-xs sm:text-sm text-gray-600 font-medium">Completed</p>
-                    <p class="text-sm sm:text-base font-semibold text-gray-900 mt-1">${StatisticsCalculations.formatDate(deployment.setup_completed_at)}</p>
-                </div>
-            </div>
-        `;
-    }
-
-    renderInProgressSessions(deployment) {
-        const sessions = StatisticsCalculations.getAllSessions(deployment);
-        
-        if (sessions.length === 0) {
-            return `
-                <div class="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
-                    <p class="text-gray-500">No sessions yet</p>
-                </div>
-            `;
-        }
-
-        const tableRows = sessions.map((session, index) => {
-            const isActive = !session.end_time;
-            const duration = session.duration_seconds 
-                ? StatisticsCalculations.formatDuration(session.duration_seconds)
-                : 'Active';
-            const itemsCount = StatisticsCalculations.getUniqueSessionItems(session).length;
-            const connectionsCount = (session.connections_created || []).length;
-            
-            const rowClass = isActive ? 'bg-green-50' : '';
-            const activeIndicator = isActive ? '<span class="inline-block w-2 h-2 bg-green-500 rounded-full mr-1"></span>' : '';
-            
-            return `
-                <tr class="${rowClass}">
-                    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm font-medium text-gray-900 whitespace-nowrap">
-                        ${activeIndicator}S${index + 1}
-                    </td>
-                    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap">
-                        ${StatisticsCalculations.formatDate(session.start_time)}
-                    </td>
-                    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap">
-                        ${session.end_time ? StatisticsCalculations.formatDate(session.end_time) : '—'}
-                    </td>
-                    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-900 font-medium whitespace-nowrap">${duration}</td>
-                    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-900 text-center">${itemsCount}</td>
-                    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-900 text-center">${connectionsCount}</td>
-                    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap">${session.location_name}</td>
-                </tr>
-            `;
-        }).join('');
-
-        return `
-            <div class="border border-gray-200 rounded-lg overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full min-w-max">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Session</th>
-                                <th class="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start</th>
-                                <th class="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End</th>
-                                <th class="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
-                                <th class="px-3 sm:px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
-                                <th class="px-3 sm:px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Conns</th>
-                                <th class="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Zone</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            ${tableRows}
-                        </tbody>
-                    </table>
-                </div>
-                <div class="bg-gray-50 px-4 py-2 text-xs text-gray-600 border-t border-gray-200">
-                    <span class="inline-block w-2 h-2 bg-green-500 rounded-full mr-1 align-middle"></span>
-                    Active session • Scroll horizontally on mobile
-                </div>
-            </div>
-        `;
-    }
-
-    renderCompletedSessions(deployment) {
-        const sessions = StatisticsCalculations.getAllSessions(deployment);
-        
-        if (sessions.length === 0) {
-            return `
-                <div class="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
-                    <p class="text-gray-500">No sessions recorded</p>
-                </div>
-            `;
-        }
-
         const mostProductive = StatisticsCalculations.findMostProductiveSession(sessions);
+        
+        return `
+            <div class="space-y-3">
+                ${zoneStats.map(zone => {
+                    const isExpanded = this.expandedZone === zone.name;
+                    const zoneSessions = sessions.filter(s => s.location_name === zone.name);
+                    
+                    return `
+                        <div class="zone-card border border-gray-200 rounded-lg overflow-hidden">
+                            <!-- Zone Header (always visible) -->
+                            <div 
+                                class="zone-header p-3 sm:p-4 cursor-pointer hover:bg-gray-50 transition-colors ${isExpanded ? 'bg-gray-50' : ''}"
+                                onclick="statisticsView.toggleZone('${zone.name}')"
+                                data-zone="${zone.name}"
+                            >
+                                <div class="flex justify-between items-center">
+                                    <h4 class="font-semibold text-gray-900 text-sm sm:text-base">${zone.name}</h4>
+                                    <span class="text-gray-400 transform transition-transform ${isExpanded ? 'rotate-180' : ''}">▼</span>
+                                </div>
+                                <div class="mt-2 flex gap-4 text-xs text-gray-600">
+                                    <span><strong>${zone.items_count}</strong> items</span>
+                                    <span><strong>${zone.connections_count}</strong> conns</span>
+                                    <span><strong>${zone.sessions_count}</strong> sessions</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Zone Content (expandable - desktop hidden, mobile inline) -->
+                            <div class="zone-content lg:hidden ${isExpanded ? '' : 'hidden'}" data-zone-content="${zone.name}">
+                                ${this.renderZoneDetails(zone, zoneSessions, mostProductive, deployment)}
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+    }
 
-        const tableRows = sessions.map((session, index) => {
-            const duration = StatisticsCalculations.formatDuration(session.duration_seconds || 0);
-            const itemsCount = StatisticsCalculations.getUniqueSessionItems(session).length;
-            const connectionsCount = (session.connections_created || []).length;
-            
-            const isMostProductive = mostProductive && session.id === mostProductive.id;
-            const rowClass = isMostProductive ? 'bg-yellow-50' : '';
-            const productiveIndicator = isMostProductive ? '<span class="text-yellow-600 mr-1">⭐</span>' : '';
-            
+    renderZoneDetails(zone, sessions, mostProductive, deployment) {
+        if (sessions.length === 0) {
             return `
-                <tr class="${rowClass}">
-                    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm font-medium text-gray-900 whitespace-nowrap">
-                        ${productiveIndicator}S${index + 1}
-                    </td>
-                    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap">
-                        ${StatisticsCalculations.formatDate(session.start_time)}
-                    </td>
-                    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap">
-                        ${StatisticsCalculations.formatDate(session.end_time)}
-                    </td>
-                    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-900 font-medium whitespace-nowrap">${duration}</td>
-                    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-900 text-center">${itemsCount}</td>
-                    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-900 text-center">${connectionsCount}</td>
-                    <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap">${session.location_name}</td>
-                </tr>
+                <div class="p-4 border-t border-gray-200">
+                    <p class="text-sm text-gray-500">No sessions in this zone yet</p>
+                </div>
             `;
-        }).join('');
+        }
+
+        // Get items and connections for this zone
+        const location = deployment.locations.find(l => l.name === zone.name);
+        const items = location?.items_deployed || [];
+        const connections = location?.connections || [];
 
         return `
-            <div class="border border-gray-200 rounded-lg overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full min-w-max">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Session</th>
-                                <th class="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start</th>
-                                <th class="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End</th>
-                                <th class="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
-                                <th class="px-3 sm:px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
-                                <th class="px-3 sm:px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Conns</th>
-                                <th class="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Zone</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            ${tableRows}
-                        </tbody>
-                    </table>
+            <div class="p-3 sm:p-4 border-t border-gray-200 space-y-4">
+                <!-- Sessions -->
+                <div>
+                    <h5 class="text-sm font-semibold text-gray-700 mb-2">Sessions (${sessions.length})</h5>
+                    <div class="space-y-2">
+                        ${sessions.map((session, index) => {
+                            const isMostProductive = mostProductive && session.id === mostProductive.id;
+                            const duration = session.duration_seconds 
+                                ? StatisticsCalculations.formatDuration(session.duration_seconds)
+                                : 'Active';
+                            const itemsCount = StatisticsCalculations.getUniqueSessionItems(session).length;
+                            const connectionsCount = (session.connections_created || []).length;
+                            const isActive = !session.end_time;
+                            
+                            return `
+                                <div class="border rounded-lg p-3 text-sm ${isActive ? 'bg-green-50 border-green-200' : isMostProductive ? 'bg-yellow-50 border-yellow-200' : 'bg-white'}">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <span class="font-medium">
+                                            ${isMostProductive ? '⭐ ' : ''}${isActive ? '<span class="inline-block w-2 h-2 bg-green-500 rounded-full mr-1"></span>' : ''}Session ${index + 1}
+                                        </span>
+                                        <span class="text-xs text-gray-500">${duration}</span>
+                                    </div>
+                                    <p class="text-xs text-gray-600 mb-2">
+                                        ${StatisticsCalculations.formatDate(session.start_time)}
+                                        ${session.end_time ? ' - ' + StatisticsCalculations.formatDate(session.end_time) : ''}
+                                    </p>
+                                    <div class="grid grid-cols-2 gap-2 text-xs">
+                                        <div><span class="text-gray-500">Items:</span> <strong>${itemsCount}</strong></div>
+                                        <div><span class="text-gray-500">Connections:</span> <strong>${connectionsCount}</strong></div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
                 </div>
-                <div class="bg-gray-50 px-4 py-2 text-xs text-gray-600 border-t border-gray-200">
-                    ⭐ Most productive session • Scroll horizontally on mobile
-                </div>
+                
+                <!-- Collapsible Items List -->
+                ${items.length > 0 ? `
+                    <div>
+                        <button 
+                            onclick="event.stopPropagation(); this.nextElementSibling.classList.toggle('hidden')"
+                            class="text-sm font-semibold text-gray-700 hover:text-gray-900 flex items-center gap-1"
+                        >
+                            <span>Items (${items.length})</span>
+                            <span class="text-xs">▼</span>
+                        </button>
+                        <div class="hidden mt-2 space-y-1 max-h-32 overflow-y-auto">
+                            ${items.map(itemId => `
+                                <div class="text-xs text-gray-600 font-mono pl-2">${itemId}</div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                <!-- Collapsible Connections List -->
+                ${connections.length > 0 ? `
+                    <div>
+                        <button 
+                            onclick="event.stopPropagation(); this.nextElementSibling.classList.toggle('hidden')"
+                            class="text-sm font-semibold text-gray-700 hover:text-gray-900 flex items-center gap-1"
+                        >
+                            <span>Connections (${connections.length})</span>
+                            <span class="text-xs">▼</span>
+                        </button>
+                        <div class="hidden mt-2 space-y-1 max-h-32 overflow-y-auto">
+                            ${connections.map(conn => `
+                                <div class="text-xs text-gray-600 font-mono pl-2">
+                                    ${conn.from_item_id} → ${conn.to_item_id}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
             </div>
         `;
     }
 
-    renderInProgressZones(deployment) {
-        const zoneStats = StatisticsCalculations.calculateZoneStats(deployment);
+    // Zone interaction methods
+    toggleZone(zoneName) {
+        const isDesktop = window.innerWidth >= 1024;
         
-        return `
-            <div class="space-y-3">
-                ${zoneStats.map(zone => `
-                    <div class="border border-gray-200 rounded-lg p-3 sm:p-4">
-                        <h4 class="font-semibold text-gray-900 text-sm sm:text-base mb-2 sm:mb-3">${zone.name}</h4>
-                        <div class="grid grid-cols-3 gap-2 sm:gap-3">
-                            <div class="text-center">
-                                <p class="text-xs text-gray-500 uppercase font-medium mb-1">Items</p>
-                                <p class="text-xl sm:text-2xl font-bold text-blue-600">${zone.items_count}</p>
-                            </div>
-                            <div class="text-center">
-                                <p class="text-xs text-gray-500 uppercase font-medium mb-1">Conns</p>
-                                <p class="text-xl sm:text-2xl font-bold text-green-600">${zone.connections_count}</p>
-                            </div>
-                            <div class="text-center">
-                                <p class="text-xs text-gray-500 uppercase font-medium mb-1">Sessions</p>
-                                <p class="text-xl sm:text-2xl font-bold text-purple-600">${zone.sessions_count}</p>
-                            </div>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-        `;
+        if (isDesktop) {
+            this.openZoneDrawer(zoneName);
+        } else {
+            // Mobile: toggle accordion
+            if (this.expandedZone === zoneName) {
+                this.expandedZone = null;
+            } else {
+                this.expandedZone = zoneName;
+            }
+            this.updateContent();
+        }
     }
 
-    renderCompletedZones(deployment) {
-        const zoneStats = StatisticsCalculations.calculateZoneStats(deployment);
+    openZoneDrawer(zoneName) {
+        const drawer = document.getElementById('zone-drawer');
+        const drawerContent = drawer.querySelector('.drawer-content');
+        const drawerBody = document.getElementById('drawer-content-body');
         
-        return `
-            <div class="space-y-3">
-                ${zoneStats.map(zone => `
-                    <div class="border border-gray-200 rounded-lg p-3 sm:p-4">
-                        <h4 class="font-semibold text-gray-900 text-sm sm:text-base mb-2 sm:mb-3">${zone.name}</h4>
-                        <div class="grid grid-cols-3 gap-2 sm:gap-3">
-                            <div class="text-center">
-                                <p class="text-xs text-gray-500 uppercase font-medium mb-1">Items</p>
-                                <p class="text-xl sm:text-2xl font-bold text-blue-600">${zone.items_count}</p>
-                            </div>
-                            <div class="text-center">
-                                <p class="text-xs text-gray-500 uppercase font-medium mb-1">Conns</p>
-                                <p class="text-xl sm:text-2xl font-bold text-green-600">${zone.connections_count}</p>
-                            </div>
-                            <div class="text-center">
-                                <p class="text-xs text-gray-500 uppercase font-medium mb-1">Sessions</p>
-                                <p class="text-xl sm:text-2xl font-bold text-purple-600">${zone.completed_sessions}</p>
-                            </div>
-                        </div>
-                    </div>
-                `).join('')}
+        // Find zone data
+        const zoneStats = StatisticsCalculations.calculateZoneStats(this.inProgressDeployment);
+        const zone = zoneStats.find(z => z.name === zoneName);
+        const sessions = StatisticsCalculations.getAllSessions(this.inProgressDeployment).filter(s => s.location_name === zoneName);
+        const mostProductive = StatisticsCalculations.findMostProductiveSession(sessions);
+        
+        // Render drawer content
+        drawerBody.innerHTML = `
+            <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center z-10">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">${zoneName}</h3>
+                    <p class="text-sm text-gray-600">${zone.items_count} items • ${zone.connections_count} connections • ${zone.sessions_count} sessions</p>
+                </div>
+                <button onclick="statisticsView.closeZoneDrawer()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="px-6 py-4">
+                ${this.renderZoneDetails(zone, sessions, mostProductive, this.inProgressDeployment)}
             </div>
         `;
+        
+        // Show drawer with animation
+        drawer.classList.remove('hidden');
+        setTimeout(() => {
+            drawerContent.classList.remove('translate-x-full');
+        }, 10);
+        
+        // Prevent body scroll
+        document.body.style.overflow = 'hidden';
+    }
+
+    closeZoneDrawer() {
+        const drawer = document.getElementById('zone-drawer');
+        const drawerContent = drawer.querySelector('.drawer-content');
+        
+        drawerContent.classList.add('translate-x-full');
+        
+        setTimeout(() => {
+            drawer.classList.add('hidden');
+            document.body.style.overflow = '';
+        }, 300);
+    }
+
+    // Items expansion methods
+    toggleItems() {
+        this.expandedItems = !this.expandedItems;
+        this.updateContent();
+    }
+
+    showAllItems() {
+        // Get all items
+        const allItems = new Set();
+        this.inProgressDeployment.locations.forEach(location => {
+            (location.items_deployed || []).forEach(itemId => allItems.add(itemId));
+        });
+        const itemsList = Array.from(allItems);
+        
+        // Create modal
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4';
+        modal.onclick = (e) => {
+            if (e.target === modal) modal.remove();
+        };
+        
+        modal.innerHTML = `
+            <div class="bg-white rounded-lg max-w-2xl w-full max-h-96 overflow-hidden flex flex-col">
+                <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                    <h3 class="text-lg font-semibold">All Items (${itemsList.length})</h3>
+                    <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="px-6 py-4 overflow-y-auto">
+                    <div class="space-y-1">
+                        ${itemsList.map(itemId => `
+                            <div class="text-sm text-gray-700 font-mono py-1">${itemId}</div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+    }
+
+    // Auto-refresh methods
+    toggleAutoRefresh() {
+        this.autoRefreshEnabled = !this.autoRefreshEnabled;
+        
+        if (this.autoRefreshEnabled) {
+            this.startAutoRefresh();
+            UIUtils.showToast('Auto-refresh enabled (30s interval)', 'info');
+        } else {
+            this.stopAutoRefresh();
+            UIUtils.showToast('Auto-refresh disabled', 'info');
+        }
+        
+        this.renderView();
+        this.attachEventListeners();
+    }
+
+    startAutoRefresh() {
+        this.autoRefreshInterval = setInterval(async () => {
+            console.log('Auto-refreshing statistics...');
+            await this.refresh();
+        }, 30000); // 30 seconds
+    }
+
+    stopAutoRefresh() {
+        if (this.autoRefreshInterval) {
+            clearInterval(this.autoRefreshInterval);
+            this.autoRefreshInterval = null;
+        }
+    }
+
+    // Resize listener for drawer/accordion switch
+    attachResizeListener() {
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                // Close drawer if switching from desktop to mobile
+                if (window.innerWidth < 1024) {
+                    this.closeZoneDrawer();
+                }
+            }, 150);
+        });
+    }
+
+    updateContent() {
+        const contentDiv = document.getElementById('stats-content');
+        if (contentDiv) {
+            contentDiv.innerHTML = this.renderContent();
+        }
     }
 
     attachEventListeners() {
@@ -514,63 +572,27 @@ class StatisticsView {
         document.querySelectorAll('.stats-tab').forEach(tab => {
             tab.addEventListener('click', (e) => {
                 this.currentTab = e.target.dataset.tab;
+                this.expandedZone = null; // Reset expanded zone when switching tabs
                 this.renderView();
                 this.attachEventListeners();
             });
         });
 
-        // Completed deployment selector
-        const selector = document.getElementById('completed-deployment-select');
-        if (selector) {
-            selector.addEventListener('change', async (e) => {
-                const deploymentId = e.target.value;
-                if (deploymentId) {
-                    await this.loadCompletedDeployment(deploymentId);
-                } else {
-                    this.selectedCompletedDeployment = null;
-                    this.updateRightColumn();
-                }
+        // Auto-refresh toggle
+        const autoRefreshToggle = document.getElementById('auto-refresh-toggle');
+        if (autoRefreshToggle) {
+            autoRefreshToggle.addEventListener('click', () => {
+                this.toggleAutoRefresh();
             });
         }
     }
 
-    async loadCompletedDeployment(deploymentId) {
-        try {
-            UIUtils.showToast('Loading deployment...', 'info');
-            
-            // Find in cache first
-            let deployment = this.completedDeployments.find(d => d.id === deploymentId);
-            
-            // If not detailed enough, fetch full data
-            if (!deployment || !deployment.locations || deployment.locations.length === 0) {
-                // Fetch from API (we'll need to use the first location as a proxy)
-                const response = await API.getDeployment(deploymentId, 'Front Yard');
-                // This returns location data, but we need full deployment
-                // For now, use the cached version
-                deployment = this.completedDeployments.find(d => d.id === deploymentId);
-            }
-            
-            this.selectedCompletedDeployment = deployment;
-            this.updateRightColumn();
-            UIUtils.showToast('Deployment loaded', 'success');
-        } catch (error) {
-            console.error('Failed to load deployment:', error);
-            UIUtils.showToast('Failed to load deployment', 'error');
-        }
-    }
-
-    updateRightColumn() {
-        const rightColumn = document.getElementById('stats-right-column');
-        if (rightColumn) {
-            rightColumn.innerHTML = this.renderRightColumn();
-            this.attachEventListeners();
-        }
-    }
-
     async refresh() {
+        this.isLoading = true;
+        this.updateContent();
         await this.loadDeployments();
-        this.renderView();
-        this.attachEventListeners();
+        this.isLoading = false;
+        this.updateContent();
     }
 }
 
