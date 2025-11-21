@@ -58,6 +58,10 @@ function initNavigation() {
             if (targetView === 'graph') {
                 showGraphView();
             }
+
+            if (viewName === 'statistics') {
+                initStatisticsView();
+}
             
             if (targetView === 'historical') {
                 initHistoricalView();

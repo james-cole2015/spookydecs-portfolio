@@ -1,0 +1,553 @@
+// Statistics View Controller
+
+class StatisticsView {
+    constructor() {
+        this.currentTab = 'overview';
+        this.inProgressDeployment = null;
+        this.selectedCompletedDeployment = null;
+        this.completedDeployments = [];
+        
+        this.init();
+    }
+
+    async init() {
+        console.log('Initializing Statistics View');
+        await this.loadDeployments();
+        this.renderView();
+        this.attachEventListeners();
+    }
+
+    async loadDeployments() {
+        try {
+            const deployments = await API.listDeployments();
+            
+            // Find in-progress deployment
+            this.inProgressDeployment = deployments.find(d => d.status === 'in_progress') || null;
+            
+            // Get completed deployments
+            this.completedDeployments = deployments
+                .filter(d => d.status === 'complete')
+                .sort((a, b) => {
+                    const dateA = new Date(a.setup_completed_at || a.updated_at);
+                    const dateB = new Date(b.setup_completed_at || b.updated_at);
+                    return dateB - dateA; // Most recent first
+                });
+            
+            console.log('In-progress:', this.inProgressDeployment?.id || 'None');
+            console.log('Completed:', this.completedDeployments.length);
+        } catch (error) {
+            console.error('Failed to load deployments:', error);
+            UIUtils.showToast('Failed to load deployments', 'error');
+        }
+    }
+
+    renderView() {
+        const container = document.getElementById('statistics-view');
+        if (!container) return;
+
+        container.innerHTML = `
+            <div class="bg-white rounded-lg shadow">
+                <!-- Header -->
+                <div class="border-b border-gray-200 px-6 py-4">
+                    <h2 class="text-2xl font-bold text-gray-900">Statistics Dashboard</h2>
+                </div>
+
+                <!-- Tabs -->
+                <div class="border-b border-gray-200 px-6">
+                    <nav class="flex space-x-8" aria-label="Tabs">
+                        <button 
+                            class="stats-tab py-4 px-1 border-b-2 font-medium text-sm ${this.currentTab === 'overview' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
+                            data-tab="overview"
+                        >
+                            Overview
+                        </button>
+                        <button 
+                            class="stats-tab py-4 px-1 border-b-2 font-medium text-sm ${this.currentTab === 'sessions' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
+                            data-tab="sessions"
+                        >
+                            Sessions
+                        </button>
+                        <button 
+                            class="stats-tab py-4 px-1 border-b-2 font-medium text-sm ${this.currentTab === 'zones' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
+                            data-tab="zones"
+                        >
+                            Zones
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Content -->
+                <div class="p-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Left Column: In-Progress -->
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-semibold text-gray-900">In-Progress Deployment</h3>
+                            <div id="stats-left-column">
+                                ${this.renderLeftColumn()}
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Completed -->
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-semibold text-gray-900">Completed Deployment</h3>
+                            <div id="stats-right-column">
+                                ${this.renderRightColumn()}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    renderLeftColumn() {
+        if (!this.inProgressDeployment) {
+            return `
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
+                    <p class="text-gray-500">No active deployment</p>
+                    <p class="text-sm text-gray-400 mt-2">Start a new deployment to see statistics</p>
+                </div>
+            `;
+        }
+
+        const deployment = this.inProgressDeployment;
+        
+        switch (this.currentTab) {
+            case 'overview':
+                return this.renderInProgressOverview(deployment);
+            case 'sessions':
+                return this.renderInProgressSessions(deployment);
+            case 'zones':
+                return this.renderInProgressZones(deployment);
+            default:
+                return '';
+        }
+    }
+
+    renderRightColumn() {
+        // Dropdown selector
+        const dropdownHTML = `
+            <div class="mb-4">
+                <select 
+                    id="completed-deployment-select" 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                    <option value="">Select a completed deployment...</option>
+                    ${this.completedDeployments.map(d => `
+                        <option value="${d.id}" ${this.selectedCompletedDeployment?.id === d.id ? 'selected' : ''}>
+                            ${d.id} - ${d.season} ${d.year}
+                        </option>
+                    `).join('')}
+                </select>
+            </div>
+        `;
+
+        if (!this.selectedCompletedDeployment) {
+            return dropdownHTML + `
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
+                    <p class="text-gray-500">Select a deployment to view statistics</p>
+                </div>
+            `;
+        }
+
+        const deployment = this.selectedCompletedDeployment;
+        let contentHTML = '';
+
+        switch (this.currentTab) {
+            case 'overview':
+                contentHTML = this.renderCompletedOverview(deployment);
+                break;
+            case 'sessions':
+                contentHTML = this.renderCompletedSessions(deployment);
+                break;
+            case 'zones':
+                contentHTML = this.renderCompletedZones(deployment);
+                break;
+        }
+
+        return dropdownHTML + contentHTML;
+    }
+
+    renderInProgressOverview(deployment) {
+        const sessions = StatisticsCalculations.getAllSessions(deployment);
+        const sessionCounts = StatisticsCalculations.countSessions(sessions);
+        const totals = StatisticsCalculations.getDeploymentTotals(deployment);
+        const elapsedSeconds = StatisticsCalculations.calculateElapsedTime(deployment.setup_started_at);
+        const elapsedTime = StatisticsCalculations.formatDuration(elapsedSeconds);
+        
+        // Get active session if any
+        const activeSession = sessions.find(s => !s.end_time);
+        
+        return `
+            <div class="space-y-4">
+                <!-- Time Elapsed -->
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p class="text-sm text-blue-600 font-medium">Time Elapsed</p>
+                    <p class="text-3xl font-bold text-blue-900 mt-1">${elapsedTime}</p>
+                    <p class="text-xs text-blue-600 mt-1">Since ${StatisticsCalculations.formatDateShort(deployment.setup_started_at)}</p>
+                </div>
+
+                <!-- Sessions Completed -->
+                <div class="bg-white border border-gray-200 rounded-lg p-4">
+                    <p class="text-sm text-gray-600 font-medium">Sessions</p>
+                    <p class="text-3xl font-bold text-gray-900 mt-1">${sessionCounts.total}</p>
+                    <p class="text-xs text-gray-500 mt-1">${sessionCounts.completed} completed, ${sessionCounts.active} active</p>
+                </div>
+
+                <!-- Total Items -->
+                <div class="bg-white border border-gray-200 rounded-lg p-4">
+                    <p class="text-sm text-gray-600 font-medium">Items Deployed</p>
+                    <p class="text-3xl font-bold text-gray-900 mt-1">${totals.totalItems}</p>
+                </div>
+
+                <!-- Total Connections -->
+                <div class="bg-white border border-gray-200 rounded-lg p-4">
+                    <p class="text-sm text-gray-600 font-medium">Connections Created</p>
+                    <p class="text-3xl font-bold text-gray-900 mt-1">${totals.totalConnections}</p>
+                </div>
+
+                ${activeSession ? `
+                    <!-- Active Session Card -->
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-sm text-green-600 font-medium">🟢 Active Session</p>
+                            <span class="text-xs text-green-700">${activeSession.location_name}</span>
+                        </div>
+                        <p class="text-sm text-green-800">${activeSession.id}</p>
+                        <div class="grid grid-cols-2 gap-2 mt-3 text-xs text-green-700">
+                            <div>
+                                <p class="font-medium">Items</p>
+                                <p class="text-lg font-bold">${StatisticsCalculations.getUniqueSessionItems(activeSession).length}</p>
+                            </div>
+                            <div>
+                                <p class="font-medium">Connections</p>
+                                <p class="text-lg font-bold">${(activeSession.connections_created || []).length}</p>
+                            </div>
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }
+
+    renderCompletedOverview(deployment) {
+        const sessions = StatisticsCalculations.getAllSessions(deployment);
+        const sessionCounts = StatisticsCalculations.countSessions(sessions);
+        const totals = StatisticsCalculations.getDeploymentTotals(deployment);
+        const elapsedSeconds = StatisticsCalculations.calculateElapsedTime(
+            deployment.setup_started_at, 
+            deployment.setup_completed_at
+        );
+        const elapsedTime = StatisticsCalculations.formatDuration(elapsedSeconds);
+        
+        const totalSessionSeconds = StatisticsCalculations.calculateTotalSessionTime(sessions);
+        const totalSessionTime = StatisticsCalculations.formatDuration(totalSessionSeconds);
+        
+        return `
+            <div class="space-y-4">
+                <!-- Setup Time (Elapsed) -->
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <p class="text-sm text-green-600 font-medium">Total Setup Time (Elapsed)</p>
+                    <p class="text-3xl font-bold text-green-900 mt-1">${elapsedTime}</p>
+                    <p class="text-xs text-green-600 mt-1">Start to completion</p>
+                </div>
+
+                <!-- Actual Work Time -->
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p class="text-sm text-blue-600 font-medium">Actual Work Time</p>
+                    <p class="text-3xl font-bold text-blue-900 mt-1">${totalSessionTime}</p>
+                    <p class="text-xs text-blue-600 mt-1">Total session time</p>
+                </div>
+
+                <!-- Sessions -->
+                <div class="bg-white border border-gray-200 rounded-lg p-4">
+                    <p class="text-sm text-gray-600 font-medium">Sessions</p>
+                    <p class="text-3xl font-bold text-gray-900 mt-1">${sessionCounts.total}</p>
+                </div>
+
+                <!-- Total Items -->
+                <div class="bg-white border border-gray-200 rounded-lg p-4">
+                    <p class="text-sm text-gray-600 font-medium">Items Deployed</p>
+                    <p class="text-3xl font-bold text-gray-900 mt-1">${totals.totalItems}</p>
+                </div>
+
+                <!-- Total Connections -->
+                <div class="bg-white border border-gray-200 rounded-lg p-4">
+                    <p class="text-sm text-gray-600 font-medium">Connections Created</p>
+                    <p class="text-3xl font-bold text-gray-900 mt-1">${totals.totalConnections}</p>
+                </div>
+
+                <!-- Completion Date -->
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <p class="text-sm text-gray-600 font-medium">Completed</p>
+                    <p class="text-sm font-semibold text-gray-900 mt-1">${StatisticsCalculations.formatDate(deployment.setup_completed_at)}</p>
+                </div>
+            </div>
+        `;
+    }
+
+    renderInProgressSessions(deployment) {
+        const sessions = StatisticsCalculations.getAllSessions(deployment);
+        
+        if (sessions.length === 0) {
+            return `
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
+                    <p class="text-gray-500">No sessions yet</p>
+                </div>
+            `;
+        }
+
+        const tableRows = sessions.map((session, index) => {
+            const isActive = !session.end_time;
+            const duration = session.duration_seconds 
+                ? StatisticsCalculations.formatDuration(session.duration_seconds)
+                : 'In Progress';
+            const itemsCount = StatisticsCalculations.getUniqueSessionItems(session).length;
+            const connectionsCount = (session.connections_created || []).length;
+            
+            const rowClass = isActive ? 'bg-green-50' : '';
+            const activeIndicator = isActive ? '🟢 ' : '';
+            
+            return `
+                <tr class="${rowClass}">
+                    <td class="px-4 py-3 text-sm font-medium text-gray-900">
+                        ${activeIndicator}${StatisticsCalculations.formatSessionNumber(index)}
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-600">
+                        ${StatisticsCalculations.formatDate(session.start_time)}
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-600">
+                        ${session.end_time ? StatisticsCalculations.formatDate(session.end_time) : '—'}
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-900 font-medium">${duration}</td>
+                    <td class="px-4 py-3 text-sm text-gray-900 text-center">${itemsCount}</td>
+                    <td class="px-4 py-3 text-sm text-gray-900 text-center">${connectionsCount}</td>
+                    <td class="px-4 py-3 text-sm text-gray-600">${session.location_name}</td>
+                </tr>
+            `;
+        }).join('');
+
+        return `
+            <div class="border border-gray-200 rounded-lg overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Session</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Start Time</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">End Time</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Duration</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Items</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Connections</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Zone</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            ${tableRows}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    }
+
+    renderCompletedSessions(deployment) {
+        const sessions = StatisticsCalculations.getAllSessions(deployment);
+        
+        if (sessions.length === 0) {
+            return `
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
+                    <p class="text-gray-500">No sessions recorded</p>
+                </div>
+            `;
+        }
+
+        const mostProductive = StatisticsCalculations.findMostProductiveSession(sessions);
+
+        const tableRows = sessions.map((session, index) => {
+            const duration = StatisticsCalculations.formatDuration(session.duration_seconds || 0);
+            const itemsCount = StatisticsCalculations.getUniqueSessionItems(session).length;
+            const connectionsCount = (session.connections_created || []).length;
+            
+            const isMostProductive = mostProductive && session.id === mostProductive.id;
+            const rowClass = isMostProductive ? 'bg-yellow-50' : '';
+            const productiveIndicator = isMostProductive ? '⭐ ' : '';
+            
+            return `
+                <tr class="${rowClass}">
+                    <td class="px-4 py-3 text-sm font-medium text-gray-900">
+                        ${productiveIndicator}${StatisticsCalculations.formatSessionNumber(index)}
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-600">
+                        ${StatisticsCalculations.formatDate(session.start_time)}
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-600">
+                        ${StatisticsCalculations.formatDate(session.end_time)}
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-900 font-medium">${duration}</td>
+                    <td class="px-4 py-3 text-sm text-gray-900 text-center">${itemsCount}</td>
+                    <td class="px-4 py-3 text-sm text-gray-900 text-center">${connectionsCount}</td>
+                    <td class="px-4 py-3 text-sm text-gray-600">${session.location_name}</td>
+                </tr>
+            `;
+        }).join('');
+
+        return `
+            <div class="border border-gray-200 rounded-lg overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Session</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Start Time</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">End Time</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Duration</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Items</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Connections</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Zone</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            ${tableRows}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    }
+
+    renderInProgressZones(deployment) {
+        const zoneStats = StatisticsCalculations.calculateZoneStats(deployment);
+        
+        return `
+            <div class="space-y-4">
+                ${zoneStats.map(zone => `
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-900 mb-3">${zone.name}</h4>
+                        <div class="grid grid-cols-3 gap-4">
+                            <div>
+                                <p class="text-xs text-gray-500 uppercase font-medium">Items</p>
+                                <p class="text-2xl font-bold text-blue-600">${zone.items_count}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 uppercase font-medium">Connections</p>
+                                <p class="text-2xl font-bold text-green-600">${zone.connections_count}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 uppercase font-medium">Sessions</p>
+                                <p class="text-2xl font-bold text-purple-600">${zone.sessions_count}</p>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    renderCompletedZones(deployment) {
+        const zoneStats = StatisticsCalculations.calculateZoneStats(deployment);
+        
+        return `
+            <div class="space-y-4">
+                ${zoneStats.map(zone => `
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-900 mb-3">${zone.name}</h4>
+                        <div class="grid grid-cols-3 gap-4">
+                            <div>
+                                <p class="text-xs text-gray-500 uppercase font-medium">Items</p>
+                                <p class="text-2xl font-bold text-blue-600">${zone.items_count}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 uppercase font-medium">Connections</p>
+                                <p class="text-2xl font-bold text-green-600">${zone.connections_count}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 uppercase font-medium">Sessions</p>
+                                <p class="text-2xl font-bold text-purple-600">${zone.completed_sessions}</p>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    attachEventListeners() {
+        // Tab switching
+        document.querySelectorAll('.stats-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                this.currentTab = e.target.dataset.tab;
+                this.renderView();
+                this.attachEventListeners();
+            });
+        });
+
+        // Completed deployment selector
+        const selector = document.getElementById('completed-deployment-select');
+        if (selector) {
+            selector.addEventListener('change', async (e) => {
+                const deploymentId = e.target.value;
+                if (deploymentId) {
+                    await this.loadCompletedDeployment(deploymentId);
+                } else {
+                    this.selectedCompletedDeployment = null;
+                    this.updateRightColumn();
+                }
+            });
+        }
+    }
+
+    async loadCompletedDeployment(deploymentId) {
+        try {
+            UIUtils.showToast('Loading deployment...', 'info');
+            
+            // Find in cache first
+            let deployment = this.completedDeployments.find(d => d.id === deploymentId);
+            
+            // If not detailed enough, fetch full data
+            if (!deployment || !deployment.locations || deployment.locations.length === 0) {
+                // Fetch from API (we'll need to use the first location as a proxy)
+                const response = await API.getDeployment(deploymentId, 'Front Yard');
+                // This returns location data, but we need full deployment
+                // For now, use the cached version
+                deployment = this.completedDeployments.find(d => d.id === deploymentId);
+            }
+            
+            this.selectedCompletedDeployment = deployment;
+            this.updateRightColumn();
+            UIUtils.showToast('Deployment loaded', 'success');
+        } catch (error) {
+            console.error('Failed to load deployment:', error);
+            UIUtils.showToast('Failed to load deployment', 'error');
+        }
+    }
+
+    updateRightColumn() {
+        const rightColumn = document.getElementById('stats-right-column');
+        if (rightColumn) {
+            rightColumn.innerHTML = this.renderRightColumn();
+            this.attachEventListeners();
+        }
+    }
+
+    async refresh() {
+        await this.loadDeployments();
+        this.renderView();
+        this.attachEventListeners();
+    }
+}
+
+// Initialize when statistics view is shown
+let statisticsView = null;
+
+function initStatisticsView() {
+    if (!statisticsView) {
+        statisticsView = new StatisticsView();
+    } else {
+        statisticsView.refresh();
+    }
+}
+
+// Export for use in app.js
+window.initStatisticsView = initStatisticsView;
+window.StatisticsView = StatisticsView;
