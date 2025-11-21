@@ -372,6 +372,41 @@ async function loadDeploymentIntoBuilder(deploymentId, locationName) {
     }
 }
 
+async function reloadDeploymentData() {
+    /**
+     * Reload deployment data to refresh session counts and connections
+     * Called after adding/deleting connections to sync frontend with backend
+     */
+    if (!AppState.currentDeploymentId || !AppState.currentLocationName) {
+        console.warn('Cannot reload: no active deployment');
+        return;
+    }
+    
+    try {
+        const locationData = await API.getDeployment(
+            AppState.currentDeploymentId, 
+            AppState.currentLocationName
+        );
+        
+        // Update connections
+        AppState.connections = locationData.location?.connections || [];
+        
+        // Update active session (to get updated counts)
+        const sessions = locationData.location?.work_sessions || [];
+        AppState.activeSession = sessions.find(s => !s.end_time) || null;
+        
+        // Re-render everything to show updated data
+        renderConnections();
+        renderSessionWidget();
+        renderItemsList();
+        
+        console.log('Deployment data reloaded successfully');
+    } catch (error) {
+        console.error('Failed to reload deployment data:', error);
+        // Don't show toast - this is a background refresh
+    }
+}
+
 function renderItemsList() {
     const listContainer = document.getElementById('items-deployed-list');
     if (!listContainer) return;
@@ -629,7 +664,8 @@ window.DeploymentManager = {
     startSetup,
     reviewAndFinish,
     completeSetup,
-    backToDeployments
+    backToDeployments,
+    reloadDeploymentData
 };
 
 // Make functions available globally for onclick handlers
@@ -643,3 +679,4 @@ window.startSession = startSession;
 window.endSession = endSession;
 window.closeEndSessionModal = closeEndSessionModal;
 window.confirmEndSession = confirmEndSession;
+window.reloadDeploymentData = reloadDeploymentData;

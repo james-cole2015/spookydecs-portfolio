@@ -10,7 +10,6 @@ async function addConnection() {
     }
 
     const illuminates = AppState.destinationItem.illuminates || [];
-
     const connectionData = {
         from_item_id: AppState.sourceItem.id,
         from_port: sourcePort,
@@ -26,25 +25,24 @@ async function addConnection() {
         connectionData.illuminates = illuminates;
     }
 
-    console.log('Sending connection data:', connectionData);
-
     try {
-        const result = await API.addConnection(AppState.currentDeploymentId, AppState.currentLocationName, connectionData);
+        const result = await API.addConnection(
+            AppState.currentDeploymentId, 
+            AppState.currentLocationName, 
+            connectionData
+        );
         
-        // Add to local state with the returned connection
-        AppState.connections.push(result.connection);
+        // Reload deployment data to get updated session counts
+        await reloadDeploymentData();  // ADD THIS LINE
         
         clearConnectionForm();
-        renderConnections();
         UIUtils.showToast('Connection added successfully');
         
-        await DeploymentManager.loadDeploymentIntoBuilder(AppState.currentDeploymentId, AppState.currentLocationName);
     } catch (error) {
         console.error('Full connection error:', error);
         UIUtils.showToast(`Failed to add connection: ${error.message}`, 'error');
     }
 }
-
 function clearConnectionForm() {
     AppState.sourceItem = null;
     AppState.destinationItem = null;
@@ -61,11 +59,15 @@ async function deleteConnection(connectionId) {
     }
 
     try {
-        await API.deleteConnection(AppState.currentDeploymentId, AppState.currentLocationName, connectionId);
+        await API.deleteConnection(
+            AppState.currentDeploymentId, 
+            AppState.currentLocationName, 
+            connectionId
+        );
         
-        AppState.connections = AppState.connections.filter(c => c.connection_id !== connectionId);
+        // Reload deployment data to get updated session counts
+        await reloadDeploymentData();  // ADD THIS LINE
         
-        renderConnections();
         UIUtils.showToast('Connection deleted successfully');
     } catch (error) {
         UIUtils.showToast(`Failed to delete connection: ${error.message}`, 'error');
