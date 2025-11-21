@@ -206,7 +206,7 @@ class StatisticsView {
                     <div class="bg-white border border-gray-200 rounded-lg p-3 sm:p-4">
                         <p class="text-xs sm:text-sm text-gray-600 font-medium">Sessions</p>
                         <p class="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">${sessionCounts.total}</p>
-                        <p class="text-xs text-gray-500 mt-1">${sessionCounts.completed} done, ${sessionCounts.active} active</p>
+                        <p class="text-xs text-gray-500 mt-1">${sessionCounts.completed} completed, ${sessionCounts.active} active</p>
                     </div>
 
                     <!-- Total Items (Expandable) -->
