@@ -118,6 +118,10 @@ function renderConnections() {
             </div>
         `;
     }).join('');
+
+        if (typeof renderItemsList === 'function') {
+        renderItemsList();
+    }
 }
 
 // Export functions

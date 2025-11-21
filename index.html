@@ -97,17 +97,7 @@
         </div>
 
         <!-- Connection Builder View (Hidden by default) -->
-        <div id="connection-builder-view" class="view hidden">
-            <div class="bg-white rounded-lg shadow p-6 mb-6">
-                <div class="flex justify-between items-center mb-6">
-                    <div>
-                        <h2 class="text-2xl font-bold">Connection Builder</h2>
-                        <p class="text-gray-600" id="current-deployment-info">Loading...</p>
-                    </div>
-                    <button id="back-to-deployments-btn" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">
-                        Back to Deployments
-                    </button>
-                    <div id="connection-builder-view" class="view hidden">
+<div id="connection-builder-view" class="view hidden">
     <div class="bg-white rounded-lg shadow p-6 mb-6">
         <div class="flex justify-between items-center mb-6">
             <div>
@@ -127,7 +117,58 @@
                 <div class="bg-white rounded-lg shadow p-6 mb-6">
                     <h2 class="text-xl font-semibold mb-4">Add Connection</h2>
                     
-                    <!-- ... your existing connection form ... -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                        <!-- Source Item -->
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-700 mb-3">Source Item</h3>
+                            <div 
+                                id="source-item-selector"
+                                class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors"
+                            >
+                                <p id="source-item-display" class="text-gray-600">Click to select</p>
+                            </div>
+                            
+                            <div class="mt-3">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Source Port</label>
+                                <select id="source-port" disabled class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="">Select source item first</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Destination Item -->
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-700 mb-3">Destination Item</h3>
+                            <div 
+                                id="destination-item-selector"
+                                class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors"
+                            >
+                                <p id="destination-item-display" class="text-gray-600">Click to select</p>
+                            </div>
+                            
+                            <div class="mt-3 text-sm text-gray-500">
+                                <p>Destination port: <span class="font-medium">Male_1 (auto-assigned)</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Notes -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Notes (optional)</label>
+                        <textarea 
+                            id="notes" 
+                            rows="2"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Add any notes about this connection..."
+                        ></textarea>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="flex justify-end space-x-2">
+                        <button id="add-connection-btn" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            Add Connection
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Connections List -->
@@ -140,110 +181,33 @@
                 </div>
             </div>
 
-            <!-- RIGHT SIDE: Session Widget (spans 1 column) -->
+            <!-- RIGHT SIDE: Session Widget & Items (spans 1 column) -->
             <div class="lg:col-span-1">
-                <div id="session-widget" class="sticky top-4">
+                <!-- Session Widget -->
+                <div id="session-widget" class="sticky top-4 mb-6">
                     <!-- Session widget content will be rendered here by JavaScript -->
                     <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
                         <p class="text-gray-500 text-sm">Loading session info...</p>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
 
-                </div>
-
-                <!-- Connection Form -->
-<div class="bg-white rounded-lg shadow p-6 mb-6">
-    <h2 class="text-xl font-semibold mb-4">Add Connection</h2>
-    
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-        <!-- Source Item -->
-        <div>
-            <h3 class="text-sm font-medium text-gray-700 mb-3">Source Item</h3>
-            <div 
-                id="source-item-selector"
-                class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors"
-            >
-                <p id="source-item-display" class="text-gray-600">Click to select</p>
-            </div>
-            
-            <div class="mt-3">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Source Port</label>
-                <select id="source-port" disabled class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    <option value="">Select source item first</option>
-                </select>
-            </div>
-        </div>
-        
-        <!-- Destination Item -->
-        <div>
-            <h3 class="text-sm font-medium text-gray-700 mb-3">Destination Item</h3>
-            <div 
-                id="destination-item-selector"
-                class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors"
-            >
-                <p id="destination-item-display" class="text-gray-600">Click to select</p>
-            </div>
-            
-            <div class="mt-3 text-sm text-gray-500">
-                <p>Destination port: <span class="font-medium">Male_1 (auto-assigned)</span></p>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Notes -->
-    <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 mb-2">Notes (optional)</label>
-        <textarea 
-            id="notes" 
-            rows="2"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Add any notes about this connection..."
-        ></textarea>
-    </div>
-    
-    <!-- Actions -->
-    <div class="flex justify-end space-x-2">
-        <button id="add-connection-btn" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-            Add Connection
-        </button>
-    </div>
-</div>
-
-<!-- Connections List -->
-<div class="bg-white rounded-lg shadow p-6">
-    <h2 class="text-xl font-semibold mb-4">Connections</h2>
-    
-    <div id="connections-list" class="space-y-3">
-        <p class="text-gray-500 text-sm">No connections yet. Add one above to get started.</p>
-    </div>
-</div>
-
-
-
-                <!-- Existing Connections -->
-                <div class="border-t pt-6 mt-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-semibold">Existing Connections</h3>
-                        <button id="validate-btn" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-sm">
-                            Validate Connections
-                        </button>
-                    </div>
-                    <div id="connections-list" class="space-y-3">
-                        <p class="text-gray-500 text-sm">No connections yet. Add one above to get started.</p>
+                <!-- Items Deployed List -->
+                <div id="items-deployed-widget" class="bg-white border border-gray-200 rounded-lg p-4">
+                    <h3 class="text-sm font-semibold text-gray-700 mb-2">Items in Zone</h3>
+                    <div id="items-deployed-list" class="text-xs text-gray-600">
+                        <p class="text-gray-400 italic">No items deployed yet</p>
                     </div>
                 </div>
             </div>
-
-            <!-- Validation Results -->
-            <div id="validation-results" class="hidden bg-white rounded-lg shadow p-6">
-                <h3 class="text-lg font-semibold mb-4">Validation Results</h3>
-                <div id="validation-content"></div>
-            </div>
         </div>
+    </div>
+
+    <!-- Validation Results (if needed) -->
+    <div id="validation-results" class="hidden bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold mb-4">Validation Results</h3>
+        <div id="validation-content"></div>
+    </div>
+</div>
 
         <!-- Graph View -->
         <div id="graph-view" class="view hidden">

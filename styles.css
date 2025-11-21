@@ -655,6 +655,7 @@
     }
   }
 
+/* Session Widget Styles */
 #session-widget {
     position: sticky;
     top: 1rem;
@@ -663,4 +664,25 @@
 #session-timer {
     font-family: monospace;
     font-weight: 600;
+}
+
+/* Items List Styles */
+#items-deployed-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+#items-deployed-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#items-deployed-list li {
+    padding: 0.375rem 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+#items-deployed-list li:last-child {
+    border-bottom: none;
 }

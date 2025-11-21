@@ -361,6 +361,7 @@ async function loadDeploymentIntoBuilder(deploymentId, locationName) {
         clearConnectionForm();
         renderConnections();
         renderSessionWidget();
+        renderItemsList();
         
         document.getElementById('deployments-view').classList.add('hidden');
         document.getElementById('connection-builder-view').classList.remove('hidden');
@@ -369,6 +370,52 @@ async function loadDeploymentIntoBuilder(deploymentId, locationName) {
     } catch (error) {
         UIUtils.showToast(`Failed to load deployment: ${error.message}`, 'error');
     }
+}
+
+function renderItemsList() {
+    const listContainer = document.getElementById('items-deployed-list');
+    if (!listContainer) return;
+    
+    // Get items from current location's connections
+    const itemsSet = new Set();
+    
+    AppState.connections.forEach(conn => {
+        itemsSet.add(conn.from_item_id);
+        itemsSet.add(conn.to_item_id);
+        // Add illuminated items
+        if (conn.illuminates) {
+            conn.illuminates.forEach(id => itemsSet.add(id));
+        }
+    });
+    
+    const itemsArray = Array.from(itemsSet);
+    
+    if (itemsArray.length === 0) {
+        listContainer.innerHTML = '<p class="text-gray-400 italic text-xs">No items deployed yet</p>';
+        return;
+    }
+    
+    // Build list with item names
+    const itemsList = itemsArray.map(itemId => {
+        const item = AppState.allItems.find(i => i.id === itemId);
+        const displayName = item ? item.short_name : itemId;
+        const className = item ? item.class_type : 'Unknown';
+        return `
+            <li class="text-xs">
+                <div class="font-medium text-gray-800">${displayName}</div>
+                <div class="text-gray-500">${className}</div>
+            </li>
+        `;
+    }).join('');
+    
+    listContainer.innerHTML = `
+        <div class="mb-2 text-xs font-medium text-gray-600">
+            ${itemsArray.length} item${itemsArray.length !== 1 ? 's' : ''}
+        </div>
+        <ul class="space-y-2">
+            ${itemsList}
+        </ul>
+    `;
 }
 
 function renderSessionWidget() {
