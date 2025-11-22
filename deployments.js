@@ -362,6 +362,14 @@ async function loadDeploymentIntoBuilder(deploymentId, locationName) {
         const sessions = locationData.location?.work_sessions || [];
         AppState.activeSession = sessions.find(s => !s.end_time) || null;
         
+        // ADD THESE 6 LINES HERE:
+        const deployment = {
+            id: deploymentId,
+            locations: [locationData.location]
+        };
+        ConnectionWorkflow.init(deployment, locationName, allItems);
+        StaticPropManager.init(deployment, locationName, allItems);
+        
         document.getElementById('current-deployment-info').textContent = 
             `${deploymentId} • ${locationName}`;
         
@@ -378,7 +386,6 @@ async function loadDeploymentIntoBuilder(deploymentId, locationName) {
         UIUtils.showToast(`Failed to load deployment: ${error.message}`, 'error');
     }
 }
-
 async function reloadDeploymentData() {
     /**
      * Reload deployment data to refresh session counts and connections
