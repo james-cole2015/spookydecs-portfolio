@@ -342,7 +342,10 @@ class StatisticsView {
                                 : 'Active';
                             const sessionItems = StatisticsCalculations.getUniqueSessionItems(session);
                             const itemsCount = sessionItems.length;
-                            const sessionConnections = session.connections_created || [];
+                            const sessionConnectionIds = session.connections_created || [];
+                            const sessionConnections = sessionConnectionIds.map(connId => 
+                                connections.find(c => c.id === connId)
+                            ).filter(c => c); // Remove any undefined (in case connection was deleted)
                             const connectionsCount = sessionConnections.length;
                             const isActive = !session.end_time;
                             
