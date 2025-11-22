@@ -171,10 +171,12 @@
                     <!-- Actions -->
                     <div class="flex justify-end space-x-2">
                         <button id="add-connection-btn" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                            Add Connection
+                            🔌 Add Connection
+                        </button>
+                        <button id="add-static-prop-btn" class="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                            🎭 Add Static Prop
                         </button>
                     </div>
-                </div>
 
                 <!-- Connections List -->
                 <div class="bg-white rounded-lg shadow p-6">
@@ -241,14 +243,13 @@
     <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg transform translate-y-20 transition-transform duration-300 z-50"></div>
 
-<script src="config.js"></script>
-<script src="api.js"></script>
-<script src="state.js"></script>
-<script src="ports.js"></script>
-<script src="ui.js"></script>
-<script src="items.js"></script>
-<script src="connections.js"></script>
 <script src="deployments.js"></script>
+<script src="port-tracker.js"></script>
+<script src="connection-workflow.js"></script>
+<script src="item-selector-enhanced.js"></script>
+<script src="port-selector.js"></script>
+<script src="illumination-selector.js"></script>
+<script src="static-prop-manager.js"></script>
 <script src="app.js"></script>
 <script src="historical_deploy_view.js"></script>
 <script src="statistics/statistics-calculations.js"></script>
@@ -319,5 +320,104 @@
 <script type="text/babel" src="graph-view/GraphControls.js"></script>
 <script type="text/babel" src="graph-view/DeploymentSelector.js"></script>
 <script type="text/babel" src="graph-view/GraphView.js"></script>
+
+<!-- Enhanced Item Selector Modal -->
+<div id="item-selector-modal" class="modal hidden">
+    <div class="modal-overlay" onclick="ItemSelectorEnhanced.close()"></div>
+    <div class="modal-content max-w-2xl">
+        <div class="modal-header">
+            <h2 id="item-selector-title" class="text-xl font-bold">Select Item</h2>
+            <button onclick="ItemSelectorEnhanced.close()" class="close-btn">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+            <div id="item-selector-list" class="max-h-96 overflow-y-auto">
+                <!-- Sections will be rendered here by JavaScript -->
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button onclick="ItemSelectorEnhanced.close()" class="btn btn-secondary">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Port Selector Modal -->
+<div id="port-selector-modal" class="modal hidden">
+    <div class="modal-overlay" onclick="PortSelector.close()"></div>
+    <div class="modal-content max-w-lg">
+        <div class="modal-header">
+            <h2 id="port-selector-title" class="text-xl font-bold">Select Port</h2>
+            <button onclick="PortSelector.close()" class="close-btn">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+            <div id="port-selector-list" class="space-y-2">
+                <!-- Ports will be rendered here by JavaScript -->
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button onclick="PortSelector.close()" class="btn btn-secondary">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Illumination Selector Modal -->
+<div id="illumination-selector-modal" class="modal hidden">
+    <div class="modal-overlay" onclick="IlluminationSelector.cancel()"></div>
+    <div class="modal-content max-w-xl">
+        <div class="modal-header">
+            <h2 class="text-xl font-bold">💡 Select Items to Illuminate</h2>
+            <button onclick="IlluminationSelector.cancel()" class="close-btn">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+            <p class="text-sm text-gray-600 mb-4">
+                Spotlights can illuminate up to 2 items. Select which items this spotlight will light up.
+            </p>
+            
+            <div id="illumination-selector-list" class="max-h-80 overflow-y-auto space-y-2">
+                <!-- Items will be rendered here by JavaScript -->
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button onclick="IlluminationSelector.cancel()" class="btn btn-secondary">Cancel</button>
+            <button 
+                id="illumination-confirm-btn" 
+                onclick="IlluminationSelector.confirm()" 
+                class="btn btn-primary"
+            >
+                Confirm (0/2)
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Static Prop Selector Modal -->
+<div id="static-prop-selector-modal" class="modal hidden">
+    <div class="modal-overlay" onclick="StaticPropManager.closeSelector()"></div>
+    <div class="modal-content max-w-2xl">
+        <div class="modal-header">
+            <h2 class="text-xl font-bold">🎭 Add Static Prop to Zone</h2>
+            <button onclick="StaticPropManager.closeSelector()" class="close-btn">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+            <p class="text-sm text-gray-600 mb-4">
+                Static props are decorative items that don't require power but can be illuminated by spotlights.
+            </p>
+            
+            <div id="static-prop-selector-list" class="max-h-96 overflow-y-auto">
+                <!-- Static props will be rendered here by JavaScript -->
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button onclick="StaticPropManager.closeSelector()" class="btn btn-secondary">Close</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>

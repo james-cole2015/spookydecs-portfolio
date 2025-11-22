@@ -6,13 +6,33 @@ function initEventListeners() {
     document.getElementById('refresh-deployments-btn').addEventListener('click', DeploymentManager.loadInProgressDeployments);
     
     document.getElementById('back-to-deployments-btn').addEventListener('click', DeploymentManager.backToDeployments);
-    document.getElementById('add-connection-btn').addEventListener('click', ConnectionBuilder.addConnection);
     
-    document.getElementById('source-item-selector').addEventListener('click', () => ItemSelector.openItemSelector('source'));
-    document.getElementById('destination-item-selector').addEventListener('click', () => ItemSelector.openItemSelector('destination'));
-    document.getElementById('close-modal-btn').addEventListener('click', ItemSelector.closeItemSelector);
-    document.getElementById('modal-class-type').addEventListener('change', ItemSelector.filterItemsByClassType);
-    document.getElementById('item-search').addEventListener('input', ItemSelector.searchItems);
+    // UPDATED: Use new ConnectionWorkflow instead of old ConnectionBuilder
+    document.getElementById('add-connection-btn').addEventListener('click', () => {
+        ConnectionWorkflow.startNewConnection();
+    });
+    
+    // NEW: Add Static Prop button
+    document.getElementById('add-static-prop-btn').addEventListener('click', () => {
+        StaticPropManager.openSelector();
+    });
+    
+    // OLD MODAL HANDLERS - Keep for backward compatibility during transition
+    // These will be replaced by the new modal system
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', ItemSelector.closeItemSelector);
+    }
+    
+    const modalClassType = document.getElementById('modal-class-type');
+    if (modalClassType) {
+        modalClassType.addEventListener('click', ItemSelector.filterItemsByClassType);
+    }
+    
+    const itemSearch = document.getElementById('item-search');
+    if (itemSearch) {
+        itemSearch.addEventListener('input', ItemSelector.searchItems);
+    }
 }
 
 // Initialize app
