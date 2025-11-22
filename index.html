@@ -243,17 +243,30 @@
     <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg transform translate-y-20 transition-transform duration-300 z-50"></div>
 
+<!-- Configuration -->
+<script src="config.js"></script>
+
+<!-- Core utilities (must load first) -->
+<script src="state.js"></script>
+<script src="ui.js"></script>
+<script src="ports.js"></script>
+
+<!-- API and other modules -->
+<script src="api.js"></script>
+<script src="items.js"></script>
+<script src="connections.js"></script>
 <script src="deployments.js"></script>
+
+<!-- NEW: Enhanced workflow components (before app.js) -->
 <script src="port-tracker.js"></script>
 <script src="connection-workflow.js"></script>
 <script src="item-selector-enhanced.js"></script>
 <script src="port-selector.js"></script>
 <script src="illumination-selector.js"></script>
 <script src="static-prop-manager.js"></script>
+
+<!-- Main app (MUST BE LAST) -->
 <script src="app.js"></script>
-<script src="historical_deploy_view.js"></script>
-<script src="statistics/statistics-calculations.js"></script>
-<script src="statistics/statistics-view.js"></script>
 <!-- Item Selector Modal -->
 <div id="item-selector-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto">
     <div class="min-h-screen px-4 flex items-center justify-center">
