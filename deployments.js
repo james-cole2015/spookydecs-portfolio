@@ -3,18 +3,25 @@
 async function createDeployment() {
     const year = document.getElementById('create-year').value;
     const season = document.getElementById('create-season').value;
+    const zone = document.getElementById('create-zone').value;
 
     if (!season) {
         UIUtils.showToast('Please select a season', 'error');
         return;
     }
 
+    if (!zone) {
+        UIUtils.showToast('Please select a zone', 'error');
+        return;
+    }
+
     try {
-        const result = await API.createDeploymentAdmin(parseInt(year), season, 'Front Yard');
+        const result = await API.createDeploymentAdmin(parseInt(year), season, zone);
         
         UIUtils.showToast('Deployment created successfully! Select a zone to continue.');
         
         document.getElementById('create-season').value = '';
+        document.getElementById('create-zone').value = '';
         
         await loadInProgressDeployments();
         
