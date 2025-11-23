@@ -386,6 +386,20 @@ async function loadDeploymentIntoBuilder(deploymentId, locationName) {
     } catch (error) {
         UIUtils.showToast(`Failed to load deployment: ${error.message}`, 'error');
     }
+
+    document.getElementById('deployments-view').classList.add('hidden');
+        document.getElementById('connection-builder-view').classList.remove('hidden');
+        
+        // Attach event listeners for connection builder buttons
+        document.getElementById('add-connection-btn').addEventListener('click', () => {
+            ConnectionWorkflow.startNewConnection();
+        });
+        
+        document.getElementById('add-static-prop-btn').addEventListener('click', () => {
+            StaticPropManager.openSelector();
+        });
+        
+        UIUtils.showToast(`Connection builder loaded for ${locationName}`);
 }
 async function reloadDeploymentData() {
     /**
