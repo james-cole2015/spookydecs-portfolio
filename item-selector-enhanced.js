@@ -18,12 +18,26 @@ const ItemSelectorEnhanced = {
         this.currentConnections = ConnectionWorkflow.currentConnections;
         
         // ✅ FIX: Use correct function name - getAvailableItems
-        this.filteredItems = PortTracker.getAvailableItems(
-            allItems,
-            this.currentConnections,
-            mode
-        );
+// Build filtered items list with port availability
+this.filteredItems = allItems
+    .map(item => {
+        const portType = mode === 'source' ? 'female' : 'male';
+        const availablePorts = PortTracker.getAvailablePorts(item, this.currentConnections, item.id, portType)
+            .filter(p => p.available)
+            .map(p => p.name);
         
+        return {
+            item: item,
+            availablePorts: availablePorts,
+            availablePortCount: availablePorts.length
+        };
+    })
+    .filter(itemData => {
+        // Only show items deployed in this location
+        const deployment = ConnectionWorkflow.currentDeployment;
+        const location = deployment.locations.find(loc => loc.name === locationName);
+        return location && location.items_deployed.includes(itemData.item.id);
+    });
         this.render();
         this.attachEventListeners();
         
