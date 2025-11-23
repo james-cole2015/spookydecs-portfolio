@@ -342,6 +342,7 @@ async function completeSetup(deploymentId) {
 }
 
 async function loadDeploymentIntoBuilder(deploymentId, locationName) {
+     console.log('🔍 loadDeploymentIntoBuilder called with:', { deploymentId, locationName });
     try {
         UIUtils.showToast('Loading available items...', 'info');
         
