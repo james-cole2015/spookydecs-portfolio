@@ -42,7 +42,7 @@ this.filteredItems = allItems
         this.attachEventListeners();
         
         // Show modal
-        const modal = document.getElementById('enhanced-item-selector-modal');
+        const modal = document.getElementById('item-selector-modal');
         if (modal) {
             modal.style.display = 'flex';
         }
@@ -52,7 +52,7 @@ this.filteredItems = allItems
      * Close the modal
      */
     close() {
-        const modal = document.getElementById('enhanced-item-selector-modal');
+        const modal = document.getElementById('item-selector-modal');
         if (modal) {
             modal.style.display = 'none';
         }
@@ -190,13 +190,13 @@ this.filteredItems = allItems
         if (!container) return;
         
         // Close button
-        const closeBtn = document.querySelector('#enhanced-item-selector-modal .modal-close');
+        const closeBtn = document.querySelector('#item-selector-modal .modal-close');
         if (closeBtn) {
             closeBtn.onclick = () => this.close();
         }
         
         // Cancel button
-        const cancelBtn = document.querySelector('#enhanced-item-selector-modal .btn-cancel');
+        const cancelBtn = document.querySelector('#item-selector-modal .btn-cancel');
         if (cancelBtn) {
             cancelBtn.onclick = () => this.close();
         }
