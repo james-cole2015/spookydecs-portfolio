@@ -1,5 +1,5 @@
-// Enhanced Item Selector with Port Availability
-// Shows items organized by availability status with port information
+// Enhanced Item Selector with Latest Open Connections
+// Displays items grouped by: Latest Open Connections, Available Items, No Ports Available
 
 const ItemSelectorEnhanced = {
     currentMode: null, // 'source' or 'destination'
@@ -9,265 +9,223 @@ const ItemSelectorEnhanced = {
     filteredItems: [],
     
     /**
-     * Open the enhanced item selector
+     * Open the enhanced item selector modal
      */
-    open(mode, location, connections, allItems) {
+    open(mode, locationName, allItems) {
         this.currentMode = mode;
-        this.currentLocation = location;
-        this.currentConnections = connections;
+        this.currentLocation = locationName;
         this.allItems = allItems;
+        this.currentConnections = ConnectionWorkflow.currentConnections;
         
-        // Show modal
-        document.getElementById('item-selector-modal').classList.remove('hidden');
-        
-        // Set modal title
-        const title = mode === 'source' ? 'Select Source Item' : 'Select Destination Item';
-        document.getElementById('item-selector-title').textContent = title;
-        
-        // Render items
-        this.renderItems();
-    },
-    
-    /**
-     * Close the item selector
-     */
-    close() {
-        document.getElementById('item-selector-modal').classList.add('hidden');
-        this.currentMode = null;
-    },
-    
-    /**
-     * Render items in sections
-     */
-    renderItems() {
-        const container = document.getElementById('item-selector-list');
-        container.innerHTML = '';
-        
-        const portType = this.currentMode === 'source' ? 'female' : 'male';
-        const itemsDeployed = this.currentLocation?.items_deployed || [];
-        
-        // Get items with open connections
-        const openConnectionItems = PortTracker.getItemsWithOpenConnections(
+        // Get items with available ports
+        this.filteredItems = PortTracker.getItemsWithAvailablePorts(
+            allItems,
             this.currentConnections,
-            this.allItems,
-            itemsDeployed
+            mode
         );
         
-        // Filter by port type
-        const openItems = openConnectionItems.filter(itemInfo => {
-            if (portType === 'female') {
-                return itemInfo.availableFemale > 0;
+        this.render();
+        this.attachEventListeners();
+        
+        // Show modal
+        const modal = document.getElementById('enhanced-item-selector-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+    },
+    
+    /**
+     * Close the modal
+     */
+    close() {
+        const modal = document.getElementById('enhanced-item-selector-modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    },
+    
+    /**
+     * Render the modal content with sections
+     */
+    render() {
+        const container = document.getElementById('enhanced-item-list');
+        if (!container) return;
+        
+        const title = document.getElementById('enhanced-item-selector-title');
+        if (title) {
+            title.textContent = this.currentMode === 'source' 
+                ? 'Select Source Item' 
+                : 'Select Destination Item';
+        }
+        
+        // Group items into sections
+        const sections = this.groupItemsIntoSections();
+        
+        // Build HTML
+        let html = '';
+        
+        // Latest Open Connections section
+        if (sections.latestOpen.length > 0) {
+            html += this.renderSection(
+                'Latest Open Connections',
+                sections.latestOpen,
+                'priority-section'
+            );
+        }
+        
+        // Available Items section
+        if (sections.available.length > 0) {
+            html += this.renderSection(
+                'Available Items',
+                sections.available,
+                'available-section'
+            );
+        }
+        
+        // No Ports Available section (view only)
+        if (sections.unavailable.length > 0) {
+            html += this.renderSection(
+                'No Ports Available',
+                sections.unavailable,
+                'unavailable-section',
+                true // disabled
+            );
+        }
+        
+        container.innerHTML = html || '<p class="no-items">No items available</p>';
+    },
+    
+    /**
+     * Group items into sections based on availability and recency
+     */
+    groupItemsIntoSections() {
+        const latestOpen = [];
+        const available = [];
+        const unavailable = [];
+        
+        // Get items that were recently connected (have at least one connection)
+        const recentlyConnectedIds = new Set();
+        this.currentConnections.forEach(conn => {
+            recentlyConnectedIds.add(conn.from_item_id);
+            recentlyConnectedIds.add(conn.to_item_id);
+        });
+        
+        this.filteredItems.forEach(itemData => {
+            const item = itemData.item;
+            const hasAvailablePorts = itemData.availablePortCount > 0;
+            const isRecentlyConnected = recentlyConnectedIds.has(item.id);
+            
+            if (hasAvailablePorts && isRecentlyConnected) {
+                latestOpen.push(itemData);
+            } else if (hasAvailablePorts) {
+                available.push(itemData);
             } else {
-                return itemInfo.availableMale > 0;
+                unavailable.push(itemData);
             }
         });
         
-        // Get available items (not yet connected)
-        const availableItems = this.allItems.filter(item => {
-            // Skip if already in open connections
-            if (openItems.find(i => i.itemId === item.id)) return false;
-            
-            // Skip if no ports of required type
-            const portCount = portType === 'female' 
-                ? parseInt(item.female_ends || '0')
-                : parseInt(item.male_ends || '0');
-            if (portCount === 0) return false;
-            
-            // Skip if deployed in current location
-            if (itemsDeployed.includes(item.id)) return false;
-            
-            // Skip if deployed elsewhere
-            const usedInLocation = PortTracker.getItemLocationUsage(
-                item.id,
-                ConnectionWorkflow.currentDeployment?.locations || [],
-                this.currentLocation.name
-            );
-            if (usedInLocation) return false;
-            
-            return true;
-        });
-        
-        // Get items used elsewhere
-        const usedElsewhereItems = this.allItems.filter(item => {
-            const portCount = portType === 'female' 
-                ? parseInt(item.female_ends || '0')
-                : parseInt(item.male_ends || '0');
-            if (portCount === 0) return false;
-            
-            const usedInLocation = PortTracker.getItemLocationUsage(
-                item.id,
-                ConnectionWorkflow.currentDeployment?.locations || [],
-                this.currentLocation.name
-            );
-            return usedInLocation !== null;
-        });
-        
-        // Render sections
-        this.renderSection(
-            container,
-            '🔥 Latest Open Connections',
-            openItems.length > 0 ? null : 'No open connections yet. Start connecting items!',
-            openItems.map(itemInfo => ({
-                item: itemInfo.item,
-                badge: this.getPortBadge(itemInfo, portType),
-                isLatest: true
-            }))
-        );
-        
-        this.renderSection(
-            container,
-            '📦 Available Items',
-            availableItems.length > 0 ? null : 'No available items',
-            availableItems.map(item => ({
-                item: item,
-                badge: this.getAvailableItemBadge(item, portType),
-                isLatest: false
-            }))
-        );
-        
-        this.renderSection(
-            container,
-            '🔒 Used in Other Locations',
-            usedElsewhereItems.length > 0 ? null : null,
-            usedElsewhereItems.map(item => ({
-                item: item,
-                badge: this.getUsedElsewhereBadge(item),
-                disabled: true
-            })),
-            true // This section can be collapsed/hidden if empty
-        );
+        return { latestOpen, available, unavailable };
     },
     
     /**
      * Render a section of items
      */
-    renderSection(container, title, emptyMessage, items, hideIfEmpty = false) {
-        if (hideIfEmpty && items.length === 0) return;
+    renderSection(title, items, cssClass, disabled = false) {
+        let html = `<div class="item-section ${cssClass}">`;
+        html += `<h3 class="section-title">${title}</h3>`;
+        html += '<div class="section-items">';
         
-        const section = document.createElement('div');
-        section.className = 'item-selector-section mb-6';
-        
-        const header = document.createElement('h3');
-        header.className = 'text-sm font-semibold text-gray-600 mb-3 uppercase tracking-wide';
-        header.textContent = title;
-        section.appendChild(header);
-        
-        if (emptyMessage) {
-            const message = document.createElement('p');
-            message.className = 'text-sm text-gray-500 italic py-4';
-            message.textContent = emptyMessage;
-            section.appendChild(message);
-        } else {
-            const list = document.createElement('div');
-            list.className = 'space-y-2';
+        items.forEach(itemData => {
+            const item = itemData.item;
+            const availablePorts = itemData.availablePorts;
+            const portCount = itemData.availablePortCount;
             
-            items.forEach(itemData => {
-                const itemEl = this.createItemElement(itemData);
-                list.appendChild(itemEl);
-            });
+            const disabledAttr = disabled ? 'disabled' : '';
+            const disabledClass = disabled ? 'disabled' : '';
             
-            section.appendChild(list);
-        }
-        
-        container.appendChild(section);
-    },
-    
-    /**
-     * Create an item element
-     */
-    createItemElement(itemData) {
-        const { item, badge, disabled, isLatest } = itemData;
-        
-        const div = document.createElement('div');
-        div.className = `item-card p-4 border rounded-lg cursor-pointer transition-all ${
-            disabled 
-                ? 'bg-gray-100 border-gray-300 opacity-60 cursor-not-allowed' 
-                : 'bg-white border-gray-300 hover:border-orange-500 hover:shadow-md'
-        } ${isLatest ? 'border-orange-400' : ''}`;
-        
-        if (!disabled) {
-            div.addEventListener('click', () => this.selectItem(item));
-        }
-        
-        div.innerHTML = `
-            <div class="flex justify-between items-start">
-                <div class="flex-1">
-                    <div class="flex items-center gap-2">
-                        <span class="font-semibold text-gray-900">${item.short_name || item.name}</span>
-                        ${item.class === 'spotlight' ? '<span class="text-lg">💡</span>' : ''}
-                        ${isLatest ? '<span class="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded">⚡ Just used</span>' : ''}
+            html += `
+                <div class="enhanced-item-card ${disabledClass}" 
+                     data-item-id="${item.id}" 
+                     ${disabledAttr}>
+                    <div class="item-header">
+                        <span class="item-name">${this.escapeHtml(item.short_name)}</span>
+                        <span class="item-type">${this.escapeHtml(item.class_type)}</span>
                     </div>
-                    <div class="text-sm text-gray-600 mt-1">${item.name}</div>
-                    <div class="text-xs text-gray-500 mt-1">Class: ${item.class}</div>
+                    <div class="item-details">
+                        <span class="item-zone">${this.escapeHtml(item.zone || 'No zone')}</span>
+                        ${!disabled ? `<span class="port-count">${portCount} port${portCount !== 1 ? 's' : ''} available</span>` : '<span class="port-count no-ports">No ports</span>'}
+                    </div>
+                    ${!disabled && availablePorts.length > 0 ? `
+                        <div class="available-ports">
+                            ${availablePorts.map(port => `<span class="port-badge">${port}</span>`).join('')}
+                        </div>
+                    ` : ''}
                 </div>
-                <div class="text-sm font-medium text-gray-700">
-                    ${badge}
-                </div>
-            </div>
-        `;
+            `;
+        });
         
-        return div;
+        html += '</div></div>';
+        return html;
     },
     
     /**
-     * Get port badge for items with open connections
+     * Attach event listeners to item cards
      */
-    getPortBadge(itemInfo, portType) {
-        const count = portType === 'female' ? itemInfo.availableFemale : itemInfo.availableMale;
-        const portLabel = portType === 'female' ? 'female' : 'male';
-        const plural = count === 1 ? 'port' : 'ports';
-        return `<span class="bg-green-100 text-green-800 px-2 py-1 rounded">${count} ${plural}</span>`;
+    attachEventListeners() {
+        const container = document.getElementById('enhanced-item-list');
+        if (!container) return;
+        
+        // Close button
+        const closeBtn = document.querySelector('#enhanced-item-selector-modal .modal-close');
+        if (closeBtn) {
+            closeBtn.onclick = () => this.close();
+        }
+        
+        // Cancel button
+        const cancelBtn = document.querySelector('#enhanced-item-selector-modal .btn-cancel');
+        if (cancelBtn) {
+            cancelBtn.onclick = () => this.close();
+        }
+        
+        // Item cards
+        const itemCards = container.querySelectorAll('.enhanced-item-card:not(.disabled)');
+        itemCards.forEach(card => {
+            card.addEventListener('click', async () => {
+                const itemId = card.dataset.itemId;
+                const item = this.allItems.find(i => i.id === itemId);
+                if (item) {
+                    await this.selectItem(item);
+                }
+            });
+        });
     },
     
     /**
-     * Get badge for available items
+     * Handle item selection - FIXED: Route to correct workflow method based on step
      */
-    getAvailableItemBadge(item, portType) {
-        const count = portType === 'female' 
-            ? parseInt(item.female_ends || '0')
-            : parseInt(item.male_ends || '0');
-        const plural = count === 1 ? 'port' : 'ports';
-        return `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">${count} ${plural}</span>`;
-    },
-    
-    /**
-     * Get badge for items used elsewhere
-     */
-    getUsedElsewhereBadge(item) {
-        const location = PortTracker.getItemLocationUsage(
-            item.id,
-            ConnectionWorkflow.currentDeployment?.locations || [],
-            this.currentLocation.name
-        );
-        return `<span class="bg-gray-200 text-gray-600 px-2 py-1 rounded text-xs">${location}</span>`;
-    },
-    
-    /**
-     * Handle item selection
-     */
-    selectItem(item) {
+    async selectItem(item) {
         this.close();
         
-        if (this.currentMode === 'source') {
-            ConnectionWorkflow.selectSourceItem(item);
+        // ✅ FIX: Check the current workflow step and call the appropriate method
+        const currentStep = ConnectionWorkflow.state.step;
+        
+        if (currentStep === 'select-source') {
+            // We're selecting the SOURCE item
+            await ConnectionWorkflow.selectSourceItem(item);
+        } else if (currentStep === 'select-destination') {
+            // We're selecting the DESTINATION item
+            await ConnectionWorkflow.selectDestinationItem(item);
         } else {
-            ConnectionWorkflow.selectDestinationItem(item);
+            console.error('Invalid workflow step:', currentStep);
         }
     },
     
     /**
-     * Filter items by search query
+     * Escape HTML to prevent XSS
      */
-    filterBySearch(query) {
-        // TODO: Implement search filtering
-        console.log('Search query:', query);
-    },
-    
-    /**
-     * Filter items by class type
-     */
-    filterByClass(classType) {
-        // TODO: Implement class filtering
-        console.log('Filter by class:', classType);
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 };
