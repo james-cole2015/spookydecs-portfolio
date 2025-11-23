@@ -268,62 +268,6 @@
 <!-- Main app (MUST BE LAST) -->
 <script src="app.js"></script>
 <!-- Item Selector Modal -->
-<div id="item-selector-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto">
-    <div class="min-h-screen px-4 flex items-center justify-center">
-        <div class="bg-white rounded-lg w-full max-w-4xl mx-auto my-8">
-            <!-- Modal Header -->
-            <div class="flex justify-between items-center p-6 border-b">
-                <h2 class="text-xl font-semibold">Select Item</h2>
-                <button id="close-modal-btn" class="text-gray-500 hover:text-gray-700">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-            </div>
-            
-            <!-- Modal Body -->
-            <div class="p-6">
-                <!-- Class Type Selection -->
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Class Type</label>
-                    <select id="modal-class-type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="">Select class type...</option>
-                    </select>
-                </div>
-                
-                <!-- Search Box -->
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Search by Name</label>
-                    <input 
-                        type="text" 
-                        id="item-search" 
-                        placeholder="Type to search..."
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                </div>
-                
-                <!-- Items Table -->
-                <div class="overflow-x-auto max-h-96 overflow-y-auto border border-gray-200 rounded-lg">
-                    <table class="w-full">
-                        <thead class="bg-gray-50 sticky top-0">
-                            <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Short Name</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Class Type</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="items-table-body" class="bg-white divide-y divide-gray-200">
-                            <tr>
-                                <td colspan="4" class="text-center py-8 text-gray-500">Select a class type to view items</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
 <script type="text/babel" src="graph-view/NodeTooltip.js"></script>
 <script type="text/babel" src="graph-view/Legend.js"></script>
