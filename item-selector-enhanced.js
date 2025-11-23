@@ -62,10 +62,10 @@ this.filteredItems = allItems
      * Render the modal content with sections
      */
     render() {
-        const container = document.getElementById('enhanced-item-list');
+        const container = document.getElementById('item-selector-list);
         if (!container) return;
         
-        const title = document.getElementById('enhanced-item-selector-title');
+        const title = document.getElementById('item-selector-title');
         if (title) {
             title.textContent = this.currentMode === 'source' 
                 ? 'Select Source Item' 
@@ -186,7 +186,7 @@ this.filteredItems = allItems
      * Attach event listeners to item cards
      */
     attachEventListeners() {
-        const container = document.getElementById('enhanced-item-list');
+        const container = document.getElementById('item-selector-list);
         if (!container) return;
         
         // Close button
