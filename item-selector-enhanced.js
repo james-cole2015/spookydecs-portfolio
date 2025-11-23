@@ -32,12 +32,13 @@ this.filteredItems = allItems
             availablePortCount: availablePorts.length
         };
     })
-    .filter(itemData => {
-        // Only show items deployed in this location
-        const deployment = ConnectionWorkflow.currentDeployment;
-        const location = deployment.locations.find(loc => loc.name === locationName);
-        return location && location.items_deployed.includes(itemData.item.id);
-    });
+.filter(itemData => {
+    // Only show items deployed in this location
+    const deployment = ConnectionWorkflow.currentDeployment;
+    const location = deployment?.locations?.find(loc => loc.name === locationName);
+    const itemsDeployed = location?.items_deployed || [];
+    return itemsDeployed.length === 0 || itemsDeployed.includes(itemData.item.id);
+});
         this.render();
         this.attachEventListeners();
         
