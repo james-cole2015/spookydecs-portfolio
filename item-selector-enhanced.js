@@ -79,7 +79,7 @@ const ItemSelectorEnhanced = {
             // Skip if deployed elsewhere
             const usedInLocation = PortTracker.getItemLocationUsage(
                 item.id,
-                this.currentDeployment?.locations || [],
+                ConnectionWorkflow.currentDeployment?.locations || [],
                 this.currentLocation.name
             );
             if (usedInLocation) return false;
@@ -96,7 +96,7 @@ const ItemSelectorEnhanced = {
             
             const usedInLocation = PortTracker.getItemLocationUsage(
                 item.id,
-                this.currentDeployment?.locations || [],
+                ConnectionWorkflow.currentDeployment?.locations || [],
                 this.currentLocation.name
             );
             return usedInLocation !== null;
@@ -236,7 +236,7 @@ const ItemSelectorEnhanced = {
     getUsedElsewhereBadge(item) {
         const location = PortTracker.getItemLocationUsage(
             item.id,
-            this.currentDeployment?.locations || [],
+            ConnectionWorkflow.currentDeployment?.locations || [],
             this.currentLocation.name
         );
         return `<span class="bg-gray-200 text-gray-600 px-2 py-1 rounded text-xs">${location}</span>`;
