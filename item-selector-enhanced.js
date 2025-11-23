@@ -17,8 +17,8 @@ const ItemSelectorEnhanced = {
         this.allItems = allItems;
         this.currentConnections = ConnectionWorkflow.currentConnections;
         
-        // Get items with available ports
-        this.filteredItems = PortTracker.getItemsWithAvailablePorts(
+        // ✅ FIX: Use correct function name - getAvailableItems
+        this.filteredItems = PortTracker.getAvailableItems(
             allItems,
             this.currentConnections,
             mode
@@ -201,12 +201,12 @@ const ItemSelectorEnhanced = {
     },
     
     /**
-     * Handle item selection - FIXED: Route to correct workflow method based on step
+     * Handle item selection - Route to correct workflow method based on step
      */
     async selectItem(item) {
         this.close();
         
-        // ✅ FIX: Check the current workflow step and call the appropriate method
+        // Check the current workflow step and call the appropriate method
         const currentStep = ConnectionWorkflow.state.step;
         
         if (currentStep === 'select-source') {
