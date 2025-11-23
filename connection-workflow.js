@@ -71,6 +71,7 @@ const ConnectionWorkflow = {
             // Auto-select the only available port
             const port = PortTracker.getFirstAvailablePort(item, this.currentConnections, item.id, 'female');
             this.selectSourcePort(port);
+             console.log('✅ sourceItem set:', this.state.sourceItem);
         } else {
             // Show port selector
             this.state.step = 'select-source-port';
