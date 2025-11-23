@@ -51,7 +51,7 @@ const API = {
     },
 
     async getDeployment(deploymentId, locationName) {
-        const response = await this.request(`/admin/deployments/${deploymentId}/locations/${locationName}`);
+        const response = await this.request(`/admin/deployments/${deploymentId}/locations/${encodeURIComponent(locationName)}`);
         // The response structure from locations-operations Lambda is:
         // { deployment_id, deployment_name, location: { name, connections, work_sessions, notes, last_updated } }
         return response;
@@ -63,20 +63,20 @@ const API = {
 
     // Connection Management
     async addConnection(deploymentId, locationName, connectionData) {
-        return this.request(`/admin/deployments/${deploymentId}/locations/${locationName}/connections`, {
+        return this.request(`/admin/deployments/${deploymentId}/locations/${encodeURIComponent(locationName)}/connections`, {
             method: 'POST',
             body: JSON.stringify(connectionData),
         });
     },
 
     async deleteConnection(deploymentId, locationName, connectionId) {
-        return this.request(`/admin/deployments/${deploymentId}/locations/${locationName}/connections/${connectionId}`, {
+        return this.request(`/admin/deployments/${deploymentId}/locations/${encodeURIComponent(locationName)}/connections/${connectionId}`, {
             method: 'DELETE',
         });
     },
 
     async validateConnections(deploymentId, locationName) {
-        return this.request(`/admin/deployments/${deploymentId}/locations/${locationName}/validate`);
+        return this.request(`/admin/deployments/${deploymentId}/locations/${encodeURIComponent(locationName)}/validate`);
     },
 
     // Deployment Lifecycle
@@ -98,7 +98,7 @@ const API = {
         });
     },
 
-    // Session Management (NEW)
+    // Session Management
     async startSession(deploymentId, locationName, data = {}) {
         return this.request(`/admin/deployments/${deploymentId}/locations/${encodeURIComponent(locationName)}/sessions`, {
             method: 'POST',
@@ -115,15 +115,15 @@ const API = {
 
     // Statistics and Analysis
     async getStatistics(deploymentId, locationName) {
-        return this.request(`/admin/deployments/${deploymentId}/locations/${locationName}/statistics`);
+        return this.request(`/admin/deployments/${deploymentId}/locations/${encodeURIComponent(locationName)}/statistics`);
     },
 
     async getUnusedItems(deploymentId, locationName) {
-        return this.request(`/admin/deployments/${deploymentId}/locations/${locationName}/unused-items`);
+        return this.request(`/admin/deployments/${deploymentId}/locations/${encodeURIComponent(locationName)}/unused-items`);
     },
 
     async getConnectionGraph(deploymentId, locationName) {
-        return this.request(`/admin/deployments/${deploymentId}/locations/${locationName}/graph`);
+        return this.request(`/admin/deployments/${deploymentId}/locations/${encodeURIComponent(locationName)}/graph`);
     },
 
     // Graph Visualization
@@ -142,5 +142,19 @@ const API = {
             endpoint += `&zone=${encodeURIComponent(zone)}`;
         }
         return this.request(endpoint);
+    },
+
+    // Item Management in Locations (for static props)
+    async addItemToLocation(deploymentId, locationName, itemId) {
+        return this.request(`/admin/deployments/${deploymentId}/locations/${encodeURIComponent(locationName)}/items`, {
+            method: 'POST',
+            body: JSON.stringify({ item_id: itemId })
+        });
+    },
+
+    async removeItemFromLocation(deploymentId, locationName, itemId) {
+        return this.request(`/admin/deployments/${deploymentId}/locations/${encodeURIComponent(locationName)}/items/${itemId}`, {
+            method: 'DELETE'
+        });
     },
 };
