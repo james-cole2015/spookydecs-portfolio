@@ -342,7 +342,7 @@ async function completeSetup(deploymentId) {
 }
 
 async function loadDeploymentIntoBuilder(deploymentId, locationName) {
-     console.log('🔍 loadDeploymentIntoBuilder called with:', { deploymentId, locationName });
+    console.log('🔍 loadDeploymentIntoBuilder called with:', { deploymentId, locationName });
     try {
         UIUtils.showToast('Loading available items...', 'info');
         
@@ -363,7 +363,7 @@ async function loadDeploymentIntoBuilder(deploymentId, locationName) {
         const sessions = locationData.location?.work_sessions || [];
         AppState.activeSession = sessions.find(s => !s.end_time) || null;
         
-        // ADD THESE 6 LINES HERE:
+        // Initialize workflow components
         const deployment = {
             id: deploymentId,
             locations: [locationData.location]
@@ -382,24 +382,30 @@ async function loadDeploymentIntoBuilder(deploymentId, locationName) {
         document.getElementById('deployments-view').classList.add('hidden');
         document.getElementById('connection-builder-view').classList.remove('hidden');
         
-        UIUtils.showToast(`Connection builder loaded for ${locationName}`);
-    } catch (error) {
-        UIUtils.showToast(`Failed to load deployment: ${error.message}`, 'error');
-    }
-
-    document.getElementById('deployments-view').classList.add('hidden');
-        document.getElementById('connection-builder-view').classList.remove('hidden');
+        // Remove old event listeners by cloning buttons
+        const addConnBtn = document.getElementById('add-connection-btn');
+        const addPropBtn = document.getElementById('add-static-prop-btn');
         
-        // Attach event listeners for connection builder buttons
-        document.getElementById('add-connection-btn').addEventListener('click', () => {
+        const newAddConnBtn = addConnBtn.cloneNode(true);
+        const newAddPropBtn = addPropBtn.cloneNode(true);
+        addConnBtn.parentNode.replaceChild(newAddConnBtn, addConnBtn);
+        addPropBtn.parentNode.replaceChild(newAddPropBtn, addPropBtn);
+        
+        // Attach fresh event listeners
+        newAddConnBtn.addEventListener('click', () => {
+            console.log('🔘 Add Connection clicked');
             ConnectionWorkflow.startNewConnection();
         });
         
-        document.getElementById('add-static-prop-btn').addEventListener('click', () => {
+        newAddPropBtn.addEventListener('click', () => {
+            console.log('🔘 Add Static Prop clicked');
             StaticPropManager.openSelector();
         });
         
         UIUtils.showToast(`Connection builder loaded for ${locationName}`);
+    } catch (error) {
+        UIUtils.showToast(`Failed to load deployment: ${error.message}`, 'error');
+    }
 }
 async function reloadDeploymentData() {
     /**
