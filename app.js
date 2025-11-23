@@ -50,7 +50,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('create-year').value = UIUtils.getCurrentYear();
         
         UIUtils.initNavigation();
-        initEventListeners();
+
+        console.log('🔧 About to call initEventListeners');
+initEventListeners();
+console.log('✅ initEventListeners called');
         
         DeploymentManager.loadInProgressDeployments();
         
