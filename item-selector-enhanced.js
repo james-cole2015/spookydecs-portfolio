@@ -62,7 +62,7 @@ this.filteredItems = allItems
      * Render the modal content with sections
      */
     render() {
-        const container = document.getElementById('item-selector-list);
+        const container = document.getElementById('item-selector-list');
         if (!container) return;
         
         const title = document.getElementById('item-selector-title');
@@ -186,7 +186,7 @@ this.filteredItems = allItems
      * Attach event listeners to item cards
      */
     attachEventListeners() {
-        const container = document.getElementById('item-selector-list);
+        const container = document.getElementById('item-selector-list');
         if (!container) return;
         
         // Close button
