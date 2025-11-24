@@ -816,3 +816,28 @@
         min-height: 80px;
     }
 }
+
+#item-selector-list {
+    display: block !important;
+    max-height: 500px;
+    overflow-y: auto;
+}
+.item-section {
+    display: block !important;
+    margin-bottom: 20px;
+}
+.section-items {
+    display: block !important;
+}
+.enhanced-item-card {
+    display: block !important;
+    padding: 12px;
+    margin: 8px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    background: white;
+}
+.enhanced-item-card:hover {
+    background: #f5f5f5;
+}
