@@ -18,18 +18,30 @@ const ItemSelectorEnhanced = {
         this.currentConnections = ConnectionWorkflow.currentConnections;
         
         // Build filtered items list with port availability
-        this.filteredItems = allItems.map(item => {
-            const portType = mode === 'source' ? 'female' : 'male';
-            const availablePorts = PortTracker.getAvailablePorts(item, this.currentConnections, item.id, portType)
-                .filter(p => p.available)
-                .map(p => p.name);
-            
-            return {
-                item: item,
-                availablePorts: availablePorts,
-                availablePortCount: availablePorts.length
-            };
-        });
+this.filteredItems = allItems
+    .filter(item => {
+        if (mode === 'source') {
+            // Source: only items with female ports
+            return item.female_ends && parseInt(item.female_ends) > 0;
+        } else {
+            // Destination: items with male ports OR items with power inlet
+            const hasMale = item.male_ends && parseInt(item.male_ends) > 0;
+            const hasPowerInlet = item.power_inlet === true;
+            return hasMale || hasPowerInlet;
+        }
+    })
+    .map(item => {
+        const portType = mode === 'source' ? 'female' : 'male';
+        const availablePorts = PortTracker.getAvailablePorts(item, this.currentConnections, item.id, portType)
+            .filter(p => p.available)
+            .map(p => p.name);
+        
+        return {
+            item: item,
+            availablePorts: availablePorts,
+            availablePortCount: availablePorts.length
+        };
+    });
         
         this.render();
         this.attachEventListeners();
@@ -160,10 +172,12 @@ const ItemSelectorEnhanced = {
                         <span class="item-name">${this.escapeHtml(item.short_name)}</span>
                         <span class="item-type">${this.escapeHtml(item.class_type)}</span>
                     </div>
-                    <div class="item-details">
-                        <span class="item-zone">${this.escapeHtml(item.zone || 'No zone')}</span>
-                        ${!disabled ? `<span class="port-count">${portCount} port${portCount !== 1 ? 's' : ''} available</span>` : '<span class="port-count no-ports">No ports</span>'}
-                    </div>
+                        <div class="item-details">
+                            <span class="item-zone">${this.escapeHtml(item.zone || 'No zone')}</span>
+                            ${!disabled ? `<span class="port-count">${
+                                item.power_inlet ? 'Power Inlet' : `${portCount} port${portCount !== 1 ? 's' : ''} available`
+                            }</span>` : '<span class="port-count no-ports">No ports</span>'}
+                        </div>
                     ${!disabled && availablePorts.length > 0 ? `
                         <div class="available-ports">
                             ${availablePorts.map(port => `<span class="port-badge">${port}</span>`).join('')}
