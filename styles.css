@@ -841,3 +841,59 @@
 .enhanced-item-card:hover {
     background: #f5f5f5;
 }
+
+.max-w-2xl {
+    max-width: 42rem;
+}
+
+.max-h-96 {
+    max-height: 24rem;
+}
+
+.overflow-y-auto {
+    overflow-y: auto;
+}
+
+.text-xl {
+    font-size: 1.25rem;
+}
+
+.section-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: #374151;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.item-name {
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.item-type {
+    font-size: 0.75rem;
+    color: #6b7280;
+    background: #f3f4f6;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+}
+
+.item-details {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.port-count {
+    font-weight: 500;
+}
