@@ -17,34 +17,27 @@ const ItemSelectorEnhanced = {
         this.allItems = allItems;
         this.currentConnections = ConnectionWorkflow.currentConnections;
         
-        // ✅ FIX: Use correct function name - getAvailableItems
-// Build filtered items list with port availability
-this.filteredItems = allItems
-    .map(item => {
-        const portType = mode === 'source' ? 'female' : 'male';
-        const availablePorts = PortTracker.getAvailablePorts(item, this.currentConnections, item.id, portType)
-            .filter(p => p.available)
-            .map(p => p.name);
+        // Build filtered items list with port availability
+        this.filteredItems = allItems.map(item => {
+            const portType = mode === 'source' ? 'female' : 'male';
+            const availablePorts = PortTracker.getAvailablePorts(item, this.currentConnections, item.id, portType)
+                .filter(p => p.available)
+                .map(p => p.name);
+            
+            return {
+                item: item,
+                availablePorts: availablePorts,
+                availablePortCount: availablePorts.length
+            };
+        });
         
-        return {
-            item: item,
-            availablePorts: availablePorts,
-            availablePortCount: availablePorts.length
-        };
-    })
-.filter(itemData => {
-    // Only show items deployed in this location
-    const deployment = ConnectionWorkflow.currentDeployment;
-    const location = deployment?.locations?.find(loc => loc.name === locationName);
-    const itemsDeployed = location?.items_deployed || [];
-    return itemsDeployed.length === 0 || itemsDeployed.includes(itemData.item.id);
-});
         this.render();
         this.attachEventListeners();
         
         // Show modal
         const modal = document.getElementById('item-selector-modal');
         if (modal) {
+            modal.classList.remove('hidden');
             modal.style.display = 'flex';
         }
     },
@@ -55,6 +48,7 @@ this.filteredItems = allItems
     close() {
         const modal = document.getElementById('item-selector-modal');
         if (modal) {
+            modal.classList.add('hidden');
             modal.style.display = 'none';
         }
     },
@@ -191,13 +185,19 @@ this.filteredItems = allItems
         if (!container) return;
         
         // Close button
-        const closeBtn = document.querySelector('#item-selector-modal .modal-close');
+        const closeBtn = document.querySelector('#item-selector-modal .close-btn');
         if (closeBtn) {
             closeBtn.onclick = () => this.close();
         }
         
+        // Modal overlay
+        const overlay = document.querySelector('#item-selector-modal .modal-overlay');
+        if (overlay) {
+            overlay.onclick = () => this.close();
+        }
+        
         // Cancel button
-        const cancelBtn = document.querySelector('#item-selector-modal .btn-cancel');
+        const cancelBtn = document.querySelector('#item-selector-modal .btn-secondary');
         if (cancelBtn) {
             cancelBtn.onclick = () => this.close();
         }
