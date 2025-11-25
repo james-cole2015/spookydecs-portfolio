@@ -389,10 +389,6 @@ async function loadDeploymentIntoBuilder(deploymentId, locationName) {
     }
 }
 async function reloadDeploymentData() {
-    /**
-     * Reload deployment data to refresh session counts and connections
-     * Called after adding/deleting connections to sync frontend with backend
-     */
     if (!AppState.currentDeploymentId || !AppState.currentLocationName) {
         console.warn('Cannot reload: no active deployment');
         return;
@@ -407,11 +403,22 @@ async function reloadDeploymentData() {
         // Update connections
         AppState.connections = locationData.location?.connections || [];
         
-        // Update active session (to get updated counts)
+        // Update active session
         const sessions = locationData.location?.work_sessions || [];
         AppState.activeSession = sessions.find(s => !s.end_time) || null;
         
-        // Re-render everything to show updated data
+        // 🔥 ADD THESE LINES:
+        // Update state.currentDeployment with fresh location data
+        if (state.currentDeployment && state.currentDeployment.locations) {
+            const locationIndex = state.currentDeployment.locations.findIndex(
+                loc => loc.name === state.currentLocation
+            );
+            if (locationIndex !== -1) {
+                state.currentDeployment.locations[locationIndex] = locationData.location;
+            }
+        }
+        
+        // Re-render everything
         renderConnections();
         renderSessionWidget();
         renderItemsList();
@@ -419,10 +426,8 @@ async function reloadDeploymentData() {
         console.log('Deployment data reloaded successfully');
     } catch (error) {
         console.error('Failed to reload deployment data:', error);
-        // Don't show toast - this is a background refresh
     }
 }
-
 function renderItemsList() {
     const listContainer = document.getElementById('items-deployed-list');
     if (!listContainer) return;
