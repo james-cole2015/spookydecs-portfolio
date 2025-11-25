@@ -400,6 +400,10 @@ async function reloadDeploymentData() {
             AppState.currentLocationName
         );
         
+        console.log('🔍 locationData received:', locationData);
+        console.log('🔍 locationData.location:', locationData.location);
+        console.log('🔍 items_deployed in response:', locationData.location?.items_deployed);
+        
         // Update connections
         AppState.connections = locationData.location?.connections || [];
         
@@ -407,15 +411,26 @@ async function reloadDeploymentData() {
         const sessions = locationData.location?.work_sessions || [];
         AppState.activeSession = sessions.find(s => !s.end_time) || null;
         
-        // 🔥 ADD THESE LINES:
         // Update state.currentDeployment with fresh location data
+        console.log('🔍 state.currentDeployment exists?', !!state.currentDeployment);
+        console.log('🔍 state.currentDeployment.locations exists?', !!state.currentDeployment?.locations);
+        console.log('🔍 state.currentLocation:', state.currentLocation);
+        
         if (state.currentDeployment && state.currentDeployment.locations) {
             const locationIndex = state.currentDeployment.locations.findIndex(
                 loc => loc.name === state.currentLocation
             );
+            console.log('🔍 locationIndex found:', locationIndex);
+            
             if (locationIndex !== -1) {
+                console.log('🔍 Updating location at index', locationIndex);
                 state.currentDeployment.locations[locationIndex] = locationData.location;
+                console.log('🔍 Updated! items_deployed now:', state.currentDeployment.locations[locationIndex].items_deployed);
+            } else {
+                console.error('❌ Location not found in state.currentDeployment.locations');
             }
+        } else {
+            console.error('❌ state.currentDeployment or locations is missing');
         }
         
         // Re-render everything
