@@ -3,6 +3,8 @@ const state = {
     currentDeploymentId: null,
     currentLocationName: null,
     currentZone: null,
+    currentDeployment: null,      // ← ADD THIS
+    currentLocation: null,         // ← ADD THIS (will be same as currentLocationName)
     sourceItem: null,
     destinationItem: null,
     items: [],
