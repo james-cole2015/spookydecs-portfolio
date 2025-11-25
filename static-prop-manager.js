@@ -109,6 +109,8 @@ const StaticPropManager = {
             console.error('Error adding static prop:', error);
             UIUtils.showToast('Failed to add static prop: ' + error.message, 'error');
         }
+
+        this.openSelector();
     },
 
     /**
