@@ -368,9 +368,9 @@ async function loadDeploymentIntoBuilder(deploymentId, locationName) {
             id: deploymentId,
             locations: [locationData.location]
         };
-        ConnectionWorkflow.init(deployment, locationName, allItems);
-        StaticPropManager.init(deployment, locationName, allItems);
-        
+        state.currentDeployment = deployment;
+        state.currentLocation = locationName;
+        state.allItems = allItems;        
         document.getElementById('current-deployment-info').textContent = 
             `${deploymentId} • ${locationName}`;
         
@@ -382,25 +382,6 @@ async function loadDeploymentIntoBuilder(deploymentId, locationName) {
         document.getElementById('deployments-view').classList.add('hidden');
         document.getElementById('connection-builder-view').classList.remove('hidden');
         
-        // Remove old event listeners by cloning buttons
-        const addConnBtn = document.getElementById('add-connection-btn');
-        const addPropBtn = document.getElementById('add-static-prop-btn');
-        
-        const newAddConnBtn = addConnBtn.cloneNode(true);
-        const newAddPropBtn = addPropBtn.cloneNode(true);
-        addConnBtn.parentNode.replaceChild(newAddConnBtn, addConnBtn);
-        addPropBtn.parentNode.replaceChild(newAddPropBtn, addPropBtn);
-        
-        // Attach fresh event listeners
-        newAddConnBtn.addEventListener('click', () => {
-            console.log('🔘 Add Connection clicked');
-            ConnectionWorkflow.startNewConnection();
-        });
-        
-        newAddPropBtn.addEventListener('click', () => {
-            console.log('🔘 Add Static Prop clicked');
-            StaticPropManager.openSelector();
-        });
         
         UIUtils.showToast(`Connection builder loaded for ${locationName}`);
     } catch (error) {
