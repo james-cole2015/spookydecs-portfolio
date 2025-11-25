@@ -260,10 +260,11 @@
 <!-- NEW: Enhanced workflow components (before app.js) -->
 <script src="port-tracker.js"></script>
 <script src="item-selector-enhanced.js"></script>
-<script src="connection-workflow.js"></script>
+<script src="static-prop-manager.js"></script>
+
+<!--<script src="connection-workflow.js"></script> -->
 <script src="port-selector.js"></script>
 <script src="illumination-selector.js"></script>
-<script src="static-prop-manager.js"></script>
 
 <!-- Main app (MUST BE LAST) -->
 <script src="app.js"></script>
@@ -288,8 +289,8 @@
         </div>
         
         <div class="modal-body">
-            <div id="item-selector-list" class="max-h-96 overflow-y-auto">
-                <!-- Sections will be rendered here by JavaScript -->
+            <div id="item-selector-list">
+                <!-- Content will be dynamically rendered by JavaScript -->
             </div>
         </div>
         
@@ -298,14 +299,13 @@
         </div>
     </div>
 </div>
-
 <!-- Port Selector Modal -->
 <div id="port-selector-modal" class="modal hidden">
-    <div class="modal-overlay" onclick="PortSelector.close()"></div>
+    <div class="modal-overlay" onclick="ItemSelectorEnhanced.closePortSelector()"></div>
     <div class="modal-content max-w-lg">
         <div class="modal-header">
             <h2 id="port-selector-title" class="text-xl font-bold">Select Port</h2>
-            <button onclick="PortSelector.close()" class="close-btn">&times;</button>
+            <button onclick="ItemSelectorEnhanced.closePortSelector()" class="close-btn">&times;</button>
         </div>
         
         <div class="modal-body">
@@ -315,18 +315,18 @@
         </div>
         
         <div class="modal-footer">
-            <button onclick="PortSelector.close()" class="btn btn-secondary">Cancel</button>
+            <button onclick="ItemSelectorEnhanced.closePortSelector()" class="btn btn-secondary">Cancel</button>
         </div>
     </div>
 </div>
 
 <!-- Illumination Selector Modal -->
 <div id="illumination-selector-modal" class="modal hidden">
-    <div class="modal-overlay" onclick="IlluminationSelector.cancel()"></div>
+    <div class="modal-overlay" onclick="ItemSelectorEnhanced.cancelIllumination()"></div>
     <div class="modal-content max-w-xl">
         <div class="modal-header">
             <h2 class="text-xl font-bold">💡 Select Items to Illuminate</h2>
-            <button onclick="IlluminationSelector.cancel()" class="close-btn">&times;</button>
+            <button onclick="ItemSelectorEnhanced.cancelIllumination()" class="close-btn">&times;</button>
         </div>
         
         <div class="modal-body">
@@ -340,10 +340,10 @@
         </div>
         
         <div class="modal-footer">
-            <button onclick="IlluminationSelector.cancel()" class="btn btn-secondary">Cancel</button>
+            <button onclick="ItemSelectorEnhanced.cancelIllumination()" class="btn btn-secondary">Cancel</button>
             <button 
                 id="illumination-confirm-btn" 
-                onclick="IlluminationSelector.confirm()" 
+                onclick="ItemSelectorEnhanced.confirmIllumination()" 
                 class="btn btn-primary"
             >
                 Confirm (0/2)
@@ -366,7 +366,7 @@
                 Static props are decorative items that don't require power but can be illuminated by spotlights.
             </p>
             
-            <div id="static-prop-selector-list" class="max-h-96 overflow-y-auto">
+            <div id="static-prop-selector-list" class="space-y-3">
                 <!-- Static props will be rendered here by JavaScript -->
             </div>
         </div>
