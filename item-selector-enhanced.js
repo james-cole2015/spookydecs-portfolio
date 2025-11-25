@@ -676,7 +676,7 @@ const ItemSelectorEnhanced = {
             console.log('Connection created:', response);
             
             // Show success toast
-            UI.showToast('Connection added successfully', 'success');
+            UIUtils.showToast('Connection added successfully', 'success');
             
             // Clear notes field
             if (notesInput) {
@@ -693,7 +693,7 @@ const ItemSelectorEnhanced = {
             
         } catch (error) {
             console.error('Error creating connection:', error);
-            UI.showToast('Failed to create connection: ' + error.message, 'error');
+            UIUtils.showToast('Failed to create connection: ' + error.message, 'error');
         }
     },
 
