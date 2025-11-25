@@ -33,7 +33,7 @@ async function addConnection() {
         );
         
         // Reload deployment data to get updated session counts
-        await reloadDeploymentData();  // ADD THIS LINE
+        await reloadDeploymentData();
         
         clearConnectionForm();
         UIUtils.showToast('Connection added successfully');
@@ -43,6 +43,7 @@ async function addConnection() {
         UIUtils.showToast(`Failed to add connection: ${error.message}`, 'error');
     }
 }
+
 function clearConnectionForm() {
     AppState.sourceItem = null;
     AppState.destinationItem = null;
@@ -66,11 +67,33 @@ async function deleteConnection(connectionId) {
         );
         
         // Reload deployment data to get updated session counts
-        await reloadDeploymentData();  // ADD THIS LINE
+        await reloadDeploymentData();
         
         UIUtils.showToast('Connection deleted successfully');
     } catch (error) {
         UIUtils.showToast(`Failed to delete connection: ${error.message}`, 'error');
+    }
+}
+
+async function deleteStaticProp(itemId) {
+    if (!confirm('Are you sure you want to remove this static prop from the zone?')) {
+        return;
+    }
+
+    try {
+        await API.removeItemFromLocation(
+            AppState.currentDeploymentId,
+            AppState.currentLocationName,
+            itemId
+        );
+        
+        // Reload deployment data
+        await reloadDeploymentData();
+        
+        UIUtils.showToast('Static prop removed successfully');
+    } catch (error) {
+        console.error('Error deleting static prop:', error);
+        UIUtils.showToast(`Failed to remove static prop: ${error.message}`, 'error');
     }
 }
 
@@ -82,7 +105,8 @@ function renderConnections() {
         return;
     }
 
-    connectionsList.innerHTML = AppState.connections.map(conn => {
+    // Render connections
+    const connectionsHtml = AppState.connections.map(conn => {
         const fromItem = AppState.allItems.find(i => i.id === conn.from_item_id);
         const toItem = AppState.allItems.find(i => i.id === conn.to_item_id);
         
@@ -120,8 +144,66 @@ function renderConnections() {
             </div>
         `;
     }).join('');
+    
+    // Get static props (items in items_deployed that are NOT in any connection)
+    const itemsInConnections = new Set();
+    AppState.connections.forEach(conn => {
+        itemsInConnections.add(conn.from_item_id);
+        itemsInConnections.add(conn.to_item_id);
+        if (conn.illuminates) {
+            conn.illuminates.forEach(id => itemsInConnections.add(id));
+        }
+    });
+    
+    // Get current location's items_deployed from state
+    const currentLocation = state.currentDeployment?.locations?.find(
+        loc => loc.name === state.currentLocation
+    );
+    const itemsDeployed = currentLocation?.items_deployed || [];
+    
+    // Find static props (items deployed but not in connections)
+    const staticPropIds = itemsDeployed.filter(itemId => !itemsInConnections.has(itemId));
+    
+    let staticPropsHtml = '';
+    if (staticPropIds.length > 0) {
+        const staticPropsItems = staticPropIds.map(itemId => {
+            const item = AppState.allItems.find(i => i.id === itemId);
+            const displayName = item ? item.short_name : itemId;
+            const classType = item ? item.class_type : 'Unknown';
+            
+            return `
+                <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="text-sm mb-1">
+                                <span class="font-medium text-gray-900">${displayName}</span>
+                            </div>
+                            <p class="text-xs text-gray-600">${classType}</p>
+                        </div>
+                        <button 
+                            class="ml-4 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm whitespace-nowrap"
+                            onclick="deleteStaticProp('${itemId}')"
+                        >
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        staticPropsHtml = `
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <h3 class="text-lg font-semibold mb-3">Static Props in Zone (${staticPropIds.length})</h3>
+                <div class="space-y-3">
+                    ${staticPropsItems}
+                </div>
+            </div>
+        `;
+    }
+    
+    connectionsList.innerHTML = connectionsHtml + staticPropsHtml;
 
-        if (typeof renderItemsList === 'function') {
+    if (typeof renderItemsList === 'function') {
         renderItemsList();
     }
 }
@@ -131,8 +213,10 @@ window.ConnectionBuilder = {
     addConnection,
     clearConnectionForm,
     deleteConnection,
+    deleteStaticProp,
     renderConnections
 };
 
 // Make functions available globally for onclick handlers
 window.deleteConnection = deleteConnection;
+window.deleteStaticProp = deleteStaticProp;
