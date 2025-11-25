@@ -695,6 +695,8 @@ const ItemSelectorEnhanced = {
             console.error('Error creating connection:', error);
             UIUtils.showToast('Failed to create connection: ' + error.message, 'error');
         }
+
+        await DeploymentManager.reloadDeploymentData();
     },
 
     /**
