@@ -78,40 +78,41 @@ const StaticPropManager = {
     /**
      * Add a static prop to the current zone
      */
-    async addStaticProp(itemId) {
-        console.log('Adding static prop:', itemId);
+async addStaticProp(itemId) {
+    console.log('Adding static prop:', itemId);
+    
+    try {
+        const item = state.allItems.find(i => i.id === itemId);
+        const itemName = item?.short_name || itemId;
         
-        try {
-            const item = state.allItems.find(i => i.id === itemId);
-            const itemName = item?.short_name || itemId;
-            
-            // Call API to add item to location
-            const response = await API.addItemToLocation(
-                state.currentDeployment.id,
-                state.currentLocation,
-                itemId
-            );
-            
-            console.log('Static prop added:', response);
-            
-            // Show success toast
-            UIUtils.showToast(`${itemName} added to zone`, 'success');
-            
-            // Close modal
-            this.closeSelector();
-            
-            // Refresh the deployment data
-            if (typeof DeploymentManager !== 'undefined' && DeploymentManager.reloadDeploymentData) {
-                await DeploymentManager.reloadDeploymentData();
-            }
-            
-        } catch (error) {
-            console.error('Error adding static prop:', error);
-            UIUtils.showToast('Failed to add static prop: ' + error.message, 'error');
+        // Call API to add item to location
+        const response = await API.addItemToLocation(
+            state.currentDeployment.id,
+            state.currentLocation,
+            itemId
+        );
+        
+        console.log('Static prop added:', response);
+        
+        // Show success toast
+        UIUtils.showToast(`${itemName} added to zone`, 'success');
+        
+        // Close modal first
+        this.closeSelector();
+        
+        // Refresh the deployment data
+        if (typeof DeploymentManager !== 'undefined' && DeploymentManager.reloadDeploymentData) {
+            await DeploymentManager.reloadDeploymentData(); // ← Make sure this is awaited
         }
-
+        
+        // THEN re-open the selector with fresh data
         this.openSelector();
-    },
+        
+    } catch (error) {
+        console.error('Error adding static prop:', error);
+        UIUtils.showToast('Failed to add static prop: ' + error.message, 'error');
+    }
+},
 
     /**
      * Close the static prop selector modal
