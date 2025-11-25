@@ -35,13 +35,21 @@ const ItemSelectorEnhanced = {
         
         title.textContent = 'Select Source Item';
         
-        // Render class/type selectors and initial empty list
-        listContainer.innerHTML = this.renderFilters();
+        const currentLocation = this.getCurrentLocation();
+        const connections = currentLocation?.connections || [];
+        const allItems = state.allItems || [];
+        
+        // Check if this is the first connection (no connections exist yet)
+        if (connections.length === 0) {
+            listContainer.innerHTML = this.renderFirstConnectionView();
+        } else {
+            listContainer.innerHTML = this.renderSourceItemsView();
+        }
         
         modal.classList.remove('hidden');
         
-        // Attach event listeners
-        this.attachFilterListeners();
+        // Attach click handlers
+        this.attachSourceItemHandlers();
     },
 
     /**
@@ -57,19 +65,19 @@ const ItemSelectorEnhanced = {
         
         title.textContent = 'Select Destination Item';
         
-        // Render class/type selectors and initial empty list
-        listContainer.innerHTML = this.renderFilters();
+        // Render class/type selectors for destination (destinations are diverse)
+        listContainer.innerHTML = this.renderDestinationFilters();
         
         modal.classList.remove('hidden');
         
         // Attach event listeners
-        this.attachFilterListeners();
+        this.attachDestinationFilterListeners();
     },
 
     /**
-     * Render filter dropdowns
+     * Render destination filter dropdowns
      */
-    renderFilters() {
+    renderDestinationFilters() {
         return `
             <div class="mb-6 space-y-4">
                 <div>
@@ -97,9 +105,9 @@ const ItemSelectorEnhanced = {
     },
 
     /**
-     * Attach event listeners to filter dropdowns
+     * Attach event listeners to destination filter dropdowns
      */
-    attachFilterListeners() {
+    attachDestinationFilterListeners() {
         const classSelect = document.getElementById('filter-class');
         const typeSelect = document.getElementById('filter-type');
         
@@ -109,7 +117,7 @@ const ItemSelectorEnhanced = {
             if (!selectedClass) {
                 typeSelect.disabled = true;
                 typeSelect.innerHTML = '<option value="">Select class first...</option>';
-                this.updateItemsList('', '');
+                this.updateDestinationItemsList('', '');
                 return;
             }
             
@@ -120,21 +128,21 @@ const ItemSelectorEnhanced = {
                 types.map(type => `<option value="${type}">${type}</option>`).join('');
             
             // Clear items list
-            this.updateItemsList(selectedClass, '');
+            this.updateDestinationItemsList(selectedClass, '');
         });
         
         typeSelect.addEventListener('change', (e) => {
             const selectedClass = classSelect.value;
             const selectedType = e.target.value;
             
-            this.updateItemsList(selectedClass, selectedType);
+            this.updateDestinationItemsList(selectedClass, selectedType);
         });
     },
 
     /**
-     * Update items list based on selected filters
+     * Update destination items list based on selected filters
      */
-    updateItemsList(selectedClass, selectedType) {
+    updateDestinationItemsList(selectedClass, selectedType) {
         const container = document.getElementById('filtered-items-container');
         
         if (!selectedClass || !selectedType) {
@@ -142,13 +150,7 @@ const ItemSelectorEnhanced = {
             return;
         }
         
-        // Get filtered items based on mode
-        let items;
-        if (this.workflowState.mode === 'source') {
-            items = this.getFilteredSourceItems(selectedClass, selectedType);
-        } else {
-            items = this.getFilteredDestItems(selectedClass, selectedType);
-        }
+        const items = this.getFilteredDestItems(selectedClass, selectedType);
         
         // Render items
         if (items.length === 0) {
@@ -156,20 +158,146 @@ const ItemSelectorEnhanced = {
             return;
         }
         
-        container.innerHTML = items.map(item => this.renderItemCard(item)).join('');
+        container.innerHTML = items.map(item => this.renderDestinationItemCard(item)).join('');
         
         // Attach click handlers
         items.forEach(item => {
             const card = document.getElementById(`item-card-${item.id}`);
             if (card) {
                 card.addEventListener('click', () => {
-                    if (this.workflowState.mode === 'source') {
-                        this.handleSourceItemClick(item);
-                    } else {
-                        this.handleDestItemClick(item);
-                    }
+                    this.handleDestItemClick(item);
                 });
             }
+        });
+    },
+
+    /**
+     * Render first connection view (receptacle only)
+     */
+    renderFirstConnectionView() {
+        const currentLocation = state.currentLocation;
+        const receptacleId = ZONE_RECEPTACLES[currentLocation];
+        
+        if (!receptacleId) {
+            return '<p class="text-gray-500 text-sm text-center py-8">No receptacle configured for this zone</p>';
+        }
+        
+        const receptacle = state.allItems.find(item => item.id === receptacleId);
+        
+        if (!receptacle) {
+            return '<p class="text-gray-500 text-sm text-center py-8">Receptacle not found</p>';
+        }
+        
+        const femaleEnds = parseInt(receptacle.female_ends || '0');
+        
+        return `
+            <div class="mb-4">
+                <h3 class="text-sm font-semibold text-gray-700 mb-3">🏠 Start from Receptacle</h3>
+                <p class="text-xs text-gray-600 mb-4">The first connection always starts from your zone's receptacle.</p>
+                
+                <div 
+                    id="source-item-${receptacle.id}" 
+                    class="item-card border-2 border-blue-500 bg-blue-50 rounded-lg p-4 cursor-pointer hover:bg-blue-100 transition-colors"
+                    data-item-id="${receptacle.id}"
+                >
+                    <div class="font-semibold text-lg text-gray-900">${receptacle.short_name || receptacle.id}</div>
+                    <div class="text-sm text-gray-600 mt-1">${receptacle.class_type} • ${femaleEnds} ports available</div>
+                </div>
+            </div>
+        `;
+    },
+
+    /**
+     * Render source items view with recent connections and ready items
+     */
+    renderSourceItemsView() {
+        const currentLocation = this.getCurrentLocation();
+        const connections = currentLocation?.connections || [];
+        const itemsDeployed = currentLocation?.items_deployed || [];
+        const allItems = state.allItems || [];
+        
+        // Get items with open connections (recent)
+        const recentItems = PortTracker.getItemsWithOpenConnections(
+            connections,
+            allItems,
+            itemsDeployed
+        ).slice(0, 3); // Top 3 most recent
+        
+        // Get all items in zone with available female ports
+        const readyItems = allItems.filter(item => {
+            // Must be deployed in this zone
+            if (!itemsDeployed.includes(item.id)) return false;
+            
+            // Must have female ports
+            const femaleEnds = parseInt(item.female_ends || '0');
+            if (femaleEnds === 0) return false;
+            
+            // Must have at least one available port
+            return PortTracker.hasAvailablePorts(item, connections, item.id, 'female');
+        });
+        
+        let html = '';
+        
+        // Recent connections section
+        if (recentItems.length > 0) {
+            html += `
+                <div class="mb-6">
+                    <h3 class="text-sm font-semibold text-gray-700 mb-3">🔥 Continue From Recent (${recentItems.length})</h3>
+                    <div class="space-y-2">
+                        ${recentItems.map(itemInfo => this.renderSourceItemCard(itemInfo.item, itemInfo.availableFemale)).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Ready items section
+        html += `
+            <div>
+                <h3 class="text-sm font-semibold text-gray-700 mb-3">📍 Ready Items (${readyItems.length})</h3>
+                ${readyItems.length === 0 
+                    ? '<p class="text-gray-500 text-sm">No items with available ports</p>'
+                    : `<div class="space-y-2">${readyItems.map(item => {
+                        const availablePorts = PortTracker.getAvailablePortCount(item, connections, item.id, 'female');
+                        return this.renderSourceItemCard(item, availablePorts);
+                    }).join('')}</div>`
+                }
+            </div>
+        `;
+        
+        return html;
+    },
+
+    /**
+     * Render a single source item card
+     */
+    renderSourceItemCard(item, availablePortCount) {
+        return `
+            <div 
+                id="source-item-${item.id}" 
+                class="item-card border border-gray-300 rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                data-item-id="${item.id}"
+            >
+                <div class="font-semibold text-lg text-gray-900">${item.short_name || item.id}</div>
+                <div class="text-sm text-gray-600 mt-1">
+                    ${item.class_type} • ${availablePortCount} ${availablePortCount === 1 ? 'port' : 'ports'} available
+                </div>
+            </div>
+        `;
+    },
+
+    /**
+     * Attach click handlers to source items
+     */
+    attachSourceItemHandlers() {
+        const itemCards = document.querySelectorAll('.item-card[data-item-id]');
+        itemCards.forEach(card => {
+            card.addEventListener('click', () => {
+                const itemId = card.dataset.itemId;
+                const item = state.allItems.find(i => i.id === itemId);
+                if (item) {
+                    this.handleSourceItemClick(item);
+                }
+            });
         });
     },
 
@@ -266,26 +394,20 @@ const ItemSelectorEnhanced = {
     },
 
     /**
-     * Render a single item card
+     * Render a single destination item card
      */
-    renderItemCard(item) {
+    renderDestinationItemCard(item) {
         const currentLocation = this.getCurrentLocation();
         const connections = currentLocation?.connections || [];
         
         // Get available ports info
         let portInfo = '';
-        if (this.workflowState.mode === 'source') {
-            const ports = PortTracker.getAvailablePorts(item, connections, item.id, 'female');
-            const available = ports.filter(p => p.available);
-            portInfo = available.map(p => p.name.replace('Female_', 'Port ')).join(', ');
+        if (item.class === 'Decoration' || item.class === 'Light') {
+            portInfo = 'Power Inlet Available';
         } else {
-            if (item.class === 'Decoration' || item.class === 'Light') {
-                portInfo = 'Power Inlet Available';
-            } else {
-                const ports = PortTracker.getAvailablePorts(item, connections, item.id, 'male');
-                const available = ports.filter(p => p.available);
-                portInfo = available.map(p => p.name.replace('Male_', 'Port ')).join(', ');
-            }
+            const ports = PortTracker.getAvailablePorts(item, connections, item.id, 'male');
+            const available = ports.filter(p => p.available);
+            portInfo = available.map(p => p.name.replace('Male_', 'Port ')).join(', ');
         }
         
         return `
@@ -310,30 +432,29 @@ const ItemSelectorEnhanced = {
         this.workflowState.sourceItem = item;
         this.workflowState.sourceItemId = item.id;
         
-        // Close item selector modal
-        this.close();
-        
-        // Check if we need port selection
+        // Auto-assign first available port
         const currentLocation = this.getCurrentLocation();
         const connections = currentLocation?.connections || [];
-        const availablePorts = PortTracker.getAvailablePorts(
-            item, 
-            connections, 
-            item.id, 
+        const firstAvailablePort = PortTracker.getFirstAvailablePort(
+            item,
+            connections,
+            item.id,
             'female'
-        ).filter(p => p.available);
+        );
         
-        if (availablePorts.length === 1) {
-            // Auto-select the only port
-            this.workflowState.sourcePort = availablePorts[0].name;
-            console.log('Auto-selected port:', availablePorts[0].name);
-            
-            // Move to destination selection
-            this.openDestinationSelector();
-        } else {
-            // Show port selector
-            this.openPortSelector(availablePorts);
+        if (!firstAvailablePort) {
+            UIUtils.showToast('No available ports on this item', 'error');
+            return;
         }
+        
+        this.workflowState.sourcePort = firstAvailablePort;
+        console.log('Auto-assigned port:', firstAvailablePort);
+        
+        // Close source selector modal
+        this.close();
+        
+        // Move directly to destination selection
+        this.openDestinationSelector();
     },
 
     /**
