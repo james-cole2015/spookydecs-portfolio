@@ -95,19 +95,19 @@ const StaticPropManager = {
             console.log('Static prop added:', response);
             
             // Show success toast
-            UI.showToast(`${itemName} added to zone`, 'success');
+            UIUtils.showToast(`${itemName} added to zone`, 'success');
             
             // Close modal
             this.closeSelector();
             
             // Refresh the deployment data
-            if (typeof ConnectionBuilder !== 'undefined' && ConnectionBuilder.loadDeployment) {
-                await ConnectionBuilder.loadDeployment(state.currentDeployment.id, state.currentLocation);
+            if (typeof DeploymentManager !== 'undefined' && DeploymentManager.reloadDeploymentData) {
+                await DeploymentManager.reloadDeploymentData();
             }
             
         } catch (error) {
             console.error('Error adding static prop:', error);
-            UI.showToast('Failed to add static prop: ' + error.message, 'error');
+            UIUtils.showToast('Failed to add static prop: ' + error.message, 'error');
         }
     },
 
