@@ -79,7 +79,8 @@ const StaticPropManager = {
      * Add a static prop to the current zone
      */
 async addStaticProp(itemId) {
-    console.log('Adding static prop:', itemId);
+    console.log('=== ADD STATIC PROP START ===');
+    console.log('Adding item:', itemId);
     
     try {
         const item = state.allItems.find(i => i.id === itemId);
@@ -92,7 +93,7 @@ async addStaticProp(itemId) {
             itemId
         );
         
-        console.log('Static prop added:', response);
+        console.log('API response:', response);
         
         // Show success toast
         UIUtils.showToast(`${itemName} added to zone`, 'success');
@@ -100,13 +101,23 @@ async addStaticProp(itemId) {
         // Close modal first
         this.closeSelector();
         
+        console.log('BEFORE reload - items_deployed:', 
+            state.currentDeployment?.locations?.find(l => l.name === state.currentLocation)?.items_deployed
+        );
+        
         // Refresh the deployment data
         if (typeof DeploymentManager !== 'undefined' && DeploymentManager.reloadDeploymentData) {
-            await DeploymentManager.reloadDeploymentData(); // ← Make sure this is awaited
+            await DeploymentManager.reloadDeploymentData();
         }
         
-        // THEN re-open the selector with fresh data
+        console.log('AFTER reload - items_deployed:', 
+            state.currentDeployment?.locations?.find(l => l.name === state.currentLocation)?.items_deployed
+        );
+        
+        // Re-open the selector with fresh data
+        console.log('Re-opening selector...');
         this.openSelector();
+        console.log('=== ADD STATIC PROP END ===');
         
     } catch (error) {
         console.error('Error adding static prop:', error);
