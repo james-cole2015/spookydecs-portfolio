@@ -461,23 +461,81 @@ const ItemSelectorEnhanced = {
      * Handle destination item selection
      */
     handleDestItemClick(item) {
-        console.log('Destination item selected:', item.short_name);
+    console.log('Destination item selected:', item.short_name);
+    
+    this.workflowState.destItem = item;
+    this.workflowState.destItemId = item.id;
+    this.workflowState.destPort = 'Male_1'; // Always Male_1 for now
+    
+    // Close item selector modal
+    this.close();
+    
+    // Check if this is a spotlight - needs illumination selection
+    if (item.class_type === 'Spot Light') {
+        this.openIlluminationSelector();
+    } else {
+        // Ensure illuminates is empty array for non-spotlights
+        this.workflowState.illuminates = [];
+        // Show notes modal
+        this.openNotesModal();
+    }
+},
+
+/**
+ * Complete the connection - make API call
+ */
+async completeConnection() {
+    console.log('Completing connection:', this.workflowState);
+    
+    try {
+        const connectionData = {
+            from_item_id: this.workflowState.sourceItemId,
+            from_port: this.workflowState.sourcePort,
+            to_item_id: this.workflowState.destItemId,
+            to_port: this.workflowState.destPort
+        };
         
-        this.workflowState.destItem = item;
-        this.workflowState.destItemId = item.id;
-        this.workflowState.destPort = 'Male_1'; // Always Male_1 for now
-        
-        // Close item selector modal
-        this.close();
-        
-        // Check if this is a spotlight - needs illumination selection
-        if (item.class_type === 'Spot Light') {
-            this.openIlluminationSelector();
-        } else {
-            // Show notes modal
-            this.openNotesModal();
+        // Add notes if present
+        const notesInput = document.getElementById('notes');
+        if (notesInput && notesInput.value.trim()) {
+            connectionData.notes = notesInput.value.trim();
         }
-    },
+        
+        // Add illuminates if present
+        if (this.workflowState.illuminates && this.workflowState.illuminates.length > 0) {
+            connectionData.illuminates = this.workflowState.illuminates;
+        }
+        
+        // Make API call
+        const response = await API.addConnection(
+            state.currentDeployment.id,
+            state.currentLocation,
+            connectionData
+        );
+        
+        console.log('Connection created:', response);
+        
+        // Show success toast
+        UIUtils.showToast('Connection added successfully', 'success');
+        
+        // Clear notes field
+        if (notesInput) {
+            notesInput.value = '';
+        }
+        
+        // Auto-refresh deployment data
+        if (typeof DeploymentManager !== 'undefined' && DeploymentManager.reloadDeploymentData) {
+            await DeploymentManager.reloadDeploymentData();
+        }
+        
+        // Reset workflow state
+        this.resetWorkflowState();
+        
+    } catch (error) {
+        console.error('Error creating connection:', error);
+        UIUtils.showToast('Failed to create connection: ' + error.message, 'error');
+    }
+},
 
     /**
      * Open port selector modal
