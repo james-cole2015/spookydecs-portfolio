@@ -157,4 +157,11 @@ const API = {
             method: 'DELETE'
         });
     },
+
+    async updateConnectionNotes(deploymentId, locationName, connectionId, notes) {
+    return this.request(`/admin/deployments/${deploymentId}/locations/${encodeURIComponent(locationName)}/connections/${connectionId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ notes }),
+    });
+},
 };
