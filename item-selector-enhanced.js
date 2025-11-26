@@ -474,8 +474,8 @@ const ItemSelectorEnhanced = {
         if (item.class_type === 'Spot Light') {
             this.openIlluminationSelector();
         } else {
-            // Complete the connection
-            this.completeConnection();
+            // Show notes modal
+            this.openNotesModal();
         }
     },
 
@@ -625,8 +625,8 @@ const ItemSelectorEnhanced = {
         const modal = document.getElementById('illumination-selector-modal');
         modal.classList.add('hidden');
         
-        // Complete the connection
-        this.completeConnection();
+        // Show notes modal
+        this.openNotesModal();
     },
 
     /**
@@ -637,7 +637,53 @@ const ItemSelectorEnhanced = {
         const modal = document.getElementById('illumination-selector-modal');
         modal.classList.add('hidden');
         
-        // Still complete connection, just without illuminates
+        // Show notes modal
+        this.openNotesModal();
+    },
+
+    /**
+     * Open notes modal (final step before connection creation)
+     */
+    openNotesModal() {
+        console.log('Opening notes modal');
+        
+        const modal = document.getElementById('connection-notes-modal');
+        const notesTextarea = document.getElementById('notes');
+        
+        // Clear previous notes
+        if (notesTextarea) {
+            notesTextarea.value = '';
+        }
+        
+        // Show modal
+        modal.classList.remove('hidden');
+    },
+
+    /**
+     * Skip notes and create connection
+     */
+    skipNotes() {
+        console.log('Skipping notes');
+        
+        // Close modal
+        const modal = document.getElementById('connection-notes-modal');
+        modal.classList.add('hidden');
+        
+        // Complete connection
+        this.completeConnection();
+    },
+
+    /**
+     * Confirm notes and create connection
+     */
+    confirmNotes() {
+        console.log('Confirming notes');
+        
+        // Close modal
+        const modal = document.getElementById('connection-notes-modal');
+        modal.classList.add('hidden');
+        
+        // Complete connection (notes will be read from #notes element in completeConnection)
         this.completeConnection();
     },
 
