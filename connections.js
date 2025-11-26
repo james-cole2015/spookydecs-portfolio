@@ -45,13 +45,23 @@ async function addConnection() {
 }
 
 function clearConnectionForm() {
+    // Reset state only - no DOM manipulation needed for modal workflow
     AppState.sourceItem = null;
     AppState.destinationItem = null;
-    document.getElementById('source-item-display').textContent = 'Click to select';
-    document.getElementById('destination-item-display').textContent = 'Click to select';
-    document.getElementById('source-port').innerHTML = '<option value="">Select source item first</option>';
-    document.getElementById('source-port').disabled = true;
-    document.getElementById('notes').value = '';
+    
+    // Reset workflow state if ItemSelectorEnhanced exists
+    if (typeof ItemSelectorEnhanced !== 'undefined' && ItemSelectorEnhanced.workflowState) {
+        ItemSelectorEnhanced.workflowState = {
+            sourceItem: null,
+            sourceItemId: null,
+            sourcePort: null,
+            destinationItem: null,
+            destinationItemId: null,
+            illuminatedItems: [],
+            notes: '',
+            mode: null
+        };
+    }
 }
 
 async function deleteConnection(connectionId) {
