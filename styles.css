@@ -657,7 +657,8 @@
 
 /* Session Widget Styles */
 #session-widget {
-    position: relative;
+    position: sticky;
+    top: 1rem;
 }
 
 #session-timer {
