@@ -956,3 +956,140 @@
         display: none !important;
     }
 }
+
+/* Connection Card Styles - Mobile Optimized */
+.connection-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: white;
+    transition: all 0.2s;
+}
+
+.connection-card:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+}
+
+.connection-main {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+}
+
+.connection-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.connection-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.connection-from,
+.connection-to {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.connection-arrow {
+    font-size: 12px;
+    color: #6b7280;
+    margin: 4px 0;
+}
+
+.connection-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 4px;
+}
+
+.connection-meta span {
+    white-space: nowrap;
+}
+
+.connection-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.connection-actions button {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 8px 12px;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+/* Desktop: Side-by-side layout */
+@media (min-width: 769px) {
+    .connection-card {
+        flex-direction: row;
+        align-items: center;
+    }
+    
+    .connection-header {
+        flex-direction: row;
+        align-items: center;
+    }
+    
+    .connection-actions {
+        margin-left: auto;
+    }
+}
+
+/* Mobile: Stacked layout */
+@media (max-width: 768px) {
+    .connection-card {
+        padding: 12px;
+    }
+    
+    .connection-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .connection-actions {
+        display: flex;
+        justify-content: flex-end;
+        width: 100%;
+        gap: 8px;
+    }
+    
+    .connection-actions button {
+        flex: 0 0 auto;
+    }
+    
+    .connection-from,
+    .connection-to {
+        font-size: 13px;
+    }
+    
+    .connection-meta {
+        font-size: 11px;
+    }
+}
+
+/* Touch-friendly sizing for mobile */
+@media (max-width: 640px) {
+    .connection-actions button {
+        min-height: 48px;
+        min-width: 48px;
+    }
+}

@@ -120,8 +120,9 @@ function renderConnections() {
         const fromItem = AppState.allItems.find(i => i.id === conn.from_item_id);
         const toItem = AppState.allItems.find(i => i.id === conn.to_item_id);
         
-        const fromDisplay = fromItem ? `${fromItem.short_name} (${conn.from_port})` : `${conn.from_item_id} (${conn.from_port})`;
-        const toDisplay = toItem ? `${toItem.short_name} - ${toItem.class_type}` : conn.to_item_id;
+        const fromDisplay = fromItem?.short_name || conn.from_item_id;
+        const toDisplay = toItem?.short_name || conn.to_item_id;
+        const toType = toItem?.class_type || '';
         
         let illuminatesHtml = '';
         if (conn.illuminates && conn.illuminates.length > 0) {
@@ -129,7 +130,7 @@ function renderConnections() {
                 const item = AppState.allItems.find(i => i.id === id);
                 return item ? `${item.short_name}` : id;
             }).join(', ');
-            illuminatesHtml = `<p class="text-sm text-gray-600 mt-2"><span class="font-medium">Illuminates:</span> ${illuminatedItems}</p>`;
+            illuminatesHtml = `<span>💡 ${illuminatedItems}</span>`;
         }
 
         // Check if source item (from_item) has available female ports
@@ -143,40 +144,39 @@ function renderConnections() {
         // Connect From Here button
         const connectButton = hasAvailablePorts
             ? `<button 
-                class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm whitespace-nowrap"
+                class="bg-green-600 hover:bg-green-700 text-white"
                 onclick="event.stopPropagation(); connectFromHere('${fromItem.id}')"
+                title="Connect from here"
             >
-                Connect From Here
+                🔌
             </button>`
-            : `<button 
-                class="px-3 py-1 bg-gray-300 text-gray-500 rounded text-sm whitespace-nowrap cursor-not-allowed"
-                disabled
-                title="No available ports"
-            >
-                Connect From Here
-            </button>`;
+            : '';
 
         return `
-            <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer" onclick="ConnectionDetailPanel.open('${conn.id}')">
-                <div class="flex justify-between items-start">
-                    <div class="flex-1">
-                        <div class="text-sm mb-2">
-                            <span class="font-medium text-gray-900">${fromDisplay}</span>
-                            <span class="text-gray-500"> → </span>
-                            <span class="font-medium text-gray-900">${toDisplay}</span>
+            <div class="connection-card" data-connection-id="${conn.id}" onclick="ConnectionDetailPanel.open('${conn.id}')">
+                <div class="connection-main">
+                    <div class="connection-header">
+                        <div class="connection-info">
+                            <div class="connection-from">${fromDisplay}</div>
+                            <div class="connection-arrow">↓</div>
+                            <div class="connection-to">${toDisplay}</div>
                         </div>
-                        ${conn.notes ? `<p class="text-sm text-gray-600 mt-2"><span class="font-medium">Notes:</span> ${conn.notes}</p>` : ''}
+                    </div>
+                    <div class="connection-meta">
+                        <span>🔌 ${conn.from_port} → ${conn.to_port}</span>
+                        ${toType ? `<span>📦 ${toType}</span>` : ''}
                         ${illuminatesHtml}
                     </div>
-                    <div class="ml-4 flex gap-2">
-                        ${connectButton}
-                        <button 
-                            class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm whitespace-nowrap"
-                            onclick="event.stopPropagation(); deleteConnection('${conn.id}')"
-                        >
-                            Delete
-                        </button>
-                    </div>
+                </div>
+                <div class="connection-actions">
+                    ${connectButton}
+                    <button 
+                        class="bg-red-600 hover:bg-red-700 text-white"
+                        onclick="event.stopPropagation(); deleteConnection('${conn.id}')"
+                        title="Delete connection"
+                    >
+                        🗑️
+                    </button>
                 </div>
             </div>
         `;
@@ -214,19 +214,24 @@ function renderConnections() {
             const classType = item ? item.class_type : 'Unknown';
             
             return `
-                <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
-                    <div class="flex justify-between items-start">
-                        <div class="flex-1">
-                            <div class="text-sm mb-1">
-                                <span class="font-medium text-gray-900">${displayName}</span>
+                <div class="connection-card" data-item-id="${itemId}">
+                    <div class="connection-main">
+                        <div class="connection-header">
+                            <div class="connection-info">
+                                <div class="connection-from">${displayName}</div>
                             </div>
-                            <p class="text-xs text-gray-600">${classType}</p>
                         </div>
+                        <div class="connection-meta">
+                            <span>📦 ${classType}</span>
+                        </div>
+                    </div>
+                    <div class="connection-actions">
                         <button 
-                            class="ml-4 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm whitespace-nowrap"
+                            class="bg-red-600 hover:bg-red-700 text-white"
                             onclick="deleteStaticProp('${itemId}')"
+                            title="Delete static prop"
                         >
-                            Delete
+                            🗑️
                         </button>
                     </div>
                 </div>
