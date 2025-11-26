@@ -897,3 +897,62 @@
 .port-count {
     font-weight: 500;
 }
+
+/* Connection Detail Panel - Desktop Slide-Out */
+#connection-detail-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 40;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease-in-out;
+}
+
+#connection-detail-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+#connection-detail-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 400px;
+    max-width: 90vw;
+    background: white;
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.2);
+    z-index: 50;
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform 0.3s ease-in-out;
+}
+
+#connection-detail-panel.open {
+    transform: translateX(0);
+}
+
+.detail-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+}
+
+.detail-value {
+    font-weight: 500;
+    color: #1f2937;
+    margin-bottom: 1rem;
+}
+
+/* Hide panel on mobile - use accordion instead */
+@media (max-width: 768px) {
+    #connection-detail-panel,
+    #connection-detail-overlay {
+        display: none !important;
+    }
+}
