@@ -144,7 +144,7 @@ function renderConnections() {
         const connectButton = hasAvailablePorts
             ? `<button 
                 class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm whitespace-nowrap"
-                onclick="connectFromHere('${fromItem.id}')"
+                onclick="event.stopPropagation(); connectFromHere('${fromItem.id}')"
             >
                 Connect From Here
             </button>`
@@ -157,7 +157,7 @@ function renderConnections() {
             </button>`;
 
         return `
-            <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+            <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer" onclick="ConnectionDetailPanel.open('${conn.id}')">
                 <div class="flex justify-between items-start">
                     <div class="flex-1">
                         <div class="text-sm mb-2">
@@ -172,7 +172,7 @@ function renderConnections() {
                         ${connectButton}
                         <button 
                             class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm whitespace-nowrap"
-                            onclick="deleteConnection('${conn.id}')"
+                            onclick="event.stopPropagation(); deleteConnection('${conn.id}')"
                         >
                             Delete
                         </button>
