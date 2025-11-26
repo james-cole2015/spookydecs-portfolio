@@ -360,5 +360,71 @@
         </div>
     </div>
 </div>
+<!-- Connection Detail Panel (Desktop only) -->
+<div id="connection-detail-overlay" class="hidden"></div>
+
+<div id="connection-detail-panel" class="hidden">
+    <div class="p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-bold">Connection Details</h2>
+            <button onclick="ConnectionDetailPanel.close()" class="text-3xl text-gray-400 hover:text-gray-600 leading-none">&times;</button>
+        </div>
+        
+        <!-- Metadata -->
+        <div class="space-y-4 mb-6">
+            <div>
+                <label class="detail-label">From</label>
+                <p class="detail-value" id="detail-from"></p>
+            </div>
+            <div>
+                <label class="detail-label">To</label>
+                <p class="detail-value" id="detail-to"></p>
+            </div>
+            <div>
+                <label class="detail-label">Ports</label>
+                <p class="detail-value text-sm" id="detail-ports"></p>
+            </div>
+            <div>
+                <label class="detail-label">Zone</label>
+                <p class="detail-value text-sm" id="detail-zone"></p>
+            </div>
+            <div>
+                <label class="detail-label">Connected</label>
+                <p class="detail-value text-sm" id="detail-timestamp"></p>
+            </div>
+            <div>
+                <label class="detail-label">Session</label>
+                <p class="detail-value text-sm" id="detail-session"></p>
+            </div>
+            <div id="detail-illuminates-section" class="hidden">
+                <label class="detail-label">Illuminates</label>
+                <p class="detail-value text-sm" id="detail-illuminates"></p>
+            </div>
+        </div>
+        
+        <!-- Notes -->
+        <div class="mb-6">
+            <label class="detail-label mb-2 block">Notes</label>
+            <textarea id="detail-notes" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+            <button onclick="ConnectionDetailPanel.saveNotes()" class="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                Save Notes
+            </button>
+        </div>
+        
+        <!-- Actions -->
+        <div class="space-y-2">
+            <button id="detail-connect-btn" class="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                Connect From Here
+            </button>
+            <button id="detail-delete-btn" class="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+                Delete Connection
+            </button>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
+
 </body>
 </html>
