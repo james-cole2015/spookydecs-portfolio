@@ -182,7 +182,7 @@ function renderConnections() {
         `;
     }).join('');
     
-    // Get static props (items in items_deployed that are NOT in any connection)
+    // Get static props - ONLY items with class_type === 'Static Prop' that are NOT in connections
     const itemsInConnections = new Set();
     AppState.connections.forEach(conn => {
         itemsInConnections.add(conn.from_item_id);
@@ -198,8 +198,13 @@ function renderConnections() {
     );
     const itemsDeployed = currentLocation?.items_deployed || [];
     
-    // Find static props (items deployed but not in connections)
-    const staticPropIds = itemsDeployed.filter(itemId => !itemsInConnections.has(itemId));
+    // Find static props - MUST be class_type === 'Static Prop' AND not in connections
+    const staticPropIds = itemsDeployed.filter(itemId => {
+        if (itemsInConnections.has(itemId)) return false;
+        
+        const item = AppState.allItems.find(i => i.id === itemId);
+        return item && item.class_type === 'Static Prop';
+    });
     
     let staticPropsHtml = '';
     if (staticPropIds.length > 0) {
