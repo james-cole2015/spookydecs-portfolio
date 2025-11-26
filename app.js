@@ -7,28 +7,35 @@ function initEventListeners() {
     
     document.getElementById('back-to-deployments-btn').addEventListener('click', DeploymentManager.backToDeployments);
     
-    // NEW: Enhanced Connection Workflow Event Listeners
+    // NEW: Enhanced Connection Workflow Event Listeners with Session Enforcement
+    
     // Add Connection Button
     document.getElementById('add-connection-btn')?.addEventListener('click', () => {
         console.log('Add Connection button clicked');
         
-        // Ensure we have a deployment and location selected
-        if (!state.currentDeployment || !state.currentLocation) {
-            UI.showToast('Please select a deployment and location first', 'error');
+        // CHECK 1: Session enforcement
+        if (!AppState.activeSession) {
+            UIUtils.showToast('Please start a session before adding connections', 'error');
             return;
         }
         
-        // Ensure items are loaded
+        // CHECK 2: Ensure we have a deployment and location selected
+        if (!state.currentDeployment || !state.currentLocation) {
+            UIUtils.showToast('Please select a deployment and location first', 'error');
+            return;
+        }
+        
+        // CHECK 3: Ensure items are loaded
         if (!state.allItems || state.allItems.length === 0) {
             console.log('Items not loaded, fetching...');
-            UI.showToast('Loading items...', 'info');
+            UIUtils.showToast('Loading items...', 'info');
             API.listItems().then(response => {
                 state.allItems = response.items || response;
                 console.log(`Loaded ${state.allItems.length} items`);
                 ItemSelectorEnhanced.openSourceSelector();
             }).catch(error => {
                 console.error('Failed to load items:', error);
-                UI.showToast('Failed to load items: ' + error.message, 'error');
+                UIUtils.showToast('Failed to load items: ' + error.message, 'error');
             });
             return;
         }
@@ -41,23 +48,29 @@ function initEventListeners() {
     document.getElementById('add-static-prop-btn')?.addEventListener('click', () => {
         console.log('Add Static Prop button clicked');
         
-        // Ensure we have a deployment and location selected
-        if (!state.currentDeployment || !state.currentLocation) {
-            UI.showToast('Please select a deployment and location first', 'error');
+        // CHECK 1: Session enforcement
+        if (!AppState.activeSession) {
+            UIUtils.showToast('Please start a session before adding static props', 'error');
             return;
         }
         
-        // Ensure items are loaded
+        // CHECK 2: Ensure we have a deployment and location selected
+        if (!state.currentDeployment || !state.currentLocation) {
+            UIUtils.showToast('Please select a deployment and location first', 'error');
+            return;
+        }
+        
+        // CHECK 3: Ensure items are loaded
         if (!state.allItems || state.allItems.length === 0) {
             console.log('Items not loaded, fetching...');
-            UI.showToast('Loading items...', 'info');
+            UIUtils.showToast('Loading items...', 'info');
             API.listItems().then(response => {
                 state.allItems = response.items || response;
                 console.log(`Loaded ${state.allItems.length} items`);
                 StaticPropManager.openSelector();
             }).catch(error => {
                 console.error('Failed to load items:', error);
-                UI.showToast('Failed to load items: ' + error.message, 'error');
+                UIUtils.showToast('Failed to load items: ' + error.message, 'error');
             });
             return;
         }

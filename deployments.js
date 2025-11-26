@@ -382,6 +382,7 @@ async function loadDeploymentIntoBuilder(deploymentId, locationName) {
         clearConnectionForm();
         renderConnections();
         renderSessionWidget();
+        updateConnectionFormState();
         renderItemsList();
         
         document.getElementById('deployments-view').classList.add('hidden');
@@ -393,6 +394,7 @@ async function loadDeploymentIntoBuilder(deploymentId, locationName) {
         UIUtils.showToast(`Failed to load deployment: ${error.message}`, 'error');
     }
 }
+
 async function reloadDeploymentData() {
     if (!AppState.currentDeploymentId || !AppState.currentLocationName) {
         console.warn('Cannot reload: no active deployment');
@@ -415,6 +417,7 @@ async function reloadDeploymentData() {
         // Update active session
         const sessions = locationData.location?.work_sessions || [];
         AppState.activeSession = sessions.find(s => !s.end_time) || null;
+        updateConnectionFormState();
         
         // Update state.currentDeployment with fresh location data
         console.log('🔍 state.currentDeployment exists?', !!state.currentDeployment);
@@ -448,6 +451,7 @@ async function reloadDeploymentData() {
         console.error('Failed to reload deployment data:', error);
     }
 }
+
 function renderItemsList() {
     const listContainer = document.getElementById('items-deployed-list');
     if (!listContainer) return;
@@ -542,6 +546,45 @@ function renderSessionWidget() {
     }
 }
 
+/**
+ * Update connection form buttons based on session state
+ * Disables/enables Add Connection and Add Static Prop buttons
+ */
+function updateConnectionFormState() {
+    const addConnectionBtn = document.getElementById('add-connection-btn');
+    const addStaticPropBtn = document.getElementById('add-static-prop-btn');
+    
+    if (!AppState.activeSession) {
+        // No active session - disable buttons
+        console.log('No active session - disabling connection buttons');
+        
+        if (addConnectionBtn) {
+            addConnectionBtn.disabled = true;
+            addConnectionBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            addConnectionBtn.title = 'Start a session to add connections';
+        }
+        if (addStaticPropBtn) {
+            addStaticPropBtn.disabled = true;
+            addStaticPropBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            addStaticPropBtn.title = 'Start a session to add static props';
+        }
+    } else {
+        // Active session exists - enable buttons
+        console.log('Active session found - enabling connection buttons');
+        
+        if (addConnectionBtn) {
+            addConnectionBtn.disabled = false;
+            addConnectionBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            addConnectionBtn.title = '';
+        }
+        if (addStaticPropBtn) {
+            addStaticPropBtn.disabled = false;
+            addStaticPropBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            addStaticPropBtn.title = '';
+        }
+    }
+}
+
 let sessionTimerInterval = null;
 
 function startSessionTimer(startTime) {
@@ -577,6 +620,7 @@ async function startSession() {
         
         AppState.activeSession = result.session;
         renderSessionWidget();
+        updateConnectionFormState();
         UIUtils.showToast(`Session ${result.session.id} started!`);
     } catch (error) {
         UIUtils.showToast(`Failed to start session: ${error.message}`, 'error');
@@ -675,6 +719,7 @@ async function confirmEndSession() {
         
         AppState.activeSession = null;
         renderSessionWidget();
+        updateConnectionFormState();
         
         const duration = result.session.duration_seconds;
         const minutes = Math.floor(duration / 60);
@@ -706,7 +751,8 @@ window.DeploymentManager = {
     reviewAndFinish,
     completeSetup,
     backToDeployments,
-    reloadDeploymentData
+    reloadDeploymentData,
+    updateConnectionFormState
 };
 
 // Make functions available globally for onclick handlers
