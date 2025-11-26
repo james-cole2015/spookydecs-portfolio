@@ -961,8 +961,8 @@
 .connection-card {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding: 16px;
+    gap: 8px;
+    padding: 12px;
     border: 1px solid #e5e7eb;
     border-radius: 8px;
     background: white;
@@ -972,14 +972,6 @@
 .connection-card:hover {
     background: #f9fafb;
     border-color: #d1d5db;
-}
-
-.connection-main {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    flex: 1;
-    min-width: 0;
 }
 
 .connection-header {
@@ -992,6 +984,10 @@
 .connection-info {
     flex: 1;
     min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 .connection-from,
@@ -999,24 +995,21 @@
     font-size: 14px;
     font-weight: 600;
     color: #1f2937;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 .connection-arrow {
-    font-size: 12px;
+    font-size: 14px;
     color: #6b7280;
-    margin: 4px 0;
+    font-weight: normal;
 }
 
 .connection-meta {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 12px;
     font-size: 12px;
     color: #6b7280;
-    margin-top: 4px;
+    padding-left: 2px;
 }
 
 .connection-meta span {
@@ -1025,55 +1018,49 @@
 
 .connection-actions {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     flex-shrink: 0;
 }
 
 .connection-actions button {
-    min-height: 44px;
-    min-width: 44px;
-    padding: 8px 12px;
-    font-size: 14px;
-    white-space: nowrap;
+    min-height: 36px;
+    min-width: 36px;
+    padding: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
-/* Desktop: Side-by-side layout */
-@media (min-width: 769px) {
-    .connection-card {
-        flex-direction: row;
-        align-items: center;
-    }
-    
-    .connection-header {
-        flex-direction: row;
-        align-items: center;
-    }
-    
-    .connection-actions {
-        margin-left: auto;
-    }
+.connection-actions button.bg-green-600 {
+    background: #16a34a;
+    color: white;
 }
 
-/* Mobile: Stacked layout */
-@media (max-width: 768px) {
-    .connection-card {
-        padding: 12px;
-    }
-    
-    .connection-header {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .connection-actions {
-        display: flex;
-        justify-content: flex-end;
-        width: 100%;
-        gap: 8px;
-    }
-    
+.connection-actions button.bg-green-600:hover {
+    background: #15803d;
+}
+
+.connection-actions button.bg-red-600 {
+    background: #dc2626;
+    color: white;
+}
+
+.connection-actions button.bg-red-600:hover {
+    background: #b91c1c;
+}
+
+/* Touch-friendly sizing for mobile */
+@media (max-width: 640px) {
     .connection-actions button {
-        flex: 0 0 auto;
+        min-height: 44px;
+        min-width: 44px;
+        font-size: 18px;
     }
     
     .connection-from,
@@ -1083,13 +1070,6 @@
     
     .connection-meta {
         font-size: 11px;
-    }
-}
-
-/* Touch-friendly sizing for mobile */
-@media (max-width: 640px) {
-    .connection-actions button {
-        min-height: 48px;
-        min-width: 48px;
+        gap: 10px;
     }
 }

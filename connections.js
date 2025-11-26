@@ -148,35 +148,33 @@ function renderConnections() {
                 onclick="event.stopPropagation(); connectFromHere('${fromItem.id}')"
                 title="Connect from here"
             >
-                🔌
+                ⚙
             </button>`
             : '';
 
         return `
             <div class="connection-card" data-connection-id="${conn.id}" onclick="ConnectionDetailPanel.open('${conn.id}')">
-                <div class="connection-main">
-                    <div class="connection-header">
-                        <div class="connection-info">
-                            <div class="connection-from">${fromDisplay}</div>
-                            <div class="connection-arrow">↓</div>
-                            <div class="connection-to">${toDisplay}</div>
-                        </div>
+                <div class="connection-header">
+                    <div class="connection-info">
+                        <span class="connection-from">${fromDisplay}</span>
+                        <span class="connection-arrow">→</span>
+                        <span class="connection-to">${toDisplay}</span>
                     </div>
-                    <div class="connection-meta">
-                        <span>🔌 ${conn.from_port} → ${conn.to_port}</span>
-                        ${toType ? `<span>📦 ${toType}</span>` : ''}
-                        ${illuminatesHtml}
+                    <div class="connection-actions">
+                        ${connectButton}
+                        <button 
+                            class="bg-red-600 hover:bg-red-700 text-white"
+                            onclick="event.stopPropagation(); deleteConnection('${conn.id}')"
+                            title="Delete connection"
+                        >
+                            ✕
+                        </button>
                     </div>
                 </div>
-                <div class="connection-actions">
-                    ${connectButton}
-                    <button 
-                        class="bg-red-600 hover:bg-red-700 text-white"
-                        onclick="event.stopPropagation(); deleteConnection('${conn.id}')"
-                        title="Delete connection"
-                    >
-                        🗑️
-                    </button>
+                <div class="connection-meta">
+                    <span>${conn.from_port} → ${conn.to_port}</span>
+                    ${toType ? `<span>${toType}</span>` : ''}
+                    ${illuminatesHtml}
                 </div>
             </div>
         `;
@@ -215,24 +213,22 @@ function renderConnections() {
             
             return `
                 <div class="connection-card" data-item-id="${itemId}">
-                    <div class="connection-main">
-                        <div class="connection-header">
-                            <div class="connection-info">
-                                <div class="connection-from">${displayName}</div>
-                            </div>
+                    <div class="connection-header">
+                        <div class="connection-info">
+                            <span class="connection-from">${displayName}</span>
                         </div>
-                        <div class="connection-meta">
-                            <span>📦 ${classType}</span>
+                        <div class="connection-actions">
+                            <button 
+                                class="bg-red-600 hover:bg-red-700 text-white"
+                                onclick="deleteStaticProp('${itemId}')"
+                                title="Delete static prop"
+                            >
+                                ✕
+                            </button>
                         </div>
                     </div>
-                    <div class="connection-actions">
-                        <button 
-                            class="bg-red-600 hover:bg-red-700 text-white"
-                            onclick="deleteStaticProp('${itemId}')"
-                            title="Delete static prop"
-                        >
-                            🗑️
-                        </button>
+                    <div class="connection-meta">
+                        <span>${classType}</span>
                     </div>
                 </div>
             `;
