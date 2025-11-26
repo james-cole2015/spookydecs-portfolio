@@ -101,16 +101,17 @@
             </div>
         </div>
 
-        <!-- Connection Builder View (Hidden by default) -->
+ <!-- Connection Builder View (Hidden by default) -->
 <div id="connection-builder-view" class="view hidden">
     <div class="bg-white rounded-lg shadow p-6 mb-6">
-        <div class="flex justify-between items-center mb-6">
-            <div>
+        <div class="connection-builder-header">
+            <div class="deployment-info">
                 <h2 class="text-2xl font-bold">Connection Builder</h2>
-                <p class="text-gray-600" id="current-deployment-info">Loading...</p>
+                <p class="text-gray-600 mt-1" id="current-deployment-info">Loading...</p>
             </div>
             <button id="back-to-deployments-btn" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">
-                Back to Deployments
+                <span class="btn-icon">←</span>
+                <span class="btn-text">Back to Deployments</span>
             </button>
         </div>
 
@@ -141,28 +142,28 @@
             </div>
 
             <!-- RIGHT SIDE: Session Widget & Items (spans 1 column) -->
-                <div class="lg:col-span-1">
-                    <div class="sticky top-4">
-                        <!-- Session Widget -->
-                        <div id="session-widget" class="mb-6">
-                            <!-- Session widget content will be rendered here by JavaScript -->
-                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                                <p class="text-gray-500 text-sm">Loading session info...</p>
-                            </div>
+            <div class="lg:col-span-1">
+                <div class="sticky top-4">
+                    <!-- Session Widget -->
+                    <div id="session-widget" class="mb-6">
+                        <!-- Session widget content will be rendered here by JavaScript -->
+                        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                            <p class="text-gray-500 text-sm">Loading session info...</p>
                         </div>
+                    </div>
 
-                        <!-- Items Deployed List -->
-                        <div id="items-deployed-widget" class="bg-white border border-gray-200 rounded-lg p-4">
-                            <h3 class="text-sm font-semibold text-gray-700 mb-2">Items in Zone</h3>
-                            <div id="items-deployed-list" class="text-xs text-gray-600">
-                                <p class="text-gray-400 italic">No items deployed yet</p>
-                            </div>
+                    <!-- Items Deployed List -->
+                    <div id="items-deployed-widget" class="bg-white border border-gray-200 rounded-lg p-4">
+                        <h3 class="text-sm font-semibold text-gray-700 mb-2">Items in Zone</h3>
+                        <div id="items-deployed-list" class="text-xs text-gray-600">
+                            <p class="text-gray-400 italic">No items deployed yet</p>
                         </div>
-                    </div> <!-- Close sticky wrapper HERE -->
-                </div>
+                    </div>
+                </div> <!-- Close sticky wrapper HERE -->
             </div>
         </div>
     </div>
+</div>
 
     <!-- Validation Results (if needed) -->
     <div id="validation-results" class="hidden bg-white rounded-lg shadow p-6">

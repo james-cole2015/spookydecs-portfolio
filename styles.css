@@ -1073,3 +1073,68 @@
         gap: 10px;
     }
 }
+
+/* Connection Builder Header - Mobile Optimized */
+.connection-builder-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.deployment-info {
+    flex: 1;
+}
+
+#current-deployment-info {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+/* Back button - desktop shows full text */
+#back-to-deployments-btn {
+    white-space: nowrap;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    .connection-builder-header {
+        margin-bottom: 16px;
+    }
+    
+    /* Stack deployment info vertically on mobile */
+    #current-deployment-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 13px;
+        line-height: 1.4;
+    }
+    
+    /* Make back button icon-only on mobile */
+    #back-to-deployments-btn {
+        min-width: 44px;
+        min-height: 44px;
+        padding: 8px;
+        font-size: 20px;
+    }
+    
+    #back-to-deployments-btn .btn-text {
+        display: none;
+    }
+    
+    #back-to-deployments-btn .btn-icon {
+        display: inline;
+    }
+}
+
+/* Desktop - hide icon, show text */
+@media (min-width: 769px) {
+    #back-to-deployments-btn .btn-icon {
+        display: none;
+    }
+    
+    #back-to-deployments-btn .btn-text {
+        display: inline;
+    }
+}

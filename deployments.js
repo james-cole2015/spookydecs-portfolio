@@ -370,9 +370,14 @@ async function loadDeploymentIntoBuilder(deploymentId, locationName) {
         };
         state.currentDeployment = deployment;
         state.currentLocation = locationName;
-        state.allItems = allItems;        
-        document.getElementById('current-deployment-info').textContent = 
-            `${deploymentId} • ${locationName}`;
+        state.allItems = allItems;
+        
+        // Update deployment info with mobile-friendly format
+        const deploymentInfo = document.getElementById('current-deployment-info');
+        deploymentInfo.innerHTML = `
+            <span>Deployment: ${deploymentId}</span>
+            <span>Zone: ${locationName}</span>
+        `;
         
         clearConnectionForm();
         renderConnections();
