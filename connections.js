@@ -107,6 +107,178 @@ async function deleteStaticProp(itemId) {
     }
 }
 
+// Toggle accordion on mobile or open panel on desktop
+function handleConnectionClick(connectionId) {
+    const isMobile = window.innerWidth <= 768;
+    
+    if (isMobile) {
+        toggleConnectionAccordion(connectionId);
+    } else {
+        ConnectionDetailPanel.open(connectionId);
+    }
+}
+
+// Toggle accordion for mobile
+function toggleConnectionAccordion(connectionId) {
+    const card = document.querySelector(`[data-connection-id="${connectionId}"]`);
+    if (!card) return;
+    
+    const existingAccordion = card.querySelector('.connection-accordion');
+    
+    // If accordion is already open, close it
+    if (existingAccordion) {
+        existingAccordion.remove();
+        card.classList.remove('accordion-open');
+        return;
+    }
+    
+    // Close any other open accordions
+    document.querySelectorAll('.connection-accordion').forEach(acc => acc.remove());
+    document.querySelectorAll('.connection-card').forEach(c => c.classList.remove('accordion-open'));
+    
+    // Find the connection data
+    const conn = AppState.connections.find(c => c.id === connectionId);
+    if (!conn) return;
+    
+    const fromItem = AppState.allItems.find(i => i.id === conn.from_item_id);
+    const toItem = AppState.allItems.find(i => i.id === conn.to_item_id);
+    
+    // Check if source item has available ports for "Connect From Here"
+    const hasAvailablePorts = fromItem && PortTracker.hasAvailablePorts(
+        fromItem,
+        AppState.connections,
+        fromItem.id,
+        'female'
+    );
+    
+    // Format illuminates
+    let illuminatesHtml = '';
+    if (conn.illuminates && conn.illuminates.length > 0) {
+        const illuminatedItems = conn.illuminates.map(id => {
+            const item = AppState.allItems.find(i => i.id === id);
+            return item ? item.short_name : id;
+        }).join(', ');
+        illuminatesHtml = `
+            <div class="accordion-field">
+                <label class="accordion-label">Illuminates</label>
+                <p class="accordion-value">${illuminatedItems}</p>
+            </div>
+        `;
+    }
+    
+    // Format timestamp
+    const timestamp = conn.timestamp ? new Date(conn.timestamp).toLocaleString() : 'Unknown';
+    const sessionLabel = conn.session_number ? `Session ${conn.session_number}` : 'Unknown';
+    
+    // Create accordion content
+    const accordionHtml = `
+        <div class="connection-accordion">
+            <div class="accordion-content">
+                <div class="accordion-field">
+                    <label class="accordion-label">Connection ID</label>
+                    <p class="accordion-value font-mono text-sm">${conn.id}</p>
+                </div>
+                
+                <div class="accordion-field">
+                    <label class="accordion-label">From Item</label>
+                    <p class="accordion-value">${fromItem?.short_name || conn.from_item_id}</p>
+                </div>
+                
+                <div class="accordion-field">
+                    <label class="accordion-label">To Item</label>
+                    <p class="accordion-value">${toItem?.short_name || conn.to_item_id}</p>
+                </div>
+                
+                <div class="accordion-field">
+                    <label class="accordion-label">Ports</label>
+                    <p class="accordion-value">${conn.from_port} → ${conn.to_port}</p>
+                </div>
+                
+                <div class="accordion-field">
+                    <label class="accordion-label">Zone</label>
+                    <p class="accordion-value">${AppState.currentLocationName}</p>
+                </div>
+                
+                <div class="accordion-field">
+                    <label class="accordion-label">Connected</label>
+                    <p class="accordion-value">${timestamp}</p>
+                </div>
+                
+                <div class="accordion-field">
+                    <label class="accordion-label">Session</label>
+                    <p class="accordion-value">${sessionLabel}</p>
+                </div>
+                
+                ${illuminatesHtml}
+                
+                <div class="accordion-field">
+                    <label class="accordion-label">Notes</label>
+                    <textarea 
+                        id="accordion-notes-${conn.id}" 
+                        class="accordion-textarea"
+                        rows="3"
+                    >${conn.notes || ''}</textarea>
+                    <button 
+                        onclick="saveConnectionNotes('${conn.id}')"
+                        class="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 w-full"
+                    >
+                        Save Notes
+                    </button>
+                </div>
+                
+                <div class="accordion-actions">
+                    ${hasAvailablePorts ? `
+                        <button 
+                            onclick="event.stopPropagation(); connectFromHere('${fromItem.id}')"
+                            class="accordion-btn bg-green-600 hover:bg-green-700 text-white"
+                        >
+                            Connect From Here
+                        </button>
+                    ` : ''}
+                    <button 
+                        onclick="event.stopPropagation(); deleteConnection('${conn.id}')"
+                        class="accordion-btn bg-red-600 hover:bg-red-700 text-white"
+                    >
+                        Delete Connection
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    card.insertAdjacentHTML('beforeend', accordionHtml);
+    card.classList.add('accordion-open');
+}
+
+// Save notes from accordion
+async function saveConnectionNotes(connectionId) {
+    const textarea = document.getElementById(`accordion-notes-${connectionId}`);
+    if (!textarea) return;
+    
+    const notes = textarea.value.trim();
+    
+    try {
+        await API.updateConnectionNotes(
+            AppState.currentDeploymentId,
+            AppState.currentLocationName,
+            connectionId,
+            notes
+        );
+        
+        UIUtils.showToast('Notes saved successfully');
+        
+        // Update local state
+        const conn = AppState.connections.find(c => c.id === connectionId);
+        if (conn) {
+            conn.notes = notes;
+        }
+        
+    } catch (error) {
+        console.error('Error saving notes:', error);
+        UIUtils.showToast(`Failed to save notes: ${error.message}`, 'error');
+    }
+}
+
 function renderConnections() {
     const connectionsList = document.getElementById('connections-list');
     
@@ -153,7 +325,7 @@ function renderConnections() {
             : '';
 
         return `
-            <div class="connection-card" data-connection-id="${conn.id}" onclick="ConnectionDetailPanel.open('${conn.id}')">
+            <div class="connection-card" data-connection-id="${conn.id}" onclick="handleConnectionClick('${conn.id}')">
                 <div class="connection-header">
                     <div class="connection-info">
                         <span class="connection-from">${fromDisplay}</span>
@@ -297,10 +469,15 @@ window.ConnectionBuilder = {
     deleteConnection,
     deleteStaticProp,
     renderConnections,
-    connectFromHere
+    connectFromHere,
+    handleConnectionClick,
+    toggleConnectionAccordion,
+    saveConnectionNotes
 };
 
 // Make functions available globally for onclick handlers
 window.deleteConnection = deleteConnection;
 window.deleteStaticProp = deleteStaticProp;
 window.connectFromHere = connectFromHere;
+window.handleConnectionClick = handleConnectionClick;
+window.saveConnectionNotes = saveConnectionNotes;

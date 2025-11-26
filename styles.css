@@ -1138,3 +1138,96 @@
         display: inline;
     }
 }
+
+/* Connection Accordion Styles - Mobile Only */
+.connection-accordion {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #e5e7eb;
+    animation: accordionSlide 0.2s ease-out;
+}
+
+@keyframes accordionSlide {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        max-height: 1000px;
+    }
+}
+
+.accordion-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.accordion-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.accordion-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.accordion-value {
+    font-size: 14px;
+    font-weight: 500;
+    color: #1f2937;
+    margin: 0;
+}
+
+.accordion-textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 80px;
+}
+
+.accordion-textarea:focus {
+    outline: none;
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+}
+
+.accordion-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.accordion-btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: 6px;
+    border: none;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.connection-card.accordion-open {
+    background: #f9fafb;
+    border-color: #3b82f6;
+}
+
+/* Hide accordion on desktop */
+@media (min-width: 769px) {
+    .connection-accordion {
+        display: none;
+    }
+}
