@@ -1,4 +1,4 @@
-// Connection Builder Functions
+// Connection Builder Functions -- connections.js
 
 async function addConnection() {
     const sourcePort = document.getElementById('source-port').value;
