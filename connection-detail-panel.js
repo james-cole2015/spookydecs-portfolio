@@ -119,38 +119,38 @@ const ConnectionDetailPanel = {
     },
     
     async saveNotes() {
-        if (!this.currentConnectionId) {
-            console.error('No connection selected');
-            return;
+    if (!this.currentConnectionId) {
+        console.error('No connection selected');
+        return;
+    }
+    
+    const notes = document.getElementById('detail-notes').value.trim();
+    
+    try {
+        UIUtils.showToast('Saving notes...', 'info');
+        
+        await API.updateConnectionNotes(
+            AppState.currentDeploymentId,
+            AppState.currentLocationName,
+            this.currentConnectionId,
+            notes
+        );
+        
+        // Reload deployment data from server to get fresh data
+        await reloadDeploymentData();
+        
+        // Re-populate the panel with fresh connection data
+        const updatedConnection = AppState.connections.find(c => c.id === this.currentConnectionId);
+        if (updatedConnection) {
+            this.populatePanel(updatedConnection);
         }
         
-        const notes = document.getElementById('detail-notes').value.trim();
-        
-        try {
-            UIUtils.showToast('Saving notes...', 'info');
-            
-            await API.updateConnectionNotes(
-                AppState.currentDeploymentId,
-                AppState.currentLocationName,
-                this.currentConnectionId,
-                notes
-            );
-            
-            // Update local state
-            const connection = AppState.connections.find(c => c.id === this.currentConnectionId);
-            if (connection) {
-                connection.notes = notes;
-            }
-            
-            // Refresh connections list
-            renderConnections();
-            
-            UIUtils.showToast('Notes saved successfully');
-        } catch (error) {
-            console.error('Error saving notes:', error);
-            UIUtils.showToast(`Failed to save notes: ${error.message}`, 'error');
-        }
-    },
+        UIUtils.showToast('Notes saved successfully');
+    } catch (error) {
+        console.error('Error saving notes:', error);
+        UIUtils.showToast(`Failed to save notes: ${error.message}`, 'error');
+    }
+},
     
     connectFromHere(itemId) {
         // Close panel first
