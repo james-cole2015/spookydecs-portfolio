@@ -49,6 +49,7 @@ const ConnectionDetailPanel = {
         const toDisplay = toItem ? `${toItem.short_name} (${toItem.class_type})` : connection.to_item_id;
         
         // Populate fields
+        document.getElementById('detail-connection-id').textContent = connection.id; 
         document.getElementById('detail-from').textContent = fromDisplay;
         document.getElementById('detail-to').textContent = toDisplay;
         document.getElementById('detail-ports').textContent = `${connection.from_port} → ${connection.to_port}`;
