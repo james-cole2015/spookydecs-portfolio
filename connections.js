@@ -122,6 +122,30 @@ function renderConnections() {
             illuminatesHtml = `<p class="text-sm text-gray-600 mt-2"><span class="font-medium">Illuminates:</span> ${illuminatedItems}</p>`;
         }
 
+        // Check if source item (from_item) has available female ports
+        const hasAvailablePorts = fromItem && PortTracker.hasAvailablePorts(
+            fromItem,
+            AppState.connections,
+            fromItem.id,
+            'female'
+        );
+
+        // Connect From Here button
+        const connectButton = hasAvailablePorts
+            ? `<button 
+                class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm whitespace-nowrap"
+                onclick="connectFromHere('${fromItem.id}')"
+            >
+                Connect From Here
+            </button>`
+            : `<button 
+                class="px-3 py-1 bg-gray-300 text-gray-500 rounded text-sm whitespace-nowrap cursor-not-allowed"
+                disabled
+                title="No available ports"
+            >
+                Connect From Here
+            </button>`;
+
         return `
             <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
                 <div class="flex justify-between items-start">
@@ -134,12 +158,15 @@ function renderConnections() {
                         ${conn.notes ? `<p class="text-sm text-gray-600 mt-2"><span class="font-medium">Notes:</span> ${conn.notes}</p>` : ''}
                         ${illuminatesHtml}
                     </div>
-                    <button 
-                        class="ml-4 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm whitespace-nowrap"
-                        onclick="deleteConnection('${conn.id}')"
-                    >
-                        Delete
-                    </button>
+                    <div class="ml-4 flex gap-2">
+                        ${connectButton}
+                        <button 
+                            class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm whitespace-nowrap"
+                            onclick="deleteConnection('${conn.id}')"
+                        >
+                            Delete
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
@@ -208,15 +235,56 @@ function renderConnections() {
     }
 }
 
+// Connect From Here handler
+async function connectFromHere(itemId) {
+    console.log('Connect from here:', itemId);
+    
+    const item = AppState.allItems.find(i => i.id === itemId);
+    if (!item) {
+        UIUtils.showToast('Item not found', 'error');
+        return;
+    }
+    
+    // Pre-select this item as source and jump to destination selector
+    ItemSelectorEnhanced.workflowState.sourceItem = item;
+    ItemSelectorEnhanced.workflowState.sourceItemId = item.id;
+    ItemSelectorEnhanced.workflowState.mode = 'source';
+    
+    // Auto-assign first available port
+    const currentLocation = state.currentDeployment?.locations?.find(
+        loc => loc.name === state.currentLocation
+    );
+    const connections = currentLocation?.connections || [];
+    const firstAvailablePort = PortTracker.getFirstAvailablePort(
+        item,
+        connections,
+        item.id,
+        'female'
+    );
+    
+    if (!firstAvailablePort) {
+        UIUtils.showToast('No available ports on this item', 'error');
+        return;
+    }
+    
+    ItemSelectorEnhanced.workflowState.sourcePort = firstAvailablePort;
+    console.log('Pre-selected source:', item.short_name, 'Port:', firstAvailablePort);
+    
+    // Open destination selector directly
+    ItemSelectorEnhanced.openDestinationSelector();
+}
+
 // Export functions
 window.ConnectionBuilder = {
     addConnection,
     clearConnectionForm,
     deleteConnection,
     deleteStaticProp,
-    renderConnections
+    renderConnections,
+    connectFromHere
 };
 
 // Make functions available globally for onclick handlers
 window.deleteConnection = deleteConnection;
 window.deleteStaticProp = deleteStaticProp;
+window.connectFromHere = connectFromHere;

@@ -683,9 +683,9 @@ const ItemSelectorEnhanced = {
                 notesInput.value = '';
             }
             
-            // Refresh the deployment data
-            if (typeof ConnectionBuilder !== 'undefined' && ConnectionBuilder.loadDeployment) {
-                await ConnectionBuilder.loadDeployment(state.currentDeployment.id, state.currentLocation);
+            // Auto-refresh deployment data
+            if (typeof DeploymentManager !== 'undefined' && DeploymentManager.reloadDeploymentData) {
+                await DeploymentManager.reloadDeploymentData();
             }
             
             // Reset workflow state
@@ -695,8 +695,6 @@ const ItemSelectorEnhanced = {
             console.error('Error creating connection:', error);
             UIUtils.showToast('Failed to create connection: ' + error.message, 'error');
         }
-
-        await DeploymentManager.reloadDeploymentData();
     },
 
     /**
