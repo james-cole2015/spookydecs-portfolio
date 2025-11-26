@@ -328,5 +328,33 @@
         </div>
     </div>
 </div>
+
+<!-- Connection Notes Modal -->
+<div id="connection-notes-modal" class="modal hidden">
+    <div class="modal-overlay"></div>
+    <div class="modal-content max-w-lg">
+        <div class="modal-header">
+            <h2 class="text-xl font-bold">Add Connection Notes (Optional)</h2>
+        </div>
+        
+        <div class="modal-body">
+            <p class="text-sm text-gray-600 mb-4">
+                Add any notes about this connection. You can skip this step if you don't need notes.
+            </p>
+            
+            <textarea 
+                id="notes" 
+                rows="3"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="e.g., Powers main display, needs weatherproofing, etc."
+            ></textarea>
+        </div>
+        
+        <div class="modal-footer">
+            <button onclick="ItemSelectorEnhanced.skipNotes()" class="btn btn-secondary">Skip</button>
+            <button onclick="ItemSelectorEnhanced.confirmNotes()" class="btn btn-primary">Create Connection</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
