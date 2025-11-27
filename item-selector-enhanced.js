@@ -343,6 +343,7 @@ const ItemSelectorEnhanced = {
 
     /**
      * Get filtered items for destination selection
+     * FIXED: Now checks deployment-wide item usage for ALL item types
      */
     getFilteredDestItems(selectedClass, selectedType) {
         const allItems = state.allItems || [];
@@ -358,16 +359,28 @@ const ItemSelectorEnhanced = {
             // Filter 2: Type match
             if (item.class_type !== selectedType) return false;
             
-            // Filter 3a: For Decorations/Lights - must have power_inlet = true and not deployed
+            // Filter 3: Check if item is deployed in ANY zone (deployment-wide check)
+            // This prevents items from being deployed in multiple zones
+            const deployedInOtherZone = PortTracker.getItemLocationUsage(
+                item.id, 
+                allLocations, 
+                state.currentLocation
+            );
+            if (deployedInOtherZone) {
+                console.log(`Item ${item.id} already deployed in ${deployedInOtherZone} - filtering out`);
+                return false;
+            }
+            
+            // Filter 4a: For Decorations/Lights - must have power_inlet and not already deployed in current zone
             if (selectedClass === 'Decoration' || selectedClass === 'Light') {
                 // Must have power inlet available
                 if (item.power_inlet !== true) return false;
                 
-                // Must NOT already be deployed in this location
+                // Must NOT already be deployed in this location (current zone check)
                 if (itemsDeployed.includes(item.id)) return false;
             }
             
-            // Filter 3b: For Accessories - must have available male ports
+            // Filter 4b: For Accessories - must have available male ports
             if (selectedClass === 'Accessory') {
                 const maleEnds = parseInt(item.male_ends || '0');
                 if (maleEnds === 0) return false;
@@ -380,14 +393,6 @@ const ItemSelectorEnhanced = {
                 );
                 if (!hasAvailablePorts) return false;
             }
-            
-            // Filter 4: Not deployed in another zone
-            const deployedInOtherZone = PortTracker.getItemLocationUsage(
-                item.id, 
-                allLocations, 
-                state.currentLocation
-            );
-            if (deployedInOtherZone) return false;
             
             return true;
         });
@@ -461,81 +466,81 @@ const ItemSelectorEnhanced = {
      * Handle destination item selection
      */
     handleDestItemClick(item) {
-    console.log('Destination item selected:', item.short_name);
-    
-    this.workflowState.destItem = item;
-    this.workflowState.destItemId = item.id;
-    this.workflowState.destPort = 'Male_1'; // Always Male_1 for now
-    
-    // Close item selector modal
-    this.close();
-    
-    // Check if this is a spotlight - needs illumination selection
-    if (item.class_type === 'Spot Light') {
-        this.openIlluminationSelector();
-    } else {
-        // Ensure illuminates is empty array for non-spotlights
-        this.workflowState.illuminates = [];
-        // Show notes modal
-        this.openNotesModal();
-    }
-},
+        console.log('Destination item selected:', item.short_name);
+        
+        this.workflowState.destItem = item;
+        this.workflowState.destItemId = item.id;
+        this.workflowState.destPort = 'Male_1'; // Always Male_1 for now
+        
+        // Close item selector modal
+        this.close();
+        
+        // Check if this is a spotlight - needs illumination selection
+        if (item.class_type === 'Spot Light') {
+            this.openIlluminationSelector();
+        } else {
+            // Ensure illuminates is empty array for non-spotlights
+            this.workflowState.illuminates = [];
+            // Show notes modal
+            this.openNotesModal();
+        }
+    },
 
-/**
- * Complete the connection - make API call
- */
-async completeConnection() {
-    console.log('Completing connection:', this.workflowState);
-    
-    try {
-        const connectionData = {
-            from_item_id: this.workflowState.sourceItemId,
-            from_port: this.workflowState.sourcePort,
-            to_item_id: this.workflowState.destItemId,
-            to_port: this.workflowState.destPort
-        };
+    /**
+     * Complete the connection - make API call
+     */
+    async completeConnection() {
+        console.log('Completing connection:', this.workflowState);
         
-        // Add notes if present
-        const notesInput = document.getElementById('notes');
-        if (notesInput && notesInput.value.trim()) {
-            connectionData.notes = notesInput.value.trim();
+        try {
+            const connectionData = {
+                from_item_id: this.workflowState.sourceItemId,
+                from_port: this.workflowState.sourcePort,
+                to_item_id: this.workflowState.destItemId,
+                to_port: this.workflowState.destPort
+            };
+            
+            // Add notes if present
+            const notesInput = document.getElementById('notes');
+            if (notesInput && notesInput.value.trim()) {
+                connectionData.notes = notesInput.value.trim();
+            }
+            
+            // Add illuminates if present
+            if (this.workflowState.illuminates && this.workflowState.illuminates.length > 0) {
+                connectionData.illuminates = this.workflowState.illuminates;
+            }
+            
+            // Make API call
+            const response = await API.addConnection(
+                state.currentDeployment.id,
+                state.currentLocation,
+                connectionData
+            );
+            
+            console.log('Connection created:', response);
+            
+            // Show success toast
+            UIUtils.showToast('Connection added successfully', 'success');
+            
+            // Clear notes field
+            if (notesInput) {
+                notesInput.value = '';
+            }
+            
+            // Auto-refresh deployment data
+            if (typeof DeploymentManager !== 'undefined' && DeploymentManager.reloadDeploymentData) {
+                await DeploymentManager.reloadDeploymentData();
+            }
+            
+            // Reset workflow state
+            this.resetWorkflowState();
+            
+        } catch (error) {
+            console.error('Error creating connection:', error);
+            UIUtils.showToast('Failed to create connection: ' + error.message, 'error');
         }
-        
-        // Add illuminates if present
-        if (this.workflowState.illuminates && this.workflowState.illuminates.length > 0) {
-            connectionData.illuminates = this.workflowState.illuminates;
-        }
-        
-        // Make API call
-        const response = await API.addConnection(
-            state.currentDeployment.id,
-            state.currentLocation,
-            connectionData
-        );
-        
-        console.log('Connection created:', response);
-        
-        // Show success toast
-        UIUtils.showToast('Connection added successfully', 'success');
-        
-        // Clear notes field
-        if (notesInput) {
-            notesInput.value = '';
-        }
-        
-        // Auto-refresh deployment data
-        if (typeof DeploymentManager !== 'undefined' && DeploymentManager.reloadDeploymentData) {
-            await DeploymentManager.reloadDeploymentData();
-        }
-        
-        // Reset workflow state
-        this.resetWorkflowState();
-        
-    } catch (error) {
-        console.error('Error creating connection:', error);
-        UIUtils.showToast('Failed to create connection: ' + error.message, 'error');
-    }
-},
+    },
 
     /**
      * Open port selector modal
@@ -743,62 +748,6 @@ async completeConnection() {
         
         // Complete connection (notes will be read from #notes element in completeConnection)
         this.completeConnection();
-    },
-
-    /**
-     * Complete the connection - make API call
-     */
-    async completeConnection() {
-        console.log('Completing connection:', this.workflowState);
-        
-        try {
-            const connectionData = {
-                from_item_id: this.workflowState.sourceItemId,
-                from_port: this.workflowState.sourcePort,
-                to_item_id: this.workflowState.destItemId,
-                to_port: this.workflowState.destPort
-            };
-            
-            // Add notes if present
-            const notesInput = document.getElementById('notes');
-            if (notesInput && notesInput.value.trim()) {
-                connectionData.notes = notesInput.value.trim();
-            }
-            
-            // Add illuminates if present
-            if (this.workflowState.illuminates.length > 0) {
-                connectionData.illuminates = this.workflowState.illuminates;
-            }
-            
-            // Make API call
-            const response = await API.addConnection(
-                state.currentDeployment.id,
-                state.currentLocation,
-                connectionData
-            );
-            
-            console.log('Connection created:', response);
-            
-            // Show success toast
-            UIUtils.showToast('Connection added successfully', 'success');
-            
-            // Clear notes field
-            if (notesInput) {
-                notesInput.value = '';
-            }
-            
-            // Auto-refresh deployment data
-            if (typeof DeploymentManager !== 'undefined' && DeploymentManager.reloadDeploymentData) {
-                await DeploymentManager.reloadDeploymentData();
-            }
-            
-            // Reset workflow state
-            this.resetWorkflowState();
-            
-        } catch (error) {
-            console.error('Error creating connection:', error);
-            UIUtils.showToast('Failed to create connection: ' + error.message, 'error');
-        }
     },
 
     /**
