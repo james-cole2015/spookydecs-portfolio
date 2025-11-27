@@ -249,7 +249,14 @@ async function loadConfig() {
   }
   function inventoryAudit(){ alert("Inventory Audit clicked! Hook API here."); }
   function repairDashboard(){ alert("Repair Dashboard clicked! Hook API here."); }
-  function deploymentManagement() {alert("Not yet implemented, Hook API here."); }
+  function deploymentManagement() { 
+    if (!window.DEPLOY_ADMIN) {
+      console.error('DEPLOY_ADMIN not set in config.');
+      alert('Unable to navigate: DEPLOY_ADMIN not configured.');
+      return;
+    }
+    window.location.href = window.DEPLOY_ADMIN;
+  }
   function viewLogs(){ alert("View Logs clicked! Hook API here."); }
   function startSeason(){ alert("Start Season clicked! Hook API here."); }
   function archiveOldItems(){ alert("Archive Old Items clicked! Hook API here."); }
