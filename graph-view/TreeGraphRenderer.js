@@ -73,7 +73,7 @@ const TreeGraphRenderer = ({ data, selectedNodeId, onNodeClick }) => {
             }
 
             // Conditional label: show short_name for decorations, blank for infrastructure
-            const showShortName = ['Inflatable', 'Spot Light', 'Animatronic', 'String Light', 'Static Prop'].includes(node.class_type);
+            const showShortName = ['Inflatable', 'Spot Light', 'Animatronic', 'String Light', 'Static Prop','Receptacle','Plug'].includes(node.class_type);
             
             nodeEl.append('text')
                 .attr('dy', -node.size / 2 - 5)
