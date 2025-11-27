@@ -20,8 +20,8 @@ phases:
       
       # Fetch pipeline configuration
       - echo "Fetching pipeline configuration from Parameter Store"
-      - export TARGET_BUCKET=$(aws ssm get-parameter --name /spooky-decs/items/$ENV/s3-bucket --query 'Parameter.Value' --output text)
-      - export DISTRIBUTION_ID=$(aws ssm get-parameter --name /spooky-decs/items/$ENV/cf-distribution --query 'Parameter.Value' --output text)
+      - export TARGET_BUCKET=$(aws ssm get-parameter --name /spooky-decs/admin/$ENV/s3-bucket --query 'Parameter.Value' --output text)
+      - export DISTRIBUTION_ID=$(aws ssm get-parameter --name /spooky-decs/admin/$ENV/cf-distribution --query 'Parameter.Value' --output text)
       - echo "Will deploy to $TARGET_BUCKET with CloudFront $DISTRIBUTION_ID"
       
       # Generate application config.json
