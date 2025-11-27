@@ -477,44 +477,47 @@ class StatisticsView {
         }
     }
 
-    openZoneDrawer(zoneName) {
-        const drawer = document.getElementById('zone-drawer');
-        const drawerContent = drawer.querySelector('.drawer-content');
-        const drawerBody = document.getElementById('drawer-content-body');
-        
-        // Find zone data
-        const zoneStats = StatisticsCalculations.calculateZoneStats(this.inProgressDeployment);
-        const zone = zoneStats.find(z => z.name === zoneName);
-        const sessions = StatisticsCalculations.getAllSessions(this.inProgressDeployment).filter(s => s.location_name === zoneName);
-        const mostProductive = StatisticsCalculations.findMostProductiveSession(sessions);
-        
-        // Render drawer content
-        drawerBody.innerHTML = `
-            <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center z-10">
-                <div>
-                    <h3 class="text-lg font-semibold text-gray-900">${zoneName}</h3>
-                    <p class="text-sm text-gray-600">${zone.items_count} items • ${zone.connections_count} connections • ${zone.sessions_count} sessions</p>
-                </div>
-                <button onclick="statisticsView.closeZoneDrawer()" class="text-gray-400 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
+ openZoneDrawer(zoneName) {
+    const drawer = document.getElementById('zone-drawer');
+    const drawerContent = drawer.querySelector('.drawer-content');
+    const drawerBody = document.getElementById('drawer-content-body');
+    
+    // Find zone data
+    const zoneStats = StatisticsCalculations.calculateZoneStats(this.inProgressDeployment);
+    const zone = zoneStats.find(z => z.name === zoneName);
+    const sessions = StatisticsCalculations.getAllSessions(this.inProgressDeployment).filter(s => s.location_name === zoneName);
+    const mostProductive = StatisticsCalculations.findMostProductiveSession(sessions);
+    
+    // Render drawer content
+    drawerBody.innerHTML = `
+        <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center z-10">
+            <div>
+                <h3 class="text-lg font-semibold text-gray-900">${zoneName}</h3>
+                <p class="text-sm text-gray-600">${zone.items_count} items • ${zone.connections_count} connections • ${zone.sessions_count} sessions</p>
             </div>
-            <div class="px-6 py-4">
-                ${this.renderZoneDetails(zone, sessions, mostProductive, this.inProgressDeployment)}
-            </div>
-        `;
-        
-        // Show drawer with animation
-        drawer.classList.remove('hidden');
-        setTimeout(() => {
-            drawerContent.classList.remove('translate-x-full');
-        }, 10);
-        
-        // Prevent body scroll
-        document.body.style.overflow = 'hidden';
-    }
+            <button onclick="statisticsView.closeZoneDrawer()" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div class="px-6 py-4">
+            ${this.renderZoneDetails(zone, sessions, mostProductive, this.inProgressDeployment)}
+        </div>
+    `;
+    
+    // Show drawer with animation
+    drawer.classList.remove('hidden');
+    setTimeout(() => {
+        drawerContent.classList.remove('translate-x-full');
+    }, 10);
+    
+    // Prevent body scroll
+    document.body.style.overflow = 'hidden';
+    
+    // CRITICAL: Attach session toggle listeners for the drawer content
+    this.attachSessionToggleListeners();
+}
 
     closeZoneDrawer() {
         const drawer = document.getElementById('zone-drawer');
