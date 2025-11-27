@@ -349,26 +349,35 @@ async function loadDeploymentIntoBuilder(deploymentId, locationName) {
         const itemsResponse = await API.listItems();
         const allItems = Array.isArray(itemsResponse) ? itemsResponse : (itemsResponse.items || []);
         
-        const locationData = await API.getDeployment(deploymentId, locationName);
+        // Get the FULL deployment with all locations
+        const deploymentsResponse = await API.listDeployments();
+        const fullDeployment = deploymentsResponse.find(d => d.id === deploymentId);
+        
+        if (!fullDeployment) {
+            throw new Error(`Deployment ${deploymentId} not found`);
+        }
+        
+        // Find the current location within the full deployment
+        const currentLocationData = fullDeployment.locations.find(loc => loc.name === locationName);
+        
+        if (!currentLocationData) {
+            throw new Error(`Location ${locationName} not found in deployment`);
+        }
         
         AppState.currentDeploymentId = deploymentId;
         AppState.currentLocationName = locationName;
         AppState.currentZone = locationName;
         AppState.allItems = allItems;
-        AppState.connections = locationData.location?.connections || [];
+        AppState.connections = currentLocationData.connections || [];
         AppState.sourceItem = null;
         AppState.destinationItem = null;
         
         // Check for active session
-        const sessions = locationData.location?.work_sessions || [];
+        const sessions = currentLocationData.work_sessions || [];
         AppState.activeSession = sessions.find(s => !s.end_time) || null;
         
-        // Initialize workflow components
-        const deployment = {
-            id: deploymentId,
-            locations: [locationData.location]
-        };
-        state.currentDeployment = deployment;
+        // Initialize workflow components with FULL deployment (all locations)
+        state.currentDeployment = fullDeployment;
         state.currentLocation = locationName;
         state.allItems = allItems;
         
