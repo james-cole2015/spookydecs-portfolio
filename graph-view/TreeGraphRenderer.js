@@ -82,13 +82,14 @@ const TreeGraphRenderer = ({ data, selectedNodeId, onNodeClick }) => {
                 .text(node.class_acronym);
 
             // Zone label
+            /*
             nodeEl.append('text')
                 .attr('dy', -node.size / 2 - 5)
                 .attr('text-anchor', 'middle')
                 .attr('font-size', '9px')
                 .attr('fill', '#6b7280')
                 .text(node.zone);
-
+                */
             // Click handler
             nodeEl.on('click', (event) => {
                 event.stopPropagation();
