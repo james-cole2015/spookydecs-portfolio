@@ -2,10 +2,10 @@
 
 // Event Listeners
 function initEventListeners() {
-    document.getElementById('start-decorating-btn').addEventListener('click', DeploymentManager.createDeployment);
-    document.getElementById('refresh-deployments-btn').addEventListener('click', DeploymentManager.loadInProgressDeployments);
+    document.getElementById('start-decorating-btn').addEventListener('click', DeploymentLifecycle.createDeployment);
+    document.getElementById('refresh-deployments-btn').addEventListener('click', DeploymentLifecycle.loadInProgressDeployments);
     
-    document.getElementById('back-to-deployments-btn').addEventListener('click', DeploymentManager.backToDeployments);
+    document.getElementById('back-to-deployments-btn').addEventListener('click', DeploymentLifecycle.backToDeployments);
     
     // NEW: Enhanced Connection Workflow Event Listeners with Session Enforcement
     
@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         initEventListeners();
         console.log('✅ initEventListeners called');
         
-        DeploymentManager.loadInProgressDeployments();
+        DeploymentLifecycle.loadInProgressDeployments();
         
         // Load all items on startup for connection workflow
         console.log('📦 Loading items for connection workflow...');
