@@ -72,16 +72,7 @@ const TreeGraphRenderer = ({ data, selectedNodeId, onNodeClick }) => {
                     .attr('stroke-width', isSelected ? 3 : 2);
             }
 
-            // Node label (short_name for tree view - more readable)
-            nodeEl.append('text')
-                .attr('dy', node.size / 2 + 15)
-                .attr('text-anchor', 'middle')
-                .attr('font-size', '10px')
-                .attr('font-weight', '600')
-                .attr('fill', '#1f2937')
-                .text(node.class_acronym);
-
-            // Conditional label: show short_name for decorations, zone for infrastructure
+            // Conditional label: show short_name for decorations, blank for infrastructure
             const showShortName = ['Inflatable', 'Spot Light', 'Animatronic', 'String Light', 'Static Prop'].includes(node.class_type);
             
             nodeEl.append('text')
@@ -89,7 +80,16 @@ const TreeGraphRenderer = ({ data, selectedNodeId, onNodeClick }) => {
                 .attr('text-anchor', 'middle')
                 .attr('font-size', '9px')
                 .attr('fill', '#6b7280')
-                .text(showShortName ? node.short_name : node.zone);
+                .text(showShortName ? node.short_name : '');
+
+            // Node label (acronym) - commented out
+            // nodeEl.append('text')
+            //     .attr('dy', node.size / 2 + 15)
+            //     .attr('text-anchor', 'middle')
+            //     .attr('font-size', '10px')
+            //     .attr('font-weight', '600')
+            //     .attr('fill', '#1f2937')
+            //     .text(node.class_acronym);
 
             // Click handler
             nodeEl.on('click', (event) => {
