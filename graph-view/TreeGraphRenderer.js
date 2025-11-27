@@ -52,12 +52,25 @@ const TreeGraphRenderer = ({ data, selectedNodeId, onNodeClick }) => {
                 .attr('class', `node ${isSelected ? 'node-selected' : ''}`)
                 .style('cursor', 'pointer');
 
-            // Node circle
-            nodeEl.append('circle')
-                .attr('r', node.size / 2)
-                .attr('fill', node.color)
-                .attr('stroke', isSelected ? '#000' : '#fff')
-                .attr('stroke-width', isSelected ? 3 : 2);
+            // Render icon if available, otherwise render circle
+            if (node.icon_url) {
+                // Render SVG icon
+                nodeEl.append('image')
+                    .attr('href', node.icon_url)
+                    .attr('x', -node.size / 2)
+                    .attr('y', -node.size / 2)
+                    .attr('width', node.size)
+                    .attr('height', node.size)
+                    .attr('stroke', isSelected ? '#000' : '#fff')
+                    .attr('stroke-width', isSelected ? 3 : 2);
+            } else {
+                // Render circle (existing behavior)
+                nodeEl.append('circle')
+                    .attr('r', node.size / 2)
+                    .attr('fill', node.color)
+                    .attr('stroke', isSelected ? '#000' : '#fff')
+                    .attr('stroke-width', isSelected ? 3 : 2);
+            }
 
             // Node label (short_name for tree view - more readable)
             nodeEl.append('text')
@@ -85,7 +98,8 @@ const TreeGraphRenderer = ({ data, selectedNodeId, onNodeClick }) => {
             // Hover interactions
             nodeEl.on('mouseenter', (event) => {
                 if (!isSelected) {
-                    d3.select(event.currentTarget).select('circle')
+                    const target = node.icon_url ? 'image' : 'circle';
+                    d3.select(event.currentTarget).select(target)
                         .attr('stroke-width', 3)
                         .attr('stroke', '#000');
                 }
@@ -98,7 +112,8 @@ const TreeGraphRenderer = ({ data, selectedNodeId, onNodeClick }) => {
             })
             .on('mouseleave', (event) => {
                 if (!isSelected) {
-                    d3.select(event.currentTarget).select('circle')
+                    const target = node.icon_url ? 'image' : 'circle';
+                    d3.select(event.currentTarget).select(target)
                         .attr('stroke-width', 2)
                         .attr('stroke', '#fff');
                 }
