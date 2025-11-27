@@ -189,6 +189,7 @@ async function loadConfig() {
     window.GALLERY_ADM_URL = CONFIG.GALLERY_ADM_URL;
     window.ITEMS_ADMIN = CONFIG.ITEMS_ADMIN;
      window.DEPLOY_ADMIN = CONFIG.DEPLOY_ADMIN;
+     window.REPAIR_ADMIN = CONFIG.REPAIR_ADMIN
     // Check authentication
     checkAuth();
   } catch (error) {
@@ -248,7 +249,14 @@ async function loadConfig() {
     window.location.href = window.STR_ADM_URL;
   }
   function inventoryAudit(){ alert("Inventory Audit clicked! Hook API here."); }
-  function repairDashboard(){ alert("Repair Dashboard clicked! Hook API here."); }
+  function repairDashboard() {
+    if (!window.REPAIR_ADMIN) {
+      console.error('REPAIR_ADMIN not set in config.');
+      alert('Unable to navigate: REPAIR_ADMIN not configured.');
+      return;
+    }
+    window.location.href = window.REPAIR_ADMIN;
+  }
   function deploymentManagement() { 
     if (!window.DEPLOY_ADMIN) {
       console.error('DEPLOY_ADMIN not set in config.');
