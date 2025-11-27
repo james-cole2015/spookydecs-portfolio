@@ -343,7 +343,7 @@ const ItemSelectorEnhanced = {
 
     /**
      * Get filtered items for destination selection
-     * FIXED: Now checks deployment-wide item usage for ALL item types
+     * FIXED: Direct deployment check instead of relying on PortTracker
      */
     getFilteredDestItems(selectedClass, selectedType) {
         const allItems = state.allItems || [];
@@ -352,6 +352,10 @@ const ItemSelectorEnhanced = {
         const itemsDeployed = currentLocation?.items_deployed || [];
         const allLocations = state.currentDeployment?.locations || [];
         
+        console.log(`Filtering destination items for ${selectedClass} / ${selectedType}`);
+        console.log(`Current location: ${state.currentLocation}`);
+        console.log(`Total locations in deployment: ${allLocations.length}`);
+        
         return allItems.filter(item => {
             // Filter 1: Class match
             if (item.class !== selectedClass) return false;
@@ -359,16 +363,17 @@ const ItemSelectorEnhanced = {
             // Filter 2: Type match
             if (item.class_type !== selectedType) return false;
             
-            // Filter 3: Check if item is deployed in ANY zone (deployment-wide check)
-            // This prevents items from being deployed in multiple zones
-            const deployedInOtherZone = PortTracker.getItemLocationUsage(
-                item.id, 
-                allLocations, 
-                state.currentLocation
-            );
-            if (deployedInOtherZone) {
-                console.log(`Item ${item.id} already deployed in ${deployedInOtherZone} - filtering out`);
-                return false;
+            // Filter 3: DIRECT CHECK - Is item deployed in ANY zone?
+            // Check all locations in deployment
+            for (const location of allLocations) {
+                // Skip current location - we'll check that separately
+                if (location.name === state.currentLocation) continue;
+                
+                const locationItemsDeployed = location.items_deployed || [];
+                if (locationItemsDeployed.includes(item.id)) {
+                    console.log(`❌ Item ${item.id} (${item.short_name}) already deployed in ${location.name} - filtering out`);
+                    return false;
+                }
             }
             
             // Filter 4a: For Decorations/Lights - must have power_inlet and not already deployed in current zone
@@ -377,7 +382,10 @@ const ItemSelectorEnhanced = {
                 if (item.power_inlet !== true) return false;
                 
                 // Must NOT already be deployed in this location (current zone check)
-                if (itemsDeployed.includes(item.id)) return false;
+                if (itemsDeployed.includes(item.id)) {
+                    console.log(`❌ Item ${item.id} (${item.short_name}) already deployed in current zone - filtering out`);
+                    return false;
+                }
             }
             
             // Filter 4b: For Accessories - must have available male ports
@@ -394,6 +402,7 @@ const ItemSelectorEnhanced = {
                 if (!hasAvailablePorts) return false;
             }
             
+            console.log(`✅ Item ${item.id} (${item.short_name}) is available for deployment`);
             return true;
         });
     },
@@ -487,7 +496,7 @@ const ItemSelectorEnhanced = {
     },
 
     /**
-     * Complete the connection - make API call
+     * Complete the connection - make API call with better error handling
      */
     async completeConnection() {
         console.log('Completing connection:', this.workflowState);
@@ -538,7 +547,17 @@ const ItemSelectorEnhanced = {
             
         } catch (error) {
             console.error('Error creating connection:', error);
-            UIUtils.showToast('Failed to create connection: ' + error.message, 'error');
+            
+            // Extract the actual error message from the API error
+            let errorMessage = error.message || 'Failed to create connection';
+            
+            // If the error message is "Connection Creation Failed", 
+            // it means the backend rejected it - show a more helpful message
+            if (errorMessage === 'Connection Creation Failed') {
+                errorMessage = 'This item cannot be added. It may already be deployed in another zone.';
+            }
+            
+            UIUtils.showToast(errorMessage, 'error');
         }
     },
 
