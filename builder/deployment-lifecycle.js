@@ -197,28 +197,37 @@ const DeploymentLifecycle = {
     /**
      * Review and finish deployment
      */
-    async reviewAndFinish(deploymentId) {
-        try {
-            UIUtils.showToast('Loading deployment summary...', 'info');
-            const reviewData = await API.getReviewData(deploymentId);
-            
-            // Check if there's an active session
-            const deployment = await API.getDeployment(deploymentId);
-            const hasActiveSession = deployment.locations.some(loc => {
-                const sessions = loc.work_sessions || [];
-                return sessions.some(s => !s.end_time);
-            });
-            
-            if (hasActiveSession) {
-                reviewData.hasActiveSession = true;
-            }
-            
-            // Show review modal
-            this.showReviewModal(reviewData);
-        } catch (error) {
-            UIUtils.showToast(`Failed to load review data: ${error.message}`, 'error');
+   /**
+ * Review and finish deployment
+ */
+async reviewAndFinish(deploymentId) {
+    try {
+        UIUtils.showToast('Loading deployment summary...', 'info');
+        const reviewData = await API.getReviewData(deploymentId);
+        
+        // Check if there's an active session
+        const deployments = await API.listDeployments();
+        const deployment = deployments.find(d => d.id === deploymentId);
+        
+        if (!deployment) {
+            throw new Error(`Deployment ${deploymentId} not found`);
         }
-    },
+        
+        const hasActiveSession = deployment.locations.some(loc => {
+            const sessions = loc.work_sessions || [];
+            return sessions.some(s => !s.end_time);
+        });
+        
+        if (hasActiveSession) {
+            reviewData.hasActiveSession = true;
+        }
+        
+        // Show review modal
+        this.showReviewModal(reviewData);
+    } catch (error) {
+        UIUtils.showToast(`Failed to load review data: ${error.message}`, 'error');
+    }
+},
 
     /**
      * Show review modal
