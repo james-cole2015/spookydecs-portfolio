@@ -235,7 +235,7 @@ async function loadConfig() {
     window.DEPLOY_ADMIN = CONFIG.DEPLOY_ADMIN;
     window.REPAIR_ADMIN = CONFIG.REPAIR_ADMIN;
     
-    // Check authentication
+    // Check for authentication
     checkAuth();
   } catch (error) {
     console.error('Failed to load config:', error);
