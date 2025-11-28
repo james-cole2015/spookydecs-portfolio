@@ -18,6 +18,22 @@
   header nav a { color: #fff; font-size: 1rem; }
   header nav a.settings { color: #ccc; }
 
+  /* ====== Hamburger Menu ====== */
+  .hamburger { display: none; flex-direction: column; cursor: pointer; gap: 5px; }
+  .hamburger span { width: 25px; height: 3px; background-color: #fff; transition: all 0.3s ease; }
+  .hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(8px, 8px); }
+  .hamburger.active span:nth-child(2) { opacity: 0; }
+  .hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(7px, -7px); }
+
+  /* ====== Mobile Menu ====== */
+  .mobile-menu { display: none; position: fixed; top: 71px; left: 0; right: 0; background-color: #2e2e2e; border-bottom: 1px solid #888; z-index: 1000; max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+  .mobile-menu.active { max-height: 400px; }
+  .mobile-menu ul { list-style: none; padding: 0; }
+  .mobile-menu li { border-bottom: 1px solid #444; }
+  .mobile-menu a { display: block; color: #fff; padding: 15px 40px; font-size: 1rem; }
+  .mobile-menu a:hover { background-color: #3e3e3e; }
+  .mobile-menu a.settings { color: #ccc; }
+
   /* ====== Container & Cards (Vertical List) ====== */
   .container { padding: 20px; display: flex; flex-direction: column; gap: 12px; flex: 1; align-items: center; }
   .card { background-color: #fff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); padding: 12px 16px; width: 80%; display: flex; flex-direction: column; transition: box-shadow 0.2s ease; }
@@ -41,8 +57,19 @@
   }
 
   /* ====== Responsive ====== */
-  @media (max-width: 768px) { .card { width: 95%; } }
+  @media (max-width: 768px) { 
+    .card { width: 95%; }
+    header { padding: 15px 20px; }
+    header h1 { font-size: 1.2rem; }
+    header img { height: 32px; }
+    header nav { display: none; }
+    .hamburger { display: flex; }
+    .mobile-menu { display: block; }
+    footer { padding: 20px; font-size: 0.85rem; }
+  }
 </style>
+<link rel="icon" type="image/svg+xml" href="https://assets.spookydecs.com/icons/admin-gear_icon.svg">
+
 </head>
 <body>
 
@@ -61,7 +88,23 @@
       <li><a href="#" onclick="logout()">Logout</a></li>
     </ul>
   </nav>
+  <div class="hamburger" onclick="toggleMobileMenu()">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
 </header>
+
+<!-- ====== Mobile Menu ====== -->
+<div class="mobile-menu" id="mobileMenu">
+  <ul>
+    <li><a href="/dashboard">Dashboard</a></li>
+    <li><a href="/inventory">Inventory</a></li>
+    <li><a href="/reports">Reports</a></li>
+    <li><a href="/settings" class="settings">Settings</a></li>
+    <li><a href="#" onclick="logout()">Logout</a></li>
+  </ul>
+</div>
 
 <!-- ====== Dashboard Cards (Vertical List) ====== -->
 <div class="container">
@@ -188,6 +231,8 @@ async function loadConfig() {
     window.STR_ADM_URL = CONFIG.STR_ADM_URL;
     window.GALLERY_ADM_URL = CONFIG.GALLERY_ADM_URL;
     window.ITEMS_ADMIN = CONFIG.ITEMS_ADMIN;
+    window.DEPLOY_ADMIN = CONFIG.DEPLOY_ADMIN;
+    window.REPAIR_ADMIN = CONFIG.REPAIR_ADMIN;
     
     // Check authentication
     checkAuth();
@@ -197,6 +242,13 @@ async function loadConfig() {
   }
 }
 
+  // --- TOGGLE MOBILE MENU ---
+  function toggleMobileMenu() {
+    const menu = document.getElementById('mobileMenu');
+    const hamburger = document.querySelector('.hamburger');
+    menu.classList.toggle('active');
+    hamburger.classList.toggle('active');
+  }
 
   // --- PARSE TOKEN FROM URL HASH ---
   function parseCognitoHash() {
@@ -248,8 +300,22 @@ async function loadConfig() {
     window.location.href = window.STR_ADM_URL;
   }
   function inventoryAudit(){ alert("Inventory Audit clicked! Hook API here."); }
-  function repairDashboard(){ alert("Repair Dashboard clicked! Hook API here."); }
-  function deploymentManagement() {alert("Not yet implemented, Hook API here."); }
+  function repairDashboard() {
+    if (!window.REPAIR_ADMIN) {
+      console.error('REPAIR_ADMIN not set in config.');
+      alert('Unable to navigate: REPAIR_ADMIN not configured.');
+      return;
+    }
+    window.location.href = window.REPAIR_ADMIN;
+  }
+  function deploymentManagement() { 
+    if (!window.DEPLOY_ADMIN) {
+      console.error('DEPLOY_ADMIN not set in config.');
+      alert('Unable to navigate: DEPLOY_ADMIN not configured.');
+      return;
+    }
+    window.location.href = window.DEPLOY_ADMIN;
+  }
   function viewLogs(){ alert("View Logs clicked! Hook API here."); }
   function startSeason(){ alert("Start Season clicked! Hook API here."); }
   function archiveOldItems(){ alert("Archive Old Items clicked! Hook API here."); }
