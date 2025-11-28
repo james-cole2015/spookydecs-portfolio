@@ -39,6 +39,7 @@
   .card { background-color: #fff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); padding: 12px 16px; width: 80%; display: flex; flex-direction: column; transition: box-shadow 0.2s ease; }
   .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
   .card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .card-icon { width: 36px; height: 36px; }
   .icon-placeholder { width: 36px; height: 36px; background-color: #ccc; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.95rem; }
   .card h3 { font-size: 1.1rem; margin-bottom: 4px; }
   .card p { color: #555; font-size: 0.88rem; margin-bottom: 8px; flex-grow: 1; }
@@ -110,78 +111,78 @@
 <div class="container">
 
   <div class="card">
-    <div class="card-header"><div class="icon-placeholder">C</div><h3>Create Item</h3></div>
+    <div class="card-header"><img src="https://assets.spookydecs.com/icons/add_icon.svg" class="card-icon" alt="Create"><h3>Create Item</h3></div>
     <p>Add a new holiday decoration to the inventory. Include name, category, condition, location, tote ID, and optional photo.</p>
     <button onclick="goToCreate()">Create Item</button>
   </div>
 
     <div class="card">
-    <div class="card-header"><div class="icon-placeholder">C</div><h3>Deployment Management</h3></div>
+    <div class="card-header"><img src="https://assets.spookydecs.com/icons/deployment_icon.svg" class="card-icon" alt="Deployment"><h3>Deployment Management</h3></div>
     <p>Create, manage, and update holiday deployments. Manage deployment maps and inventory configurations. </p>
     <button onclick="deploymentManagement()">Manage Deployments</button>
   </div>
 
   <div class="card">
-    <div class="card-header"><div class="icon-placeholder">I</div><h3>Ideas and Inspirations Administration</h3></div>
+    <div class="card-header"><img src="https://assets.spookydecs.com/icons/ideas_icon.svg" class="card-icon" alt="Ideas"><h3>Ideas and Inspirations Administration</h3></div>
     <p>Add a new idea for tracking in the offseason</p>
     <button onclick="manageideas_Inspirations()">Manage Ideas & Inspirations</button>
   </div>
 
   <div class="card">
-    <div class="card-header"><div class="icon-placeholder">P</div><h3>Packing Process</h3></div>
+    <div class="card-header"><img src="https://assets.spookydecs.com/icons/placeholder_icon.svg" class="card-icon" alt="Packing"><h3>Packing Process</h3></div>
     <p>Scan tote → scan items → assign items → confirm completion.</p>
     <button onclick="startPacking()">Start Packing</button>
   </div>
 
   <div class="card">
-    <div class="card-header"><div class="icon-placeholder">U</div><h3>Manage Item</h3></div>
+    <div class="card-header"><img src="https://assets.spookydecs.com/icons/items_icon.svg" class="card-icon" alt="Edit"><h3>Manage Item</h3></div>
     <p>Edit name, category, condition, location, tote ID, last used date, notes.</p>
     <button onclick="updateItems()">Update Items</button>
   </div>
 <!--
   <div class="card">
-    <div class="card-header"><div class="icon-placeholder">D</div><h3>Delete Item</h3></div>
+    <div class="card-header"><img src="https://assets.spookydecs.com/icons/delete_icon.svg" class="card-icon" alt="Delete"><h3>Delete Item</h3></div>
     <p>Permanent delete with optional archive/undo.</p>
     <button class="danger" onclick="deleteItems()">Delete Items</button>
   </div>
 -->
     <div class="card">
-    <div class="card-header"><div class="icon-placeholder">📷</div><h3>Photo Management</h3></div>
+    <div class="card-header"><img src="https://assets.spookydecs.com/icons/gallery.svg" class="card-icon" alt="Photos"><h3>Photo Management</h3></div>
     <p>Upload/view photos for items or totes.</p>
     <button onclick="managePhotos()">Manage Photos</button>
   </div>
 
   <div class="card">
-    <div class="card-header"><div class="icon-placeholder">T</div><h3>Tote Management</h3></div>
+    <div class="card-header"><img src="https://assets.spookydecs.com/icons/storage_icon.svg" class="card-icon" alt="Tote"><h3>Tote Management</h3></div>
     <p>Create, update, delete totes; view contents; move items; track condition/location/photos.</p>
     <button onclick="manageTotes()">Manage Totes</button>
   </div>
 
   <div class="card">
-    <div class="card-header"><div class="icon-placeholder">A</div><h3>Inventory Audit</h3></div>
+    <div class="card-header"><img src="https://assets.spookydecs.com/icons/checklist_icon.svg" class="card-icon" alt="Audit"><h3>Inventory Audit</h3></div>
     <p>Filter items by category, location, condition, packed/unpacked. Highlight missing/duplicates.</p>
     <button onclick="inventoryAudit()">Audit Inventory</button>
   </div>
 
   <div class="card">
-    <div class="card-header"><div class="icon-placeholder">R</div><h3>Repair / Maintenance</h3></div>
+    <div class="card-header"><img src="https://assets.spookydecs.com/icons/repairs_icon.svg" class="card-icon" alt="Repair"><h3>Repair / Maintenance</h3></div>
     <p>Track items needing repair; optional priority, notes, and dashboard view.</p>
     <button onclick="repairDashboard()">Repair Dashboard</button>
   </div>
 
   <div class="card">
-    <div class="card-header"><div class="icon-placeholder">H</div><h3>History / Audit Logs</h3></div>
+    <div class="card-header"><img src="https://assets.spookydecs.com/icons/history_icon.svg" class="card-icon" alt="History"><h3>History / Audit Logs</h3></div>
     <p>Track add/update/delete/pack actions with timestamps and user info.</p>
     <button onclick="viewLogs()">View Logs</button>
   </div>
 
   <div class="card">
-    <div class="card-header"><div class="icon-placeholder">S</div><h3>Search & Filter</h3></div>
+    <div class="card-header"><img src="https://assets.spookydecs.com/icons/search_icon.svg" class="card-icon" alt="Search"><h3>Search & Filter</h3></div>
     <input type="text" class="search-input" placeholder="Search items...">
   </div>
 
   <div class="card">
-    <div class="card-header"><div class="icon-placeholder">C</div><h3>Seasonal Prep / Cleanup</h3></div>
+    <div class="card-header"><img src="https://assets.spookydecs.com/icons/calendar_icon.svg" class="card-icon" alt="Seasonal"><h3>Seasonal Prep / Cleanup</h3></div>
     <p>Start packing season, archive old items, prep shopping list.</p>
     <button onclick="startSeason()">Start Season</button>
     <button onclick="archiveOldItems()">Archive Old Items</button>
@@ -340,23 +341,6 @@ async function loadConfig() {
 
   // Initialize on page load
   loadConfig();
-
-
-    function addFavicon(url) {
-      const existingIcons = document.querySelectorAll('link[rel="icon"], link[rel="shortcut icon"]');
-      existingIcons.forEach(icon => icon.parentNode.removeChild(icon));
-
-      const link = document.createElement('link');
-      link.rel = 'icon';
-      link.type = 'image/png';
-      link.href = url;
-
-      document.head.appendChild(link);
-    }
-
-    addFavicon('https://assets.spookydecs.com/icons/admin-gear-icon.svg');
-
-
 </script>
 
 </body>
