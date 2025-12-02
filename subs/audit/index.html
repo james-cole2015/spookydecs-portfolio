@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Audit Log - SpookyDecs</title>
+  <script src="https://assets.spookydecs.com/components/spookydecs-header.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="audit_dashboard.css">
+</head>
+<body>
+  <spookydecs-header></spookydecs-header>
+
+  <div class="container">
+    <div class="content-wrapper">
+      <!-- Header -->
+      <div class="page-header">
+        <h1>Audit Log</h1>
+        <button id="mobile-filter-btn" class="btn-filter mobile-only">
+          <i class="fas fa-filter"></i>
+          Filters
+        </button>
+      </div>
+
+      <!-- Desktop Filter Bar -->
+      <div id="filter-bar" class="filter-bar desktop-only">
+        <div class="filter-grid">
+          <div class="filter-item">
+            <label>Date Range</label>
+            <select id="filter-dateRange">
+              <option value="7">Last 7 days</option>
+              <option value="30" selected>Last 30 days</option>
+              <option value="90">Last 90 days</option>
+              <option value="365">This year</option>
+            </select>
+          </div>
+
+          <div class="filter-item">
+            <label>Operation</label>
+            <select id="filter-crudType">
+              <option value="ALL">All</option>
+              <option value="CREATE">Create</option>
+              <option value="UPDATE">Update</option>
+              <option value="DELETE">Delete</option>
+            </select>
+          </div>
+
+          <div id="class-type-filter" class="filter-item" style="display: none;">
+            <label>Class Type</label>
+            <select id="filter-classType">
+              <option value="ALL">All</option>
+              <option value="Decoration">Decoration</option>
+              <option value="Accessory">Accessory</option>
+              <option value="Light">Light</option>
+              <option value="Deployment">Deployment</option>
+              <option value="Storage">Storage</option>
+            </select>
+          </div>
+
+          <div class="filter-item">
+            <label>Environment</label>
+            <select id="filter-environment">
+              <option value="prod">Production</option>
+              <option value="dev" selected>Development</option>
+            </select>
+          </div>
+
+          <div class="filter-item filter-search">
+            <label>Search</label>
+            <div class="search-wrapper">
+              <i class="fas fa-search search-icon"></i>
+              <input
+                type="text"
+                id="filter-search"
+                placeholder="Search by ID, title, or name..."
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile Filter Drawer -->
+      <div id="mobile-filter-overlay" class="overlay"></div>
+      <div id="mobile-filter-drawer" class="mobile-drawer">
+        <div class="drawer-content">
+          <div class="drawer-header">
+            <h3>Filters</h3>
+            <button id="close-mobile-filters" class="btn-close">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          
+          <div class="drawer-filters">
+            <div class="filter-item">
+              <label>Date Range</label>
+              <select id="mobile-filter-dateRange">
+                <option value="7">Last 7 days</option>
+                <option value="30" selected>Last 30 days</option>
+                <option value="90">Last 90 days</option>
+                <option value="365">This year</option>
+              </select>
+            </div>
+
+            <div class="filter-item">
+              <label>Operation</label>
+              <select id="mobile-filter-crudType">
+                <option value="ALL">All</option>
+                <option value="CREATE">Create</option>
+                <option value="UPDATE">Update</option>
+                <option value="DELETE">Delete</option>
+              </select>
+            </div>
+
+            <div id="mobile-class-type-filter" class="filter-item" style="display: none;">
+              <label>Class Type</label>
+              <select id="mobile-filter-classType">
+                <option value="ALL">All</option>
+                <option value="Decoration">Decoration</option>
+                <option value="Accessory">Accessory</option>
+                <option value="Light">Light</option>
+                <option value="Deployment">Deployment</option>
+                <option value="Storage">Storage</option>
+              </select>
+            </div>
+
+            <div class="filter-item">
+              <label>Environment</label>
+              <select id="mobile-filter-environment">
+                <option value="prod">Production</option>
+                <option value="dev" selected>Development</option>
+              </select>
+            </div>
+
+            <div class="filter-item">
+              <label>Search</label>
+              <input
+                type="text"
+                id="mobile-filter-search"
+                placeholder="Search..."
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs-container">
+        <!-- Mobile Tab Dropdown -->
+        <select id="mobile-tab-select" class="mobile-tab-select mobile-only">
+          <option value="recent">Recent Activity</option>
+          <option value="inventory">Inventory</option>
+          <option value="gallery">Gallery</option>
+          <option value="ideas">Ideas</option>
+        </select>
+
+        <!-- Desktop Tabs -->
+        <div id="desktop-tabs" class="tabs desktop-only">
+          <button data-tab="recent" class="tab-btn active">Recent Activity</button>
+          <button data-tab="inventory" class="tab-btn">Inventory</button>
+          <button data-tab="gallery" class="tab-btn">Gallery</button>
+          <button data-tab="ideas" class="tab-btn">Ideas</button>
+        </div>
+      </div>
+
+      <!-- Desktop Table -->
+      <div id="desktop-table" class="table-container desktop-only">
+        <table class="audit-table">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Entity</th>
+              <th>Name</th>
+              <th>Operation</th>
+              <th id="class-header" style="display: none;">Class</th>
+              <th>Changed Fields</th>
+            </tr>
+          </thead>
+          <tbody id="table-body">
+            <tr>
+              <td colspan="6" class="text-center">Loading...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Mobile Cards -->
+      <div id="mobile-cards" class="mobile-cards mobile-only"></div>
+
+      <!-- Pagination -->
+      <div id="pagination" class="pagination">
+        <div class="pagination-info" id="pagination-info"></div>
+        <div class="pagination-buttons">
+          <button id="prev-page" class="btn-pagination">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <button id="next-page" class="btn-pagination">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail Modal -->
+  <div id="detail-modal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h2 id="modal-title"></h2>
+          <p id="modal-subtitle" class="modal-subtitle"></p>
+        </div>
+        <button id="close-modal" class="btn-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="changed-fields-section">
+          <h3 id="changed-fields-title"></h3>
+          <div id="changed-fields-list"></div>
+        </div>
+
+        <button id="toggle-details" class="btn-toggle">
+          ▼ Show Full Details
+        </button>
+
+        <div id="expanded-details" class="expanded-details"></div>
+      </div>
+
+      <div class="modal-footer">
+        <button disabled class="btn btn-disabled" title="Restore feature coming soon">
+          Restore This Version
+        </button>
+        <button id="modal-close-btn" class="btn btn-primary">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="audit_dashboard.js"></script>
+</body>
+</html>
