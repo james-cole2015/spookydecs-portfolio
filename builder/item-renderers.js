@@ -24,6 +24,16 @@ const ItemRenderers = {
                         <option value="">Select class first...</option>
                     </select>
                 </div>
+                
+                <div id="dest-search-container" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">🔍 Search Items</label>
+                    <input 
+                        type="text" 
+                        id="dest-item-search" 
+                        placeholder="Type to filter items..."
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                </div>
             </div>
             
             <div id="filtered-items-container" class="space-y-3">
@@ -80,12 +90,25 @@ const ItemRenderers = {
         
         let html = '';
         
+        // Add search bar at the top
+        html += `
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">🔍 Search Items</label>
+                <input 
+                    type="text" 
+                    id="source-item-search" 
+                    placeholder="Type to filter items..."
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+            </div>
+        `;
+        
         // Recent connections section
         if (recentItems.length > 0) {
             html += `
-                <div class="mb-6">
+                <div class="mb-6" id="recent-items-section">
                     <h3 class="text-sm font-semibold text-gray-700 mb-3">🔥 Continue From Recent (${recentItems.length})</h3>
-                    <div class="space-y-2">
+                    <div class="space-y-2" id="recent-items-list">
                         ${recentItems.map(itemInfo => this.renderSourceItemCard(itemInfo.item, itemInfo.availableFemale)).join('')}
                     </div>
                 </div>
@@ -94,11 +117,11 @@ const ItemRenderers = {
         
         // Ready items section
         html += `
-            <div>
+            <div id="ready-items-section">
                 <h3 class="text-sm font-semibold text-gray-700 mb-3">📍 Ready Items (${readyItems.length})</h3>
                 ${readyItems.length === 0 
                     ? '<p class="text-gray-500 text-sm">No items with available ports</p>'
-                    : `<div class="space-y-2">${readyItems.map(item => {
+                    : `<div class="space-y-2" id="ready-items-list">${readyItems.map(item => {
                         const availablePorts = PortTracker.getAvailablePortCount(item, connections, item.id, 'female');
                         return this.renderSourceItemCard(item, availablePorts);
                     }).join('')}</div>`
@@ -116,8 +139,10 @@ const ItemRenderers = {
         return `
             <div 
                 id="source-item-${item.id}" 
-                class="item-card border border-gray-300 rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                class="item-card source-item-card border border-gray-300 rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors"
                 data-item-id="${item.id}"
+                data-item-name="${(item.short_name || item.id).toLowerCase()}"
+                data-item-type="${(item.class_type || '').toLowerCase()}"
             >
                 <div class="font-semibold text-lg text-gray-900">${item.short_name || item.id}</div>
                 <div class="text-sm text-gray-600 mt-1">
@@ -145,7 +170,12 @@ const ItemRenderers = {
         }
         
         return `
-            <div id="item-card-${item.id}" class="item-card border border-gray-300 rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors">
+            <div 
+                id="item-card-${item.id}" 
+                class="item-card dest-item-card border border-gray-300 rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                data-item-name="${(item.short_name || item.id).toLowerCase()}"
+                data-item-type="${(item.class_type || '').toLowerCase()}"
+            >
                 <div class="item-header">
                     <span class="item-name text-lg font-semibold">${item.short_name || item.id}</span>
                     <span class="item-type text-xs">${item.class_type}</span>
