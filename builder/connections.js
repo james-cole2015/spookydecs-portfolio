@@ -32,8 +32,10 @@ async function addConnection() {
             connectionData
         );
         
-        // Reload deployment data to get updated session counts
-        await reloadDeploymentData();
+        console.log('✅ Connection added, reloading deployment data...');
+        
+        // Reload deployment data to get updated connections and session counts
+        await DeploymentLifecycle.reloadDeploymentData();
         
         clearConnectionForm();
         UIUtils.showToast('Connection added successfully');
@@ -76,8 +78,10 @@ async function deleteConnection(connectionId) {
             connectionId
         );
         
-        // Reload deployment data to get updated session counts
-        await reloadDeploymentData();
+        console.log('✅ Connection deleted, reloading deployment data...');
+        
+        // Reload deployment data to get updated connections and session counts
+        await DeploymentLifecycle.reloadDeploymentData();
         
         UIUtils.showToast('Connection deleted successfully');
     } catch (error) {
@@ -97,8 +101,10 @@ async function deleteStaticProp(itemId) {
             itemId
         );
         
+        console.log('✅ Static prop removed, reloading deployment data...');
+        
         // Reload deployment data
-        await reloadDeploymentData();
+        await DeploymentLifecycle.reloadDeploymentData();
         
         UIUtils.showToast('Static prop removed successfully');
     } catch (error) {
