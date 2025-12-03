@@ -15,8 +15,8 @@ phases:
   pre_build:
     commands:
       - echo "Fetching deployment configuration from Parameter Store"
-      - export TARGET_BUCKET=$(aws ssm get-parameter --name /spooky-decs/$SUB/$DEPLOY_ENV/s3-bucket --query 'Parameter.Value' --output text)
-      - export DISTRIBUTION_ID=$(aws ssm get-parameter --name /spooky-decs/$SUB/$DEPLOY_ENV/cf-distribution --query 'Parameter.Value' --output text)
+      - export TARGET_BUCKET=$(aws ssm get-parameter --name /spooky-decs/$DEPLOY_ENV/$SUB/s3-bucket --query 'Parameter.Value' --output text)
+      - export DISTRIBUTION_ID=$(aws ssm get-parameter --name /spooky-decs/$DEPLOY_ENV/$SUB/cf-distribution --query 'Parameter.Value' --output text)
       - if [[ -z "$TARGET_BUCKET" || -z "$DISTRIBUTION_ID" ]]; then echo "ERROR - Failed to fetch parameters from SSM"; echo "TARGET_BUCKET - $TARGET_BUCKET"; echo "DISTRIBUTION_ID - $DISTRIBUTION_ID"; exit 1; fi
       - echo "Target S3 Bucket - $TARGET_BUCKET"
       - echo "CloudFront Distribution - $DISTRIBUTION_ID"
