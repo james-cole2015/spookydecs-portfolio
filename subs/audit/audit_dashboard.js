@@ -1,6 +1,6 @@
 import { loadConfig } from './config.js';
-import { renderRecords, renderError } from './audit-renderer.js';
-import { openRecordDetail, closeModal, toggleDetails } from './audit-modal.js';
+import { renderRecords, renderError } from './audit_renderer.js';
+import { openRecordDetail, closeModal, toggleDetails } from './audit_modal.js';
 
 let API_BASE = '';
 let activeTab = 'recent';
