@@ -147,73 +147,85 @@
     </div>
 
     <script>
-        // Replace with your API Gateway endpoint
-        const API_ENDPOINT = 'https://miinu7boec.execute-api.us-east-2.amazonaws.com/dev/auth';
+        console.log('Script loading...');
         
-        const form = document.getElementById('loginForm');
-        const errorDiv = document.getElementById('error');
-        const submitBtn = document.getElementById('submitBtn');
-        
-        // Get redirect URL from query params
-        const urlParams = new URLSearchParams(window.location.search);
-        const redirectUrl = urlParams.get('redirect') || 'https://admin.spookydecs.com';
-        
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            console.log('Form submitted');
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing...');
             
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            console.log('Username:', username);
-            console.log('API Endpoint:', API_ENDPOINT);
-            console.log('Redirect URL:', redirectUrl);
+            const API_ENDPOINT = 'https://miinu7boec.execute-api.us-east-2.amazonaws.com/dev/auth';
             
-            // Clear previous errors
-            errorDiv.classList.remove('show');
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Signing in...';
+            const form = document.getElementById('loginForm');
+            const errorDiv = document.getElementById('error');
+            const submitBtn = document.getElementById('submitBtn');
             
-            try {
-                console.log('Sending request...');
-                const response = await fetch(API_ENDPOINT, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ username, password })
-                });
-                
-                console.log('Response status:', response.status);
-                const data = await response.json();
-                console.log('Response data:', data);
-                
-                if (!response.ok) {
-                    throw new Error(data.error || 'Login failed');
-                }
-                
-                // Set JWT cookie
-                const expiresIn = data.expiresIn || 3600;
-                const expiresDate = new Date(Date.now() + expiresIn * 1000);
-                
-                console.log('Setting cookie...');
-                document.cookie = `spookydecs_auth=${data.idToken}; domain=.spookydecs.com; path=/; expires=${expiresDate.toUTCString()}; secure; samesite=lax`;
-                console.log('Cookie set, redirecting to:', redirectUrl);
-                
-                // Redirect to original destination
-                window.location.href = redirectUrl;
-                
-            } catch (error) {
-                console.error('Login error:', error);
-                errorDiv.textContent = error.message;
-                errorDiv.classList.add('show');
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Sign In';
+            console.log('Form element:', form);
+            console.log('Error div:', errorDiv);
+            console.log('Submit button:', submitBtn);
+            
+            if (!form || !errorDiv || !submitBtn) {
+                console.error('Failed to find required elements!');
+                return;
             }
-        });
-        
-        document.getElementById('forgotPassword').addEventListener('click', (e) => {
-            e.preventDefault();
-            alert('Password reset functionality coming soon! Contact your administrator.');
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirectUrl = urlParams.get('redirect') || 'https://admin.spookydecs.com';
+            
+            console.log('Adding submit listener...');
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                console.log('Form submitted - preventDefault called');
+                
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                console.log('Username:', username);
+                console.log('API Endpoint:', API_ENDPOINT);
+                console.log('Redirect URL:', redirectUrl);
+                
+                errorDiv.classList.remove('show');
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Signing in...';
+                
+                try {
+                    console.log('Sending request...');
+                    const response = await fetch(API_ENDPOINT, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ username, password })
+                    });
+                    
+                    console.log('Response status:', response.status);
+                    const data = await response.json();
+                    console.log('Response data:', data);
+                    
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Login failed');
+                    }
+                    
+                    const expiresIn = data.expiresIn || 3600;
+                    const expiresDate = new Date(Date.now() + expiresIn * 1000);
+                    
+                    console.log('Setting cookie...');
+                    document.cookie = `spookydecs_auth=${data.idToken}; domain=.spookydecs.com; path=/; expires=${expiresDate.toUTCString()}; secure; samesite=lax`;
+                    console.log('Cookie set, redirecting to:', redirectUrl);
+                    
+                    window.location.href = redirectUrl;
+                    
+                } catch (error) {
+                    console.error('Login error:', error);
+                    errorDiv.textContent = error.message;
+                    errorDiv.classList.add('show');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Sign In';
+                }
+            });
+            console.log('Submit listener added successfully');
+            
+            document.getElementById('forgotPassword').addEventListener('click', function(e) {
+                e.preventDefault();
+                alert('Password reset functionality coming soon! Contact your administrator.');
+            });
         });
     </script>
 </body>
