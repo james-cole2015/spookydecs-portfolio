@@ -171,7 +171,7 @@
             const redirectUrl = urlParams.get('redirect') || 'https://admin.spookydecs.com';
             
             console.log('Adding submit listener...');
-            form.addEventListener('submit', async function(e) {
+            form.onsubmit = async function(e) {
                 e.preventDefault();
                 console.log('Form submitted - preventDefault called');
                 
@@ -219,7 +219,9 @@
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'Sign In';
                 }
-            });
+                
+                return false;  // Extra safeguard against form submission
+            };
             console.log('Submit listener added successfully');
             
             document.getElementById('forgotPassword').addEventListener('click', function(e) {
