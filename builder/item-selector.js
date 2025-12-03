@@ -43,12 +43,86 @@ const ItemSelector = {
             listContainer.innerHTML = ItemRenderers.renderFirstConnectionView();
         } else {
             listContainer.innerHTML = ItemRenderers.renderSourceItemsView();
+            
+            // Attach search listener for source items
+            this.attachSourceSearchListener();
         }
         
         modal.classList.remove('hidden');
         
         // Attach click handlers
         this.attachSourceItemHandlers();
+    },
+
+    /**
+     * Attach search listener for source items
+     */
+    attachSourceSearchListener() {
+        const searchInput = document.getElementById('source-item-search');
+        if (!searchInput) return;
+        
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            this.filterSourceItems(query);
+        });
+    },
+
+    /**
+     * Filter source items based on search query
+     */
+    filterSourceItems(query) {
+        const itemCards = document.querySelectorAll('.source-item-card');
+        let recentVisibleCount = 0;
+        let readyVisibleCount = 0;
+        
+        itemCards.forEach(card => {
+            const itemName = card.dataset.itemName || '';
+            const itemType = card.dataset.itemType || '';
+            const itemId = card.dataset.itemId || '';
+            
+            // Check if query matches name, type, or ID
+            const matches = itemName.includes(query) || 
+                          itemType.includes(query) || 
+                          itemId.toLowerCase().includes(query);
+            
+            if (matches) {
+                card.style.display = '';
+                
+                // Count visible items in each section
+                const parentSection = card.closest('#recent-items-list, #ready-items-list');
+                if (parentSection) {
+                    if (parentSection.id === 'recent-items-list') {
+                        recentVisibleCount++;
+                    } else if (parentSection.id === 'ready-items-list') {
+                        readyVisibleCount++;
+                    }
+                }
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Update section headers with counts
+        const recentSection = document.getElementById('recent-items-section');
+        const readySection = document.getElementById('ready-items-section');
+        
+        if (recentSection) {
+            const header = recentSection.querySelector('h3');
+            if (header) {
+                const originalText = header.textContent.split('(')[0].trim();
+                header.textContent = `${originalText} (${recentVisibleCount})`;
+            }
+            // Hide section if no items visible
+            recentSection.style.display = recentVisibleCount > 0 ? '' : 'none';
+        }
+        
+        if (readySection) {
+            const header = readySection.querySelector('h3');
+            if (header) {
+                const originalText = header.textContent.split('(')[0].trim();
+                header.textContent = `${originalText} (${readyVisibleCount})`;
+            }
+        }
     },
 
     /**
@@ -109,13 +183,69 @@ const ItemSelector = {
     },
 
     /**
+     * Attach search listener for destination items
+     */
+    attachDestSearchListener() {
+        const searchInput = document.getElementById('dest-item-search');
+        if (!searchInput) return;
+        
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            this.filterDestinationItems(query);
+        });
+    },
+
+    /**
+     * Filter destination items based on search query
+     */
+    filterDestinationItems(query) {
+        const itemCards = document.querySelectorAll('.dest-item-card');
+        let visibleCount = 0;
+        
+        itemCards.forEach(card => {
+            const itemName = card.dataset.itemName || '';
+            const itemType = card.dataset.itemType || '';
+            const itemId = card.id.replace('item-card-', '');
+            
+            // Check if query matches name, type, or ID
+            const matches = itemName.includes(query) || 
+                          itemType.includes(query) || 
+                          itemId.toLowerCase().includes(query);
+            
+            if (matches) {
+                card.style.display = '';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Show/hide "no results" message
+        const container = document.getElementById('filtered-items-container');
+        const noResultsMsg = container.querySelector('.no-results-message');
+        
+        if (visibleCount === 0 && query) {
+            if (!noResultsMsg) {
+                const msg = document.createElement('p');
+                msg.className = 'no-results-message text-gray-500 text-sm text-center py-4';
+                msg.textContent = `No items match "${query}"`;
+                container.appendChild(msg);
+            }
+        } else if (noResultsMsg) {
+            noResultsMsg.remove();
+        }
+    },
+
+    /**
      * Update destination items list based on selected filters
      */
     updateDestinationItemsList(selectedClass, selectedType) {
         const container = document.getElementById('filtered-items-container');
+        const searchContainer = document.getElementById('dest-search-container');
         
         if (!selectedClass || !selectedType) {
             container.innerHTML = '<p class="text-gray-500 text-sm text-center py-8">Select class and type to see available items</p>';
+            searchContainer?.classList.add('hidden');
             return;
         }
         
@@ -124,8 +254,12 @@ const ItemSelector = {
         // Render items
         if (items.length === 0) {
             container.innerHTML = '<p class="text-gray-500 text-sm text-center py-8">No available items match these filters</p>';
+            searchContainer?.classList.add('hidden');
             return;
         }
+        
+        // Show search bar if we have items
+        searchContainer?.classList.remove('hidden');
         
         container.innerHTML = items.map(item => ItemRenderers.renderDestinationItemCard(item)).join('');
         
@@ -138,6 +272,9 @@ const ItemSelector = {
                 });
             }
         });
+        
+        // Attach search listener
+        this.attachDestSearchListener();
     },
 
     /**
@@ -428,8 +565,8 @@ const ItemSelector = {
             }
             
             // Auto-refresh deployment data
-            if (typeof DeploymentManager !== 'undefined' && DeploymentManager.reloadDeploymentData) {
-                await DeploymentManager.reloadDeploymentData();
+            if (typeof DeploymentLifecycle !== 'undefined' && DeploymentLifecycle.reloadDeploymentData) {
+                await DeploymentLifecycle.reloadDeploymentData();
             }
             
             // Reset workflow state
