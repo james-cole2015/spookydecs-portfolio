@@ -99,6 +99,14 @@
   display: none;
 }
 
+/* Tab Dropdown (mobile only) */
+.tab-dropdown-container {
+  display: none;
+  padding: 12px 20px;
+  background: #fafafa;
+  border-bottom: 2px solid #e5e7eb;
+}
+
 .tab-btn {
   padding: 14px 20px;
   background: transparent;
@@ -128,8 +136,10 @@
 .modal-body {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 24px 28px;
   background: white;
+  min-height: 0;
 }
 
 .tab-content {
@@ -444,24 +454,76 @@
     width: 96%;
     max-height: 94vh;
     border-radius: 12px;
+    display: flex;
+    flex-direction: column;
   }
   
   .modal-header {
     padding: 18px 20px;
+    flex-shrink: 0;
+  }
+  
+  .view-item-id {
+    font-size: 14px;
+    padding: 8px;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+  }
+  
+  .tab-dropdown-container {
+    flex-shrink: 0;
   }
   
   .modal-body {
     padding: 18px 20px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
   }
   
   .modal-footer {
     padding: 16px 20px;
     flex-wrap: wrap;
+    flex-shrink: 0;
   }
   
-  .tab-btn {
-    padding: 12px 16px;
-    font-size: 13px;
+  /* Hide tab buttons on mobile */
+  .tab-nav {
+    display: none !important;
+  }
+  
+  /* Show tab dropdown on mobile */
+  .tab-dropdown-container {
+    display: block !important;
+    padding: 12px 20px;
+    background: #fafafa;
+    border-bottom: 2px solid #e5e7eb;
+    flex-shrink: 0;
+  }
+  
+  .tab-dropdown {
+    width: 100%;
+    padding: 12px 14px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background: white;
+    color: #1f2937;
+    font-weight: 600;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 40px;
+  }
+  
+  .tab-dropdown:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   }
   
   .field-row {
@@ -478,5 +540,11 @@
   .form-group select,
   .form-group textarea {
     font-size: 16px;
+  }
+  
+  /* Ensure form doesn't overflow */
+  #createForm,
+  #editForm {
+    max-width: 100%;
   }
 }

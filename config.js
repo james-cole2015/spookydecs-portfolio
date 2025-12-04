@@ -4,6 +4,13 @@
 let config = {};
 let allItems = [];
 
+// ADD THIS - Class Hierarchy (defines which class_types belong to each class)
+const CLASS_HIERARCHY = {
+  'Decoration': ['Inflatable', 'Static Prop', 'Animatronic'],
+  'Accessory': ['Plug', 'Cord', 'Adapter'],
+  'Light': ['String Light', 'Spot Light']
+};
+
 // Icon mapping for class types
 const CLASS_TYPE_ICONS = {
   'Cord': '🔌',
@@ -48,6 +55,7 @@ const ATTRIBUTE_LABELS = {
   'watts': 'Power (Watts)',
   'amps': 'Current (Amps)'
 };
+
 // Helper function to format field names
 function formatFieldName(key) {
   return key
