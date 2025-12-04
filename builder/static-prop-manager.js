@@ -22,6 +22,14 @@ const StaticPropManager = {
                 return false;
             }
             
+            // Season filter - must match deployment season or be "Shared"
+            const deploymentSeason = state.currentDeployment?.season;
+            const itemSeason = item.season;
+            if (deploymentSeason && itemSeason !== deploymentSeason && itemSeason !== 'Shared') {
+                console.log(`❌ Static prop ${item.id} (${item.short_name}) season mismatch - item: ${itemSeason}, deployment: ${deploymentSeason}`);
+                return false;
+            }
+            
             // Not deployed in any other zone
             const deployedInOtherZone = PortTracker.getItemLocationUsage(
                 item.id,
@@ -106,8 +114,8 @@ async addStaticProp(itemId) {
         );
         
         // Refresh the deployment data
-        if (typeof DeploymentManager !== 'undefined' && DeploymentManager.reloadDeploymentData) {
-            await DeploymentManager.reloadDeploymentData();
+        if (typeof DeploymentLifecycle !== 'undefined' && DeploymentLifecycle.reloadDeploymentData) {
+            await DeploymentLifecycle.reloadDeploymentData();
         }
         
         console.log('AFTER reload - items_deployed:', 

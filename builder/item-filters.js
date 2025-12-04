@@ -3,6 +3,19 @@
 
 const ItemFilters = {
     /**
+     * Check if item matches deployment season
+     */
+    matchesSeason(item) {
+        const deploymentSeason = state.currentDeployment?.season;
+        if (!deploymentSeason) return true; // If no season set, show all
+        
+        const itemSeason = item.season;
+        
+        // Show if item season matches deployment season OR item is marked as "Shared"
+        return itemSeason === deploymentSeason || itemSeason === 'Shared';
+    },
+
+    /**
      * Get filtered items for source selection
      */
     getFilteredSourceItems(selectedClass, selectedType) {
@@ -12,6 +25,9 @@ const ItemFilters = {
         const allLocations = state.currentDeployment?.locations || [];
         
         return allItems.filter(item => {
+            // Filter 0: Season match
+            if (!this.matchesSeason(item)) return false;
+            
             // Filter 1: Class match
             if (item.class !== selectedClass) return false;
             
@@ -56,8 +72,15 @@ const ItemFilters = {
         console.log(`Filtering destination items for ${selectedClass} / ${selectedType}`);
         console.log(`Current location: ${state.currentLocation}`);
         console.log(`Total locations in deployment: ${allLocations.length}`);
+        console.log(`Deployment season: ${state.currentDeployment?.season}`);
         
         return allItems.filter(item => {
+            // Filter 0: Season match
+            if (!this.matchesSeason(item)) {
+                console.log(`❌ Item ${item.id} (${item.short_name}) season mismatch - item: ${item.season}, deployment: ${state.currentDeployment?.season}`);
+                return false;
+            }
+            
             // Filter 1: Class match
             if (item.class !== selectedClass) return false;
             
@@ -117,11 +140,16 @@ const ItemFilters = {
         const itemsDeployed = currentLocation?.items_deployed || [];
         const allItems = state.allItems || [];
         
-        return PortTracker.getItemsWithOpenConnections(
+        const recentItems = PortTracker.getItemsWithOpenConnections(
             connections,
             allItems,
             itemsDeployed
-        ).slice(0, 3); // Top 3 most recent
+        );
+        
+        // Filter by season
+        return recentItems
+            .filter(itemInfo => this.matchesSeason(itemInfo.item))
+            .slice(0, 3); // Top 3 most recent
     },
 
     /**
@@ -134,6 +162,9 @@ const ItemFilters = {
         const allItems = state.allItems || [];
         
         return allItems.filter(item => {
+            // Season filter
+            if (!this.matchesSeason(item)) return false;
+            
             // Must be deployed in this zone
             if (!itemsDeployed.includes(item.id)) return false;
             
@@ -155,6 +186,9 @@ const ItemFilters = {
         const allItems = state.allItems || [];
         
         return allItems.filter(item => {
+            // Season filter
+            if (!this.matchesSeason(item)) return false;
+            
             return itemsDeployed.includes(item.id) && 
                    (item.class_type === 'Inflatable' || item.class_type === 'Static Prop');
         });
