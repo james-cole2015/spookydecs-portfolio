@@ -8,8 +8,6 @@ function closeModal(modalId) {
   
   // Re-enable body scroll
   document.body.style.overflow = '';
-  document.body.style.position = '';
-  document.body.style.width = '';
   
   // Clear any stored items
   if (modalId === 'viewModal') {
@@ -24,10 +22,11 @@ function openModal(modalId) {
   if (modal) {
     modal.style.display = 'flex';
     
-    // Prevent body scroll on mobile
-    document.body.style.overflow = 'hidden';
-    document.body.style.position = 'fixed';
-    document.body.style.width = '100%';
+    // Prevent body scroll while allowing modal scroll
+    // Only disable body scroll on desktop - mobile handles it via CSS
+    if (window.innerWidth > 768) {
+      document.body.style.overflow = 'hidden';
+    }
   }
 }
 
