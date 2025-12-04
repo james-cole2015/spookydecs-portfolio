@@ -126,10 +126,18 @@ function validateCreateNumericField(input) {
 }
 
 function switchCreateTab(tabName) {
+  // Update tab buttons (desktop)
   document.querySelectorAll('#createModal .tab-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.tab === tabName);
   });
   
+  // Update dropdown (mobile)
+  const dropdown = document.getElementById('createTabDropdown');
+  if (dropdown) {
+    dropdown.value = tabName;
+  }
+  
+  // Update tab content
   document.querySelectorAll('#createModal .tab-content').forEach(content => {
     content.classList.toggle('active', content.dataset.tab === tabName);
   });

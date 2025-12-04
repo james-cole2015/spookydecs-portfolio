@@ -16,6 +16,7 @@ function viewItem(id) {
   // Populate all tabs
   populateDetailsTab(item);
   populateVendorTab(item);
+  populateRepairsTab(item);
   populateDeploymentsTab(item);
   populateStorageTab(item);
   populatePhotosTab(item);
@@ -54,12 +55,6 @@ function populateDetailsTab(item) {
       <div class="field-value">${item.status || '-'}</div>
     </div>
     <div class="field-row">
-      <div class="field-label">Needs Repair:</div>
-      <div class="field-value ${item.repair_status?.needs_repair ? 'needs-repair-yes' : ''}">
-        ${item.repair_status?.needs_repair ? 'YES' : 'NO'}
-      </div>
-    </div>
-    <div class="field-row">
       <div class="field-label">Item Notes:</div>
       <div class="field-value">${item.general_notes || '-'}</div>
     </div>
@@ -72,6 +67,14 @@ function populateVendorTab(item) {
   
   container.innerHTML = `
     <div class="field-row">
+      <div class="field-label">Store:</div>
+      <div class="field-value">${vm.vendor_store || '-'}</div>
+    </div>
+    <div class="field-row">
+      <div class="field-label">Manufacturer:</div>
+      <div class="field-value">${vm.manufacturer || '-'}</div>
+    </div>
+    <div class="field-row">
       <div class="field-label">Cost:</div>
       <div class="field-value">${vm.cost || '-'}</div>
     </div>
@@ -79,13 +82,44 @@ function populateVendorTab(item) {
       <div class="field-label">Value:</div>
       <div class="field-value">${vm.value || '-'}</div>
     </div>
+  `;
+}
+
+function populateRepairsTab(item) {
+  const container = document.getElementById('viewRepairsContent');
+  const classType = item.class_type;
+  const hasRepairTracking = HAS_REPAIR_TRACKING.includes(classType);
+  
+  if (!hasRepairTracking) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">🔧</div>
+        <div>Repair tracking not available for this item type</div>
+      </div>
+    `;
+    return;
+  }
+  
+  const needsRepair = item.repair_status?.needs_repair;
+  
+  container.innerHTML = `
     <div class="field-row">
-      <div class="field-label">Manufacturer:</div>
-      <div class="field-value">${vm.manufacturer || '-'}</div>
+      <div class="field-label">Needs Repair:</div>
+      <div class="field-value ${needsRepair ? 'needs-repair-yes' : ''}">
+        ${needsRepair ? 'YES' : 'NO'}
+      </div>
     </div>
     <div class="field-row">
-      <div class="field-label">Store:</div>
-      <div class="field-value">${vm.vendor_store || '-'}</div>
+      <div class="field-label">Last Repair Date:</div>
+      <div class="field-value">${item.repair_status?.last_repair_date || '-'}</div>
+    </div>
+    <div class="field-row">
+      <div class="field-label">Repair Notes:</div>
+      <div class="field-value">${item.repair_status?.repair_notes || '-'}</div>
+    </div>
+    <div class="field-row">
+      <div class="field-label">Repair Criticality:</div>
+      <div class="field-value">${item.repair_status?.last_criticality || '-'}</div>
     </div>
   `;
 }
@@ -128,11 +162,17 @@ function populateDeploymentsTab(item) {
 
 function populateStorageTab(item) {
   const container = document.getElementById('viewStorageContent');
+  const toteId = item.packing_data?.tote_id || '-';
+  const toteLocation = item.packing_data?.tote_location || '-';
   
   container.innerHTML = `
     <div class="field-row">
+      <div class="field-label">Tote ID:</div>
+      <div class="field-value">${toteId}</div>
+    </div>
+    <div class="field-row">
       <div class="field-label">Storage Location:</div>
-      <div class="field-value">${item.packing_data?.tote_location || '-'}</div>
+      <div class="field-value">${toteLocation}</div>
     </div>
   `;
 }
@@ -140,7 +180,6 @@ function populateStorageTab(item) {
 function populatePhotosTab(item) {
   const container = document.getElementById('viewPhotosContent');
   
-  // Placeholder for future photo support
   container.innerHTML = `
     <div class="empty-state">
       <div class="empty-state-icon">📷</div>
@@ -178,36 +217,20 @@ function populateMiscTab(item) {
     `;
   });
   
-  // Add repair info if applicable
-  const hasRepairTracking = HAS_REPAIR_TRACKING.includes(classType);
-  if (hasRepairTracking && item.repair_status) {
-    html += `
-      <div style="margin-top: 24px; padding-top: 20px; border-top: 2px solid #e5e7eb;">
-        <h3 style="font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 12px;">Repair Information</h3>
-        <div class="field-row">
-          <div class="field-label">Last Repair Date:</div>
-          <div class="field-value">${item.repair_status.last_repair_date || '-'}</div>
-        </div>
-        <div class="field-row">
-          <div class="field-label">Repair Notes:</div>
-          <div class="field-value">${item.repair_status.repair_notes || '-'}</div>
-        </div>
-        <div class="field-row">
-          <div class="field-label">Repair Criticality:</div>
-          <div class="field-value">${item.repair_status.last_criticality || '-'}</div>
-        </div>
-      </div>
-    `;
-  }
-  
   container.innerHTML = html;
 }
 
 function switchViewTab(tabName) {
-  // Update tab buttons
+  // Update tab buttons (desktop)
   document.querySelectorAll('#viewModal .tab-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.tab === tabName);
   });
+  
+  // Update dropdown (mobile)
+  const dropdown = document.getElementById('viewTabDropdown');
+  if (dropdown) {
+    dropdown.value = tabName;
+  }
   
   // Update tab content
   document.querySelectorAll('#viewModal .tab-content').forEach(content => {

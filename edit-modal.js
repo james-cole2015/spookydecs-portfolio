@@ -34,9 +34,6 @@ function populateEditForm(item) {
   document.getElementById('edit-status').value = item.status || '';
   document.getElementById('edit-general-notes').value = item.general_notes || '';
   
-  // Generate dynamic fields in Details tab
-  generateEditDynamicFields(item);
-  
   // Vendor tab
   document.getElementById('edit-cost').value = item.vendor_metadata?.cost || '';
   document.getElementById('edit-value').value = item.vendor_metadata?.value || '';
@@ -45,10 +42,13 @@ function populateEditForm(item) {
   
   // Storage tab
   document.getElementById('edit-tote-location').value = item.packing_data?.tote_location || '';
+  
+  // Misc tab - Generate dynamic fields
+  generateEditMiscFields(item);
 }
 
-function generateEditDynamicFields(item) {
-  const container = document.getElementById('editDynamicFields');
+function generateEditMiscFields(item) {
+  const container = document.getElementById('editMiscFields');
   const classType = item.class_type;
   const attributesToShow = CLASS_TYPE_ATTRIBUTES[classType] || [];
   
@@ -117,10 +117,18 @@ function validateNumericField(input) {
 }
 
 function switchEditTab(tabName) {
+  // Update tab buttons (desktop)
   document.querySelectorAll('#editModal .tab-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.tab === tabName);
   });
   
+  // Update dropdown (mobile)
+  const dropdown = document.getElementById('editTabDropdown');
+  if (dropdown) {
+    dropdown.value = tabName;
+  }
+  
+  // Update tab content
   document.querySelectorAll('#editModal .tab-content').forEach(content => {
     content.classList.toggle('active', content.dataset.tab === tabName);
   });
