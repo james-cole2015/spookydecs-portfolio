@@ -147,27 +147,27 @@
       <button class="close-btn" onclick="closeModal('editModal')">&times;</button>
     </div>
     
-    <div id="editFormView">
-      <!-- Desktop Tabs -->
-      <div class="tab-nav">
-        <button class="tab-btn active" data-tab="details" onclick="switchEditTab('details')">Details</button>
-        <button class="tab-btn" data-tab="vendor" onclick="switchEditTab('vendor')">Vendor</button>
-        <button class="tab-btn" data-tab="storage" onclick="switchEditTab('storage')">Storage</button>
-        <button class="tab-btn" data-tab="misc" onclick="switchEditTab('misc')">Misc</button>
-      </div>
-      
-      <!-- Mobile Dropdown -->
-      <div class="tab-dropdown-container">
-        <select class="tab-dropdown" id="editTabDropdown" onchange="switchEditTab(this.value)">
-          <option value="details">Details</option>
-          <option value="vendor">Vendor</option>
-          <option value="storage">Storage</option>
-          <option value="misc">Misc</option>
-        </select>
-      </div>
-      
-      <div class="modal-body">
-        <form id="editForm">
+    <div class="modal-body">
+      <div id="editFormView">
+        <!-- Desktop Tabs -->
+        <div class="tab-nav">
+          <button class="tab-btn active" data-tab="details" onclick="switchEditTab('details')">Details</button>
+          <button class="tab-btn" data-tab="vendor" onclick="switchEditTab('vendor')">Vendor</button>
+          <button class="tab-btn" data-tab="storage" onclick="switchEditTab('storage')">Storage</button>
+          <button class="tab-btn" data-tab="misc" onclick="switchEditTab('misc')">Misc</button>
+        </div>
+        
+        <!-- Mobile Dropdown -->
+        <div class="tab-dropdown-container">
+          <select class="tab-dropdown" id="editTabDropdown" onchange="switchEditTab(this.value)">
+            <option value="details">Details</option>
+            <option value="vendor">Vendor</option>
+            <option value="storage">Storage</option>
+            <option value="misc">Misc</option>
+          </select>
+        </div>
+        
+        <form id="editForm" style="margin-top: 20px;">
           <!-- Details Tab -->
           <div class="tab-content active" data-tab="details">
             <div class="form-group">
@@ -254,10 +254,8 @@
           </div>
         </form>
       </div>
-    </div>
-    
-    <div id="editPreviewView" style="display:none;">
-      <div class="modal-body"></div>
+      
+      <div id="editPreviewView" style="display:none;"></div>
     </div>
     
     <div class="modal-footer">
@@ -277,25 +275,25 @@
       <button class="close-btn" onclick="closeModal('createModal')">&times;</button>
     </div>
     
-    <div id="createFormView">
-      <!-- Desktop Tabs -->
-      <div class="tab-nav">
-        <button class="tab-btn active" data-tab="details" onclick="switchCreateTab('details')">Details</button>
-        <button class="tab-btn" data-tab="vendor" onclick="switchCreateTab('vendor')">Vendor</button>
-        <button class="tab-btn" data-tab="storage" onclick="switchCreateTab('storage')">Storage</button>
-      </div>
-      
-      <!-- Mobile Dropdown -->
-      <div class="tab-dropdown-container">
-        <select class="tab-dropdown" id="createTabDropdown" onchange="switchCreateTab(this.value)">
-          <option value="details">Details</option>
-          <option value="vendor">Vendor</option>
-          <option value="storage">Storage</option>
-        </select>
-      </div>
-      
-      <div class="modal-body">
-        <form id="createForm">
+    <div class="modal-body">
+      <div id="createFormView">
+        <!-- Desktop Tabs -->
+        <div class="tab-nav">
+          <button class="tab-btn active" data-tab="details" onclick="switchCreateTab('details')">Details</button>
+          <button class="tab-btn" data-tab="vendor" onclick="switchCreateTab('vendor')">Vendor</button>
+          <button class="tab-btn" data-tab="storage" onclick="switchCreateTab('storage')">Storage</button>
+        </div>
+        
+        <!-- Mobile Dropdown -->
+        <div class="tab-dropdown-container">
+          <select class="tab-dropdown" id="createTabDropdown" onchange="switchCreateTab(this.value)">
+            <option value="details">Details</option>
+            <option value="vendor">Vendor</option>
+            <option value="storage">Storage</option>
+          </select>
+        </div>
+        
+        <form id="createForm" style="margin-top: 20px;">
           <!-- Details Tab -->
           <div class="tab-content active" data-tab="details">
             <div class="form-group">
@@ -391,10 +389,8 @@
           </div>
         </form>
       </div>
-    </div>
-    
-    <div id="createPreviewView" style="display:none;">
-      <div class="modal-body"></div>
+      
+      <div id="createPreviewView" style="display:none;"></div>
     </div>
     
     <div class="modal-footer">
@@ -405,7 +401,6 @@
     </div>
   </div>
 </div>
-
 
 <!-- Delete Modal -->
 <div id="deleteModal" class="modal" style="display:none;">
