@@ -38,16 +38,18 @@ function generateCreatePreview(formData) {
   }
   
   // Vendor section
+  const vm = formData.vendor_metadata || {};
   html += generateCreatePreviewSection('Vendor Information', [
-    { label: 'Cost', value: formData.vendor_metadata.cost },
-    { label: 'Value', value: formData.vendor_metadata.value },
-    { label: 'Manufacturer', value: formData.vendor_metadata.manufacturer },
-    { label: 'Store', value: formData.vendor_metadata.vendor_store }
+    { label: 'Store', value: vm.vendor_store },
+    { label: 'Manufacturer', value: vm.manufacturer },
+    { label: 'Cost', value: vm.cost },
+    { label: 'Value', value: vm.value }
   ]);
   
   // Storage section
+  const pd = formData.packing_data || {};
   html += generateCreatePreviewSection('Storage', [
-    { label: 'Storage Location', value: formData.packing_data.tote_location }
+    { label: 'Storage Location', value: pd.tote_location }
   ]);
   
   container.innerHTML = html;
