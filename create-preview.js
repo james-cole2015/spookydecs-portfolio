@@ -109,7 +109,7 @@ async function saveNewItem() {
       newItem.deployment_data.last_deployment_id = 'CURR';
     }
     
-    await saveItemToAPI(newId, newItem);
+    await createItemAPI(newItem);
     
     showToast('success', 'Success!', 'Item created successfully');
     closeModal('createModal');

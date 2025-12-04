@@ -49,7 +49,34 @@ async function loadItems() {
   }
 }
 
-// Save item changes to API
+// Create new item via API (POST)
+async function createItemAPI(itemPayload) {
+  try {
+    const apiUrl = config.API_ENDPOINT || '';
+    if (!apiUrl) {
+      throw new Error('API endpoint not configured');
+    }
+    
+    const response = await fetch(`${apiUrl}/admin/items`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(itemPayload)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Failed to create item: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    throw error;
+  }
+}
+
+// Save item changes to API (PUT)
 async function saveItemToAPI(itemId, updatePayload) {
   try {
     const apiUrl = config.API_ENDPOINT || '';
