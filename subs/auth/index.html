@@ -170,10 +170,10 @@
             const urlParams = new URLSearchParams(window.location.search);
             const redirectUrl = urlParams.get('redirect') || 'https://admin.spookydecs.com';
             
-            console.log('Adding submit listener...');
-            form.onsubmit = async function(e) {
+            console.log('Adding button click listener...');
+            submitBtn.onclick = async function(e) {
                 e.preventDefault();
-                console.log('Form submitted - preventDefault called');
+                console.log('Button clicked - preventDefault called');
                 
                 const username = document.getElementById('username').value;
                 const password = document.getElementById('password').value;
@@ -222,7 +222,14 @@
                 
                 return false;  // Extra safeguard against form submission
             };
-            console.log('Submit listener added successfully');
+            console.log('Button click listener added successfully');
+            
+            // Also prevent form submission as backup
+            form.onsubmit = function(e) {
+                e.preventDefault();
+                console.log('Form onsubmit prevented');
+                return false;
+            };
             
             document.getElementById('forgotPassword').addEventListener('click', function(e) {
                 e.preventDefault();
