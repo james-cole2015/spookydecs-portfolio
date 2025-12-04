@@ -1,41 +1,27 @@
 // Event Handlers and Initialization
 
-// Close modal
-function closeModal(modalId) {
-  document.getElementById(modalId).style.display = 'none';
-}
+// Note: closeModal is now in modal-utils.js, so this duplicate can be removed
 
 // Initialize event listeners
-// Create button
 document.getElementById('btnCreateItem').addEventListener('click', openCreateModal);
 
-  // Delete button
-  document.getElementById('btnDeleteItem').addEventListener('click', () => {
-    document.getElementById('deleteModal').style.display = 'flex';
-  });
+// Delete button
+document.getElementById('btnDeleteItem').addEventListener('click', () => {
+  document.getElementById('deleteModal').style.display = 'flex';
+});
 
-  // Logout button
-  document.getElementById('btnLogout').addEventListener('click', () => {
-    alert('Logout clicked');
-  });
+// Logout button
+document.getElementById('btnLogout').addEventListener('click', () => {
+  alert('Logout clicked');
+});
 
-  // Close modals when clicking outside
-  window.addEventListener('click', (e) => {
-    if (e.target.classList.contains('modal')) {
-      e.target.style.display = 'none';
-    }
-  });
+// Note: Modal backdrop closing is handled in modal-utils.js, so removing duplicate
 
-// Initialize the filter system when the page loads
+// Initialize the filter system and load config when page loads
 document.addEventListener('DOMContentLoaded', function() {
   // Initialize filter system
   FilterSystem.init();
-  });
-
-// Initialize application
-document.addEventListener('DOMContentLoaded', () => {
-  initializeEventListeners();
+  
+  // Load config
   loadConfig();
 });
-
-document.getElementById('btnDeleteItem').addEventListener('click', openDeleteModal);
