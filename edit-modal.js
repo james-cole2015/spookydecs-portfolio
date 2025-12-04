@@ -22,7 +22,7 @@ function editItem(id) {
   switchEditTab('details');
   
   // Show modal
-  document.getElementById('editModal').style.display = 'flex';
+  openModal('editModal');
 }
 
 function populateEditForm(item) {

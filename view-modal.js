@@ -26,7 +26,7 @@ function viewItem(id) {
   switchViewTab('details');
   
   // Show modal
-  document.getElementById('viewModal').style.display = 'flex';
+  openModal('viewModal');
 }
 
 function populateDetailsTab(item) {

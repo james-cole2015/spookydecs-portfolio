@@ -6,11 +6,28 @@ function closeModal(modalId) {
     modal.style.display = 'none';
   }
   
+  // Re-enable body scroll
+  document.body.style.overflow = '';
+  document.body.style.position = '';
+  document.body.style.width = '';
+  
   // Clear any stored items
   if (modalId === 'viewModal') {
     window.currentViewItem = null;
   } else if (modalId === 'editModal') {
     window.currentEditItem = null;
+  }
+}
+
+function openModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.style.display = 'flex';
+    
+    // Prevent body scroll on mobile
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
   }
 }
 

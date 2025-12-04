@@ -8,7 +8,7 @@ function openCreateModal() {
   showCreateFormView();
   switchCreateTab('details');
   
-  document.getElementById('createModal').style.display = 'flex';
+  openModal('createModal');
 }
 
 function clearCreateForm() {
