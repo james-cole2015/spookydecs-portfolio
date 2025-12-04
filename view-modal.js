@@ -1,6 +1,5 @@
-// View Modal - Handles item detail viewing
+// View Modal - Tab-based item detail viewing
 
-// View item details
 function viewItem(id) {
   const item = allItems.find(i => i.id === id);
   if (!item) {
@@ -8,260 +7,218 @@ function viewItem(id) {
     return;
   }
   
-  // Populate ID (without "ID:" prefix)
+  window.currentViewItem = item;
+  
+  // Set modal title and ID
+  document.getElementById('viewModalTitle').textContent = 'Item Details';
   document.getElementById('viewItemId').textContent = item.id || 'N/A';
   
-  // Populate basic fields
-  document.getElementById('view-short-name').textContent = item.short_name || 'N/A';
-  document.getElementById('view-season').textContent = item.season || 'N/A';
-  document.getElementById('view-class').textContent = item.class || 'N/A';
+  // Populate all tabs
+  populateDetailsTab(item);
+  populateVendorTab(item);
+  populateDeploymentsTab(item);
+  populateStorageTab(item);
+  populatePhotosTab(item);
+  populateMiscTab(item);
   
-  // Class type with icon
-  const classTypeEl = document.getElementById('view-class-type');
-  const icon = CLASS_TYPE_ICONS[item.class_type] || '📦';
-  classTypeEl.innerHTML = `<span class="type-icon">${icon}</span> ${item.class_type || 'N/A'}`;
+  // Switch to Details tab
+  switchViewTab('details');
   
-  document.getElementById('view-status').textContent = item.status || 'N/A';
-  document.getElementById('view-general-notes').textContent = item.general_notes || 'N/A';
-  
-  // Needs Repair
-  const needsRepairEl = document.getElementById('view-needs-repair');
-  if (item.repair_status?.needs_repair === true) {
-    needsRepairEl.textContent = 'YES';
-    needsRepairEl.className = 'view-field-value needs-repair-yes';
-  } else {
-    needsRepairEl.textContent = 'NO';
-    needsRepairEl.className = 'view-field-value';
-  }
-  
-  // Storage Location
-  document.getElementById('view-tote-location').textContent = 
-    item.packing_data?.tote_location || 'N/A';
-  
-  // Last Deployment - extract last 4 characters
-  const lastDeployment = item.deployment_data?.last_deployment_id;
-  if (lastDeployment) {
-    const last4 = lastDeployment.slice(-4);
-    document.getElementById('view-last-deployment').textContent = last4;
-  } else {
-    document.getElementById('view-last-deployment').textContent = 'N/A';
-  }
-  
-  // Populate expanded content with all other fields
-  populateExpandedContent(item);
-  
-  // Reset expanded state
-  document.getElementById('expandedContent').classList.remove('show');
-  document.getElementById('viewPanel').classList.remove('expanded');
-  document.getElementById('btnMoreInfo').textContent = 'More Information';
-  
+  // Show modal
   document.getElementById('viewModal').style.display = 'flex';
 }
 
-// Populate expanded content in view modal
-function populateExpandedContent(item) {
-  const expandedLeft = document.getElementById('expandedLeft');
-  const expandedRight = document.getElementById('expandedRight');
-  expandedLeft.innerHTML = '';
-  expandedRight.innerHTML = '';
+function populateDetailsTab(item) {
+  const container = document.getElementById('viewDetailsContent');
+  const icon = CLASS_TYPE_ICONS[item.class_type] || '📦';
   
-  const classType = item.class_type;
-  const hasRepairTracking = HAS_REPAIR_TRACKING.includes(classType);
+  container.innerHTML = `
+    <div class="field-row">
+      <div class="field-label">Name:</div>
+      <div class="field-value">${item.short_name || '-'}</div>
+    </div>
+    <div class="field-row">
+      <div class="field-label">Season:</div>
+      <div class="field-value">${item.season || '-'}</div>
+    </div>
+    <div class="field-row">
+      <div class="field-label">Class:</div>
+      <div class="field-value">${item.class || '-'}</div>
+    </div>
+    <div class="field-row">
+      <div class="field-label">Class Type:</div>
+      <div class="field-value"><span class="type-icon">${icon}</span> ${item.class_type || '-'}</div>
+    </div>
+    <div class="field-row">
+      <div class="field-label">Status:</div>
+      <div class="field-value">${item.status || '-'}</div>
+    </div>
+    <div class="field-row">
+      <div class="field-label">Needs Repair:</div>
+      <div class="field-value ${item.repair_status?.needs_repair ? 'needs-repair-yes' : ''}">
+        ${item.repair_status?.needs_repair ? 'YES' : 'NO'}
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field-label">Item Notes:</div>
+      <div class="field-value">${item.general_notes || '-'}</div>
+    </div>
+  `;
+}
+
+function populateVendorTab(item) {
+  const container = document.getElementById('viewVendorContent');
+  const vm = item.vendor_metadata || {};
   
-  // LEFT SIDE - Previous Deployments
-  const deploySection = document.createElement('div');
-  deploySection.className = 'expanded-section';
+  container.innerHTML = `
+    <div class="field-row">
+      <div class="field-label">Cost:</div>
+      <div class="field-value">${vm.cost || '-'}</div>
+    </div>
+    <div class="field-row">
+      <div class="field-label">Value:</div>
+      <div class="field-value">${vm.value || '-'}</div>
+    </div>
+    <div class="field-row">
+      <div class="field-label">Manufacturer:</div>
+      <div class="field-value">${vm.manufacturer || '-'}</div>
+    </div>
+    <div class="field-row">
+      <div class="field-label">Store:</div>
+      <div class="field-value">${vm.vendor_store || '-'}</div>
+    </div>
+  `;
+}
+
+function populateDeploymentsTab(item) {
+  const container = document.getElementById('viewDeploymentsContent');
+  const lastDeployment = item.deployment_data?.last_deployment_id;
+  const previousDeployments = item.deployment_data?.previous_deployments || [];
   
-  const deployTitle = document.createElement('h4');
-  deployTitle.textContent = 'Previous Deployments';
-  deploySection.appendChild(deployTitle);
+  let html = `
+    <div class="field-row">
+      <div class="field-label">Last Deployment:</div>
+      <div class="field-value">${lastDeployment ? lastDeployment.slice(-4) : '-'}</div>
+    </div>
+  `;
   
-  if (item.deployment_data?.previous_deployments && 
-      Array.isArray(item.deployment_data.previous_deployments) && 
-      item.deployment_data.previous_deployments.length > 0) {
-    item.deployment_data.previous_deployments.forEach(dep => {
-      const listItem = document.createElement('div');
-      listItem.className = 'list-item';
-      listItem.style.paddingLeft = '12px';
-      listItem.textContent = dep;
-      deploySection.appendChild(listItem);
+  if (previousDeployments.length > 0) {
+    html += `
+      <div style="margin-top: 20px;">
+        <h3 style="font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 12px;">Previous Deployments</h3>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+    `;
+    
+    previousDeployments.forEach(dep => {
+      html += `<div style="padding: 8px 12px; background: #f9fafb; border-radius: 6px; font-size: 13px;">${dep}</div>`;
     });
+    
+    html += '</div></div>';
   } else {
-    const noData = document.createElement('div');
-    noData.className = 'list-item';
-    noData.style.paddingLeft = '12px';
-    noData.textContent = 'No previous deployments';
-    deploySection.appendChild(noData);
+    html += `
+      <div class="empty-state">
+        <div class="empty-state-icon">📋</div>
+        <div>No previous deployments recorded</div>
+      </div>
+    `;
   }
   
-  expandedLeft.appendChild(deploySection);
+  container.innerHTML = html;
+}
+
+function populateStorageTab(item) {
+  const container = document.getElementById('viewStorageContent');
   
-  // LEFT SIDE - Repair Information (only for items with repair tracking)
-  if (hasRepairTracking) {
-    const repairSection = document.createElement('div');
-    repairSection.className = 'expanded-section';
-    
-    const repairTitle = document.createElement('h4');
-    repairTitle.textContent = 'Repair Information';
-    repairSection.appendChild(repairTitle);
-    
-    // Last Repair Date
-    const repairDateField = document.createElement('div');
-    repairDateField.className = 'expanded-field';
-    const repairDateLabel = document.createElement('div');
-    repairDateLabel.className = 'expanded-field-label';
-    repairDateLabel.textContent = 'Last Repair Date:';
-    const repairDateValue = document.createElement('div');
-    repairDateValue.className = 'expanded-field-value';
-    repairDateValue.textContent = item.repair_status?.last_repair_date || 'N/A';
-    repairDateField.appendChild(repairDateLabel);
-    repairDateField.appendChild(repairDateValue);
-    repairSection.appendChild(repairDateField);
-    
-    // Repair Notes
-    const repairNotesField = document.createElement('div');
-    repairNotesField.className = 'expanded-field';
-    const repairNotesLabel = document.createElement('div');
-    repairNotesLabel.className = 'expanded-field-label';
-    repairNotesLabel.textContent = 'Repair Notes:';
-    const repairNotesValue = document.createElement('div');
-    repairNotesValue.className = 'expanded-field-value';
-    repairNotesValue.textContent = item.repair_status?.repair_notes || 'N/A';
-    repairNotesField.appendChild(repairNotesLabel);
-    repairNotesField.appendChild(repairNotesValue);
-    repairSection.appendChild(repairNotesField);
-    
-    // Repair Criticality
-    const repairCritField = document.createElement('div');
-    repairCritField.className = 'expanded-field';
-    const repairCritLabel = document.createElement('div');
-    repairCritLabel.className = 'expanded-field-label';
-    repairCritLabel.textContent = 'Repair Criticality:';
-    const repairCritValue = document.createElement('div');
-    repairCritValue.className = 'expanded-field-value';
-    repairCritValue.textContent = item.repair_status?.last_criticality || 'N/A';
-    repairCritField.appendChild(repairCritLabel);
-    repairCritField.appendChild(repairCritValue);
-    repairSection.appendChild(repairCritField);
-    
-    expandedLeft.appendChild(repairSection);
-  }
+  container.innerHTML = `
+    <div class="field-row">
+      <div class="field-label">Storage Location:</div>
+      <div class="field-value">${item.packing_data?.tote_location || '-'}</div>
+    </div>
+  `;
+}
+
+function populatePhotosTab(item) {
+  const container = document.getElementById('viewPhotosContent');
   
-  // RIGHT SIDE - Item Information (dynamic based on class_type)
+  // Placeholder for future photo support
+  container.innerHTML = `
+    <div class="empty-state">
+      <div class="empty-state-icon">📷</div>
+      <div>Photo support coming soon</div>
+    </div>
+  `;
+}
+
+function populateMiscTab(item) {
+  const container = document.getElementById('viewMiscContent');
+  const classType = item.class_type;
   const attributesToShow = CLASS_TYPE_ATTRIBUTES[classType] || [];
   
-  if (attributesToShow.length > 0) {
-    const itemSection = document.createElement('div');
-    itemSection.className = 'expanded-section';
-    
-    const itemTitle = document.createElement('h4');
-    itemTitle.textContent = 'Item Information';
-    itemSection.appendChild(itemTitle);
-    
-    attributesToShow.forEach(attr => {
-      const field = document.createElement('div');
-      field.className = 'expanded-field';
-      
-      const label = document.createElement('div');
-      label.className = 'expanded-field-label';
-      label.textContent = (ATTRIBUTE_LABELS[attr] || formatFieldName(attr)) + ':';
-      
-      const value = document.createElement('div');
-      value.className = 'expanded-field-value';
-      value.textContent = item[attr] || 'N/A';
-      
-      field.appendChild(label);
-      field.appendChild(value);
-      itemSection.appendChild(field);
-    });
-    
-    expandedRight.appendChild(itemSection);
+  if (attributesToShow.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">📦</div>
+        <div>No additional attributes for this class type</div>
+      </div>
+    `;
+    return;
   }
   
-  // RIGHT SIDE - Vendor Information
-  const vendorSection = document.createElement('div');
-  vendorSection.className = 'expanded-section';
+  let html = '';
   
-  const vendorTitle = document.createElement('h4');
-  vendorTitle.textContent = 'Vendor Information';
-  vendorSection.appendChild(vendorTitle);
+  attributesToShow.forEach(attr => {
+    const label = ATTRIBUTE_LABELS[attr] || formatFieldName(attr);
+    const value = item[attr] || '-';
+    
+    html += `
+      <div class="field-row">
+        <div class="field-label">${label}:</div>
+        <div class="field-value">${value}</div>
+      </div>
+    `;
+  });
   
-  // Cost
-  const costField = document.createElement('div');
-  costField.className = 'expanded-field';
-  const costLabel = document.createElement('div');
-  costLabel.className = 'expanded-field-label';
-  costLabel.textContent = 'Cost:';
-  const costValue = document.createElement('div');
-  costValue.className = 'expanded-field-value';
-  costValue.textContent = item.vendor_metadata?.cost || 'N/A';
-  costField.appendChild(costLabel);
-  costField.appendChild(costValue);
-  vendorSection.appendChild(costField);
-  
-  // Value
-  const valueField = document.createElement('div');
-  valueField.className = 'expanded-field';
-  const valueLabel = document.createElement('div');
-  valueLabel.className = 'expanded-field-label';
-  valueLabel.textContent = 'Value:';
-  const valueValue = document.createElement('div');
-  valueValue.className = 'expanded-field-value';
-  valueValue.textContent = item.vendor_metadata?.value || 'N/A';
-  valueField.appendChild(valueLabel);
-  valueField.appendChild(valueValue);
-  vendorSection.appendChild(valueField);
-  
-  // Manufacturer
-  const mfgField = document.createElement('div');
-  mfgField.className = 'expanded-field';
-  const mfgLabel = document.createElement('div');
-  mfgLabel.className = 'expanded-field-label';
-  mfgLabel.textContent = 'Manufacturer:';
-  const mfgValue = document.createElement('div');
-  mfgValue.className = 'expanded-field-value';
-  mfgValue.textContent = item.vendor_metadata?.manufacturer || 'N/A';
-  mfgField.appendChild(mfgLabel);
-  mfgField.appendChild(mfgValue);
-  vendorSection.appendChild(mfgField);
-  
-  // Store
-  const storeField = document.createElement('div');
-  storeField.className = 'expanded-field';
-  const storeLabel = document.createElement('div');
-  storeLabel.className = 'expanded-field-label';
-  storeLabel.textContent = 'Store:';
-  const storeValue = document.createElement('div');
-  storeValue.className = 'expanded-field-value';
-  storeValue.textContent = item.vendor_metadata?.vendor_store || 'N/A';
-  storeField.appendChild(storeLabel);
-  storeField.appendChild(storeValue);
-  vendorSection.appendChild(storeField);
-  
-  expandedRight.appendChild(vendorSection);
-}
-
-// Toggle expanded information in view modal
-function toggleMoreInfo() {
-  const expandedContent = document.getElementById('expandedContent');
-  const viewPanel = document.getElementById('viewPanel');
-  const btn = document.getElementById('btnMoreInfo');
-  
-  if (expandedContent.classList.contains('show')) {
-    expandedContent.classList.remove('show');
-    viewPanel.classList.remove('expanded');
-    btn.textContent = 'More Information';
-  } else {
-    expandedContent.classList.add('show');
-    viewPanel.classList.add('expanded');
-    btn.textContent = 'Less Information';
+  // Add repair info if applicable
+  const hasRepairTracking = HAS_REPAIR_TRACKING.includes(classType);
+  if (hasRepairTracking && item.repair_status) {
+    html += `
+      <div style="margin-top: 24px; padding-top: 20px; border-top: 2px solid #e5e7eb;">
+        <h3 style="font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 12px;">Repair Information</h3>
+        <div class="field-row">
+          <div class="field-label">Last Repair Date:</div>
+          <div class="field-value">${item.repair_status.last_repair_date || '-'}</div>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Repair Notes:</div>
+          <div class="field-value">${item.repair_status.repair_notes || '-'}</div>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Repair Criticality:</div>
+          <div class="field-value">${item.repair_status.last_criticality || '-'}</div>
+        </div>
+      </div>
+    `;
   }
+  
+  container.innerHTML = html;
 }
 
-// Edit item from view modal
+function switchViewTab(tabName) {
+  // Update tab buttons
+  document.querySelectorAll('#viewModal .tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tabName);
+  });
+  
+  // Update tab content
+  document.querySelectorAll('#viewModal .tab-content').forEach(content => {
+    content.classList.toggle('active', content.dataset.tab === tabName);
+  });
+}
+
 function editItemFromView() {
+  const item = window.currentViewItem;
+  if (!item) return;
+  
   closeModal('viewModal');
-  // Get the current item ID from the view modal
-  const idText = document.getElementById('viewItemId').textContent;
-  editItem(idText);
+  editItem(item.id);
 }

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SpookyDecs — Items Management</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="modal-styles.css">
 </head>
 <body>
 
@@ -89,71 +90,34 @@
 
 <!-- View Modal -->
 <div id="viewModal" class="modal" style="display:none;">
-  <div class="panel view-panel" id="viewPanel">
+  <div class="panel">
     <div class="modal-header">
-      <h2>Item Details</h2>
-      <button onclick="closeModal('viewModal')" style="background:transparent;border:none;font-size:20px;cursor:pointer;">&times;</button>
+      <h2 id="viewModalTitle">Item Details</h2>
+      <button class="close-btn" onclick="closeModal('viewModal')">&times;</button>
     </div>
     
     <div class="view-item-id" id="viewItemId">ITEM-XXX-XXXX</div>
     
-    <div class="view-content">
-      <div class="view-section">
-        <h3>Basic Information</h3>
-        <div class="view-field">
-          <div class="view-field-label">Name:</div>
-          <div class="view-field-value" id="view-short-name">-</div>
-        </div>
-        <div class="view-field">
-          <div class="view-field-label">Season:</div>
-          <div class="view-field-value" id="view-season">-</div>
-        </div>
-        <div class="view-field">
-          <div class="view-field-label">Class:</div>
-          <div class="view-field-value" id="view-class">-</div>
-        </div>
-        <div class="view-field">
-          <div class="view-field-label">Type:</div>
-          <div class="view-field-value" id="view-class-type">-</div>
-        </div>
-      </div>
-      
-      <div class="view-section">
-        <h3>Status & Location</h3>
-        <div class="view-field">
-          <div class="view-field-label">Status:</div>
-          <div class="view-field-value" id="view-status">-</div>
-        </div>
-        <div class="view-field">
-          <div class="view-field-label">Needs Repair:</div>
-          <div class="view-field-value" id="view-needs-repair">-</div>
-        </div>
-        <div class="view-field">
-          <div class="view-field-label">Item Notes:</div>
-          <div class="view-field-value" id="view-general-notes">-</div>
-        </div>
-        <div class="view-field">
-          <div class="view-field-label">Storage Location:</div>
-          <div class="view-field-value" id="view-tote-location">-</div>
-        </div>
-        <div class="view-field">
-          <div class="view-field-label">Last Deployment:</div>
-          <div class="view-field-value" id="view-last-deployment">-</div>
-        </div>
-      </div>
+    <div class="tab-nav">
+      <button class="tab-btn active" data-tab="details" onclick="switchViewTab('details')">Details</button>
+      <button class="tab-btn" data-tab="vendor" onclick="switchViewTab('vendor')">Vendor</button>
+      <button class="tab-btn" data-tab="deployments" onclick="switchViewTab('deployments')">Deployments</button>
+      <button class="tab-btn" data-tab="storage" onclick="switchViewTab('storage')">Storage</button>
+      <button class="tab-btn" data-tab="photos" onclick="switchViewTab('photos')">Photos</button>
+      <button class="tab-btn" data-tab="misc" onclick="switchViewTab('misc')">Misc</button>
     </div>
     
-    <div class="expanded-content" id="expandedContent">
-      <h3 style="margin-bottom: 16px; text-align: center;">Additional Information</h3>
-      <div style="display: grid; grid-template-columns: repeat(2,max-content); justify-content: center; gap: 200px; max-width: 900px; margin: 0 auto;">
-        <div id="expandedLeft"></div>
-        <div id="expandedRight"></div>
-      </div>
+    <div class="modal-body">
+      <div class="tab-content active" data-tab="details" id="viewDetailsContent"></div>
+      <div class="tab-content" data-tab="vendor" id="viewVendorContent"></div>
+      <div class="tab-content" data-tab="deployments" id="viewDeploymentsContent"></div>
+      <div class="tab-content" data-tab="storage" id="viewStorageContent"></div>
+      <div class="tab-content" data-tab="photos" id="viewPhotosContent"></div>
+      <div class="tab-content" data-tab="misc" id="viewMiscContent"></div>
     </div>
     
     <div class="modal-footer">
       <button class="btn-secondary" onclick="editItemFromView()">Edit</button>
-      <button class="btn-primary" id="btnMoreInfo" onclick="toggleMoreInfo()">More Information</button>
       <button class="btn-secondary" onclick="closeModal('viewModal')">Close</button>
     </div>
   </div>
@@ -161,31 +125,31 @@
 
 <!-- Edit Modal -->
 <div id="editModal" class="modal" style="display:none;">
-  <div class="panel edit-panel">
+  <div class="panel">
     <div class="modal-header">
       <h2 id="editModalTitle">Edit Item</h2>
-      <button onclick="closeModal('editModal')" style="background:transparent;border:none;font-size:20px;cursor:pointer;">&times;</button>
+      <button class="close-btn" onclick="closeModal('editModal')">&times;</button>
     </div>
     
-    <!-- Edit Form View -->
-    <div id="editFormView" class="edit-view">
-      <form id="editForm">
-        
-        <!-- Basic Information Section -->
-        <div class="accordion-section">
-          <button type="button" class="accordion-header" onclick="toggleAccordion(this)">
-            <span>Basic Information</span>
-            <span class="accordion-icon">▼</span>
-          </button>
-          <div class="accordion-content active">
+    <div id="editFormView">
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="details" onclick="switchEditTab('details')">Details</button>
+        <button class="tab-btn" data-tab="vendor" onclick="switchEditTab('vendor')">Vendor</button>
+        <button class="tab-btn" data-tab="storage" onclick="switchEditTab('storage')">Storage</button>
+      </div>
+      
+      <div class="modal-body">
+        <form id="editForm">
+          <!-- Details Tab -->
+          <div class="tab-content active" data-tab="details">
             <div class="form-group">
               <label for="edit-short-name">Name <span class="required">*</span></label>
-              <input type="text" id="edit-short-name" name="short_name" required>
+              <input type="text" id="edit-short-name" required>
             </div>
             
             <div class="form-group">
               <label for="edit-season">Season <span class="required">*</span></label>
-              <select id="edit-season" name="season" required>
+              <select id="edit-season" required>
                 <option value="">Select Season</option>
                 <option value="Halloween">Halloween</option>
                 <option value="Christmas">Christmas</option>
@@ -195,104 +159,74 @@
             
             <div class="form-group">
               <label for="edit-class">Class <span class="required">*</span></label>
-              <select id="edit-class" name="class" required>
+              <select id="edit-class" required disabled>
                 <option value="">Select Class</option>
                 <option value="Accessory">Accessory</option>
                 <option value="Decoration">Decoration</option>
                 <option value="Light">Light</option>
               </select>
+              <div class="field-hint">Class cannot be changed</div>
             </div>
             
             <div class="form-group">
               <label for="edit-class-type">Class Type <span class="required">*</span></label>
-              <input type="text" id="edit-class-type" name="class_type" readonly disabled>
+              <input type="text" id="edit-class-type" readonly disabled>
               <div class="field-hint">Class Type cannot be changed</div>
             </div>
             
             <div class="form-group">
               <label for="edit-status">Status <span class="required">*</span></label>
-              <select id="edit-status" name="status" required>
+              <select id="edit-status" required>
                 <option value="">Select Status</option>
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
               </select>
             </div>
-          </div>
-        </div>
-        
-        <!-- Item Details Section (Dynamic) -->
-        <div class="accordion-section" id="itemDetailsSection">
-          <button type="button" class="accordion-header" onclick="toggleAccordion(this)">
-            <span>Item Details</span>
-            <span class="accordion-icon">▼</span>
-          </button>
-          <div class="accordion-content">
-            <div id="dynamicFields">
-              <!-- Dynamic fields will be inserted here based on class_type -->
+            
+            <div class="form-group">
+              <label for="edit-general-notes">Item Notes</label>
+              <textarea id="edit-general-notes" rows="3"></textarea>
             </div>
+            
+            <div id="editDynamicFields"></div>
           </div>
-        </div>
-        
-        <!-- Vendor Information Section -->
-        <div class="accordion-section">
-          <button type="button" class="accordion-header" onclick="toggleAccordion(this)">
-            <span>Vendor Information</span>
-            <span class="accordion-icon">▼</span>
-          </button>
-          <div class="accordion-content">
+          
+          <!-- Vendor Tab -->
+          <div class="tab-content" data-tab="vendor">
             <div class="form-group">
               <label for="edit-cost">Cost</label>
-              <input type="text" id="edit-cost" name="cost" placeholder="e.g., $29.99">
+              <input type="text" id="edit-cost" placeholder="e.g., $29.99">
             </div>
             
             <div class="form-group">
               <label for="edit-value">Value</label>
-              <input type="text" id="edit-value" name="value" placeholder="e.g., $50.00">
+              <input type="text" id="edit-value" placeholder="e.g., $50.00">
             </div>
             
             <div class="form-group">
               <label for="edit-manufacturer">Manufacturer</label>
-              <input type="text" id="edit-manufacturer" name="manufacturer">
+              <input type="text" id="edit-manufacturer">
             </div>
             
             <div class="form-group">
               <label for="edit-store">Store</label>
-              <input type="text" id="edit-store" name="vendor_store">
+              <input type="text" id="edit-store">
             </div>
           </div>
-        </div>
-        
-        <!-- Storage & Deployment Section -->
-        <div class="accordion-section">
-          <button type="button" class="accordion-header" onclick="toggleAccordion(this)">
-            <span>Storage & Deployment</span>
-            <span class="accordion-icon">▼</span>
-          </button>
-          <div class="accordion-content">
+          
+          <!-- Storage Tab -->
+          <div class="tab-content" data-tab="storage">
             <div class="form-group">
               <label for="edit-tote-location">Storage Location</label>
-              <input type="text" id="edit-tote-location" name="tote_location" placeholder="e.g., Garage - A3">
-            </div>
-            
-            <div class="form-group">
-              <label for="edit-general-notes">Item Notes</label>
-              <textarea id="edit-general-notes" name="general_notes" rows="3"></textarea>
-            </div>
-            
-            <div class="form-group">
-              <label for="edit-last-deployment">Last Deployment</label>
-              <input type="text" id="edit-last-deployment" name="last_deployment" readonly disabled>
-              <div class="field-hint">Managed by deployment system</div>
+              <input type="text" id="edit-tote-location" placeholder="e.g., Garage - A3">
             </div>
           </div>
-        </div>
-        
-      </form>
+        </form>
+      </div>
     </div>
     
-    <!-- Preview View -->
-    <div id="editPreviewView" class="edit-view" style="display:none;">
-      <!-- Preview content will be generated dynamically -->
+    <div id="editPreviewView" style="display:none;">
+      <div class="modal-body"></div>
     </div>
     
     <div class="modal-footer">
@@ -306,31 +240,31 @@
 
 <!-- Create Modal -->
 <div id="createModal" class="modal" style="display:none;">
-  <div class="panel edit-panel">
+  <div class="panel">
     <div class="modal-header">
       <h2 id="createModalTitle">Create New Item</h2>
-      <button onclick="closeModal('createModal')" style="background:transparent;border:none;font-size:20px;cursor:pointer;">&times;</button>
+      <button class="close-btn" onclick="closeModal('createModal')">&times;</button>
     </div>
     
-    <!-- Create Form View -->
-    <div id="createFormView" class="edit-view">
-      <form id="createForm">
-        
-        <!-- Basic Information Section -->
-        <div class="accordion-section">
-          <button type="button" class="accordion-header" onclick="toggleAccordion(this)">
-            <span>Basic Information</span>
-            <span class="accordion-icon">▼</span>
-          </button>
-          <div class="accordion-content active">
+    <div id="createFormView">
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="details" onclick="switchCreateTab('details')">Details</button>
+        <button class="tab-btn" data-tab="vendor" onclick="switchCreateTab('vendor')">Vendor</button>
+        <button class="tab-btn" data-tab="storage" onclick="switchCreateTab('storage')">Storage</button>
+      </div>
+      
+      <div class="modal-body">
+        <form id="createForm">
+          <!-- Details Tab -->
+          <div class="tab-content active" data-tab="details">
             <div class="form-group">
               <label for="create-short-name">Name <span class="required">*</span></label>
-              <input type="text" id="create-short-name" name="short_name" required>
+              <input type="text" id="create-short-name" required>
             </div>
             
             <div class="form-group">
               <label for="create-season">Season <span class="required">*</span></label>
-              <select id="create-season" name="season" required>
+              <select id="create-season" required>
                 <option value="">Select Season</option>
                 <option value="Halloween">Halloween</option>
                 <option value="Christmas">Christmas</option>
@@ -340,7 +274,7 @@
             
             <div class="form-group">
               <label for="create-class">Class <span class="required">*</span></label>
-              <select id="create-class" name="class" required onchange="onCreateClassChange()">
+              <select id="create-class" required onchange="onCreateClassChange()">
                 <option value="">Select Class</option>
                 <option value="Decoration">Decoration</option>
                 <option value="Accessory">Accessory</option>
@@ -350,7 +284,7 @@
             
             <div class="form-group">
               <label for="create-class-type">Class Type <span class="required">*</span></label>
-              <select id="create-class-type" name="class_type" required disabled onchange="onCreateClassTypeChange()">
+              <select id="create-class-type" required disabled onchange="onCreateClassTypeChange()">
                 <option value="">Select Class Type</option>
               </select>
               <div class="field-hint">Select a Class first</div>
@@ -358,94 +292,68 @@
             
             <div class="form-group">
               <label for="create-status">Status</label>
-              <select id="create-status" name="status">
+              <select id="create-status">
                 <option value="Active" selected>Active</option>
                 <option value="Inactive">Inactive</option>
               </select>
-              <div class="field-hint">Defaults to Active</div>
             </div>
-            <!-- Add this checkbox field in your create form's "Basic Information" section -->
-            <!-- Place it AFTER the "Status" dropdown and BEFORE the "Item Notes" textarea -->
-
+            
             <div class="form-group">
               <label for="create-deployed">
-                <input type="checkbox" id="create-deployed" name="deployed" style="width: auto; margin-right: 8px;">
+                <input type="checkbox" id="create-deployed" style="width: auto; margin-right: 8px;">
                 Currently Deployed
               </label>
-              <div class="field-hint">Check if this item is currently deployed in your display</div>
+              <div class="field-hint">Check if this item is currently deployed</div>
             </div>
-
+            
             <div class="form-group">
               <label for="create-general-notes">Item Notes</label>
-              <textarea id="create-general-notes" name="general_notes" rows="3"></textarea>
+              <textarea id="create-general-notes" rows="3"></textarea>
             </div>
-          </div>
-        </div>
-        
-        <!-- Item Details Section (Dynamic) -->
-        <div class="accordion-section" id="createItemDetailsSection">
-          <button type="button" class="accordion-header" onclick="toggleAccordion(this)">
-            <span>Item Details</span>
-            <span class="accordion-icon">▼</span>
-          </button>
-          <div class="accordion-content">
+            
             <div id="createDynamicFields">
               <div class="field-hint" style="text-align: center; padding: 20px;">
                 Select a Class Type to see additional fields
               </div>
             </div>
           </div>
-        </div>
-        
-        <!-- Vendor Information Section -->
-        <div class="accordion-section">
-          <button type="button" class="accordion-header" onclick="toggleAccordion(this)">
-            <span>Vendor Information</span>
-            <span class="accordion-icon">▼</span>
-          </button>
-          <div class="accordion-content">
+          
+          <!-- Vendor Tab -->
+          <div class="tab-content" data-tab="vendor">
             <div class="form-group">
               <label for="create-cost">Cost</label>
-              <input type="text" id="create-cost" name="cost" placeholder="e.g., $29.99">
+              <input type="text" id="create-cost" placeholder="e.g., $29.99">
             </div>
             
             <div class="form-group">
               <label for="create-value">Value</label>
-              <input type="text" id="create-value" name="value" placeholder="e.g., $50.00">
+              <input type="text" id="create-value" placeholder="e.g., $50.00">
             </div>
             
             <div class="form-group">
               <label for="create-manufacturer">Manufacturer</label>
-              <input type="text" id="create-manufacturer" name="manufacturer">
+              <input type="text" id="create-manufacturer">
             </div>
             
             <div class="form-group">
               <label for="create-store">Store</label>
-              <input type="text" id="create-store" name="vendor_store">
+              <input type="text" id="create-store">
             </div>
           </div>
-        </div>
-        
-        <!-- Storage Section -->
-        <div class="accordion-section">
-          <button type="button" class="accordion-header" onclick="toggleAccordion(this)">
-            <span>Storage</span>
-            <span class="accordion-icon">▼</span>
-          </button>
-          <div class="accordion-content">
+          
+          <!-- Storage Tab -->
+          <div class="tab-content" data-tab="storage">
             <div class="form-group">
               <label for="create-tote-location">Storage Location</label>
-              <input type="text" id="create-tote-location" name="tote_location" placeholder="e.g., Garage - A3">
+              <input type="text" id="create-tote-location" placeholder="e.g., Garage - A3">
             </div>
           </div>
-        </div>
-        
-      </form>
+        </form>
+      </div>
     </div>
     
-    <!-- Preview View -->
-    <div id="createPreviewView" class="edit-view" style="display:none;">
-      <!-- Preview content will be generated dynamically -->
+    <div id="createPreviewView" style="display:none;">
+      <div class="modal-body"></div>
     </div>
     
     <div class="modal-footer">
@@ -476,11 +384,12 @@
 <script src="config.js"></script>
 <script src="api-service.js"></script>
 <script src="ui-renderer.js"></script>
+<script src="modal-utils.js"></script>
 <script src="view-modal.js"></script>
-<script src="edit-form.js"></script>
+<script src="edit-modal.js"></script>
 <script src="edit-preview.js"></script>
-<script src="edit-save.js"></script>
 <script src="create-modal.js"></script>
+<script src="create-preview.js"></script>
 <script src="pagination.js"></script>
 <script src="filter-system.js"></script>
 <script src="delete-handler.js"></script>

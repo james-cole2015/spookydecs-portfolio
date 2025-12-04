@@ -6,11 +6,8 @@ function closeModal(modalId) {
 }
 
 // Initialize event listeners
-function initializeEventListeners() {
-  // Create button
-  document.getElementById('btnCreateItem').addEventListener('click', () => {
-    openCreateModal();
-  });
+// Create button
+document.getElementById('btnCreateItem').addEventListener('click', openCreateModal);
 
   // Delete button
   document.getElementById('btnDeleteItem').addEventListener('click', () => {
@@ -28,7 +25,6 @@ function initializeEventListeners() {
       e.target.style.display = 'none';
     }
   });
-}
 
 // Initialize the filter system when the page loads
 document.addEventListener('DOMContentLoaded', function() {
