@@ -65,7 +65,13 @@ function buildExpandedView() {
     smartChangesHtml = buildDeploymentChanges();
   }
   
-  const changedFields = (selectedRecord.changedFields || []).map(field => {
+  // Filter out noisy fields for deployments
+  const fieldsToShow = isDeployment 
+    ? (selectedRecord.changedFields || []).filter(f => 
+        !['updated_at', 'statistics', 'time_tracking'].includes(f))
+    : (selectedRecord.changedFields || []);
+  
+  const changedFields = fieldsToShow.map(field => {
     const oldVal = selectedRecord.oldValue?.[field];
     const newVal = selectedRecord.newValue?.[field];
     
@@ -76,13 +82,13 @@ function buildExpandedView() {
           <div>
             <div class="text-xs text-gray-500 mb-1">Before:</div>
             <div class="bg-red-50 p-2 rounded break-words">
-              ${formatValue(oldVal)}
+              ${formatValue(oldVal, field, isDeployment)}
             </div>
           </div>
           <div>
             <div class="text-xs text-gray-500 mb-1">After:</div>
             <div class="bg-green-50 p-2 rounded break-words">
-              ${formatValue(newVal)}
+              ${formatValue(newVal, field, isDeployment)}
             </div>
           </div>
         </div>
@@ -210,11 +216,50 @@ function buildDeploymentChanges() {
   `;
 }
 
-function formatValue(val) {
+function formatValue(val, field, isDeployment) {
   if (val === null) return '<span class="text-gray-400 italic">null</span>';
   if (val === undefined) return '<span class="text-gray-400 italic">undefined</span>';
+  
+  // Special handling for deployment locations field
+  if (isDeployment && field === 'locations' && Array.isArray(val)) {
+    return formatLocations(val);
+  }
+  
   if (typeof val === 'string') return escapeHtml(val);
   return escapeHtml(JSON.stringify(val));
+}
+
+function formatLocations(locations) {
+  if (!locations || locations.length === 0) {
+    return '<span class="text-gray-400 italic">No locations</span>';
+  }
+  
+  return locations.map(loc => {
+    const itemsCount = (loc.items_deployed || []).length;
+    const connectionsCount = (loc.connections || []).length;
+    const items = loc.items_deployed || [];
+    const connections = loc.connections || [];
+    
+    let summary = `<div class="mb-3">
+      <strong>${escapeHtml(loc.name)}:</strong> ${itemsCount} item${itemsCount !== 1 ? 's' : ''}, ${connectionsCount} connection${connectionsCount !== 1 ? 's' : ''}`;
+    
+    if (itemsCount > 0) {
+      summary += `<div class="ml-4 mt-1 text-gray-600">
+        items deployed:<br/>
+        ${items.map(id => `<span class="ml-2">• ${escapeHtml(id)}</span>`).join('<br/>')}
+      </div>`;
+    }
+    
+    if (connectionsCount > 0) {
+      summary += `<div class="ml-4 mt-1 text-gray-600">
+        connections:<br/>
+        ${connections.map(conn => `<span class="ml-2">• ${escapeHtml(conn.id)}</span>`).join('<br/>')}
+      </div>`;
+    }
+    
+    summary += '</div>';
+    return summary;
+  }).join('');
 }
 
 function escapeHtml(text) {
