@@ -1,4 +1,4 @@
-import { loadConfig } from './config.js';
+import { loadConfig } from './config.json';
 import { renderRecords, renderError } from './audit_renderer.js';
 import { openRecordDetail, closeModal, toggleDetails } from './audit_modal.js';
 
