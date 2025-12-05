@@ -1,4 +1,6 @@
-// Edit Modal - Tab-based editing with validation
+// edit-modal.js - Edit item functionality
+
+let currentEditItem = null;
 
 function editItem(id) {
   const item = allItems.find(i => i.id === id);
@@ -7,113 +9,80 @@ function editItem(id) {
     return;
   }
   
-  window.currentEditItem = JSON.parse(JSON.stringify(item));
+  currentEditItem = item;
   
-  // Populate form
-  populateEditForm(item);
+  // Set modal title
+  document.getElementById('editModalTitle').textContent = 'Edit Item';
   
-  // Show form view
-  showEditFormView();
+  // Populate form fields - Details tab
+  document.getElementById('edit-short-name').value = item.short_name || '';
+  document.getElementById('edit-season').value = item.season || '';
+  document.getElementById('edit-class').value = item.class || '';
+  document.getElementById('edit-class-type').value = item.class_type || '';
+  document.getElementById('edit-status').value = item.status || 'Active';
+  document.getElementById('edit-general-notes').value = item.general_notes || '';
   
-  // Set title
-  document.getElementById('editModalTitle').textContent = `Edit Item - ${item.id}`;
+  // Populate form fields - Vendor tab
+  const vm = item.vendor_metadata || {};
+  document.getElementById('edit-store').value = vm.vendor_store || '';
+  document.getElementById('edit-manufacturer').value = vm.manufacturer || '';
+  document.getElementById('edit-cost').value = vm.cost || '';
+  document.getElementById('edit-value').value = vm.value || '';
+  
+  // Populate form fields - Storage tab
+  const pd = item.packing_data || {};
+  document.getElementById('edit-tote-location').value = pd.tote_location || '';
+  
+  // Populate misc fields
+  populateEditMiscFields(item);
   
   // Switch to Details tab
   switchEditTab('details');
+  
+  // Show form, hide preview
+  document.getElementById('editFormView').style.display = 'block';
+  document.getElementById('editPreviewView').style.display = 'none';
+  
+  // Show/hide appropriate buttons
+  document.getElementById('editCancelBtn').style.display = 'inline-block';
+  document.getElementById('editPreviewBtn').style.display = 'inline-block';
+  document.getElementById('editBackBtn').style.display = 'none';
+  document.getElementById('editSaveBtn').style.display = 'none';
   
   // Show modal
   openModal('editModal');
 }
 
-function populateEditForm(item) {
-  // Details tab - Basic fields
-  document.getElementById('edit-short-name').value = item.short_name || '';
-  document.getElementById('edit-season').value = item.season || '';
-  document.getElementById('edit-class').value = item.class || '';
-  document.getElementById('edit-class-type').value = item.class_type || '';
-  document.getElementById('edit-status').value = item.status || '';
-  document.getElementById('edit-general-notes').value = item.general_notes || '';
-  
-  // Vendor tab
-  document.getElementById('edit-cost').value = item.vendor_metadata?.cost || '';
-  document.getElementById('edit-value').value = item.vendor_metadata?.value || '';
-  document.getElementById('edit-manufacturer').value = item.vendor_metadata?.manufacturer || '';
-  document.getElementById('edit-store').value = item.vendor_metadata?.vendor_store || '';
-  
-  // Storage tab
-  document.getElementById('edit-tote-location').value = item.packing_data?.tote_location || '';
-  
-  // Misc tab - Generate dynamic fields
-  generateEditMiscFields(item);
-}
-
-function generateEditMiscFields(item) {
+function populateEditMiscFields(item) {
   const container = document.getElementById('editMiscFields');
   const classType = item.class_type;
   const attributesToShow = CLASS_TYPE_ATTRIBUTES[classType] || [];
   
-  container.innerHTML = '';
-  
   if (attributesToShow.length === 0) {
-    container.innerHTML = '<div class="field-hint" style="text-align: center; padding: 20px;">No additional fields for this class type</div>';
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">📦</div>
+        <div>No additional attributes for this class type</div>
+      </div>
+    `;
     return;
   }
   
+  let html = '';
+  
   attributesToShow.forEach(attr => {
-    const formGroup = document.createElement('div');
-    formGroup.className = 'form-group';
+    const label = ATTRIBUTE_LABELS[attr] || formatFieldName(attr);
+    const value = item[attr] || '';
     
-    const label = document.createElement('label');
-    label.setAttribute('for', `edit-${attr}`);
-    label.textContent = ATTRIBUTE_LABELS[attr] || formatFieldName(attr);
-    
-    let input;
-    if (attr === 'notes') {
-      input = document.createElement('textarea');
-      input.rows = 3;
-    } else {
-      input = document.createElement('input');
-      input.type = 'text';
-    }
-    
-    input.id = `edit-${attr}`;
-    input.name = attr;
-    input.value = item[attr] || '';
-    
-    if (['stakes', 'tethers', 'length', 'height_length', 'male_ends', 'female_ends'].includes(attr)) {
-      input.placeholder = 'Enter a number';
-      input.addEventListener('blur', () => validateNumericField(input));
-    }
-    
-    formGroup.appendChild(label);
-    formGroup.appendChild(input);
-    
-    const errorMsg = document.createElement('div');
-    errorMsg.className = 'error-message';
-    formGroup.appendChild(errorMsg);
-    
-    container.appendChild(formGroup);
+    html += `
+      <div class="form-group">
+        <label for="edit-${attr}">${label}</label>
+        <input type="text" id="edit-${attr}" value="${value}">
+      </div>
+    `;
   });
-}
-
-function validateNumericField(input) {
-  const formGroup = input.closest('.form-group');
-  const errorMsg = formGroup.querySelector('.error-message');
   
-  if (input.value.trim() === '') {
-    formGroup.classList.remove('error');
-    return true;
-  }
-  
-  const cleanValue = input.value.replace(/[$,\s]/g, '');
-  if (isNaN(cleanValue) || cleanValue === '') {
-    formGroup.classList.add('error');
-    errorMsg.textContent = 'Must be a valid number';
-    return false;
-  }
-  
-  formGroup.classList.remove('error');
-  return true;
+  container.innerHTML = html;
 }
 
 function switchEditTab(tabName) {
@@ -134,97 +103,213 @@ function switchEditTab(tabName) {
   });
 }
 
-function showEditFormView() {
-  document.getElementById('editFormView').style.display = 'block';
-  document.getElementById('editPreviewView').style.display = 'none';
-  document.getElementById('editPreviewBtn').style.display = 'inline-block';
-  document.getElementById('editBackBtn').style.display = 'none';
-  document.getElementById('editSaveBtn').style.display = 'none';
-  document.getElementById('editCancelBtn').style.display = 'inline-block';
-}
-
 function showEditPreview() {
+  // Validate form
   const form = document.getElementById('editForm');
   if (!form.checkValidity()) {
     form.reportValidity();
     return;
   }
   
-  const validationErrors = validateEditForm();
-  if (validationErrors.length > 0) {
-    showToast('error', 'Validation Error', validationErrors[0]);
-    return;
-  }
+  // Collect form data
+  const formData = collectEditFormData();
   
-  const formData = getEditFormData();
-  generateEditPreview(formData);
+  // Generate preview HTML
+  const previewHtml = generateEditPreviewHtml(formData);
   
+  // Show preview
+  document.getElementById('editPreviewView').innerHTML = previewHtml;
   document.getElementById('editFormView').style.display = 'none';
   document.getElementById('editPreviewView').style.display = 'block';
+  
+  // Update buttons
+  document.getElementById('editCancelBtn').style.display = 'none';
   document.getElementById('editPreviewBtn').style.display = 'none';
   document.getElementById('editBackBtn').style.display = 'inline-block';
   document.getElementById('editSaveBtn').style.display = 'inline-block';
-  document.getElementById('editCancelBtn').style.display = 'none';
-  document.getElementById('editModalTitle').textContent = 'Preview Changes';
 }
 
-function validateEditForm() {
-  const errors = [];
-  const numericFields = ['edit-cost', 'edit-value'];
+function backToEditForm() {
+  document.getElementById('editFormView').style.display = 'block';
+  document.getElementById('editPreviewView').style.display = 'none';
   
-  const classType = window.currentEditItem.class_type;
-  const attributesToShow = CLASS_TYPE_ATTRIBUTES[classType] || [];
-  attributesToShow.forEach(attr => {
-    if (['stakes', 'tethers', 'length', 'height_length', 'male_ends', 'female_ends'].includes(attr)) {
-      numericFields.push(`edit-${attr}`);
-    }
-  });
-  
-  numericFields.forEach(fieldId => {
-    const field = document.getElementById(fieldId);
-    if (field && field.value.trim() !== '') {
-      if (!validateNumericField(field)) {
-        const label = field.previousElementSibling?.textContent || fieldId;
-        errors.push(`${label} must be a valid number`);
-      }
-    }
-  });
-  
-  return errors;
+  document.getElementById('editCancelBtn').style.display = 'inline-block';
+  document.getElementById('editPreviewBtn').style.display = 'inline-block';
+  document.getElementById('editBackBtn').style.display = 'none';
+  document.getElementById('editSaveBtn').style.display = 'none';
 }
 
-function getEditFormData() {
+function collectEditFormData() {
   const formData = {
-    short_name: document.getElementById('edit-short-name').value.trim(),
+    id: currentEditItem.id,
+    short_name: document.getElementById('edit-short-name').value,
     season: document.getElementById('edit-season').value,
     class: document.getElementById('edit-class').value,
     class_type: document.getElementById('edit-class-type').value,
     status: document.getElementById('edit-status').value,
-    general_notes: document.getElementById('edit-general-notes').value.trim(),
+    general_notes: document.getElementById('edit-general-notes').value,
     vendor_metadata: {
-      cost: document.getElementById('edit-cost').value.trim(),
-      value: document.getElementById('edit-value').value.trim(),
-      manufacturer: document.getElementById('edit-manufacturer').value.trim(),
-      vendor_store: document.getElementById('edit-store').value.trim()
+      vendor_store: document.getElementById('edit-store').value,
+      manufacturer: document.getElementById('edit-manufacturer').value,
+      cost: document.getElementById('edit-cost').value,
+      value: document.getElementById('edit-value').value,
     },
     packing_data: {
-      tote_location: document.getElementById('edit-tote-location').value.trim()
-    }
+      tote_location: document.getElementById('edit-tote-location').value,
+    },
   };
   
-  const classType = window.currentEditItem.class_type;
+  // Collect misc fields
+  const classType = currentEditItem.class_type;
   const attributesToShow = CLASS_TYPE_ATTRIBUTES[classType] || [];
+  
   attributesToShow.forEach(attr => {
-    const field = document.getElementById(`edit-${attr}`);
-    if (field) {
-      formData[attr] = field.value.trim();
+    const input = document.getElementById(`edit-${attr}`);
+    if (input) {
+      formData[attr] = input.value;
     }
   });
   
   return formData;
 }
 
-function backToEditForm() {
-  showEditFormView();
-  document.getElementById('editModalTitle').textContent = `Edit Item - ${window.currentEditItem.id}`;
+function generateEditPreviewHtml(formData) {
+  const icon = CLASS_TYPE_ICONS[formData.class_type] || '📦';
+  
+  return `
+    <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px;">
+      <h3 style="margin: 0 0 16px 0; color: #374151; font-size: 16px; font-weight: 600;">Preview Changes</h3>
+      
+      <div class="preview-section">
+        <div class="preview-section-title">Details</div>
+        <div class="field-row">
+          <div class="field-label">Name:</div>
+          <div class="field-value">${formData.short_name || '-'}</div>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Season:</div>
+          <div class="field-value">${formData.season || '-'}</div>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Class:</div>
+          <div class="field-value">${formData.class || '-'}</div>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Class Type:</div>
+          <div class="field-value"><span class="type-icon">${icon}</span> ${formData.class_type || '-'}</div>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Status:</div>
+          <div class="field-value">${formData.status || '-'}</div>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Item Notes:</div>
+          <div class="field-value">${formData.general_notes || '-'}</div>
+        </div>
+      </div>
+      
+      <div class="preview-section">
+        <div class="preview-section-title">Vendor</div>
+        <div class="field-row">
+          <div class="field-label">Store:</div>
+          <div class="field-value">${formData.vendor_metadata.vendor_store || '-'}</div>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Manufacturer:</div>
+          <div class="field-value">${formData.vendor_metadata.manufacturer || '-'}</div>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Cost:</div>
+          <div class="field-value">${formData.vendor_metadata.cost || '-'}</div>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Value:</div>
+          <div class="field-value">${formData.vendor_metadata.value || '-'}</div>
+        </div>
+      </div>
+      
+      <div class="preview-section">
+        <div class="preview-section-title">Storage</div>
+        <div class="field-row">
+          <div class="field-label">Storage Location:</div>
+          <div class="field-value">${formData.packing_data.tote_location || '-'}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function saveEditChanges() {
+  try {
+    const formData = collectEditFormData();
+    
+    // Disable save button
+    const saveBtn = document.getElementById('editSaveBtn');
+    const originalText = saveBtn.textContent;
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+    
+    // Call API
+    await updateItem(formData);
+    
+    // Close modal
+    closeModal('editModal');
+    
+    // Show success message
+    showToast('Item Updated', 'Item was successfully updated', 'success');
+    
+    // Refresh table
+    await loadItems();
+    
+  } catch (error) {
+    console.error('Error saving changes:', error);
+    showToast('Save Failed', error.message || 'Failed to save changes', 'error');
+    
+    // Re-enable button
+    const saveBtn = document.getElementById('editSaveBtn');
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Confirm & Save';
+  }
+}
+
+/**
+ * Delete item from the edit modal
+ */
+async function deleteFromEditModal() {
+  if (!currentEditItem) {
+    console.error('No item currently being edited');
+    return;
+  }
+  
+  // Check if item is deployed
+  if (isItemDeployed(currentEditItem)) {
+    showToast('Cannot Delete', 'Deployed items cannot be deleted', 'error');
+    return;
+  }
+  
+  // Confirm deletion
+  const itemName = currentEditItem.short_name || 'this item';
+  const confirmMessage = `Delete '${itemName}'? This cannot be undone.`;
+  
+  if (!confirm(confirmMessage)) {
+    return;
+  }
+  
+  try {
+    // Call API to delete
+    await deleteItem(currentEditItem.id);
+    
+    // Close modal
+    closeModal('editModal');
+    
+    // Show success message
+    showToast('Item Deleted', `Successfully deleted '${itemName}'`, 'success');
+    
+    // Refresh table
+    await loadItems();
+    
+  } catch (error) {
+    console.error('Error deleting item:', error);
+    showToast('Delete Failed', error.message || 'Failed to delete item', 'error');
+  }
 }

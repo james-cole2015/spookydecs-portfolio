@@ -3,6 +3,13 @@
 let selectedItemsForDeletion = new Set();
 
 /**
+ * Check if an item is currently deployed
+ */
+function isItemDeployed(item) {
+  return !!(item.deployment_data?.last_deployment_id);
+}
+
+/**
  * Opens the delete modal and populates it with all items
  */
 function openDeleteModal() {
@@ -90,28 +97,38 @@ async function populateDeleteTable() {
     // Sort items by name for easier scanning
     items.sort((a, b) => (a.short_name || '').localeCompare(b.short_name || ''));
     
-    tbody.innerHTML = items.map(item => `
-      <tr style="border-bottom: 1px solid #f3f4f6;" data-item-id="${item.id}">
-        <td style="padding: 10px 8px;">
-          <input type="checkbox" 
-            class="delete-item-checkbox" 
-            value="${item.id}"
-            onchange="toggleItemSelection('${item.id}')"
-            style="cursor: pointer; width: 16px; height: 16px;">
-        </td>
-        <td style="padding: 10px 8px; font-size: 14px; color: #1f2937; font-weight: 500;">
-          ${item.short_name || 'Unnamed Item'}
-        </td>
-        <td style="padding: 10px 8px; font-size: 13px; color: #6b7280; font-family: monospace;">
-          ${item.id}
-        </td>
-        <td style="padding: 10px 8px;">
-          <span class="badge ${(item.season || '').toLowerCase()}" style="font-size: 11px;">
-            ${item.season || 'N/A'}
-          </span>
-        </td>
-      </tr>
-    `).join('');
+    tbody.innerHTML = items.map(item => {
+      const deployed = isItemDeployed(item);
+      const rowStyle = deployed ? 'border-bottom: 1px solid #f3f4f6; opacity: 0.5;' : 'border-bottom: 1px solid #f3f4f6;';
+      const checkboxDisabled = deployed ? 'disabled' : '';
+      const checkboxTitle = deployed ? 'Cannot delete deployed items' : '';
+      
+      return `
+        <tr style="${rowStyle}" data-item-id="${item.id}">
+          <td style="padding: 10px 8px;">
+            <input type="checkbox" 
+              class="delete-item-checkbox" 
+              value="${item.id}"
+              onchange="toggleItemSelection('${item.id}')"
+              ${checkboxDisabled}
+              title="${checkboxTitle}"
+              style="cursor: ${deployed ? 'not-allowed' : 'pointer'}; width: 16px; height: 16px;">
+          </td>
+          <td style="padding: 10px 8px; font-size: 14px; color: #1f2937; font-weight: 500;">
+            ${item.short_name || 'Unnamed Item'}
+            ${deployed ? '<span style="display: inline-block; margin-left: 8px; padding: 2px 8px; background: #fef3c7; color: #92400e; border-radius: 4px; font-size: 11px; font-weight: 600;">⚠️ Deployed</span>' : ''}
+          </td>
+          <td style="padding: 10px 8px; font-size: 13px; color: #6b7280; font-family: monospace;">
+            ${item.id}
+          </td>
+          <td style="padding: 10px 8px;">
+            <span class="badge ${(item.season || '').toLowerCase()}" style="font-size: 11px;">
+              ${item.season || 'N/A'}
+            </span>
+          </td>
+        </tr>
+      `;
+    }).join('');
     
   } catch (error) {
     console.error('Error loading items for deletion:', error);
@@ -129,6 +146,13 @@ async function populateDeleteTable() {
  * Toggles selection of a single item
  */
 function toggleItemSelection(itemId) {
+  // Find the item and check if it's deployed
+  const item = allItems.find(i => i.id === itemId);
+  if (item && isItemDeployed(item)) {
+    showToast('Cannot Delete', 'Deployed items cannot be deleted', 'error');
+    return;
+  }
+  
   if (selectedItemsForDeletion.has(itemId)) {
     selectedItemsForDeletion.delete(itemId);
   } else {
@@ -141,16 +165,32 @@ function toggleItemSelection(itemId) {
  * Toggles all items selection
  */
 function toggleSelectAll(checkbox) {
-  const checkboxes = document.querySelectorAll('.delete-item-checkbox');
+  const checkboxes = document.querySelectorAll('.delete-item-checkbox:not([disabled])');
+  let skippedCount = 0;
+  
   checkboxes.forEach(cb => {
     cb.checked = checkbox.checked;
     const itemId = cb.value;
+    
+    // Double-check that the item is not deployed
+    const item = allItems.find(i => i.id === itemId);
+    if (item && isItemDeployed(item)) {
+      cb.checked = false;
+      skippedCount++;
+      return;
+    }
+    
     if (checkbox.checked) {
       selectedItemsForDeletion.add(itemId);
     } else {
       selectedItemsForDeletion.delete(itemId);
     }
   });
+  
+  if (checkbox.checked && skippedCount > 0) {
+    showToast('Items Skipped', `${skippedCount} deployed item${skippedCount !== 1 ? 's' : ''} cannot be deleted`, 'error');
+  }
+  
   updateDeleteUI();
 }
 
@@ -194,7 +234,7 @@ function updateDeleteUI() {
   
   // Update "select all" checkbox state
   const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-  const checkboxes = document.querySelectorAll('.delete-item-checkbox');
+  const checkboxes = document.querySelectorAll('.delete-item-checkbox:not([disabled])');
   if (selectAllCheckbox && checkboxes.length > 0) {
     const allChecked = Array.from(checkboxes).every(cb => cb.checked);
     const someChecked = Array.from(checkboxes).some(cb => cb.checked);

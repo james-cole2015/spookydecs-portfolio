@@ -7,8 +7,9 @@ document.getElementById('btnCreateItem').addEventListener('click', openCreateMod
 
 // Delete button
 document.getElementById('btnDeleteItem').addEventListener('click', () => {
-  document.getElementById('deleteModal').style.display = 'flex';
+  openDeleteModal();
 });
+
 
 // Logout button
 document.getElementById('btnLogout').addEventListener('click', () => {
