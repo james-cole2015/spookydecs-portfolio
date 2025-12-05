@@ -1,10 +1,23 @@
-# spookydecs-portfolio
-Portfolio page for SpookyDecs Holiday Decoration Management 
-# SpookyDecs Audit Dashboard
+# SpookyDecs Documentation
 
-Welcome to the SpookyDecs Audit Dashboard! This tool helps you track and review all changes made to your holiday decoration inventory, deployments, gallery images, and ideas.
+## Table of Contents
 
-## What is the Audit Dashboard?
+- [Admin](#admin) - User management, permissions, and system configuration
+- [Audit](#audit) - Change tracking and audit logs
+- [Auth](#auth) - Authentication and authorization
+- [Deployments](#deployments) - Setup tracking, work sessions, and connections
+- [Gallery](#gallery) - Photo management and decoration images
+- [Ideas](#ideas) - Custom decoration concepts and inspirations
+- [Items](#items) - Inventory management for decorations, accessories, and lights
+- [Main](#main) - Dashboard and overview
+- [Repairs](#repairs) - Repair tracking and maintenance logs
+- [Storage](#storage) - Storage location and tote management
+
+---
+
+## Audit
+
+### What is the Audit Dashboard?
 
 The Audit Dashboard automatically tracks every change made in SpookyDecs, including:
 - **Inventory items** - When decorations, accessories, lights, or storage items are created, updated, or deleted
@@ -97,3 +110,57 @@ If you encounter any issues or have questions about the audit dashboard, please 
 ---
 
 *SpookyDecs - Making holiday decoration management spooky simple!* 🎃 🎄
+
+---
+
+## Admin
+
+**Coming soon** - Documentation for user management, permissions, and system configuration.
+
+---
+
+## Auth
+
+**Coming soon** - Documentation for authentication and authorization.
+
+---
+
+## Deployments
+
+**Coming soon** - Documentation for setup tracking, work sessions, and connections.
+
+---
+
+## Gallery
+
+**Coming soon** - Documentation for photo management and decoration images.
+
+---
+
+## Ideas
+
+**Coming soon** - Documentation for custom decoration concepts and inspirations.
+
+---
+
+## Items
+
+**Coming soon** - Documentation for inventory management (decorations, accessories, lights).
+
+---
+
+## Main
+
+**Coming soon** - Documentation for the main dashboard and overview.
+
+---
+
+## Repairs
+
+**Coming soon** - Documentation for repair tracking and maintenance logs.
+
+---
+
+## Storage
+
+**Coming soon** - Documentation for storage location and tote management.
