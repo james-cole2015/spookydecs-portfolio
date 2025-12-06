@@ -238,7 +238,7 @@ function generateEditPreviewHtml(formData) {
     </div>
   `;
 }
-
+/*
 async function saveEditChanges() {
   try {
     const formData = collectEditFormData();
@@ -271,7 +271,7 @@ async function saveEditChanges() {
     saveBtn.textContent = 'Confirm & Save';
   }
 }
-
+*/ // removing duplicate function 
 /**
  * Delete item from the edit modal
  */

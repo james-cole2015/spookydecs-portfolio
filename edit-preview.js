@@ -126,7 +126,7 @@ function detectChanges(original, updated) {
 }
 
 async function saveEditChanges() {
-  const formData = getEditFormData();
+  const formData = collectEditFormData();
   const itemId = window.currentEditItem.id;
   
   try {
