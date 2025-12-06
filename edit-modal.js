@@ -1,6 +1,6 @@
 // edit-modal.js - Edit item functionality
 
-let currentEditItem = null;
+window.currentEditItem = null;
 
 function editItem(id) {
   const item = allItems.find(i => i.id === id);
@@ -9,7 +9,7 @@ function editItem(id) {
     return;
   }
   
-  currentEditItem = item;
+ window.currentEditItem = item;
   
   // Set modal title
   document.getElementById('editModalTitle').textContent = 'Edit Item';
@@ -141,7 +141,7 @@ function backToEditForm() {
 
 function collectEditFormData() {
   const formData = {
-    id: currentEditItem.id,
+    id: window.currentEditItem.id,
     short_name: document.getElementById('edit-short-name').value,
     season: document.getElementById('edit-season').value,
     class: document.getElementById('edit-class').value,
@@ -160,7 +160,7 @@ function collectEditFormData() {
   };
   
   // Collect misc fields
-  const classType = currentEditItem.class_type;
+  const classType = window.currentEditItem = item.class_type
   const attributesToShow = CLASS_TYPE_ATTRIBUTES[classType] || [];
   
   attributesToShow.forEach(attr => {
@@ -276,7 +276,7 @@ async function saveEditChanges() {
  * Delete item from the edit modal
  */
 async function deleteFromEditModal() {
-  if (!currentEditItem) {
+  if (!window.currentEditItem) {
     console.error('No item currently being edited');
     return;
   }
@@ -288,7 +288,7 @@ async function deleteFromEditModal() {
   }
   
   // Confirm deletion
-  const itemName = currentEditItem.short_name || 'this item';
+  const itemName = window.currentEditItem.short_name || 'this item';
   const confirmMessage = `Delete '${itemName}'? This cannot be undone.`;
   
   if (!confirm(confirmMessage)) {
@@ -297,7 +297,7 @@ async function deleteFromEditModal() {
   
   try {
     // Call API to delete
-    await deleteItem(currentEditItem.id);
+    await deleteItem(window.currentEditItem.id);
     
     // Close modal
     closeModal('editModal');
