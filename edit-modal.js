@@ -160,7 +160,7 @@ function collectEditFormData() {
   };
   
   // Collect misc fields
-  const classType = window.currentEditItem = item.class_type
+  const classType = window.currentEditItem.class_type;
   const attributesToShow = CLASS_TYPE_ATTRIBUTES[classType] || [];
   
   attributesToShow.forEach(attr => {
@@ -282,7 +282,7 @@ async function deleteFromEditModal() {
   }
   
   // Check if item is deployed
-  if (isItemDeployed(currentEditItem)) {
+  if (isItemDeployed(window.currentEditItem)) {
     showToast('Cannot Delete', 'Deployed items cannot be deleted', 'error');
     return;
   }
