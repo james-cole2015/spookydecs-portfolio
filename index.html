@@ -6,6 +6,7 @@
   <title>SpookyDecs — Items Management</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="modal-styles.css">
+  <link rel="stylesheet" href="photo-styles.css">
 </head>
 <body>
 
@@ -68,6 +69,7 @@
   <table id="itemsTable">
     <thead>
       <tr>
+        <th style="width: 50px;">Photo</th>
         <th>Status</th>
         <th>Name</th>
         <th>Season</th>
@@ -418,9 +420,24 @@
   </div>
 </div>
 
+<!-- Photo Viewer Modal -->
+<div id="photoViewerModal" class="photo-viewer-overlay" style="display:none;">
+  <button class="photo-viewer-close" onclick="closePhotoViewer()">&times;</button>
+  <button class="photo-viewer-nav photo-viewer-prev" onclick="prevPhoto()">←</button>
+  <div class="photo-viewer-content">
+    <img id="photoViewerImage" class="photo-viewer-image" src="" alt="">
+    <div class="photo-viewer-caption" id="photoViewerCaption"></div>
+    <div class="photo-viewer-counter" id="photoViewerCounter"></div>
+  </div>
+  <button class="photo-viewer-nav photo-viewer-next" onclick="nextPhoto()">→</button>
+</div>
+
 <!-- JavaScript Modules - Load in order of dependencies -->
 <script src="config.js"></script>
 <script src="api-service.js"></script>
+<script src="photo-service.js"></script>
+<script src="photo-viewer.js"></script>
+<script src="photo-manager.js"></script>
 <script src="ui-renderer.js"></script>
 <script src="modal-utils.js"></script>
 <script src="view-modal.js"></script>

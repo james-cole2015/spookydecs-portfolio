@@ -1,4 +1,4 @@
-// View Modal - Tab-based item detail viewing
+// View Modal - Tab-based item detail viewing (UPDATED for photo management)
 
 function viewItem(id) {
   const item = allItems.find(i => i.id === id);
@@ -178,14 +178,8 @@ function populateStorageTab(item) {
 }
 
 function populatePhotosTab(item) {
-  const container = document.getElementById('viewPhotosContent');
-  
-  container.innerHTML = `
-    <div class="empty-state">
-      <div class="empty-state-icon">📷</div>
-      <div>Photo support coming soon</div>
-    </div>
-  `;
+  // Initialize photo manager instead of showing placeholder
+  initPhotoManager(item);
 }
 
 function populateMiscTab(item) {
