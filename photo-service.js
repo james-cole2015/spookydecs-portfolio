@@ -269,25 +269,22 @@ async function uploadPhotoWithThumbnail(file, itemId, season) {
     }
     
     const fullImageUpload = presignResponse.uploads[0];
-    const thumbnailUpload = presignResponse.uploads[1];
     
     // Upload full image to S3
-    await uploadToS3(fullImageUpload.presigned_url, file, file.type);
+   await uploadToS3(fullImageUpload.presigned_url, file, file.type);
     
     // Upload thumbnail to S3 (if generated)
-    let thumbCloudFrontUrl = null;
-    let thumbS3Key = null;
+    let thumbCloudFrontUrl = fullImageUpload.thumb_cloudfront_url; 
+    let thumbS3Key = fullImageUpload.thumb_s3_key; 
     
-    if (!thumbnailFailed && thumbnailUpload) {
-      try {
-        await uploadToS3(thumbnailUpload.presigned_url, thumbnailBlob, 'image/jpeg');
-        thumbCloudFrontUrl = thumbnailUpload.cloudfront_url;
-        thumbS3Key = thumbnailUpload.s3_key;
-      } catch (error) {
-        console.error('Thumbnail upload to S3 failed:', error);
-        thumbnailFailed = true;
-      }
-    }
+if (!thumbnailFailed && fullImageUpload.thumb_presigned_url) {
+  try {
+    await uploadToS3(fullImageUpload.thumb_presigned_url, thumbnailBlob, 'image/jpeg');
+  } catch (error) {
+    console.error('Thumbnail upload to S3 failed:', error);
+    thumbnailFailed = true;
+  }
+}
     
     // Prepare confirmation data
     const confirmData = {
