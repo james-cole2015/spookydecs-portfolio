@@ -88,15 +88,11 @@ async function saveNewItem() {
   const formData = getCreateFormData();
   
   try {
-    // Generate ID
-    const shortName = formData.short_name.replace(/\s+/g, '-').toUpperCase();
-    const season = formData.season.substring(0, 3).toUpperCase();
-    const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
-    const newId = `${season}-${shortName}-${randomSuffix}`;
+    // Show progress toast
+    showToast('info', 'Creating item...', 'Please wait');
     
-    // Build payload
+    // Build payload (NO ID - let backend generate it)
     const newItem = {
-      id: newId,
       type: 'Item',
       ...formData,
       repair_status: {
@@ -116,11 +112,11 @@ async function saveNewItem() {
       newItem.deployment_data.last_deployment_id = 'CURR';
     }
     
-    // Show progress toast
-    showToast('info', 'Creating item...', 'Please wait');
+    // Create item first (backend generates ID)
+    const createResponse = await createItemAPI(newItem);
+    const newItemId = createResponse.confirmation.id;  // Get the real ID from backend
     
-    // Create item first
-    await createItemAPI(newItem);
+    console.log(`Item created with ID: ${newItemId}`);
     
     // Upload photos if any
     let photoUploadSuccess = true;
@@ -130,7 +126,8 @@ async function saveNewItem() {
       try {
         showToast('info', 'Uploading photos...', `Uploading ${createPhotosSelected.length} photo${createPhotosSelected.length > 1 ? 's' : ''}`);
         
-        await uploadPhotosForNewItem(newId, formData.season, createPhotosSelected);
+        // Use the REAL item ID from backend
+        await uploadPhotosForNewItem(newItemId, formData.season, createPhotosSelected);
         
         photoUploadMessage = ` with ${createPhotosSelected.length} photo${createPhotosSelected.length > 1 ? 's' : ''}`;
       } catch (photoError) {
@@ -167,7 +164,8 @@ async function uploadPhotosForNewItem(itemId, season, photoFiles) {
     const isFirstPhoto = i === 0;
     
     try {
-      // Upload with thumbnail (reuse existing function from photo-service.js)
+      // Reuse existing uploadPhotoWithThumbnail function
+      // It already handles is_primary logic based on existing photos
       await uploadPhotoWithThumbnail(file, itemId, season);
       
       console.log(`Uploaded photo ${i + 1}/${photoFiles.length} for item ${itemId}`);
