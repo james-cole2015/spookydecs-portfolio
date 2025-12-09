@@ -1,172 +1,151 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SpookyDecs — Gallery Management</title>
-  <link rel="icon" type="image/svg+xml" href="https://assets.spookydecs.com/icons/person-gear_icon.svg">
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Management App</title>
+    <script src="https://assets.spookydecs.com/components/spookydecs-header.js"></script>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/tabs.css">
+    <link rel="stylesheet" href="css/filters.css">
+    <link rel="stylesheet" href="css/photo-grid.css">
+    <link rel="stylesheet" href="css/modal.css">
 </head>
 <body>
 
-<header>
-  <h1>SpookyDecs — Image Management</h1>
-  <div style="flex:1"></div>
-  <a id="galleryLink" href="#" class="admin-link">View Gallery</a>
-  <a id="adminLink" href="#" class="admin-link">Admin</a>
-  <button id="btnLogout">Logout</button>
-</header>
+    <div class="container">
+        <!-- Tab Navigation -->
+        <nav class="tab-navigation">
+            <!-- Mobile Dropdown -->
+            <div class="tab-dropdown">
+                <select id="tab-select" class="tab-select">
+                    <option value="items" selected>Items</option>
+                    <option value="ideas">Ideas</option>
+                    <option value="build">Build</option>
+                    <option value="gallery">Gallery</option>
+                    <option value="deployments">Deployments</option>
+                </select>
+            </div>
 
-<main>
-  <h2>Image Management</h2>
-  
-  <!-- Stats Cards -->
-  <div class="stats-grid" id="statsGrid">
-    <div class="stat-card">
-      <div class="stat-label">Total Images</div>
-      <div class="stat-value" id="statTotal">0</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Halloween</div>
-      <div class="stat-value" id="statHalloween">0</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Christmas</div>
-      <div class="stat-value" id="statChristmas">0</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">My Display</div>
-      <div class="stat-value" id="statMyDisplay">0</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Community</div>
-      <div class="stat-value" id="statCommunity">0</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Build Progress</div>
-      <div class="stat-value" id="statBuildProgress">0</div>
-    </div>
-  </div>
+            <!-- Desktop Tabs -->
+            <div class="tab-bar">
+                <button class="tab-button active" data-tab="items">Items</button>
+                <button class="tab-button" data-tab="ideas">Ideas</button>
+                <button class="tab-button" data-tab="build">Build</button>
+                <button class="tab-button" data-tab="gallery">Gallery</button>
+                <button class="tab-button" data-tab="deployments">Deployments</button>
+            </div>
+        </nav>
 
-  <!-- Action Buttons -->
-  <div class="action-bar">
-    <button class="btn-primary" onclick="showUploadModal()">
-      <span>📤</span> Upload Image
-    </button>
-    <button class="btn-secondary" onclick="showBulkUploadToast()">
-      <span>📦</span> Bulk Upload
-    </button>
-  </div>
-  
-  <!-- Filters -->
-  <div class="filters">
-    <div class="filter-group">
-      <label>Season</label>
-      <select id="filterSeason">
-        <option value="all">All Seasons</option>
-        <option value="halloween">Halloween</option>
-        <option value="christmas">Christmas</option>
-      </select>
-    </div>
-    
-    <div class="filter-group">
-      <label>Category</label>
-      <select id="filterCategory">
-        <option value="all">All Categories</option>
-        <option value="myDisplay">My Display</option>
-        <option value="community">Community</option>
-        <option value="buildProgress">Build Progress</option>
-        <option value="uncategorized">Uncategorized</option>
-      </select>
-    </div>
-    
-    <div class="filter-group">
-      <label>Visibility</label>
-      <select id="filterVisible">
-        <option value="all">All</option>
-        <option value="true">Visible</option>
-        <option value="false">Hidden</option>
-      </select>
-    </div>
-    
-    <div class="filter-group">
-      <label>Search</label>
-      <input type="text" id="searchInput" placeholder="Search by title...">
-    </div>
-  </div>
+        <!-- Stats Cards -->
+        <section class="stats-container">
+            <div class="stat-card">
+                <h3 class="stat-label">Total Images (Season)</h3>
+                <p class="stat-value">0</p>
+            </div>
+            <div class="stat-card">
+                <h3 class="stat-label">Total Images (Type)</h3>
+                <p class="stat-value">0</p>
+            </div>
+            <div class="stat-card">
+                <h3 class="stat-label">Recent Uploads</h3>
+                <p class="stat-value">0</p>
+            </div>
+        </section>
 
-  <!-- Table -->
-  <div class="table-container">
-    <table id="galleryTable">
-      <thead>
-        <tr>
-          <th>Thumbnail</th>
-          <th class="sortable" onclick="sortTable('year')">Year <span class="sort-icon">↕</span></th>
-          <th>Title</th>
-          <th class="sortable" onclick="sortTable('category')">Category <span class="sort-icon">↕</span></th>
-          <th>Visible</th>
-          <th class="sortable" onclick="sortTable('season')">Season <span class="sort-icon">↕</span></th>
-          <th>Tags</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="galleryTableBody">
-        <tr>
-          <td colspan="8">
-            <div class="loading">Loading images...</div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</main>
+        <!-- Filter Bar -->
+        <section class="filter-section">
+            <!-- Search Bar (Always Visible) -->
+            <div class="search-container">
+                <input 
+                    type="text" 
+                    id="search-input" 
+                    class="search-input" 
+                    placeholder="Search by short name..."
+                >
+            </div>
 
-<!-- Edit Modal -->
-<div id="editModal" class="modal" style="display:none;">
-  <div class="panel">
-    <div class="modal-header">
-      <h2>Edit Image</h2>
-      <button class="btn-close" onclick="closeEditModal()">×</button>
+            <!-- Filter Toggle (Mobile Only) -->
+            <button class="filter-toggle" id="filter-toggle">
+                <span>Filters</span>
+                <span class="filter-badge" id="filter-badge">0</span>
+                <svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+
+            <!-- Filter Panel -->
+            <div class="filter-panel" id="filter-panel">
+                <div class="filter-group">
+                    <label for="season-filter" class="filter-label">Season</label>
+                    <select id="season-filter" class="filter-select">
+                        <option value="">All Seasons</option>
+                        <option value="spring">Spring</option>
+                        <option value="summer">Summer</option>
+                        <option value="fall">Fall</option>
+                        <option value="winter">Winter</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="type-filter" class="filter-label">Type</label>
+                    <select id="type-filter" class="filter-select">
+                        <option value="">All Types</option>
+                        <option value="item">Item</option>
+                        <option value="idea">Idea</option>
+                        <option value="storage">Storage</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="year-filter" class="filter-label">Year</label>
+                    <select id="year-filter" class="filter-select">
+                        <option value="">All Years</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- Photo Grid -->
+        <section class="photo-grid" id="photo-grid">
+            <!-- Example Card (to be populated dynamically) -->
+            <article class="photo-card">
+                <div class="photo-image-container">
+                    <img src="https://via.placeholder.com/400x300" alt="Sample image" class="photo-image">
+                </div>
+                <div class="photo-caption">
+                    <p class="photo-title">Sample Image Title</p>
+                </div>
+                <div class="photo-actions">
+                    <button class="action-button action-view">View</button>
+                    <button class="action-button action-edit">Edit</button>
+                </div>
+            </article>
+        </section>
     </div>
-    <div class="modal-body" id="editModalBody"></div>
-  </div>
-</div>
 
-<!-- Upload Modal -->
-<div id="uploadModal" class="modal" style="display:none;">
-  <div class="panel">
-    <div class="modal-header">
-      <h2>Upload Image</h2>
-      <button class="btn-close" onclick="closeUploadModal()">×</button>
+    <!-- Modal Container -->
+    <div class="modal" id="modal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Modal Title</h2>
+                <button class="modal-close" id="modal-close">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Modal content goes here -->
+            </div>
+            <div class="modal-footer">
+                <!-- Modal actions go here -->
+            </div>
+        </div>
     </div>
-    <div class="modal-body" id="uploadModalBody"></div>
-  </div>
-</div>
-
-<!-- Confirmation Modal -->
-<div id="confirmModal" class="modal" style="display:none;">
-  <div class="panel" style="max-width:500px;">
-    <div class="modal-header">
-      <h2 id="confirmTitle">Confirm Action</h2>
-    </div>
-    <div class="modal-body">
-      <p id="confirmMessage"></p>
-      <div class="modal-actions">
-        <button class="btn-secondary" onclick="closeConfirmModal()">Cancel</button>
-        <button class="btn-danger" id="confirmBtn">Confirm</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Toast Container -->
-<div id="toastContainer" class="toast-container"></div>
-
-<script src="config.js"></script>
-<script src="api.js"></script>
-<script src="ui.js"></script>
-<script src="modals.js"></script>
-<script src="app.js"></script>
-
 </body>
 </html>
