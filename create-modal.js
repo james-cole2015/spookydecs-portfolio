@@ -142,7 +142,7 @@ function showCreatePhotoSection() {
           No photos selected
         </div>
       </div>
-      <input type="file" id="createPhotoInput" accept="image/jpeg,image/jpg,image/png,image/heic,image/heif" multiple webkitdirectory="false" style="display: none;">
+      <input type="file" id="createPhotoInput" accept="image/jpeg,image/jpg,image/png,image/heic,image/heif" multiple style="display: none;">
     `;
     
     // Insert after general notes field
