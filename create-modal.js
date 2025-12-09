@@ -1,4 +1,7 @@
-// Create Modal - Tab-based item creation
+// Create Modal - Tab-based item creation with photo upload
+
+// Photo state for create modal
+let createPhotosSelected = [];
 
 function openCreateModal() {
   clearCreateForm();
@@ -29,6 +32,10 @@ function clearCreateForm() {
   document.getElementById('create-tote-location').value = '';
   
   document.getElementById('createDynamicFields').innerHTML = '<div class="field-hint" style="text-align: center; padding: 20px;">Select a Class Type to see additional fields</div>';
+  
+  // Clear photo state
+  createPhotosSelected = [];
+  updateCreatePhotoDisplay();
 }
 
 function onCreateClassChange() {
@@ -41,6 +48,7 @@ function onCreateClassChange() {
   
   if (!selectedClass) {
     document.getElementById('createDynamicFields').innerHTML = '<div class="field-hint" style="text-align: center; padding: 20px;">Select a Class Type to see additional fields</div>';
+    hideCreatePhotoSection();
     return;
   }
   
@@ -51,6 +59,13 @@ function onCreateClassChange() {
     option.textContent = type;
     classTypeSelect.appendChild(option);
   });
+  
+  // Show/hide photo section based on class
+  if (selectedClass === 'Decoration') {
+    showCreatePhotoSection();
+  } else {
+    hideCreatePhotoSection();
+  }
 }
 
 function onCreateClassTypeChange() {
@@ -103,6 +118,91 @@ function generateCreateDynamicFields(classType) {
     
     container.appendChild(formGroup);
   });
+}
+
+function showCreatePhotoSection() {
+  let photoSection = document.getElementById('createPhotoSection');
+  
+  if (!photoSection) {
+    // Create photo section
+    photoSection = document.createElement('div');
+    photoSection.id = 'createPhotoSection';
+    photoSection.className = 'form-group';
+    photoSection.style.marginTop = '20px';
+    photoSection.style.paddingTop = '20px';
+    photoSection.style.borderTop = '1px solid #e5e7eb';
+    
+    photoSection.innerHTML = `
+      <label>Photos <span style="color: #6b7280; font-weight: normal;">(Optional, max 3)</span></label>
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <button type="button" class="btn-secondary" onclick="selectCreatePhotos()" style="margin: 0;">
+          📤 Select Photos
+        </button>
+        <div id="createPhotoCount" style="color: #6b7280; font-size: 14px;">
+          No photos selected
+        </div>
+      </div>
+      <input type="file" id="createPhotoInput" accept="image/jpeg,image/jpg,image/png,image/heic,image/heif" multiple style="display: none;">
+    `;
+    
+    // Insert after general notes field
+    const generalNotesGroup = document.querySelector('#create-general-notes').closest('.form-group');
+    generalNotesGroup.parentNode.insertBefore(photoSection, generalNotesGroup.nextSibling);
+    
+    // Add event listener to file input
+    document.getElementById('createPhotoInput').addEventListener('change', handleCreatePhotoSelection);
+  }
+  
+  photoSection.style.display = 'block';
+}
+
+function hideCreatePhotoSection() {
+  const photoSection = document.getElementById('createPhotoSection');
+  if (photoSection) {
+    photoSection.style.display = 'none';
+  }
+  createPhotosSelected = [];
+}
+
+function selectCreatePhotos() {
+  document.getElementById('createPhotoInput').click();
+}
+
+function handleCreatePhotoSelection(event) {
+  const files = Array.from(event.target.files);
+  
+  // Limit to 3 photos
+  if (files.length > 3) {
+    showToast('error', 'Too many photos', 'Maximum 3 photos allowed during item creation');
+    event.target.value = ''; // Clear selection
+    return;
+  }
+  
+  // Validate each file
+  try {
+    files.forEach(file => validateFile(file));
+    createPhotosSelected = files;
+    updateCreatePhotoDisplay();
+  } catch (error) {
+    showToast('error', 'Invalid file', error.message);
+    event.target.value = ''; // Clear selection
+    createPhotosSelected = [];
+    updateCreatePhotoDisplay();
+  }
+}
+
+function updateCreatePhotoDisplay() {
+  const countDisplay = document.getElementById('createPhotoCount');
+  if (!countDisplay) return;
+  
+  if (createPhotosSelected.length === 0) {
+    countDisplay.textContent = 'No photos selected';
+    countDisplay.style.color = '#6b7280';
+  } else {
+    const fileNames = createPhotosSelected.map(f => f.name).join(', ');
+    countDisplay.innerHTML = `<strong>${createPhotosSelected.length} photo${createPhotosSelected.length > 1 ? 's' : ''} selected</strong><br><span style="font-size: 13px;">${fileNames}</span>`;
+    countDisplay.style.color = '#059669';
+  }
 }
 
 function validateCreateNumericField(input) {

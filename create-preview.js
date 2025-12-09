@@ -1,4 +1,4 @@
-// Create Preview - Generate preview and save new item
+// Create Preview - Generate preview and save new item with photos
 
 function generateCreatePreview(formData) {
   const container = document.getElementById('createPreviewView');
@@ -51,6 +51,13 @@ function generateCreatePreview(formData) {
   html += generateCreatePreviewSection('Storage', [
     { label: 'Storage Location', value: pd.tote_location }
   ]);
+  
+  // Photos section (if any)
+  if (createPhotosSelected.length > 0) {
+    html += generateCreatePreviewSection('Photos', [
+      { label: 'Photos to Upload', value: `${createPhotosSelected.length} photo${createPhotosSelected.length > 1 ? 's' : ''}` }
+    ]);
+  }
   
   container.innerHTML = html;
 }
@@ -109,13 +116,64 @@ async function saveNewItem() {
       newItem.deployment_data.last_deployment_id = 'CURR';
     }
     
+    // Show progress toast
+    showToast('info', 'Creating item...', 'Please wait');
+    
+    // Create item first
     await createItemAPI(newItem);
     
-    showToast('success', 'Success!', 'Item created successfully');
+    // Upload photos if any
+    let photoUploadSuccess = true;
+    let photoUploadMessage = '';
+    
+    if (createPhotosSelected.length > 0 && formData.class === 'Decoration') {
+      try {
+        showToast('info', 'Uploading photos...', `Uploading ${createPhotosSelected.length} photo${createPhotosSelected.length > 1 ? 's' : ''}`);
+        
+        await uploadPhotosForNewItem(newId, formData.season, createPhotosSelected);
+        
+        photoUploadMessage = ` with ${createPhotosSelected.length} photo${createPhotosSelected.length > 1 ? 's' : ''}`;
+      } catch (photoError) {
+        console.error('Photo upload failed:', photoError);
+        photoUploadSuccess = false;
+        photoUploadMessage = ', but photo upload failed';
+      }
+    }
+    
+    // Show success message
+    if (photoUploadSuccess) {
+      showToast('success', 'Success!', `Item created successfully${photoUploadMessage}`);
+    } else {
+      showToast('warning', 'Item created', `Item created successfully${photoUploadMessage}. You can add photos from the Photos tab.`);
+    }
+    
     closeModal('createModal');
     await loadItems();
+    
   } catch (error) {
     console.error('Failed to create item:', error);
     showToast('error', 'Error', error.message || 'Failed to create item');
+  }
+}
+
+async function uploadPhotosForNewItem(itemId, season, photoFiles) {
+  /**
+   * Upload photos for newly created item
+   * First photo becomes primary, rest are secondary
+   */
+  
+  for (let i = 0; i < photoFiles.length; i++) {
+    const file = photoFiles[i];
+    const isFirstPhoto = i === 0;
+    
+    try {
+      // Upload with thumbnail (reuse existing function from photo-service.js)
+      await uploadPhotoWithThumbnail(file, itemId, season);
+      
+      console.log(`Uploaded photo ${i + 1}/${photoFiles.length} for item ${itemId}`);
+    } catch (error) {
+      console.error(`Failed to upload photo ${i + 1}:`, error);
+      throw new Error(`Failed to upload photo ${i + 1}: ${error.message}`);
+    }
   }
 }
