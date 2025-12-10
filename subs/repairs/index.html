@@ -306,6 +306,8 @@
       </div>
 
       <div class="modal-footer">
+        <button id="btnEditDetails" class="btn-primary" style="display:none;">Edit Details</button>
+        <button id="btnUnflagRepair" class="btn-secondary" style="display:none;">Remove Repair Flag</button>
         <button id="btnStartRepair" class="btn-primary" style="display:none;">Start Repair</button>
         <button id="btnCompleteRepair" class="btn-success" style="display:none;">Complete Repair</button>
         <button id="btnRetireItem" class="btn-danger" style="display:none;">Retire Item</button>
@@ -340,6 +342,48 @@
       <div class="modal-footer">
         <button id="btnSubmitComplete" class="btn-success">Complete Repair</button>
         <button class="btn-secondary" onclick="closeCompleteRepairModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Edit Repair Details -->
+  <div id="modalEditRepair" class="modal" style="display:none;">
+    <div class="panel">
+      <div class="modal-header">
+        <h2>Edit Repair Details</h2>
+        <button class="close-btn" onclick="closeEditRepairModal()">&times;</button>
+      </div>
+
+      <div id="editItemInfo" class="item-preview-card" style="margin-bottom: 20px;">
+        <h3 id="editItemName">Item Name</h3>
+        <div class="preview-details">
+          <span id="editItemId">ID</span>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <label for="editCriticality">Criticality Level *</label>
+        <select id="editCriticality" required>
+          <option value="Low">Low</option>
+          <option value="Medium">Medium</option>
+          <option value="High">High</option>
+          <option value="Critical">Critical</option>
+        </select>
+      </div>
+
+      <div class="form-section">
+        <label for="editEstimatedCost">Estimated Repair Cost ($)</label>
+        <input type="number" id="editEstimatedCost" step="0.01" min="0" placeholder="0.00" />
+      </div>
+
+      <div class="form-section">
+        <label for="editNotes">Update Notes (optional)</label>
+        <textarea id="editNotes" rows="4" placeholder="Add notes about this update..."></textarea>
+      </div>
+
+      <div class="modal-footer">
+        <button id="btnSubmitEdit" class="btn-primary">Update Details</button>
+        <button class="btn-secondary" onclick="closeEditRepairModal()">Cancel</button>
       </div>
     </div>
   </div>

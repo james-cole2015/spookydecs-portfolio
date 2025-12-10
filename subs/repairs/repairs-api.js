@@ -129,5 +129,31 @@ const API = {
       method: 'PUT',
       body: JSON.stringify({ notes })
     });
+  },
+
+  /**
+   * Update repair details (criticality, estimated cost, notes)
+   */
+  async updateRepairDetails(itemId, updateData) {
+    const endpoint = `/items/${itemId}`;
+    return this.request(endpoint, {
+      method: 'PUT',
+      body: JSON.stringify({
+        repair_status: updateData
+      })
+    });
+  },
+
+  /**
+   * Remove repair flag from an item
+   */
+  async unflagRepair(itemId) {
+    const endpoint = `/items/${itemId}`;
+    return this.request(endpoint, {
+      method: 'PUT',
+      body: JSON.stringify({
+        unflag: true
+      })
+    });
   }
 };

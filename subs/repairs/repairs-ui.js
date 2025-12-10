@@ -162,14 +162,24 @@ const RepairDetailModal = {
   },
 
   updateActionButtons(repairStatus) {
+    const btnEditDetails = document.getElementById('btnEditDetails');
+    const btnUnflagRepair = document.getElementById('btnUnflagRepair');
     const btnStart = document.getElementById('btnStartRepair');
     const btnComplete = document.getElementById('btnCompleteRepair');
     const btnRetire = document.getElementById('btnRetireItem');
 
     // Hide all by default
+    btnEditDetails.style.display = 'none';
+    btnUnflagRepair.style.display = 'none';
     btnStart.style.display = 'none';
     btnComplete.style.display = 'none';
     btnRetire.style.display = 'none';
+
+    // Show buttons based on repair status
+    if (repairStatus.needs_repair) {
+      btnEditDetails.style.display = 'inline-block';
+      btnUnflagRepair.style.display = 'inline-block';
+    }
 
     if (repairStatus.status === 'Needs Repair') {
       btnStart.style.display = 'inline-block';
@@ -203,6 +213,34 @@ const CompleteRepairModal = {
   }
 };
 
+/**
+ * Edit Repair Modal
+ */
+const EditRepairModal = {
+  currentItem: null,
+
+  open(item) {
+    this.currentItem = item;
+    const repairStatus = item.repair_status || {};
+
+    // Populate item info
+    document.getElementById('editItemName').textContent = item.short_name || 'Unknown';
+    document.getElementById('editItemId').textContent = item.id;
+
+    // Populate form fields with current values
+    document.getElementById('editCriticality').value = repairStatus.criticality || 'Medium';
+    document.getElementById('editEstimatedCost').value = repairStatus.estimated_repair_cost || '';
+    document.getElementById('editNotes').value = '';
+
+    document.getElementById('modalEditRepair').style.display = 'flex';
+  },
+
+  close() {
+    document.getElementById('modalEditRepair').style.display = 'none';
+    this.currentItem = null;
+  }
+};
+
 // Global modal close functions for inline onclick handlers
 function closeRepairDetailModal() {
   RepairDetailModal.close();
@@ -210,4 +248,8 @@ function closeRepairDetailModal() {
 
 function closeCompleteRepairModal() {
   CompleteRepairModal.close();
+}
+
+function closeEditRepairModal() {
+  EditRepairModal.close();
 }
