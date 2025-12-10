@@ -57,6 +57,7 @@ body {
     color: #1f2937;
     line-height: 1.6;
     min-height: 100vh;
+    margin: 16px;
 }
 
 /* Base Typography */
@@ -79,20 +80,17 @@ p {
     max-width: 1280px;
     margin: 0 auto;
     padding: var(--spacing-2);
-    padding-top: 80px; /* Account for fixed header */
 }
 
 @media (min-width: 640px) {
     .container {
         padding: var(--spacing-3);
-        padding-top: 80px; /* Maintain header spacing */
     }
 }
 
 @media (min-width: 1024px) {
     .container {
         padding: var(--spacing-4);
-        padding-top: 80px; /* Maintain header spacing */
     }
 }
 
