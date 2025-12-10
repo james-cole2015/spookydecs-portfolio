@@ -10,11 +10,10 @@ let apiConfig = null;
  */
 async function loadConfig() {
   if (apiConfig) {
-    console.log('[API] Using cached config:', apiConfig);
     return apiConfig;
   }
 
-  console.log('[API] Loading config from /config.json...');
+  console.log('[API] Loading config.json...');
   
   try {
     const response = await fetch('/config.json');
@@ -23,7 +22,7 @@ async function loadConfig() {
       throw new Error(`Failed to load config: ${response.status}`);
     }
     apiConfig = await response.json();
-    console.log('[API] Config loaded successfully:', apiConfig);
+    console.log('[API] ✓ Config loaded');
     return apiConfig;
   } catch (error) {
     console.error('[API] Config loading error:', error);
