@@ -31,10 +31,10 @@ export async function loadPhotos() {
     
     console.log(`[Photos] Loaded ${photos.length} photos`);
     
-    // Update state
-    setPhotos(photos);
+    // Update state with photos and loading flag together
     setState(prevState => ({
       ...prevState,
+      photos: [...photos],
       loading: false,
       error: null
     }));
