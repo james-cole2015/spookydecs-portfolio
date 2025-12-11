@@ -37,9 +37,18 @@ const RepairHistory = {
    */
   async fetchAllItems() {
     try {
-      // Use the dedicated history endpoint
-      const response = await API.getRepairHistory();
+      // Fetch all items directly from the /items endpoint
+      const response = await API.request('/items');
       this.allItems = response.items || [];
+      
+      // Filter to only items that have repair history
+      this.allItems = this.allItems.filter(item => {
+        const repairStatus = item.repair_status || {};
+        const notes = repairStatus.repair_notes || [];
+        const history = item.repair_history || [];
+        return notes.length > 0 || history.length > 0;
+      });
+      
       return this.allItems;
     } catch (error) {
       console.error('Error fetching items:', error);
@@ -49,17 +58,18 @@ const RepairHistory = {
   },
 
   /**
-   * Build flat history list from all items' repair_notes
+   * Build flat history list from all items' repair_notes and repair_history
    */
   buildHistoryFromItems() {
     this.allHistory = [];
     
     this.allItems.forEach(item => {
       const repairStatus = item.repair_status || {};
-      const notes = repairStatus.repair_notes || [];
+      const currentNotes = repairStatus.repair_notes || [];
+      const archivedHistory = item.repair_history || [];
       
-      // Each note becomes a history entry
-      notes.forEach(note => {
+      // Add current repair notes
+      currentNotes.forEach(note => {
         this.allHistory.push({
           id: `${item.id}-${note.date}`,
           item_id: item.id,
@@ -69,8 +79,44 @@ const RepairHistory = {
           type: note.type,
           description: note.description,
           cost: note.cost,
-          performed_by: note.performed_by
+          performed_by: note.performed_by,
+          source: 'current'
         });
+      });
+      
+      // Add archived repair history
+      archivedHistory.forEach(archived => {
+        const notes = archived.repair_notes || [];
+        notes.forEach(note => {
+          this.allHistory.push({
+            id: `${item.id}-archived-${note.date}`,
+            item_id: item.id,
+            item_name: item.short_name || item.id,
+            item_class: item.class_type || 'Unknown',
+            date: note.date,
+            type: note.type,
+            description: note.description,
+            cost: note.cost,
+            performed_by: note.performed_by,
+            source: 'archived'
+          });
+        });
+        
+        // Add unflag event as a history entry
+        if (archived.unflagged_date) {
+          this.allHistory.push({
+            id: `${item.id}-unflagged-${archived.unflagged_date}`,
+            item_id: item.id,
+            item_name: item.short_name || item.id,
+            item_class: item.class_type || 'Unknown',
+            date: archived.unflagged_date,
+            type: 'unflagged',
+            description: `Repair flag removed. Was ${archived.criticality} priority with estimated cost of ${archived.estimated_repair_cost ? '$' + archived.estimated_repair_cost.toFixed(2) : 'unknown'}`,
+            cost: null,
+            performed_by: archived.unflagged_by || 'Unknown',
+            source: 'archived'
+          });
+        }
       });
     });
     
@@ -200,7 +246,9 @@ const RepairHistory = {
     const badges = {
       'repair': '<span class="badge" style="background:#d1fae5;color:#059669;">Repair</span>',
       'inspection': '<span class="badge" style="background:#dbeafe;color:#2563eb;">Inspection</span>',
-      'retired': '<span class="badge" style="background:#fee2e2;color:#dc2626;">Retired</span>'
+      'retired': '<span class="badge" style="background:#fee2e2;color:#dc2626;">Retired</span>',
+      'update': '<span class="badge" style="background:#fef3c7;color:#d97706;">Update</span>',
+      'unflagged': '<span class="badge" style="background:#f3e8ff;color:#7c3aed;">Unflagged</span>'
     };
     return badges[type] || `<span class="badge">${type}</span>`;
   },
