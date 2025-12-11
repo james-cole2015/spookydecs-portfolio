@@ -202,27 +202,18 @@ export function updateStatsCards() {
   // Update card values
   const statCards = document.querySelectorAll('.stat-card');
   
-  if (statCards.length >= 3) {
-    // Card 1: Total Images (filtered by season if applicable)
-    const seasonFilter = state.filters.season;
-    const seasonTotal = seasonFilter && seasonFilter !== 'all'
-      ? (seasonFilter === 'christmas' ? stats.christmas : stats.halloween)
-      : stats.total;
+  if (statCards.length >= 4) {
+    // Card 1: Total Images
+    statCards[0].querySelector('.stat-value').textContent = stats.total || 0;
     
-    statCards[0].querySelector('.stat-value').textContent = seasonTotal;
-    statCards[0].querySelector('.stat-label').textContent = 
-      seasonFilter && seasonFilter !== 'all' 
-        ? `Total Images (${seasonFilter})`
-        : 'Total Images (All)';
+    // Card 2: Christmas
+    statCards[1].querySelector('.stat-value').textContent = stats.christmas || 0;
     
-    // Card 2: Total Images (filtered by type if applicable)
-    const typeTotal = photos.length;
-    statCards[1].querySelector('.stat-value').textContent = typeTotal;
-    statCards[1].querySelector('.stat-label').textContent = 'Total Images (Type)';
+    // Card 3: Halloween
+    statCards[2].querySelector('.stat-value').textContent = stats.halloween || 0;
     
-    // Card 3: Recent Uploads
-    statCards[2].querySelector('.stat-value').textContent = recentCount;
-    statCards[2].querySelector('.stat-label').textContent = 'Recent Uploads (30d)';
+    // Card 4: Recent Uploads
+    statCards[3].querySelector('.stat-value').textContent = recentCount;
   }
 }
 

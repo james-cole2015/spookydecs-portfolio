@@ -1,43 +1,134 @@
-// Configuration management
-window.config = {};
+/**
+ * Main Application Entry Point
+ * Initializes all modules and coordinates app startup
+ */
 
-async function loadConfig() {
-  console.log('📡 Loading configuration...');
+import { initTabs } from './tabs.js';
+import { initFilters } from './filters.js';
+import { initUI } from './ui.js';
+import { loadPhotos, loadStats } from './photos.js';
+import { getState } from './state.js';
+import { showToast } from './ui.js';
+
+/**
+ * Wait for config to be loaded
+ */
+async function waitForConfig() {
+  // If config already loaded, return immediately
+  if (window.config && window.config.API_ENDPOINT) {
+    return window.config;
+  }
+  
+  // Wait for config to load (max 5 seconds)
+  return new Promise((resolve, reject) => {
+    let attempts = 0;
+    const maxAttempts = 50; // 5 seconds (50 * 100ms)
+    
+    const checkConfig = setInterval(() => {
+      attempts++;
+      
+      if (window.config && window.config.API_ENDPOINT) {
+        clearInterval(checkConfig);
+        resolve(window.config);
+      } else if (attempts >= maxAttempts) {
+        clearInterval(checkConfig);
+        reject(new Error('Configuration failed to load'));
+      }
+    }, 100);
+  });
+}
+
+/**
+ * Initialize the application
+ */
+async function initApp() {
+  console.log('[App] Starting application initialization...');
   
   try {
-    const response = await fetch('/config.json');
-    
-    if (!response.ok) {
-      throw new Error(`Failed to load config: ${response.status}`);
+    // Config is already loading via config.js
+    // Just verify it's available
+    if (!window.config || !window.config.API_ENDPOINT) {
+      console.warn('[App] Config not yet loaded, waiting...');
+      await waitForConfig();
     }
     
-    window.config = await response.json();
+    console.log('[App] Config ready:', window.config.API_ENDPOINT);
     
-    console.log('✅ Configuration loaded:');
-    console.log('   - Environment:', window.config.ENV || 'unknown');
-    console.log('   - API Endpoint:', window.config.API_ENDPOINT || 'not set');
-    console.log('   - Gallery URL:', window.config.GALLERY_LINK_FROM_ADM || 'not set');
+    // Initialize UI components
+    initUI();
+    console.log('[App] ✓ UI initialized');
     
-    // Update navigation links if they exist
-    const galleryLink = document.getElementById('galleryLink');
-    if (galleryLink && window.config.GALLERY_LINK_FROM_ADM) {
-      galleryLink.href = window.config.GALLERY_LINK_FROM_ADM;
+    // Initialize tabs
+    initTabs();
+    console.log('[App] ✓ Tabs initialized');
+    
+    // Initialize filters
+    initFilters();
+    console.log('[App] ✓ Filters initialized');
+    
+    // Load initial data
+    console.log('[App] Loading initial data...');
+    
+    // Load stats
+    try {
+      await loadStats();
+      console.log('[App] ✓ Stats loaded');
+    } catch (error) {
+      console.error('[App] Failed to load stats:', error);
+      showToast('Failed to load statistics', 'warning');
     }
     
-    const adminLink = document.getElementById('adminLink');
-    if (adminLink && window.config.ADMIN_URL) {
-      adminLink.href = window.config.ADMIN_URL;
+    // Load photos for current tab
+    try {
+      const state = getState();
+      console.log('[App] Loading photos for tab:', state.currentTab);
+      await loadPhotos();
+      console.log('[App] ✓ Photos loaded');
+    } catch (error) {
+      console.error('[App] Failed to load photos:', error);
+      showToast(`Failed to load photos: ${error.message}`, 'error');
     }
     
-    return window.config;
+    console.log('[App] ✅ Application initialized successfully');
+    
   } catch (error) {
-    console.error('❌ Error loading config:', error);
-    throw error;
+    console.error('[App] ❌ Application initialization failed:', error);
+    showToast(`App initialization failed: ${error.message}`, 'error');
   }
 }
 
-// Expose loadConfig globally for app.js
-window.loadConfig = loadConfig;
+/**
+ * Setup error handlers
+ */
+function setupErrorHandlers() {
+  // Global error handler
+  window.addEventListener('error', (event) => {
+    console.error('[App] Global error:', event.error);
+  });
+  
+  // Unhandled promise rejection handler
+  window.addEventListener('unhandledrejection', (event) => {
+    console.error('[App] Unhandled promise rejection:', event.reason);
+  });
+}
 
-// Automatically start loading config when script loads
-loadConfig();
+/**
+ * Wait for DOM to be ready, then initialize
+ */
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    setupErrorHandlers();
+    initApp();
+  });
+} else {
+  // DOM already loaded
+  setupErrorHandlers();
+  initApp();
+}
+
+// Export for debugging
+window.appDebug = {
+  getState,
+  loadPhotos,
+  loadStats
+};

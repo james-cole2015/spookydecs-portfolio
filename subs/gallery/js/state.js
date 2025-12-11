@@ -7,9 +7,9 @@ const STATE_KEY = 'spookydecs_admin_state';
 
 // Default state structure
 const DEFAULT_STATE = {
-  currentTab: 'photos',
+  currentTab: 'items',
   filters: {
-    photo_type: 'all',
+    photo_type: 'item',
     season: 'all',
     class_type: 'all',
     year: 'all',
