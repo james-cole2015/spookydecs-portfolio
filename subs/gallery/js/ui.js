@@ -45,6 +45,11 @@ export function renderPhotoGrid() {
   const state = getState();
   const photoGrid = document.getElementById('photo-grid');
   
+  console.log('[UI] renderPhotoGrid called');
+  console.log('[UI] - loading:', state.loading);
+  console.log('[UI] - error:', state.error);
+  console.log('[UI] - photos count:', state.photos?.length);
+  
   if (!photoGrid) {
     console.warn('[UI] Photo grid element not found');
     return;
@@ -52,6 +57,7 @@ export function renderPhotoGrid() {
   
   // Handle loading state
   if (state.loading) {
+    console.log('[UI] Rendering loading state');
     photoGrid.innerHTML = `
       <div class="loading-state">
         <div class="spinner"></div>
@@ -63,6 +69,7 @@ export function renderPhotoGrid() {
   
   // Handle error state
   if (state.error) {
+    console.log('[UI] Rendering error state:', state.error);
     photoGrid.innerHTML = `
       <div class="error-state">
         <p>Error loading photos: ${state.error}</p>
@@ -79,8 +86,11 @@ export function renderPhotoGrid() {
     photos = filterPhotosBySearch(photos, state.filters.search);
   }
   
+  console.log('[UI] Filtered photos count:', photos.length);
+  
   // Handle empty state
   if (photos.length === 0) {
+    console.log('[UI] Rendering empty state');
     photoGrid.innerHTML = `
       <div class="empty-state">
         <p>No photos found</p>
@@ -91,10 +101,13 @@ export function renderPhotoGrid() {
   }
   
   // Render photo cards
+  console.log('[UI] Rendering', photos.length, 'photo cards');
   photoGrid.innerHTML = photos.map(photo => createPhotoCard(photo)).join('');
   
   // Attach event listeners to action buttons
   attachPhotoCardListeners();
+  
+  console.log('[UI] Photo grid rendered successfully');
 }
 
 /**
