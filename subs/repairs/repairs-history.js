@@ -10,6 +10,8 @@ const RepairHistory = {
     type: '',
     search: ''
   },
+  currentPage: 1,
+  itemsPerPage: 15,
 
   /**
    * Load all items and build repair history
@@ -68,8 +70,13 @@ const RepairHistory = {
       const currentNotes = repairStatus.repair_notes || [];
       const archivedHistory = item.repair_history || [];
       
-      // Add current repair notes
+      // Add current repair notes (filter out undefined types)
       currentNotes.forEach(note => {
+        // Skip entries with undefined type
+        if (note.type === undefined || note.type === 'undefined') {
+          return;
+        }
+        
         this.allHistory.push({
           id: `${item.id}-${note.date}`,
           item_id: item.id,
@@ -84,10 +91,15 @@ const RepairHistory = {
         });
       });
       
-      // Add archived repair history
+      // Add archived repair history (filter out undefined types)
       archivedHistory.forEach(archived => {
         const notes = archived.repair_notes || [];
         notes.forEach(note => {
+          // Skip entries with undefined type
+          if (note.type === undefined || note.type === 'undefined') {
+            return;
+          }
+          
           this.allHistory.push({
             id: `${item.id}-archived-${note.date}`,
             item_id: item.id,
@@ -111,7 +123,220 @@ const RepairHistory = {
             item_class: item.class_type || 'Unknown',
             date: archived.unflagged_date,
             type: 'unflagged',
-            description: `Repair flag removed. Was ${archived.criticality} priority with estimated cost of ${archived.estimated_repair_cost ? '$' + archived.estimated_repair_cost.toFixed(2) : 'unknown'}`,
+            description: `Repair flag removed. Was ${archived.criticality} priority with estimated cost of ${archived.estimated_repair_cost ? '
+
+  /**
+   * Update statistics
+   */
+  updateStats() {
+    const stats = {
+      totalRepairs: 0,
+      totalCost: 0,
+      itemsServiced: new Set()
+    };
+    
+    this.allHistory.forEach(entry => {
+      if (entry.type === 'repair') {
+        stats.totalRepairs++;
+        if (entry.cost) {
+          stats.totalCost += parseFloat(entry.cost);
+        }
+      }
+      stats.itemsServiced.add(entry.item_id);
+    });
+    
+    document.querySelector('#historyStatsRow .stat-card:nth-child(1) .stat-value').textContent = stats.totalRepairs;
+    document.querySelector('#historyStatsRow .stat-card:nth-child(2) .stat-value').textContent = UI.formatCurrency(stats.totalCost);
+    document.querySelector('#historyStatsRow .stat-card:nth-child(3) .stat-value').textContent = stats.itemsServiced.size;
+  },
+
+  /**
+   * Apply filters to history
+   */
+  getFilteredHistory() {
+    let filtered = [...this.allHistory];
+    
+    // Filter by type
+    if (this.filters.type) {
+      filtered = filtered.filter(entry => entry.type === this.filters.type);
+    }
+    
+    // Filter by search term
+    if (this.filters.search) {
+      const searchLower = this.filters.search.toLowerCase();
+      filtered = filtered.filter(entry => 
+        entry.item_id.toLowerCase().includes(searchLower) ||
+        entry.item_name.toLowerCase().includes(searchLower) ||
+        entry.description.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    return filtered;
+  },
+
+  /**
+   * Render repair history table
+   */
+  render() {
+    const container = document.getElementById('repairHistoryContainer');
+    const filtered = this.getFilteredHistory();
+    
+    if (filtered.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <h3>No Repair History</h3>
+          <p>No repair history found matching your filters.</p>
+        </div>
+      `;
+      return;
+    }
+    
+    // Calculate pagination
+    const totalPages = Math.ceil(filtered.length / this.itemsPerPage);
+    const startIdx = (this.currentPage - 1) * this.itemsPerPage;
+    const endIdx = startIdx + this.itemsPerPage;
+    const pageItems = filtered.slice(startIdx, endIdx);
+    
+    // Create pagination controls
+    const paginationHTML = `
+      <div class="pagination" style="justify-content: flex-end; margin-bottom: 16px;">
+        <button id="btnHistoryPrev" class="btn-small btn-secondary" ${this.currentPage === 1 ? 'disabled' : ''}>← Previous</button>
+        <span class="page-info">Page ${this.currentPage} of ${totalPages}</span>
+        <button id="btnHistoryNext" class="btn-small btn-secondary" ${this.currentPage === totalPages ? 'disabled' : ''}>Next →</button>
+      </div>
+    `;
+    
+    const tableHTML = `
+      ${paginationHTML}
+      <table class="repair-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Item ID</th>
+            <th>Item Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Cost</th>
+            <th>Performed By</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${pageItems.map(entry => this.renderRow(entry)).join('')}
+        </tbody>
+      </table>
+    `;
+    
+    container.innerHTML = tableHTML;
+    this.attachEventListeners();
+    this.attachPaginationListeners();
+  },
+
+  /**
+   * Render a single history row
+   */
+  renderRow(entry) {
+    const typeBadge = this.getTypeBadge(entry.type);
+    const costDisplay = entry.cost ? UI.formatCurrency(entry.cost) : '-';
+    
+    return `
+      <tr>
+        <td>${UI.formatDate(entry.date)}</td>
+        <td><strong>${entry.item_id}</strong></td>
+        <td>${entry.item_name}</td>
+        <td>${typeBadge}</td>
+        <td style="max-width: 300px;">${entry.description}</td>
+        <td>${costDisplay}</td>
+        <td>${entry.performed_by || 'Unknown'}</td>
+        <td>
+          <button class="btn-small btn-secondary view-item-btn" data-id="${entry.item_id}">
+            View Item
+          </button>
+        </td>
+      </tr>
+    `;
+  },
+
+  /**
+   * Get badge for entry type
+   */
+  getTypeBadge(type) {
+    const badges = {
+      'repair': '<span class="badge" style="background:#d1fae5;color:#059669;">Repair</span>',
+      'inspection': '<span class="badge" style="background:#dbeafe;color:#2563eb;">Inspection</span>',
+      'retired': '<span class="badge" style="background:#fee2e2;color:#dc2626;">Retired</span>',
+      'update': '<span class="badge" style="background:#fef3c7;color:#d97706;">Update</span>',
+      'unflagged': '<span class="badge" style="background:#f3e8ff;color:#7c3aed;">Unflagged</span>'
+    };
+    return badges[type] || `<span class="badge">${type}</span>`;
+  },
+
+  /**
+   * Attach event listeners
+   */
+  attachEventListeners() {
+    // View item buttons
+    document.querySelectorAll('.view-item-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const itemId = e.target.dataset.id;
+        try {
+          const response = await API.getRepairDetail(itemId);
+          RepairDetailModal.open(response.item);
+        } catch (error) {
+          UI.showToast('Failed to load item details: ' + error.message, 'error');
+        }
+      });
+    });
+  },
+
+  /**
+   * Attach pagination listeners
+   */
+  attachPaginationListeners() {
+    const btnPrev = document.getElementById('btnHistoryPrev');
+    const btnNext = document.getElementById('btnHistoryNext');
+    
+    if (btnPrev) {
+      btnPrev.addEventListener('click', () => this.prevPage());
+    }
+    
+    if (btnNext) {
+      btnNext.addEventListener('click', () => this.nextPage());
+    }
+  },
+
+  /**
+   * Go to next page
+   */
+  nextPage() {
+    const filtered = this.getFilteredHistory();
+    const totalPages = Math.ceil(filtered.length / this.itemsPerPage);
+    
+    if (this.currentPage < totalPages) {
+      this.currentPage++;
+      this.render();
+    }
+  },
+
+  /**
+   * Go to previous page
+   */
+  prevPage() {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.render();
+    }
+  },
+
+  /**
+   * Apply filters and reload
+   */
+  applyFilters(filters) {
+    this.filters = { ...this.filters, ...filters };
+    this.currentPage = 1; // Reset to first page when filters change
+    this.render();
+  }
+}; + archived.estimated_repair_cost.toFixed(2) : 'unknown'}`,
             cost: null,
             performed_by: archived.unflagged_by || 'Unknown',
             source: 'archived'
