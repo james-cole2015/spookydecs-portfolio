@@ -133,7 +133,7 @@ export function resetFilters() {
  * @param {Array} photos - Photos array
  */
 export function setPhotos(photos) {
-  setState({ photos });
+  setState({ photos: [...photos] }); // Create new array reference
 }
 
 /**
