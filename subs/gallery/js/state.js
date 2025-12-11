@@ -9,7 +9,7 @@ const STATE_KEY = 'spookydecs_admin_state';
 const DEFAULT_STATE = {
   currentTab: 'items',
   filters: {
-    photo_type: 'item',
+    photo_type: 'catalog',
     season: 'all',
     class_type: 'all',
     year: 'all',

@@ -8,7 +8,7 @@ import { loadPhotos } from './photos.js';
 
 // Map tabs to photo_type values
 const TAB_TO_PHOTO_TYPE = {
-  items: 'item',
+  items: 'catalog',
   ideas: 'idea',
   build: 'build',
   gallery: 'gallery',
