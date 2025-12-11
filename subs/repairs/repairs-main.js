@@ -237,69 +237,87 @@ function setupTabs() {
  * Setup action buttons in detail modal
  */
 function setupActionButtons() {
-  document.getElementById('btnStartRepair').addEventListener('click', async () => {
-    if (!RepairDetailModal.currentItem) return;
+  const btnStartRepair = document.getElementById('btnStartRepair');
+  if (btnStartRepair) {
+    btnStartRepair.addEventListener('click', async () => {
+      if (!RepairDetailModal.currentItem) return;
 
-    try {
+      try {
+        const itemId = RepairDetailModal.currentItem.id;
+        await API.startRepair(itemId);
+        
+        UI.showToast('Repair started successfully!', 'success');
+        
+        const response = await API.getRepairDetail(itemId);
+        RepairDetailModal.open(response.item);
+        
+        RepairQueue.load();
+      } catch (error) {
+        UI.showToast('Failed to start repair: ' + error.message, 'error');
+      }
+    });
+  }
+
+  const btnCompleteRepair = document.getElementById('btnCompleteRepair');
+  if (btnCompleteRepair) {
+    btnCompleteRepair.addEventListener('click', () => {
+      if (!RepairDetailModal.currentItem) return;
+      
       const itemId = RepairDetailModal.currentItem.id;
-      await API.startRepair(itemId);
-      
-      UI.showToast('Repair started successfully!', 'success');
-      
-      const response = await API.getRepairDetail(itemId);
-      RepairDetailModal.open(response.item);
-      
-      RepairQueue.load();
-    } catch (error) {
-      UI.showToast('Failed to start repair: ' + error.message, 'error');
-    }
-  });
+      CompleteRepairModal.open(itemId);
+    });
+  }
 
-  document.getElementById('btnCompleteRepair').addEventListener('click', () => {
-    if (!RepairDetailModal.currentItem) return;
-    
-    const itemId = RepairDetailModal.currentItem.id;
-    CompleteRepairModal.open(itemId);
-  });
+  const btnRetireItem = document.getElementById('btnRetireItem');
+  if (btnRetireItem) {
+    btnRetireItem.addEventListener('click', async () => {
+      if (!RepairDetailModal.currentItem) return;
 
-  document.getElementById('btnRetireItem').addEventListener('click', async () => {
-    if (!RepairDetailModal.currentItem) return;
+      const confirmed = confirm('Are you sure you want to retire this item? This action marks the item as permanently out of service.');
+      if (!confirmed) return;
 
-    const confirmed = confirm('Are you sure you want to retire this item? This action marks the item as permanently out of service.');
-    if (!confirmed) return;
+      try {
+        const itemId = RepairDetailModal.currentItem.id;
+        const notes = prompt('Retirement notes (optional):') || 'Item retired from service';
+        
+        await API.retireItem(itemId, notes);
+        
+        UI.showToast('Item retired successfully', 'success');
+        
+        RepairDetailModal.close();
+        RepairQueue.load();
+      } catch (error) {
+        UI.showToast('Failed to retire item: ' + error.message, 'error');
+      }
+    });
+  }
 
-    try {
-      const itemId = RepairDetailModal.currentItem.id;
-      const notes = prompt('Retirement notes (optional):') || 'Item retired from service';
-      
-      await API.retireItem(itemId, notes);
-      
-      UI.showToast('Item retired successfully', 'success');
-      
-      RepairDetailModal.close();
-      RepairQueue.load();
-    } catch (error) {
-      UI.showToast('Failed to retire item: ' + error.message, 'error');
-    }
-  });
+  const btnEditDetails = document.getElementById('btnEditDetails');
+  if (btnEditDetails) {
+    btnEditDetails.addEventListener('click', () => {
+      if (!RepairDetailModal.currentItem) return;
+      EditRepairModal.open(RepairDetailModal.currentItem);
+    });
+  }
 
-  document.getElementById('btnEditDetails').addEventListener('click', () => {
-    if (!RepairDetailModal.currentItem) return;
-    EditRepairModal.open(RepairDetailModal.currentItem);
-  });
+  const btnLogout = document.getElementById('btnLogout');
+  if (btnLogout) {
+    btnLogout.addEventListener('click', () => {
+      AUTH.logout();
+    });
+  }
 
-  document.getElementById('btnLogout').addEventListener('click', () => {
-    AUTH.logout();
-  });
-
-  document.getElementById('adminLink').addEventListener('click', (e) => {
-    e.preventDefault();
-    if (CONFIG.ADMIN_URL) {
-      window.location.href = CONFIG.ADMIN_URL;
-    } else {
-      alert('Admin URL not configured');
-    }
-  });
+  const adminLink = document.getElementById('adminLink');
+  if (adminLink) {
+    adminLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (CONFIG.ADMIN_URL) {
+        window.location.href = CONFIG.ADMIN_URL;
+      } else {
+        alert('Admin URL not configured');
+      }
+    });
+  }
 }
 
 /**
@@ -451,22 +469,25 @@ function setupEditRepairForm() {
  * Setup unflag button
  */
 function setupUnflagButton() {
-  document.getElementById('btnUnflagRepair').addEventListener('click', async () => {
-    if (!RepairDetailModal.currentItem) return;
+  const btnUnflagRepair = document.getElementById('btnUnflagRepair');
+  if (btnUnflagRepair) {
+    btnUnflagRepair.addEventListener('click', async () => {
+      if (!RepairDetailModal.currentItem) return;
 
-    const confirmed = confirm('Are you sure you want to remove the repair flag? The item will be marked as operational.');
-    if (!confirmed) return;
+      const confirmed = confirm('Are you sure you want to remove the repair flag? The item will be marked as operational.');
+      if (!confirmed) return;
 
-    try {
-      const itemId = RepairDetailModal.currentItem.id;
-      await API.unflagRepair(itemId);
+      try {
+        const itemId = RepairDetailModal.currentItem.id;
+        await API.unflagRepair(itemId);
 
-      UI.showToast('Repair flag removed successfully', 'success');
-      
-      RepairDetailModal.close();
-      RepairQueue.load();
-    } catch (error) {
-      UI.showToast('Failed to remove repair flag: ' + error.message, 'error');
-    }
-  });
+        UI.showToast('Repair flag removed successfully', 'success');
+        
+        RepairDetailModal.close();
+        RepairQueue.load();
+      } catch (error) {
+        UI.showToast('Failed to remove repair flag: ' + error.message, 'error');
+      }
+    });
+  }
 }
