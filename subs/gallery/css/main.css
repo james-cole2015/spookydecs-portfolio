@@ -110,39 +110,208 @@ p {
 
 @media (min-width: 1024px) {
     .stats-container {
-        grid-template-columns: repeat(3, 1fr);
-        gap: var(--spacing-3);
+        grid-template-columns: repeat(4, 1fr);
+        gap: var(--spacing-2);
     }
 }
 
-/* Stat Card */
+/* Stat Card - Compact inline layout */
 .stat-card {
     background: var(--bg-card);
     border-radius: var(--radius-lg);
-    padding: var(--spacing-3);
-    box-shadow: var(--shadow-md);
+    padding: var(--spacing-2);
+    box-shadow: var(--shadow-sm);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-2);
 }
 
 .stat-card:hover {
     transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--shadow-md);
 }
 
 .stat-label {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     color: var(--text-secondary);
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    margin-bottom: var(--spacing-1);
+    margin: 0;
+    white-space: nowrap;
 }
 
 .stat-value {
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: 700;
     color: var(--accent-purple);
     margin: 0;
+}
+
+/* Pagination Controls */
+.pagination-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-bottom: var(--spacing-2);
+    gap: var(--spacing-1);
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-1);
+}
+
+.pagination-button {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    min-width: var(--touch-target);
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pagination-button:hover:not(:disabled) {
+    background: var(--accent-purple-light);
+    color: white;
+    border-color: var(--accent-purple-light);
+}
+
+.pagination-button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.pagination-button.active {
+    background: var(--accent-purple);
+    color: white;
+    border-color: var(--accent-purple);
+}
+
+.pagination-ellipsis {
+    padding: 6px 8px;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+/* Clear Filters Button */
+.clear-filters-btn {
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 8px 16px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    min-height: var(--touch-target);
+    transition: background 0.2s ease;
+}
+
+.clear-filters-btn:hover {
+    background: #dc2626;
+}
+
+.clear-filters-btn:active {
+    background: #b91c1c;
+}
+
+.clear-filters-btn.hidden {
+    display: none;
+}
+
+/* Loading/Empty States */
+.loading-state,
+.empty-state,
+.error-state {
+    text-align: center;
+    padding: var(--spacing-6);
+    color: var(--text-secondary);
+}
+
+.spinner {
+    border: 3px solid var(--border-color);
+    border-top: 3px solid var(--accent-purple);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto var(--spacing-2);
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.empty-state-hint {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-top: var(--spacing-1);
+}
+
+/* Toast Container */
+.toast-container {
+    position: fixed;
+    top: var(--spacing-3);
+    right: var(--spacing-3);
+    z-index: 1100;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-1);
+    max-width: 400px;
+}
+
+.toast {
+    background: white;
+    border-radius: var(--radius-md);
+    padding: var(--spacing-2);
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    opacity: 0;
+    transform: translateX(100%);
+    transition: all 0.3s ease;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.toast-icon {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.toast-message {
+    flex: 1;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+}
+
+.toast-success {
+    border-left: 4px solid #10b981;
+}
+
+.toast-error {
+    border-left: 4px solid #ef4444;
+}
+
+.toast-warning {
+    border-left: 4px solid #f59e0b;
+}
+
+.toast-info {
+    border-left: 4px solid #3b82f6;
 }
 
 /* Buttons */

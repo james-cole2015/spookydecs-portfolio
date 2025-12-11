@@ -16,6 +16,10 @@ const DEFAULT_STATE = {
     tags: [],
     search: ''
   },
+  pagination: {
+    currentPage: 1,
+    itemsPerPage: 20
+  },
   photos: [],
   stats: {
     total: 0,
@@ -200,6 +204,27 @@ export function clearSelection() {
  */
 export function setCurrentTab(tab) {
   setState({ currentTab: tab });
+}
+
+/**
+ * Set current page
+ * @param {number} page - Page number
+ */
+export function setPage(page) {
+  setState(state => ({
+    ...state,
+    pagination: {
+      ...state.pagination,
+      currentPage: page
+    }
+  }));
+}
+
+/**
+ * Reset pagination to page 1
+ */
+export function resetPagination() {
+  setPage(1);
 }
 
 /**

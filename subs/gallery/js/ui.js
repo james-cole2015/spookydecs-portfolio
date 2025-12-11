@@ -3,7 +3,7 @@
  * Handles rendering of photo grid, stats, and UI updates
  */
 
-import { getState, subscribe } from './state.js';
+import { getState, subscribe, setPage } from './state.js';
 import { filterPhotosBySearch, calculateRecentUploads } from './photos.js';
 import { getItemNames } from './helpers.js';
 
@@ -18,6 +18,13 @@ export function initUI() {
     // Re-render photo grid when photos change
     if (state.photos !== previousState.photos) {
       renderPhotoGrid();
+      renderPagination();
+    }
+    
+    // Re-render when pagination changes
+    if (state.pagination.currentPage !== previousState.pagination.currentPage) {
+      renderPhotoGrid();
+      renderPagination();
     }
     
     // Update stats when they change
@@ -28,11 +35,13 @@ export function initUI() {
     // Re-render when search changes
     if (state.filters.search !== previousState.filters.search) {
       renderPhotoGrid();
+      renderPagination();
     }
   });
   
   // Initial render
   renderPhotoGrid();
+  renderPagination();
   updateStatsCards();
   
   console.log('[UI] UI initialized');
@@ -100,9 +109,16 @@ export function renderPhotoGrid() {
     return;
   }
   
+  // Apply pagination
+  const { currentPage, itemsPerPage } = state.pagination;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedPhotos = photos.slice(startIndex, endIndex);
+  
+  console.log('[UI] Rendering', paginatedPhotos.length, 'photo cards (page', currentPage, ')');
+  
   // Render photo cards
-  console.log('[UI] Rendering', photos.length, 'photo cards');
-  photoGrid.innerHTML = photos.map(photo => createPhotoCard(photo)).join('');
+  photoGrid.innerHTML = paginatedPhotos.map(photo => createPhotoCard(photo)).join('');
   
   // Attach event listeners to action buttons
   attachPhotoCardListeners();
@@ -227,6 +243,173 @@ export function updateStatsCards() {
     
     // Card 4: Recent Uploads
     statCards[3].querySelector('.stat-value').textContent = recentCount;
+  }
+}
+
+/**
+ * Render pagination controls
+ */
+export function renderPagination() {
+  const state = getState();
+  const paginationContainer = document.getElementById('pagination-container');
+  
+  if (!paginationContainer) {
+    return;
+  }
+  
+  // Get filtered photos count
+  let photos = state.photos || [];
+  if (state.filters.search) {
+    photos = filterPhotosBySearch(photos, state.filters.search);
+  }
+  
+  const totalPhotos = photos.length;
+  const { currentPage, itemsPerPage } = state.pagination;
+  const totalPages = Math.ceil(totalPhotos / itemsPerPage);
+  
+  // Hide pagination if only one page or no photos
+  if (totalPages <= 1) {
+    paginationContainer.innerHTML = '';
+    return;
+  }
+  
+  // Generate page numbers with ellipsis
+  const pageNumbers = generatePageNumbers(currentPage, totalPages);
+  
+  // Render pagination
+  paginationContainer.innerHTML = `
+    <div class="pagination-controls">
+      <button 
+        class="pagination-button" 
+        data-page="prev" 
+        ${currentPage === 1 ? 'disabled' : ''}
+        aria-label="Previous page"
+      >
+        ← Prev
+      </button>
+      
+      ${pageNumbers.map(page => {
+        if (page === '...') {
+          return '<span class="pagination-ellipsis">...</span>';
+        }
+        return `
+          <button 
+            class="pagination-button ${page === currentPage ? 'active' : ''}" 
+            data-page="${page}"
+            aria-label="Page ${page}"
+            ${page === currentPage ? 'aria-current="page"' : ''}
+          >
+            ${page}
+          </button>
+        `;
+      }).join('')}
+      
+      <button 
+        class="pagination-button" 
+        data-page="next" 
+        ${currentPage === totalPages ? 'disabled' : ''}
+        aria-label="Next page"
+      >
+        Next →
+      </button>
+    </div>
+  `;
+  
+  // Attach event listeners
+  paginationContainer.querySelectorAll('.pagination-button').forEach(button => {
+    button.addEventListener('click', handlePaginationClick);
+  });
+}
+
+/**
+ * Generate page numbers with ellipsis
+ * @param {number} currentPage - Current page number
+ * @param {number} totalPages - Total number of pages
+ * @returns {Array} Array of page numbers and ellipsis
+ */
+function generatePageNumbers(currentPage, totalPages) {
+  const pages = [];
+  const maxVisible = 5; // Max page buttons to show
+  
+  if (totalPages <= maxVisible + 2) {
+    // Show all pages if total is small
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(i);
+    }
+  } else {
+    // Always show first page
+    pages.push(1);
+    
+    // Calculate range around current page
+    let start = Math.max(2, currentPage - 1);
+    let end = Math.min(totalPages - 1, currentPage + 1);
+    
+    // Adjust range if at edges
+    if (currentPage <= 3) {
+      end = Math.min(totalPages - 1, 4);
+    }
+    if (currentPage >= totalPages - 2) {
+      start = Math.max(2, totalPages - 3);
+    }
+    
+    // Add ellipsis before range if needed
+    if (start > 2) {
+      pages.push('...');
+    }
+    
+    // Add range
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    
+    // Add ellipsis after range if needed
+    if (end < totalPages - 1) {
+      pages.push('...');
+    }
+    
+    // Always show last page
+    pages.push(totalPages);
+  }
+  
+  return pages;
+}
+
+/**
+ * Handle pagination button click
+ * @param {Event} event - Click event
+ */
+function handlePaginationClick(event) {
+  const button = event.currentTarget;
+  const page = button.dataset.page;
+  
+  if (button.disabled) {
+    return;
+  }
+  
+  const state = getState();
+  const { currentPage } = state.pagination;
+  
+  // Get filtered photos to calculate total pages
+  let photos = state.photos || [];
+  if (state.filters.search) {
+    photos = filterPhotosBySearch(photos, state.filters.search);
+  }
+  const totalPages = Math.ceil(photos.length / state.pagination.itemsPerPage);
+  
+  let newPage = currentPage;
+  
+  if (page === 'prev') {
+    newPage = Math.max(1, currentPage - 1);
+  } else if (page === 'next') {
+    newPage = Math.min(totalPages, currentPage + 1);
+  } else {
+    newPage = parseInt(page);
+  }
+  
+  if (newPage !== currentPage) {
+    setPage(newPage);
+    // Scroll to top of photo grid
+    document.getElementById('photo-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 }
 

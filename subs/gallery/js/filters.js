@@ -3,7 +3,7 @@
  * Handles filter controls, search, and filter state
  */
 
-import { getState, setFilter, setFilters, resetFilters } from './state.js';
+import { getState, setFilter, setFilters, resetFilters, resetPagination } from './state.js';
 import { loadPhotos } from './photos.js';
 import { debounce } from './helpers.js';
 
@@ -45,6 +45,12 @@ export function initFilters() {
     yearFilter.addEventListener('change', handleYearChange);
   }
   
+  // Initialize clear filters button
+  const clearFiltersBtn = document.getElementById('clear-filters-btn');
+  if (clearFiltersBtn) {
+    clearFiltersBtn.addEventListener('click', clearAllFilters);
+  }
+  
   // Initialize mobile filter toggle
   const filterToggle = document.getElementById('filter-toggle');
   const filterPanel = document.getElementById('filter-panel');
@@ -56,8 +62,9 @@ export function initFilters() {
     });
   }
   
-  // Update filter badge count
+  // Update filter badge count and clear button visibility
   updateFilterBadge();
+  updateClearButtonVisibility();
   
   console.log('[Filters] Filters initialized');
 }
@@ -71,7 +78,9 @@ function handleSearchChange(event) {
   console.log('[Filters] Search changed:', searchQuery);
   
   setFilter('search', searchQuery);
+  resetPagination();
   updateFilterBadge();
+  updateClearButtonVisibility();
   
   // Note: Search is handled client-side in photo-grid rendering
   // Trigger re-render by dispatching custom event
@@ -87,7 +96,9 @@ async function handleSeasonChange(event) {
   console.log('[Filters] Season changed:', season);
   
   setFilter('season', season);
+  resetPagination();
   updateFilterBadge();
+  updateClearButtonVisibility();
   
   // Reload photos
   try {
@@ -106,7 +117,9 @@ async function handleTypeChange(event) {
   console.log('[Filters] Type changed:', type);
   
   setFilter('class_type', type);
+  resetPagination();
   updateFilterBadge();
+  updateClearButtonVisibility();
   
   // Reload photos
   try {
@@ -125,7 +138,9 @@ async function handleYearChange(event) {
   console.log('[Filters] Year changed:', year);
   
   setFilter('year', year);
+  resetPagination();
   updateFilterBadge();
+  updateClearButtonVisibility();
   
   // Reload photos
   try {
@@ -176,17 +191,45 @@ function updateFilterBadge() {
 }
 
 /**
+ * Update clear filters button visibility
+ * Show button only when filters are active
+ */
+function updateClearButtonVisibility() {
+  const state = getState();
+  const filters = state.filters;
+  
+  let hasActiveFilters = false;
+  
+  // Check if any filters are active
+  if (filters.season && filters.season !== 'all' && filters.season !== '') hasActiveFilters = true;
+  if (filters.class_type && filters.class_type !== 'all' && filters.class_type !== '') hasActiveFilters = true;
+  if (filters.year && filters.year !== 'all' && filters.year !== '') hasActiveFilters = true;
+  if (filters.search && filters.search.trim() !== '') hasActiveFilters = true;
+  
+  const clearBtn = document.getElementById('clear-filters-btn');
+  if (clearBtn) {
+    if (hasActiveFilters) {
+      clearBtn.classList.remove('hidden');
+    } else {
+      clearBtn.classList.add('hidden');
+    }
+  }
+}
+
+/**
  * Clear all filters
  */
 export async function clearAllFilters() {
   console.log('[Filters] Clearing all filters');
   
   resetFilters();
+  resetPagination();
   
   // Reset UI
   const state = getState();
   setFilterValues(state.filters);
   updateFilterBadge();
+  updateClearButtonVisibility();
   
   // Reload photos
   try {
