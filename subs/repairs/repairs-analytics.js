@@ -17,44 +17,27 @@ const Analytics = {
       document.getElementById('totalRepairsCompleted').textContent = '...';
       document.getElementById('totalEstimatedCost').textContent = '...';
 
-      // Get repair history data (items with repair records)
-      const historyResponse = await API.getRepairHistory();
-      const historyItems = historyResponse.items || [];
+      // Get all items from the main endpoint
+      const allItemsResponse = await API.request('/items');
+      const allItems = allItemsResponse.items || [];
 
       // Get all items needing repair (current queue)
       const repairsResponse = await API.listRepairs();
       const queueItems = repairsResponse.items || [];
 
-      // Combine both datasets, avoiding duplicates
-      const itemsMap = new Map();
-      
-      // Add history items
-      historyItems.forEach(item => {
-        itemsMap.set(item.id, item);
-      });
-      
-      // Add/update with queue items
-      queueItems.forEach(item => {
-        itemsMap.set(item.id, item);
-      });
-
-      // Convert map back to array
-      const allRepairItems = Array.from(itemsMap.values());
-      
       console.log('Analytics loaded:', {
-        historyItems: historyItems.length,
-        queueItems: queueItems.length,
-        combined: allRepairItems.length
+        totalItems: allItems.length,
+        queueItems: queueItems.length
       });
 
       // Store for analysis
-      this.allItems = allRepairItems;
+      this.allItems = allItems;
 
       // Calculate and display metrics
-      this.calculateSummary(allRepairItems, queueItems);
-      this.renderFrequentRepairs(allRepairItems);
+      this.calculateSummary(allItems, queueItems);
+      this.renderFrequentRepairs(allItems);
       this.renderCriticalityChart(queueItems); // Only current queue items have criticality
-      this.calculateAvgRepairTime(allRepairItems);
+      this.calculateAvgRepairTime(allItems);
     } catch (error) {
       console.error('Failed to load analytics:', error);
       
@@ -92,10 +75,18 @@ const Analytics = {
       }
     });
 
-    // Count completed repairs from all items
+    // Count completed repairs from all items (both current and archived)
     allItems.forEach(item => {
-      const notes = item.repair_status?.repair_notes || [];
-      totalRepairsCompleted += notes.filter(n => n.type === 'repair').length;
+      // Count repairs from current repair_notes
+      const currentNotes = item.repair_status?.repair_notes || [];
+      totalRepairsCompleted += currentNotes.filter(n => n.type === 'repair').length;
+
+      // Count repairs from archived repair_history
+      const archivedHistory = item.repair_history || [];
+      archivedHistory.forEach(archived => {
+        const archivedNotes = archived.repair_notes || [];
+        totalRepairsCompleted += archivedNotes.filter(n => n.type === 'repair').length;
+      });
     });
 
     document.getElementById('totalNeedingRepair').textContent = totalNeedingRepair;
@@ -110,17 +101,36 @@ const Analytics = {
   renderFrequentRepairs(items) {
     const container = document.getElementById('frequentRepairsChart');
 
-    // Count repairs per item
+    // Count repairs per item (including archived history)
     const repairCounts = items.map(item => {
-      const notes = item.repair_status?.repair_notes || [];
-      const repairCount = notes.filter(n => n.type === 'repair').length;
+      let repairCount = 0;
+
+      // Count current repairs
+      const currentNotes = item.repair_status?.repair_notes || [];
+      repairCount += currentNotes.filter(n => n.type === 'repair').length;
+
+      // Count archived repairs
+      const archivedHistory = item.repair_history || [];
+      archivedHistory.forEach(archived => {
+        const archivedNotes = archived.repair_notes || [];
+        repairCount += archivedNotes.filter(n => n.type === 'repair').length;
+      });
+
+      // Also count number of times item has been flagged (repair_history length)
+      const timesFlagged = archivedHistory.length;
+
       return {
         id: item.id,
         name: item.short_name || item.id,
-        count: repairCount
+        count: repairCount,
+        timesFlagged: timesFlagged
       };
-    }).filter(item => item.count > 0)
-      .sort((a, b) => b.count - a.count)
+    }).filter(item => item.count > 0 || item.timesFlagged > 0)
+      .sort((a, b) => {
+        // Sort by number of repairs first, then by times flagged
+        if (b.count !== a.count) return b.count - a.count;
+        return b.timesFlagged - a.timesFlagged;
+      })
       .slice(0, 5);
 
     if (repairCounts.length === 0) {
@@ -128,12 +138,23 @@ const Analytics = {
       return;
     }
 
-    const html = repairCounts.map(item => `
-      <div class="summary-item">
-        <span class="summary-label">${item.name}</span>
-        <span class="summary-value">${item.count} repair${item.count !== 1 ? 's' : ''}</span>
-      </div>
-    `).join('');
+    const html = repairCounts.map(item => {
+      const parts = [];
+      if (item.count > 0) {
+        parts.push(`${item.count} repair${item.count !== 1 ? 's' : ''}`);
+      }
+      if (item.timesFlagged > 0) {
+        parts.push(`${item.timesFlagged} flag${item.timesFlagged !== 1 ? 's' : ''}`);
+      }
+      const detail = parts.join(', ');
+
+      return `
+        <div class="summary-item">
+          <span class="summary-label">${item.name}</span>
+          <span class="summary-value">${detail}</span>
+        </div>
+      `;
+    }).join('');
 
     container.innerHTML = html;
   },
@@ -185,37 +206,84 @@ const Analytics = {
     const container = document.getElementById('avgRepairTime');
 
     let totalRepairDays = 0;
-    let completedRepairs = 0;
+    let completedRepairsWithDates = 0;
+    let totalCompletedRepairs = 0;
 
     items.forEach(item => {
-      const notes = item.repair_status?.repair_notes || [];
+      // Check current repair notes
+      const currentNotes = item.repair_status?.repair_notes || [];
       
-      notes.forEach(note => {
-        if (note.type === 'repair' && note.date) {
-          // This is simplified - in reality you'd track start/end dates
-          completedRepairs++;
-          // Placeholder: assume average 3 days per repair
-          totalRepairDays += 3;
+      currentNotes.forEach(note => {
+        if (note.type === 'repair') {
+          totalCompletedRepairs++;
+          
+          // Try to calculate actual repair time if we have started date
+          const repairStatus = item.repair_status || {};
+          if (repairStatus.repair_started_date && note.date) {
+            const startDate = new Date(repairStatus.repair_started_date);
+            const endDate = new Date(note.date);
+            const days = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24));
+            
+            if (days > 0 && days < 365) { // Sanity check
+              totalRepairDays += days;
+              completedRepairsWithDates++;
+            }
+          }
         }
+      });
+
+      // Check archived repair history
+      const archivedHistory = item.repair_history || [];
+      archivedHistory.forEach(archived => {
+        const archivedNotes = archived.repair_notes || [];
+        
+        archivedNotes.forEach(note => {
+          if (note.type === 'repair') {
+            totalCompletedRepairs++;
+            
+            // Try to calculate repair time from archived data
+            if (archived.repair_started_date && note.date) {
+              const startDate = new Date(archived.repair_started_date);
+              const endDate = new Date(note.date);
+              const days = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24));
+              
+              if (days > 0 && days < 365) { // Sanity check
+                totalRepairDays += days;
+                completedRepairsWithDates++;
+              }
+            }
+          }
+        });
       });
     });
 
-    if (completedRepairs === 0) {
+    if (totalCompletedRepairs === 0) {
       container.innerHTML = '<p class="muted">No completed repairs to analyze yet.</p>';
       return;
     }
 
-    const avgDays = (totalRepairDays / completedRepairs).toFixed(1);
+    // Calculate average if we have date information
+    let avgDisplay = 'N/A';
+    if (completedRepairsWithDates > 0) {
+      const avgDays = (totalRepairDays / completedRepairsWithDates).toFixed(1);
+      avgDisplay = `${avgDays} days`;
+    }
 
     container.innerHTML = `
       <div class="summary-item">
         <span class="summary-label">Average Time to Repair</span>
-        <span class="summary-value">${avgDays} days</span>
+        <span class="summary-value">${avgDisplay}</span>
       </div>
       <div class="summary-item">
         <span class="summary-label">Total Repairs Completed</span>
-        <span class="summary-value">${completedRepairs}</span>
+        <span class="summary-value">${totalCompletedRepairs}</span>
       </div>
+      ${completedRepairsWithDates > 0 ? `
+        <div class="summary-item">
+          <span class="summary-label">Repairs with Date Data</span>
+          <span class="summary-value">${completedRepairsWithDates} of ${totalCompletedRepairs}</span>
+        </div>
+      ` : ''}
     `;
   }
 };
