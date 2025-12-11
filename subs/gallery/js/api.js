@@ -1,41 +1,17 @@
 /**
  * API Client
- * Handles all API calls to Lambda endpoints with automatic config loading
+ * Handles all API calls to Lambda endpoints
+ * Uses config.API_ENDPOINT from config.js
  */
-
-let apiConfig = null;
 
 /**
- * Load API configuration from /config.json
+ * Get API base URL from global config
  */
-async function loadConfig() {
-  if (apiConfig) {
-    return apiConfig;
+function getApiUrl() {
+  if (!window.config || !window.config.API_ENDPOINT) {
+    throw new Error('Config not loaded. Ensure config.js loads before api.js');
   }
-
-  console.log('[API] Loading config.json...');
-  
-  try {
-    const response = await fetch('/config.json');
-    if (!response.ok) {
-      console.error('[API] Config load failed:', response.status);
-      throw new Error(`Failed to load config: ${response.status}`);
-    }
-    apiConfig = await response.json();
-    console.log('[API] ✓ Config loaded');
-    return apiConfig;
-  } catch (error) {
-    console.error('[API] Config loading error:', error);
-    throw new Error(`Config loading error: ${error.message}`);
-  }
-}
-
-/**
- * Get API base URL
- */
-async function getApiUrl() {
-  const config = await loadConfig();
-  return config.apiUrl || config.API_URL;
+  return window.config.API_ENDPOINT;
 }
 
 /**
@@ -44,7 +20,7 @@ async function getApiUrl() {
  * @param {Object} options - Fetch options
  */
 async function apiRequest(endpoint, options = {}) {
-  const baseUrl = await getApiUrl();
+  const baseUrl = getApiUrl();
   const url = `${baseUrl}${endpoint}`;
 
   const defaultHeaders = {
@@ -115,8 +91,8 @@ export async function fetchPhotos(filters = {}) {
     
     const data = await apiRequest(endpoint, { method: 'GET' });
     
-    // Lambda returns raw array or might return { photos: [] }
-    return Array.isArray(data) ? data : (data.photos || []);
+    // Lambda returns { count: N, photos: [...] }
+    return data.photos || [];
   } catch (error) {
     console.error('fetchPhotos error:', error);
     throw new Error(`Failed to fetch photos: ${error.message}`);
@@ -240,6 +216,7 @@ export async function smartTag(photoIdOrIds) {
 
 /**
  * Upload a new photo with metadata
+ * NOTE: This endpoint may not be implemented yet in your Lambda
  * @param {File} file - File object from input
  * @param {Object} metadata - Photo metadata
  * @returns {Promise<Object>} Upload result
@@ -261,7 +238,7 @@ export async function uploadPhoto(file, metadata = {}) {
       }
     });
 
-    const baseUrl = await getApiUrl();
+    const baseUrl = getApiUrl();
     const url = `${baseUrl}/admin/images`;
 
     const response = await fetch(url, {
