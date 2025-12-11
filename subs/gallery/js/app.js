@@ -11,17 +11,43 @@ import { getState } from './state.js';
 import { showToast } from './ui.js';
 
 /**
+ * Wait for config to be loaded
+ */
+async function waitForConfig() {
+  // If config already loaded, return immediately
+  if (window.config && window.config.API_ENDPOINT) {
+    return window.config;
+  }
+  
+  // Wait for config to load (max 5 seconds)
+  return new Promise((resolve, reject) => {
+    let attempts = 0;
+    const maxAttempts = 50; // 5 seconds (50 * 100ms)
+    
+    const checkConfig = setInterval(() => {
+      attempts++;
+      
+      if (window.config && window.config.API_ENDPOINT) {
+        clearInterval(checkConfig);
+        resolve(window.config);
+      } else if (attempts >= maxAttempts) {
+        clearInterval(checkConfig);
+        reject(new Error('Configuration failed to load'));
+      }
+    }, 100);
+  });
+}
+
+/**
  * Initialize the application
  */
 async function initApp() {
   console.log('[App] Starting application initialization...');
   
   try {
-    // Wait for config to be loaded (config.js should load first)
-    if (!window.config || !window.config.API_ENDPOINT) {
-      throw new Error('Configuration not loaded. Check config.js');
-    }
-    
+    // Wait for config to be loaded
+    console.log('[App] Waiting for config...');
+    await waitForConfig();
     console.log('[App] Config loaded:', window.config.API_ENDPOINT);
     
     // Initialize UI components
