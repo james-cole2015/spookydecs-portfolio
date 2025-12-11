@@ -1,5 +1,5 @@
 // Configuration management
-let config = {};
+window.config = {};
 
 async function loadConfig() {
   console.log('📡 Loading configuration...');
@@ -11,25 +11,33 @@ async function loadConfig() {
       throw new Error(`Failed to load config: ${response.status}`);
     }
     
-    config = await response.json();
+    window.config = await response.json();
     
     console.log('✅ Configuration loaded:');
-    console.log('   - Environment:', config.ENV || 'unknown');
-    console.log('   - API Endpoint:', config.API_ENDPOINT || 'not set');
-    console.log('   - Gallery URL:', config.GALLERY_LINK_FROM_ADM || 'not set');
+    console.log('   - Environment:', window.config.ENV || 'unknown');
+    console.log('   - API Endpoint:', window.config.API_ENDPOINT || 'not set');
+    console.log('   - Gallery URL:', window.config.GALLERY_LINK_FROM_ADM || 'not set');
     
-    // Update navigation links
-    if (config.GALLERY_LINK_FROM_ADM) {
-      document.getElementById('galleryLink').href = config.GALLERY_LINK_FROM_ADM;
+    // Update navigation links if they exist
+    const galleryLink = document.getElementById('galleryLink');
+    if (galleryLink && window.config.GALLERY_LINK_FROM_ADM) {
+      galleryLink.href = window.config.GALLERY_LINK_FROM_ADM;
     }
     
-    if (config.ADMIN_URL) {
-      document.getElementById('adminLink').href = config.ADMIN_URL;
+    const adminLink = document.getElementById('adminLink');
+    if (adminLink && window.config.ADMIN_URL) {
+      adminLink.href = window.config.ADMIN_URL;
     }
     
-    return config;
+    return window.config;
   } catch (error) {
     console.error('❌ Error loading config:', error);
     throw error;
   }
 }
+
+// Expose loadConfig globally for app.js
+window.loadConfig = loadConfig;
+
+// Automatically start loading config when script loads
+loadConfig();
