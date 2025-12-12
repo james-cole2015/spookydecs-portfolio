@@ -168,6 +168,139 @@ export function filterPhotosBySearch(photos, searchQuery) {
 }
 
 /**
+ * Load items for the current tab
+ * Fetches items or deployments based on tab and caches them
+ * @returns {Promise<void>}
+ */
+export async function loadItemsForTab() {
+  const state = getState();
+  const currentTab = state.currentTab;
+  
+  // Only load items for tabs that need them
+  if (currentTab !== 'items' && currentTab !== 'deployments') {
+    return;
+  }
+  
+  try {
+    if (currentTab === 'items') {
+      // Fetch items for both seasons if not cached
+      const seasons = ['christmas', 'halloween'];
+      
+      for (const season of seasons) {
+        // Skip if already cached
+        if (state.items[season] && state.items[season].length > 0) {
+          console.log(`[Photos] Items for ${season} already cached`);
+          continue;
+        }
+        
+        console.log(`[Photos] Fetching items for season: ${season}`);
+        const items = await fetchItems(season);
+        setItems(season, items);
+        console.log(`[Photos] Cached ${items.length} items for ${season}`);
+      }
+    } else if (currentTab === 'deployments') {
+      // Fetch deployments for both seasons if not cached
+      const seasons = ['christmas', 'halloween'];
+      
+      for (const season of seasons) {
+        // Check if deployments cached (stored with 'deployments_' prefix)
+        const cacheKey = `deployments_${season}`;
+        if (state.items[cacheKey] && state.items[cacheKey].length > 0) {
+          console.log(`[Photos] Deployments for ${season} already cached`);
+          continue;
+        }
+        
+        console.log(`[Photos] Fetching deployments for season: ${season}`);
+        const deployments = await fetchItems(season);
+        // Filter to only deployment class_type
+        const filteredDeployments = deployments.filter(item => item.class_type === 'Deployment');
+        setItems(cacheKey, filteredDeployments);
+        console.log(`[Photos] Cached ${filteredDeployments.length} deployments for ${season}`);
+      }
+    }
+  } catch (error) {
+    console.error('[Photos] Error loading items for tab:', error);
+    // Don't throw - photos can still display without item data
+  }
+}
+
+/**
+ * Enrich photos with item/deployment data
+ * Adds _enriched property to each photo with related item data
+ * @param {Array} photos - Photos to enrich
+ * @param {string} tab - Current tab (items/deployments)
+ * @returns {Array} Enriched photos
+ */
+export function enrichPhotosWithItems(photos, tab) {
+  const state = getState();
+  
+  if (tab !== 'items' && tab !== 'deployments') {
+    return photos;
+  }
+  
+  return photos.map(photo => {
+    // Clone photo to avoid mutation
+    const enrichedPhoto = { ...photo };
+    
+    if (tab === 'items') {
+      // For items tab, expect single item_id
+      const itemId = photo.item_ids?.[0];
+      if (!itemId) {
+        return enrichedPhoto;
+      }
+      
+      // Find item in cache
+      let item = null;
+      for (const season in state.items) {
+        if (season.startsWith('deployments_')) continue;
+        const seasonItems = state.items[season] || [];
+        item = seasonItems.find(i => i.id === itemId);
+        if (item) break;
+      }
+      
+      if (item) {
+        enrichedPhoto._enriched = {
+          item: {
+            id: item.id,
+            short_name: item.short_name,
+            class_type: item.class_type,
+            year: item.year
+          }
+        };
+      }
+    } else if (tab === 'deployments') {
+      // For deployments tab, expect deployment_id
+      const deploymentId = photo.deployment_id;
+      if (!deploymentId) {
+        return enrichedPhoto;
+      }
+      
+      // Find deployment in cache
+      let deployment = null;
+      for (const season in state.items) {
+        if (!season.startsWith('deployments_')) continue;
+        const seasonDeployments = state.items[season] || [];
+        deployment = seasonDeployments.find(d => d.id === deploymentId);
+        if (deployment) break;
+      }
+      
+      if (deployment) {
+        enrichedPhoto._enriched = {
+          deployment: {
+            id: deployment.id,
+            name: deployment.short_name,
+            year: deployment.year,
+            season: deployment.season
+          }
+        };
+      }
+    }
+    
+    return enrichedPhoto;
+  });
+}
+
+/**
  * Calculate recent uploads (photos from last 30 days)
  * @param {Array} photos - All photos
  * @returns {number} Count of recent uploads

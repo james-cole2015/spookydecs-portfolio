@@ -4,7 +4,7 @@
  */
 
 import { getState, subscribe, setPage } from './state.js';
-import { filterPhotosBySearch, calculateRecentUploads } from './photos.js';
+import { filterPhotosBySearch, calculateRecentUploads, enrichPhotosWithItems } from './photos.js';
 import { getItemNames } from './helpers.js';
 
 /**
@@ -34,6 +34,13 @@ export function initUI() {
     
     // Re-render when search changes
     if (state.filters.search !== previousState.filters.search) {
+      renderPhotoGrid();
+      renderPagination();
+    }
+    
+    // Re-render when class_type or year filters change (client-side filtering)
+    if (state.filters.class_type !== previousState.filters.class_type ||
+        state.filters.year !== previousState.filters.year) {
       renderPhotoGrid();
       renderPagination();
     }
@@ -95,6 +102,26 @@ export function renderPhotoGrid() {
     photos = filterPhotosBySearch(photos, state.filters.search);
   }
   
+  // Enrich photos with item/deployment data if needed
+  const currentTab = state.currentTab;
+  if (currentTab === 'items' || currentTab === 'deployments') {
+    photos = enrichPhotosWithItems(photos, currentTab);
+  }
+  
+  // Apply client-side filters for items tab
+  if (currentTab === 'items') {
+    // Filter by class_type
+    if (state.filters.class_type && state.filters.class_type !== 'all' && state.filters.class_type !== '') {
+      photos = photos.filter(photo => photo._enriched?.item?.class_type === state.filters.class_type);
+    }
+    
+    // Filter by year
+    if (state.filters.year && state.filters.year !== 'all' && state.filters.year !== '') {
+      const filterYear = parseInt(state.filters.year);
+      photos = photos.filter(photo => photo._enriched?.item?.year === filterYear);
+    }
+  }
+  
   console.log('[UI] Filtered photos count:', photos.length);
   
   // Handle empty state
@@ -133,16 +160,38 @@ export function renderPhotoGrid() {
  */
 function createPhotoCard(photo) {
   const state = getState();
+  const currentTab = state.currentTab;
   
-  // Get item names if item_ids exist
-  const itemNames = photo.item_ids && photo.item_ids.length > 0
-    ? getItemNames(photo.item_ids, state.items)
-    : [];
+  // Determine display name and metadata based on tab
+  let displayName = '';
+  let metadata = [];
   
-  // Format display name
-  const displayName = itemNames.length > 0
-    ? itemNames.join(', ')
-    : `Photo ${photo.photo_id.substring(0, 8)}`;
+  if (currentTab === 'items' && photo._enriched?.item) {
+    // Items tab: show item name, class_type, year
+    displayName = photo._enriched.item.short_name;
+    metadata.push(photo._enriched.item.class_type);
+    if (photo._enriched.item.year) {
+      metadata.push(`Year: ${photo._enriched.item.year}`);
+    }
+  } else if (currentTab === 'deployments' && photo._enriched?.deployment) {
+    // Deployments tab: show deployment name
+    displayName = photo._enriched.deployment.name;
+    if (photo.season) {
+      metadata.push(photo.season);
+    }
+    if (photo.year) {
+      metadata.push(`Year: ${photo.year}`);
+    }
+  } else {
+    // Gallery/Ideas/Build: show season and year from photo
+    displayName = `Photo ${photo.photo_id.substring(0, 8)}`;
+    if (photo.season) {
+      metadata.push(photo.season);
+    }
+    if (photo.year) {
+      metadata.push(`Year: ${photo.year}`);
+    }
+  }
   
   return `
     <article class="photo-card" data-photo-id="${photo.photo_id}">
@@ -158,7 +207,7 @@ function createPhotoCard(photo) {
       </div>
       <div class="photo-caption">
         <p class="photo-title">${displayName}</p>
-        ${photo.year ? `<p class="photo-meta">Year: ${photo.year}</p>` : ''}
+        ${metadata.length > 0 ? `<p class="photo-meta">${metadata.join(' • ')}</p>` : ''}
         ${photo.tags && photo.tags.length > 0 ? `
           <div class="photo-tags">
             ${photo.tags.slice(0, 3).map(tag => `<span class="tag">${tag}</span>`).join('')}
@@ -408,8 +457,6 @@ function handlePaginationClick(event) {
   
   if (newPage !== currentPage) {
     setPage(newPage);
-    // Scroll to top of photo grid
-    document.getElementById('photo-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 }
 

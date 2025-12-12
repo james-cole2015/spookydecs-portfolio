@@ -121,12 +121,8 @@ async function handleTypeChange(event) {
   updateFilterBadge();
   updateClearButtonVisibility();
   
-  // Reload photos
-  try {
-    await loadPhotos();
-  } catch (error) {
-    console.error('[Filters] Error loading photos:', error);
-  }
+  // Type filter is client-side, trigger re-render via state change
+  // Photos will be filtered in renderPhotoGrid
 }
 
 /**
@@ -142,12 +138,8 @@ async function handleYearChange(event) {
   updateFilterBadge();
   updateClearButtonVisibility();
   
-  // Reload photos
-  try {
-    await loadPhotos();
-  } catch (error) {
-    console.error('[Filters] Error loading photos:', error);
-  }
+  // Year filter is client-side, trigger re-render via state change
+  // Photos will be filtered in renderPhotoGrid
 }
 
 /**

@@ -4,7 +4,7 @@
  */
 
 import { getState, setCurrentTab, setFilter } from './state.js';
-import { loadPhotos } from './photos.js';
+import { loadPhotos, loadItemsForTab } from './photos.js';
 
 // Map tabs to photo_type values
 const TAB_TO_PHOTO_TYPE = {
@@ -82,6 +82,13 @@ export async function switchTab(tab) {
   // Map tab to photo_type and update filter
   const photoType = TAB_TO_PHOTO_TYPE[tab] || 'item';
   setFilter('photo_type', photoType);
+  
+  // Load items/deployments for this tab if needed
+  try {
+    await loadItemsForTab();
+  } catch (error) {
+    console.error('[Tabs] Error loading items for tab:', error);
+  }
   
   // Load photos for this tab
   try {
