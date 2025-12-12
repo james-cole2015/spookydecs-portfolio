@@ -307,3 +307,43 @@ export async function deletePhotos(photoIds) {
     throw new Error(`Failed to delete ${photoIds.length} photos: ${error.message}`);
   }
 }
+
+/**
+ * Get presigned URLs for photo uploads
+ * @param {Object} payload - Upload metadata
+ * @returns {Promise<Object>} Presigned URLs and S3 keys
+ */
+export async function presignUpload(payload) {
+  try {
+    const endpoint = `/admin/images/presign`;
+    const data = await apiRequest(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    
+    return data;
+  } catch (error) {
+    console.error('presignUpload error:', error);
+    throw new Error(`Failed to get presigned URLs: ${error.message}`);
+  }
+}
+
+/**
+ * Confirm photo uploads and save to DynamoDB
+ * @param {Object} payload - Photo metadata and S3 keys
+ * @returns {Promise<Object>} Confirmation result
+ */
+export async function confirmUpload(payload) {
+  try {
+    const endpoint = `/admin/images/confirm`;
+    const data = await apiRequest(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    
+    return data;
+  } catch (error) {
+    console.error('confirmUpload error:', error);
+    throw new Error(`Failed to confirm uploads: ${error.message}`);
+  }
+}

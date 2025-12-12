@@ -73,6 +73,23 @@
                     class="search-input" 
                     placeholder="Search photos..."
                 >
+                <!-- NEW: Upload/Delete Buttons -->
+                <div class="toolbar-buttons">
+                    <button id="upload-btn" class="btn btn-upload">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M8 2a1 1 0 0 1 .707.293l3 3a1 1 0 0 1-1.414 1.414L9 5.414V11a1 1 0 1 1-2 0V5.414L5.707 6.707a1 1 0 0 1-1.414-1.414l3-3A1 1 0 0 1 8 2z"/>
+                            <path d="M3 10a1 1 0 0 1 1 1v1h8v-1a1 1 0 1 1 2 0v1a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-1a1 1 0 0 1 1-1z"/>
+                        </svg>
+                        Upload Photo
+                    </button>
+                    
+                    <button id="delete-btn" class="btn btn-delete" disabled title="Coming soon">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5zM11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H2.5a.5.5 0 0 0 0 1h.764l.84 10.09A1.5 1.5 0 0 0 5.603 15h4.794a1.5 1.5 0 0 0 1.5-1.41l.839-10.09h.764a.5.5 0 0 0 0-1H11z"/>
+                        </svg>
+                        Delete
+                    </button>
+                </div>
             </div>
 
             <!-- Filter Toggle (Mobile Only) -->
@@ -159,6 +176,31 @@
         </div>
     </div>
 
+    <!-- NEW: Upload Modal -->
+    <div id="upload-modal" class="modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Upload Photo</h2>
+                <button class="modal-close" id="upload-modal-close" aria-label="Close">&times;</button>
+            </div>
+            
+            <div class="modal-body" id="upload-form-container">
+                <!-- Dynamic form content rendered by upload.js -->
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-cancel">Cancel</button>
+                <button class="btn btn-upload-confirm">Upload</button>
+            </div>
+            
+            <div class="upload-progress" id="upload-progress" style="display:none;">
+                <div class="spinner"></div>
+                <p id="progress-text">Uploading...</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Container -->
     <div id="toast-container" class="toast-container"></div>
 
@@ -171,6 +213,7 @@
     <script type="module" src="js/tabs.js"></script>
     <script type="module" src="js/filters.js"></script>
     <script type="module" src="js/ui.js"></script>
+    <script type="module" src="js/upload.js"></script>
     <script type="module" src="js/app.js"></script>
 </body>
 </html>
