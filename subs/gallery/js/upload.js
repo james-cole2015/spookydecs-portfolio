@@ -237,10 +237,22 @@ export class UploadModal {
   renderIdeasForm() {
     const ideas = this.ideas || [];
     
-    // Filter ideas by status if on Build tab
-    const filteredIdeas = this.currentTab === 'build' 
-      ? ideas.filter(idea => idea.status === 'In Progress' || idea.status === 'Building')
-      : ideas;
+    // Filter ideas by status/type based on tab
+    let filteredIdeas;
+    if (this.currentTab === 'build') {
+      // Build tab: Only show Planning or Building status
+      filteredIdeas = ideas.filter(idea => 
+        idea.status === 'Planning' || idea.status === 'Building'
+      );
+    } else if (this.currentTab === 'ideas') {
+      // Ideas tab: Only show type = Idea (case-insensitive)
+      filteredIdeas = ideas.filter(idea => 
+        idea.type && idea.type.toLowerCase() === 'idea'
+      );
+    } else {
+      // Fallback: Show all ideas
+      filteredIdeas = ideas;
+    }
     
     return `
       <div class="form-group">
