@@ -53,6 +53,11 @@ export class UploadModal {
       await this.loadIdeas();
     }
     
+    // Load items if needed (for Items tab)
+    if (tab === 'items') {
+      await this.ensureItemsLoaded();
+    }
+    
     // Render form
     this.render();
     
@@ -96,6 +101,29 @@ export class UploadModal {
       console.error('Failed to load ideas:', error);
       this.ideas = [];
       this.showToast('Failed to load ideas', 'error');
+    }
+  }
+
+  async ensureItemsLoaded() {
+    const state = getState();
+    
+    // Check if items are already loaded in state
+    const hasChristmas = state.items.christmas && state.items.christmas.length > 0;
+    const hasHalloween = state.items.halloween && state.items.halloween.length > 0;
+    
+    if (!hasChristmas || !hasHalloween) {
+      try {
+        // Load items from API if not in state
+        if (!hasChristmas) {
+          await fetchItems('christmas');
+        }
+        if (!hasHalloween) {
+          await fetchItems('halloween');
+        }
+      } catch (error) {
+        console.error('Failed to load items:', error);
+        this.showToast('Failed to load items', 'error');
+      }
     }
   }
 
