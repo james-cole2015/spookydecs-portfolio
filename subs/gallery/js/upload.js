@@ -374,46 +374,16 @@ export class UploadModal {
     const select = document.getElementById(selectId);
     const resultsDiv = document.getElementById(resultsId);
     
+    // Show all results when input is focused
+    searchInput.addEventListener('focus', (e) => {
+      const query = e.target.value.toLowerCase();
+      this.updateDropdownResults(select, resultsDiv, query);
+    });
+    
+    // Filter results as user types
     searchInput.addEventListener('input', (e) => {
       const query = e.target.value.toLowerCase();
-      resultsDiv.innerHTML = '';
-      
-      if (query.length === 0) {
-        resultsDiv.style.display = 'none';
-        return;
-      }
-      
-      const options = Array.from(select.options).slice(1); // Skip first option
-      const filtered = options.filter(opt => {
-        const text = opt.textContent.toLowerCase();
-        return text.includes(query);
-      });
-      
-      if (filtered.length === 0) {
-        resultsDiv.innerHTML = '<div class="dropdown-item no-results">No results found</div>';
-        resultsDiv.style.display = 'block';
-        return;
-      }
-      
-      filtered.forEach(opt => {
-        const div = document.createElement('div');
-        div.className = 'dropdown-item';
-        div.textContent = opt.textContent;
-        div.dataset.value = opt.value;
-        div.dataset.season = opt.dataset.season;
-        div.dataset.year = opt.dataset.year || '';
-        
-        div.addEventListener('click', () => {
-          select.value = opt.value;
-          searchInput.value = opt.textContent;
-          resultsDiv.style.display = 'none';
-          select.dispatchEvent(new Event('change'));
-        });
-        
-        resultsDiv.appendChild(div);
-      });
-      
-      resultsDiv.style.display = 'block';
+      this.updateDropdownResults(select, resultsDiv, query);
     });
     
     // Hide results when clicking outside
@@ -422,6 +392,43 @@ export class UploadModal {
         resultsDiv.style.display = 'none';
       }
     });
+  }
+  
+  updateDropdownResults(select, resultsDiv, query) {
+    resultsDiv.innerHTML = '';
+    
+    const options = Array.from(select.options).slice(1); // Skip first option
+    
+    // If no query, show all results
+    const filtered = query.length === 0 
+      ? options 
+      : options.filter(opt => opt.textContent.toLowerCase().includes(query));
+    
+    if (filtered.length === 0) {
+      resultsDiv.innerHTML = '<div class="dropdown-item no-results">No results found</div>';
+      resultsDiv.style.display = 'block';
+      return;
+    }
+    
+    filtered.forEach(opt => {
+      const div = document.createElement('div');
+      div.className = 'dropdown-item';
+      div.textContent = opt.textContent;
+      div.dataset.value = opt.value;
+      div.dataset.season = opt.dataset.season;
+      div.dataset.year = opt.dataset.year || '';
+      
+      div.addEventListener('click', () => {
+        select.value = opt.value;
+        document.getElementById(select.id.replace('-select', '-search')).value = opt.textContent;
+        resultsDiv.style.display = 'none';
+        select.dispatchEvent(new Event('change'));
+      });
+      
+      resultsDiv.appendChild(div);
+    });
+    
+    resultsDiv.style.display = 'block';
   }
 
   handleItemSelect(e) {
