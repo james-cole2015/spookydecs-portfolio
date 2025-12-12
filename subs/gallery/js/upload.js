@@ -755,6 +755,7 @@ export class UploadModal {
     const halloween = state.items.halloween || [];
     
     return [...christmas, ...halloween]
+      .filter(item => item.class === 'Decoration') // Only show Decoration class items
       .map(item => ({
         ...item,
         year: item.date_acquired || new Date().getFullYear()
