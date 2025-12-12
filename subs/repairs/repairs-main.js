@@ -428,6 +428,9 @@ function setupCompleteRepairForm() {
 /**
  * Setup edit repair form
  */
+/**
+ * Setup edit repair form (with debugging)
+ */
 function setupEditRepairForm() {
   document.getElementById('btnSubmitEdit').addEventListener('click', async () => {
     const item = EditRepairModal.currentItem;
@@ -447,6 +450,13 @@ function setupEditRepairForm() {
       updateData.update_notes = notes;
     }
 
+    // DEBUG: Log what we're sending
+    console.log('=== UPDATE REPAIR DEBUG ===');
+    console.log('Item ID:', item.id);
+    console.log('Update Data:', JSON.stringify(updateData, null, 2));
+    console.log('Current Item:', JSON.stringify(item, null, 2));
+    console.log('========================');
+
     try {
       await API.updateRepairDetails(item.id, updateData);
 
@@ -460,6 +470,7 @@ function setupEditRepairForm() {
       
       RepairQueue.load();
     } catch (error) {
+      console.error('Update failed:', error);
       UI.showToast('Failed to update repair details: ' + error.message, 'error');
     }
   });
