@@ -22,6 +22,7 @@ export class UploadModal {
     this.selectedFiles = [];
     this.currentTab = null;
     this.deployments = null;
+    this.ideas = null;
     
     this.setupEventListeners();
   }
@@ -45,6 +46,11 @@ export class UploadModal {
     // Fetch deployments if needed
     if (tab === 'deployments' && !this.deployments) {
       await this.loadDeployments();
+    }
+    
+    // Fetch ideas if needed
+    if ((tab === 'ideas' || tab === 'build') && !this.ideas) {
+      await this.loadIdeas();
     }
     
     // Render form
@@ -80,6 +86,19 @@ export class UploadModal {
     }
   }
 
+  async loadIdeas() {
+    try {
+      // Fetch ideas from API
+      const response = await fetch(`${window.config.API_ENDPOINT}/ideas`);
+      const data = await response.json();
+      this.ideas = Array.isArray(data) ? data : (data.ideas || []);
+    } catch (error) {
+      console.error('Failed to load ideas:', error);
+      this.ideas = [];
+      this.showToast('Failed to load ideas', 'error');
+    }
+  }
+
   render() {
     const modalTitle = this.modal.querySelector('.modal-title');
     modalTitle.textContent = `Upload Photo - ${this.capitalizeTab(this.currentTab)}`;
@@ -95,6 +114,8 @@ export class UploadModal {
         break;
       case 'ideas':
       case 'build':
+        formHTML = this.renderIdeasForm();
+        break;
       case 'gallery':
         formHTML = this.renderGalleryForm();
         break;
@@ -213,6 +234,64 @@ export class UploadModal {
     `;
   }
 
+  renderIdeasForm() {
+    const ideas = this.ideas || [];
+    
+    // Filter ideas by status if on Build tab
+    const filteredIdeas = this.currentTab === 'build' 
+      ? ideas.filter(idea => idea.status === 'In Progress' || idea.status === 'Building')
+      : ideas;
+    
+    return `
+      <div class="form-group">
+        <label for="idea-select">Idea <span class="required">*</span></label>
+        <div class="searchable-dropdown">
+          <input 
+            type="text" 
+            id="idea-search" 
+            placeholder="Search ideas by title..."
+            autocomplete="off"
+          />
+          <select id="idea-select" size="8" style="display:none;">
+            <option value="">-- Select an idea --</option>
+            ${filteredIdeas.map(idea => 
+              `<option value="${idea.id}" data-season="${idea.season}" data-year="">${idea.title} (${idea.season})</option>`
+            ).join('')}
+          </select>
+          <div class="dropdown-results" id="idea-results"></div>
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="season-display">Season</label>
+          <input type="text" id="season-display" readonly disabled />
+        </div>
+        <div class="form-group">
+          <label for="year-display">Year</label>
+          <input type="text" id="year-display" readonly disabled />
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="tags-input">Tags (comma-separated)</label>
+        <input type="text" id="tags-input" placeholder="workbench, materials, wiring" />
+      </div>
+      
+      <div class="form-group">
+        <label for="file-input">Photos <span class="required">*</span></label>
+        <input 
+          type="file" 
+          id="file-input" 
+          accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/heic,image/heif"
+          multiple
+        />
+        <p class="help-text">Max ${MAX_FILES} files, 10MB each. JPEG, PNG, GIF, WebP, HEIC/HEIF supported.</p>
+        <div id="file-preview" class="file-preview"></div>
+      </div>
+    `;
+  }
+
   renderGalleryForm() {
     const currentYear = new Date().getFullYear();
     const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
@@ -284,6 +363,9 @@ export class UploadModal {
     } else if (this.currentTab === 'deployments') {
       this.setupSearchableDropdown('deployment-search', 'deployment-select', 'deployment-results', 'id');
       document.getElementById('deployment-select').addEventListener('change', (e) => this.handleDeploymentSelect(e));
+    } else if (this.currentTab === 'ideas' || this.currentTab === 'build') {
+      this.setupSearchableDropdown('idea-search', 'idea-select', 'idea-results', 'title');
+      document.getElementById('idea-select').addEventListener('change', (e) => this.handleIdeaSelect(e));
     }
   }
 
@@ -359,6 +441,17 @@ export class UploadModal {
     
     const season = selectedOption.dataset.season;
     const year = selectedOption.dataset.year;
+    
+    document.getElementById('season-display').value = season;
+    document.getElementById('year-display').value = year;
+  }
+
+  handleIdeaSelect(e) {
+    const selectedOption = e.target.selectedOptions[0];
+    if (!selectedOption || !selectedOption.value) return;
+    
+    const season = selectedOption.dataset.season;
+    const year = new Date().getFullYear(); // Use current year for ideas
     
     document.getElementById('season-display').value = season;
     document.getElementById('year-display').value = year;
@@ -472,7 +565,12 @@ export class UploadModal {
       if (!deploymentSelect.value) {
         return { valid: false, error: 'Please select a deployment' };
       }
-    } else {
+    } else if (this.currentTab === 'ideas' || this.currentTab === 'build') {
+      const ideaSelect = document.getElementById('idea-select');
+      if (!ideaSelect.value) {
+        return { valid: false, error: 'Please select an idea' };
+      }
+    } else if (this.currentTab === 'gallery') {
       const seasonSelect = document.getElementById('season-select');
       const yearSelect = document.getElementById('year-select');
       if (!seasonSelect.value || !yearSelect.value) {
@@ -525,7 +623,13 @@ export class UploadModal {
       data.deployment_id = deploymentSelect.value;
       data.season = selectedOption.dataset.season.toLowerCase();
       data.year = parseInt(selectedOption.dataset.year);
-    } else {
+    } else if (this.currentTab === 'ideas' || this.currentTab === 'build') {
+      const ideaSelect = document.getElementById('idea-select');
+      const selectedOption = ideaSelect.selectedOptions[0];
+      data.idea_id = ideaSelect.value;
+      data.season = selectedOption.dataset.season.toLowerCase();
+      data.year = new Date().getFullYear();
+    } else if (this.currentTab === 'gallery') {
       const seasonSelect = document.getElementById('season-select');
       const yearSelect = document.getElementById('year-select');
       data.season = seasonSelect.value;
@@ -553,7 +657,8 @@ export class UploadModal {
             content_type: file.type
           }],
           ...(metadata.item_ids && { item_ids: metadata.item_ids }),
-          ...(metadata.deployment_id && { deployment_id: metadata.deployment_id })
+          ...(metadata.deployment_id && { deployment_id: metadata.deployment_id }),
+          ...(metadata.idea_id && { idea_id: metadata.idea_id })
         };
         
         const presignData = await presignUpload(presignPayload);
@@ -602,7 +707,8 @@ export class UploadModal {
         photos: successfulUploads,
         tags: metadata.tags,
         ...(metadata.item_ids && { item_ids: metadata.item_ids }),
-        ...(metadata.deployment_id && { deployment_id: metadata.deployment_id })
+        ...(metadata.deployment_id && { deployment_id: metadata.deployment_id }),
+        ...(metadata.idea_id && { idea_id: metadata.idea_id })
       };
       
       await confirmUpload(confirmPayload);
