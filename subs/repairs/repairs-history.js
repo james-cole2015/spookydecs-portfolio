@@ -116,9 +116,13 @@ const RepairHistory = {
         
         // Add unflag event as a history entry
         if (archived.unflagged_date) {
-          const estimatedCost = archived.estimated_repair_cost 
-            ? `$${archived.estimated_repair_cost.toFixed(2)}` 
-            : 'unknown';
+          let estimatedCost = 'unknown';
+          if (archived.estimated_repair_cost !== null && archived.estimated_repair_cost !== undefined) {
+            const costNum = parseFloat(archived.estimated_repair_cost);
+            if (!isNaN(costNum)) {
+              estimatedCost = `${costNum.toFixed(2)}`;
+            }
+          }
           
           this.allHistory.push({
             id: `${item.id}-unflagged-${archived.unflagged_date}`,
@@ -127,7 +131,7 @@ const RepairHistory = {
             item_class: item.class_type || 'Unknown',
             date: archived.unflagged_date,
             type: 'unflagged',
-            description: `Repair flag removed. Was ${archived.criticality} priority with estimated cost of ${estimatedCost}`,
+            description: `Repair flag removed. Was ${archived.criticality || 'unknown'} priority with estimated cost of ${estimatedCost}`,
             cost: null,
             performed_by: archived.unflagged_by || 'Unknown',
             source: 'archived'
