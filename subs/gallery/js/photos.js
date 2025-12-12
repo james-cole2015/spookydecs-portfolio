@@ -3,8 +3,8 @@
  * Handles fetching photos from API and updating state
  */
 
-import { getState, setState, setPhotos } from './state.js';
-import { fetchPhotos, fetchStats } from './api.js';
+import { getState, setState, setPhotos, setItems } from './state.js';
+import { fetchPhotos, fetchStats, fetchItems } from './api.js';
 
 /**
  * Load photos based on current filters and tab
