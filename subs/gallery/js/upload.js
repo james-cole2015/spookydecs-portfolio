@@ -127,6 +127,29 @@ export class UploadModal {
     }
   }
 
+  async ensureItemsLoaded() {
+    const state = getState();
+    
+    // Check if items are already loaded in state
+    const hasChristmas = state.items.christmas && state.items.christmas.length > 0;
+    const hasHalloween = state.items.halloween && state.items.halloween.length > 0;
+    
+    if (!hasChristmas || !hasHalloween) {
+      try {
+        // Load items from API if not in state
+        if (!hasChristmas) {
+          await fetchItems('christmas');
+        }
+        if (!hasHalloween) {
+          await fetchItems('halloween');
+        }
+      } catch (error) {
+        console.error('Failed to load items:', error);
+        this.showToast('Failed to load items', 'error');
+      }
+    }
+  }
+
   render() {
     const modalTitle = this.modal.querySelector('.modal-title');
     modalTitle.textContent = `Upload Photo - ${this.capitalizeTab(this.currentTab)}`;

@@ -127,7 +127,7 @@ export async function fetchItems(season) {
       throw new Error('Season parameter is required');
     }
 
-    const endpoint = `/admin/items?season=${season.toLowerCase()}`;
+    const endpoint = `/items?season=${season.toLowerCase()}`;
     const data = await apiRequest(endpoint, { method: 'GET' });
     
     // Return raw array or extract from wrapper
