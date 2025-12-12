@@ -100,6 +100,27 @@ export async function fetchPhotos(filters = {}) {
 }
 
 /**
+ * Fetch a single photo by ID
+ * @param {string} photoId - Photo ID
+ * @returns {Promise<Object>} Photo object
+ */
+export async function fetchPhoto(photoId) {
+  try {
+    if (!photoId) {
+      throw new Error('Photo ID is required');
+    }
+
+    const endpoint = `/admin/images/${photoId}`;
+    const data = await apiRequest(endpoint, { method: 'GET' });
+    
+    return data;
+  } catch (error) {
+    console.error('fetchPhoto error:', error);
+    throw new Error(`Failed to fetch photo ${photoId}: ${error.message}`);
+  }
+}
+
+/**
  * Fetch statistics for a specific photo type
  * @param {string} photo_type - Photo type ('all', 'christmas', 'halloween')
  * @returns {Promise<Object>} Stats object
