@@ -9,6 +9,7 @@ import { initUI } from './ui.js';
 import { loadPhotos, loadStats } from './photos.js';
 import { getState } from './state.js';
 import { showToast } from './ui.js';
+import { UploadModal } from './upload.js';
 
 /**
  * Wait for config to be loaded
@@ -39,6 +40,45 @@ async function waitForConfig() {
 }
 
 /**
+ * Initialize upload modal
+ */
+function initUploadModal() {
+  const uploadModal = new UploadModal();
+  
+  // Upload button click handler
+  const uploadBtn = document.getElementById('upload-btn');
+  if (uploadBtn) {
+    uploadBtn.addEventListener('click', () => {
+      const state = getState();
+      uploadModal.open(state.currentTab);
+    });
+  }
+  
+  // Modal close button handler
+  const uploadModalClose = document.getElementById('upload-modal-close');
+  if (uploadModalClose) {
+    uploadModalClose.addEventListener('click', () => {
+      uploadModal.close();
+    });
+  }
+  
+  // Listen for refresh events after upload
+  window.addEventListener('refreshPhotos', async () => {
+    console.log('[App] Refreshing photos after upload...');
+    try {
+      await loadPhotos();
+      await loadStats();
+      showToast('Photos uploaded successfully', 'success');
+    } catch (error) {
+      console.error('[App] Failed to refresh after upload:', error);
+      showToast('Upload succeeded but failed to refresh grid', 'warning');
+    }
+  });
+  
+  console.log('[App] ✓ Upload modal initialized');
+}
+
+/**
  * Initialize the application
  */
 async function initApp() {
@@ -65,6 +105,9 @@ async function initApp() {
     // Initialize filters
     initFilters();
     console.log('[App] ✓ Filters initialized');
+    
+    // Initialize upload modal
+    initUploadModal();
     
     // Load initial data
     console.log('[App] Loading initial data...');
