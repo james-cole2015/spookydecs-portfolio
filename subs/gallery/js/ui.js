@@ -147,9 +147,6 @@ export function renderPhotoGrid() {
   // Render photo cards
   photoGrid.innerHTML = paginatedPhotos.map(photo => createPhotoCard(photo)).join('');
   
-  // Attach event listeners to action buttons
-  attachPhotoCardListeners();
-  
   console.log('[UI] Photo grid rendered successfully');
 }
 
@@ -215,55 +212,8 @@ function createPhotoCard(photo) {
           </div>
         ` : ''}
       </div>
-      <div class="photo-actions">
-        <button class="action-button action-view" data-action="view">View</button>
-        <button class="action-button action-edit" data-action="edit">Edit</button>
-      </div>
     </article>
   `;
-}
-
-/**
- * Attach event listeners to photo card buttons
- */
-function attachPhotoCardListeners() {
-  const photoCards = document.querySelectorAll('.photo-card');
-  
-  photoCards.forEach(card => {
-    const photoId = card.dataset.photoId;
-    
-    // View button
-    const viewBtn = card.querySelector('[data-action="view"]');
-    if (viewBtn) {
-      viewBtn.addEventListener('click', () => handleViewPhoto(photoId));
-    }
-    
-    // Edit button
-    const editBtn = card.querySelector('[data-action="edit"]');
-    if (editBtn) {
-      editBtn.addEventListener('click', () => handleEditPhoto(photoId));
-    }
-  });
-}
-
-/**
- * Handle view photo action
- * @param {string} photoId - Photo ID
- */
-function handleViewPhoto(photoId) {
-  console.log('[UI] View photo:', photoId);
-  showToast('View modal not implemented yet', 'info');
-  // TODO: Implement view modal
-}
-
-/**
- * Handle edit photo action
- * @param {string} photoId - Photo ID
- */
-function handleEditPhoto(photoId) {
-  console.log('[UI] Edit photo:', photoId);
-  showToast('Edit modal not implemented yet', 'info');
-  // TODO: Implement edit modal
 }
 
 /**
