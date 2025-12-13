@@ -133,13 +133,50 @@ const API = {
 
   /**
    * Update repair details (criticality, estimated cost, notes)
+   * FIXED: Get full item, clean repair_notes, then send complete repair_status
    */
   async updateRepairDetails(itemId, updateData) {
+    // First, fetch the current item to get full repair_status
+    const currentItem = await this.getRepairDetail(itemId);
+    const currentRepairStatus = currentItem.item.repair_status || {};
+    
+    // Clean up repair_notes if they exist
+    let cleanedNotes = currentRepairStatus.repair_notes || [];
+    if (Array.isArray(cleanedNotes)) {
+      cleanedNotes = cleanedNotes.filter(note => {
+        // Remove empty strings, null, undefined, or non-object entries
+        return note && typeof note === 'object' && note.date && note.description;
+      });
+    }
+    
+    // Merge the update with current repair_status
+    const updatedRepairStatus = {
+      ...currentRepairStatus,
+      ...updateData,
+      repair_notes: cleanedNotes
+    };
+    
+    // If there are update_notes, add them to repair_notes
+    if (updateData.update_notes) {
+      updatedRepairStatus.repair_notes = [
+        ...cleanedNotes,
+        {
+          date: new Date().toISOString(),
+          type: 'update',
+          description: updateData.update_notes,
+          performed_by: 'Admin',
+          cost: null
+        }
+      ];
+      // Remove update_notes from the object since we've added it to repair_notes
+      delete updatedRepairStatus.update_notes;
+    }
+    
     const endpoint = `/items/${itemId}`;
     return this.request(endpoint, {
       method: 'PUT',
       body: JSON.stringify({
-        repair_status: updateData
+        repair_status: updatedRepairStatus
       })
     });
   },
