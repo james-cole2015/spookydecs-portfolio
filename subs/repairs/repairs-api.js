@@ -133,52 +133,35 @@ const API = {
 
   /**
    * Update repair details (criticality, estimated cost, notes)
-   * FIXED: Get full item, clean repair_notes, then send complete repair_status
+   * FIXED: Only send the fields being updated, not the entire repair_status
    */
   async updateRepairDetails(itemId, updateData) {
-    // First, fetch the current item to get full repair_status
-    const currentItem = await this.getRepairDetail(itemId);
-    const currentRepairStatus = currentItem.item.repair_status || {};
+    console.log('[API] Starting updateRepairDetails for:', itemId);
+    console.log('[API] Update data received:', updateData);
     
-    // Clean up repair_notes if they exist
-    let cleanedNotes = currentRepairStatus.repair_notes || [];
-    if (Array.isArray(cleanedNotes)) {
-      cleanedNotes = cleanedNotes.filter(note => {
-        // Remove empty strings, null, undefined, or non-object entries
-        return note && typeof note === 'object' && note.date && note.description;
-      });
-    }
-    
-    // Merge the update with current repair_status
-    const updatedRepairStatus = {
-      ...currentRepairStatus,
-      ...updateData,
-      repair_notes: cleanedNotes
+    // Build the payload with only the fields we're updating
+    const payload = {
+      repair_status: {
+        criticality: updateData.criticality,
+        estimated_repair_cost: updateData.estimated_repair_cost
+      }
     };
     
-    // If there are update_notes, add them to repair_notes
+    // Add update_notes if provided
     if (updateData.update_notes) {
-      updatedRepairStatus.repair_notes = [
-        ...cleanedNotes,
-        {
-          date: new Date().toISOString(),
-          type: 'update',
-          description: updateData.update_notes,
-          performed_by: 'Admin',
-          cost: null
-        }
-      ];
-      // Remove update_notes from the object since we've added it to repair_notes
-      delete updatedRepairStatus.update_notes;
+      payload.repair_status.update_notes = updateData.update_notes;
     }
     
+    console.log('[API] Sending PUT request with payload:', JSON.stringify(payload, null, 2));
+    
     const endpoint = `/items/${itemId}`;
-    return this.request(endpoint, {
+    const result = await this.request(endpoint, {
       method: 'PUT',
-      body: JSON.stringify({
-        repair_status: updatedRepairStatus
-      })
+      body: JSON.stringify(payload)
     });
+    
+    console.log('[API] Backend response:', result);
+    return result;
   },
 
   /**
