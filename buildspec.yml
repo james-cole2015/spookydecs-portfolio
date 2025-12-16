@@ -3,38 +3,37 @@ version: 0.2
 phases:
   install:
     runtime-versions:
+      nodejs: 18
       python: 3.11
     commands:
-      - echo "Starting deployment for subdomain - $SUB"
+      - echo "Starting React deployment for subdomain - $SUB"
       - if [[ -z "$SUB" || -z "$DEPLOY_ENV" ]]; then echo "ERROR - SUB or DEPLOY_ENV environment variables not set"; exit 1; fi
       - echo "Environment - $DEPLOY_ENV"
       - echo "Subdomain - $SUB"
       - yum install -y jq
-      - cd subs/$SUB
 
   pre_build:
     commands:
+      - echo "Installing React dependencies"
+      - npm install
       - echo "Fetching deployment configuration from Parameter Store"
       - export TARGET_BUCKET=$(aws ssm get-parameter --name /spooky-decs/$SUB/$DEPLOY_ENV/s3-bucket --query 'Parameter.Value' --output text)
       - export DISTRIBUTION_ID=$(aws ssm get-parameter --name /spooky-decs/$SUB/$DEPLOY_ENV/cf-distribution --query 'Parameter.Value' --output text)
       - if [[ -z "$TARGET_BUCKET" || -z "$DISTRIBUTION_ID" ]]; then echo "ERROR - Failed to fetch parameters from SSM"; echo "TARGET_BUCKET - $TARGET_BUCKET"; echo "DISTRIBUTION_ID - $DISTRIBUTION_ID"; exit 1; fi
       - echo "Target S3 Bucket - $TARGET_BUCKET"
       - echo "CloudFront Distribution - $DISTRIBUTION_ID"
-      - echo "Generating config.json for $SUB"
-      - chmod +x ../../generate-config.sh
-      - bash ../../generate-config.sh $DEPLOY_ENV $SUB
-      - if [ ! -f config.json ]; then echo "ERROR - config.json was not generated"; exit 1; fi
-      - echo "✅ config.json generated successfully"
-      - cat config.json | jq '.' 2>/dev/null || cat config.json
 
   build:
     commands:
-      - echo "Deploying vanilla JS files for $SUB"
+      - echo "Building React app for $SUB"
+      - npm run build
+      - echo "✅ React build completed"
+      - echo "Deploying React build to S3"
       - echo "Syncing files to S3 bucket - $TARGET_BUCKET"
-      - aws s3 sync . s3://$TARGET_BUCKET --delete --exclude ".git/*" --exclude "*.md" --exclude ".gitignore"
+      - aws s3 sync dist/ s3://$TARGET_BUCKET --delete
       - echo "✅ S3 sync completed"
       - echo "Verifying critical files in S3"
-      - aws s3 ls s3://$TARGET_BUCKET/ --recursive | grep -E "(index.html|config.json)" || echo "Warning - Expected files not found"
+      - aws s3 ls s3://$TARGET_BUCKET/ --recursive | grep -E "(index.html)" || echo "Warning - Expected files not found"
 
   post_build:
     commands:
@@ -42,3 +41,7 @@ phases:
       - aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*" --no-cli-pager
       - echo "✅ Deployment complete for $SUB in $DEPLOY_ENV environment"
       - echo "Site URL - https://$SUB.spookydecs.com"
+
+cache:
+  paths:
+    - 'node_modules/**/*'
