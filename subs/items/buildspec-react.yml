@@ -11,6 +11,7 @@ phases:
       - echo "Environment - $DEPLOY_ENV"
       - echo "Subdomain - $SUB"
       - yum install -y jq
+      - cd subs/$SUB
 
   pre_build:
     commands:
