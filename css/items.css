@@ -189,6 +189,16 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  border-left: 1px solid #e5e7eb;
+  border-right: 1px solid #e5e7eb;
+}
+
+.items-table th:first-child {
+  border-left: none;
+}
+
+.items-table th:last-child {
+  border-right: none;
 }
 
 .items-table th.sortable {
@@ -226,6 +236,16 @@
   color: #374151;
   vertical-align: middle;
   text-align: left; /* Default left align */
+  border-left: 1px solid #f3f4f6;
+  border-right: 1px solid #f3f4f6;
+}
+
+.items-table td:first-child {
+  border-left: none;
+}
+
+.items-table td:last-child {
+  border-right: none;
 }
 
 /* Center-align specific columns: Season (2), Status (5), Repair (6), Storage (7) */
