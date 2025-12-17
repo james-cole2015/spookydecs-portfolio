@@ -225,13 +225,15 @@
   padding: 14px 18px;
   color: #374151;
   vertical-align: middle;
-  text-align: center;
+  text-align: left; /* Default left align */
 }
 
-/* Left-align specific columns */
-.items-table td:first-child,
-.items-table td:nth-child(3) {
-  text-align: left;
+/* Center-align specific columns: Season (2), Status (5), Repair (6), Storage (7) */
+.items-table td:nth-child(2),
+.items-table td:nth-child(5),
+.items-table td:nth-child(6),
+.items-table td:nth-child(7) {
+  text-align: center;
 }
 
 /* Table Cell Styles */
@@ -239,6 +241,7 @@
   font-family: 'Courier New', monospace;
   font-size: 13px;
   color: #6b7280;
+  white-space: nowrap;
 }
 
 .item-name {
@@ -252,6 +255,7 @@
   border-radius: 10px;
   font-size: 12px;
   font-weight: 600;
+  vertical-align: middle;
 }
 
 .season-halloween {
@@ -275,6 +279,7 @@
   border-radius: 10px;
   font-size: 12px;
   font-weight: 600;
+  vertical-align: middle;
 }
 
 .status-active {

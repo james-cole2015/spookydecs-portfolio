@@ -8,7 +8,7 @@ export function initRouter() {
   // Initialize Navigo router
   router = new Navigo('/', { hash: false });
   
-  // Define routes
+  // Define routes (order matters - more specific routes first)
   router
     .on('/items', () => {
       loadPage('items-list');
@@ -17,9 +17,19 @@ export function initRouter() {
       loadPage('item-form', { mode: 'create' });
     })
     .on('/items/:id/edit', ({ data }) => {
+      // Only match if id is not 'create'
+      if (data.id === 'create') {
+        router.navigate('/items/create');
+        return;
+      }
       loadPage('item-form', { mode: 'edit', itemId: data.id });
     })
     .on('/items/:id', ({ data }) => {
+      // Only match if id is not 'create' or 'edit'
+      if (data.id === 'create') {
+        router.navigate('/items/create');
+        return;
+      }
       loadPage('item-detail', { itemId: data.id });
     })
     .notFound(() => {

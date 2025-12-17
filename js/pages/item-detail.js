@@ -20,12 +20,6 @@ export async function init(params) {
     return;
   }
   
-  // Prevent treating 'create' as an item ID
-  if (params.itemId === 'create') {
-    navigate('/items/create');
-    return;
-  }
-  
   // Show loading state
   showLoading();
   
