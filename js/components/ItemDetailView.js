@@ -400,6 +400,8 @@ export class ItemDetailView {
   }
   
   switchTab(sectionName) {
+    console.log('Switching to tab:', sectionName);
+    
     // Update tab buttons
     this.container.querySelectorAll('.section-tab').forEach(tab => {
       tab.classList.toggle('active', tab.dataset.section === sectionName);
@@ -407,25 +409,56 @@ export class ItemDetailView {
     
     // Clear and render new content
     const contentContainer = this.container.querySelector('.section-content');
+    if (!contentContainer) {
+      console.error('Section content container not found!');
+      return;
+    }
+    
+    console.log('Content container found, clearing...');
     contentContainer.innerHTML = '';
     
     let sectionContent;
-    switch (sectionName) {
-      case 'details':
-        sectionContent = this.renderDetailsSection();
-        break;
-      case 'deployments':
-        sectionContent = this.renderDeploymentsSection();
-        break;
-      case 'maintenance':
-        sectionContent = this.renderMaintenanceSection();
-        break;
-      case 'storage':
-        sectionContent = this.renderStorageSection();
-        break;
+    try {
+      switch (sectionName) {
+        case 'details':
+          console.log('Rendering details section');
+          sectionContent = this.renderDetailsSection();
+          break;
+        case 'deployments':
+          console.log('Rendering deployments section');
+          sectionContent = this.renderDeploymentsSection();
+          break;
+        case 'maintenance':
+          console.log('Rendering maintenance section');
+          sectionContent = this.renderMaintenanceSection();
+          break;
+        case 'storage':
+          console.log('Rendering storage section');
+          sectionContent = this.renderStorageSection();
+          break;
+        default:
+          console.error('Unknown section:', sectionName);
+          return;
+      }
+      
+      if (!sectionContent) {
+        console.error('Section content is null/undefined for:', sectionName);
+        return;
+      }
+      
+      console.log('Appending section content to container');
+      contentContainer.appendChild(sectionContent);
+      console.log('Section rendered successfully');
+      
+    } catch (error) {
+      console.error('Error rendering section:', sectionName, error);
+      contentContainer.innerHTML = `
+        <div class="error-section">
+          <div class="error-icon">⚠️</div>
+          <div class="error-message">Error loading section: ${error.message}</div>
+        </div>
+      `;
     }
-    
-    contentContainer.appendChild(sectionContent);
   }
   
   renderDeploymentsSection() {
@@ -433,8 +466,16 @@ export class ItemDetailView {
     section.className = 'section-panel';
     section.dataset.section = 'deployments';
     
+    console.log('Rendering Deployments Section');
+    console.log('Item data:', this.item);
+    console.log('Deployment data:', this.item.deployment_data);
+    
     const deploymentData = this.item.deployment_data || {};
-    const deploymentCount = deploymentData.previous_deployments?.length || 0;
+    const previousDeployments = deploymentData.previous_deployments || [];
+    const deploymentCount = Array.isArray(previousDeployments) ? previousDeployments.length : 0;
+    
+    console.log('Deployment count:', deploymentCount);
+    console.log('Previous deployments:', previousDeployments);
     
     if (deploymentCount === 0) {
       section.innerHTML = `
@@ -446,31 +487,34 @@ export class ItemDetailView {
       return section;
     }
     
+    const lastDeploymentId = deploymentData.last_deployment_id || null;
+    const lastDeployedAt = deploymentData.last_deployed_at || null;
+    
     section.innerHTML = `
       <div class="section-header">
         <h3>Deployed ${deploymentCount} time${deploymentCount !== 1 ? 's' : ''}</h3>
       </div>
       
-      ${deploymentData.last_deployment_id ? `
+      ${lastDeploymentId ? `
         <div class="field-group">
           <h4 class="subsection-title">Last Deployment</h4>
           <div class="deployment-item">
             <span class="deployment-icon">📍</span>
-            <a href="/deployments/${deploymentData.last_deployment_id}" class="deployment-link">
-              ${deploymentData.last_deployment_id}
+            <a href="/deployments/${lastDeploymentId}" class="deployment-link">
+              ${lastDeploymentId}
             </a>
-            ${deploymentData.last_deployed_at ? `
-              <span class="deployment-date">${new Date(deploymentData.last_deployed_at).toLocaleDateString()}</span>
+            ${lastDeployedAt ? `
+              <span class="deployment-date">${new Date(lastDeployedAt).toLocaleDateString()}</span>
             ` : ''}
           </div>
         </div>
       ` : ''}
       
-      ${deploymentData.previous_deployments && deploymentData.previous_deployments.length > 0 ? `
+      ${previousDeployments.length > 0 ? `
         <div class="field-group">
           <h4 class="subsection-title">Deployment History</h4>
           <div class="deployment-list">
-            ${deploymentData.previous_deployments.map(depId => `
+            ${previousDeployments.map(depId => `
               <div class="deployment-item">
                 <span class="deployment-icon">📍</span>
                 <a href="/deployments/${depId}" class="deployment-link">${depId}</a>
@@ -489,8 +533,16 @@ export class ItemDetailView {
     section.className = 'section-panel';
     section.dataset.section = 'maintenance';
     
+    console.log('Rendering Maintenance Section');
+    console.log('Item data:', this.item);
+    console.log('Repair status:', this.item.repair_status);
+    
     const repairStatus = this.item.repair_status || {};
     const needsRepair = repairStatus.needs_repair || false;
+    const criticality = repairStatus.criticality || null;
+    
+    console.log('Needs repair:', needsRepair);
+    console.log('Criticality:', criticality);
     
     section.innerHTML = `
       <div class="field-group">
@@ -500,8 +552,8 @@ export class ItemDetailView {
             <div class="repair-status-icon">⚠️</div>
             <div class="repair-status-info">
               <div class="repair-status-label">Repair Needed</div>
-              ${repairStatus.criticality ? `
-                <span class="pill pill-criticality-${repairStatus.criticality.toLowerCase()}">${repairStatus.criticality} Priority</span>
+              ${criticality ? `
+                <span class="pill pill-criticality-${criticality.toLowerCase()}">${criticality} Priority</span>
               ` : ''}
             </div>
             <a href="/repairs/${this.item.id}" class="btn-link">View in Repair Dashboard</a>
@@ -535,6 +587,7 @@ export class ItemDetailView {
       </div>
     `;
     
+    console.log('Maintenance section HTML created');
     return section;
   }
   
@@ -543,15 +596,25 @@ export class ItemDetailView {
     section.className = 'section-panel';
     section.dataset.section = 'storage';
     
-    const packingData = this.item.packing_data || {};
+    console.log('Rendering Storage Section');
+    console.log('Item data:', this.item);
+    console.log('Packing data:', this.item.packing_data);
     
-    if (!packingData.tote_id) {
+    const packingData = this.item.packing_data || {};
+    const toteId = packingData.tote_id || null;
+    const toteLocation = packingData.tote_location || null;
+    
+    console.log('Tote ID:', toteId);
+    console.log('Tote Location:', toteLocation);
+    
+    if (!toteId) {
       section.innerHTML = `
         <div class="empty-section">
           <div class="empty-icon">📦</div>
           <div class="empty-message">Not currently stored</div>
         </div>
       `;
+      console.log('Storage section: showing empty state');
       return section;
     }
     
@@ -562,20 +625,21 @@ export class ItemDetailView {
           <div class="storage-info">
             <div class="storage-field">
               <span class="storage-label">Tote ID:</span>
-              <span class="storage-value">${packingData.tote_id}</span>
+              <span class="storage-value">${toteId}</span>
             </div>
             <div class="storage-field">
               <span class="storage-label">Location:</span>
-              <span class="storage-value">${packingData.tote_location || 'Unknown'}</span>
+              <span class="storage-value">${toteLocation || 'Unknown'}</span>
             </div>
           </div>
-          <a href="/storage/${packingData.tote_id}" class="btn-secondary btn-small">
+          <a href="/storage/${toteId}" class="btn-secondary btn-small">
             View Storage Details
           </a>
         </div>
       </div>
     `;
     
+    console.log('Storage section HTML created');
     return section;
   }
   

@@ -168,7 +168,8 @@
 .items-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: 15px;
+  table-layout: fixed; /* Use fixed layout for consistent column widths */
 }
 
 .items-table thead {
@@ -178,13 +179,16 @@
 }
 
 .items-table th {
-  padding: 12px 16px;
+  padding: 14px 18px;
   text-align: left;
   font-weight: 600;
   color: #374151;
-  font-size: 13px;
+  font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .items-table th.sortable {
@@ -218,33 +222,31 @@
 }
 
 .items-table td {
-  padding: 14px 16px;
+  padding: 14px 18px;
   color: #374151;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Table Cell Styles */
 .item-id {
   font-family: 'Courier New', monospace;
-  font-size: 12px;
+  font-size: 13px;
   color: #6b7280;
 }
 
 .item-name {
-  font-weight: 500;
+  font-weight: 600;
   color: #1f2937;
-}
-
-.item-icon {
-  font-size: 16px;
-  margin-right: 6px;
 }
 
 .season-badge {
   display: inline-block;
-  padding: 4px 10px;
+  padding: 5px 12px;
   border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .season-halloween {
@@ -264,10 +266,10 @@
 
 .status-badge {
   display: inline-block;
-  padding: 4px 10px;
+  padding: 5px 12px;
   border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .status-active {
@@ -447,5 +449,158 @@
   .items-table th,
   .items-table td {
     padding: 10px 8px;
+  }
+}
+
+/* Mobile Tab Dropdown */
+.tab-bar-desktop {
+  display: flex;
+  gap: 8px;
+}
+
+.tab-bar-mobile {
+  display: none;
+}
+
+.tab-select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  background: white;
+  color: #1f2937;
+}
+
+/* Mobile Card View */
+.items-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.item-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.item-card:hover {
+  border-color: #f97316;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.card-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card-field {
+  display: flex;
+  font-size: 14px;
+}
+
+.card-label {
+  color: #6b7280;
+  font-weight: 500;
+  margin-right: 8px;
+}
+
+.card-value {
+  color: #1f2937;
+}
+
+/* Button mobile styling */
+.btn-icon-mobile .btn-icon-only {
+  display: none;
+}
+
+.btn-icon-mobile .btn-text {
+  display: inline;
+}
+
+/* Storage column style */
+.storage-location {
+  font-size: 13px;
+  color: #6366f1;
+  cursor: help;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .app-container {
+    padding: 8px;
+  }
+  
+  .page-header {
+    margin-bottom: 16px;
+  }
+  
+  .header-content h1 {
+    font-size: 24px;
+  }
+  
+  .main-content {
+    padding: 16px;
+  }
+  
+  /* Show mobile tabs */
+  .tab-bar-desktop {
+    display: none;
+  }
+  
+  .tab-bar-mobile {
+    display: block;
+  }
+  
+  /* Mobile button */
+  .btn-icon-mobile {
+    width: 100%;
+  }
+  
+  .btn-icon-mobile .btn-icon-only {
+    display: inline;
+  }
+  
+  .btn-icon-mobile .btn-text {
+    display: none;
+  }
+  
+  /* Hide table, show cards */
+  .items-table {
+    display: none;
+  }
+  
+  .controls-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .filter-bar {
+    width: 100%;
+  }
+  
+  .item-count-container {
+    text-align: center;
   }
 }

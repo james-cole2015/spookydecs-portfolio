@@ -74,30 +74,31 @@ export const REPAIR_STATUS_OPTIONS = [
 // Table column definitions
 export const TABLE_COLUMNS = {
   decorations: [
-    { key: 'id', label: 'ID', sortable: true, width: '15%' },
+    { key: 'id', label: 'ID', sortable: true, width: '12%' },
+    { key: 'season', label: 'Season', sortable: true, width: '12%' },
     { key: 'short_name', label: 'Name', sortable: true, width: '25%' },
     { key: 'class_type', label: 'Type', sortable: true, width: '15%' },
-    { key: 'season', label: 'Season', sortable: true, width: '12%' },
-    { key: 'status', label: 'Status', sortable: true, width: '10%' },
-    { key: 'repair_status', label: 'Repair', sortable: false, width: '10%' },
-    { key: 'storage', label: 'Storage', sortable: false, width: '13%' }
+    { key: 'status', label: 'Status', sortable: true, width: '12%' },
+    { key: 'repair_status', label: 'Repair', sortable: false, width: '12%' },
+    { key: 'storage', label: 'Storage', sortable: false, width: '12%' }
   ],
   lights: [
-    { key: 'id', label: 'ID', sortable: true, width: '15%' },
+    { key: 'id', label: 'ID', sortable: true, width: '12%' },
+    { key: 'season', label: 'Season', sortable: true, width: '12%' },
     { key: 'short_name', label: 'Name', sortable: true, width: '25%' },
     { key: 'class_type', label: 'Type', sortable: true, width: '15%' },
-    { key: 'color', label: 'Color', sortable: true, width: '12%' },
-    { key: 'season', label: 'Season', sortable: true, width: '12%' },
-    { key: 'status', label: 'Status', sortable: true, width: '10%' },
-    { key: 'repair_status', label: 'Repair', sortable: false, width: '11%' }
+    { key: 'status', label: 'Status', sortable: true, width: '12%' },
+    { key: 'repair_status', label: 'Repair', sortable: false, width: '12%' },
+    { key: 'storage', label: 'Storage', sortable: false, width: '12%' }
   ],
   accessories: [
-    { key: 'id', label: 'ID', sortable: true, width: '15%' },
-    { key: 'short_name', label: 'Name', sortable: true, width: '30%' },
+    { key: 'id', label: 'ID', sortable: true, width: '12%' },
+    { key: 'season', label: 'Season', sortable: true, width: '12%' },
+    { key: 'short_name', label: 'Name', sortable: true, width: '25%' },
     { key: 'class_type', label: 'Type', sortable: true, width: '15%' },
-    { key: 'length', label: 'Length', sortable: true, width: '12%' },
-    { key: 'season', label: 'Season', sortable: true, width: '13%' },
-    { key: 'status', label: 'Status', sortable: true, width: '15%' }
+    { key: 'status', label: 'Status', sortable: true, width: '12%' },
+    { key: 'repair_status', label: 'Repair', sortable: false, width: '12%' },
+    { key: 'storage', label: 'Storage', sortable: false, width: '12%' }
   ]
 };
 
