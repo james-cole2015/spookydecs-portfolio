@@ -1,0 +1,197 @@
+// Items API Client
+// Wrapper for items Lambda endpoints
+
+// Get API endpoint from config (assumes config is loaded globally)
+function getApiEndpoint() {
+  if (typeof config !== 'undefined' && config.API_ENDPOINT) {
+    return config.API_ENDPOINT;
+  }
+  // Fallback - adjust based on your actual endpoint
+  console.warn('config.API_ENDPOINT not found, using fallback');
+  return '/api';
+}
+
+/**
+ * Fetch all items
+ * @returns {Promise<Array>} Array of item objects
+ */
+export async function fetchAllItems() {
+  try {
+    const response = await fetch(`${getApiEndpoint()}/items`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch items: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    
+    // Handle different response formats (some APIs return { items: [...] })
+    if (Array.isArray(data)) {
+      return data;
+    } else if (data.items && Array.isArray(data.items)) {
+      return data.items;
+    } else {
+      console.error('Unexpected response format:', data);
+      return [];
+    }
+  } catch (error) {
+    console.error('Error fetching items:', error);
+    throw error;
+  }
+}
+
+/**
+ * Fetch a single item by ID
+ * @param {string} itemId - Item ID (e.g., "DEC-INF-ZERO-011")
+ * @returns {Promise<Object>} Item object
+ */
+export async function fetchItemById(itemId) {
+  try {
+    const response = await fetch(`${getApiEndpoint()}/items/${itemId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch item ${itemId}: ${response.status} ${response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error(`Error fetching item ${itemId}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Create a new item
+ * @param {Object} itemData - Item data object
+ * @returns {Promise<Object>} Created item with ID
+ */
+export async function createItem(itemData) {
+  try {
+    const response = await fetch(`${getApiEndpoint()}/items`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(itemData)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Failed to create item: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error creating item:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update an existing item
+ * @param {string} itemId - Item ID
+ * @param {Object} itemData - Updated item data (partial or full)
+ * @returns {Promise<Object>} Updated item
+ */
+export async function updateItem(itemId, itemData) {
+  try {
+    const response = await fetch(`${getApiEndpoint()}/items/${itemId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(itemData)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Failed to update item: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error(`Error updating item ${itemId}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Delete an item (hard delete)
+ * @param {string} itemId - Item ID
+ * @returns {Promise<Object>} Delete confirmation
+ */
+export async function deleteItem(itemId) {
+  try {
+    const response = await fetch(`${getApiEndpoint()}/items/${itemId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Failed to delete item: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error(`Error deleting item ${itemId}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Retire an item (soft delete - updates status to "Retired")
+ * @param {string} itemId - Item ID
+ * @returns {Promise<Object>} Updated item
+ */
+export async function retireItem(itemId) {
+  try {
+    // Retire is just updating the status field
+    return await updateItem(itemId, { status: 'Retired' });
+  } catch (error) {
+    console.error(`Error retiring item ${itemId}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Bulk retire items
+ * @param {Array<string>} itemIds - Array of item IDs
+ * @returns {Promise<Array>} Array of results
+ */
+export async function bulkRetireItems(itemIds) {
+  try {
+    const promises = itemIds.map(id => retireItem(id));
+    return await Promise.all(promises);
+  } catch (error) {
+    console.error('Error bulk retiring items:', error);
+    throw error;
+  }
+}
+
+/**
+ * Bulk delete items
+ * @param {Array<string>} itemIds - Array of item IDs
+ * @returns {Promise<Array>} Array of results
+ */
+export async function bulkDeleteItems(itemIds) {
+  try {
+    const promises = itemIds.map(id => deleteItem(id));
+    return await Promise.all(promises);
+  } catch (error) {
+    console.error('Error bulk deleting items:', error);
+    throw error;
+  }
+}
