@@ -141,8 +141,8 @@ export class ItemDetailView {
     tabButtons.className = 'section-tabs';
     tabButtons.innerHTML = `
       <button class="section-tab active" data-section="details">Details</button>
-      <button class="section-tab" data-section="deployments">Deployments</button>
       <button class="section-tab" data-section="maintenance">Maintenance</button>
+      <button class="section-tab" data-section="deployments">Deployments</button>
       <button class="section-tab" data-section="storage">Storage</button>
     `;
     
@@ -556,7 +556,9 @@ export class ItemDetailView {
                 <span class="pill pill-criticality-${criticality.toLowerCase()}">${criticality} Priority</span>
               ` : ''}
             </div>
-            <a href="/repairs/${this.item.id}" class="btn-link">View in Repair Dashboard</a>
+            <a href="/repairs/${this.item.id}" class="btn-primary btn-small">
+              View in Repair Dashboard
+            </a>
           </div>
         ` : `
           <div class="repair-status-card operational">
@@ -577,12 +579,6 @@ export class ItemDetailView {
         <h4 class="subsection-title">Maintenance Records</h4>
         <button class="btn-secondary" onclick="itemDetailPage.showMaintenancePlaceholder()">
           View Maintenance Records
-        </button>
-      </div>
-      
-      <div class="field-group">
-        <button class="btn-primary" onclick="itemDetailPage.openWorkbench()">
-          🔧 Open Workbench
         </button>
       </div>
     `;

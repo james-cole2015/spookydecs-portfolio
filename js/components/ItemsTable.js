@@ -208,7 +208,7 @@ export class ItemsTable {
   
   renderRepairStatus(item) {
     if (!item.repair_status) {
-      return '<span class="repair-status operational">✓</span>';
+      return '<span class="repair-status operational">🟢</span>';
     }
     
     if (item.repair_status.needs_repair) {
@@ -216,7 +216,7 @@ export class ItemsTable {
       return `<span class="repair-status needs-repair" title="${criticality} priority">⚠️</span>`;
     }
     
-    return '<span class="repair-status operational">✓</span>';
+    return '<span class="repair-status operational">🟢</span>';
   }
   
   renderStorage(item) {

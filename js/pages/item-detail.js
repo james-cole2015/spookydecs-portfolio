@@ -20,6 +20,12 @@ export async function init(params) {
     return;
   }
   
+  // Prevent treating 'create' as an item ID
+  if (params.itemId === 'create') {
+    navigate('/items/create');
+    return;
+  }
+  
   // Show loading state
   showLoading();
   
@@ -191,26 +197,6 @@ export function viewRepairHistory() {
 // Maintenance Actions
 export function showMaintenancePlaceholder() {
   toast.info('Infrastructure Needed', 'Please build maintenance records infrastructure');
-}
-
-export async function openWorkbench() {
-  try {
-    // Load config to get WORKBENCH_URL
-    const response = await fetch('/config.json');
-    if (!response.ok) {
-      throw new Error('Failed to load config');
-    }
-    const config = await response.json();
-    
-    if (config.WORKBENCH_URL) {
-      window.location.href = config.WORKBENCH_URL;
-    } else {
-      toast.error('Configuration Error', 'WORKBENCH_URL not found in config');
-    }
-  } catch (error) {
-    console.error('Failed to open workbench:', error);
-    toast.error('Error', 'Failed to load workbench URL');
-  }
 }
 
 // Storage Actions

@@ -224,9 +224,14 @@
 .items-table td {
   padding: 14px 18px;
   color: #374151;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  vertical-align: middle;
+  text-align: center;
+}
+
+/* Left-align specific columns */
+.items-table td:first-child,
+.items-table td:nth-child(3) {
+  text-align: left;
 }
 
 /* Table Cell Styles */
@@ -243,9 +248,9 @@
 
 .season-badge {
   display: inline-block;
-  padding: 5px 12px;
-  border-radius: 12px;
-  font-size: 13px;
+  padding: 4px 10px;
+  border-radius: 10px;
+  font-size: 12px;
   font-weight: 600;
 }
 
@@ -266,9 +271,9 @@
 
 .status-badge {
   display: inline-block;
-  padding: 5px 12px;
-  border-radius: 12px;
-  font-size: 13px;
+  padding: 4px 10px;
+  border-radius: 10px;
+  font-size: 12px;
   font-weight: 600;
 }
 
@@ -283,7 +288,9 @@
 }
 
 .repair-status {
-  font-size: 18px;
+  font-size: 20px;
+  display: inline-block;
+  line-height: 1;
 }
 
 .repair-status.operational {
