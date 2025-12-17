@@ -168,13 +168,17 @@ export class ItemsTable {
             break;
             
           case 'season':
-            td.textContent = item.season || '-';
-            td.className = `season-badge season-${(item.season || '').toLowerCase()}`;
+            const seasonSpan = document.createElement('span');
+            seasonSpan.className = `season-badge season-${(item.season || '').toLowerCase()}`;
+            seasonSpan.textContent = item.season || '-';
+            td.appendChild(seasonSpan);
             break;
             
           case 'status':
-            td.textContent = item.status || 'Active';
-            td.className = `status-badge status-${(item.status || 'active').toLowerCase()}`;
+            const statusSpan = document.createElement('span');
+            statusSpan.className = `status-badge status-${(item.status || 'active').toLowerCase()}`;
+            statusSpan.textContent = item.status || 'Active';
+            td.appendChild(statusSpan);
             break;
             
           case 'repair_status':
