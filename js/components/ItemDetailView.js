@@ -51,14 +51,14 @@ export class ItemDetailView {
         <div class="item-id-badge">${this.item.id}</div>
       </div>
       <div class="header-actions">
-        <button class="btn-secondary" onclick="itemDetailPage.handleEdit()">
-          ✏️ Edit
+        <button class="btn-icon btn-secondary" onclick="itemDetailPage.handleEdit()" title="Edit">
+          ✏️
         </button>
-        <button class="btn-warning" onclick="itemDetailPage.handleRetire()">
-          📦 Retire
+        <button class="btn-icon btn-warning" onclick="itemDetailPage.handleRetire()" title="Retire">
+          📦
         </button>
-        <button class="btn-danger" onclick="itemDetailPage.handleDelete()">
-          🗑️ Delete
+        <button class="btn-icon btn-danger" onclick="itemDetailPage.handleDelete()" title="Delete">
+          ✕
         </button>
       </div>
     `;
@@ -142,7 +142,7 @@ export class ItemDetailView {
     tabButtons.innerHTML = `
       <button class="section-tab active" data-section="details">Details</button>
       <button class="section-tab" data-section="deployments">Deployments</button>
-      <button class="section-tab" data-section="repairs">Repairs</button>
+      <button class="section-tab" data-section="maintenance">Maintenance</button>
       <button class="section-tab" data-section="storage">Storage</button>
     `;
     
@@ -190,29 +190,20 @@ export class ItemDetailView {
     categories.push({
       title: 'Basic Information',
       fields: [
-        { label: 'Class', value: this.item.class },
-        { label: 'Type', value: this.item.class_type },
-        { label: 'Season', value: this.item.season },
-        { label: 'Status', value: this.item.status || 'Active' },
+        { label: 'Class', value: this.item.class, isPill: true, pillType: 'class' },
+        { label: 'Type', value: this.item.class_type, isPill: true, pillType: 'type' },
+        { label: 'Season', value: this.item.season, isPill: true, pillType: 'season' },
+        { label: 'Status', value: this.getStatusPills(), isPill: true, pillType: 'status', isMultiple: true },
         { label: 'Date Acquired', value: this.item.date_acquired || '-' }
       ]
     });
     
-    // Physical Specifications (class-specific fields)
-    const physicalFields = this.getPhysicalSpecFields();
-    if (physicalFields.length > 0) {
+    // Combined Specifications (Physical + Power)
+    const combinedFields = [...this.getPhysicalSpecFields(), ...this.getPowerSpecFields()];
+    if (combinedFields.length > 0) {
       categories.push({
-        title: 'Physical Specifications',
-        fields: physicalFields
-      });
-    }
-    
-    // Power Specifications (if applicable)
-    const powerFields = this.getPowerSpecFields();
-    if (powerFields.length > 0) {
-      categories.push({
-        title: 'Power Specifications',
-        fields: powerFields
+        title: 'Specifications',
+        fields: combinedFields
       });
     }
     
@@ -225,10 +216,10 @@ export class ItemDetailView {
       });
     }
     
-    // Acquisition Details
+    // Vendor Info (renamed from Acquisition)
     const vendorData = this.item.vendor_metadata || {};
     categories.push({
-      title: 'Acquisition',
+      title: 'Vendor Info',
       fields: [
         { label: 'Cost', value: vendorData.cost ? `$${vendorData.cost}` : '-' },
         { label: 'Value', value: vendorData.value ? `$${vendorData.value}` : '-' },
@@ -248,6 +239,37 @@ export class ItemDetailView {
     }
     
     return categories;
+  }
+  
+  getStatusPills() {
+    const pills = [];
+    
+    // Check deployed status
+    if (this.item.deployment_data?.deployed) {
+      pills.push({ text: 'Deployed', type: 'deployed' });
+    }
+    
+    // Check packed status
+    if (this.item.packing_data?.packing_status) {
+      pills.push({ text: 'Packed', type: 'packed' });
+    }
+    
+    // Check repair status
+    if (this.item.repair_status?.needs_repair) {
+      pills.push({ text: 'Repair', type: 'repair' });
+    }
+    
+    // Check retired status
+    if (this.item.status === 'Retired') {
+      pills.push({ text: 'Retired', type: 'retired' });
+    }
+    
+    // Default to Active if no other status
+    if (pills.length === 0) {
+      pills.push({ text: 'Active', type: 'active' });
+    }
+    
+    return pills;
   }
   
   getPhysicalSpecFields() {
@@ -345,7 +367,28 @@ export class ItemDetailView {
       
       const value = document.createElement('div');
       value.className = 'field-value';
-      value.textContent = field.value || '-';
+      
+      if (field.isPill) {
+        if (field.isMultiple && Array.isArray(field.value)) {
+          // Multiple status pills
+          value.className = 'field-value field-value-pills';
+          field.value.forEach(pill => {
+            const pillEl = document.createElement('span');
+            pillEl.className = `pill pill-${pill.type}`;
+            pillEl.textContent = pill.text;
+            value.appendChild(pillEl);
+          });
+        } else {
+          // Single pill
+          const pillEl = document.createElement('span');
+          pillEl.className = `pill pill-${field.pillType}`;
+          pillEl.textContent = field.value || '-';
+          value.appendChild(pillEl);
+        }
+      } else {
+        value.textContent = field.value || '-';
+      }
+      
       fieldEl.appendChild(value);
       
       fieldsContainer.appendChild(fieldEl);
@@ -374,8 +417,8 @@ export class ItemDetailView {
       case 'deployments':
         sectionContent = this.renderDeploymentsSection();
         break;
-      case 'repairs':
-        sectionContent = this.renderRepairsSection();
+      case 'maintenance':
+        sectionContent = this.renderMaintenanceSection();
         break;
       case 'storage':
         sectionContent = this.renderStorageSection();
@@ -391,107 +434,103 @@ export class ItemDetailView {
     section.dataset.section = 'deployments';
     
     const deploymentData = this.item.deployment_data || {};
+    const deploymentCount = deploymentData.previous_deployments?.length || 0;
+    
+    if (deploymentCount === 0) {
+      section.innerHTML = `
+        <div class="empty-section">
+          <div class="empty-icon">📍</div>
+          <div class="empty-message">Awaiting first deployment</div>
+        </div>
+      `;
+      return section;
+    }
     
     section.innerHTML = `
-      <div class="field-group">
-        <h3 class="field-group-title">Deployment Status</h3>
-        <div class="fields-container">
-          <div class="field">
-            <div class="field-label">Currently Deployed</div>
-            <div class="field-value">${deploymentData.deployed ? 'Yes' : 'No'}</div>
-          </div>
-          ${deploymentData.last_deployment_id ? `
-            <div class="field">
-              <div class="field-label">Last Deployment</div>
-              <div class="field-value deployment-link">${deploymentData.last_deployment_id}</div>
-            </div>
-          ` : ''}
-          ${deploymentData.last_deployed_at ? `
-            <div class="field">
-              <div class="field-label">Last Deployed Date</div>
-              <div class="field-value">${new Date(deploymentData.last_deployed_at).toLocaleDateString()}</div>
-            </div>
-          ` : ''}
-        </div>
+      <div class="section-header">
+        <h3>Deployed ${deploymentCount} time${deploymentCount !== 1 ? 's' : ''}</h3>
       </div>
+      
+      ${deploymentData.last_deployment_id ? `
+        <div class="field-group">
+          <h4 class="subsection-title">Last Deployment</h4>
+          <div class="deployment-item">
+            <span class="deployment-icon">📍</span>
+            <a href="/deployments/${deploymentData.last_deployment_id}" class="deployment-link">
+              ${deploymentData.last_deployment_id}
+            </a>
+            ${deploymentData.last_deployed_at ? `
+              <span class="deployment-date">${new Date(deploymentData.last_deployed_at).toLocaleDateString()}</span>
+            ` : ''}
+          </div>
+        </div>
+      ` : ''}
       
       ${deploymentData.previous_deployments && deploymentData.previous_deployments.length > 0 ? `
         <div class="field-group">
-          <h3 class="field-group-title">Deployment History</h3>
+          <h4 class="subsection-title">Deployment History</h4>
           <div class="deployment-list">
             ${deploymentData.previous_deployments.map(depId => `
               <div class="deployment-item">
                 <span class="deployment-icon">📍</span>
-                <span class="deployment-link">${depId}</span>
+                <a href="/deployments/${depId}" class="deployment-link">${depId}</a>
               </div>
             `).join('')}
           </div>
         </div>
-      ` : '<div class="empty-section">No deployment history</div>'}
+      ` : ''}
     `;
     
     return section;
   }
   
-  renderRepairsSection() {
+  renderMaintenanceSection() {
     const section = document.createElement('div');
     section.className = 'section-panel';
-    section.dataset.section = 'repairs';
+    section.dataset.section = 'maintenance';
     
     const repairStatus = this.item.repair_status || {};
-    const repairHistory = this.item.repair_history || [];
-    
     const needsRepair = repairStatus.needs_repair || false;
-    const status = repairStatus.status || 'Operational';
     
     section.innerHTML = `
       <div class="field-group">
-        <h3 class="field-group-title">Current Status</h3>
-        <div class="repair-status-card ${needsRepair ? 'needs-repair' : 'operational'}">
-          <div class="repair-status-icon">${needsRepair ? '⚠️' : '✓'}</div>
-          <div class="repair-status-info">
-            <div class="repair-status-label">${status}</div>
-            ${needsRepair && repairStatus.criticality ? `
-              <div class="repair-criticality">${repairStatus.criticality} Priority</div>
-            ` : ''}
-            ${needsRepair && repairStatus.estimated_repair_cost ? `
-              <div class="repair-cost">Est. Cost: $${repairStatus.estimated_repair_cost}</div>
-            ` : ''}
+        <h4 class="subsection-title">Current Repair Status</h4>
+        ${needsRepair ? `
+          <div class="repair-status-card needs-repair">
+            <div class="repair-status-icon">⚠️</div>
+            <div class="repair-status-info">
+              <div class="repair-status-label">Repair Needed</div>
+              ${repairStatus.criticality ? `
+                <span class="pill pill-criticality-${repairStatus.criticality.toLowerCase()}">${repairStatus.criticality} Priority</span>
+              ` : ''}
+            </div>
+            <a href="/repairs/${this.item.id}" class="btn-link">View in Repair Dashboard</a>
           </div>
-          ${needsRepair ? `
-            <button class="btn-primary btn-small" onclick="itemDetailPage.handleMarkRepaired()">
-              Mark as Repaired
-            </button>
-          ` : ''}
-        </div>
-        
-        ${repairStatus.repair_notes && repairStatus.repair_notes.length > 0 ? `
-          <div class="repair-notes">
-            <h4>Current Repair Notes</h4>
-            ${repairStatus.repair_notes.map(note => `
-              <div class="repair-note">
-                <div class="note-meta">${note.date ? new Date(note.date).toLocaleDateString() : ''} - ${note.type || 'Note'}</div>
-                <div class="note-text">${note.description || ''}</div>
-              </div>
-            `).join('')}
+        ` : `
+          <div class="repair-status-card operational">
+            <div class="repair-status-icon">✓</div>
+            <div class="repair-status-info">
+              <div class="repair-status-label">Operational</div>
+            </div>
           </div>
-        ` : ''}
+        `}
       </div>
       
-      ${repairHistory.length > 0 ? `
-        <div class="field-group">
-          <h3 class="field-group-title">Repair History</h3>
-          <div class="repair-history-link">
-            <a href="#" onclick="itemDetailPage.viewRepairHistory(); return false;">
-              View full repair history (${repairHistory.length} records)
-            </a>
-          </div>
-        </div>
-      ` : ''}
+      <div class="field-group">
+        <h4 class="subsection-title">Repair History</h4>
+        <div class="placeholder-message">Repair history to be developed</div>
+      </div>
       
       <div class="field-group">
-        <button class="btn-secondary" onclick="itemDetailPage.handleFlagForRepair()">
-          🔧 Flag for Repair
+        <h4 class="subsection-title">Maintenance Records</h4>
+        <button class="btn-secondary" onclick="itemDetailPage.showMaintenancePlaceholder()">
+          View Maintenance Records
+        </button>
+      </div>
+      
+      <div class="field-group">
+        <button class="btn-primary" onclick="itemDetailPage.openWorkbench()">
+          🔧 Open Workbench
         </button>
       </div>
     `;
@@ -506,32 +545,34 @@ export class ItemDetailView {
     
     const packingData = this.item.packing_data || {};
     
+    if (!packingData.tote_id) {
+      section.innerHTML = `
+        <div class="empty-section">
+          <div class="empty-icon">📦</div>
+          <div class="empty-message">Not currently stored</div>
+        </div>
+      `;
+      return section;
+    }
+    
     section.innerHTML = `
       <div class="field-group">
-        <h3 class="field-group-title">Current Location</h3>
-        ${packingData.tote_id ? `
-          <div class="storage-card">
-            <div class="storage-icon">📦</div>
-            <div class="storage-info">
-              <div class="storage-tote-id">${packingData.tote_id}</div>
-              <div class="storage-location">${packingData.tote_location || 'Unknown location'}</div>
-              <div class="storage-status">
-                ${packingData.packing_status ? 'Packed' : 'Not packed'}
-              </div>
+        <div class="storage-card">
+          <div class="storage-icon">📦</div>
+          <div class="storage-info">
+            <div class="storage-field">
+              <span class="storage-label">Tote ID:</span>
+              <span class="storage-value">${packingData.tote_id}</span>
             </div>
-            <button class="btn-secondary btn-small" onclick="itemDetailPage.viewStorage()">
-              View Storage
-            </button>
+            <div class="storage-field">
+              <span class="storage-label">Location:</span>
+              <span class="storage-value">${packingData.tote_location || 'Unknown'}</span>
+            </div>
           </div>
-        ` : `
-          <div class="empty-section">Not currently stored</div>
-        `}
-      </div>
-      
-      <div class="field-group">
-        <button class="btn-secondary" onclick="itemDetailPage.handleChangeStorage()">
-          📍 Change Storage Location
-        </button>
+          <a href="/storage/${packingData.tote_id}" class="btn-secondary btn-small">
+            View Storage Details
+          </a>
+        </div>
       </div>
     `;
     

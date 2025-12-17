@@ -30,6 +30,17 @@ export class ItemsTable {
       return;
     }
     
+    // Check if mobile view
+    const isMobile = window.innerWidth < 768;
+    
+    if (isMobile) {
+      this.renderMobileCards(items);
+    } else {
+      this.renderDesktopTable(items);
+    }
+  }
+  
+  renderDesktopTable(items) {
     // Sort items
     const sortedItems = this.sortItems([...items]);
     
@@ -44,6 +55,50 @@ export class ItemsTable {
     table.appendChild(this.renderBody(sortedItems));
     
     this.container.appendChild(table);
+  }
+  
+  renderMobileCards(items) {
+    const sortedItems = this.sortItems([...items]);
+    
+    const cardsContainer = document.createElement('div');
+    cardsContainer.className = 'items-cards';
+    
+    sortedItems.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'item-card';
+      card.dataset.itemId = item.id;
+      
+      card.addEventListener('click', () => {
+        navigate(`/items/${item.id}`);
+      });
+      
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="card-name">${item.short_name || '-'}</div>
+          <span class="status-badge status-${(item.status || 'active').toLowerCase()}">${item.status || 'Active'}</span>
+        </div>
+        <div class="card-body">
+          <div class="card-field">
+            <span class="card-label">Type:</span>
+            <span class="card-value">${item.class_type || '-'}</span>
+          </div>
+          <div class="card-field">
+            <span class="card-label">Season:</span>
+            <span class="card-value">${item.season || '-'}</span>
+          </div>
+          ${item.repair_status?.needs_repair ? `
+            <div class="card-field">
+              <span class="card-label">Status:</span>
+              <span class="card-value">⚠️ Needs Repair</span>
+            </div>
+          ` : ''}
+        </div>
+      `;
+      
+      cardsContainer.appendChild(card);
+    });
+    
+    this.container.appendChild(cardsContainer);
   }
   
   renderHeader() {
@@ -104,8 +159,7 @@ export class ItemsTable {
             break;
             
           case 'short_name':
-            const icon = getClassTypeIcon(item.class_type);
-            td.innerHTML = `<span class="item-icon">${icon}</span> ${item.short_name || '-'}`;
+            td.textContent = item.short_name || '-';
             td.className = 'item-name';
             break;
             
@@ -166,16 +220,14 @@ export class ItemsTable {
   }
   
   renderStorage(item) {
-    if (!item.packing_data || !item.packing_data.tote_id) {
+    if (!item.packing_data || !item.packing_data.tote_location) {
       return '<span class="storage-none">-</span>';
     }
     
-    // For now, just display tote_id
-    // When storage subdomain is built, this will be a link
-    const toteId = item.packing_data.tote_id;
     const location = item.packing_data.tote_location;
+    const toteId = item.packing_data.tote_id;
     
-    return `<span class="storage-tote" title="${location || 'Unknown location'}">${toteId}</span>`;
+    return `<span class="storage-location" title="${toteId || 'Unknown tote'}">${location}</span>`;
   }
   
   renderEmptyState() {

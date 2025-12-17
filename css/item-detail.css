@@ -554,3 +554,198 @@
     white-space: nowrap;
   }
 }
+/* Additional Detail View Styles */
+
+/* Pill Badges */
+.pill {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Status Pills */
+.pill-deployed {
+  background: #10b981;
+  color: white;
+}
+
+.pill-packed {
+  background: #9ca3af;
+  color: #1f2937;
+}
+
+.pill-repair {
+  background: #fbbf24;
+  color: #78350f;
+}
+
+.pill-retired {
+  background: #dc2626;
+  color: white;
+}
+
+.pill-active {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+/* Class/Type/Season Pills - Neutral */
+.pill-class,
+.pill-type {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.pill-season {
+  background: #fce7f3;
+  color: #831843;
+}
+
+/* Criticality Pills */
+.pill-criticality-low {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.pill-criticality-medium {
+  background: #fed7aa;
+  color: #9a3412;
+}
+
+.pill-criticality-high {
+  background: #fecaca;
+  color: #991b1b;
+}
+
+.pill-criticality-critical {
+  background: #dc2626;
+  color: white;
+}
+
+/* Field value with multiple pills */
+.field-value-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Icon-only buttons */
+.btn-icon {
+  min-width: 44px;
+  height: 44px;
+  padding: 0;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Subsection titles */
+.subsection-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 12px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Section header */
+.section-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 20px 0;
+}
+
+/* Empty section styles */
+.empty-section {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 12px;
+}
+
+.empty-message {
+  font-size: 16px;
+  color: #6b7280;
+}
+
+/* Deployment item */
+.deployment-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 8px;
+}
+
+.deployment-date {
+  margin-left: auto;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* Placeholder message */
+.placeholder-message {
+  padding: 16px;
+  background: #fef3c7;
+  border: 1px solid #fde047;
+  border-radius: 6px;
+  color: #78350f;
+  font-size: 14px;
+  font-style: italic;
+}
+
+/* Storage card improvements */
+.storage-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: #eff6ff;
+  border: 2px solid #3b82f6;
+  border-radius: 8px;
+}
+
+.storage-field {
+  margin-bottom: 8px;
+}
+
+.storage-field:last-child {
+  margin-bottom: 0;
+}
+
+.storage-label {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 600;
+  margin-right: 8px;
+}
+
+.storage-value {
+  font-size: 15px;
+  color: #1f2937;
+  font-weight: 500;
+}
+
+/* Button link style */
+.btn-link {
+  color: #3b82f6;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.btn-link:hover {
+  text-decoration: underline;
+}
