@@ -233,7 +233,15 @@
 .items-table td:nth-child(5),
 .items-table td:nth-child(6),
 .items-table td:nth-child(7) {
-  text-align: center;
+  text-align: center !important;
+}
+
+/* Center-align headers for centered columns */
+.items-table th:nth-child(2),
+.items-table th:nth-child(5),
+.items-table th:nth-child(6),
+.items-table th:nth-child(7) {
+  text-align: center !important;
 }
 
 /* Table Cell Styles */
@@ -241,7 +249,6 @@
   font-family: 'Courier New', monospace;
   font-size: 13px;
   color: #6b7280;
-  white-space: nowrap;
 }
 
 .item-name {
@@ -251,11 +258,12 @@
 
 .season-badge {
   display: inline-block;
-  padding: 4px 10px;
-  border-radius: 10px;
+  padding: 3px 12px;
+  border-radius: 16px;
   font-size: 12px;
   font-weight: 600;
   vertical-align: middle;
+  line-height: 1.4;
 }
 
 .season-halloween {
@@ -275,11 +283,12 @@
 
 .status-badge {
   display: inline-block;
-  padding: 4px 10px;
-  border-radius: 10px;
+  padding: 3px 12px;
+  border-radius: 16px;
   font-size: 12px;
   font-weight: 600;
   vertical-align: middle;
+  line-height: 1.4;
 }
 
 .status-active {

@@ -508,10 +508,12 @@ export async function handleSave() {
   try {
     // Prepare item data
     const itemData = prepareItemData();
+    console.log('Preparing to save item data:', itemData);
     
     let savedItem;
     if (mode === 'create') {
       // Create new item
+      console.log('Creating new item with data:', JSON.stringify(itemData, null, 2));
       savedItem = await createItem(itemData);
       toast.success('Item Created', `${savedItem.short_name} has been created`);
     } else {

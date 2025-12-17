@@ -21,6 +21,10 @@ export class TabBar {
     const tabBar = document.createElement('div');
     tabBar.className = 'tab-bar';
     
+    // Desktop tabs
+    const desktopTabs = document.createElement('div');
+    desktopTabs.className = 'tab-bar-desktop';
+    
     TABS.forEach(tab => {
       const tabButton = document.createElement('button');
       tabButton.className = `tab-button ${tab.id === activeTab ? 'active' : ''}`;
@@ -31,8 +35,33 @@ export class TabBar {
         this.handleTabClick(tab.id);
       });
       
-      tabBar.appendChild(tabButton);
+      desktopTabs.appendChild(tabButton);
     });
+    
+    // Mobile dropdown
+    const mobileDropdown = document.createElement('div');
+    mobileDropdown.className = 'tab-bar-mobile';
+    
+    const select = document.createElement('select');
+    select.className = 'tab-select';
+    select.value = activeTab;
+    
+    TABS.forEach(tab => {
+      const option = document.createElement('option');
+      option.value = tab.id;
+      option.textContent = tab.label;
+      if (tab.id === activeTab) option.selected = true;
+      select.appendChild(option);
+    });
+    
+    select.addEventListener('change', (e) => {
+      this.handleTabClick(e.target.value);
+    });
+    
+    mobileDropdown.appendChild(select);
+    
+    tabBar.appendChild(desktopTabs);
+    tabBar.appendChild(mobileDropdown);
     
     this.container.innerHTML = '';
     this.container.appendChild(tabBar);
@@ -56,8 +85,16 @@ export class TabBar {
   
   setActiveTab(tabId) {
     this.activeTab = tabId;
+    
+    // Update desktop tabs
     this.container.querySelectorAll('.tab-button').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.tabId === tabId);
     });
+    
+    // Update mobile dropdown
+    const select = this.container.querySelector('.tab-select');
+    if (select) {
+      select.value = tabId;
+    }
   }
 }

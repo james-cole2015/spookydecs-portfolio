@@ -103,6 +103,9 @@ export async function createItem(itemData) {
   try {
     const apiEndpoint = await getApiEndpoint();
     
+    console.log('Sending POST to:', `${apiEndpoint}/items`);
+    console.log('Request body:', JSON.stringify(itemData, null, 2));
+    
     const response = await fetch(`${apiEndpoint}/items`, {
       method: 'POST',
       headers: {
@@ -111,8 +114,20 @@ export async function createItem(itemData) {
       body: JSON.stringify(itemData)
     });
     
+    console.log('Response status:', response.status);
+    console.log('Response headers:', response.headers);
+    
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
+      const errorText = await response.text();
+      console.error('Error response body:', errorText);
+      
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch (e) {
+        errorData = { message: errorText };
+      }
+      
       throw new Error(errorData.message || `Failed to create item: ${response.status}`);
     }
     
