@@ -463,7 +463,7 @@ export class ItemDetailView {
   
   renderDeploymentsSection() {
     const section = document.createElement('div');
-    section.className = 'section-panel';
+    section.className = 'section-panel active';
     section.dataset.section = 'deployments';
     
     console.log('Rendering Deployments Section');
@@ -530,7 +530,7 @@ export class ItemDetailView {
   
   renderMaintenanceSection() {
     const section = document.createElement('div');
-    section.className = 'section-panel';
+    section.className = 'section-panel active';
     section.dataset.section = 'maintenance';
     
     console.log('Rendering Maintenance Section');
@@ -593,7 +593,7 @@ export class ItemDetailView {
   
   renderStorageSection() {
     const section = document.createElement('div');
-    section.className = 'section-panel';
+    section.className = 'section-panel active';
     section.dataset.section = 'storage';
     
     console.log('Rendering Storage Section');
