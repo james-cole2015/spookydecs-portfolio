@@ -1,13 +1,34 @@
 // Photos API Client
 // Wrapper for photos Lambda endpoints and operations
 
-// Get API endpoint from config
-function getApiEndpoint() {
-  if (typeof config !== 'undefined' && config.API_ENDPOINT) {
-    return config.API_ENDPOINT;
+let configCache = null;
+
+// Load config from /config.json
+async function loadConfig() {
+  if (configCache) return configCache;
+  
+  try {
+    const response = await fetch('/config.json');
+    if (!response.ok) {
+      throw new Error('Failed to load config');
+    }
+    configCache = await response.json();
+    return configCache;
+  } catch (error) {
+    console.error('Failed to load config.json:', error);
+    throw new Error('Configuration not loaded');
   }
-  console.warn('config.API_ENDPOINT not found, using fallback');
-  return '/api';
+}
+
+// Get API endpoint from config
+async function getApiEndpoint() {
+  const config = await loadConfig();
+  
+  if (!config.API_ENDPOINT) {
+    throw new Error('API_ENDPOINT not found in config');
+  }
+  
+  return config.API_ENDPOINT;
 }
 
 /**
@@ -17,7 +38,9 @@ function getApiEndpoint() {
  */
 export async function fetchPhotoById(photoId) {
   try {
-    const response = await fetch(`${getApiEndpoint()}/images/${photoId}`, {
+    const apiEndpoint = await getApiEndpoint();
+    
+    const response = await fetch(`${apiEndpoint}/images/${photoId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
@@ -75,6 +98,8 @@ export async function uploadPhoto(file, itemId, season, isPrimary = false) {
       throw new Error('Invalid file object');
     }
     
+    const apiEndpoint = await getApiEndpoint();
+    
     // Create FormData for file upload
     const formData = new FormData();
     formData.append('file', file);
@@ -83,7 +108,7 @@ export async function uploadPhoto(file, itemId, season, isPrimary = false) {
     formData.append('is_primary', isPrimary.toString());
     formData.append('photo_type', 'catalog');
     
-    const response = await fetch(`${getApiEndpoint()}/images/upload`, {
+    const response = await fetch(`${apiEndpoint}/images/upload`, {
       method: 'POST',
       body: formData
       // Don't set Content-Type header - browser will set it with boundary
@@ -136,7 +161,9 @@ export async function uploadPhotos(files, itemId, season) {
  */
 export async function linkPhotoToItem(photoId, itemId, isPrimary = false) {
   try {
-    const response = await fetch(`${getApiEndpoint()}/images/${photoId}/link`, {
+    const apiEndpoint = await getApiEndpoint();
+    
+    const response = await fetch(`${apiEndpoint}/images/${photoId}/link`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -167,7 +194,9 @@ export async function linkPhotoToItem(photoId, itemId, isPrimary = false) {
  */
 export async function unlinkPhotoFromItem(photoId, itemId) {
   try {
-    const response = await fetch(`${getApiEndpoint()}/images/${photoId}/unlink`, {
+    const apiEndpoint = await getApiEndpoint();
+    
+    const response = await fetch(`${apiEndpoint}/images/${photoId}/unlink`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -195,7 +224,9 @@ export async function unlinkPhotoFromItem(photoId, itemId) {
  */
 export async function deletePhoto(photoId) {
   try {
-    const response = await fetch(`${getApiEndpoint()}/images/${photoId}`, {
+    const apiEndpoint = await getApiEndpoint();
+    
+    const response = await fetch(`${apiEndpoint}/images/${photoId}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json'
