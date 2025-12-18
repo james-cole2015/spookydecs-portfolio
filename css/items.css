@@ -474,10 +474,6 @@
     flex-direction: column;
   }
   
-  .filter-search {
-    min-width: 100%;
-  }
-  
   .filters-container {
     width: 100%;
   }
