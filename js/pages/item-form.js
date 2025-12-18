@@ -181,27 +181,6 @@ function renderStepIndicator() {
   `).join('<div class="step-connector"></div>');
 }
 
-function renderStepContent() {
-  const container = document.getElementById('step-content');
-  if (!container) return;
-  
-  container.innerHTML = '';
-  
-  switch (currentStep) {
-    case 1:
-      container.appendChild(renderStep1());
-      break;
-    case 2:
-      container.appendChild(renderStep2());
-      break;
-    case 3:
-      container.appendChild(renderStep3());
-      break;
-    case 4:
-      container.appendChild(renderStep4());
-      break;
-  }
-}
 
 // Step 1: Select Class
 function renderStep1() {
