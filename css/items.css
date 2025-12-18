@@ -435,17 +435,19 @@
   background: #ea580c;
 }
 
+/* Buttons */
 .btn-primary {
-  padding: 14px 28px;  /* Even more padding */
+  padding: 10px 20px;
   background: #f97316;
   color: white;
   border: none;
   border-radius: 6px;
-  font-size: 16px;
-  font-weight: 600;  /* Slightly bolder */
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
   transition: background 0.2s;
 }
+
 .btn-primary:hover {
   background: #ea580c;
 }

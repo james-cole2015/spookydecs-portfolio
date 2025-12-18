@@ -116,7 +116,7 @@ function getPageHTML(pageName) {
         <div class="app-container">
           <header class="page-header">
             <div class="header-content">
-              <h1>Inventory Overview</h1>
+              <h1>Items Administration</h1>
               <div class="header-actions">
                 <button class="btn-primary btn-icon-mobile" onclick="itemsListPage.handleCreateItem()" title="Create Item">
                   <span class="btn-icon-only">+</span>
