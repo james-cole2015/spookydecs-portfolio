@@ -551,47 +551,41 @@ export async function handleSave() {
 
 function prepareItemData() {
   const data = {
-    // Backend expects these specific field names
-    type: formData.class_type,           // Required
-    class_type: formData.class_type,     // Also required
-    shortName: formData.short_name,      // Required
-    category: formData.season,            // Required
+    // Backend expects snake_case
     class: formData.class,
+    class_type: formData.class_type,
+    short_name: formData.short_name,
+    season: formData.season,
     status: formData.status || 'Active'
   };
   
-  // Add optional fields
-  if (formData.date_acquired) data.dateAcquired = formData.date_acquired;
-  if (formData.general_notes) data.generalNotes = formData.general_notes;
+  // Add optional fields (snake_case)
+  if (formData.date_acquired) data.date_acquired = formData.date_acquired;
+  if (formData.general_notes) data.general_notes = formData.general_notes;
   
-  // Add class-specific fields (convert to camelCase)
-  if (formData.height_length) data.heightLength = formData.height_length;
+  // Add class-specific fields (snake_case)
+  if (formData.height_length) data.height_length = formData.height_length;
   if (formData.stakes) data.stakes = formData.stakes;
   if (formData.tethers) data.tethers = formData.tethers;
   if (formData.color) data.color = formData.color;
-  if (formData.bulb_type) data.bulbType = formData.bulb_type;
+  if (formData.bulb_type) data.bulb_type = formData.bulb_type;
   if (formData.length) data.length = formData.length;
-  if (formData.male_ends) data.maleEnds = formData.male_ends;
-  if (formData.female_ends) data.femaleEnds = formData.female_ends;
+  if (formData.male_ends) data.male_ends = formData.male_ends;
+  if (formData.female_ends) data.female_ends = formData.female_ends;
   if (formData.watts) data.watts = formData.watts;
   if (formData.amps) data.amps = formData.amps;
   if (formData.adapter) data.adapter = formData.adapter;
-  if (formData.power_inlet !== undefined) data.powerInlet = formData.power_inlet;
+  if (formData.power_inlet !== undefined) data.power_inlet = formData.power_inlet;
   
-  // Add vendor metadata (camelCase keys)
-  data.vendorMetadata = {
-    cost: formData.vendor_cost || '',
-    value: formData.vendor_value || '',
-    manufacturer: formData.vendor_manufacturer || '',
-    vendorStore: formData.vendor_store || ''
-  };
+  // Vendor metadata - the Lambda extracts these with get('cost'), get('value'), etc.
+  if (formData.vendor_cost) data.cost = formData.vendor_cost;
+  if (formData.vendor_value) data.value = formData.vendor_value;
+  if (formData.vendor_manufacturer) data.manufacturer = formData.vendor_manufacturer;
+  if (formData.vendor_store) data.vendor_store = formData.vendor_store;
   
-  // Add packing data (camelCase keys)
-  data.packingData = {
-    toteId: formData.storage_tote_id || '',
-    toteLocation: formData.storage_location || '',
-    packingStatus: false
-  };
+  // Packing/storage data - the Lambda extracts with get('tote_location')
+  if (formData.storage_tote_id) data.tote_id = formData.storage_tote_id;
+  if (formData.storage_location) data.tote_location = formData.storage_location;
   
   return data;
 }
