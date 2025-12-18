@@ -510,22 +510,33 @@ export async function handleSave() {
     const itemData = prepareItemData();
     console.log('Preparing to save item data:', itemData);
     
-    let savedItem;
+    let response;
+    let itemId;
+    let itemName;
+    
     if (mode === 'create') {
       // Create new item
       console.log('Creating new item with data:', JSON.stringify(itemData, null, 2));
-      savedItem = await createItem(itemData);
-      toast.success('Item Created', `${savedItem.short_name} has been created`);
+      response = await createItem(itemData);
+      
+      // Extract from Lambda response structure
+      itemId = response.confirmation?.id || response.preview?.id;
+      itemName = response.confirmation?.short_name || response.preview?.short_name;
+      
+      toast.success('Item Created', `${itemName} has been created`);
     } else {
       // Update existing item
-      savedItem = await updateItem(originalItem.id, itemData);
-      toast.success('Item Updated', `${savedItem.short_name} has been updated`);
+      response = await updateItem(originalItem.id, itemData);
+      itemId = response.id || originalItem.id;
+      itemName = response.short_name || originalItem.short_name;
+      
+      toast.success('Item Updated', `${itemName} has been updated`);
     }
     
     // Upload photos if any (decorations only)
     if (photoUploader && photoUploader.hasPhotos()) {
       try {
-        await photoUploader.uploadPhotos(savedItem.id, formData.season);
+        await photoUploader.uploadPhotos(itemId, formData.season);
         toast.success('Photos Uploaded', 'Photos have been added to the item');
       } catch (photoError) {
         console.error('Failed to upload photos:', photoError);
@@ -533,15 +544,16 @@ export async function handleSave() {
       }
     }
     
-    // Navigate to item detail page
+    // Navigate to items list page after a brief delay
     setTimeout(() => {
-      navigate(`/items/${savedItem.id}`);
-    }, 1000);
+      navigate('/items');
+    }, 1500);
     
   } catch (error) {
     console.error('Failed to save item:', error);
     toast.error('Save Failed', error.message || 'Failed to save item. Please try again.');
     
+    // Re-enable button on error
     if (saveBtn) {
       saveBtn.disabled = false;
       saveBtn.textContent = '💾 Save Item';
