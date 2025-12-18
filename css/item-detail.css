@@ -517,6 +517,20 @@
   font-size: 13px;
 }
 
+  /* Hide desktop tabs, show mobile dropdown */
+  .section-tabs-desktop {
+    display: none;
+  }
+  
+  .section-tabs-mobile {
+    display: block;
+  }
+  
+  /* Remove horizontal scroll since we're using dropdown */
+  .section-tabs {
+    overflow-x: visible;
+  }
+
 /* Responsive */
 @media (max-width: 1024px) {
   .detail-main-content {
@@ -546,19 +560,6 @@
     grid-template-columns: 1fr;
   }
   
-  /* Hide desktop tabs, show mobile dropdown */
-  .section-tabs-desktop {
-    display: none;
-  }
-  
-  .section-tabs-mobile {
-    display: block;
-  }
-  
-  /* Remove horizontal scroll since we're using dropdown */
-  .section-tabs {
-    overflow-x: visible;
-  }
 }
 /* Additional Detail View Styles */
 
