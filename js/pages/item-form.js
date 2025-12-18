@@ -23,7 +23,11 @@ let formFields = null;
 let photoUploader = null;
 
 export async function init(params) {
+  console.log('1. Init called with params:', params);
+  
   mode = params.mode || 'create';
+  console.log('2. Mode set to:', mode);
+  
   currentStep = 1;
   formData = {
     class: '',
@@ -32,19 +36,28 @@ export async function init(params) {
     status: 'Active'
   };
   
-  console.log(`Initializing item form page in ${mode} mode...`, params);
+  console.log('3. About to check edit mode');
   
   // If edit mode, fetch existing item
   if (mode === 'edit') {
+    console.log('4. In edit mode block');
+    
     if (!params.itemId) {
+      console.log('5. No itemId - showing error');
       toast.error('Error', 'No item ID provided');
       navigate('/items');
       return;
     }
     
+    console.log('6. ItemId exists:', params.itemId);
+    
     try {
+      console.log('7. Calling showLoading()');
       showLoading();
+      
+      console.log('8. About to fetch item by ID');
       originalItem = await fetchItemById(params.itemId);
+      console.log('9. Item fetched:', originalItem);
       
       // Pre-fill form data
       formData = {
@@ -53,19 +66,26 @@ export async function init(params) {
         class_type: originalItem.class_type
       };
       
+      console.log('10. FormData populated');
+      
       // For edit mode, skip to step 3 (details)
       currentStep = 3;
+      console.log('11. About to call renderWizard()');
       renderWizard();
+      console.log('12. renderWizard() completed');
       
     } catch (error) {
-      console.error('Failed to load item:', error);
+      console.error('ERROR in edit mode:', error);
       toast.error('Error', 'Failed to load item for editing');
       navigate('/items');
     }
   } else {
+    console.log('13. In create mode - calling renderWizard()');
     // Create mode - start at step 1
     renderWizard();
   }
+  
+  console.log('14. Init function completed');
 }
 
 function showLoading() {
