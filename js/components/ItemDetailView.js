@@ -37,6 +37,9 @@ export class ItemDetailView {
     
     this.container.innerHTML = '';
     this.container.appendChild(detailView);
+    
+    // Attach event listeners after DOM is inserted
+    this.attachTabEventListeners();
   }
   
   renderHeader() {
@@ -163,10 +166,6 @@ export class ItemDetailView {
       <option value="storage">Storage</option>
     `;
     
-    select.addEventListener('change', (e) => {
-      this.switchTab(e.target.value);
-    });
-    
     mobileDropdown.appendChild(select);
     
     tabButtons.appendChild(desktopTabs);
@@ -182,14 +181,25 @@ export class ItemDetailView {
     tabbed.appendChild(tabButtons);
     tabbed.appendChild(tabContent);
     
-    // Add tab click handlers for desktop tabs
-    desktopTabs.querySelectorAll('.section-tab').forEach(tab => {
+    return tabbed;
+  }
+  
+  attachTabEventListeners() {
+    // Desktop tab buttons
+    const desktopTabs = this.container.querySelectorAll('.section-tab');
+    desktopTabs.forEach(tab => {
       tab.addEventListener('click', (e) => {
         this.switchTab(e.target.dataset.section);
       });
     });
     
-    return tabbed;
+    // Mobile dropdown
+    const mobileSelect = this.container.querySelector('.section-tab-select');
+    if (mobileSelect) {
+      mobileSelect.addEventListener('change', (e) => {
+        this.switchTab(e.target.value);
+      });
+    }
   }
   
   renderDetailsSection() {

@@ -5,6 +5,7 @@
   max-width: 1400px;
   margin: 0 auto;
   padding: 20px;
+  box-sizing: border-box;
 }
 
 .page-header {
@@ -35,6 +36,7 @@
   border-radius: 8px;
   padding: 24px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
 }
 
 /* Tab Bar */
@@ -88,12 +90,15 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .filter-search {
   flex: 1;
-  min-width: 0; /* CHANGED: Remove min-width: 300px */
-  max-width: 100%; /* ADD: Prevent overflow */
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .search-input {
@@ -103,6 +108,7 @@
   border-radius: 6px;
   font-size: 14px;
   transition: border-color 0.2s;
+  box-sizing: border-box;
 }
 
 .search-input:focus {
@@ -453,41 +459,6 @@
   border-color: #9ca3af;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .app-container {
-    padding: 12px;
-  }
-  
-  .header-content {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
-  
-  .tab-bar {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  .filter-bar {
-    flex-direction: column;
-  }
-  
-  .filters-container {
-    width: 100%;
-  }
-  
-  .items-table {
-    font-size: 12px;
-  }
-  
-  .items-table th,
-  .items-table td {
-    padding: 10px 8px;
-  }
-}
-
 /* Mobile Tab Dropdown */
 .tab-bar-desktop {
   display: flex;
@@ -592,6 +563,12 @@
     margin-bottom: 16px;
   }
   
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
   .header-content h1 {
     font-size: 24px;
   }
@@ -630,9 +607,14 @@
   .controls-row {
     flex-direction: column;
     gap: 12px;
+    align-items: stretch;
   }
   
   .filter-bar {
+    width: 100%;
+  }
+  
+  .filters-container {
     width: 100%;
   }
   
