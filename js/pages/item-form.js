@@ -101,10 +101,49 @@ function showLoading() {
 }
 
 function renderWizard() {
+  console.log('renderWizard() called, currentStep:', currentStep);
   updatePageTitle();
+  console.log('updatePageTitle() done');
   renderStepIndicator();
+  console.log('renderStepIndicator() done');
   renderStepContent();
+  console.log('renderStepContent() done');
   renderStepActions();
+  console.log('renderStepActions() done');
+}
+
+function renderStepContent() {
+  console.log('renderStepContent() called, currentStep:', currentStep);
+  const container = document.getElementById('step-content');
+  console.log('step-content container:', container);
+  
+  if (!container) {
+    console.error('step-content container NOT FOUND!');
+    return;
+  }
+  
+  container.innerHTML = '';
+  
+  switch (currentStep) {
+    case 1:
+      console.log('Calling renderStep1()');
+      container.appendChild(renderStep1());
+      break;
+    case 2:
+      console.log('Calling renderStep2()');
+      container.appendChild(renderStep2());
+      break;
+    case 3:
+      console.log('Calling renderStep3()');
+      container.appendChild(renderStep3());
+      break;
+    case 4:
+      console.log('Calling renderStep4()');
+      container.appendChild(renderStep4());
+      break;
+  }
+  
+  console.log('renderStepContent() finished');
 }
 
 function updatePageTitle() {
