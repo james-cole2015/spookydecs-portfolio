@@ -106,7 +106,7 @@ export async function createItem(itemData) {
     console.log('Sending POST to:', `${apiEndpoint}/admin/items`);
     console.log('Request body:', JSON.stringify(itemData, null, 2));
     
-    const response = await fetch(`${apiEndpoint}/items`, {
+    const response = await fetch(`${apiEndpoint}/admin/items`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
