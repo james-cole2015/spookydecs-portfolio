@@ -8,11 +8,11 @@
   <!-- Navigo Router CDN -->
   <script src="https://unpkg.com/navigo@8.11.1/lib/navigo.min.js"></script>
   
-  <!-- CSS - Load all styles upfront for SPA -->
-  <link rel="stylesheet" href="css/shared.css">
-  <link rel="stylesheet" href="css/items.css">
-  <link rel="stylesheet" href="css/item-detail.css">
-  <link rel="stylesheet" href="css/item-form.css">
+  <!-- CSS - Use absolute paths -->
+  <link rel="stylesheet" href="/css/shared.css">
+  <link rel="stylesheet" href="/css/items.css">
+  <link rel="stylesheet" href="/css/item-detail.css">
+  <link rel="stylesheet" href="/css/item-form.css">
 </head>
 <body>
   <!-- Dynamic content container - router loads pages here -->
@@ -20,7 +20,7 @@
   
   <!-- Initialize router -->
   <script type="module">
-    import { initRouter } from './js/router.js';
+    import { initRouter } from '/js/router.js';  // ✅ Added leading slash
     
     // Wait for DOM + config to load
     document.addEventListener('DOMContentLoaded', () => {
