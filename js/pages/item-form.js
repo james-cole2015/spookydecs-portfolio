@@ -34,9 +34,6 @@ export async function init(params) {
   
   console.log(`Initializing item form page in ${mode} mode...`, params);
   
-  // Initialize components
-  formFields = new ItemFormFields('form-fields-container');
-  
   // If edit mode, fetch existing item
   if (mode === 'edit') {
     if (!params.itemId) {
