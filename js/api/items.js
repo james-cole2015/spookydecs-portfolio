@@ -103,7 +103,7 @@ export async function createItem(itemData) {
   try {
     const apiEndpoint = await getApiEndpoint();
     
-    console.log('Sending POST to:', `${apiEndpoint}/items`);
+    console.log('Sending POST to:', `${apiEndpoint}/admin/items`);
     console.log('Request body:', JSON.stringify(itemData, null, 2));
     
     const response = await fetch(`${apiEndpoint}/items`, {
