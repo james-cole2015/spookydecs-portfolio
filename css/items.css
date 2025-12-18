@@ -42,18 +42,19 @@
 /* Tab Bar */
 .tab-bar {
   display: flex;
-  gap: 8px;
+  gap: 0;
   margin-bottom: 24px;
   border-bottom: 2px solid #e5e7eb;
   padding-bottom: 0;
 }
 
 .tab-button {
-  padding: 12px 24px;
+  flex: 1;
+  padding: 14px 24px;
   background: none;
   border: none;
   border-bottom: 3px solid transparent;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 500;
   color: #6b7280;
   cursor: pointer;
@@ -472,11 +473,13 @@
 /* Mobile Tab Dropdown */
 .tab-bar-desktop {
   display: flex;
-  gap: 8px;
+  gap: 0;
+  width: 100%;
 }
 
 .tab-bar-mobile {
   display: none;
+  width: 100%;
 }
 
 .tab-select {
@@ -488,6 +491,7 @@
   font-weight: 500;
   background: white;
   color: #1f2937;
+  box-sizing: border-box;
 }
 
 /* Mobile Card View */
