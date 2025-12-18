@@ -591,11 +591,24 @@ export async function handleSave() {
     // Upload photos if any (decorations only)
     if (photoUploader && photoUploader.hasPhotos()) {
       try {
+        console.log('Starting photo upload for item:', itemId);
         await photoUploader.uploadPhotos(itemId, formData.season);
         toast.success('Photos Uploaded', 'Photos have been added to the item');
       } catch (photoError) {
-        console.error('Failed to upload photos:', photoError);
-        toast.warning('Photo Upload Failed', 'Item was created but photos failed to upload');
+        console.error('Photo upload error:', photoError);
+        
+        // Show detailed error message
+        const errorMessage = photoError.message || 'Unknown error';
+        toast.error('Photo Upload Failed', errorMessage);
+        
+        // Re-enable button and stop navigation
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.textContent = '💾 Save Item';
+        }
+        
+        // Don't navigate away - let user see the error and try again
+        return;
       }
     }
     
