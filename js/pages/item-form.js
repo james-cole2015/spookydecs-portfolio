@@ -223,8 +223,12 @@ function renderStep2() {
 
 // Step 3: Fill Details
 function renderStep3() {
+  console.log('renderStep3 called');
   const step = document.createElement('div');
   step.className = 'step-panel';
+  
+  console.log('formData at renderStep3:', formData);
+  console.log('class:', formData.class, 'class_type:', formData.class_type);
   
   step.innerHTML = `
     <h2>Item Details</h2>
@@ -260,25 +264,41 @@ function renderStep3() {
   
   // Wait for DOM to update, then render fields
   setTimeout(() => {
+    console.log('setTimeout in renderStep3 executing');
+    console.log('Looking for basic-fields container:', document.getElementById('basic-fields'));
+    
     formFields = new ItemFormFields('basic-fields');
+    console.log('ItemFormFields created for basic-fields');
     formFields.renderBasicFields(formData);
+    console.log('renderBasicFields completed');
     
     formFields = new ItemFormFields('specific-fields');
+    console.log('ItemFormFields created for specific-fields');
     formFields.renderClassSpecificFields(formData.class_type, formData);
+    console.log('renderClassSpecificFields completed');
     
     formFields = new ItemFormFields('vendor-fields');
+    console.log('ItemFormFields created for vendor-fields');
     formFields.renderVendorFields(formData);
+    console.log('renderVendorFields completed');
     
     formFields = new ItemFormFields('storage-fields');
+    console.log('ItemFormFields created for storage-fields');
     formFields.renderStorageFields(formData);
+    console.log('renderStorageFields completed');
     
     // Photo uploader for decorations
     if (formData.class === 'Decoration') {
+      console.log('Creating PhotoUploader for Decoration');
       photoUploader = new PhotoUploader('photo-uploader', 3);
       photoUploader.render();
+      console.log('PhotoUploader render completed');
     }
+    
+    console.log('All field rendering completed');
   }, 10);
   
+  console.log('Returning step element');
   return step;
 }
 
