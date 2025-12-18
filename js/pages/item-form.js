@@ -551,38 +551,45 @@ export async function handleSave() {
 
 function prepareItemData() {
   const data = {
+    // Backend expects these specific field names
+    type: formData.class_type,           // class_type → type
+    shortName: formData.short_name,      // short_name → shortName
+    category: formData.season,            // season → category
     class: formData.class,
-    class_type: formData.class_type,
-    short_name: formData.short_name,
-    season: formData.season,
     status: formData.status || 'Active'
   };
   
   // Add optional fields
-  if (formData.date_acquired) data.date_acquired = formData.date_acquired;
-  if (formData.general_notes) data.general_notes = formData.general_notes;
+  if (formData.date_acquired) data.dateAcquired = formData.date_acquired;
+  if (formData.general_notes) data.generalNotes = formData.general_notes;
   
-  // Add class-specific fields
-  ['height_length', 'stakes', 'tethers', 'color', 'bulb_type', 'length',
-   'male_ends', 'female_ends', 'watts', 'amps', 'adapter', 'power_inlet'].forEach(key => {
-    if (formData[key]) {
-      data[key] = formData[key];
-    }
-  });
+  // Add class-specific fields (convert to camelCase)
+  if (formData.height_length) data.heightLength = formData.height_length;
+  if (formData.stakes) data.stakes = formData.stakes;
+  if (formData.tethers) data.tethers = formData.tethers;
+  if (formData.color) data.color = formData.color;
+  if (formData.bulb_type) data.bulbType = formData.bulb_type;
+  if (formData.length) data.length = formData.length;
+  if (formData.male_ends) data.maleEnds = formData.male_ends;
+  if (formData.female_ends) data.femaleEnds = formData.female_ends;
+  if (formData.watts) data.watts = formData.watts;
+  if (formData.amps) data.amps = formData.amps;
+  if (formData.adapter) data.adapter = formData.adapter;
+  if (formData.power_inlet !== undefined) data.powerInlet = formData.power_inlet;
   
-  // Add vendor metadata
-  data.vendor_metadata = {
+  // Add vendor metadata (camelCase keys)
+  data.vendorMetadata = {
     cost: formData.vendor_cost || '',
     value: formData.vendor_value || '',
     manufacturer: formData.vendor_manufacturer || '',
-    vendor_store: formData.vendor_store || ''
+    vendorStore: formData.vendor_store || ''
   };
   
-  // Add packing data
-  data.packing_data = {
-    tote_id: formData.storage_tote_id || '',
-    tote_location: formData.storage_location || '',
-    packing_status: false
+  // Add packing data (camelCase keys)
+  data.packingData = {
+    toteId: formData.storage_tote_id || '',
+    toteLocation: formData.storage_location || '',
+    packingStatus: false
   };
   
   return data;
