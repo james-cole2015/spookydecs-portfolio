@@ -544,10 +544,9 @@ export async function handleSave() {
       }
     }
     
-    // Navigate to items list page after a brief delay
-    setTimeout(() => {
-      navigate('/items');
-    }, 1500);
+    // Navigate immediately - toast will show during navigation
+    console.log('Navigating to /items...');
+    navigate('/items');
     
   } catch (error) {
     console.error('Failed to save item:', error);
