@@ -544,9 +544,14 @@ export async function handleSave() {
       }
     }
     
-    // Navigate immediately - toast will show during navigation
-    console.log('Navigating to /items...');
-    navigate('/items');
+    // Reset form state before navigating
+    cleanup();
+    
+    // Navigate after brief delay to allow cleanup
+    setTimeout(() => {
+      console.log('Navigating to /items...');
+      window.location.href = '/items';
+    }, 500);
     
   } catch (error) {
     console.error('Failed to save item:', error);
