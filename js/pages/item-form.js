@@ -89,7 +89,7 @@ export async function init(params) {
 }
 
 function showLoading() {
-  const container = document.getElementById('wizard-container');
+  const container = document.getElementById('step-content');
   if (container) {
     container.innerHTML = `
       <div class="form-loading">
