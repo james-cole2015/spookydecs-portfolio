@@ -326,6 +326,16 @@
   color: #6b7280;
 }
 
+.status-deployed {
+  background: #10b981;
+  color: white;
+}
+
+.status-packed {
+  background: #9ca3af;
+  color: #1f2937;
+}
+
 .repair-status {
   font-size: 20px;
   display: inline-block;
