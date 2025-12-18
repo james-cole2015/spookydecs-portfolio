@@ -552,9 +552,10 @@ export async function handleSave() {
 function prepareItemData() {
   const data = {
     // Backend expects these specific field names
-    type: formData.class_type,           // class_type → type
-    shortName: formData.short_name,      // short_name → shortName
-    category: formData.season,            // season → category
+    type: formData.class_type,           // Required
+    class_type: formData.class_type,     // Also required
+    shortName: formData.short_name,      // Required
+    category: formData.season,            // Required
     class: formData.class,
     status: formData.status || 'Active'
   };
