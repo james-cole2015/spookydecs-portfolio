@@ -136,15 +136,41 @@ export class ItemDetailView {
     const tabbed = document.createElement('div');
     tabbed.className = 'tabbed-sections';
     
-    // Tab buttons
+    // Tab buttons container
     const tabButtons = document.createElement('div');
     tabButtons.className = 'section-tabs';
-    tabButtons.innerHTML = `
+    
+    // Desktop tabs
+    const desktopTabs = document.createElement('div');
+    desktopTabs.className = 'section-tabs-desktop';
+    desktopTabs.innerHTML = `
       <button class="section-tab active" data-section="details">Details</button>
       <button class="section-tab" data-section="maintenance">Maintenance</button>
       <button class="section-tab" data-section="deployments">Deployments</button>
       <button class="section-tab" data-section="storage">Storage</button>
     `;
+    
+    // Mobile dropdown
+    const mobileDropdown = document.createElement('div');
+    mobileDropdown.className = 'section-tabs-mobile';
+    
+    const select = document.createElement('select');
+    select.className = 'section-tab-select';
+    select.innerHTML = `
+      <option value="details">Details</option>
+      <option value="maintenance">Maintenance</option>
+      <option value="deployments">Deployments</option>
+      <option value="storage">Storage</option>
+    `;
+    
+    select.addEventListener('change', (e) => {
+      this.switchTab(e.target.value);
+    });
+    
+    mobileDropdown.appendChild(select);
+    
+    tabButtons.appendChild(desktopTabs);
+    tabButtons.appendChild(mobileDropdown);
     
     // Tab content
     const tabContent = document.createElement('div');
@@ -156,8 +182,8 @@ export class ItemDetailView {
     tabbed.appendChild(tabButtons);
     tabbed.appendChild(tabContent);
     
-    // Add tab click handlers
-    tabButtons.querySelectorAll('.section-tab').forEach(tab => {
+    // Add tab click handlers for desktop tabs
+    desktopTabs.querySelectorAll('.section-tab').forEach(tab => {
       tab.addEventListener('click', (e) => {
         this.switchTab(e.target.dataset.section);
       });
@@ -402,10 +428,16 @@ export class ItemDetailView {
   switchTab(sectionName) {
     console.log('Switching to tab:', sectionName);
     
-    // Update tab buttons
+    // Update desktop tab buttons
     this.container.querySelectorAll('.section-tab').forEach(tab => {
       tab.classList.toggle('active', tab.dataset.section === sectionName);
     });
+    
+    // Update mobile dropdown
+    const mobileSelect = this.container.querySelector('.section-tab-select');
+    if (mobileSelect) {
+      mobileSelect.value = sectionName;
+    }
     
     // Clear and render new content
     const contentContainer = this.container.querySelector('.section-content');

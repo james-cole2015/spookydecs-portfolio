@@ -92,7 +92,8 @@
 
 .filter-search {
   flex: 1;
-  min-width: 300px;
+  min-width: 0; /* CHANGED: Remove min-width: 300px */
+  max-width: 100%; /* ADD: Prevent overflow */
 }
 
 .search-input {
