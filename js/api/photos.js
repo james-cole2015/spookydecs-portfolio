@@ -40,7 +40,7 @@ export async function fetchPhotoById(photoId) {
   try {
     const apiEndpoint = await getApiEndpoint();
     
-    const response = await fetch(`${apiEndpoint}/images/${photoId}`, {
+    const response = await fetch(`${apiEndpoint}/admin/images/${photoId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
@@ -297,7 +297,7 @@ export async function linkPhotoToItem(photoId, itemId, isPrimary = false) {
   try {
     const apiEndpoint = await getApiEndpoint();
     
-    const response = await fetch(`${apiEndpoint}/images/${photoId}/link`, {
+    const response = await fetch(`${apiEndpoint}/admin/images/${photoId}/link`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -330,7 +330,7 @@ export async function unlinkPhotoFromItem(photoId, itemId) {
   try {
     const apiEndpoint = await getApiEndpoint();
     
-    const response = await fetch(`${apiEndpoint}/images/${photoId}/unlink`, {
+    const response = await fetch(`${apiEndpoint}/admin/images/${photoId}/unlink`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -360,7 +360,7 @@ export async function deletePhoto(photoId) {
   try {
     const apiEndpoint = await getApiEndpoint();
     
-    const response = await fetch(`${apiEndpoint}/images/${photoId}`, {
+    const response = await fetch(`${apiEndpoint}/admin/images/${photoId}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json'
