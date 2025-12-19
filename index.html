@@ -13,6 +13,9 @@
   <link rel="stylesheet" href="/css/items.css">
   <link rel="stylesheet" href="/css/item-detail.css">
   <link rel="stylesheet" href="/css/item-form.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+  <link rel="stylesheet" href="/css/crop-modal.css">
+  
 </head>
 <body>
   <!-- Dynamic content container - router loads pages here -->
@@ -20,14 +23,18 @@
   <spookydecs-header page-title="Items Management"></spookydecs-header>
   <div id="app-root"></div>
   
+  <!-- Cropper.js MUST load before module scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+  
   <!-- Initialize router -->
   <script type="module">
-    import { initRouter } from '/js/router.js';  // ✅ Added leading slash
+    import { initRouter } from '/js/router.js';
     
     // Wait for DOM + config to load
     document.addEventListener('DOMContentLoaded', () => {
       initRouter();
     });
   </script>
+
 </body>
 </html>

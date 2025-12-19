@@ -1,7 +1,8 @@
 // PhotoUploader Component
-// Handles photo selection and upload (max 3 photos for decorations)
+// Handles photo selection, cropping, and upload (max 3 photos for decorations)
 
 import { validateFile, uploadPhotos } from '../api/photos.js';
+import { CropModal } from './CropModal.js';
 
 export class PhotoUploader {
   constructor(containerId, maxPhotos = 3) {
@@ -9,6 +10,8 @@ export class PhotoUploader {
     this.maxPhotos = maxPhotos;
     this.selectedFiles = [];
     this.fileInputId = `photo-input-${Date.now()}`;
+    this.cropModal = new CropModal();
+    this.cropModal.init();
   }
   
   render() {
@@ -64,7 +67,7 @@ export class PhotoUploader {
     }
   }
   
-  handleFileSelection(event) {
+  async handleFileSelection(event) {
     const files = Array.from(event.target.files);
     
     // Check max limit
@@ -77,10 +80,37 @@ export class PhotoUploader {
     // Validate each file
     try {
       files.forEach(file => validateFile(file));
-      this.selectedFiles = files;
-      this.updateDisplay();
     } catch (error) {
       this.showError(error.message);
+      event.target.value = '';
+      return;
+    }
+    
+    // Process each file through crop modal
+    try {
+      const croppedFiles = [];
+      
+      for (const file of files) {
+        try {
+          const croppedFile = await this.cropModal.open(file);
+          croppedFiles.push(croppedFile);
+        } catch (error) {
+          // User cancelled crop - skip this file
+          console.log('Crop cancelled for file:', file.name);
+        }
+      }
+      
+      // Only set files if we got at least one
+      if (croppedFiles.length > 0) {
+        this.selectedFiles = croppedFiles;
+        this.updateDisplay();
+      } else {
+        // All crops were cancelled
+        event.target.value = '';
+      }
+      
+    } catch (error) {
+      this.showError('Error processing photos: ' + error.message);
       event.target.value = '';
       this.selectedFiles = [];
       this.updateDisplay();
