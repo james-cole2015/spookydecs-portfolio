@@ -148,6 +148,7 @@ export class CropModal {
         height: 800,
         imageSmoothingEnabled: true,
         imageSmoothingQuality: 'high',
+        fillColor: '#ffffff',
       });
       
       // Convert to blob
