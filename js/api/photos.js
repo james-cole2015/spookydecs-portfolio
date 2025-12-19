@@ -153,7 +153,7 @@ export async function uploadPhoto(file, itemId, season, isPrimary = false) {
     const apiEndpoint = await getApiEndpoint();
     
     // Step 1: Request presigned URLs
-    const presignResponse = await fetch(`${apiEndpoint}/images/presign`, {
+    const presignResponse = await fetch(`${apiEndpoint}/admin/images/presign`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -214,7 +214,7 @@ export async function uploadPhoto(file, itemId, season, isPrimary = false) {
     }
     
     // Step 5: Confirm upload and create photo record
-    const confirmResponse = await fetch(`${apiEndpoint}/images/confirm`, {
+    const confirmResponse = await fetch(`${apiEndpoint}/admin/images/confirm`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
