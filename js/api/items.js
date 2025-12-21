@@ -240,3 +240,49 @@ export async function bulkDeleteItems(itemIds) {
     throw error;
   }
 }
+
+/**
+ * Bulk store items in a location
+ * @param {Array<string>} itemIds - Array of item IDs
+ * @param {string} location - Storage location
+ * @returns {Promise<Object>} Store confirmation
+ */
+export async function bulkStore(itemIds, location) {
+  try {
+    const apiEndpoint = await getApiEndpoint();
+    
+    const response = await fetch(`${apiEndpoint}/items/bulk`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        item_ids: itemIds,
+        location: location
+      })
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || errorData.message || `Failed to store items: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error bulk storing items:', error);
+    throw error;
+  }
+}
+
+// Create itemsAPI object for consistency with other subdomains
+export const itemsAPI = {
+  getAll: fetchAllItems,
+  getById: fetchItemById,
+  create: createItem,
+  update: updateItem,
+  delete: deleteItem,
+  retire: retireItem,
+  bulkRetire: bulkRetireItems,
+  bulkDelete: bulkDeleteItems,
+  bulkStore: bulkStore
+};
