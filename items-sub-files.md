@@ -16,6 +16,7 @@ root/
 │   │
 │   ├── components/
 │   │   ├── ItemsTable.js              # Vanilla JS table component
+│   │   ├── CropModal.js               # Cropper modal for photo upload
 │   │   ├── FilterBar.js               # Search + pill filters
 │   │   ├── TabBar.js                  # Tab navigation component
 │   │   ├── ItemDetailView.js          # Detail page layout
@@ -37,6 +38,7 @@ root/
 └── css/
     ├── items.css                      # Items-specific styles
     └── shared.css                     # Shared component styles
-    ├── item-detail.css                      # Items-specific styles
-    └── item-form.css                     # Shared component styles
+    └── crop-modal.css                 # Styles for crop modal
+    ├── item-detail.css                # Items-specific styles
+    └── item-form.css                  # Shared component styles
     

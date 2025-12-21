@@ -1,9 +1,10 @@
 // Item Detail Page
 // Displays single item with all details, photos, and actions
 
-import { fetchItemById, deleteItem, retireItem } from '../api/items.js';
+import { fetchItemById, deleteItem, retireItem, itemsAPI } from '../api/items.js';
 import { getPhotosForItem } from '../api/photos.js';
 import { ItemDetailView } from '../components/ItemDetailView.js';
+import { StoreItemModal } from '../components/StoreItemModal.js';
 import { confirmationModal } from '../shared/modal.js';
 import { toast } from '../shared/toast.js';
 import { navigate } from '../router.js';
@@ -72,6 +73,44 @@ function showError(message) {
 export function handleEdit() {
   if (!currentItem) return;
   navigate(`/items/${currentItem.id}/edit`);
+}
+
+export function handleStoreItem() {
+  if (!currentItem) return;
+  
+  const modal = new StoreItemModal({
+    item: currentItem,
+    onConfirm: async (location) => {
+      try {
+        // Call bulk store API with single item
+        await itemsAPI.bulkStore([currentItem.id], location);
+        
+        toast.success('Item Stored', `${currentItem.short_name} stored in ${location}`);
+        
+        // Reload item detail to show updated state
+        const updatedItem = await fetchItemById(currentItem.id);
+        const photos = await getPhotosForItem(updatedItem);
+        currentItem = updatedItem;
+        detailView.render(currentItem, photos);
+        
+      } catch (error) {
+        console.error('Failed to store item:', error);
+        toast.error('Store Failed', error.message || 'Failed to store item. Please try again.');
+      }
+    },
+    onCancel: () => {
+      // Modal closed, do nothing
+    }
+  });
+  
+  modal.show();
+}
+
+export function handlePackItem() {
+  if (!currentItem) return;
+  
+  // Redirect to packing wizard with pre-selected item
+  navigate(`/storage/pack?mode=single&items=${currentItem.id}`);
 }
 
 export function handleRetire() {

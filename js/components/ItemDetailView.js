@@ -48,12 +48,32 @@ export class ItemDetailView {
     
     const icon = getClassTypeIcon(this.item.class_type);
     
+    // Determine which action buttons to show
+    const packingData = this.item.packing_data || {};
+    const isUnpacked = packingData.packing_status === false;
+    const isNonPackable = this.item.packable === false;
+    const isSinglePacked = this.item.single_packed === true;
+    const isReceptacle = this.item.class_type === 'Receptacle';
+    
+    const showStoreButton = isNonPackable && !isReceptacle && isUnpacked;
+    const showPackButton = isSinglePacked && isUnpacked;
+    
     header.innerHTML = `
       <div class="header-title">
         <h1><span class="title-icon">${icon}</span> ${this.item.short_name}</h1>
         <div class="item-id-badge">${this.item.id}</div>
       </div>
       <div class="header-actions">
+        ${showStoreButton ? `
+          <button class="btn btn-primary" onclick="itemDetailPage.handleStoreItem()" title="Store Item">
+            📍 Store Item
+          </button>
+        ` : ''}
+        ${showPackButton ? `
+          <button class="btn btn-primary" onclick="itemDetailPage.handlePackItem()" title="Pack Item">
+            📦 Pack Item
+          </button>
+        ` : ''}
         <button class="btn-icon btn-secondary" onclick="itemDetailPage.handleEdit()" title="Edit">
           ✏️
         </button>
