@@ -32,6 +32,36 @@ async function getApiEndpoint() {
 }
 
 /**
+ * Get Storage subdomain URL from config
+ * @returns {Promise<string>} Storage URL (e.g., "https://dev-storage.spookydecs.com")
+ */
+export async function getStorageUrl() {
+  const config = await loadConfig();
+  
+  if (!config.STR_ADM_URL) {
+    console.error('STR_ADM_URL not found in config');
+    throw new Error('Storage URL not configured');
+  }
+  
+  return config.STR_ADM_URL;
+}
+
+/**
+ * Get Deployment subdomain URL from config
+ * @returns {Promise<string>} Deployment URL (e.g., "https://dev-deployments.spookydecs.com")
+ */
+export async function getDeploymentUrl() {
+  const config = await loadConfig();
+  
+  if (!config.DEPLOY_ADMIN_URL) {
+    console.error('DEPLOY_ADMIN_URL not found in config');
+    throw new Error('Deployment URL not configured');
+  }
+  
+  return config.DEPLOY_ADMIN_URL;
+}
+
+/**
  * Fetch all items
  * @returns {Promise<Array>} Array of item objects
  */
@@ -286,3 +316,6 @@ export const itemsAPI = {
   bulkDelete: bulkDeleteItems,
   bulkStore: bulkStore
 };
+
+// Export config loader for use in other modules
+export { loadConfig };

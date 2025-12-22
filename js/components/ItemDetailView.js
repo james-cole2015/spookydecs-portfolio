@@ -8,6 +8,8 @@ import {
   hasRepairTracking 
 } from '../utils/item-config.js';
 
+import { getStorageUrl, getDeploymentUrl } from '../api/items.js';
+
 export class ItemDetailView {
   constructor(containerId) {
     this.container = document.getElementById(containerId);
@@ -455,7 +457,7 @@ export class ItemDetailView {
     return group;
   }
   
-  switchTab(sectionName) {
+  async switchTab(sectionName) {
     console.log('Switching to tab:', sectionName);
     
     // Update desktop tab buttons
@@ -488,7 +490,7 @@ export class ItemDetailView {
           break;
         case 'deployments':
           console.log('Rendering deployments section');
-          sectionContent = this.renderDeploymentsSection();
+          sectionContent = await this.renderDeploymentsSection();
           break;
         case 'maintenance':
           console.log('Rendering maintenance section');
@@ -496,7 +498,7 @@ export class ItemDetailView {
           break;
         case 'storage':
           console.log('Rendering storage section');
-          sectionContent = this.renderStorageSection();
+          sectionContent = await this.renderStorageSection();
           break;
         default:
           console.error('Unknown section:', sectionName);
@@ -523,7 +525,7 @@ export class ItemDetailView {
     }
   }
   
-  renderDeploymentsSection() {
+  async renderDeploymentsSection() {
     const section = document.createElement('div');
     section.className = 'section-panel active';
     section.dataset.section = 'deployments';
@@ -549,6 +551,21 @@ export class ItemDetailView {
       return section;
     }
     
+    // Get deployment URL from config
+    let deploymentUrl;
+    try {
+      deploymentUrl = await getDeploymentUrl();
+    } catch (error) {
+      console.error('Failed to load deployment URL from config:', error);
+      section.innerHTML = `
+        <div class="error-section">
+          <div class="error-icon">⚠️</div>
+          <div class="error-message">Unable to load deployment links. Please check configuration.</div>
+        </div>
+      `;
+      return section;
+    }
+    
     const lastDeploymentId = deploymentData.last_deployment_id || null;
     const lastDeployedAt = deploymentData.last_deployed_at || null;
     
@@ -562,7 +579,7 @@ export class ItemDetailView {
           <h4 class="subsection-title">Last Deployment</h4>
           <div class="deployment-item">
             <span class="deployment-icon">📍</span>
-            <a href="/deployments/${lastDeploymentId}" class="deployment-link">
+            <a href="${deploymentUrl}/deployments/${lastDeploymentId}" class="deployment-link">
               ${lastDeploymentId}
             </a>
             ${lastDeployedAt ? `
@@ -579,7 +596,7 @@ export class ItemDetailView {
             ${previousDeployments.map(depId => `
               <div class="deployment-item">
                 <span class="deployment-icon">📍</span>
-                <a href="/deployments/${depId}" class="deployment-link">${depId}</a>
+                <a href="${deploymentUrl}/deployments/${depId}" class="deployment-link">${depId}</a>
               </div>
             `).join('')}
           </div>
@@ -618,9 +635,11 @@ export class ItemDetailView {
                 <span class="pill pill-criticality-${criticality.toLowerCase()}">${criticality} Priority</span>
               ` : ''}
             </div>
+            <!-- Repair dashboard link commented out - waiting for repairs subdomain architecture
             <a href="/repairs/${this.item.id}" class="btn-primary btn-small">
               View in Repair Dashboard
             </a>
+            -->
           </div>
         ` : `
           <div class="repair-status-card operational">
@@ -649,7 +668,7 @@ export class ItemDetailView {
     return section;
   }
   
-  renderStorageSection() {
+  async renderStorageSection() {
     const section = document.createElement('div');
     section.className = 'section-panel active';
     section.dataset.section = 'storage';
@@ -676,6 +695,21 @@ export class ItemDetailView {
       return section;
     }
     
+    // Get storage URL from config
+    let storageUrl;
+    try {
+      storageUrl = await getStorageUrl();
+    } catch (error) {
+      console.error('Failed to load storage URL from config:', error);
+      section.innerHTML = `
+        <div class="error-section">
+          <div class="error-icon">⚠️</div>
+          <div class="error-message">Unable to load storage link. Please check configuration.</div>
+        </div>
+      `;
+      return section;
+    }
+    
     section.innerHTML = `
       <div class="field-group">
         <div class="storage-card">
@@ -690,7 +724,7 @@ export class ItemDetailView {
               <span class="storage-value">${toteLocation || 'Unknown'}</span>
             </div>
           </div>
-          <a href="/storage/${toteId}" class="btn-secondary btn-small">
+          <a href="${storageUrl}/storage/${toteId}" class="btn-secondary btn-small">
             View Storage Details
           </a>
         </div>
