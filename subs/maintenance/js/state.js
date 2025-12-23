@@ -1,0 +1,250 @@
+// Global state management with event emitter
+
+import { groupBy } from './utils/helpers.js';
+import { fetchRecordsByItem, fetchMultipleRecordsByItems } from './api.js';
+
+class AppState {
+  constructor() {
+    this.state = {
+      records: [],
+      filteredRecords: [],
+      items: {},
+      itemsWithRecords: new Set(),
+      filters: {
+        season: [],
+        recordType: [],
+        status: [],
+        criticality: [],
+        itemId: '',
+        dateRange: { start: null, end: null }
+      },
+      activeTab: 'all',
+      loading: false,
+      error: null
+    };
+    
+    this.listeners = [];
+  }
+  
+  subscribe(callback) {
+    this.listeners.push(callback);
+    return () => {
+      this.listeners = this.listeners.filter(cb => cb !== callback);
+    };
+  }
+  
+  notify() {
+    this.listeners.forEach(callback => callback(this.state));
+  }
+  
+  setState(updates) {
+    this.state = { ...this.state, ...updates };
+    this.notify();
+  }
+  
+  setFilter(filterName, value) {
+    this.state.filters[filterName] = value;
+    this.applyFilters();
+    this.notify();
+  }
+  
+  clearFilters() {
+    this.state.filters = {
+      season: [],
+      recordType: [],
+      status: [],
+      criticality: [],
+      itemId: '',
+      dateRange: { start: null, end: null }
+    };
+    this.applyFilters();
+    this.notify();
+  }
+  
+  setActiveTab(tab) {
+    this.state.activeTab = tab;
+    this.applyFilters();
+    this.notify();
+  }
+  
+  async loadRecordsByItem(itemId) {
+    this.setState({ loading: true, error: null });
+    
+    try {
+      const data = await fetchRecordsByItem(itemId);
+      const records = data.records || [];
+      
+      // Add to our records collection
+      const existingIds = new Set(this.state.records.map(r => r.record_id));
+      const newRecords = records.filter(r => !existingIds.has(r.record_id));
+      
+      this.state.records = [...this.state.records, ...newRecords];
+      this.state.itemsWithRecords.add(itemId);
+      
+      this.applyFilters();
+      this.setState({ loading: false });
+      
+      return records;
+    } catch (error) {
+      console.error('Failed to load records:', error);
+      this.setState({ loading: false, error: error.message });
+      throw error;
+    }
+  }
+  
+  async loadAllRecordsForItems(itemIds) {
+    this.setState({ loading: true, error: null });
+    
+    try {
+      const data = await fetchMultipleRecordsByItems(itemIds);
+      this.state.records = data.records || [];
+      
+      // Track which items have records
+      itemIds.forEach(id => this.state.itemsWithRecords.add(id));
+      
+      this.applyFilters();
+      this.setState({ loading: false });
+      
+      return this.state.records;
+    } catch (error) {
+      console.error('Failed to load records:', error);
+      this.setState({ loading: false, error: error.message });
+      throw error;
+    }
+  }
+  
+  addRecord(record) {
+    this.state.records.push(record);
+    this.state.itemsWithRecords.add(record.item_id);
+    this.applyFilters();
+    this.notify();
+  }
+  
+  updateRecord(recordId, updates) {
+    const index = this.state.records.findIndex(r => r.record_id === recordId);
+    if (index !== -1) {
+      this.state.records[index] = { ...this.state.records[index], ...updates };
+      this.applyFilters();
+      this.notify();
+    }
+  }
+  
+  removeRecord(recordId) {
+    this.state.records = this.state.records.filter(r => r.record_id !== recordId);
+    this.applyFilters();
+    this.notify();
+  }
+  
+  cacheItem(itemId, itemData) {
+    this.state.items[itemId] = itemData;
+  }
+  
+  getItem(itemId) {
+    return this.state.items[itemId];
+  }
+  
+  applyFilters() {
+    let filtered = [...this.state.records];
+    const { filters, activeTab } = this.state;
+    
+    // Apply tab filter
+    if (activeTab !== 'all' && activeTab !== 'items') {
+      filtered = filtered.filter(r => r.record_type === activeTab.replace('s', ''));
+    }
+    
+    // Apply season filter
+    if (filters.season.length > 0) {
+      filtered = filtered.filter(r => {
+        const item = this.state.items[r.item_id];
+        return item && filters.season.includes(item.season);
+      });
+    }
+    
+    // Apply record type filter
+    if (filters.recordType.length > 0) {
+      filtered = filtered.filter(r => filters.recordType.includes(r.record_type));
+    }
+    
+    // Apply status filter
+    if (filters.status.length > 0) {
+      filtered = filtered.filter(r => filters.status.includes(r.status));
+    }
+    
+    // Apply criticality filter
+    if (filters.criticality.length > 0) {
+      filtered = filtered.filter(r => {
+        if (filters.criticality.includes('none')) {
+          return !r.criticality || r.criticality === 'null' || filters.criticality.includes(r.criticality);
+        }
+        return filters.criticality.includes(r.criticality);
+      });
+    }
+    
+    // Apply item ID filter
+    if (filters.itemId) {
+      filtered = filtered.filter(r => 
+        r.item_id.toLowerCase().includes(filters.itemId.toLowerCase())
+      );
+    }
+    
+    // Apply date range filter
+    if (filters.dateRange.start) {
+      const startDate = new Date(filters.dateRange.start);
+      filtered = filtered.filter(r => new Date(r.created_at) >= startDate);
+    }
+    
+    if (filters.dateRange.end) {
+      const endDate = new Date(filters.dateRange.end);
+      filtered = filtered.filter(r => new Date(r.created_at) <= endDate);
+    }
+    
+    this.state.filteredRecords = filtered;
+  }
+  
+  groupByItem() {
+    const grouped = groupBy(this.state.filteredRecords, 'item_id');
+    
+    return Object.entries(grouped).map(([itemId, records]) => {
+      const item = this.state.items[itemId];
+      
+      // Calculate stats
+      const repairs = records.filter(r => r.record_type === 'repair').length;
+      const maintenance = records.filter(r => r.record_type === 'maintenance').length;
+      const inspections = records.filter(r => r.record_type === 'inspection').length;
+      
+      const totalCost = records.reduce((sum, r) => sum + (r.total_cost || 0), 0);
+      
+      // Find highest criticality
+      const criticalityOrder = { high: 3, medium: 2, low: 1, null: 0 };
+      const highestCrit = records.reduce((max, r) => {
+        const rCrit = criticalityOrder[r.criticality] || 0;
+        return rCrit > max ? rCrit : max;
+      }, 0);
+      
+      const criticalityMap = { 3: 'high', 2: 'medium', 1: 'low', 0: null };
+      
+      // Most recent record date
+      const sortedByDate = records.sort((a, b) => 
+        new Date(b.created_at) - new Date(a.created_at)
+      );
+      
+      return {
+        item_id: itemId,
+        season: item?.season || 'Unknown',
+        criticality: criticalityMap[highestCrit],
+        repairs,
+        maintenance,
+        inspections,
+        total_cost: totalCost,
+        last_record_date: sortedByDate[0]?.created_at,
+        record_count: records.length
+      };
+    });
+  }
+  
+  getState() {
+    return this.state;
+  }
+}
+
+export const appState = new AppState();

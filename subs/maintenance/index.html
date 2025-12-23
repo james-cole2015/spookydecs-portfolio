@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maintenance Records | SpookyDecs</title>
+  
+  <!-- External CSS -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/table.css">
+  <link rel="stylesheet" href="css/filters.css">
+  <link rel="stylesheet" href="css/detail.css">
+  <link rel="stylesheet" href="css/form.css">
+  
+  <!-- External Components -->
+  <script src="https://assets.spookydecs.com/components/spookydecs-header.js"></script>
+  <script src="https://assets.spookydecs.com/components/modal.js"></script>
+  <script src="https://assets.spookydecs.com/components/toast.js"></script>
+  
+  <!-- External Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/navigo@8.11.1/lib/navigo.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tanstack/table-core@8.10.7/build/umd/index.production.js"></script>
+</head>
+<body>
+  <!-- Header Component (loaded from external) -->
+  <div id="header-container"></div>
+  
+  <!-- Main App Container -->
+  <div id="app-container">
+    <!-- Loading State -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+      <div class="spinner"></div>
+      <p><Loading class=""></Loading>..</p>
+    </div>
+    
+    <!-- Main Content Area (router renders here) -->
+    <main id="main-content"></main>
+  </div>
+  
+  <!-- Toast Container (loaded from external) -->
+  <div id="toast-container"></div>
+  
+  <!-- Modal Container (loaded from external) -->
+  <div id="modal-container"></div>
+  
+  <!-- App Scripts (load in order) -->
+  <script type="module" src="js/utils/helpers.js"></script>
+  <script type="module" src="js/utils/formatters.js"></script>
+  <script type="module" src="js/api.js"></script>
+  <script type="module" src="js/state.js"></script>
+  <script type="module" src="js/components/StatsCards.js"></script>
+  <script type="module" src="js/components/Tabs.js"></script>
+  <script type="module" src="js/components/Filters.js"></script>
+  <script type="module" src="js/components/MainTable.js"></script>
+  <script type="module" src="js/components/PhotoCarousel.js"></script>
+  <script type="module" src="js/components/RecordDetail.js"></script>
+  <script type="module" src="js/components/ItemDetail.js"></script>
+  <script type="module" src="js/components/RecordForm.js"></script>
+  <script type="module" src="js/router.js"></script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
