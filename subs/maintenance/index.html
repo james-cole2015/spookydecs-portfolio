@@ -12,20 +12,23 @@
   <link rel="stylesheet" href="/css/detail.css">
   <link rel="stylesheet" href="/css/form.css">
   
-<!-- Change from regular scripts to module scripts -->
-<script src="https://assets.spookydecs.com/components/spookydecs-header.js"></script>
-<script type="module" src="https://assets.spookydecs.com/components/modal.js"></script>
-<script type="module" src="https://assets.spookydecs.com/components/toast.js"></script>
+  <!-- PhotoSwipe CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/photoswipe@5.4.3/dist/photoswipe.css">
+  
+  <!-- PhotoSwipe JS - MUST LOAD BEFORE APP SCRIPTS -->
+  <script src="https://unpkg.com/photoswipe@5.4.3/dist/photoswipe.umd.min.js"></script>
+  <script src="https://unpkg.com/photoswipe@5.4.3/dist/photoswipe-lightbox.umd.min.js"></script>
   
   <!-- External Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/navigo@8.11.1/lib/navigo.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tanstack/table-core@8.10.7/build/umd/index.production.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/photoswipe@5.4.3/dist/photoswipe.css">
-
+  
+  <!-- Component Scripts -->
+  <script src="https://assets.spookydecs.com/components/spookydecs-header.js"></script>
+  <script type="module" src="https://assets.spookydecs.com/components/modal.js"></script>
+  <script type="module" src="https://assets.spookydecs.com/components/toast.js"></script>
 </head>
 <body>
-  <!-- Use the custom element directly instead of a container div -->
-  <script src="https://assets.spookydecs.com/components/spookydecs-header.js"></script>
   <spookydecs-header page-title="Maintenance Records"></spookydecs-header>
   
   <!-- Main App Container -->
@@ -45,9 +48,6 @@
   
   <!-- Modal Container (loaded from external) -->
   <div id="modal-container"></div>
-
-   <!-- PhotoSwipe JS - ADD THIS BEFORE YOUR APP SCRIPTS -->
-  <script src="https://unpkg.com/photoswipe@5.4.3/dist/photoswipe.umd.min.js"></script>
   
   <!-- App Scripts (load in order) -->
   <script type="module" src="/js/utils/helpers.js"></script>
@@ -58,9 +58,11 @@
   <script type="module" src="/js/components/Tabs.js"></script>
   <script type="module" src="/js/components/Filters.js"></script>
   <script type="module" src="/js/components/MainTable.js"></script>
+  <script type="module" src="/js/components/PhotoSwipeGallery.js"></script>
   <script type="module" src="/js/components/PhotoCarousel.js"></script>
   <script type="module" src="/js/components/RecordDetail.js"></script>
   <script type="module" src="/js/components/ItemDetail.js"></script>
+  <script type="module" src="/js/components/PhotoUpload.js"></script>
   <script type="module" src="/js/components/RecordForm.js"></script>
   <script type="module" src="/js/router.js"></script>
   <script type="module" src="/js/main.js"></script>
