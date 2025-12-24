@@ -1,9 +1,10 @@
 // Record form component for create/edit
 
-import { fetchRecord, createRecord, updateRecord, searchItems, fetchItem } from '../api.js';
+import { fetchRecord, createRecord, updateRecord, searchItems, fetchItem, fetchMultiplePhotos } from '../api.js';
 import { appState } from '../state.js';
 import { navigateTo } from '../router.js';
 import { debounce } from '../utils/helpers.js';
+import { PhotoUpload } from './PhotoUpload.js';
 
 export class RecordFormView {
   constructor(recordId = null, itemId = null) {
@@ -15,6 +16,12 @@ export class RecordFormView {
     this.isEditMode = !!recordId;
     this.autocompleteResults = [];
     this.debouncedSearch = debounce(this.performItemSearch.bind(this), 300);
+    this.photoUploader = null;
+    this.existingPhotos = {
+      before_photos: [],
+      after_photos: [],
+      documentation: []
+    };
     this.initToastContainer();
   }
 
@@ -82,6 +89,9 @@ export class RecordFormView {
         this.record = await fetchRecord(this.recordId);
         this.materials = this.record.materials_used || [];
         this.prefilledItemId = this.record.item_id;
+        
+        // Load existing photos
+        await this.loadExistingPhotos();
       }
       
       // If item ID provided, fetch item details
@@ -96,9 +106,38 @@ export class RecordFormView {
       container.innerHTML = this.renderForm();
       this.attachEventListeners(container);
       
+      // Initialize photo uploader in edit mode
+      if (this.isEditMode) {
+        this.initializePhotoUploader(container);
+      }
+      
     } catch (error) {
       console.error('Failed to load form:', error);
       container.innerHTML = this.renderError();
+    }
+  }
+  
+  async loadExistingPhotos() {
+    if (!this.record || !this.record.attachments) return;
+    
+    const attachments = this.record.attachments;
+    
+    // Fetch photos for each category
+    for (const category of ['before_photos', 'after_photos', 'documentation']) {
+      const photoRefs = attachments[category] || [];
+      const photoIds = photoRefs.map(ref => ref.photo_id);
+      
+      if (photoIds.length > 0) {
+        try {
+          const photos = await fetchMultiplePhotos(photoIds);
+          this.existingPhotos[category] = photos.map((photo, index) => ({
+            ...photo,
+            ...photoRefs[index]
+          }));
+        } catch (error) {
+          console.error(`Failed to load ${category}:`, error);
+        }
+      }
     }
   }
   
@@ -213,67 +252,70 @@ export class RecordFormView {
                 <div class="form-group">
                   <label for="date_performed">Date Performed <span class="required">*</span></label>
                   <input 
-                    type="datetime-local" 
+                    type="date" 
                     id="date_performed" 
                     name="date_performed"
-                    class="form-input"
-                    value="${this.formatDateForInput(record.date_performed)}"
+                    class="form-input" 
+                    value="${record.date_performed ? record.date_performed.split('T')[0] : ''}"
                     required
                   >
                 </div>
                 
                 <div class="form-group">
-                  <label for="performed_by">Performed By <span class="required">*</span></label>
+                  <label for="estimated_completion_date">Est. Completion Date</label>
                   <input 
-                    type="text" 
-                    id="performed_by" 
-                    name="performed_by"
-                    class="form-input"
-                    placeholder="Name"
-                    value="${record.performed_by || ''}"
-                    required
+                    type="date" 
+                    id="estimated_completion_date" 
+                    name="estimated_completion_date"
+                    class="form-input" 
+                    value="${record.estimated_completion_date ? record.estimated_completion_date.split('T')[0] : ''}"
                   >
                 </div>
               </div>
               
               <div class="form-group">
-                <label for="estimated_completion_date">Estimated Completion Date (Optional)</label>
+                <label for="performed_by">Performed By <span class="required">*</span></label>
                 <input 
-                  type="datetime-local" 
-                  id="estimated_completion_date" 
-                  name="estimated_completion_date"
-                  class="form-input"
-                  value="${this.formatDateForInput(record.estimated_completion_date)}"
+                  type="text" 
+                  id="performed_by" 
+                  name="performed_by"
+                  class="form-input" 
+                  placeholder="Name of person performing work"
+                  value="${record.performed_by || ''}"
+                  required
                 >
               </div>
             </div>
             
             <!-- Materials Section -->
             <div class="form-section">
-              <h3>Materials Used <span class="optional">(Optional)</span></h3>
-              
+              <h3>Materials Used</h3>
               <div id="materials-list">
                 ${this.renderMaterialsList()}
               </div>
-              
-              <button type="button" class="btn-secondary" id="add-material-btn">
-                + Add Material
-              </button>
+              <button type="button" class="btn-secondary" id="add-material-btn">+ Add Material</button>
             </div>
             
-            <!-- Photos Section -->
-            <div class="form-section">
-              <h3>Photos <span class="optional">(Coming Soon)</span></h3>
-              <div class="placeholder-box">
-                <p>Photo upload functionality will be available in a future update.</p>
+            ${this.isEditMode ? `
+              <!-- Photo Management Section (Edit Mode Only) -->
+              <div class="form-section">
+                <h3>Photo Management</h3>
+                
+                <!-- Existing Photos -->
+                ${this.renderExistingPhotos()}
+                
+                <!-- Upload New Photos -->
+                <div id="photo-upload-container"></div>
               </div>
-            </div>
+            ` : ''}
             
-            <!-- Form Actions -->
+            <!-- Submit Buttons -->
             <div class="form-actions">
-              <button type="button" class="btn-secondary" onclick="history.back()">Cancel</button>
               <button type="submit" class="btn-primary">
                 ${this.isEditMode ? 'Update Record' : 'Create Record'}
+              </button>
+              <button type="button" class="btn-secondary" onclick="history.back()">
+                Cancel
               </button>
             </div>
           </form>
@@ -284,54 +326,122 @@ export class RecordFormView {
   
   renderMaterialsList() {
     if (this.materials.length === 0) {
-      return '<p class="empty-text">No materials added yet</p>';
+      return '<p class="empty-message">No materials added yet</p>';
     }
     
     return this.materials.map((material, index) => `
       <div class="material-item" data-index="${index}">
-        <div class="material-fields">
-          <input 
-            type="text" 
-            class="form-input material-item-name" 
-            placeholder="Material name"
-            value="${material.item || ''}"
-            data-field="item"
-          >
-          <input 
-            type="number" 
-            class="form-input material-quantity" 
-            placeholder="Qty"
-            value="${material.quantity || ''}"
-            data-field="quantity"
-          >
-          <input 
-            type="text" 
-            class="form-input material-unit" 
-            placeholder="Unit"
-            value="${material.unit || ''}"
-            data-field="unit"
-          >
-        </div>
+        <input 
+          type="text" 
+          placeholder="Item name" 
+          value="${material.item || ''}"
+          data-field="item"
+          class="form-input"
+        >
+        <input 
+          type="text" 
+          placeholder="Quantity" 
+          value="${material.quantity || ''}"
+          data-field="quantity"
+          class="form-input"
+        >
+        <input 
+          type="text" 
+          placeholder="Unit" 
+          value="${material.unit || ''}"
+          data-field="unit"
+          class="form-input"
+        >
         <button type="button" class="btn-remove" data-index="${index}">Remove</button>
       </div>
     `).join('');
   }
   
-  formatDateForInput(isoString) {
-    if (!isoString) return '';
+  renderExistingPhotos() {
+    const categories = [
+      { key: 'before_photos', label: 'Before Photos' },
+      { key: 'after_photos', label: 'After Photos' },
+      { key: 'documentation', label: 'Documentation' }
+    ];
     
-    try {
-      const date = new Date(isoString);
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      const hours = String(date.getHours()).padStart(2, '0');
-      const minutes = String(date.getMinutes()).padStart(2, '0');
+    return categories.map(({ key, label }) => {
+      const photos = this.existingPhotos[key] || [];
       
-      return `${year}-${month}-${day}T${hours}:${minutes}`;
-    } catch (e) {
-      return '';
+      if (photos.length === 0) return '';
+      
+      return `
+        <div class="existing-photos-section">
+          <h4>${label} (${photos.length})</h4>
+          <div class="existing-photos-grid">
+            ${photos.map(photo => `
+              <div class="existing-photo-item" data-photo-id="${photo.photo_id}" data-category="${key}">
+                <img src="${photo.thumb_cloudfront_url}" alt="Photo" class="existing-photo-thumb">
+                <div class="existing-photo-info">
+                  <div class="photo-filename">${photo.metadata?.original_filename || 'Photo'}</div>
+                  <div class="photo-type">${photo.photo_type}</div>
+                </div>
+                <button type="button" class="btn-remove-existing-photo" data-photo-id="${photo.photo_id}" data-category="${key}">
+                  × Remove
+                </button>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+  
+  initializePhotoUploader(container) {
+    const uploadContainer = container.querySelector('#photo-upload-container');
+    if (!uploadContainer) return;
+    
+    // Create photo uploader with record context
+    this.photoUploader = new PhotoUpload({
+      record_type: this.record.record_type,
+      season: this.item?.season || 'shared',
+      item_id: this.prefilledItemId
+    });
+    
+    uploadContainer.innerHTML = this.photoUploader.render();
+    this.photoUploader.attachEventListeners(uploadContainer);
+  }
+  
+  removeExistingPhoto(photoId, category) {
+    // Remove from local state
+    this.existingPhotos[category] = this.existingPhotos[category].filter(
+      photo => photo.photo_id !== photoId
+    );
+    
+    // Re-render existing photos section
+    const formSection = document.querySelector('.form-section:has(#photo-upload-container)');
+    if (formSection) {
+      const existingSections = formSection.querySelectorAll('.existing-photos-section');
+      existingSections.forEach(section => section.remove());
+      
+      const uploadContainer = formSection.querySelector('#photo-upload-container');
+      if (uploadContainer) {
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = this.renderExistingPhotos();
+        
+        while (tempDiv.firstChild) {
+          uploadContainer.parentNode.insertBefore(tempDiv.firstChild, uploadContainer);
+        }
+      }
+      
+      // Re-attach event listeners for remove buttons
+      this.attachPhotoRemoveListeners();
     }
+  }
+  
+  attachPhotoRemoveListeners() {
+    const removeButtons = document.querySelectorAll('.btn-remove-existing-photo');
+    removeButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const photoId = e.target.dataset.photoId;
+        const category = e.target.dataset.category;
+        this.removeExistingPhoto(photoId, category);
+      });
+    });
   }
   
   renderError() {
@@ -395,6 +505,11 @@ export class RecordFormView {
     }
     
     this.attachMaterialsListeners(container);
+    
+    // Photo remove listeners (edit mode)
+    if (this.isEditMode) {
+      this.attachPhotoRemoveListeners();
+    }
   }
   
   attachMaterialsListeners(container) {
@@ -496,6 +611,39 @@ export class RecordFormView {
   async handleSubmit(form) {
     try {
       const formData = new FormData(form);
+      
+      // Build attachments object
+      const attachments = {
+        before_photos: [],
+        after_photos: [],
+        documentation: []
+      };
+      
+      // Add existing photos (that weren't removed)
+      for (const category of ['before_photos', 'after_photos', 'documentation']) {
+        attachments[category] = this.existingPhotos[category].map(photo => ({
+          photo_id: photo.photo_id,
+          photo_type: photo.photo_type
+        }));
+      }
+      
+      // Handle new photo uploads if any
+      if (this.photoUploader && this.photoUploader.hasPhotos()) {
+        this.showToast('info', 'Uploading Photos', 'Please wait while photos are being uploaded...');
+        
+        try {
+          const uploadedPhotos = await this.photoUploader.uploadPhotos();
+          
+          // Add new photos to appropriate category
+          const selectedCategory = this.photoUploader.getCategory();
+          attachments[selectedCategory].push(...uploadedPhotos);
+        } catch (uploadError) {
+          console.error('Photo upload failed:', uploadError);
+          this.showToast('error', 'Photo Upload Failed', uploadError.message || 'Failed to upload photos');
+          return;
+        }
+      }
+      
       const data = {
         item_id: formData.get('item_id'),
         record_type: formData.get('record_type'),
@@ -509,7 +657,7 @@ export class RecordFormView {
         materials_used: this.materials.filter(m => m.item),
         cost_record_ids: this.record?.cost_record_ids || [],
         total_cost: this.record?.total_cost || 0,
-        attachments: this.record?.attachments || { before_photos: [], after_photos: [], documentation: [] }
+        attachments: attachments
       };
       
       // Validate
