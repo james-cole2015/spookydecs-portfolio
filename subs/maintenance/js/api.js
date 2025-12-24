@@ -111,7 +111,7 @@ export async function deleteRecord(recordId) {
 export async function fetchItem(itemId) {
   const cfg = await loadConfig();
   const response = await fetch(
-    `${cfg.ITEMS_ADMIN}/items/${encodeURIComponent(itemId)}`,
+    `${cfg.API_ENDPOINT}/items/${encodeURIComponent(itemId)}`,
     { headers: getHeaders() }
   );
   
@@ -126,7 +126,7 @@ export async function searchItems(query) {
   }
   
   const response = await fetch(
-    `${cfg.ITEMS_ADMIN}/items?search=${encodeURIComponent(query)}`,
+    `${cfg.API_ENDPOINT}/items?search=${encodeURIComponent(query)}`,
     { headers: getHeaders() }
   );
   
@@ -163,7 +163,7 @@ export async function fetchMultipleRecordsByItems(itemIds) {
 
 export function getItemUrl(itemId) {
   if (!config) return '#';
-  return `${config.ITEMS_ADMIN}/items/${itemId}`;
+  return `${config.API_ENDPOINT}/items/${itemId}`;
 }
 
 export function getCostsUrl() {
