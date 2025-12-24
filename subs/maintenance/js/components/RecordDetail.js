@@ -1,6 +1,6 @@
 // Record detail view component
 
-import { fetchRecord, deleteRecord, getItemUrl, getCostsUrl } from '../api.js';
+import { fetchRecord, deleteRecord, getItemUrl, getCostsUrl, fetchMultiplePhotos } from '../api.js';
 import { appState } from '../state.js';
 import { navigateTo } from '../router.js';
 import { formatDate, formatDateTime, formatCurrency, formatStatus, formatCriticality, formatRecordType } from '../utils/formatters.js';
@@ -217,16 +217,96 @@ export class RecordDetailView {
   }
   
   renderPhotosTab() {
-    const gallery = new PhotoSwipeGallery(this.record.attachments);
+    // Check if record has attachments
+    if (!this.record.attachments) {
+      return `
+        <div class="photos-tab">
+          <div class="no-photos">
+            <div class="placeholder-icon">📷</div>
+            <h3>No Photos Yet</h3>
+            <p>No photos have been attached to this record.</p>
+            <a href="/${this.itemId}/${this.recordId}/edit" class="btn-secondary">
+              Add Photos
+            </a>
+          </div>
+        </div>
+      `;
+    }
+    
+    const attachments = this.record.attachments;
+    
+    // Check if using new structure (before_photos, after_photos, documentation)
+    const isNewStructure = 
+      attachments.hasOwnProperty('before_photos') ||
+      attachments.hasOwnProperty('after_photos') ||
+      attachments.hasOwnProperty('documentation');
+    
+    if (isNewStructure) {
+      const hasPhotos = 
+        (attachments.before_photos && attachments.before_photos.length > 0) ||
+        (attachments.after_photos && attachments.after_photos.length > 0) ||
+        (attachments.documentation && attachments.documentation.length > 0);
+      
+      if (!hasPhotos) {
+        return `
+          <div class="photos-tab">
+            <div class="no-photos">
+              <div class="placeholder-icon">📷</div>
+              <h3>No Photos Yet</h3>
+              <p>No photos have been attached to this record.</p>
+              <a href="/${this.itemId}/${this.recordId}/edit" class="btn-secondary">
+                Add Photos
+              </a>
+            </div>
+          </div>
+        `;
+      }
+      
+      return `
+        <div class="photos-tab">
+          <div class="photos-categories">
+            ${this.renderPhotoCategory('Before Photos', 'before_photos', attachments.before_photos || [])}
+            ${this.renderPhotoCategory('After Photos', 'after_photos', attachments.after_photos || [])}
+            ${this.renderPhotoCategory('Documentation', 'documentation', attachments.documentation || [])}
+          </div>
+          
+          <div class="photo-actions">
+            <a href="/${this.itemId}/${this.recordId}/edit" class="btn-secondary">
+              Manage Photos
+            </a>
+          </div>
+        </div>
+      `;
+    } else {
+      // Old structure - fallback to PhotoSwipeGallery
+      const gallery = new PhotoSwipeGallery(this.record.attachments);
+      
+      return `
+        <div class="photos-tab">
+          ${gallery.render()}
+          
+          <div class="photo-actions">
+            <a href="/${this.itemId}/${this.recordId}/edit" class="btn-secondary">
+              Manage Photos
+            </a>
+          </div>
+        </div>
+      `;
+    }
+  }
+  
+  renderPhotoCategory(categoryLabel, categoryKey, photoRefs) {
+    if (!photoRefs || photoRefs.length === 0) {
+      return '';
+    }
     
     return `
-      <div class="photos-tab">
-        ${gallery.render()}
-        
-        <div class="photo-upload-placeholder">
-          <h3>Photo Upload</h3>
-          <p>Photo upload functionality will be available in a future update.</p>
+      <div class="photo-category">
+        <h4>${categoryLabel} (${photoRefs.length})</h4>
+        <div class="photo-category-loading" data-category="${categoryKey}">
+          Loading photos...
         </div>
+        <div class="photo-category-grid" data-category="${categoryKey}" style="display: none;"></div>
       </div>
     `;
   }
@@ -245,7 +325,7 @@ export class RecordDetailView {
     // Tab switching
     const tabBtns = container.querySelectorAll('.tab-btn');
     tabBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         // Clean up old gallery if switching away from photos tab
         if (this.activeTab === 'photos' && this.photoGallery) {
           this.photoGallery.destroy();
@@ -257,13 +337,9 @@ export class RecordDetailView {
         if (contentDiv) {
           contentDiv.innerHTML = this.renderTabContent();
           
-          // Initialize photo gallery if on photos tab
+          // Load photos if on photos tab
           if (this.activeTab === 'photos') {
-            this.photoGallery = new PhotoSwipeGallery(this.record.attachments);
-            const photosTab = contentDiv.querySelector('.photos-tab');
-            if (photosTab) {
-              this.photoGallery.attachEventListeners(photosTab);
-            }
+            await this.loadPhotosForTab(contentDiv);
           }
         }
         
@@ -281,14 +357,108 @@ export class RecordDetailView {
       });
     }
     
-    // Initialize photo gallery if on photos tab
+    // Initialize photos if starting on photos tab
     if (this.activeTab === 'photos') {
-      this.photoGallery = new PhotoSwipeGallery(this.record.attachments);
-      const photosTab = container.querySelector('.photos-tab');
-      if (photosTab) {
-        this.photoGallery.attachEventListeners(photosTab);
+      const contentDiv = container.querySelector('.detail-content');
+      if (contentDiv) {
+        this.loadPhotosForTab(contentDiv);
       }
     }
+  }
+  
+  /**
+   * Load and display photos for the photos tab
+   */
+  async loadPhotosForTab(container) {
+    if (!this.record.attachments) return;
+    
+    const attachments = this.record.attachments;
+    const categories = [
+      { key: 'before_photos', label: 'Before Photos' },
+      { key: 'after_photos', label: 'After Photos' },
+      { key: 'documentation', label: 'Documentation' }
+    ];
+    
+    // Collect all photo IDs for PhotoSwipeGallery
+    let allPhotos = [];
+    
+    for (const { key, label } of categories) {
+      const photoRefs = attachments[key] || [];
+      if (photoRefs.length === 0) continue;
+      
+      const loadingDiv = container.querySelector(`.photo-category-loading[data-category="${key}"]`);
+      const gridDiv = container.querySelector(`.photo-category-grid[data-category="${key}"]`);
+      
+      if (!gridDiv) continue;
+      
+      try {
+        // Fetch photo objects
+        const photoIds = photoRefs.map(ref => ref.photo_id);
+        const photos = await fetchMultiplePhotos(photoIds);
+        
+        // Render photos in grid
+        gridDiv.innerHTML = photos.map((photo, index) => `
+          <div class="photo-grid-item" data-photo-index="${allPhotos.length + index}">
+            <img 
+              src="${photo.thumb_cloudfront_url}" 
+              alt="${photo.metadata?.original_filename || 'Photo'}"
+              class="photo-grid-thumb"
+              data-full-url="${photo.cloudfront_url}"
+            >
+            <div class="photo-grid-info">
+              <div class="photo-filename">${photo.metadata?.original_filename || 'Photo'}</div>
+              <div class="photo-meta">
+                <span class="photo-type-badge">${photo.photo_type}</span>
+              </div>
+            </div>
+          </div>
+        `).join('');
+        
+        // Add to all photos array for gallery
+        allPhotos.push(...photos);
+        
+        // Hide loading, show grid
+        if (loadingDiv) loadingDiv.style.display = 'none';
+        gridDiv.style.display = 'grid';
+        
+      } catch (error) {
+        console.error(`Failed to load ${label}:`, error);
+        if (loadingDiv) {
+          loadingDiv.textContent = `Failed to load ${label.toLowerCase()}`;
+        }
+      }
+    }
+    
+    // Initialize PhotoSwipeGallery if photos loaded
+    if (allPhotos.length > 0) {
+      this.initializePhotoGallery(container, allPhotos);
+    }
+  }
+  
+  /**
+   * Initialize PhotoSwipeGallery with loaded photos
+   */
+  initializePhotoGallery(container, photos) {
+    // Convert to PhotoSwipeGallery format
+    const galleryPhotos = photos.map(photo => ({
+      src: photo.cloudfront_url,
+      thumbnail: photo.thumb_cloudfront_url,
+      title: photo.metadata?.original_filename || 'Photo',
+      description: `${photo.photo_type} - ${photo.season}`
+    }));
+    
+    this.photoGallery = new PhotoSwipeGallery(galleryPhotos);
+    
+    // Attach click handlers to thumbnails
+    const thumbs = container.querySelectorAll('.photo-grid-thumb');
+    thumbs.forEach((thumb, index) => {
+      thumb.style.cursor = 'pointer';
+      thumb.addEventListener('click', () => {
+        if (this.photoGallery) {
+          this.photoGallery.open(index);
+        }
+      });
+    });
   }
   
   async handleDelete() {

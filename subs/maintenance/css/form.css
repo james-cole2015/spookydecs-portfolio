@@ -784,3 +784,413 @@ textarea.form-input {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   }
 }
+
+/* Photo Upload Component Styles */
+/* Add this to your existing CSS file (e.g., form.css or main.css) */
+
+.photo-upload {
+  margin: 20px 0;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.photo-upload-header {
+  margin-bottom: 15px;
+}
+
+.photo-upload-header label {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #2c3e50;
+}
+
+.photo-upload-header .optional {
+  font-weight: 400;
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.photo-upload-controls {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.category-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.category-selector label {
+  font-weight: 500;
+  color: #495057;
+}
+
+.category-select {
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background: white;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.category-select:hover {
+  border-color: #ff6600;
+}
+
+.btn-select-photos {
+  padding: 10px 20px;
+  background: #ff6600;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.btn-select-photos:hover {
+  background: #e55b00;
+}
+
+.photo-count {
+  padding: 10px;
+  background: #e9ecef;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+.photo-count.active {
+  background: #d4edda;
+  color: #155724;
+}
+
+.photo-count strong {
+  color: #2c3e50;
+}
+
+.photo-count .file-names {
+  display: block;
+  margin-top: 5px;
+  font-size: 0.85rem;
+  color: #6c757d;
+  word-break: break-word;
+}
+
+.photo-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.photo-preview-item {
+  position: relative;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+
+.photo-preview-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.preview-image {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  background: #f8f9fa;
+}
+
+.preview-info {
+  padding: 10px;
+}
+
+.preview-name {
+  font-size: 0.85rem;
+  color: #2c3e50;
+  font-weight: 500;
+  margin-bottom: 4px;
+  word-break: break-word;
+}
+
+.preview-size {
+  font-size: 0.75rem;
+  color: #6c757d;
+}
+
+.btn-remove-photo {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  background: rgba(220, 53, 69, 0.9);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.2rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.btn-remove-photo:hover {
+  background: #dc3545;
+}
+
+.upload-progress {
+  margin-top: 15px;
+  padding: 15px;
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff6600, #ff9944);
+  transition: width 0.3s ease;
+  border-radius: 4px;
+}
+
+.progress-text {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #495057;
+  font-weight: 500;
+}
+
+/* Existing Photos Display */
+.existing-photos-section {
+  margin: 20px 0;
+  padding: 15px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.existing-photos-section h4 {
+  margin: 0 0 15px 0;
+  color: #2c3e50;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.existing-photos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.existing-photo-item {
+  position: relative;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  overflow: hidden;
+  transition: transform 0.2s;
+}
+
+.existing-photo-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.existing-photo-thumb {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+}
+
+.existing-photo-info {
+  padding: 8px;
+}
+
+.photo-filename {
+  font-size: 0.8rem;
+  color: #2c3e50;
+  font-weight: 500;
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.photo-type {
+  font-size: 0.75rem;
+  color: #6c757d;
+  text-transform: capitalize;
+}
+
+.btn-remove-existing-photo {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  background: rgba(220, 53, 69, 0.9);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s, background 0.2s;
+}
+
+.existing-photo-item:hover .btn-remove-existing-photo {
+  opacity: 1;
+}
+
+.btn-remove-existing-photo:hover {
+  background: #dc3545;
+}
+
+/* Photos Tab - RecordDetail */
+.photos-tab {
+  padding: 20px 0;
+}
+
+.no-photos {
+  text-align: center;
+  padding: 40px 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 2px dashed #dee2e6;
+}
+
+.no-photos .placeholder-icon {
+  font-size: 3rem;
+  margin-bottom: 15px;
+}
+
+.no-photos h3 {
+  margin: 0 0 10px 0;
+  color: #495057;
+  font-size: 1.25rem;
+}
+
+.no-photos p {
+  margin: 0 0 20px 0;
+  color: #6c757d;
+  font-size: 1rem;
+}
+
+.photos-categories {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.photo-category h4 {
+  margin: 0 0 15px 0;
+  color: #2c3e50;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #ff6600;
+}
+
+.photo-category-loading {
+  padding: 20px;
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.photo-category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.photo-grid-item {
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.photo-grid-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.photo-grid-thumb {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.photo-grid-thumb:hover {
+  opacity: 0.9;
+}
+
+.photo-grid-info {
+  padding: 12px;
+}
+
+.photo-type-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  background: #ff6600;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+
+.photo-actions {
+  margin-top: 30px;
+  text-align: center;
+  padding-top: 20px;
+  border-top: 1px solid #dee2e6;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .photo-upload-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .category-selector {
+    justify-content: space-between;
+  }
+  
+  .photo-preview-grid,
+  .existing-photos-grid,
+  .photo-category-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+}
