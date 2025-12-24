@@ -53,8 +53,8 @@ export class ItemDetailView {
     // Determine which action buttons to show
     const packingData = this.item.packing_data || {};
     const isUnpacked = packingData.packing_status === false;
-    const isNonPackable = packingData.packable === false;  
-    const isSinglePacked = packingData.single_packed === true;  
+    const isNonPackable = packingData.packable === false;
+    const isSinglePacked = packingData.single_packed === true;
     const isReceptacle = this.item.class_type === 'Receptacle';
     
     const showStoreButton = isNonPackable && !isReceptacle && isUnpacked;
@@ -680,18 +680,21 @@ export class ItemDetailView {
     const packingData = this.item.packing_data || {};
     const toteId = packingData.tote_id || null;
     const toteLocation = packingData.tote_location || null;
+    const isPackable = packingData.packable !== false; // Default true if not specified
     
     console.log('Tote ID:', toteId);
     console.log('Tote Location:', toteLocation);
+    console.log('Is Packable:', isPackable);
     
-    if (!toteId) {
+    // Case 1: No storage info at all
+    if (!toteId && !toteLocation) {
       section.innerHTML = `
         <div class="empty-section">
           <div class="empty-icon">📦</div>
           <div class="empty-message">Not currently stored</div>
         </div>
       `;
-      console.log('Storage section: showing empty state');
+      console.log('Storage section: showing empty state (no tote_id or location)');
       return section;
     }
     
@@ -710,28 +713,52 @@ export class ItemDetailView {
       return section;
     }
     
-    section.innerHTML = `
-      <div class="field-group">
-        <div class="storage-card">
-          <div class="storage-icon">📦</div>
-          <div class="storage-info">
-            <div class="storage-field">
-              <span class="storage-label">Tote ID:</span>
-              <span class="storage-value">${toteId}</span>
+    // Case 2: Packable item in tote (has tote_id)
+    if (toteId) {
+      section.innerHTML = `
+        <div class="field-group">
+          <div class="storage-card">
+            <div class="storage-icon">📦</div>
+            <div class="storage-info">
+              <div class="storage-field">
+                <span class="storage-label">Tote ID:</span>
+                <span class="storage-value">${toteId}</span>
+              </div>
+              <div class="storage-field">
+                <span class="storage-label">Location:</span>
+                <span class="storage-value">${toteLocation || 'Unknown'}</span>
+              </div>
             </div>
-            <div class="storage-field">
-              <span class="storage-label">Location:</span>
-              <span class="storage-value">${toteLocation || 'Unknown'}</span>
+            <a href="${storageUrl}/storage/${toteId}" class="btn-secondary btn-small">
+              View Tote Details
+            </a>
+          </div>
+        </div>
+      `;
+      console.log('Storage section: showing tote storage card');
+    } 
+    // Case 3: Non-packable item stored at location (no tote_id, but has location)
+    else {
+      section.innerHTML = `
+        <div class="field-group">
+          <div class="storage-card">
+            <div class="storage-icon">📍</div>
+            <div class="storage-info">
+              <div class="storage-field">
+                <span class="storage-label">Storage Type:</span>
+                <span class="storage-value">Non-Packable Item</span>
+              </div>
+              <div class="storage-field">
+                <span class="storage-label">Location:</span>
+                <span class="storage-value">${toteLocation}</span>
+              </div>
             </div>
           </div>
-          <a href="${storageUrl}/storage/${toteId}" class="btn-secondary btn-small">
-            View Storage Details
-          </a>
         </div>
-      </div>
-    `;
+      `;
+      console.log('Storage section: showing non-packable location card');
+    }
     
-    console.log('Storage section HTML created');
     return section;
   }
   
