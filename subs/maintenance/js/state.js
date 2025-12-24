@@ -67,12 +67,57 @@ class AppState {
     this.notify();
   }
   
+  /**
+   * Deduplicate records by record_id
+   * Keeps the most recently added version of each record
+   */
+  deduplicateRecords(records) {
+    const recordMap = new Map();
+    
+    // Use Map to automatically handle duplicates - last one wins
+    records.forEach(record => {
+      if (record && record.record_id) {
+        recordMap.set(record.record_id, record);
+      }
+    });
+    
+    const deduplicated = Array.from(recordMap.values());
+    
+    // Log if duplicates were found
+    if (deduplicated.length < records.length) {
+      console.warn(`Deduplication: Removed ${records.length - deduplicated.length} duplicate record(s)`);
+      
+      // Find which record_ids were duplicated
+      const counts = {};
+      records.forEach(r => {
+        if (r && r.record_id) {
+          counts[r.record_id] = (counts[r.record_id] || 0) + 1;
+        }
+      });
+      
+      const duplicates = Object.entries(counts)
+        .filter(([_, count]) => count > 1)
+        .map(([id, count]) => `${id.substring(0, 8)}... (${count} times)`);
+      
+      if (duplicates.length > 0) {
+        console.warn('Duplicate record_ids found:', duplicates.join(', '));
+      }
+    }
+    
+    return deduplicated;
+  }
+  
   async loadAllRecords() {
     this.setState({ loading: true, error: null });
     
     try {
       const data = await fetchAllRecords();
-      this.state.records = data.records || [];
+      const records = data.records || [];
+      
+      // Deduplicate records from API response
+      this.state.records = this.deduplicateRecords(records);
+      
+      console.log(`Loaded ${this.state.records.length} unique records from API`);
       
       this.applyFilters();
       this.setState({ loading: false });
@@ -92,11 +137,11 @@ class AppState {
       const data = await fetchRecordsByItem(itemId);
       const records = data.records || [];
       
-      // Add to our records collection
-      const existingIds = new Set(this.state.records.map(r => r.record_id));
-      const newRecords = records.filter(r => !existingIds.has(r.record_id));
+      // Merge new records with existing ones
+      const allRecords = [...this.state.records, ...records];
       
-      this.state.records = [...this.state.records, ...newRecords];
+      // Deduplicate the combined array
+      this.state.records = this.deduplicateRecords(allRecords);
       this.state.itemsWithRecords.add(itemId);
       
       this.applyFilters();
@@ -115,7 +160,10 @@ class AppState {
     
     try {
       const data = await fetchMultipleRecordsByItems(itemIds);
-      this.state.records = data.records || [];
+      const records = data.records || [];
+      
+      // Deduplicate records from API response
+      this.state.records = this.deduplicateRecords(records);
       
       // Track which items have records
       itemIds.forEach(id => this.state.itemsWithRecords.add(id));
@@ -132,7 +180,16 @@ class AppState {
   }
   
   addRecord(record) {
-    this.state.records.push(record);
+    // Check if record already exists
+    const existingIndex = this.state.records.findIndex(r => r.record_id === record.record_id);
+    
+    if (existingIndex !== -1) {
+      console.warn(`Record ${record.record_id} already exists, updating instead of adding`);
+      this.state.records[existingIndex] = record;
+    } else {
+      this.state.records.push(record);
+    }
+    
     this.state.itemsWithRecords.add(record.item_id);
     this.applyFilters();
     this.notify();
