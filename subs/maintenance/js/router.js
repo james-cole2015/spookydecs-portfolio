@@ -11,10 +11,10 @@ let router = null;
 let mainTableView = null;
 
 export function initRouter() {
-  const root = window.location.origin;
-  router = new Navigo(root, { hash: false });
+  // Navigo 8.x expects null or '/' for root when using { hash: false }
+  router = new Navigo('/', { hash: false });
   
-  console.log('🔧 Router initialized with root:', root);
+  console.log('🔧 Router initialized');
   console.log('📍 Current location:', window.location.href);
   console.log('📍 Current pathname:', window.location.pathname);
   
