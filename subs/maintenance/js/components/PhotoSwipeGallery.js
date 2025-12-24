@@ -10,6 +10,30 @@ export class PhotoSwipeGallery {
     
     this.photos = this.combinePhotos();
     this.lightbox = null;
+    this.PhotoSwipeLightbox = null;
+    this.PhotoSwipe = null;
+  }
+  
+  async loadPhotoSwipeModules() {
+    if (this.PhotoSwipeLightbox && this.PhotoSwipe) {
+      return; // Already loaded
+    }
+    
+    try {
+      // Dynamically import PhotoSwipe modules
+      const [{ default: PhotoSwipeLightbox }, { default: PhotoSwipe }] = await Promise.all([
+        import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.min.js'),
+        import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.min.js')
+      ]);
+      
+      this.PhotoSwipeLightbox = PhotoSwipeLightbox;
+      this.PhotoSwipe = PhotoSwipe;
+      
+      console.log('PhotoSwipe modules loaded successfully');
+    } catch (error) {
+      console.error('Failed to load PhotoSwipe modules:', error);
+      throw error;
+    }
   }
   
   combinePhotos() {
@@ -88,30 +112,22 @@ export class PhotoSwipeGallery {
   }
   
   async attachEventListeners(container) {
-    // Wait for PhotoSwipe globals to be available (with timeout)
-    const maxAttempts = 20; // 2 seconds max
-    let attempts = 0;
+    // Load PhotoSwipe modules dynamically
+    await this.loadPhotoSwipeModules();
     
-    while ((typeof PhotoSwipeLightbox === 'undefined' || typeof PhotoSwipe === 'undefined') && attempts < maxAttempts) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-      attempts++;
-    }
-    
-    // Check if PhotoSwipe is available (UMD global)
-    if (typeof PhotoSwipeLightbox === 'undefined' || typeof PhotoSwipe === 'undefined') {
-      console.error('PhotoSwipe library not loaded - make sure photoswipe UMD scripts are loaded in HTML');
-      console.error('Waited 2 seconds but PhotoSwipe globals not found');
+    if (!this.PhotoSwipeLightbox || !this.PhotoSwipe) {
+      console.error('PhotoSwipe modules failed to load');
       return;
     }
     
     const galleryElement = container.querySelector('#photoswipe-gallery');
     if (!galleryElement) return;
     
-    // Initialize PhotoSwipe lightbox using UMD globals
-    this.lightbox = new PhotoSwipeLightbox({
+    // Initialize PhotoSwipe lightbox using dynamically imported modules
+    this.lightbox = new this.PhotoSwipeLightbox({
       gallery: galleryElement,
       children: '.gallery-thumbnail',
-      pswpModule: PhotoSwipe, // Use the global PhotoSwipe from UMD script
+      pswpModule: this.PhotoSwipe,
       bgOpacity: 0.95,
       padding: { top: 50, bottom: 50, left: 50, right: 50 }
     });
