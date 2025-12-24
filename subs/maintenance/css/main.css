@@ -220,3 +220,68 @@ code {
     gap: 12px;
   }
 }
+
+/* Add this to css/main.css */
+
+/* Tabs Container */
+.tabs-container {
+  display: flex;
+  gap: 8px;
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #E5E7EB;
+  margin-bottom: 20px;
+  overflow-x: auto;
+}
+
+.tab-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6B7280;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.tab-button:hover {
+  background-color: #F9FAFB;
+  color: #1F2937;
+}
+
+.tab-button.active {
+  background-color: #EFF6FF;
+  color: #3B82F6;
+  border-color: #BFDBFE;
+}
+
+.tab-icon {
+  font-size: 18px;
+}
+
+.tab-label {
+  font-weight: 500;
+}
+
+.tab-count {
+  background-color: #F3F4F6;
+  color: #6B7280;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 24px;
+  text-align: center;
+}
+
+.tab-button.active .tab-count {
+  background-color: #DBEAFE;
+  color: #3B82F6;
+}

@@ -1,0 +1,271 @@
+/* Filters component styles */
+
+.filters-container {
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #E5E7EB;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.filters-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.filters-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.clear-filters-btn {
+  background-color: #FEE2E2;
+  color: #DC2626;
+  border: 1px solid #FEE2E2;
+  padding: 6px 16px;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.clear-filters-btn:hover {
+  background-color: #FEF2F2;
+  border-color: #FECACA;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-group label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+}
+
+/* Dropdown Filter */
+.filter-dropdown {
+  position: relative;
+}
+
+.filter-dropdown-btn {
+  width: 100%;
+  padding: 8px 12px;
+  background: #F3F4F6;
+  border: 1px solid #E5E7EB;
+  border-radius: 16px;
+  font-size: 13px;
+  color: #1F2937;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s;
+}
+
+.filter-dropdown-btn:hover {
+  background: #E5E7EB;
+}
+
+.filter-badge {
+  background-color: #3B82F6;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.filter-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 100;
+  display: none;
+}
+
+.filter-dropdown-menu.show {
+  display: block;
+}
+
+.filter-option {
+  padding: 10px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.15s;
+}
+
+.filter-option:hover {
+  background-color: #F9FAFB;
+}
+
+.filter-option.selected {
+  background-color: #EFF6FF;
+  color: #3B82F6;
+}
+
+.filter-option input[type="checkbox"] {
+  cursor: pointer;
+}
+
+/* Filter Pills */
+.filter-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #F3F4F6;
+  border: 1px solid #E5E7EB;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  color: #1F2937;
+}
+
+.pill-remove {
+  background: none;
+  border: none;
+  color: #6B7280;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.pill-remove:hover {
+  color: #EF4444;
+}
+
+/* Autocomplete */
+.autocomplete-container {
+  position: relative;
+}
+
+.autocomplete-input {
+  width: 100%;
+  padding: 8px 12px;
+  background: #F3F4F6;
+  border: 1px solid #E5E7EB;
+  border-radius: 16px;
+  font-size: 13px;
+  color: #1F2937;
+}
+
+.autocomplete-input:focus {
+  outline: none;
+  border-color: #3B82F6;
+  background: white;
+}
+
+.autocomplete-results {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 100;
+  display: none;
+}
+
+.autocomplete-results.show {
+  display: block;
+}
+
+.autocomplete-result {
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.autocomplete-result:hover {
+  background-color: #F9FAFB;
+}
+
+.autocomplete-result strong {
+  color: #1F2937;
+}
+
+.autocomplete-empty {
+  padding: 10px 12px;
+  color: #6B7280;
+  font-style: italic;
+}
+
+/* Date Range */
+.date-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.date-input {
+  flex: 1;
+  padding: 8px 12px;
+  background: #F3F4F6;
+  border: 1px solid #E5E7EB;
+  border-radius: 16px;
+  font-size: 13px;
+  color: #1F2937;
+}
+
+.date-input:focus {
+  outline: none;
+  border-color: #3B82F6;
+  background: white;
+}
+
+.date-range span {
+  color: #6B7280;
+  font-size: 13px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .filters-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .date-range {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .date-range span {
+    text-align: center;
+  }
+}
