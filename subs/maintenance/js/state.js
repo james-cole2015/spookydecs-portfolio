@@ -1,7 +1,7 @@
 // Global state management with event emitter
 
 import { groupBy } from './utils/helpers.js';
-import { fetchRecordsByItem, fetchMultipleRecordsByItems } from './api.js';
+import { fetchRecordsByItem, fetchMultipleRecordsByItems, fetchAllRecords } from './api.js';
 
 class AppState {
   constructor() {
@@ -65,6 +65,24 @@ class AppState {
     this.state.activeTab = tab;
     this.applyFilters();
     this.notify();
+  }
+  
+  async loadAllRecords() {
+    this.setState({ loading: true, error: null });
+    
+    try {
+      const data = await fetchAllRecords();
+      this.state.records = data.records || [];
+      
+      this.applyFilters();
+      this.setState({ loading: false });
+      
+      return this.state.records;
+    } catch (error) {
+      console.error('Failed to load all records:', error);
+      this.setState({ loading: false, error: error.message });
+      throw error;
+    }
   }
   
   async loadRecordsByItem(itemId) {

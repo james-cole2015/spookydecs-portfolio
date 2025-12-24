@@ -27,6 +27,11 @@ class MaintenanceApp {
       console.log('Initializing router...');
       initRouter();
       
+      // Load initial data
+      console.log('Loading initial data...');
+      await appState.loadAllRecords();
+      console.log('Initial data loaded successfully');
+      
       // Set up global error handler
       window.addEventListener('error', (event) => {
         console.error('Global error:', event.error);
@@ -48,10 +53,10 @@ class MaintenanceApp {
     }
   }
   
-initHeader() {
-  // Header is already in the HTML as a custom element
-  console.log('Header loaded via custom element');
-}
+  initHeader() {
+    // Header is already in the HTML as a custom element
+    console.log('Header loaded via custom element');
+  }
   
   initToast() {
     if (window.toast) {
