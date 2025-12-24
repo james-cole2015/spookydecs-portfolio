@@ -87,10 +87,20 @@ export class PhotoSwipeGallery {
     `).join('');
   }
   
-  attachEventListeners(container) {
+  async attachEventListeners(container) {
+    // Wait for PhotoSwipe globals to be available (with timeout)
+    const maxAttempts = 20; // 2 seconds max
+    let attempts = 0;
+    
+    while ((typeof PhotoSwipeLightbox === 'undefined' || typeof PhotoSwipe === 'undefined') && attempts < maxAttempts) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      attempts++;
+    }
+    
     // Check if PhotoSwipe is available (UMD global)
     if (typeof PhotoSwipeLightbox === 'undefined' || typeof PhotoSwipe === 'undefined') {
       console.error('PhotoSwipe library not loaded - make sure photoswipe UMD scripts are loaded in HTML');
+      console.error('Waited 2 seconds but PhotoSwipe globals not found');
       return;
     }
     

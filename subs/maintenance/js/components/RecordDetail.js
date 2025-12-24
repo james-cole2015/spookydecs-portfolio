@@ -431,14 +431,14 @@ export class RecordDetailView {
     
     // Initialize PhotoSwipeGallery if photos loaded
     if (allPhotos.length > 0) {
-      this.initializePhotoGallery(container, allPhotos);
+      await this.initializePhotoGallery(container, allPhotos);
     }
   }
   
   /**
    * Initialize PhotoSwipeGallery with loaded photos
    */
-  initializePhotoGallery(container, photos) {
+  async initializePhotoGallery(container, photos) {
     // Convert to PhotoSwipeGallery format
     const galleryPhotos = photos.map(photo => ({
       src: photo.cloudfront_url,
@@ -449,9 +449,9 @@ export class RecordDetailView {
     
     this.photoGallery = new PhotoSwipeGallery(galleryPhotos);
     
-    // Let PhotoSwipeGallery handle its own event listeners
+    // Let PhotoSwipeGallery handle its own event listeners (now async)
     if (this.photoGallery && typeof this.photoGallery.attachEventListeners === 'function') {
-      this.photoGallery.attachEventListeners(container);
+      await this.photoGallery.attachEventListeners(container);
     }
   }
   
