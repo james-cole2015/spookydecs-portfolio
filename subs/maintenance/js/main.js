@@ -48,22 +48,10 @@ class MaintenanceApp {
     }
   }
   
-  initHeader() {
-    const headerContainer = document.getElementById('header-container');
-    if (headerContainer && window.SpookyDecsHeader) {
-      const header = new window.SpookyDecsHeader({
-        title: 'Maintenance Records',
-        links: [
-          { text: 'Records', href: '/' },
-          { text: 'Items', href: 'https://dev-items.spookydecs.com' },
-          { text: 'Finance', href: 'https://dev-finance.spookydecs.com' }
-        ]
-      });
-      header.render(headerContainer);
-    } else {
-      console.warn('Header component not available');
-    }
-  }
+initHeader() {
+  // Header is already in the HTML as a custom element
+  console.log('Header loaded via custom element');
+}
   
   initToast() {
     if (window.toast) {
