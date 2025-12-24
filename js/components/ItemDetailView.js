@@ -53,8 +53,8 @@ export class ItemDetailView {
     // Determine which action buttons to show
     const packingData = this.item.packing_data || {};
     const isUnpacked = packingData.packing_status === false;
-    const isNonPackable = this.item.packable === false;
-    const isSinglePacked = this.item.single_packed === true;
+    const isNonPackable = packingData.packable === false;  
+    const isSinglePacked = packingData.single_packed === true;  
     const isReceptacle = this.item.class_type === 'Receptacle';
     
     const showStoreButton = isNonPackable && !isReceptacle && isUnpacked;
