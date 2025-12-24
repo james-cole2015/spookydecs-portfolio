@@ -87,93 +87,84 @@ export class PhotoSwipeGallery {
     `).join('');
   }
   
-  attachEventListeners(container) {
-    // Check if PhotoSwipe is available
-    if (typeof PhotoSwipe === 'undefined') {
-      console.error('PhotoSwipe library not loaded');
-      return;
-    }
-    
-    const galleryElement = container.querySelector('#photoswipe-gallery');
-    if (!galleryElement) return;
-    
-    // Initialize PhotoSwipe lightbox
-    this.lightbox = new PhotoSwipe({
-      dataSource: this.photos,
-      pswpModule: PhotoSwipe,
-      bgOpacity: 0.95,
-      padding: { top: 50, bottom: 50, left: 50, right: 50 },
-      
-      // Show photo type in caption
-      appendToEl: document.body,
-    });
-    
-    // Add custom caption with photo type
-    this.lightbox.on('uiRegister', () => {
-      this.lightbox.pswp.ui.registerElement({
-        name: 'photo-type-caption',
-        order: 9,
-        isButton: false,
-        appendTo: 'root',
-        html: '',
-        onInit: (el, pswp) => {
-          pswp.on('change', () => {
-            const currSlide = pswp.currSlide;
-            const photo = this.photos[pswp.currIndex];
-            
-            if (photo) {
-              el.innerHTML = `
-                <div class="pswp__caption" style="
-                  position: absolute;
-                  bottom: 20px;
-                  left: 50%;
-                  transform: translateX(-50%);
-                  background: rgba(0, 0, 0, 0.7);
-                  color: white;
-                  padding: 8px 16px;
-                  border-radius: 20px;
-                  font-size: 14px;
-                  font-weight: 500;
-                  pointer-events: none;
-                ">
-                  <span style="
-                    display: inline-block;
-                    width: 8px;
-                    height: 8px;
-                    border-radius: 50%;
-                    background-color: ${photo.color};
-                    margin-right: 8px;
-                  "></span>
-                  ${photo.type}
-                </div>
-              `;
-            }
-          });
-        }
-      });
-    });
-    
-    // Click handlers for thumbnails
-    const thumbnails = galleryElement.querySelectorAll('.gallery-thumbnail');
-    thumbnails.forEach((thumbnail, index) => {
-      thumbnail.addEventListener('click', (e) => {
-        e.preventDefault();
-        this.openGallery(index);
-      });
-      
-      // Add keyboard accessibility
-      thumbnail.setAttribute('tabindex', '0');
-      thumbnail.setAttribute('role', 'button');
-      thumbnail.setAttribute('aria-label', `View ${this.photos[index].type} photo ${index + 1}`);
-      
-      thumbnail.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          this.openGallery(index);
-        }
-      });
-    });
+ attachEventListeners(container) {
+  // Check if PhotoSwipe is available
+  if (typeof PhotoSwipeLightbox === 'undefined') {
+    console.error('PhotoSwipe library not loaded');
+    return;
   }
+  
+  const galleryElement = container.querySelector('#photoswipe-gallery');
+  if (!galleryElement) return;
+  
+  // Initialize PhotoSwipe lightbox
+  this.lightbox = new PhotoSwipeLightbox({
+    gallery: galleryElement,
+    children: '.gallery-thumbnail',
+    pswpModule: () => import('https://unpkg.com/photoswipe@5.4.3/dist/photoswipe.esm.js'),
+    bgOpacity: 0.95,
+    padding: { top: 50, bottom: 50, left: 50, right: 50 }
+  });
+  
+  // Provide data source dynamically
+  this.lightbox.on('contentLoad', (e) => {
+    const index = e.index;
+    const photo = this.photos[index];
+    
+    e.content = {
+      src: photo.url,
+      width: 1200,
+      height: 900
+    };
+  });
+  
+  // Add custom caption with photo type
+  this.lightbox.on('uiRegister', () => {
+    this.lightbox.pswp.ui.registerElement({
+      name: 'photo-type-caption',
+      order: 9,
+      isButton: false,
+      appendTo: 'root',
+      html: '',
+      onInit: (el, pswp) => {
+        pswp.on('change', () => {
+          const photo = this.photos[pswp.currIndex];
+          
+          if (photo) {
+            el.innerHTML = `
+              <div class="pswp__caption" style="
+                position: absolute;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0, 0, 0, 0.7);
+                color: white;
+                padding: 8px 16px;
+                border-radius: 20px;
+                font-size: 14px;
+                font-weight: 500;
+                pointer-events: none;
+              ">
+                <span style="
+                  display: inline-block;
+                  width: 8px;
+                  height: 8px;
+                  border-radius: 50%;
+                  background-color: ${photo.color};
+                  margin-right: 8px;
+                "></span>
+                ${photo.type}
+              </div>
+            `;
+          }
+        });
+      }
+    });
+  });
+  
+  // Initialize the lightbox
+  this.lightbox.init();
+}
   
   openGallery(index = 0) {
     if (!this.lightbox) {
