@@ -15,6 +15,64 @@ export class RecordFormView {
     this.isEditMode = !!recordId;
     this.autocompleteResults = [];
     this.debouncedSearch = debounce(this.performItemSearch.bind(this), 300);
+    this.initToastContainer();
+  }
+
+  initToastContainer() {
+    // Create toast container if it doesn't exist
+    if (!document.querySelector('.toast-container')) {
+      const container = document.createElement('div');
+      container.className = 'toast-container';
+      document.body.appendChild(container);
+    }
+  }
+
+  showToast(type, title, message, duration = 5000) {
+    const container = document.querySelector('.toast-container');
+    
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    // Icon based on type
+    const icons = {
+      success: '✓',
+      error: '✕',
+      warning: '⚠',
+      info: 'ℹ'
+    };
+    
+    toast.innerHTML = `
+      <div class="toast-icon">${icons[type] || icons.info}</div>
+      <div class="toast-content">
+        <div class="toast-title">${title}</div>
+        ${message ? `<div class="toast-message">${message}</div>` : ''}
+      </div>
+      <button class="toast-close" aria-label="Close">×</button>
+    `;
+    
+    // Add to container
+    container.appendChild(toast);
+    
+    // Close button handler
+    const closeBtn = toast.querySelector('.toast-close');
+    closeBtn.addEventListener('click', () => {
+      this.removeToast(toast);
+    });
+    
+    // Auto-remove after duration
+    if (duration > 0) {
+      setTimeout(() => {
+        this.removeToast(toast);
+      }, duration);
+    }
+  }
+
+  removeToast(toast) {
+    toast.classList.add('hiding');
+    setTimeout(() => {
+      toast.remove();
+    }, 300); // Match animation duration
   }
   
   async render(container) {
@@ -471,17 +529,13 @@ export class RecordFormView {
         savedRecord = await updateRecord(this.recordId, data);
         appState.updateRecord(this.recordId, savedRecord);
         
-        if (window.toast) {
-          window.toast.success('Success', 'Record updated successfully');
-        }
+        this.showToast('success', 'Success', 'Record updated successfully');
       } else {
         // Create new record
         savedRecord = await createRecord(data);
         appState.addRecord(savedRecord);
         
-        if (window.toast) {
-          window.toast.success('Success', 'Record created successfully');
-        }
+        this.showToast('success', 'Success', 'Record created successfully');
       }
       
       // Navigate to record detail
@@ -489,12 +543,7 @@ export class RecordFormView {
       
     } catch (error) {
       console.error('Failed to save record:', error);
-      
-      if (window.toast) {
-        window.toast.error('Error', error.message || 'Failed to save record');
-      } else {
-        alert('Error: ' + (error.message || 'Failed to save record'));
-      }
+      this.showToast('error', 'Error', error.message || 'Failed to save record');
     }
   }
 }
