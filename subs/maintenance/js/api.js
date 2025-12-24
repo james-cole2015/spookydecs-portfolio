@@ -38,7 +38,7 @@ export async function fetchAllRecords() {
   const cfg = await loadConfig();
   
   // First, get a sample to check if there's pagination needed
-  const response = await fetch(`${cfg.MAINT_API}/maintenance-records?item_id=scan-all`, {
+  const response = await fetch(`${cfg.API_ENDPOINT}/maintenance-records?item_id=scan-all`, {
     headers: getHeaders()
   });
   
@@ -51,7 +51,7 @@ export async function fetchAllRecords() {
 export async function fetchRecordsByItem(itemId) {
   const cfg = await loadConfig();
   const response = await fetch(
-    `${cfg.MAINT_API}/maintenance-records?item_id=${encodeURIComponent(itemId)}`,
+    `${cfg.API_ENDPOINT}/maintenance-records?item_id=${encodeURIComponent(itemId)}`,
     { headers: getHeaders() }
   );
   
@@ -61,7 +61,7 @@ export async function fetchRecordsByItem(itemId) {
 export async function fetchRecord(recordId) {
   const cfg = await loadConfig();
   const response = await fetch(
-    `${cfg.MAINT_API}/maintenance-records/${encodeURIComponent(recordId)}`,
+    `${cfg.API_ENDPOINT}/maintenance-records/${encodeURIComponent(recordId)}`,
     { headers: getHeaders() }
   );
   
@@ -71,7 +71,7 @@ export async function fetchRecord(recordId) {
 
 export async function createRecord(recordData) {
   const cfg = await loadConfig();
-  const response = await fetch(`${cfg.MAINT_API}/maintenance-records`, {
+  const response = await fetch(`${cfg.API_ENDPOINT}/maintenance-records`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify(recordData)
@@ -84,7 +84,7 @@ export async function createRecord(recordData) {
 export async function updateRecord(recordId, recordData) {
   const cfg = await loadConfig();
   const response = await fetch(
-    `${cfg.MAINT_API}/maintenance-records/${encodeURIComponent(recordId)}`,
+    `${cfg.API_ENDPOINT}/maintenance-records/${encodeURIComponent(recordId)}`,
     {
       method: 'PUT',
       headers: getHeaders(),
@@ -99,7 +99,7 @@ export async function updateRecord(recordId, recordData) {
 export async function deleteRecord(recordId) {
   const cfg = await loadConfig();
   const response = await fetch(
-    `${cfg.MAINT_API}/maintenance-records/${encodeURIComponent(recordId)}`,
+    `${cfg.API_ENDPOINT}/maintenance-records/${encodeURIComponent(recordId)}`,
     {
       method: 'DELETE',
       headers: getHeaders()
