@@ -36,22 +36,16 @@ async function handleResponse(response) {
 
 export async function fetchAllRecords() {
   const cfg = await loadConfig();
-  
-  // First, get a sample to check if there's pagination needed
-  const response = await fetch(`${cfg.API_ENDPOINT}/maintenance-records?item_id=scan-all`, {
+  const response = await fetch(`${cfg.API_ENDPOINT}/admin/admin/maintenance-records`, {
     headers: getHeaders()
   });
-  
-  // Since we don't have a "get all" endpoint, we'll need to scan by querying
-  // For now, return empty and let the component handle loading
-  // This is a placeholder - in production you'd implement pagination or a scan endpoint
-  return { records: [], count: 0 };
+  return handleResponse(response);
 }
 
 export async function fetchRecordsByItem(itemId) {
   const cfg = await loadConfig();
   const response = await fetch(
-    `${cfg.API_ENDPOINT}/maintenance-records?item_id=${encodeURIComponent(itemId)}`,
+    `${cfg.API_ENDPOINT}/admin/admin/maintenance-records?item_id=${encodeURIComponent(itemId)}`,
     { headers: getHeaders() }
   );
   
@@ -61,7 +55,7 @@ export async function fetchRecordsByItem(itemId) {
 export async function fetchRecord(recordId) {
   const cfg = await loadConfig();
   const response = await fetch(
-    `${cfg.API_ENDPOINT}/maintenance-records/${encodeURIComponent(recordId)}`,
+    `${cfg.API_ENDPOINT}/admin/maintenance-records/${encodeURIComponent(recordId)}`,
     { headers: getHeaders() }
   );
   
@@ -71,7 +65,7 @@ export async function fetchRecord(recordId) {
 
 export async function createRecord(recordData) {
   const cfg = await loadConfig();
-  const response = await fetch(`${cfg.API_ENDPOINT}/maintenance-records`, {
+  const response = await fetch(`${cfg.API_ENDPOINT}/admin/maintenance-records`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify(recordData)
@@ -84,7 +78,7 @@ export async function createRecord(recordData) {
 export async function updateRecord(recordId, recordData) {
   const cfg = await loadConfig();
   const response = await fetch(
-    `${cfg.API_ENDPOINT}/maintenance-records/${encodeURIComponent(recordId)}`,
+    `${cfg.API_ENDPOINT}/admin/maintenance-records/${encodeURIComponent(recordId)}`,
     {
       method: 'PUT',
       headers: getHeaders(),
@@ -99,7 +93,7 @@ export async function updateRecord(recordId, recordData) {
 export async function deleteRecord(recordId) {
   const cfg = await loadConfig();
   const response = await fetch(
-    `${cfg.API_ENDPOINT}/maintenance-records/${encodeURIComponent(recordId)}`,
+    `${cfg.API_ENDPOINT}/admin/maintenance-records/${encodeURIComponent(recordId)}`,
     {
       method: 'DELETE',
       headers: getHeaders()
