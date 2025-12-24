@@ -449,16 +449,10 @@ export class RecordDetailView {
     
     this.photoGallery = new PhotoSwipeGallery(galleryPhotos);
     
-    // Attach click handlers to thumbnails
-    const thumbs = container.querySelectorAll('.photo-grid-thumb');
-    thumbs.forEach((thumb, index) => {
-      thumb.style.cursor = 'pointer';
-      thumb.addEventListener('click', () => {
-        if (this.photoGallery) {
-          this.photoGallery.open(index);
-        }
-      });
-    });
+    // Let PhotoSwipeGallery handle its own event listeners
+    if (this.photoGallery && typeof this.photoGallery.attachEventListeners === 'function') {
+      this.photoGallery.attachEventListeners(container);
+    }
   }
   
   async handleDelete() {
