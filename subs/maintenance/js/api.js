@@ -36,7 +36,7 @@ async function handleResponse(response) {
 
 export async function fetchAllRecords() {
   const cfg = await loadConfig();
-  const response = await fetch(`${cfg.API_ENDPOINT}/admin/admin/maintenance-records`, {
+  const response = await fetch(`${cfg.API_ENDPOINT}/admin/maintenance-records`, {
     headers: getHeaders()
   });
   
