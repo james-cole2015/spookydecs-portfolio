@@ -99,7 +99,7 @@
 
 .detail-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: 1fr 1fr;
   gap: 24px;
 }
 
@@ -437,5 +437,14 @@
   
   .tab-btn {
     white-space: nowrap;
+  }
+  
+  .link-buttons {
+    flex-direction: column;
+  }
+  
+  .link-buttons .btn-link {
+    width: 100%;
+    text-align: center;
   }
 }

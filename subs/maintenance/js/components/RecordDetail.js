@@ -145,18 +145,6 @@ export class RecordDetailView {
           ` : ''}
           
           <div class="detail-section full-width">
-            <h3>Related Links</h3>
-            <div class="link-buttons">
-              <a href="/${this.itemId}" class="btn-link">
-                View Item in Maintenance →
-              </a>
-              <a href="${getItemUrl(this.itemId)}" class="btn-link" target="_blank">
-                View Item in Items Subdomain →
-              </a>
-            </div>
-          </div>
-          
-          <div class="detail-section">
             <h3>Timestamps</h3>
             <div class="detail-row">
               <span class="detail-label">Created</span>
@@ -169,6 +157,18 @@ export class RecordDetailView {
             <div class="detail-row">
               <span class="detail-label">Updated By</span>
               <span class="detail-value">${this.record.updated_by || 'N/A'}</span>
+            </div>
+          </div>
+          
+          <div class="detail-section full-width">
+            <h3>Related Links</h3>
+            <div class="link-buttons">
+              <a href="/${this.itemId}" class="btn-link">
+                View Item in Maintenance →
+              </a>
+              <a href="${getItemUrl(this.itemId)}" class="btn-link" target="_blank">
+                View Item in Items Subdomain →
+              </a>
             </div>
           </div>
         </div>
