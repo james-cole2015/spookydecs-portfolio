@@ -128,20 +128,14 @@ export class PhotoSwipeGallery {
       gallery: galleryElement,
       children: '.gallery-thumbnail',
       pswpModule: this.PhotoSwipe,
-      bgOpacity: 0.95,
-      padding: { top: 50, bottom: 50, left: 50, right: 50 }
-    });
-    
-    // Provide data source dynamically
-    this.lightbox.on('contentLoad', (e) => {
-      const index = e.index;
-      const photo = this.photos[index];
-      
-      e.content = {
+      dataSource: this.photos.map(photo => ({
         src: photo.url,
         width: 1200,
-        height: 900
-      };
+        height: 900,
+        alt: `${photo.type} photo`
+      })),
+      bgOpacity: 0.95,
+      padding: { top: 50, bottom: 50, left: 50, right: 50 }
     });
     
     // Add custom caption with photo type
