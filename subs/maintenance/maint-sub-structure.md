@@ -19,7 +19,7 @@
     │   ├── RecordDetail.js
     │   ├── ItemDetail.js
     │   ├── RecordForm.js
-    │   ├── PhotoCarousel.js
+    │   ├── PhotoSwipeGallery.js
     │   └── StatsCards.js
     └── utils/
         ├── helpers.js

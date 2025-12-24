@@ -20,6 +20,8 @@
   <!-- External Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/navigo@8.11.1/lib/navigo.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tanstack/table-core@8.10.7/build/umd/index.production.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/photoswipe@5.4.3/dist/photoswipe.css">
+
 </head>
 <body>
   <!-- Use the custom element directly instead of a container div -->
@@ -43,6 +45,9 @@
   
   <!-- Modal Container (loaded from external) -->
   <div id="modal-container"></div>
+
+   <!-- PhotoSwipe JS - ADD THIS BEFORE YOUR APP SCRIPTS -->
+  <script src="https://unpkg.com/photoswipe@5.4.3/dist/photoswipe.umd.min.js"></script>
   
   <!-- App Scripts (load in order) -->
   <script type="module" src="/js/utils/helpers.js"></script>

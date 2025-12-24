@@ -222,179 +222,96 @@
   margin-top: 20px;
 }
 
-/* Photo Carousel */
-.photo-carousel {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+/* ============================================ */
+/* PHOTOSWIPE GALLERY STYLES */
+/* ============================================ */
+
+.photo-gallery {
+  margin-bottom: 24px;
 }
 
-.carousel-main {
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.gallery-thumbnail {
   position: relative;
-  background: #F9FAFB;
+  aspect-ratio: 1;
   border-radius: 8px;
   overflow: hidden;
-  min-height: 400px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.carousel-image-container {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.carousel-main-image {
-  max-width: 100%;
-  max-height: 500px;
-  object-fit: contain;
   cursor: pointer;
-}
-
-.carousel-badge {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  padding: 6px 12px;
-  border-radius: 6px;
-  color: white;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.carousel-nav {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(255, 255, 255, 0.9);
-  border: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  font-size: 24px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border: 2px solid #E5E7EB;
   transition: all 0.2s;
-  z-index: 10;
+  background: #F9FAFB;
 }
 
-.carousel-nav:hover {
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.carousel-nav.prev {
-  left: 16px;
-}
-
-.carousel-nav.next {
-  right: 16px;
-}
-
-.carousel-thumbnails {
-  display: flex;
-  gap: 12px;
-  overflow-x: auto;
-  padding: 8px 0;
-}
-
-.carousel-thumbnail {
-  flex-shrink: 0;
-  width: 100px;
-  height: 100px;
-  border-radius: 6px;
-  overflow: hidden;
-  cursor: pointer;
-  border: 2px solid transparent;
-  transition: all 0.2s;
-  position: relative;
-}
-
-.carousel-thumbnail:hover {
-  border-color: #D1D5DB;
-}
-
-.carousel-thumbnail.active {
+.gallery-thumbnail:hover {
   border-color: #3B82F6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+  transform: translateY(-2px);
 }
 
-.carousel-thumbnail img {
+.gallery-thumbnail:focus {
+  outline: 2px solid #3B82F6;
+  outline-offset: 2px;
+}
+
+.gallery-thumbnail img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
-.thumbnail-label {
+.thumbnail-badge {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: rgba(0, 0, 0, 0.6);
+  top: 8px;
+  left: 8px;
+  padding: 4px 10px;
+  border-radius: 4px;
   color: white;
-  font-size: 10px;
-  padding: 4px;
-  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  pointer-events: none;
 }
 
-.carousel-counter {
+.gallery-info {
   text-align: center;
   font-size: 13px;
   color: #6B7280;
+  padding: 8px 0;
 }
 
-.photo-carousel-empty {
+.photo-gallery-empty {
   text-align: center;
   padding: 60px 20px;
   color: #6B7280;
+  background: #F9FAFB;
+  border-radius: 8px;
 }
 
-/* Photo Fullscreen */
-.photo-fullscreen {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+/* PhotoSwipe UI Customizations */
+.pswp {
   z-index: 10000;
 }
 
-.fullscreen-overlay {
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.95);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px;
+.pswp__button {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  color: white !important;
 }
 
-.fullscreen-overlay img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
+.pswp__button:hover {
+  background-color: rgba(0, 0, 0, 0.7) !important;
 }
 
-.fullscreen-close {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: white;
-  border: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  font-size: 24px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.pswp__counter {
+  font-size: 14px;
+  font-weight: 500;
 }
 
 /* Photo Upload Placeholder */
@@ -446,5 +363,16 @@
   .link-buttons .btn-link {
     width: 100%;
     text-align: center;
+  }
+  
+  .gallery-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .gallery-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }

@@ -5,7 +5,7 @@ import { appState } from '../state.js';
 import { navigateTo } from '../router.js';
 import { formatDate, formatDateTime, formatCurrency, formatStatus, formatCriticality, formatRecordType } from '../utils/formatters.js';
 import { StatsCards } from './StatsCards.js';
-import { PhotoCarousel } from './PhotoCarousel.js';
+import { PhotoSwipeGallery } from './PhotoSwipeGallery.js';
 
 export class RecordDetailView {
   constructor(recordId, itemId) {
@@ -14,6 +14,7 @@ export class RecordDetailView {
     this.record = null;
     this.item = null;
     this.activeTab = 'details';
+    this.photoGallery = null;
   }
   
   async render(container) {
@@ -216,11 +217,11 @@ export class RecordDetailView {
   }
   
   renderPhotosTab() {
-    const carousel = new PhotoCarousel(this.record.attachments);
+    const gallery = new PhotoSwipeGallery(this.record.attachments);
     
     return `
       <div class="photos-tab">
-        ${carousel.render()}
+        ${gallery.render()}
         
         <div class="photo-upload-placeholder">
           <h3>Photo Upload</h3>
@@ -245,17 +246,23 @@ export class RecordDetailView {
     const tabBtns = container.querySelectorAll('.tab-btn');
     tabBtns.forEach(btn => {
       btn.addEventListener('click', () => {
+        // Clean up old gallery if switching away from photos tab
+        if (this.activeTab === 'photos' && this.photoGallery) {
+          this.photoGallery.destroy();
+          this.photoGallery = null;
+        }
+        
         this.activeTab = btn.getAttribute('data-tab');
         const contentDiv = container.querySelector('.detail-content');
         if (contentDiv) {
           contentDiv.innerHTML = this.renderTabContent();
           
-          // Re-attach carousel listeners if on photos tab
+          // Initialize photo gallery if on photos tab
           if (this.activeTab === 'photos') {
-            const carousel = new PhotoCarousel(this.record.attachments);
-            const carouselEl = contentDiv.querySelector('.photo-carousel');
-            if (carouselEl) {
-              carousel.attachEventListeners(carouselEl.parentElement);
+            this.photoGallery = new PhotoSwipeGallery(this.record.attachments);
+            const photosTab = contentDiv.querySelector('.photos-tab');
+            if (photosTab) {
+              this.photoGallery.attachEventListeners(photosTab);
             }
           }
         }
@@ -274,12 +281,12 @@ export class RecordDetailView {
       });
     }
     
-    // Initialize photo carousel if on photos tab
+    // Initialize photo gallery if on photos tab
     if (this.activeTab === 'photos') {
-      const carousel = new PhotoCarousel(this.record.attachments);
+      this.photoGallery = new PhotoSwipeGallery(this.record.attachments);
       const photosTab = container.querySelector('.photos-tab');
       if (photosTab) {
-        carousel.attachEventListeners(photosTab);
+        this.photoGallery.attachEventListeners(photosTab);
       }
     }
   }
@@ -308,6 +315,14 @@ export class RecordDetailView {
       } else {
         alert('Failed to delete record: ' + error.message);
       }
+    }
+  }
+  
+  // Cleanup method
+  destroy() {
+    if (this.photoGallery) {
+      this.photoGallery.destroy();
+      this.photoGallery = null;
     }
   }
 }
