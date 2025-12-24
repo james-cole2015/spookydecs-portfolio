@@ -281,7 +281,7 @@ export async function bulkStore(itemIds, location) {
   try {
     const apiEndpoint = await getApiEndpoint();
     
-    const response = await fetch(`${apiEndpoint}/items/bulk`, {
+    const response = await fetch(`${apiEndpoint}/admin/items/bulk`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json'
