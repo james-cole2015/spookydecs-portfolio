@@ -163,7 +163,7 @@ export async function fetchMultipleRecordsByItems(itemIds) {
 
 export function getItemUrl(itemId) {
   if (!config) return '#';
-  return `${config.API_ENDPOINT}/items/${itemId}`;
+  return `${config.ITEMS_ADMIN}/items/${itemId}`;
 }
 
 export function getCostsUrl() {
