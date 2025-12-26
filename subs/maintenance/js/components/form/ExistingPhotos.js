@@ -49,7 +49,7 @@ export class ExistingPhotos {
     });
   }
   
-  rerender(container, existingPhotos) {
+  rerender(container, existingPhotos, onRemove) {
     const formSection = container.querySelector('.form-section:has(#photo-upload-container)');
     if (!formSection) return;
     
@@ -66,8 +66,6 @@ export class ExistingPhotos {
       }
     }
     
-    this.attachEventListeners(container, (photoId, category) => {
-      // Re-attach with same callback
-    });
+    this.attachEventListeners(container, onRemove);
   }
 }

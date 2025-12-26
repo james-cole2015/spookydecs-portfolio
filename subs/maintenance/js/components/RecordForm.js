@@ -263,8 +263,10 @@ export class RecordFormView {
     
     // Item selector listeners
     this.itemSelector.attachEventListeners(container, (item) => {
-      this.item = item;
-      this.prefilledItemId = item.id;
+      if (item) {
+        this.item = item;
+        this.prefilledItemId = item.id;
+      }
       container.innerHTML = this.renderForm();
       this.attachEventListeners(container);
     });
@@ -278,7 +280,13 @@ export class RecordFormView {
         this.existingPhotos[category] = this.existingPhotos[category].filter(
           photo => photo.photo_id !== photoId
         );
-        this.existingPhotosView.rerender(container, this.existingPhotos);
+        this.existingPhotosView.rerender(container, this.existingPhotos, (photoId, category) => {
+          // Re-attach with same callback
+          this.existingPhotos[category] = this.existingPhotos[category].filter(
+            photo => photo.photo_id !== photoId
+          );
+          this.existingPhotosView.rerender(container, this.existingPhotos);
+        });
       });
     }
   }
