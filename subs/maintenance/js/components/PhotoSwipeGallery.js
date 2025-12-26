@@ -71,11 +71,32 @@ export class PhotoSwipeGallery {
       createPhotoSwipeElement();
     }
     
-    // Attach click handlers to thumbnails
+    // Attach click handlers to photo grid items (from RecordDetail)
+    const photoGridItems = container.querySelectorAll('.photo-grid-item');
+    
+    if (photoGridItems.length > 0) {
+      console.log(`Found ${photoGridItems.length} photo grid items`);
+      photoGridItems.forEach((item, index) => {
+        item.addEventListener('click', (e) => {
+          e.preventDefault();
+          console.log(`Clicked photo index ${index}`);
+          this.openGallery(index);
+        });
+        // Add cursor pointer
+        item.style.cursor = 'pointer';
+      });
+      return;
+    }
+    
+    // Fallback: Attach to gallery thumbnails (from PhotoSwipeGallery render)
     const galleryElement = container.querySelector('#photoswipe-gallery');
-    if (!galleryElement) return;
+    if (!galleryElement) {
+      console.warn('No photo grid items or gallery element found');
+      return;
+    }
     
     const thumbnails = galleryElement.querySelectorAll('.gallery-thumbnail');
+    console.log(`Found ${thumbnails.length} gallery thumbnails`);
     thumbnails.forEach((thumbnail, index) => {
       thumbnail.addEventListener('click', () => {
         this.openGallery(index);
