@@ -23,33 +23,33 @@ export function initRouter() {
   console.log('✅ MainTableView instance created');
   
   // Define routes
-  router
-    .on('/', async () => {
-      console.log('✅ Route matched: /');
-      await handleMainView();
-    })
-    .on('/create', async (match) => {
-      console.log('✅ Route matched: /create');
-      await handleCreateView(match);
-    })
-    .on('/:itemId/:recordId/edit', async (match) => {
-      console.log('✅ Route matched: /:itemId/:recordId/edit', match.data);
-      await handleEditView(match);
-    })
-    .on('/:itemId/:recordId', async (match) => {
-      console.log('✅ Route matched: /:itemId/:recordId', match.data);
-      await handleRecordDetailView(match);
-    })
-    .on('/:itemId', async (match) => {
-      console.log('✅ Route matched: /:itemId', match.data);
-      await handleItemDetailView(match);
-    })
-    .notFound(() => {
-      console.log('❌ Route NOT FOUND');
-      console.log('   Current path:', window.location.pathname);
-      console.log('   Current href:', window.location.href);
-      renderNotFound();
-    });
+router
+  .on('/', async () => {
+    console.log('✅ Route matched: /');
+    await handleMainView();
+  })
+  .on('/create', async (match) => {  // Move /create BEFORE /:itemId
+    console.log('✅ Route matched: /create');
+    await handleCreateView(match);
+  })
+  .on('/:itemId/:recordId/edit', async (match) => {
+    console.log('✅ Route matched: /:itemId/:recordId/edit', match.data);
+    await handleEditView(match);
+  })
+  .on('/:itemId/:recordId', async (match) => {
+    console.log('✅ Route matched: /:itemId/:recordId', match.data);
+    await handleRecordDetailView(match);
+  })
+  .on('/:itemId', async (match) => {  // This should be LAST
+    console.log('✅ Route matched: /:itemId', match.data);
+    await handleItemDetailView(match);
+  })
+  .notFound(() => {
+    console.log('❌ Route NOT FOUND');
+    console.log('   Current path:', window.location.pathname);
+    console.log('   Current href:', window.location.href);
+    renderNotFound();
+  });
   
   // Resolve initial route
   console.log('🚀 Resolving initial route...');
