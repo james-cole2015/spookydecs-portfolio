@@ -2,13 +2,30 @@
 
 export class PhotoSwipeGallery {
   constructor(attachments) {
-    this.attachments = attachments || {
-      before_photos: [],
-      after_photos: [],
-      documentation: []
-    };
+    // Handle both formats:
+    // 1. Direct array of photos (from RecordDetail)
+    // 2. Object with before_photos/after_photos/documentation (legacy)
+    if (Array.isArray(attachments)) {
+      // Direct array format - use as-is
+      this.attachments = null;
+      this.photos = attachments.map(photo => ({
+        url: photo.src || photo.url,
+        type: photo.title || 'Photo',
+        color: '#6B7280',
+        src: photo.src || photo.url,
+        width: 0,
+        height: 0
+      }));
+    } else {
+      // Legacy object format
+      this.attachments = attachments || {
+        before_photos: [],
+        after_photos: [],
+        documentation: []
+      };
+      this.photos = this.combinePhotos();
+    }
     
-    this.photos = this.combinePhotos();
     this.lightbox = null;
     this.PhotoSwipeLightbox = null;
     this.PhotoSwipe = null;
