@@ -56,9 +56,11 @@ export class ItemDetailView {
     const isNonPackable = packingData.packable === false;
     const isSinglePacked = packingData.single_packed === true;
     const isReceptacle = this.item.class_type === 'Receptacle';
+    const isDecoration = this.item.class === 'Decoration';
     
     const showStoreButton = isNonPackable && !isReceptacle && isUnpacked;
     const showPackButton = isSinglePacked && isUnpacked;
+    const showFlagForRepairButton = isDecoration;
     
     header.innerHTML = `
       <div class="header-title">
@@ -74,6 +76,11 @@ export class ItemDetailView {
         ${showPackButton ? `
           <button class="btn btn-primary" onclick="itemDetailPage.handlePackItem()" title="Pack Item">
             📦 Pack Item
+          </button>
+        ` : ''}
+        ${showFlagForRepairButton ? `
+          <button class="btn-icon btn-warning" onclick="itemDetailPage.handleFlagForRepair()" title="Flag for Repair">
+            ⚠️
           </button>
         ` : ''}
         <button class="btn-icon btn-secondary" onclick="itemDetailPage.handleEdit()" title="Edit">

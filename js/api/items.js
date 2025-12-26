@@ -62,6 +62,21 @@ export async function getDeploymentUrl() {
 }
 
 /**
+ * Get Maintenance subdomain URL from config
+ * @returns {Promise<string>} Maintenance URL (e.g., "https://dev-maintenance.spookydecs.com")
+ */
+export async function getMaintenanceUrl() {
+  const config = await loadConfig();
+  
+  if (!config.MAINT_URL) {
+    console.error('MAINT_URL not found in config');
+    throw new Error('Maintenance URL not configured');
+  }
+  
+  return config.MAINT_URL;
+}
+
+/**
  * Fetch all items
  * @returns {Promise<Array>} Array of item objects
  */

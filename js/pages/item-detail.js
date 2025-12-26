@@ -1,7 +1,7 @@
 // Item Detail Page
 // Displays single item with all details, photos, and actions
 
-import { fetchItemById, deleteItem, retireItem, itemsAPI } from '../api/items.js';
+import { fetchItemById, deleteItem, retireItem, itemsAPI, getMaintenanceUrl } from '../api/items.js';
 import { getPhotosForItem } from '../api/photos.js';
 import { ItemDetailView } from '../components/ItemDetailView.js';
 import { StoreItemModal } from '../components/StoreItemModal.js';
@@ -219,8 +219,16 @@ export function handleMarkRepaired() {
   toast.info('Coming Soon', 'Mark as repaired functionality will be available in the Repairs subdomain');
 }
 
-export function handleFlagForRepair() {
-  toast.info('Coming Soon', 'Flag for repair functionality will be available in the Repairs subdomain');
+export async function handleFlagForRepair() {
+  if (!currentItem) return;
+  
+  try {
+    const maintenanceUrl = await getMaintenanceUrl();
+    window.location.href = `${maintenanceUrl}/create?item_id=${currentItem.id}`;
+  } catch (error) {
+    console.error('Failed to navigate to maintenance subdomain:', error);
+    toast.error('Navigation Failed', 'Unable to access maintenance subdomain. Please check configuration.');
+  }
 }
 
 export function viewRepairHistory() {
