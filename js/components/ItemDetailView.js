@@ -58,6 +58,14 @@ export class ItemDetailView {
     const isReceptacle = this.item.class_type === 'Receptacle';
     const isDecoration = this.item.class === 'Decoration';
     
+    // DEBUG LOGGING
+    console.log('=== FLAG FOR REPAIR BUTTON DEBUG ===');
+    console.log('Item class:', this.item.class);
+    console.log('Item class_type:', this.item.class_type);
+    console.log('isDecoration:', isDecoration);
+    console.log('showFlagForRepairButton will be:', isDecoration);
+    console.log('====================================');
+    
     const showStoreButton = isNonPackable && !isReceptacle && isUnpacked;
     const showPackButton = isSinglePacked && isUnpacked;
     const showFlagForRepairButton = isDecoration;
