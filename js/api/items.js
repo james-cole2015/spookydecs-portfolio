@@ -53,12 +53,12 @@ export async function getStorageUrl() {
 export async function getDeploymentUrl() {
   const config = await loadConfig();
   
-  if (!config.DEPLOY_ADMIN_URL) {
-    console.error('DEPLOY_ADMIN_URL not found in config');
+  if (!config.DEPLOY_ADMIN) {
+    console.error('DEPLOY_ADMIN not found in config');
     throw new Error('Deployment URL not configured');
   }
   
-  return config.DEPLOY_ADMIN_URL;
+  return config.DEPLOY_ADMIN;
 }
 
 /**
