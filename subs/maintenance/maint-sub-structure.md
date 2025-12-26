@@ -5,6 +5,7 @@
 │   ├── main.css
 │   ├── table.css
 │   ├── filters.css
+│   ├── photo-gallery.css
 │   ├── detail.css
 │   └── form.css
 └── js/

@@ -431,27 +431,29 @@ export class RecordDetailView {
     
     // Initialize PhotoSwipeGallery if photos loaded
     if (allPhotos.length > 0) {
-      await this.initializePhotoGallery(container, allPhotos);
+      this.initializePhotoGallery(container, allPhotos);
     }
   }
   
   /**
    * Initialize PhotoSwipeGallery with loaded photos
    */
-  async initializePhotoGallery(container, photos) {
+  initializePhotoGallery(container, photos) {
     // Convert to PhotoSwipeGallery format
     const galleryPhotos = photos.map(photo => ({
-      src: photo.cloudfront_url,
-      thumbnail: photo.thumb_cloudfront_url,
+      url: photo.cloudfront_url,
+      w: 0,  // Will be detected dynamically
+      h: 0,  // Will be detected dynamically
       title: photo.metadata?.original_filename || 'Photo',
-      description: `${photo.photo_type} - ${photo.season}`
+      type: photo.photo_type,
+      color: '#6B7280'  // Default gray color
     }));
     
     this.photoGallery = new PhotoSwipeGallery(galleryPhotos);
     
-    // Let PhotoSwipeGallery handle its own event listeners (now async)
+    // Let PhotoSwipeGallery handle its own event listeners (synchronous now)
     if (this.photoGallery && typeof this.photoGallery.attachEventListeners === 'function') {
-      await this.photoGallery.attachEventListeners(container);
+      this.photoGallery.attachEventListeners(container);
     }
   }
   

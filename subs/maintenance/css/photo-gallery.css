@@ -1,0 +1,201 @@
+/* Photo Gallery Styles */
+
+/* Add cursor pointer and hover effects to gallery thumbnails */
+.gallery-thumbnail {
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.gallery-thumbnail:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+  border-color: #3B82F6;
+}
+
+/* Add zoom icon indicator on hover */
+.gallery-thumbnail::before {
+  content: '🔍';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.gallery-thumbnail:hover::before {
+  opacity: 1;
+}
+
+/* PhotoSwipe custom theme adjustments */
+.pswp__bg {
+  background-color: rgba(0, 0, 0, 0.92);
+}
+
+.pswp__caption__center {
+  text-align: center;
+  max-width: 90%;
+  margin: 0 auto;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.pswp__button {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  color: white !important;
+  transition: background-color 0.2s ease;
+}
+
+.pswp__button:hover {
+  background-color: rgba(0, 0, 0, 0.7) !important;
+}
+
+.pswp__counter {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .gallery-thumbnail::before {
+    opacity: 0.7;
+  }
+  
+  .gallery-thumbnail:hover {
+    transform: none;
+  }
+  
+  /* Ensure PhotoSwipe buttons are accessible on mobile */
+  .pswp__button {
+    width: 48px !important;
+    height: 48px !important;
+  }
+  
+  .pswp__button--arrow--left,
+  .pswp__button--arrow--right {
+    width: 44px !important;
+    height: 44px !important;
+  }
+}
+
+/* Loading state for photos */
+.photo-category-loading {
+  padding: 40px 20px;
+  text-align: center;
+  color: #6B7280;
+  font-size: 14px;
+}
+
+/* Photo grid for new photo structure */
+.photo-category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.photo-grid-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid #E5E7EB;
+  transition: all 0.2s;
+  background: #F9FAFB;
+}
+
+.photo-grid-item:hover {
+  border-color: #3B82F6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+  transform: translateY(-2px);
+}
+
+.photo-grid-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.photo-grid-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+  padding: 8px;
+  color: white;
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.photo-grid-item:hover .photo-grid-info {
+  opacity: 1;
+}
+
+.photo-filename {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+
+.photo-type-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Photo category sections */
+.photo-category {
+  margin-bottom: 32px;
+}
+
+.photo-category h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.photo-actions {
+  margin-top: 24px;
+  text-align: center;
+}
+
+/* Responsive grid adjustments */
+@media (max-width: 768px) {
+  .photo-category-grid,
+  .gallery-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .photo-category-grid,
+  .gallery-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

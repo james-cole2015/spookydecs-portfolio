@@ -12,8 +12,12 @@
   <link rel="stylesheet" href="/css/detail.css">
   <link rel="stylesheet" href="/css/form.css">
   
-  <!-- PhotoSwipe CSS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.css">
+  <!-- PhotoSwipe v4 Core CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/default-skin/default-skin.min.css" />
+  
+  <!-- Photo Gallery Styles -->
+  <link rel="stylesheet" href="/css/photo-gallery.css">
 </head>
 <body>
   <spookydecs-header page-title="Maintenance Records"></spookydecs-header>
@@ -40,6 +44,10 @@
   <!-- External Libraries (non-module) -->
   <script src="https://cdn.jsdelivr.net/npm/navigo@8.11.1/lib/navigo.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tanstack/table-core@8.10.7/build/umd/index.production.js"></script>
+  
+  <!-- PhotoSwipe v4 Library - MUST load before ES6 modules -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
   
   <!-- Component Scripts (non-module, load early) -->
   <script src="https://assets.spookydecs.com/components/spookydecs-header.js"></script>
