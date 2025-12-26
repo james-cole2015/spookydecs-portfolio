@@ -1194,3 +1194,35 @@ textarea.form-input {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   }
 }
+
+.autocomplete-container {
+  position: relative;
+}
+
+.autocomplete-clear {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  color: #9CA3AF;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+  z-index: 10;
+}
+
+.autocomplete-clear:hover {
+  color: #374151;
+}
+
+.autocomplete-input {
+  padding-right: 40px; /* Make room for the X button */
+}

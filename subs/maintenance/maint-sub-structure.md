@@ -7,7 +7,8 @@
 │   ├── filters.css
 │   ├── photo-gallery.css
 │   ├── detail.css
-│   └── form.css
+│   ├── form.css
+│   └── toast.css
 └── js/
     ├── main.js
     ├── api.js
@@ -20,8 +21,14 @@
     │   ├── RecordDetail.js
     │   ├── ItemDetail.js
     │   ├── RecordForm.js
+    │   ├── PhotoUpload.js
     │   ├── PhotoSwipeGallery.js
-    │   └── StatsCards.js
+    │   ├── StatsCards.js
+    │   └── form/
+    │       ├── ItemSelector.js
+    │       ├── MaterialsList.js
+    │       └── ExistingPhotos.js
     └── utils/
         ├── helpers.js
-        └── formatters.js
+        ├── formatters.js
+        └── toast.js
