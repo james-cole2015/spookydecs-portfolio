@@ -1,6 +1,7 @@
 // Schedule detail view - shows template info and generated records
 
 import { fetchSchedule, fetchScheduleRecords, deleteSchedule, generateScheduleRecords } from '../scheduleApi.js';
+import { fetchAllItems } from '../api.js';
 import { appState } from '../state.js';
 import { navigateTo } from '../router.js';
 import { Toast } from '../utils/toast.js';
@@ -31,9 +32,65 @@ export class ScheduleDetailView {
       container.innerHTML = this.renderDetail();
       this.attachEventListeners(container);
       
+      // Load items using this template (async, don't block rendering)
+      this.loadAndRenderItems(container);
+      
     } catch (error) {
       console.error('Failed to load schedule:', error);
       container.innerHTML = this.renderError();
+    }
+  }
+  
+  async loadAndRenderItems(container) {
+    const itemsListContent = container.querySelector('#items-list-content');
+    
+    if (!itemsListContent) return;
+    
+    try {
+      // Fetch all items and filter to ones with this template
+      const allItems = await fetchAllItems({
+        class_type: this.schedule.class_type
+      });
+      
+      const itemsWithTemplate = allItems.filter(item =>
+        item.maintenance?.applied_templates?.includes(this.scheduleId)
+      );
+      
+      if (itemsWithTemplate.length === 0) {
+        itemsListContent.innerHTML = `
+          <div class="empty-state-small">
+            <p>No items are using this template yet.</p>
+            <button class="btn-primary" onclick="window.location.href='/schedules/${this.scheduleId}/apply'">
+              Apply to Items
+            </button>
+          </div>
+        `;
+      } else {
+        itemsListContent.innerHTML = `
+          <p class="items-count">${itemsWithTemplate.length} items using this template</p>
+          <div class="items-list-compact">
+            ${itemsWithTemplate.slice(0, 10).map(item => `
+              <div class="item-row">
+                <code>${item.id}</code>
+                <span>${item.name || 'Unnamed'}</span>
+              </div>
+            `).join('')}
+            ${itemsWithTemplate.length > 10 ? `
+              <div class="item-row-more">
+                ... and ${itemsWithTemplate.length - 10} more
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }
+      
+    } catch (error) {
+      console.error('Failed to load items:', error);
+      itemsListContent.innerHTML = `
+        <div class="error-message-small">
+          Failed to load items using this template.
+        </div>
+      `;
     }
   }
   
@@ -45,6 +102,9 @@ export class ScheduleDetailView {
             ← Back to Schedules
           </button>
           <div class="detail-actions">
+            <button class="btn-primary" id="btn-apply-to-items">
+              → Apply to Items
+            </button>
             <button class="btn-secondary" id="btn-generate">
               ↻ Generate More Records
             </button>
@@ -58,8 +118,21 @@ export class ScheduleDetailView {
         </div>
         
         <div class="detail-content">
+          ${this.renderItemsUsingTemplate()}
           ${this.renderScheduleInfo()}
           ${this.renderRecordsSection()}
+        </div>
+      </div>
+    `;
+  }
+  
+  renderItemsUsingTemplate() {
+    // This will be populated after loading
+    return `
+      <div class="detail-card" id="items-using-template">
+        <h3>Items Using This Template</h3>
+        <div id="items-list-content">
+          <div class="loading">Loading items...</div>
         </div>
       </div>
     `;
@@ -259,6 +332,14 @@ export class ScheduleDetailView {
     if (editBtn) {
       editBtn.addEventListener('click', () => {
         navigateTo(`/schedules/${this.scheduleId}/edit`);
+      });
+    }
+    
+    // Apply to Items button
+    const applyBtn = container.querySelector('#btn-apply-to-items');
+    if (applyBtn) {
+      applyBtn.addEventListener('click', () => {
+        navigateTo(`/schedules/${this.scheduleId}/apply`);
       });
     }
     

@@ -43,9 +43,14 @@ export class SchedulesTableView {
             </button>
             <h1>Maintenance Templates</h1>
           </div>
-          <button class="btn-primary" id="btn-create-schedule">
-            + Create Template
-          </button>
+          <div class="header-actions">
+            <button class="btn-secondary" id="btn-apply-templates">
+              → Apply Templates
+            </button>
+            <button class="btn-primary" id="btn-create-schedule">
+              + Create Template
+            </button>
+          </div>
         </div>
         
         <div id="filters-container"></div>
@@ -61,6 +66,13 @@ export class SchedulesTableView {
     if (createBtn) {
       createBtn.addEventListener('click', () => {
         navigateTo('/schedules/new');
+      });
+    }
+    
+    const applyTemplatesBtn = container.querySelector('#btn-apply-templates');
+    if (applyTemplatesBtn) {
+      applyTemplatesBtn.addEventListener('click', () => {
+        navigateTo('/schedules/apply');
       });
     }
     
@@ -314,6 +326,9 @@ export class SchedulesTableView {
           </span>
         </td>
         <td>
+          <button class="btn-small btn-apply" data-schedule-id="${schedule.schedule_id}">
+            Apply
+          </button>
           <button class="btn-small btn-edit" data-schedule-id="${schedule.schedule_id}">
             Edit
           </button>
@@ -375,10 +390,20 @@ export class SchedulesTableView {
     rows.forEach(row => {
       row.addEventListener('click', (e) => {
         // Don't navigate if clicking a button
-        if (e.target.classList.contains('btn-edit')) return;
+        if (e.target.classList.contains('btn-edit') || e.target.classList.contains('btn-apply')) return;
         
         const scheduleId = row.getAttribute('data-schedule-id');
         navigateTo(`/schedules/${scheduleId}`);
+      });
+    });
+    
+    // Apply buttons
+    const applyBtns = container.querySelectorAll('.btn-apply');
+    applyBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const scheduleId = btn.getAttribute('data-schedule-id');
+        navigateTo(`/schedules/${scheduleId}/apply`);
       });
     });
     
