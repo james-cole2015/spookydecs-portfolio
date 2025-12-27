@@ -6,7 +6,19 @@ import { applyTemplateToItems } from '../scheduleApi.js';
 import { navigateTo } from '../router.js';
 import { Toast } from '../utils/toast.js';
 import { formatTaskType } from '../utils/formatters.js';
-import { formatScheduleFrequency } from '../utils/scheduleHelpers.js';
+
+// Get formatScheduleFrequency from scheduleHelpers or create inline
+function formatScheduleFrequency(frequency, season) {
+  const labels = {
+    'annual': 'Annual',
+    'seasonal': season ? `Seasonal (${season})` : 'Seasonal',
+    'quarterly': 'Quarterly',
+    'monthly': 'Monthly',
+    'pre_season': season ? `Pre-season (${season})` : 'Pre-season',
+    'post_season': season ? `Post-season (${season})` : 'Post-season'
+  };
+  return labels[frequency] || frequency;
+}
 
 export class TemplateApplicationView {
   constructor(preSelectedTemplateId = null) {
