@@ -1,6 +1,6 @@
 // Schedule form component for create/edit templates
 
-import { fetchSchedule, createSchedule, updateSchedule } from '../api.js';
+import { fetchSchedule, createSchedule, updateSchedule } from '../scheduleApi.js';
 import { appState } from '../state.js';
 import { navigateTo } from '../router.js';
 import { Toast } from '../utils/toast.js';
@@ -405,4 +405,3 @@ export class ScheduleFormView {
     }
   }
 }
-
