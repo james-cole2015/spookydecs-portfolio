@@ -41,10 +41,24 @@ export function initRouter() {
     })
     .on('/:itemId/:recordId', async (match) => {
       console.log('✅ Route matched: /:itemId/:recordId', match.data);
+      
+      // Prevent /schedules/* from matching this pattern
+      if (match.data.itemId === 'schedules') {
+        console.log('   ⚠️  Skipping - this is a schedules route');
+        return;
+      }
+      
       await handleRecordDetailView(match);
     })
     .on('/:itemId/:recordId/edit', async (match) => {
       console.log('✅ Route matched: /:itemId/:recordId/edit', match.data);
+      
+      // Prevent /schedules/* from matching this pattern
+      if (match.data.itemId === 'schedules') {
+        console.log('   ⚠️  Skipping - this is a schedules route');
+        return;
+      }
+      
       await handleEditView(match);
     })
     .on('/create', async (match) => {
