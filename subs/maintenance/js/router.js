@@ -25,58 +25,52 @@ export function initRouter() {
   mainTableView = new MainTableView();
   console.log('✅ MainTableView instance created');
   
-  // Define routes - MOST SPECIFIC FIRST
+  // Define routes - Navigo matches in order, so put GENERIC routes first, SPECIFIC routes last
   router
-    .on('/', async () => {
-      console.log('✅ Route matched: /');
-      await handleMainView();
+    .on('/:itemId', async (match) => {
+      console.log('✅ Route matched: /:itemId', match.data);
+      
+      // Safety guard - prevent literal routes from being caught
+      if (match.data.itemId === 'create' || match.data.itemId === 'schedules') {
+        console.error('❌ BUG: Literal route matched /:itemId pattern!');
+        console.error('   This should never happen - check route order');
+        return;
+      }
+      
+      await handleItemDetailView(match);
     })
-    // Schedules routes - MUST come before /:itemId
-    .on('/schedules/new', async () => {
-      console.log('✅ Route matched: /schedules/new');
-      await handleScheduleCreateView();
+    .on('/:itemId/:recordId', async (match) => {
+      console.log('✅ Route matched: /:itemId/:recordId', match.data);
+      await handleRecordDetailView(match);
     })
-    .on('/schedules/:id/edit', async (match) => {
-      console.log('✅ Route matched: /schedules/:id/edit', match.data);
-      await handleScheduleEditView(match);
+    .on('/:itemId/:recordId/edit', async (match) => {
+      console.log('✅ Route matched: /:itemId/:recordId/edit', match.data);
+      await handleEditView(match);
     })
-    .on('/schedules/:id', async (match) => {
-      console.log('✅ Route matched: /schedules/:id', match.data);
-      await handleScheduleDetailView(match);
-    })
-    .on('/schedules', async () => {
-      console.log('✅ Route matched: /schedules');
-      await handleSchedulesView();
-    })
-    // Literal /create route - MUST come before /:itemId
     .on('/create', async (match) => {
       console.log('✅ Route matched: /create');
       console.log('   Query params:', window.location.search);
       await handleCreateView(match);
     })
-    // Edit route - 3 segments
-    .on('/:itemId/:recordId/edit', async (match) => {
-      console.log('✅ Route matched: /:itemId/:recordId/edit', match.data);
-      await handleEditView(match);
+    .on('/schedules', async () => {
+      console.log('✅ Route matched: /schedules');
+      await handleSchedulesView();
     })
-    // Record detail - 2 segments
-    .on('/:itemId/:recordId', async (match) => {
-      console.log('✅ Route matched: /:itemId/:recordId', match.data);
-      await handleRecordDetailView(match);
+    .on('/schedules/:id', async (match) => {
+      console.log('✅ Route matched: /schedules/:id', match.data);
+      await handleScheduleDetailView(match);
     })
-    // Item detail - 1 segment (LAST - most generic)
-    .on('/:itemId', async (match) => {
-      console.log('✅ Route matched: /:itemId', match.data);
-      
-      // Safety guard (shouldn't be needed if routing works)
-      if (match.data.itemId === 'create') {
-        console.error('❌ BUG: /create matched /:itemId instead of /create route!');
-        console.error('   This indicates Navigo is not matching routes in order');
-        await handleCreateView(match);
-        return;
-      }
-      
-      await handleItemDetailView(match);
+    .on('/schedules/:id/edit', async (match) => {
+      console.log('✅ Route matched: /schedules/:id/edit', match.data);
+      await handleScheduleEditView(match);
+    })
+    .on('/schedules/new', async () => {
+      console.log('✅ Route matched: /schedules/new');
+      await handleScheduleCreateView();
+    })
+    .on('/', async () => {
+      console.log('✅ Route matched: /');
+      await handleMainView();
     })
     .notFound(() => {
       console.log('❌ Route NOT FOUND');
