@@ -5,6 +5,9 @@ import { MainTableView } from './components/MainTable.js';
 import { RecordDetailView } from './components/RecordDetail.js';
 import { ItemDetailView } from './components/ItemDetail.js';
 import { RecordFormView } from './components/RecordForm.js';
+import { SchedulesTableView } from './components/SchedulesTable.js';
+import { ScheduleFormView } from './components/ScheduleForm.js';
+import { ScheduleDetailView } from './components/ScheduleDetail.js';
 import { showLoading, hideLoading, parseQueryString } from './utils/helpers.js';
 
 let router = null;
@@ -27,6 +30,23 @@ export function initRouter() {
     .on('/', async () => {
       console.log('✅ Route matched: /');
       await handleMainView();
+    })
+    // Schedules routes - MUST come before /:itemId
+    .on('/schedules/new', async () => {
+      console.log('✅ Route matched: /schedules/new');
+      await handleScheduleCreateView();
+    })
+    .on('/schedules/:id/edit', async (match) => {
+      console.log('✅ Route matched: /schedules/:id/edit', match.data);
+      await handleScheduleEditView(match);
+    })
+    .on('/schedules/:id', async (match) => {
+      console.log('✅ Route matched: /schedules/:id', match.data);
+      await handleScheduleDetailView(match);
+    })
+    .on('/schedules', async () => {
+      console.log('✅ Route matched: /schedules');
+      await handleSchedulesView();
     })
     // Literal /create route - MUST come before /:itemId
     .on('/create', async (match) => {
@@ -85,7 +105,7 @@ export function getRouter() {
 }
 
 // ============================================
-// ROUTE HANDLERS
+// ROUTE HANDLERS - MAINTENANCE RECORDS
 // ============================================
 
 async function handleMainView() {
@@ -209,6 +229,105 @@ async function handleItemDetailView(match) {
     console.error('❌ Error rendering item detail:', error);
     hideLoading();
     renderError(container, 'Failed to load item details');
+  }
+}
+
+// ============================================
+// ROUTE HANDLERS - SCHEDULES
+// ============================================
+
+async function handleSchedulesView() {
+  console.log('📄 handleSchedulesView started');
+  const container = document.getElementById('main-content');
+  
+  if (!container) {
+    console.error('❌ main-content container not found!');
+    return;
+  }
+  
+  try {
+    showLoading();
+    console.log('🔄 Rendering SchedulesTableView...');
+    const schedulesView = new SchedulesTableView();
+    await schedulesView.render(container);
+    console.log('✅ SchedulesTableView rendered successfully');
+    hideLoading();
+  } catch (error) {
+    console.error('❌ Error rendering schedules view:', error);
+    hideLoading();
+    renderError(container, 'Failed to load maintenance schedules');
+  }
+}
+
+async function handleScheduleCreateView() {
+  console.log('📄 handleScheduleCreateView started');
+  const container = document.getElementById('main-content');
+  
+  if (!container) {
+    console.error('❌ main-content container not found!');
+    return;
+  }
+  
+  try {
+    showLoading();
+    console.log('🔄 Creating ScheduleFormView...');
+    const formView = new ScheduleFormView();
+    await formView.render(container);
+    hideLoading();
+  } catch (error) {
+    console.error('❌ Error rendering schedule create view:', error);
+    hideLoading();
+    renderError(container, 'Failed to load schedule form');
+  }
+}
+
+async function handleScheduleEditView(match) {
+  console.log('📄 handleScheduleEditView started');
+  const container = document.getElementById('main-content');
+  
+  if (!container) {
+    console.error('❌ main-content container not found!');
+    return;
+  }
+  
+  try {
+    showLoading();
+    
+    const { id } = match.data;
+    console.log('🔄 Creating ScheduleFormView for edit:', { id });
+    const formView = new ScheduleFormView(id);
+    await formView.render(container);
+    
+    hideLoading();
+  } catch (error) {
+    console.error('❌ Error rendering schedule edit view:', error);
+    hideLoading();
+    renderError(container, 'Failed to load schedule form');
+  }
+}
+
+async function handleScheduleDetailView(match) {
+  console.log('📄 handleScheduleDetailView started');
+  const container = document.getElementById('main-content');
+  
+  if (!container) {
+    console.error('❌ main-content container not found!');
+    return;
+  }
+  
+  try {
+    showLoading();
+    
+    const { id } = match.data;
+    console.log('🔄 Creating ScheduleDetailView:', { id });
+    const detailView = new ScheduleDetailView(id);
+    await detailView.render(container);
+    
+    hideLoading();
+  } catch (error) {
+    console.error('❌ Error rendering schedule detail:', error);
+    hideLoading();
+    renderError(container, 'Failed to load schedule details');
   }
 }
 

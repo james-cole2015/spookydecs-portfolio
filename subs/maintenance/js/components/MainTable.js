@@ -20,9 +20,14 @@ export class MainTableView {
       <div class="main-table-view">
         <div class="view-header">
           <h1>Maintenance Records</h1>
-          <button class="btn-primary" onclick="window.location.href='/create'">
-            + Create Record
-          </button>
+          <div class="header-actions">
+            <button class="btn-secondary" id="btn-schedules">
+              📅 Maintenance Schedules
+            </button>
+            <button class="btn-primary" onclick="window.location.href='/create'">
+              + Create Record
+            </button>
+          </div>
         </div>
         
         <div id="tabs-container"></div>
@@ -30,6 +35,14 @@ export class MainTableView {
         <div id="table-container"></div>
       </div>
     `;
+    
+    // Add schedules button event listener
+    const schedulesBtn = container.querySelector('#btn-schedules');
+    if (schedulesBtn) {
+      schedulesBtn.addEventListener('click', () => {
+        navigateTo('/schedules');
+      });
+    }
     
     // Render tabs
     const tabsContainer = container.querySelector('#tabs-container');
@@ -130,11 +143,16 @@ export class MainTableView {
     const itemId = record.item_id || 'N/A';
     const recordId = record.record_id.substring(0, 8) + '...';
     
+    // Show schedule badge if record is from a schedule
+    const scheduleBadge = record.is_scheduled_task 
+      ? `<span class="schedule-badge" title="Scheduled task">📅</span>` 
+      : '';
+    
     return `
       <tr class="table-row" data-record-id="${record.record_id}" data-item-id="${itemId}">
         <td><code>${recordId}</code></td>
         <td>${formatStatus(record.status)}</td>
-        <td class="table-title">${record.title}</td>
+        <td class="table-title">${scheduleBadge}${record.title}</td>
         <td>${formatRecordTypePill(record.record_type)}</td>
         <td><code>${itemId}</code></td>
         <td>${formatCriticality(record.criticality)}</td>

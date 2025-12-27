@@ -20,7 +20,18 @@ class AppState {
       },
       activeTab: 'all',
       loading: false,
-      error: null
+      error: null,
+      
+      // Schedule state
+      schedules: [],
+      currentSchedule: null,
+      scheduleRecords: [],
+      scheduleFilters: {
+        status: 'all',
+        task_type: 'all',
+        item_id: 'all',
+        enabled: 'all'
+      }
     };
     
     this.listeners = [];
@@ -315,6 +326,184 @@ class AppState {
         record_count: records.length
       };
     });
+  }
+  
+  // ============= SCHEDULE METHODS =============
+  
+  /**
+   * Set all schedules
+   * @param {Array} schedules - Array of schedule objects
+   */
+  setSchedules(schedules) {
+    this.state.schedules = schedules;
+    this.notify();
+  }
+  
+  /**
+   * Add a new schedule
+   * @param {Object} schedule - Schedule object
+   */
+  addSchedule(schedule) {
+    this.state.schedules.push(schedule);
+    this.notify();
+  }
+  
+  /**
+   * Update an existing schedule
+   * @param {string} scheduleId - Schedule ID
+   * @param {Object} updatedSchedule - Updated schedule data
+   */
+  updateSchedule(scheduleId, updatedSchedule) {
+    const index = this.state.schedules.findIndex(s => s.schedule_id === scheduleId);
+    if (index !== -1) {
+      this.state.schedules[index] = { ...this.state.schedules[index], ...updatedSchedule };
+      
+      // Update current schedule if it's the one being viewed
+      if (this.state.currentSchedule && this.state.currentSchedule.schedule_id === scheduleId) {
+        this.state.currentSchedule = this.state.schedules[index];
+      }
+      
+      this.notify();
+    }
+  }
+  
+  /**
+   * Remove a schedule
+   * @param {string} scheduleId - Schedule ID
+   */
+  removeSchedule(scheduleId) {
+    this.state.schedules = this.state.schedules.filter(s => s.schedule_id !== scheduleId);
+    
+    // Clear current schedule if it was deleted
+    if (this.state.currentSchedule && this.state.currentSchedule.schedule_id === scheduleId) {
+      this.state.currentSchedule = null;
+    }
+    
+    this.notify();
+  }
+  
+  /**
+   * Set current schedule (for detail view)
+   * @param {Object} schedule - Schedule object
+   */
+  setCurrentSchedule(schedule) {
+    this.state.currentSchedule = schedule;
+    this.notify();
+  }
+  
+  /**
+   * Set records for current schedule
+   * @param {Array} records - Array of maintenance records
+   */
+  setScheduleRecords(records) {
+    this.state.scheduleRecords = records;
+    this.notify();
+  }
+  
+  /**
+   * Update schedule filters
+   * @param {Object} filters - Filter object
+   */
+  updateScheduleFilters(filters) {
+    this.state.scheduleFilters = { ...this.state.scheduleFilters, ...filters };
+    this.notify();
+  }
+  
+  /**
+   * Get filtered schedules based on current filters
+   * @returns {Array} Filtered schedules
+   */
+  getFilteredSchedules() {
+    let filtered = [...this.state.schedules];
+    
+    // Apply status filter
+    if (this.state.scheduleFilters.status !== 'all') {
+      filtered = filtered.filter(s => s.status === this.state.scheduleFilters.status);
+    }
+    
+    // Apply task type filter
+    if (this.state.scheduleFilters.task_type !== 'all') {
+      filtered = filtered.filter(s => s.task_type === this.state.scheduleFilters.task_type);
+    }
+    
+    // Apply item filter
+    if (this.state.scheduleFilters.item_id !== 'all') {
+      filtered = filtered.filter(s => s.item_id === this.state.scheduleFilters.item_id);
+    }
+    
+    // Apply enabled filter
+    if (this.state.scheduleFilters.enabled !== 'all') {
+      const enabledValue = this.state.scheduleFilters.enabled === 'true';
+      filtered = filtered.filter(s => s.enabled === enabledValue);
+    }
+    
+    return filtered;
+  }
+  
+  /**
+   * Get schedule by ID
+   * @param {string} scheduleId - Schedule ID
+   * @returns {Object|null} Schedule object or null
+   */
+  getScheduleById(scheduleId) {
+    return this.state.schedules.find(s => s.schedule_id === scheduleId) || null;
+  }
+  
+  /**
+   * Get schedules for a specific item
+   * @param {string} itemId - Item ID
+   * @returns {Array} Array of schedules for the item
+   */
+  getSchedulesForItem(itemId) {
+    return this.state.schedules.filter(s => s.item_id === itemId);
+  }
+  
+  /**
+   * Get upcoming schedules (due within X days)
+   * @param {number} days - Number of days to look ahead (default 30)
+   * @returns {Array} Array of upcoming schedules
+   */
+  getUpcomingSchedules(days = 30) {
+    const now = new Date();
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() + days);
+    
+    return this.state.schedules.filter(s => {
+      const dueDate = new Date(s.next_due_date);
+      return dueDate >= now && dueDate <= cutoff && s.enabled;
+    }).sort((a, b) => new Date(a.next_due_date) - new Date(b.next_due_date));
+  }
+  
+  /**
+   * Get overdue schedules
+   * @returns {Array} Array of overdue schedules
+   */
+  getOverdueSchedules() {
+    const now = new Date();
+    
+    return this.state.schedules.filter(s => {
+      const dueDate = new Date(s.next_due_date);
+      return dueDate < now && s.enabled && s.status === 'overdue';
+    }).sort((a, b) => new Date(a.next_due_date) - new Date(b.next_due_date));
+  }
+  
+  /**
+   * Get schedule statistics
+   * @returns {Object} Statistics object
+   */
+  getScheduleStats() {
+    const total = this.state.schedules.length;
+    const enabled = this.state.schedules.filter(s => s.enabled).length;
+    const upcoming = this.getUpcomingSchedules(7).length; // Due in next 7 days
+    const overdue = this.getOverdueSchedules().length;
+    
+    return {
+      total,
+      enabled,
+      disabled: total - enabled,
+      upcoming,
+      overdue
+    };
   }
   
   getState() {

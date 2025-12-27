@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="/css/detail.css">
   <link rel="stylesheet" href="/css/toast.css">
   <link rel="stylesheet" href="/css/form.css">
+  <link rel="stylesheet" href="/css/schedules.css">
   
   <!-- PhotoSwipe v4 Core CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.min.css" />
@@ -55,37 +56,43 @@
   <script type="module" src="https://assets.spookydecs.com/components/modal.js"></script>
   <script type="module" src="https://assets.spookydecs.com/components/toast.js"></script>
   
- <!-- App Scripts (load in order) - ES6 modules are deferred automatically -->
-<!-- Utilities (no dependencies) -->
-<script type="module" src="/js/utils/helpers.js"></script>
-<script type="module" src="/js/utils/formatters.js"></script>
-<script type="module" src="/js/utils/toast.js"></script>
+  <!-- App Scripts (load in order) - ES6 modules are deferred automatically -->
+  <!-- Utilities (no dependencies) -->
+  <script type="module" src="/js/utils/helpers.js"></script>
+  <script type="module" src="/js/utils/formatters.js"></script>
+  <script type="module" src="/js/utils/toast.js"></script>
+  <script type="module" src="/js/utils/scheduleHelpers.js"></script>
 
-<!-- Core (depends on utils) -->
-<script type="module" src="/js/api.js"></script>
-<script type="module" src="/js/state.js"></script>
+  <!-- Core (depends on utils) -->
+  <script type="module" src="/js/api.js"></script>
+  <script type="module" src="/js/state.js"></script>
 
-<!-- Simple components (depend on core/utils) -->
-<script type="module" src="/js/components/StatsCards.js"></script>
-<script type="module" src="/js/components/Tabs.js"></script>
-<script type="module" src="/js/components/Filters.js"></script>
-<script type="module" src="/js/components/PhotoSwipeGallery.js"></script>
-<script type="module" src="/js/components/PhotoCarousel.js"></script>
-<script type="module" src="/js/components/PhotoUpload.js"></script>
+  <!-- Simple components (depend on core/utils) -->
+  <script type="module" src="/js/components/StatsCards.js"></script>
+  <script type="module" src="/js/components/Tabs.js"></script>
+  <script type="module" src="/js/components/Filters.js"></script>
+  <script type="module" src="/js/components/PhotoSwipeGallery.js"></script>
+  <script type="module" src="/js/components/PhotoCarousel.js"></script>
+  <script type="module" src="/js/components/PhotoUpload.js"></script>
 
-<!-- Form sub-components (depend on api, utils) -->
-<script type="module" src="/js/components/form/ItemSelector.js"></script>
-<script type="module" src="/js/components/form/MaterialsList.js"></script>
-<script type="module" src="/js/components/form/ExistingPhotos.js"></script>
+  <!-- Form sub-components (depend on api, utils) -->
+  <script type="module" src="/js/components/form/ItemSelector.js"></script>
+  <script type="module" src="/js/components/form/MaterialsList.js"></script>
+  <script type="module" src="/js/components/form/ExistingPhotos.js"></script>
 
-<!-- Complex components (depend on sub-components) -->
-<script type="module" src="/js/components/MainTable.js"></script>
-<script type="module" src="/js/components/RecordDetail.js"></script>
-<script type="module" src="/js/components/ItemDetail.js"></script>
-<script type="module" src="/js/components/RecordForm.js"></script>
+  <!-- Complex components (depend on sub-components) -->
+  <script type="module" src="/js/components/MainTable.js"></script>
+  <script type="module" src="/js/components/RecordDetail.js"></script>
+  <script type="module" src="/js/components/ItemDetail.js"></script>
+  <script type="module" src="/js/components/RecordForm.js"></script>
+  
+  <!-- Schedule components (depend on form components) -->
+  <script type="module" src="/js/components/SchedulesTable.js"></script>
+  <script type="module" src="/js/components/ScheduleForm.js"></script>
+  <script type="module" src="/js/components/ScheduleDetail.js"></script>
 
-<!-- Router and Main (depend on all components) -->
-<script type="module" src="/js/router.js"></script>
-<script type="module" src="/js/main.js"></script>
+  <!-- Router and Main (depend on all components) -->
+  <script type="module" src="/js/router.js"></script>
+  <script type="module" src="/js/main.js"></script>
 </body>
 </html>
