@@ -29,9 +29,13 @@ export class TemplateApplicationView {
     this.allItems = [];
     this.startDate = null;
     this.applyResult = null;
+    this.container = null; // Store container reference
   }
   
   async render(container) {
+    // Store the container for re-renders
+    this.container = container;
+    
     container.innerHTML = `
       <div class="template-application-view">
         ${this.renderHeader()}
@@ -217,7 +221,7 @@ export class TemplateApplicationView {
     
     nextBtn?.addEventListener('click', () => {
       this.currentStep = 2;
-      this.render(container.closest('.template-application-view').parentElement);
+      this.render(this.container); // Use stored container
     });
   }
   
@@ -381,13 +385,13 @@ export class TemplateApplicationView {
       if (this.preSelectedTemplateId) {
         navigateTo('/schedules');
       } else {
-        this.render(container.closest('.template-application-view').parentElement);
+        this.render(this.container); // Use stored container
       }
     });
     
     nextBtn?.addEventListener('click', () => {
       this.currentStep = 3;
-      this.render(container.closest('.template-application-view').parentElement);
+      this.render(this.container); // Use stored container
     });
   }
   
@@ -461,7 +465,7 @@ export class TemplateApplicationView {
     
     backBtn?.addEventListener('click', () => {
       this.currentStep = 2;
-      this.render(container.closest('.template-application-view').parentElement);
+      this.render(this.container); // Use stored container
     });
     
     applyBtn?.addEventListener('click', async () => {
@@ -483,7 +487,7 @@ export class TemplateApplicationView {
       this.applyResult = await applyTemplateToItems(this.selectedTemplate.schedule_id, data);
       
       this.currentStep = 4;
-      this.render(container.closest('.template-application-view').parentElement);
+      this.render(this.container); // Use stored container
       
     } catch (error) {
       console.error('Failed to apply template:', error);
