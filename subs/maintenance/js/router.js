@@ -74,9 +74,9 @@ export function initRouter() {
     .on('/schedules/:id', async (match) => {
       console.log('✅ Route matched: /schedules/:id', match.data);
       
-      // Prevent /schedules/new from matching this - 'new' is not an ID
-      if (match.data.id === 'new') {
-        console.log('   ⚠️  Skipping - this is /schedules/new route');
+      // Prevent /schedules/new and /schedules/apply from matching this - these are not IDs
+      if (match.data.id === 'new' || match.data.id === 'apply') {
+        console.log('   ⚠️  Skipping - this is a literal route');
         return;
       }
       
