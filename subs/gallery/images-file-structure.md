@@ -40,10 +40,10 @@ images/
     │   ├── RelatedEntities.js          # Display linked items/storage/deployments
     │   ├── ImageEditForm.js            # Edit form orchestration
     │   ├── EditFormFields.js           # Reusable form fields
-    │   ├── ImageUploadForm.js          # Upload form (Phase 4 - placeholder)
+    │   ├── ImageUploadForm.js      1    # Upload form (Phase 4 - placeholder)
     │   ├── PhotoTypeSelector.js        # Photo type selector (Phase 4 - placeholder)
-    │   ├── EntityPickers.js            # Entity pickers (Phase 4 - placeholder)
-    │   └── GalleryViewer.js            # PhotoSwipe gallery (Phase 5 - placeholder)
+    │   ├── EntityPickers.js   1         # Entity pickers (Phase 4 - placeholder)
+    │   └── GalleryViewer.js   1         # PhotoSwipe gallery (Phase 5 - placeholder)
     │
     └── pages/
         ├── images-list.js              # List page orchestration
