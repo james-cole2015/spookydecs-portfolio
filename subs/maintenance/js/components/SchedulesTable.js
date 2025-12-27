@@ -1,7 +1,7 @@
 // Schedules table view - lists all maintenance templates
 
 import { appState } from '../state.js';
-import { fetchSchedules } from '../api.js';
+import { fetchSchedules } from '../scheduleApi.js';
 import { navigateTo } from '../router.js';
 import { Toast } from '../utils/toast.js';
 import { 

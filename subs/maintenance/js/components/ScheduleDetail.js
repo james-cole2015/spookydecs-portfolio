@@ -1,6 +1,6 @@
-// Schedule detail view - shows schedule info and generated records
+// Schedule detail view - shows template info and generated records
 
-import { fetchSchedule, fetchScheduleRecords, deleteSchedule, generateScheduleRecords } from '../api.js';
+import { fetchSchedule, fetchScheduleRecords, deleteSchedule, generateScheduleRecords } from '../scheduleApi.js';
 import { appState } from '../state.js';
 import { navigateTo } from '../router.js';
 import { Toast } from '../utils/toast.js';
