@@ -186,6 +186,13 @@ export class ScheduleFormView {
           </div>
         </div>
         
+        <div class="form-group">
+          <label for="start_date">Start Date (Optional)</label>
+          <input type="date" id="start_date" name="start_date" class="form-input"
+                 value="${schedule.start_date || ''}">
+          <small class="form-help">When should this schedule start? Leave blank to start immediately when applied to items.</small>
+        </div>
+        
         <div class="form-note">
           <strong>Note:</strong> Repairs and maintenance tasks are automatically scheduled within the 
           April 1 - September 30 work window. Inspections can be scheduled during the deployment season.
@@ -358,6 +365,7 @@ export class ScheduleFormView {
         description: formData.get('description') || '',
         frequency: formData.get('frequency'),
         season: formData.get('season') || null,
+        start_date: formData.get('start_date') || null,
         is_default: formData.get('is_default') === 'on',
         enabled: formData.get('enabled') === 'true',
         estimated_cost: parseFloat(formData.get('estimated_cost')) || 0,
@@ -397,3 +405,4 @@ export class ScheduleFormView {
     }
   }
 }
+

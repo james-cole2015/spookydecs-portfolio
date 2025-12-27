@@ -537,3 +537,214 @@ export async function generateScheduleRecords(scheduleId, count = 2) {
     throw error;
   }
 }
+
+// Schedule API Functions - ADD THESE to your existing api.js
+
+// Load config (assuming this is already in your api.js)
+// const config = await fetch('/config.json').then(r => r.json());
+// const API_ENDPOINT = config.API_ENDPOINT;
+
+/**
+ * Fetch all schedules with optional filters
+ * @param {Object} filters - Optional filters { item_id, status, task_type, enabled }
+ * @returns {Promise<Array>} Array of schedules
+ */
+export async function fetchSchedules(filters = {}) {
+  try {
+    const config = await fetch('/config.json').then(r => r.json());
+    const queryParams = new URLSearchParams();
+    
+    // Add filters to query string
+    if (filters.item_id) queryParams.append('item_id', filters.item_id);
+    if (filters.status) queryParams.append('status', filters.status);
+    if (filters.task_type) queryParams.append('task_type', filters.task_type);
+    if (filters.enabled !== undefined) queryParams.append('enabled', filters.enabled);
+    
+    const queryString = queryParams.toString();
+    const url = `${config.API_ENDPOINT}/admin/maintenance-schedules${queryString ? '?' + queryString : ''}`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch schedules');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching schedules:', error);
+    throw error;
+  }
+}
+
+/**
+ * Fetch a single schedule by ID
+ * @param {string} scheduleId - Schedule ID
+ * @returns {Promise<Object>} Schedule object
+ */
+export async function fetchSchedule(scheduleId) {
+  try {
+    const config = await fetch('/config.json').then(r => r.json());
+    const response = await fetch(`${config.API_ENDPOINT}/admin/maintenance-schedules/${scheduleId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch schedule');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching schedule:', error);
+    throw error;
+  }
+}
+
+/**
+ * Create a new schedule
+ * @param {Object} scheduleData - Schedule data
+ * @returns {Promise<Object>} Created schedule with generated records
+ */
+export async function createSchedule(scheduleData) {
+  try {
+    const config = await fetch('/config.json').then(r => r.json());
+    const response = await fetch(`${config.API_ENDPOINT}/admin/maintenance-schedules`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(scheduleData)
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create schedule');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error creating schedule:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update an existing schedule
+ * @param {string} scheduleId - Schedule ID
+ * @param {Object} scheduleData - Updated schedule data
+ * @returns {Promise<Object>} Updated schedule
+ */
+export async function updateSchedule(scheduleId, scheduleData) {
+  try {
+    const config = await fetch('/config.json').then(r => r.json());
+    const response = await fetch(`${config.API_ENDPOINT}/admin/maintenance-schedules/${scheduleId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(scheduleData)
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to update schedule');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error updating schedule:', error);
+    throw error;
+  }
+}
+
+/**
+ * Delete a schedule (cancels all future scheduled records)
+ * @param {string} scheduleId - Schedule ID
+ * @returns {Promise<Object>} Deletion result with cancelled records count
+ */
+export async function deleteSchedule(scheduleId) {
+  try {
+    const config = await fetch('/config.json').then(r => r.json());
+    const response = await fetch(`${config.API_ENDPOINT}/admin/maintenance-schedules/${scheduleId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to delete schedule');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error deleting schedule:', error);
+    throw error;
+  }
+}
+
+/**
+ * Fetch all maintenance records generated from a specific schedule
+ * @param {string} scheduleId - Schedule ID
+ * @returns {Promise<Array>} Array of maintenance records
+ */
+export async function fetchScheduleRecords(scheduleId) {
+  try {
+    const config = await fetch('/config.json').then(r => r.json());
+    const response = await fetch(`${config.API_ENDPOINT}/admin/maintenance-schedules/${scheduleId}/records`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch schedule records');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching schedule records:', error);
+    throw error;
+  }
+}
+
+/**
+ * Manually generate additional records for a schedule
+ * @param {string} scheduleId - Schedule ID
+ * @param {number} count - Number of records to generate (default 2)
+ * @returns {Promise<Object>} Generation result with created records
+ */
+export async function generateScheduleRecords(scheduleId, count = 2) {
+  try {
+    const config = await fetch('/config.json').then(r => r.json());
+    const response = await fetch(`${config.API_ENDPOINT}/admin/maintenance-schedules/${scheduleId}/generate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ count })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to generate records');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error generating schedule records:', error);
+    throw error;
+  }
+}
