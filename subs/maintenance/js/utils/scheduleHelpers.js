@@ -244,15 +244,20 @@ export function getTaskTypeIcon(taskType) {
 export function validateScheduleData(data) {
   const errors = [];
   
-  // Required fields
-  if (!data.item_id) errors.push('Item ID is required');
+  // Required fields for templates
+  if (!data.class_type) errors.push('Class type is required');
   if (!data.task_type) errors.push('Task type is required');
+  if (!data.short_name) errors.push('Short name is required');
   if (!data.title) errors.push('Title is required');
   if (!data.frequency) errors.push('Frequency is required');
   
   // Conditional requirements
   if (data.frequency === 'seasonal' && !data.season) {
     errors.push('Season is required for seasonal frequency');
+  }
+  
+  if (data.frequency === 'pre_season' && !data.season) {
+    errors.push('Season is required for pre-season frequency');
   }
   
   // Numeric validations
@@ -266,6 +271,11 @@ export function validateScheduleData(data) {
   
   if (data.days_before_reminder && data.days_before_reminder < 0) {
     errors.push('Days before reminder cannot be negative');
+  }
+  
+  // Short name validation
+  if (data.short_name && !/^[A-Z0-9_]+$/.test(data.short_name)) {
+    errors.push('Short name must contain only uppercase letters, numbers, and underscores');
   }
   
   return {
