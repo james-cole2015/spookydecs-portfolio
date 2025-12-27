@@ -72,11 +72,23 @@ export class SchedulesTableView {
     this.renderStats(container);
     this.renderTable(container);
     
-    // Subscribe to state changes
-    appState.subscribe(() => {
-      this.renderStats(container);
-      this.renderTable(container);
+    // Subscribe to state changes ONLY for this view
+    // Store the unsubscribe function so we can clean up later
+    this.unsubscribe = appState.subscribe(() => {
+      // Only re-render if the schedules view is still visible
+      const schedulesView = document.querySelector('.schedules-view');
+      if (schedulesView) {
+        this.renderStats(schedulesView);
+        this.renderTable(schedulesView);
+      }
     });
+  }
+  
+  // Clean up subscription when view is destroyed
+  destroy() {
+    if (this.unsubscribe) {
+      this.unsubscribe();
+    }
   }
   
   async loadSchedules() {
@@ -182,6 +194,10 @@ export class SchedulesTableView {
   
   renderStats(container) {
     const statsContainer = container.querySelector('#stats-container');
+    
+    // Don't render if container doesn't exist (we're not on this page)
+    if (!statsContainer) return;
+    
     const schedules = appState.getState().schedules;
     
     const total = schedules.length;
@@ -218,6 +234,10 @@ export class SchedulesTableView {
   
   renderTable(container) {
     const tableContainer = container.querySelector('#table-container');
+    
+    // Don't render if container doesn't exist (we're not on this page)
+    if (!tableContainer) return;
+    
     let schedules = appState.getFilteredSchedules();
     
     // Apply default filter (stored in status field)
