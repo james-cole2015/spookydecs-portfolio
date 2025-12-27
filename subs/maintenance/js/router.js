@@ -72,10 +72,24 @@ export function initRouter() {
     })
     .on('/schedules/:id', async (match) => {
       console.log('✅ Route matched: /schedules/:id', match.data);
+      
+      // Prevent /schedules/new from matching this - 'new' is not an ID
+      if (match.data.id === 'new') {
+        console.log('   ⚠️  Skipping - this is /schedules/new route');
+        return;
+      }
+      
       await handleScheduleDetailView(match);
     })
     .on('/schedules/:id/edit', async (match) => {
       console.log('✅ Route matched: /schedules/:id/edit', match.data);
+      
+      // Prevent /schedules/new/edit from matching (shouldn't happen but safety)
+      if (match.data.id === 'new') {
+        console.log('   ⚠️  Skipping - invalid route');
+        return;
+      }
+      
       await handleScheduleEditView(match);
     })
     .on('/schedules/new', async () => {
