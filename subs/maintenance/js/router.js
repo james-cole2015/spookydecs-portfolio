@@ -8,6 +8,7 @@ import { RecordFormView } from './components/RecordForm.js';
 import { SchedulesTableView } from './components/SchedulesTable.js';
 import { ScheduleFormView } from './components/ScheduleForm.js';
 import { ScheduleDetailView } from './components/ScheduleDetail.js';
+import { TemplateApplicationView } from './components/TemplateApplication.js';
 import { showLoading, hideLoading, parseQueryString } from './utils/helpers.js';
 
 let router = null;
@@ -91,6 +92,14 @@ export function initRouter() {
       }
       
       await handleScheduleEditView(match);
+    })
+    .on('/schedules/apply', async () => {
+      console.log('✅ Route matched: /schedules/apply');
+      await handleTemplateApplicationView();
+    })
+    .on('/schedules/:id/apply', async (match) => {
+      console.log('✅ Route matched: /schedules/:id/apply', match.data);
+      await handleTemplateApplicationView(match.data.id);
     })
     .on('/schedules/new', async () => {
       console.log('✅ Route matched: /schedules/new');
@@ -350,6 +359,28 @@ async function handleScheduleDetailView(match) {
     console.error('❌ Error rendering schedule detail:', error);
     hideLoading();
     renderError(container, 'Failed to load schedule details');
+  }
+}
+
+async function handleTemplateApplicationView(preSelectedTemplateId = null) {
+  console.log('📄 handleTemplateApplicationView started', { preSelectedTemplateId });
+  const container = document.getElementById('main-content');
+  
+  if (!container) {
+    console.error('❌ main-content container not found!');
+    return;
+  }
+  
+  try {
+    showLoading();
+    console.log('🔄 Creating TemplateApplicationView...');
+    const applicationView = new TemplateApplicationView(preSelectedTemplateId);
+    await applicationView.render(container);
+    hideLoading();
+  } catch (error) {
+    console.error('❌ Error rendering template application view:', error);
+    hideLoading();
+    renderError(container, 'Failed to load template application wizard');
   }
 }
 

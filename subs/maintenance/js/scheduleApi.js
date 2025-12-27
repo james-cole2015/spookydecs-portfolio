@@ -195,3 +195,28 @@ export async function generateScheduleRecords(scheduleId, count = 2) {
     throw error;
   }
 }
+
+/**
+ * Apply a template to one or more items
+ * @param {string} scheduleId - Template ID to apply
+ * @param {Object} data - { item_ids: string[], start_date?: string }
+ * @returns {Promise<Object>} Application result with items_updated, records_created, details
+ */
+export async function applyTemplateToItems(scheduleId, data) {
+  try {
+    const config = await loadConfig();
+    const response = await fetch(
+      `${config.API_ENDPOINT}/admin/maintenance-schedules/${scheduleId}/apply`,
+      {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(data)
+      }
+    );
+    
+    return handleResponse(response);
+  } catch (error) {
+    console.error('Error applying template to items:', error);
+    throw error;
+  }
+}

@@ -137,6 +137,29 @@ export async function searchItems(query) {
   };
 }
 
+/**
+ * Fetch all items with optional filters
+ * @param {Object} filters - Optional filters { class_type, status, enabled }
+ * @returns {Promise<Array>} Array of items
+ */
+export async function fetchAllItems(filters = {}) {
+  const cfg = await loadConfig();
+  
+  const queryParams = new URLSearchParams();
+  
+  if (filters.class_type) queryParams.append('class_type', filters.class_type);
+  if (filters.status) queryParams.append('status', filters.status);
+  if (filters.enabled !== undefined) queryParams.append('enabled', filters.enabled);
+  
+  const queryString = queryParams.toString();
+  const url = `${cfg.API_ENDPOINT}/items${queryString ? '?' + queryString : ''}`;
+  
+  const response = await fetch(url, { headers: getHeaders() });
+  
+  const data = await handleResponse(response);
+  return data.items || [];
+}
+
 // ============================================
 // BATCH OPERATIONS
 // ============================================

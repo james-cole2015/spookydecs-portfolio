@@ -229,6 +229,454 @@
   margin-bottom: 24px;
 }
 
+/* ========== Template Application Wizard ========== */
+.template-application-view {
+  padding: 20px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.wizard-container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 30px;
+}
+
+/* Step Indicator */
+.step-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 40px;
+  padding: 20px 0;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.step-number {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #e9ecef;
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.step.active .step-number {
+  background: #007bff;
+  color: white;
+}
+
+.step.completed .step-number {
+  background: #28a745;
+  color: white;
+}
+
+.step-label {
+  font-size: 12px;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.step.active .step-label {
+  color: #007bff;
+  font-weight: 600;
+}
+
+.step-connector {
+  width: 60px;
+  height: 2px;
+  background: #e9ecef;
+  margin: 0 10px;
+}
+
+.step.completed + .step-connector {
+  background: #28a745;
+}
+
+/* Wizard Step Content */
+.wizard-step {
+  min-height: 400px;
+}
+
+.wizard-step h2 {
+  margin-bottom: 10px;
+  color: #212529;
+}
+
+.wizard-step > p {
+  color: #6c757d;
+  margin-bottom: 30px;
+}
+
+.wizard-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #e9ecef;
+}
+
+/* Step 1: Template Selection */
+.template-selection {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.template-group h3 {
+  font-size: 16px;
+  color: #495057;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.template-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 8px;
+}
+
+.template-option:hover {
+  border-color: #007bff;
+  background: #f8f9fa;
+}
+
+.template-option input[type="radio"]:checked + .template-info {
+  color: #007bff;
+}
+
+.template-option input[type="radio"] {
+  margin-top: 2px;
+}
+
+.template-info {
+  flex: 1;
+}
+
+.template-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.template-meta {
+  font-size: 13px;
+  color: #6c757d;
+}
+
+/* Step 2: Item Selection */
+.selected-template-info {
+  background: #e7f3ff;
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.item-search {
+  margin-bottom: 16px;
+}
+
+.item-selection-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.items-count {
+  font-size: 14px;
+  color: #6c757d;
+  margin-bottom: 12px;
+}
+
+.items-list {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.item-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  border-bottom: 1px solid #f1f3f5;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.item-checkbox:hover {
+  background: #f8f9fa;
+}
+
+.item-checkbox:last-child {
+  border-bottom: none;
+}
+
+.item-checkbox input[type="checkbox"] {
+  margin-top: 2px;
+}
+
+.item-info {
+  flex: 1;
+}
+
+.item-id {
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+.item-name {
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.item-note {
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.selection-summary {
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.items-with-template {
+  margin-top: 20px;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.items-with-template summary {
+  cursor: pointer;
+  font-weight: 500;
+  padding: 4px;
+}
+
+.items-list-readonly {
+  margin-top: 12px;
+}
+
+.item-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border-bottom: 1px solid #f1f3f5;
+}
+
+.item-row:last-child {
+  border-bottom: none;
+}
+
+.badge-info {
+  background: #d1ecf1;
+  color: #0c5460;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  margin-left: auto;
+}
+
+/* Step 3: Review */
+.review-section {
+  margin-bottom: 24px;
+}
+
+.review-section h3 {
+  font-size: 16px;
+  color: #495057;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.review-item {
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.action-list {
+  list-style: none;
+  padding: 0;
+}
+
+.action-list li {
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-left: 3px solid #28a745;
+  margin-bottom: 8px;
+}
+
+.items-review {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* Step 4: Results */
+.success-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.success-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #28a745;
+  color: white;
+  font-size: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}
+
+.result-summary {
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.result-stats {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0 0;
+}
+
+.result-stats li {
+  padding: 4px 0;
+}
+
+.result-warnings {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.result-warnings h3 {
+  margin-top: 0;
+  color: #856404;
+}
+
+.result-errors {
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.result-errors h3 {
+  margin-top: 0;
+  color: #721c24;
+}
+
+.result-details h3 {
+  margin-bottom: 12px;
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f3f5;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-row.success {
+  background: #f8fff9;
+}
+
+.detail-row.error {
+  background: #fff8f8;
+}
+
+.detail-row.skipped {
+  background: #fffef8;
+}
+
+.status-icon {
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.detail-row.success .status-icon {
+  color: #28a745;
+}
+
+.detail-row.error .status-icon {
+  color: #dc3545;
+}
+
+.detail-row.skipped .status-icon {
+  color: #ffc107;
+}
+
+.info-message {
+  background: #d1ecf1;
+  border: 1px solid #bee5eb;
+  border-radius: 6px;
+  padding: 16px;
+  margin: 20px 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .step-indicator {
+    overflow-x: auto;
+  }
+  
+  .step-connector {
+    width: 40px;
+  }
+  
+  .wizard-container {
+    padding: 20px 16px;
+  }
+}
+
+
 /* ========== Schedule Detail ========== */
 .detail-grid {
   display: grid;
