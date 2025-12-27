@@ -1,4 +1,4 @@
-// Schedules table view - lists all maintenance schedules
+// Schedules table view - lists all maintenance templates
 
 import { appState } from '../state.js';
 import { fetchSchedules } from '../api.js';
@@ -15,6 +15,18 @@ import {
   getStatusFromDueDate 
 } from '../utils/scheduleHelpers.js';
 
+// Class type options (matching ScheduleForm)
+const CLASS_TYPES = [
+  { value: 'INFLATABLE', label: 'Inflatable' },
+  { value: 'ANIMATRONIC', label: 'Animatronic' },
+  { value: 'PROJECTION', label: 'Projection' },
+  { value: 'STATIC_PROP', label: 'Static Prop' },
+  { value: 'LIGHTING', label: 'Lighting' },
+  { value: 'SOUND', label: 'Sound Equipment' },
+  { value: 'CONTROLLER', label: 'Controller' },
+  { value: 'OTHER', label: 'Other' }
+];
+
 export class SchedulesTableView {
   constructor() {
     this.currentPage = 0;
@@ -29,17 +41,17 @@ export class SchedulesTableView {
             <button class="btn-back" onclick="window.location.href='/'">
               ← Back to Records
             </button>
-            <h1>Maintenance Schedules</h1>
+            <h1>Maintenance Templates</h1>
           </div>
           <button class="btn-primary" id="btn-create-schedule">
-            + Create Schedule
+            + Create Template
           </button>
         </div>
         
         <div id="filters-container"></div>
         <div id="stats-container"></div>
         <div id="table-container">
-          <div class="loading">Loading schedules...</div>
+          <div class="loading">Loading templates...</div>
         </div>
       </div>
     `;
@@ -71,20 +83,16 @@ export class SchedulesTableView {
     try {
       const schedules = await fetchSchedules();
       
-      // Update status based on due dates
+      // Templates don't have status - they're just templates
+      // We'll add status based on enabled flag
       schedules.forEach(schedule => {
-        if (schedule.enabled) {
-          schedule.status = getStatusFromDueDate(
-            schedule.next_due_date, 
-            schedule.days_before_reminder
-          );
-        }
+        schedule.status = schedule.enabled ? 'active' : 'disabled';
       });
       
       appState.setSchedules(schedules);
     } catch (error) {
-      console.error('Failed to load schedules:', error);
-      Toast.show('error', 'Error', 'Failed to load schedules');
+      console.error('Failed to load templates:', error);
+      Toast.show('error', 'Error', 'Failed to load templates');
     }
   }
   
@@ -96,22 +104,31 @@ export class SchedulesTableView {
     filtersContainer.innerHTML = `
       <div class="filters-bar">
         <div class="filter-group">
-          <label>Status:</label>
-          <select id="filter-status" class="filter-select">
-            <option value="all" ${filters.status === 'all' ? 'selected' : ''}>All</option>
-            <option value="upcoming" ${filters.status === 'upcoming' ? 'selected' : ''}>Upcoming</option>
-            <option value="due" ${filters.status === 'due' ? 'selected' : ''}>Due Soon</option>
-            <option value="overdue" ${filters.status === 'overdue' ? 'selected' : ''}>Overdue</option>
+          <label>Class Type:</label>
+          <select id="filter-class-type" class="filter-select">
+            <option value="all" ${filters.item_id === 'all' ? 'selected' : ''}>All Classes</option>
+            ${CLASS_TYPES.map(type => 
+              `<option value="${type.value}" ${filters.item_id === type.value ? 'selected' : ''}>${type.label}</option>`
+            ).join('')}
           </select>
         </div>
         
         <div class="filter-group">
           <label>Task Type:</label>
           <select id="filter-task-type" class="filter-select">
-            <option value="all" ${filters.task_type === 'all' ? 'selected' : ''}>All</option>
+            <option value="all" ${filters.task_type === 'all' ? 'selected' : ''}>All Tasks</option>
             ${getTaskTypeOptions().map(opt => 
               `<option value="${opt.value}" ${filters.task_type === opt.value ? 'selected' : ''}>${opt.label}</option>`
             ).join('')}
+          </select>
+        </div>
+        
+        <div class="filter-group">
+          <label>Default:</label>
+          <select id="filter-default" class="filter-select">
+            <option value="all">All</option>
+            <option value="true">Default Only</option>
+            <option value="false">Non-Default Only</option>
           </select>
         </div>
         
@@ -129,17 +146,23 @@ export class SchedulesTableView {
     `;
     
     // Attach filter event listeners
-    const statusFilter = filtersContainer.querySelector('#filter-status');
+    const classTypeFilter = filtersContainer.querySelector('#filter-class-type');
     const taskTypeFilter = filtersContainer.querySelector('#filter-task-type');
+    const defaultFilter = filtersContainer.querySelector('#filter-default');
     const enabledFilter = filtersContainer.querySelector('#filter-enabled');
     const clearBtn = filtersContainer.querySelector('#btn-clear-filters');
     
-    statusFilter?.addEventListener('change', (e) => {
-      appState.updateScheduleFilters({ status: e.target.value });
+    classTypeFilter?.addEventListener('change', (e) => {
+      appState.updateScheduleFilters({ item_id: e.target.value });
     });
     
     taskTypeFilter?.addEventListener('change', (e) => {
       appState.updateScheduleFilters({ task_type: e.target.value });
+    });
+    
+    defaultFilter?.addEventListener('change', (e) => {
+      // Store default filter in status field for now
+      appState.updateScheduleFilters({ status: e.target.value });
     });
     
     enabledFilter?.addEventListener('change', (e) => {
@@ -148,6 +171,7 @@ export class SchedulesTableView {
     
     clearBtn?.addEventListener('click', () => {
       appState.updateScheduleFilters({ 
+        item_id: 'all',
         status: 'all', 
         task_type: 'all', 
         enabled: 'all' 
@@ -158,25 +182,35 @@ export class SchedulesTableView {
   
   renderStats(container) {
     const statsContainer = container.querySelector('#stats-container');
-    const stats = appState.getScheduleStats();
+    const schedules = appState.getState().schedules;
+    
+    const total = schedules.length;
+    const enabled = schedules.filter(s => s.enabled).length;
+    const defaults = schedules.filter(s => s.is_default).length;
+    const byClass = {};
+    
+    schedules.forEach(s => {
+      const cls = s.class_type || 'Unknown';
+      byClass[cls] = (byClass[cls] || 0) + 1;
+    });
     
     statsContainer.innerHTML = `
       <div class="stats-cards">
         <div class="stat-card">
-          <div class="stat-value">${stats.total}</div>
-          <div class="stat-label">Total Schedules</div>
+          <div class="stat-value">${total}</div>
+          <div class="stat-label">Total Templates</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value">${stats.enabled}</div>
+          <div class="stat-value">${enabled}</div>
           <div class="stat-label">Enabled</div>
         </div>
-        <div class="stat-card stat-warning">
-          <div class="stat-value">${stats.upcoming}</div>
-          <div class="stat-label">Due This Week</div>
+        <div class="stat-card">
+          <div class="stat-value">${defaults}</div>
+          <div class="stat-label">Default Templates</div>
         </div>
-        <div class="stat-card stat-danger">
-          <div class="stat-value">${stats.overdue}</div>
-          <div class="stat-label">Overdue</div>
+        <div class="stat-card">
+          <div class="stat-value">${Object.keys(byClass).length}</div>
+          <div class="stat-label">Class Types</div>
         </div>
       </div>
     `;
@@ -184,17 +218,27 @@ export class SchedulesTableView {
   
   renderTable(container) {
     const tableContainer = container.querySelector('#table-container');
-    const schedules = appState.getFilteredSchedules();
+    let schedules = appState.getFilteredSchedules();
+    
+    // Apply default filter (stored in status field)
+    const defaultFilter = appState.getState().scheduleFilters.status;
+    if (defaultFilter === 'true') {
+      schedules = schedules.filter(s => s.is_default === true);
+    } else if (defaultFilter === 'false') {
+      schedules = schedules.filter(s => !s.is_default);
+    }
     
     if (schedules.length === 0) {
       tableContainer.innerHTML = this.renderEmptyState();
       return;
     }
     
-    // Sort by next_due_date
-    const sorted = [...schedules].sort((a, b) => 
-      new Date(a.next_due_date) - new Date(b.next_due_date)
-    );
+    // Sort by class_type, then task_type
+    const sorted = [...schedules].sort((a, b) => {
+      const classCompare = (a.class_type || '').localeCompare(b.class_type || '');
+      if (classCompare !== 0) return classCompare;
+      return (a.task_type || '').localeCompare(b.task_type || '');
+    });
     
     // Pagination
     const totalPages = Math.ceil(sorted.length / this.pageSize);
@@ -207,12 +251,12 @@ export class SchedulesTableView {
         <table class="data-table">
           <thead>
             <tr>
-              <th>Item ID</th>
+              <th>Template ID</th>
+              <th>Class Type</th>
               <th>Task Type</th>
               <th>Title</th>
               <th>Frequency</th>
-              <th>Next Due</th>
-              <th>Status</th>
+              <th>Default</th>
               <th>Enabled</th>
               <th>Actions</th>
             </tr>
@@ -230,14 +274,20 @@ export class SchedulesTableView {
   }
   
   renderScheduleRow(schedule) {
+    const templateId = schedule.schedule_id.substring(0, 20) + '...';
+    
     return `
       <tr class="table-row" data-schedule-id="${schedule.schedule_id}">
-        <td><code>${schedule.item_id}</code></td>
+        <td><code class="template-id" title="${schedule.schedule_id}">${templateId}</code></td>
+        <td><span class="class-type-badge">${schedule.class_type}</span></td>
         <td>${formatTaskType(schedule.task_type)}</td>
         <td class="table-title">${schedule.title}</td>
         <td>${formatScheduleFrequency(schedule.frequency, schedule.season)}</td>
-        <td>${formatNextDueDate(schedule.next_due_date, schedule.status)}</td>
-        <td>${formatScheduleStatus(schedule.status)}</td>
+        <td>
+          ${schedule.is_default 
+            ? '<span class="badge-default">✓ Default</span>' 
+            : '<span class="badge-custom">Custom</span>'}
+        </td>
         <td>
           <span class="enabled-badge ${schedule.enabled ? 'enabled' : 'disabled'}">
             ${schedule.enabled ? '✓ Yes' : '✗ No'}
@@ -289,11 +339,11 @@ export class SchedulesTableView {
   renderEmptyState() {
     return `
       <div class="empty-state">
-        <div class="empty-icon">📅</div>
-        <h3>No schedules found</h3>
-        <p>Create your first maintenance schedule to automate recurring tasks</p>
+        <div class="empty-icon">📋</div>
+        <h3>No templates found</h3>
+        <p>Create your first maintenance template to automate recurring tasks</p>
         <button class="btn-primary" onclick="window.location.href='/schedules/new'">
-          + Create Schedule
+          + Create Template
         </button>
       </div>
     `;

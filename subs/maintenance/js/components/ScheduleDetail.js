@@ -72,13 +72,21 @@ export class ScheduleDetailView {
       <div class="detail-card">
         <div class="card-header">
           <h2>${s.title}</h2>
-          ${formatScheduleStatus(s.status)}
+          <div class="badges">
+            ${s.is_default ? '<span class="badge-default">✓ Default Template</span>' : '<span class="badge-custom">Custom Template</span>'}
+            ${s.enabled ? '' : '<span class="badge-disabled">Disabled</span>'}
+          </div>
         </div>
         
         <div class="detail-grid">
           <div class="detail-row">
-            <label>Item ID:</label>
-            <div><code>${s.item_id}</code></div>
+            <label>Template ID:</label>
+            <div><code>${s.schedule_id}</code></div>
+          </div>
+          
+          <div class="detail-row">
+            <label>Class Type:</label>
+            <div><span class="class-type-badge">${s.class_type}</span></div>
           </div>
           
           <div class="detail-row">
@@ -87,26 +95,21 @@ export class ScheduleDetailView {
           </div>
           
           <div class="detail-row">
+            <label>Short Name:</label>
+            <div><code>${s.short_name}</code></div>
+          </div>
+          
+          <div class="detail-row">
             <label>Frequency:</label>
             <div>${formatScheduleFrequency(s.frequency, s.season)}</div>
           </div>
           
           <div class="detail-row">
-            <label>Next Due:</label>
-            <div class="highlight">${formatNextDueDate(s.next_due_date, s.status)}</div>
-          </div>
-          
-          <div class="detail-row">
-            <label>Last Completed:</label>
-            <div>${s.last_completed_date ? formatDate(s.last_completed_date) : 'Never'}</div>
-          </div>
-          
-          <div class="detail-row">
-            <label>Enabled:</label>
+            <label>Auto-Apply to New Items:</label>
             <div>
-              <span class="enabled-badge ${s.enabled ? 'enabled' : 'disabled'}">
-                ${s.enabled ? '✓ Yes' : '✗ No'}
-              </span>
+              ${s.is_default 
+                ? '<strong>Yes</strong> - Automatically assigned to new ' + s.class_type + ' items'
+                : 'No - Must be manually assigned'}
             </div>
           </div>
           
@@ -134,6 +137,15 @@ export class ScheduleDetailView {
           <div class="detail-row">
             <label>Reminder:</label>
             <div>${s.days_before_reminder} days before due</div>
+          </div>
+          
+          <div class="detail-row">
+            <label>Status:</label>
+            <div>
+              <span class="enabled-badge ${s.enabled ? 'enabled' : 'disabled'}">
+                ${s.enabled ? '✓ Enabled' : '✗ Disabled'}
+              </span>
+            </div>
           </div>
           
           <div class="detail-row">
@@ -291,11 +303,15 @@ export class ScheduleDetailView {
   }
   
   async handleDelete() {
-    const upcomingRecords = this.records.filter(r => r.status !== 'completed').length;
+    const pendingRecords = this.records.filter(r => r.status === 'scheduled').length;
     
     const confirmed = confirm(
-      `Are you sure you want to delete this schedule?\n\n` +
-      `This will cancel ${upcomingRecords} upcoming maintenance record(s).\n\n` +
+      `Delete Template: ${this.schedule.title}?\n\n` +
+      `This template ${this.schedule.is_default ? 'IS a default template' : 'is a custom template'}.\n\n` +
+      `This will:\n` +
+      `• Remove this template from the system\n` +
+      `• Cancel ${pendingRecords} pending maintenance record(s)\n` +
+      `• Keep all completed historical records\n\n` +
       `This action cannot be undone.`
     );
     
@@ -307,15 +323,15 @@ export class ScheduleDetailView {
       
       Toast.show(
         'success', 
-        'Schedule Deleted', 
-        `Cancelled ${result.cancelled_records} future record(s)`
+        'Template Deleted', 
+        `${result.template_name || 'Template'} deleted. ${result.cancelled_records} future record(s) cancelled.`
       );
       
       navigateTo('/schedules');
       
     } catch (error) {
-      console.error('Failed to delete schedule:', error);
-      Toast.show('error', 'Error', 'Failed to delete schedule');
+      console.error('Failed to delete template:', error);
+      Toast.show('error', 'Error', 'Failed to delete template');
     }
   }
   

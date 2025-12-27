@@ -1,10 +1,9 @@
-// Schedule form component for create/edit
+// Schedule form component for create/edit templates
 
 import { fetchSchedule, createSchedule, updateSchedule } from '../api.js';
 import { appState } from '../state.js';
 import { navigateTo } from '../router.js';
 import { Toast } from '../utils/toast.js';
-import { ItemSelector } from './form/ItemSelector.js';
 import {
   getTaskTypeOptions,
   getFrequencyOptions,
@@ -13,20 +12,30 @@ import {
   calculateNextDueDate
 } from '../utils/scheduleHelpers.js';
 
+// Class type options
+const CLASS_TYPES = [
+  { value: 'INFLATABLE', label: 'Inflatable' },
+  { value: 'ANIMATRONIC', label: 'Animatronic' },
+  { value: 'PROJECTION', label: 'Projection' },
+  { value: 'STATIC_PROP', label: 'Static Prop' },
+  { value: 'LIGHTING', label: 'Lighting' },
+  { value: 'SOUND', label: 'Sound Equipment' },
+  { value: 'CONTROLLER', label: 'Controller' },
+  { value: 'OTHER', label: 'Other' }
+];
+
 export class ScheduleFormView {
   constructor(scheduleId = null) {
     this.scheduleId = scheduleId;
     this.schedule = null;
     this.isEditMode = !!scheduleId;
-    this.itemSelector = new ItemSelector(null, this.isEditMode);
   }
   
   async render(container) {
     try {
-      // If edit mode, fetch existing schedule
+      // If edit mode, fetch existing template
       if (this.isEditMode) {
         this.schedule = await fetchSchedule(this.scheduleId);
-        this.itemSelector.setItemId(this.schedule.item_id);
       }
       
       container.innerHTML = this.renderForm();
@@ -44,14 +53,16 @@ export class ScheduleFormView {
     return `
       <div class="form-view">
         <div class="form-header">
-          <button class="btn-back" onclick="history.back()">← Back to Schedules</button>
+          <button class="btn-back" onclick="history.back()">← Back to Templates</button>
         </div>
         
         <div class="form-container">
-          <h1>${this.isEditMode ? 'Edit' : 'Create'} Maintenance Schedule</h1>
+          <h1>${this.isEditMode ? 'Edit' : 'Create'} Maintenance Template</h1>
+          <p class="form-subtitle">Templates define recurring maintenance tasks for a class of items</p>
           
           <form id="schedule-form" class="record-form">
-            ${this.renderBasicInfo(schedule)}
+            ${this.renderTemplateInfo(schedule)}
+            ${this.renderTaskDetails(schedule)}
             ${this.renderFrequencySection(schedule)}
             ${this.renderEstimates(schedule)}
             ${this.renderOptions(schedule)}
@@ -63,12 +74,52 @@ export class ScheduleFormView {
     `;
   }
   
-  renderBasicInfo(schedule) {
+  renderTemplateInfo(schedule) {
     return `
       <div class="form-section">
-        <h3>Basic Information</h3>
+        <h3>Template Information</h3>
         
-        ${this.itemSelector.render(schedule.item_id)}
+        <div class="form-row">
+          <div class="form-group">
+            <label for="class_type">Class Type <span class="required">*</span></label>
+            <select id="class_type" name="class_type" class="form-input" required>
+              <option value="">Select class type...</option>
+              ${CLASS_TYPES.map(type => 
+                `<option value="${type.value}" ${schedule.class_type === type.value ? 'selected' : ''}>
+                  ${type.label}
+                </option>`
+              ).join('')}
+            </select>
+            <small class="form-help">Type of decoration this template applies to</small>
+          </div>
+          
+          <div class="form-group">
+            <label for="short_name">Short Name <span class="required">*</span></label>
+            <input type="text" id="short_name" name="short_name" class="form-input" 
+                   placeholder="e.g., VISUAL, MOTOR, SEAM" 
+                   value="${schedule.short_name || ''}"
+                   pattern="[A-Z0-9_]+" 
+                   required>
+            <small class="form-help">Uppercase letters, numbers, and underscores only</small>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="is_default" name="is_default" 
+                   ${schedule.is_default ? 'checked' : ''}>
+            <strong>Set as default</strong> (auto-apply to new items of this class)
+          </label>
+          <small class="form-help">Default templates are automatically assigned when creating new items</small>
+        </div>
+      </div>
+    `;
+  }
+  
+  renderTaskDetails(schedule) {
+    return `
+      <div class="form-section">
+        <h3>Task Details</h3>
         
         <div class="form-row">
           <div class="form-group">
@@ -107,6 +158,8 @@ export class ScheduleFormView {
   }
   
   renderFrequencySection(schedule) {
+    const needsSeason = schedule.frequency === 'seasonal' || schedule.frequency === 'pre_season';
+    
     return `
       <div class="form-section">
         <h3>Schedule Frequency</h3>
@@ -122,9 +175,9 @@ export class ScheduleFormView {
             </select>
           </div>
           
-          <div class="form-group" id="season-group" style="${schedule.frequency === 'seasonal' || schedule.frequency === 'pre_season' ? '' : 'display: none;'}">
+          <div class="form-group" id="season-group" style="${needsSeason ? '' : 'display: none;'}">
             <label for="season">Season <span class="required" id="season-required">*</span></label>
-            <select id="season" name="season" class="form-input">
+            <select id="season" name="season" class="form-input" ${needsSeason ? 'required' : ''}>
               <option value="">Select season...</option>
               ${getSeasonOptions().map(opt => 
                 `<option value="${opt.value}" ${schedule.season === opt.value ? 'selected' : ''}>${opt.label}</option>`
@@ -175,7 +228,7 @@ export class ScheduleFormView {
           <input type="number" id="days_before_reminder" name="days_before_reminder" 
                  class="form-input" min="1" max="90"
                  value="${schedule.days_before_reminder || 7}">
-          <small class="form-help">You'll be reminded this many days before the task is due</small>
+          <small class="form-help">Users will be reminded this many days before tasks are due</small>
         </div>
       </div>
     `;
@@ -196,7 +249,7 @@ export class ScheduleFormView {
     return `
       <div class="form-actions">
         <button type="submit" class="btn-primary">
-          ${this.isEditMode ? 'Update Schedule' : 'Create Schedule'}
+          ${this.isEditMode ? 'Update Template' : 'Create Template'}
         </button>
         <button type="button" class="btn-secondary" onclick="history.back()">Cancel</button>
       </div>
@@ -207,7 +260,7 @@ export class ScheduleFormView {
     return `
       <div class="error-container">
         <h1>Error Loading Form</h1>
-        <p>Unable to load the schedule form. Please try again.</p>
+        <p>Unable to load the template form. Please try again.</p>
         <button onclick="history.back()">Go Back</button>
       </div>
     `;
@@ -221,6 +274,12 @@ export class ScheduleFormView {
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       this.handleSubmit(form);
+    });
+    
+    // Auto-uppercase short_name
+    const shortNameInput = form.querySelector('#short_name');
+    shortNameInput?.addEventListener('input', (e) => {
+      e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, '');
     });
     
     // Frequency change - show/hide season
@@ -246,13 +305,6 @@ export class ScheduleFormView {
       this.updatePreview(form);
     });
     
-    // Item selector
-    this.itemSelector.attachEventListeners(container, (item) => {
-      if (item) {
-        this.updatePreview(form);
-      }
-    });
-    
     // Update preview on any field change
     const formInputs = form.querySelectorAll('input, select, textarea');
     formInputs.forEach(input => {
@@ -265,8 +317,9 @@ export class ScheduleFormView {
     const frequency = formData.get('frequency');
     const taskType = formData.get('task_type');
     const season = formData.get('season');
+    const classType = formData.get('class_type');
     
-    if (!frequency || !taskType) return;
+    if (!frequency || !taskType || !classType) return;
     
     try {
       const nextDue = calculateNextDueDate(
@@ -286,7 +339,7 @@ export class ScheduleFormView {
           month: 'long', 
           day: 'numeric' 
         })}</p>
-        <p><small>The system will automatically generate 2 future maintenance records when you create this schedule.</small></p>
+        <p><small>When applied to items, maintenance records will be generated based on this schedule.</small></p>
       `;
     } catch (error) {
       console.error('Preview calculation failed:', error);
@@ -298,12 +351,14 @@ export class ScheduleFormView {
       const formData = new FormData(form);
       
       const data = {
-        item_id: formData.get('item_id'),
+        class_type: formData.get('class_type'),
         task_type: formData.get('task_type'),
+        short_name: formData.get('short_name'),
         title: formData.get('title'),
         description: formData.get('description') || '',
         frequency: formData.get('frequency'),
         season: formData.get('season') || null,
+        is_default: formData.get('is_default') === 'on',
         enabled: formData.get('enabled') === 'true',
         estimated_cost: parseFloat(formData.get('estimated_cost')) || 0,
         estimated_duration_minutes: parseInt(formData.get('estimated_duration_minutes')) || null,
@@ -321,19 +376,24 @@ export class ScheduleFormView {
       let result;
       if (this.isEditMode) {
         result = await updateSchedule(this.scheduleId, data);
-        appState.updateSchedule(this.scheduleId, result);
-        Toast.show('success', 'Success', 'Schedule updated successfully');
+        appState.updateSchedule(this.scheduleId, result.schedule);
+        
+        const message = result.updated_records > 0 
+          ? `Template updated. ${result.updated_records} pending records updated.`
+          : 'Template updated successfully';
+        
+        Toast.show('success', 'Success', message);
       } else {
         result = await createSchedule(data);
         appState.addSchedule(result.schedule);
-        Toast.show('success', 'Success', 'Schedule created successfully');
+        Toast.show('success', 'Success', 'Template created successfully');
       }
       
-      navigateTo(`/schedules/${result.schedule_id || this.scheduleId}`);
+      navigateTo(`/schedules/${result.schedule.schedule_id || this.scheduleId}`);
       
     } catch (error) {
-      console.error('Failed to save schedule:', error);
-      Toast.show('error', 'Error', error.message || 'Failed to save schedule');
+      console.error('Failed to save template:', error);
+      Toast.show('error', 'Error', error.message || 'Failed to save template');
     }
   }
 }
