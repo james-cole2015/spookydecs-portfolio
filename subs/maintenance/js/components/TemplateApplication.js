@@ -229,9 +229,19 @@ export class TemplateApplicationView {
   
   async renderStep2() {
     try {
-      // Load all items for this class type
-      let allItems = await fetchAllItems({
-        class_type: this.selectedTemplate.class_type
+      // Load ALL items (don't filter by class_type via API since normalization is inconsistent)
+      let allItems = await fetchAllItems({});
+      
+      // Filter to matching class_type on frontend with normalization
+      const normalizeClassType = (classType) => {
+        return (classType || '').toUpperCase().replace(/\s+/g, '_');
+      };
+      
+      const templateClassType = normalizeClassType(this.selectedTemplate.class_type);
+      
+      allItems = allItems.filter(item => {
+        const itemClassType = normalizeClassType(item.class_type);
+        return itemClassType === templateClassType;
       });
       
       // Filter out Deployment and Storage class items
