@@ -1,15 +1,16 @@
-/* Schedule Detail Tabs Styles */
+/* Schedule Detail Tabs Styles - Override schedules.css conflicts */
 
-.detail-tabs {
-  display: flex;
+.detail-view .detail-tabs {
+  display: flex !important;
   gap: 8px;
   margin-bottom: 24px;
   border-bottom: 2px solid #e5e7eb;
   padding: 0 4px;
+  position: relative;
 }
 
-.detail-tab-button {
-  display: flex;
+.detail-view .detail-tab-button {
+  display: flex !important;
   align-items: center;
   gap: 8px;
   padding: 12px 20px;
@@ -25,14 +26,14 @@
   margin-bottom: -2px;
 }
 
-.detail-tab-button:hover {
+.detail-view .detail-tab-button:hover {
   color: #111827;
   background-color: #f9fafb;
 }
 
-.detail-tab-button.active {
-  color: #f97316;
-  border-bottom-color: #f97316;
+.detail-view .detail-tab-button.active {
+  color: #f97316 !important;
+  border-bottom-color: #f97316 !important;
   background-color: #fff7ed;
 }
 
@@ -65,16 +66,16 @@
 }
 
 /* Tab Panels */
-.detail-tab-panels {
+.detail-view .detail-tab-panels {
   position: relative;
 }
 
-.detail-tab-panel {
+.detail-view .detail-tab-panel {
   display: none;
 }
 
-.detail-tab-panel.active {
-  display: block;
+.detail-view .detail-tab-panel.active {
+  display: block !important;
   animation: fadeIn 0.2s ease-in;
 }
 
@@ -110,6 +111,25 @@
   padding: 12px 16px;
   border-bottom: 1px solid #e5e7eb;
   vertical-align: middle;
+}
+
+/* Override .detail-row from schedules.css for table rows */
+.items-using-template-table .item-row {
+  display: table-row !important;
+  flex-direction: unset !important;
+  gap: unset !important;
+  padding: unset !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+.items-using-template-table .item-row.clickable {
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.items-using-template-table .item-row.clickable:hover {
+  background-color: #f9fafb !important;
 }
 
 .items-using-template-table .item-id-code {
@@ -183,15 +203,6 @@
 .status-badge.status-disabled {
   background-color: #fee2e2;
   color: #991b1b;
-}
-
-.item-row.clickable {
-  cursor: pointer;
-  transition: background-color 0.15s;
-}
-
-.item-row.clickable:hover {
-  background-color: #f9fafb;
 }
 
 /* Card Header with Actions */
@@ -323,10 +334,10 @@
   }
 }
 
-/* Small button variant for table actions */
-.btn-small {
-  padding: 6px 12px;
-  font-size: 12px;
+/* Small button variant for table actions - override schedules.css */
+.items-using-template-table .btn-small {
+  padding: 6px 12px !important;
+  font-size: 12px !important;
   font-weight: 500;
   border-radius: 6px;
   border: 1px solid #d1d5db;
@@ -336,7 +347,7 @@
   transition: all 0.15s;
 }
 
-.btn-small:hover {
+.items-using-template-table .btn-small:hover {
   background-color: #f9fafb;
   border-color: #9ca3af;
 }
