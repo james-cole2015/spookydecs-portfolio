@@ -235,13 +235,16 @@ export class TemplateApplicationView {
       });
       
       // Filter to items that don't have this template
-      const itemsWithoutTemplate = this.allItems.filter(item => 
-        !item.maintenance?.applied_templates?.includes(this.selectedTemplate.schedule_id)
-      );
+      // Lazy migration: if maintenance structure doesn't exist, treat as "doesn't have template"
+      const itemsWithoutTemplate = this.allItems.filter(item => {
+        const appliedTemplates = item.maintenance?.applied_templates || [];
+        return !appliedTemplates.includes(this.selectedTemplate.schedule_id);
+      });
       
-      const itemsWithTemplate = this.allItems.filter(item =>
-        item.maintenance?.applied_templates?.includes(this.selectedTemplate.schedule_id)
-      );
+      const itemsWithTemplate = this.allItems.filter(item => {
+        const appliedTemplates = item.maintenance?.applied_templates || [];
+        return appliedTemplates.includes(this.selectedTemplate.schedule_id);
+      });
       
       return `
         <div class="wizard-step">
@@ -313,7 +316,8 @@ export class TemplateApplicationView {
   }
   
   renderItemCheckbox(item) {
-    const hasOtherTemplates = item.maintenance?.applied_templates?.length > 0;
+    const appliedTemplates = item.maintenance?.applied_templates || [];
+    const hasOtherTemplates = appliedTemplates.length > 0;
     
     return `
       <label class="item-checkbox">
@@ -322,7 +326,7 @@ export class TemplateApplicationView {
           <div class="item-id"><code>${item.id}</code></div>
           <div class="item-name">${item.name || 'Unnamed Item'}</div>
           ${hasOtherTemplates ? `
-            <div class="item-note">Has ${item.maintenance.applied_templates.length} other template(s)</div>
+            <div class="item-note">Has ${appliedTemplates.length} other template(s)</div>
           ` : '<div class="item-note">No templates yet</div>'}
         </div>
       </label>
