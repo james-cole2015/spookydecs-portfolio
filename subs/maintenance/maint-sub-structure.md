@@ -48,3 +48,4 @@ maintenance-records/
 
 backend/
 └── maintenance_schedule_handler.py    # NEW - Template CRUD Lambda
+└── applyTemplatesToItems.py           # NEW - Template CRUD Lambda

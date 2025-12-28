@@ -18,6 +18,8 @@ export class ScheduleDetailView {
     this.scheduleId = scheduleId;
     this.schedule = null;
     this.records = [];
+    this.itemsWithTemplate = [];
+    this.activeTab = 'overview'; // 'overview' or 'items'
   }
   
   async render(container) {
@@ -42,55 +44,68 @@ export class ScheduleDetailView {
   }
   
   async loadAndRenderItems(container) {
-    const itemsListContent = container.querySelector('#items-list-content');
+    const itemsTabContent = container.querySelector('#items-tab-content');
     
-    if (!itemsListContent) return;
+    if (!itemsTabContent) return;
     
     try {
-      // Fetch all items and filter to ones with this template
-      const allItems = await fetchAllItems({
-        class_type: this.schedule.class_type
+      // Show loading state
+      itemsTabContent.innerHTML = `
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading items...</p>
+        </div>
+      `;
+      
+      // Fetch all items (we need to check all items since template can be for any class_type)
+      const allItems = await fetchAllItems({});
+      
+      // Filter to items that have this template in their applied_templates array
+      const itemsWithTemplate = allItems.filter(item => {
+        // Check if item has maintenance object and applied_templates array
+        if (!item.maintenance || !Array.isArray(item.maintenance.applied_templates)) {
+          return false;
+        }
+        
+        // Check if this template ID is in the applied_templates array
+        return item.maintenance.applied_templates.includes(this.scheduleId);
       });
       
-      const itemsWithTemplate = allItems.filter(item =>
-        item.maintenance?.applied_templates?.includes(this.scheduleId)
-      );
+      console.log(`Found ${itemsWithTemplate.length} items using template ${this.scheduleId}`);
       
-      if (itemsWithTemplate.length === 0) {
-        itemsListContent.innerHTML = `
-          <div class="empty-state-small">
-            <p>No items are using this template yet.</p>
-            <button class="btn-primary" onclick="window.location.href='/schedules/${this.scheduleId}/apply'">
-              Apply to Items
-            </button>
-          </div>
-        `;
-      } else {
-        itemsListContent.innerHTML = `
-          <p class="items-count">${itemsWithTemplate.length} items using this template</p>
-          <div class="items-list-compact">
-            ${itemsWithTemplate.slice(0, 10).map(item => `
-              <div class="item-row">
-                <code>${item.id}</code>
-                <span>${item.name || 'Unnamed'}</span>
-              </div>
-            `).join('')}
-            ${itemsWithTemplate.length > 10 ? `
-              <div class="item-row-more">
-                ... and ${itemsWithTemplate.length - 10} more
-              </div>
-            ` : ''}
-          </div>
-        `;
+      this.itemsWithTemplate = itemsWithTemplate;
+      
+      // Update the tab content
+      itemsTabContent.innerHTML = this.renderItemsTabContent();
+      
+      // Update the tab count badge
+      const itemsTabButton = container.querySelector('.detail-tab-button[data-tab="items"]');
+      if (itemsTabButton) {
+        const countBadge = itemsTabButton.querySelector('.tab-count');
+        if (countBadge) {
+          countBadge.textContent = itemsWithTemplate.length;
+        }
       }
+      
+      // Attach event listeners for item rows
+      this.attachItemRowListeners(container);
       
     } catch (error) {
       console.error('Failed to load items:', error);
-      itemsListContent.innerHTML = `
-        <div class="error-message-small">
-          Failed to load items using this template.
+      itemsTabContent.innerHTML = `
+        <div class="error-state">
+          <p>Failed to load items using this template.</p>
+          <button class="btn-secondary" id="retry-items-load">Retry</button>
         </div>
       `;
+      
+      // Add retry button listener
+      const retryBtn = itemsTabContent.querySelector('#retry-items-load');
+      if (retryBtn) {
+        retryBtn.addEventListener('click', () => {
+          this.loadAndRenderItems(container);
+        });
+      }
     }
   }
   
@@ -118,23 +133,111 @@ export class ScheduleDetailView {
         </div>
         
         <div class="detail-content">
-          ${this.renderItemsUsingTemplate()}
-          ${this.renderScheduleInfo()}
-          ${this.renderRecordsSection()}
+          ${this.renderTabs()}
+          ${this.renderTabContent()}
         </div>
       </div>
     `;
   }
   
-  renderItemsUsingTemplate() {
-    // This will be populated after loading
+  renderTabs() {
     return `
-      <div class="detail-card" id="items-using-template">
-        <h3>Items Using This Template</h3>
-        <div id="items-list-content">
-          <div class="loading">Loading items...</div>
+      <div class="detail-tabs">
+        <button class="detail-tab-button ${this.activeTab === 'overview' ? 'active' : ''}" data-tab="overview">
+          <span class="tab-icon">📋</span>
+          <span class="tab-label">Overview</span>
+        </button>
+        <button class="detail-tab-button ${this.activeTab === 'items' ? 'active' : ''}" data-tab="items">
+          <span class="tab-icon">📦</span>
+          <span class="tab-label">Items Using This Template</span>
+          <span class="tab-count">0</span>
+        </button>
+      </div>
+    `;
+  }
+  
+  renderTabContent() {
+    return `
+      <div class="detail-tab-panels">
+        <div class="detail-tab-panel ${this.activeTab === 'overview' ? 'active' : ''}" data-panel="overview">
+          ${this.renderScheduleInfo()}
+          ${this.renderRecordsSection()}
+        </div>
+        <div class="detail-tab-panel ${this.activeTab === 'items' ? 'active' : ''}" data-panel="items">
+          <div id="items-tab-content">
+            <div class="loading-state">
+              <div class="spinner"></div>
+              <p>Loading items...</p>
+            </div>
+          </div>
         </div>
       </div>
+    `;
+  }
+  
+  renderItemsTabContent() {
+    if (this.itemsWithTemplate.length === 0) {
+      return `
+        <div class="detail-card">
+          <div class="empty-state">
+            <div class="empty-state-icon">📦</div>
+            <h3>No Items Using This Template</h3>
+            <p>This template hasn't been applied to any items yet.</p>
+            <button class="btn-primary" id="apply-template-from-items-tab">
+              Apply Template to Items
+            </button>
+          </div>
+        </div>
+      `;
+    }
+    
+    return `
+      <div class="detail-card">
+        <div class="card-header-with-actions">
+          <h3>${this.itemsWithTemplate.length} Item${this.itemsWithTemplate.length !== 1 ? 's' : ''} Using This Template</h3>
+          <button class="btn-secondary btn-small" id="apply-more-items">
+            + Apply to More Items
+          </button>
+        </div>
+        
+        <div class="items-table-container">
+          <table class="data-table items-using-template-table">
+            <thead>
+              <tr>
+                <th>Item ID</th>
+                <th>Name</th>
+                <th>Class Type</th>
+                <th>Season</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${this.itemsWithTemplate.map(item => this.renderItemRow(item)).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+  
+  renderItemRow(item) {
+    const statusClass = item.enabled === false ? 'disabled' : 'enabled';
+    const statusText = item.enabled === false ? 'Disabled' : 'Active';
+    
+    return `
+      <tr class="item-row clickable" data-item-id="${item.id}">
+        <td><code class="item-id-code">${item.id}</code></td>
+        <td class="item-name">${item.name || 'Unnamed Item'}</td>
+        <td><span class="class-type-badge">${item.class_type || 'Unknown'}</span></td>
+        <td><span class="season-badge season-${(item.season || 'unknown').toLowerCase()}">${item.season || 'Unknown'}</span></td>
+        <td><span class="status-badge status-${statusClass}">${statusText}</span></td>
+        <td>
+          <button class="btn-small btn-view-item" data-item-id="${item.id}" title="View Item Details">
+            View
+          </button>
+        </td>
+      </tr>
     `;
   }
   
@@ -327,6 +430,15 @@ export class ScheduleDetailView {
   }
   
   attachEventListeners(container) {
+    // Tab switching
+    const tabButtons = container.querySelectorAll('.detail-tab-button');
+    tabButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const tab = button.getAttribute('data-tab');
+        this.switchTab(tab, container);
+      });
+    });
+    
     // Edit button
     const editBtn = container.querySelector('#btn-edit');
     if (editBtn) {
@@ -335,10 +447,26 @@ export class ScheduleDetailView {
       });
     }
     
-    // Apply to Items button
+    // Apply to Items button (header)
     const applyBtn = container.querySelector('#btn-apply-to-items');
     if (applyBtn) {
       applyBtn.addEventListener('click', () => {
+        navigateTo(`/schedules/${this.scheduleId}/apply`);
+      });
+    }
+    
+    // Apply Template button (from items tab empty state)
+    const applyFromItemsTab = container.querySelector('#apply-template-from-items-tab');
+    if (applyFromItemsTab) {
+      applyFromItemsTab.addEventListener('click', () => {
+        navigateTo(`/schedules/${this.scheduleId}/apply`);
+      });
+    }
+    
+    // Apply to More Items button
+    const applyMoreBtn = container.querySelector('#apply-more-items');
+    if (applyMoreBtn) {
+      applyMoreBtn.addEventListener('click', () => {
         navigateTo(`/schedules/${this.scheduleId}/apply`);
       });
     }
@@ -366,8 +494,10 @@ export class ScheduleDetailView {
         if (e.target.classList.contains('btn-small')) return;
         
         const recordId = row.getAttribute('data-record-id');
-        const itemId = this.schedule.item_id;
-        navigateTo(`/${itemId}/${recordId}`);
+        const record = this.records.find(r => r.record_id === recordId);
+        if (record && record.item_id) {
+          navigateTo(`/${record.item_id}/${recordId}`);
+        }
       });
     });
     
@@ -377,9 +507,62 @@ export class ScheduleDetailView {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const recordId = btn.getAttribute('data-record-id');
-        const itemId = this.schedule.item_id;
-        navigateTo(`/${itemId}/${recordId}`);
+        const record = this.records.find(r => r.record_id === recordId);
+        if (record && record.item_id) {
+          navigateTo(`/${record.item_id}/${recordId}`);
+        }
       });
+    });
+  }
+  
+  attachItemRowListeners(container) {
+    // Item row clicks
+    const itemRows = container.querySelectorAll('.item-row.clickable');
+    itemRows.forEach(row => {
+      row.addEventListener('click', (e) => {
+        // Don't trigger if clicking a button
+        if (e.target.classList.contains('btn-view-item') || e.target.closest('.btn-view-item')) {
+          return;
+        }
+        
+        const itemId = row.getAttribute('data-item-id');
+        // Navigate to item detail page (adjust URL as needed)
+        window.location.href = `/items/${itemId}`;
+      });
+    });
+    
+    // View item buttons
+    const viewItemBtns = container.querySelectorAll('.btn-view-item');
+    viewItemBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const itemId = btn.getAttribute('data-item-id');
+        window.location.href = `/items/${itemId}`;
+      });
+    });
+  }
+  
+  switchTab(tab, container) {
+    this.activeTab = tab;
+    
+    // Update tab buttons
+    const tabButtons = container.querySelectorAll('.detail-tab-button');
+    tabButtons.forEach(button => {
+      if (button.getAttribute('data-tab') === tab) {
+        button.classList.add('active');
+      } else {
+        button.classList.remove('active');
+      }
+    });
+    
+    // Update tab panels
+    const tabPanels = container.querySelectorAll('.detail-tab-panel');
+    tabPanels.forEach(panel => {
+      if (panel.getAttribute('data-panel') === tab) {
+        panel.classList.add('active');
+      } else {
+        panel.classList.remove('active');
+      }
     });
   }
   
