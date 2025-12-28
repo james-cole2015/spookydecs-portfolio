@@ -818,3 +818,160 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Template Application Wizard - Additional Styles */
+
+/* Center the filter controls */
+.item-filters-container {
+  max-width: 600px;
+  margin: 0 auto 2rem auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.item-search {
+  width: 100%;
+}
+
+.item-filter-row {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.item-filter-row select {
+  flex: 1;
+}
+
+.item-selection-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+/* Item checkbox styling - add data attribute for filtering */
+.item-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.item-checkbox:hover {
+  background-color: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.item-checkbox input[type="checkbox"] {
+  margin-top: 0.25rem;
+  cursor: pointer;
+}
+
+.item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.item-id {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.item-name {
+  font-weight: 500;
+  color: #111827;
+}
+
+.item-note {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+/* Selection summary */
+.selection-summary {
+  text-align: center;
+  padding: 1rem;
+  background-color: #f3f4f6;
+  border-radius: 0.375rem;
+  margin: 1rem 0;
+  font-size: 0.875rem;
+}
+
+.selection-summary strong {
+  color: #2563eb;
+  font-size: 1.125rem;
+}
+
+/* Items list */
+.items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.items-count {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+}
+
+/* Items with template (readonly section) */
+.items-with-template {
+  margin: 1.5rem 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  padding: 1rem;
+}
+
+.items-with-template summary {
+  cursor: pointer;
+  font-weight: 500;
+  color: #6b7280;
+  user-select: none;
+}
+
+.items-with-template summary:hover {
+  color: #111827;
+}
+
+.items-list-readonly {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.item-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  background-color: #f9fafb;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.item-row code {
+  color: #6b7280;
+}
+
+.item-row span {
+  flex: 1;
+}
+
+.badge-info {
+  padding: 0.25rem 0.5rem;
+  background-color: #dbeafe;
+  color: #1e40af;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}

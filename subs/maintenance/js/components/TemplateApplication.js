@@ -230,9 +230,16 @@ export class TemplateApplicationView {
   async renderStep2() {
     try {
       // Load all items for this class type
-      this.allItems = await fetchAllItems({
+      let allItems = await fetchAllItems({
         class_type: this.selectedTemplate.class_type
       });
+      
+      // Filter out Deployment and Storage class items
+      allItems = allItems.filter(item => 
+        item.class !== 'Deployment' && item.class !== 'Storage'
+      );
+      
+      this.allItems = allItems;
       
       // Filter to items that don't have this template
       // Lazy migration: if maintenance structure doesn't exist, treat as "doesn't have template"
@@ -246,6 +253,9 @@ export class TemplateApplicationView {
         return appliedTemplates.includes(this.selectedTemplate.schedule_id);
       });
       
+      // Get unique class_type values for filter
+      const uniqueClassTypes = [...new Set(itemsWithoutTemplate.map(item => item.class_type))].sort();
+      
       return `
         <div class="wizard-step">
           <h2>Step 2: Select Items</h2>
@@ -254,13 +264,22 @@ export class TemplateApplicationView {
             <span class="class-type-badge">${this.selectedTemplate.class_type}</span>
           </div>
           
-          <div class="item-search">
-            <input type="text" id="item-search" placeholder="Search items..." class="form-input">
-          </div>
-          
-          <div class="item-selection-actions">
-            <button class="btn-small" id="btn-select-all">Select All</button>
-            <button class="btn-small" id="btn-deselect-all">Deselect All</button>
+          <div class="item-filters-container">
+            <div class="item-search">
+              <input type="text" id="item-search" placeholder="Search items..." class="form-input">
+            </div>
+            
+            <div class="item-filter-row">
+              <select id="class-type-filter" class="form-input">
+                <option value="">All Types</option>
+                ${uniqueClassTypes.map(ct => `<option value="${ct}">${ct}</option>`).join('')}
+              </select>
+            </div>
+            
+            <div class="item-selection-actions">
+              <button class="btn-small" id="btn-select-all">Select All</button>
+              <button class="btn-small" id="btn-deselect-all">Deselect All</button>
+            </div>
           </div>
           
           ${itemsWithoutTemplate.length === 0 ? `
@@ -281,7 +300,7 @@ export class TemplateApplicationView {
                 ${itemsWithTemplate.map(item => `
                   <div class="item-row">
                     <code>${item.id}</code>
-                    <span>${item.name || 'Unnamed'}</span>
+                    <span>${item.short_name || item.name || 'Unnamed'}</span>
                     <span class="badge-info">Already applied</span>
                   </div>
                 `).join('')}
@@ -320,11 +339,11 @@ export class TemplateApplicationView {
     const hasOtherTemplates = appliedTemplates.length > 0;
     
     return `
-      <label class="item-checkbox">
+      <label class="item-checkbox" data-class-type="${item.class_type || ''}">
         <input type="checkbox" name="item" value="${item.id}">
         <div class="item-info">
           <div class="item-id"><code>${item.id}</code></div>
-          <div class="item-name">${item.name || 'Unnamed Item'}</div>
+          <div class="item-name">${item.short_name || item.name || 'Unnamed Item'}</div>
           ${hasOtherTemplates ? `
             <div class="item-note">Has ${appliedTemplates.length} other template(s)</div>
           ` : '<div class="item-note">No templates yet</div>'}
@@ -341,6 +360,7 @@ export class TemplateApplicationView {
     const deselectAllBtn = container.querySelector('#btn-deselect-all');
     const summary = container.querySelector('#selection-summary');
     const searchInput = container.querySelector('#item-search');
+    const classTypeFilter = container.querySelector('#class-type-filter');
     
     const updateSelection = () => {
       this.selectedItems = Array.from(checkboxes)
@@ -349,6 +369,30 @@ export class TemplateApplicationView {
       
       summary.innerHTML = `Selected: <strong>${this.selectedItems.length}</strong> items`;
       nextBtn.disabled = this.selectedItems.length === 0;
+    };
+    
+    const applyFilters = () => {
+      const searchQuery = searchInput?.value.toLowerCase() || '';
+      const classTypeValue = classTypeFilter?.value || '';
+      
+      checkboxes.forEach(cb => {
+        const label = cb.closest('.item-checkbox');
+        const itemId = cb.value.toLowerCase();
+        const itemName = label.querySelector('.item-name')?.textContent.toLowerCase() || '';
+        const itemClassType = label.getAttribute('data-class-type') || '';
+        
+        // Check search filter
+        const matchesSearch = !searchQuery || itemId.includes(searchQuery) || itemName.includes(searchQuery);
+        
+        // Check class type filter
+        const matchesClassType = !classTypeValue || itemClassType === classTypeValue;
+        
+        if (matchesSearch && matchesClassType) {
+          label.style.display = '';
+        } else {
+          label.style.display = 'none';
+        }
+      });
     };
     
     checkboxes.forEach(cb => {
@@ -369,20 +413,8 @@ export class TemplateApplicationView {
       updateSelection();
     });
     
-    searchInput?.addEventListener('input', (e) => {
-      const query = e.target.value.toLowerCase();
-      checkboxes.forEach(cb => {
-        const label = cb.closest('.item-checkbox');
-        const itemId = cb.value.toLowerCase();
-        const itemName = label.querySelector('.item-name')?.textContent.toLowerCase() || '';
-        
-        if (itemId.includes(query) || itemName.includes(query)) {
-          label.style.display = '';
-        } else {
-          label.style.display = 'none';
-        }
-      });
-    });
+    searchInput?.addEventListener('input', applyFilters);
+    classTypeFilter?.addEventListener('change', applyFilters);
     
     backBtn?.addEventListener('click', () => {
       this.currentStep = this.preSelectedTemplateId ? 1 : 1; // Can't go back if template pre-selected
