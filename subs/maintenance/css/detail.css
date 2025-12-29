@@ -471,3 +471,32 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* Compact Stats Row */
+.compact-stats-row {
+  display: flex;
+  gap: 24px;
+  padding: 12px 20px;
+  background: #F9FAFB;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  border: 1px solid #E5E7EB;
+}
+
+.compact-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.compact-stat-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #6B7280;
+}
+
+.compact-stat-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1F2937;
+}

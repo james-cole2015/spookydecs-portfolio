@@ -212,3 +212,84 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Expansion Drawer for Main Table */
+.table-row {
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.table-row:hover {
+  background-color: #F9FAFB;
+}
+
+.table-row.expanded {
+  background-color: #EFF6FF;
+}
+
+.expansion-drawer {
+  background-color: #F9FAFB;
+  border-top: 2px solid #E5E7EB;
+}
+
+.expansion-content {
+  padding: 20px;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+}
+
+.expansion-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 24px;
+  background: white;
+  border: 2px solid #E5E7EB;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 100px;
+  height: 80px;
+}
+
+.expansion-btn:hover {
+  border-color: #3B82F6;
+  background-color: #EFF6FF;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.expansion-btn-icon {
+  font-size: 24px;
+}
+
+.expansion-btn-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.expansion-btn:hover .expansion-btn-label {
+  color: #3B82F6;
+}
+
+/* Icon colors */
+.expansion-btn.view .expansion-btn-icon { color: #3B82F6; }
+.expansion-btn.edit .expansion-btn-icon { color: #F59E0B; }
+.expansion-btn.delete .expansion-btn-icon { color: #EF4444; }
+.expansion-btn.inspect .expansion-btn-icon { color: #10B981; }
+
+/* Responsive expansion drawer */
+@media (max-width: 768px) {
+  .expansion-content {
+    flex-wrap: wrap;
+  }
+  
+  .expansion-btn {
+    flex: 1 1 calc(50% - 6px);
+    min-width: 0;
+  }
+}

@@ -244,6 +244,8 @@
   cursor: pointer;
   transition: all 0.2s;
   min-width: 100px;
+  height: 80px;
+  justify-content: center;
 }
 
 .expansion-btn:hover {

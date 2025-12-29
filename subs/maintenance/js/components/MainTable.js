@@ -15,6 +15,7 @@ export class MainTableView {
     this.pageSize = 50;
     this.sortColumn = 'created_at';
     this.sortDirection = 'desc';
+    this.expandedRow = null;
   }
   
   async render(container) {
@@ -180,6 +181,7 @@ export class MainTableView {
   renderRecordRow(record) {
     const itemId = record.item_id || 'N/A';
     const recordId = record.record_id.substring(0, 8) + '...';
+    const isExpanded = this.expandedRow === record.record_id;
     
     // Show schedule badge if record is from a schedule
     const scheduleBadge = record.is_scheduled_task 
@@ -187,7 +189,7 @@ export class MainTableView {
       : '';
     
     return `
-      <tr class="table-row" data-record-id="${record.record_id}" data-item-id="${itemId}">
+      <tr class="table-row ${isExpanded ? 'expanded' : ''}" data-record-id="${record.record_id}" data-item-id="${itemId}">
         <td><code>${recordId}</code></td>
         <td>${formatStatus(record.status)}</td>
         <td class="table-title">${scheduleBadge}${record.title}</td>
@@ -195,6 +197,40 @@ export class MainTableView {
         <td><code>${itemId}</code></td>
         <td>${formatCriticality(record.criticality)}</td>
         <td>${formatDate(record.date_performed || record.created_at)}</td>
+      </tr>
+      ${isExpanded ? this.renderExpansionDrawer(record) : ''}
+    `;
+  }
+  
+  renderExpansionDrawer(record) {
+    const itemId = record.item_id || 'N/A';
+    const isInspection = record.record_type === 'inspection' && 
+                         ['pending', 'Pending', 'PENDING', 'scheduled', 'SCHEDULED', 'Scheduled'].includes(record.status);
+    
+    return `
+      <tr class="expansion-drawer">
+        <td colspan="7">
+          <div class="expansion-content">
+            <button class="expansion-btn view" data-action="view" data-record-id="${record.record_id}" data-item-id="${itemId}">
+              <span class="expansion-btn-icon">👁️</span>
+              <span class="expansion-btn-label">View</span>
+            </button>
+            <button class="expansion-btn edit" data-action="edit" data-record-id="${record.record_id}" data-item-id="${itemId}">
+              <span class="expansion-btn-icon">✎</span>
+              <span class="expansion-btn-label">Edit</span>
+            </button>
+            <button class="expansion-btn delete" data-action="delete" data-record-id="${record.record_id}" data-item-id="${itemId}">
+              <span class="expansion-btn-icon">✕</span>
+              <span class="expansion-btn-label">Delete</span>
+            </button>
+            ${isInspection ? `
+              <button class="expansion-btn inspect" data-action="inspect" data-record-id="${record.record_id}" data-item-id="${itemId}">
+                <span class="expansion-btn-icon">🔍</span>
+                <span class="expansion-btn-label">Inspect</span>
+              </button>
+            ` : ''}
+          </div>
+        </td>
       </tr>
     `;
   }
@@ -308,10 +344,46 @@ export class MainTableView {
   attachTableEventListeners(container) {
     const rows = container.querySelectorAll('.table-row');
     rows.forEach(row => {
-      row.addEventListener('click', () => {
+      row.addEventListener('click', (e) => {
+        // Don't navigate if clicking expansion buttons
+        if (e.target.closest('.expansion-btn')) return;
+        
         const recordId = row.getAttribute('data-record-id');
-        const itemId = row.getAttribute('data-item-id');
-        navigateTo(`/${itemId}/${recordId}`);
+        
+        // Toggle expansion
+        if (this.expandedRow === recordId) {
+          this.expandedRow = null;
+        } else {
+          this.expandedRow = recordId;
+        }
+        
+        this.renderTable();
+      });
+    });
+    
+    // Expansion button actions
+    const expansionBtns = container.querySelectorAll('.expansion-btn');
+    expansionBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const action = btn.getAttribute('data-action');
+        const recordId = btn.getAttribute('data-record-id');
+        const itemId = btn.getAttribute('data-item-id');
+        
+        switch(action) {
+          case 'view':
+            navigateTo(`/${itemId}/${recordId}`);
+            break;
+          case 'edit':
+            navigateTo(`/${itemId}/${recordId}/edit`);
+            break;
+          case 'inspect':
+            navigateTo(`/${itemId}/${recordId}/perform-inspection`);
+            break;
+          case 'delete':
+            this.handleDelete(recordId);
+            break;
+        }
       });
     });
     
@@ -334,6 +406,39 @@ export class MainTableView {
     });
     
     this.attachPaginationListeners(container);
+  }
+  
+  async handleDelete(recordId) {
+    const state = appState.getState();
+    const record = state.records.find(r => r.record_id === recordId);
+    if (!record) return;
+    
+    const confirmed = confirm(
+      `Delete ${record.record_type}: ${record.title}?\n\n` +
+      `This action cannot be undone.`
+    );
+    
+    if (!confirmed) return;
+    
+    try {
+      // Import deleteRecord dynamically to avoid circular dependencies
+      const { deleteRecord } = await import('../api.js');
+      await deleteRecord(recordId);
+      appState.removeRecord(recordId);
+      
+      if (window.toast) {
+        window.toast.success('Success', 'Record deleted successfully');
+      }
+      
+      // Reset expansion and re-render
+      this.expandedRow = null;
+      this.renderTable();
+    } catch (error) {
+      console.error('Failed to delete record:', error);
+      if (window.toast) {
+        window.toast.error('Error', 'Failed to delete record');
+      }
+    }
   }
   
   attachItemsTableEventListeners(container) {

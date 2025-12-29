@@ -53,8 +53,8 @@ export class SchedulesTableHandlers {
     const rows = container.querySelectorAll('.table-row');
     rows.forEach(row => {
       row.addEventListener('click', (e) => {
-        // Don't toggle if clicking in Actions column
-        if (e.target.closest('td:last-child')) return;
+        // Don't toggle if clicking a button inside expansion drawer
+        if (e.target.closest('.expansion-btn')) return;
         
         const scheduleId = row.getAttribute('data-schedule-id');
         

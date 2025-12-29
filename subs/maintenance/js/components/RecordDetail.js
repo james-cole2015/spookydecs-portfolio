@@ -113,6 +113,22 @@ export class RecordDetailView {
     
     return `
       <div class="details-tab">
+        <!-- Compact Stats Row -->
+        <div class="compact-stats-row">
+          <div class="compact-stat-item">
+            <span class="compact-stat-label">Status:</span>
+            <span class="compact-stat-value">${formatStatus(this.record.status)}</span>
+          </div>
+          <div class="compact-stat-item">
+            <span class="compact-stat-label">Type:</span>
+            <span class="compact-stat-value">${formatRecordType(this.record.record_type)}</span>
+          </div>
+          <div class="compact-stat-item">
+            <span class="compact-stat-label">Criticality:</span>
+            <span class="compact-stat-value">${formatCriticality(this.record.criticality)}</span>
+          </div>
+        </div>
+        
         <div class="detail-grid">
           <div class="detail-section full-width">
             <h3>Record Information</h3>
@@ -124,18 +140,6 @@ export class RecordDetailView {
               <div class="detail-item">
                 <span class="detail-label">Item ID</span>
                 <span class="detail-value"><code>${this.itemId}</code></span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Record Type</span>
-                <span class="detail-value">${formatRecordType(this.record.record_type)}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Status</span>
-                <span class="detail-value">${formatStatus(this.record.status)}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Criticality</span>
-                <span class="detail-value">${formatCriticality(this.record.criticality)}</span>
               </div>
             </div>
           </div>
