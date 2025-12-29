@@ -10,9 +10,8 @@ export class Filters {
     this.autocompleteResults = [];
     
     this.filterOptions = {
-      season: ['Halloween', 'Christmas', 'Easter', 'Spring', 'Summer', 'Fall', 'Winter'],
-      recordType: ['repair', 'maintenance', 'inspection'],
-      status: ['scheduled', 'in_progress', 'completed', 'cancelled'],
+      season: ['Halloween', 'Christmas', 'Shared'],
+      status: ['scheduled', 'in_progress', 'completed', 'cancelled', 'pending'],
       criticality: ['low', 'medium', 'high', 'none']
     };
     
@@ -45,23 +44,6 @@ export class Filters {
             </div>
             <div class="filter-pills">
               ${this.renderPills(filters.season, 'season')}
-            </div>
-          </div>
-          
-          <!-- Record Type Filter -->
-          <div class="filter-group">
-            <label>Record Type</label>
-            <div class="filter-dropdown">
-              <button class="filter-dropdown-btn" data-filter="recordType">
-                Select Type
-                ${filters.recordType.length > 0 ? `<span class="filter-badge">${filters.recordType.length}</span>` : ''}
-              </button>
-              <div class="filter-dropdown-menu" data-menu="recordType">
-                ${this.renderDropdownOptions('recordType', filters.recordType)}
-              </div>
-            </div>
-            <div class="filter-pills">
-              ${this.renderPills(filters.recordType, 'recordType')}
             </div>
           </div>
           
@@ -175,7 +157,6 @@ export class Filters {
   hasActiveFilters() {
     const filters = appState.getState().filters;
     return filters.season.length > 0 ||
-           filters.recordType.length > 0 ||
            filters.status.length > 0 ||
            filters.criticality.length > 0 ||
            filters.itemId !== '' ||

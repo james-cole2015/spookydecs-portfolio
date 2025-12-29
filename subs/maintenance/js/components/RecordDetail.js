@@ -32,11 +32,25 @@ export class RecordDetailView {
     }
   }
   
+  renderBreadcrumbs() {
+    const recordIdShort = this.record.record_id.substring(0, 8);
+    return `
+      <nav class="breadcrumbs">
+        <a href="/" class="breadcrumb-link">All Records</a>
+        <span class="breadcrumb-separator">/</span>
+        <a href="/${this.itemId}" class="breadcrumb-link">${this.itemId}</a>
+        <span class="breadcrumb-separator">/</span>
+        <span class="breadcrumb-current">${recordIdShort}...</span>
+      </nav>
+    `;
+  }
+  
   renderView() {
     return `
       <div class="detail-view">
+        ${this.renderBreadcrumbs()}
+        
         <div class="detail-header">
-          <button class="btn-back" onclick="history.back()">← Back</button>
           <div class="header-actions">
             ${this.renderPerformInspectionButton()}
             <a href="/${this.itemId}/${this.recordId}/edit" class="btn-secondary">Edit Record</a>
@@ -46,9 +60,6 @@ export class RecordDetailView {
         
         <div class="detail-title">
           <h1>${this.record.title}</h1>
-          <div class="title-meta">
-            ${formatRecordType(this.record.record_type)} • ${this.record.record_id.substring(0, 12)}...
-          </div>
         </div>
         
         ${StatsCards.renderRecordStats(this.record)}
@@ -74,7 +85,8 @@ export class RecordDetailView {
   
   renderPerformInspectionButton() {
     // Only show for inspection records that are pending
-if (this.record.record_type === 'inspection' && ['pending', 'Pending', 'PENDING','scheduled', 'SCHEDULED', 'Scheduled'].includes(this.record.status)) { return `
+    if (this.record.record_type === 'inspection' && ['pending', 'Pending', 'PENDING','scheduled', 'SCHEDULED', 'Scheduled'].includes(this.record.status)) { 
+      return `
         <a href="/${this.itemId}/${this.recordId}/perform-inspection" class="btn-primary">
           Perform Inspection
         </a>
@@ -107,6 +119,10 @@ if (this.record.record_type === 'inspection' && ['pending', 'Pending', 'PENDING'
             <div class="detail-row">
               <span class="detail-label">Record ID</span>
               <span class="detail-value"><code>${this.record.record_id}</code></span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Item ID</span>
+              <span class="detail-value"><code>${this.itemId}</code></span>
             </div>
             <div class="detail-row">
               <span class="detail-label">Record Type</span>
@@ -159,17 +175,19 @@ if (this.record.record_type === 'inspection' && ['pending', 'Pending', 'PENDING'
           
           <div class="detail-section full-width">
             <h3>Timestamps</h3>
-            <div class="detail-row">
-              <span class="detail-label">Created</span>
-              <span class="detail-value">${formatDateTime(this.record.created_at)}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Updated</span>
-              <span class="detail-value">${formatDateTime(this.record.updated_at)}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Updated By</span>
-              <span class="detail-value">${this.record.updated_by || 'N/A'}</span>
+            <div class="timestamps-row">
+              <div class="timestamp-item">
+                <span class="timestamp-label">Created</span>
+                <span class="timestamp-value">${formatDateTime(this.record.created_at)}</span>
+              </div>
+              <div class="timestamp-item">
+                <span class="timestamp-label">Updated</span>
+                <span class="timestamp-value">${formatDateTime(this.record.updated_at)}</span>
+              </div>
+              <div class="timestamp-item">
+                <span class="timestamp-label">Updated By</span>
+                <span class="timestamp-value">${this.record.updated_by || 'N/A'}</span>
+              </div>
             </div>
           </div>
           

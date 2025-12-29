@@ -6,6 +6,7 @@
   border: 1px solid #E5E7EB;
   padding: 20px;
   margin-bottom: 24px;
+  overflow: visible;
 }
 
 .filters-header {
@@ -42,12 +43,15 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 20px;
+  position: relative;
 }
 
 .filter-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  position: relative;
+  min-width: 0;
 }
 
 .filter-group label {
@@ -95,6 +99,7 @@
   top: calc(100% + 4px);
   left: 0;
   right: 0;
+  min-width: 200px;
   background: white;
   border: 1px solid #E5E7EB;
   border-radius: 8px;
@@ -226,21 +231,23 @@
   font-style: italic;
 }
 
-/* Date Range */
+/* Date Range - FIXED to stay within container */
 .date-range {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 8px;
 }
 
 .date-input {
-  flex: 1;
+  width: 100%;
   padding: 8px 12px;
   background: #F3F4F6;
   border: 1px solid #E5E7EB;
   border-radius: 16px;
   font-size: 13px;
   color: #1F2937;
+  min-width: 0;
 }
 
 .date-input:focus {
@@ -252,6 +259,7 @@
 .date-range span {
   color: #6B7280;
   font-size: 13px;
+  white-space: nowrap;
 }
 
 /* Responsive */
@@ -261,8 +269,8 @@
   }
   
   .date-range {
-    flex-direction: column;
-    align-items: stretch;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
   }
   
   .date-range span {

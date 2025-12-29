@@ -26,6 +26,33 @@
   color: #6B7280;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  transition: background-color 0.15s;
+}
+
+.data-table th:hover {
+  background-color: #F3F4F6;
+}
+
+.data-table th.sortable::after {
+  content: '⇅';
+  margin-left: 8px;
+  opacity: 0.3;
+  font-size: 12px;
+}
+
+.data-table th.sort-asc::after {
+  content: '↑';
+  opacity: 1;
+  color: #3B82F6;
+}
+
+.data-table th.sort-desc::after {
+  content: '↓';
+  opacity: 1;
+  color: #3B82F6;
 }
 
 .data-table tbody tr {

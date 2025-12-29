@@ -1,4 +1,4 @@
-// Main table view with TanStack Table integration
+// Main table view with TanStack Table integration and sorting
 
 import { appState } from '../state.js';
 import { Tabs } from './Tabs.js';
@@ -13,6 +13,8 @@ export class MainTableView {
     this.table = null;
     this.currentPage = 0;
     this.pageSize = 50;
+    this.sortColumn = 'created_at';
+    this.sortDirection = 'desc';
   }
   
   async render(container) {
@@ -89,6 +91,28 @@ export class MainTableView {
     }
   }
   
+  sortData(data, column, direction) {
+    return [...data].sort((a, b) => {
+      let aVal = a[column];
+      let bVal = b[column];
+      
+      // Handle dates
+      if (column === 'created_at' || column === 'date_performed') {
+        aVal = new Date(aVal);
+        bVal = new Date(bVal);
+      }
+      
+      // Handle nulls
+      if (aVal === null || aVal === undefined) return 1;
+      if (bVal === null || bVal === undefined) return -1;
+      
+      // Compare
+      if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+      if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+  
   renderRecordsTable(container) {
     const state = appState.getState();
     let data = state.filteredRecords;
@@ -104,8 +128,8 @@ export class MainTableView {
       return;
     }
     
-    // Sort by created_at desc
-    data = [...data].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    // Apply sorting
+    data = this.sortData(data, this.sortColumn, this.sortDirection);
     
     // Pagination
     const totalPages = Math.ceil(data.length / this.pageSize);
@@ -118,13 +142,27 @@ export class MainTableView {
         <table class="data-table">
           <thead>
             <tr>
-              <th>Record ID</th>
-              <th>Status</th>
-              <th>Title</th>
-              <th>Type</th>
-              <th>Item ID</th>
-              <th>Criticality</th>
-              <th>Date</th>
+              <th class="sortable ${this.sortColumn === 'record_id' ? 'sort-' + this.sortDirection : ''}" data-column="record_id">
+                Record ID
+              </th>
+              <th class="sortable ${this.sortColumn === 'status' ? 'sort-' + this.sortDirection : ''}" data-column="status">
+                Status
+              </th>
+              <th class="sortable ${this.sortColumn === 'title' ? 'sort-' + this.sortDirection : ''}" data-column="title">
+                Title
+              </th>
+              <th class="sortable ${this.sortColumn === 'record_type' ? 'sort-' + this.sortDirection : ''}" data-column="record_type">
+                Type
+              </th>
+              <th class="sortable ${this.sortColumn === 'item_id' ? 'sort-' + this.sortDirection : ''}" data-column="item_id">
+                Item ID
+              </th>
+              <th class="sortable ${this.sortColumn === 'criticality' ? 'sort-' + this.sortDirection : ''}" data-column="criticality">
+                Criticality
+              </th>
+              <th class="sortable ${this.sortColumn === 'date_performed' ? 'sort-' + this.sortDirection : ''}" data-column="date_performed">
+                Date
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -274,6 +312,24 @@ export class MainTableView {
         const recordId = row.getAttribute('data-record-id');
         const itemId = row.getAttribute('data-item-id');
         navigateTo(`/${itemId}/${recordId}`);
+      });
+    });
+    
+    // Sorting event listeners
+    const sortHeaders = container.querySelectorAll('th.sortable');
+    sortHeaders.forEach(header => {
+      header.addEventListener('click', () => {
+        const column = header.getAttribute('data-column');
+        
+        // Toggle sort direction if same column, otherwise default to desc
+        if (this.sortColumn === column) {
+          this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+          this.sortColumn = column;
+          this.sortDirection = 'desc';
+        }
+        
+        this.renderTable();
       });
     });
     

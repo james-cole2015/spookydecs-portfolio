@@ -5,9 +5,39 @@
   margin: 0 auto;
 }
 
+/* Breadcrumbs */
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: #6B7280;
+}
+
+.breadcrumb-link {
+  color: #3B82F6;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.breadcrumb-link:hover {
+  color: #2563EB;
+  text-decoration: underline;
+}
+
+.breadcrumb-separator {
+  color: #D1D5DB;
+}
+
+.breadcrumb-current {
+  color: #1F2937;
+  font-weight: 500;
+}
+
 .detail-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   margin-bottom: 24px;
 }
@@ -25,12 +55,7 @@
   font-size: 32px;
   font-weight: 600;
   color: #111827;
-  margin-bottom: 8px;
-}
-
-.title-meta {
-  font-size: 14px;
-  color: #6B7280;
+  margin-bottom: 0;
 }
 
 /* Item Links */
@@ -97,10 +122,11 @@
   padding: 24px;
 }
 
+/* Updated detail grid - three column layout */
 .detail-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  gap: 32px;
 }
 
 .detail-section {
@@ -120,11 +146,12 @@
   margin-bottom: 8px;
 }
 
+/* Fixed detail row alignment */
 .detail-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: 140px 1fr;
   gap: 16px;
+  align-items: center;
   padding: 8px 0;
   border-bottom: 1px solid #F3F4F6;
 }
@@ -137,14 +164,12 @@
   font-size: 13px;
   color: #6B7280;
   font-weight: 500;
-  min-width: 140px;
 }
 
 .detail-value {
   font-size: 14px;
   color: #1F2937;
-  text-align: right;
-  flex: 1;
+  text-align: left;
 }
 
 .detail-value.cost-value {
@@ -157,6 +182,33 @@
   color: #374151;
   line-height: 1.6;
   white-space: pre-wrap;
+}
+
+/* Timestamps - single row layout */
+.timestamps-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  padding: 16px 0;
+}
+
+.timestamp-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.timestamp-label {
+  font-size: 12px;
+  color: #6B7280;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.timestamp-value {
+  font-size: 14px;
+  color: #1F2937;
 }
 
 /* Materials List */
@@ -368,6 +420,20 @@
   .gallery-grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 12px;
+  }
+  
+  .timestamps-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .detail-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  
+  .detail-value {
+    text-align: left;
   }
 }
 
