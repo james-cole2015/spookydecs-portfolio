@@ -38,6 +38,7 @@ export class RecordDetailView {
         <div class="detail-header">
           <button class="btn-back" onclick="history.back()">← Back</button>
           <div class="header-actions">
+            ${this.renderPerformInspectionButton()}
             <a href="/${this.itemId}/${this.recordId}/edit" class="btn-secondary">Edit Record</a>
             <button class="btn-danger" data-action="delete">Delete Record</button>
           </div>
@@ -69,6 +70,18 @@ export class RecordDetailView {
         </div>
       </div>
     `;
+  }
+  
+  renderPerformInspectionButton() {
+    // Only show for inspection records that are pending
+    if (this.record.record_type === 'inspection' && this.record.status === 'pending') {
+      return `
+        <a href="/${this.itemId}/${this.recordId}/perform-inspection" class="btn-primary">
+          Perform Inspection
+        </a>
+      `;
+    }
+    return '';
   }
   
   renderTabContent() {

@@ -9,6 +9,7 @@ import { SchedulesTableView } from './components/SchedulesTable.js';
 import { ScheduleFormView } from './components/ScheduleForm.js';
 import { ScheduleDetailView } from './components/ScheduleDetail.js';
 import { TemplateApplicationView } from './components/TemplateApplication.js';
+import { PerformInspectionForm } from './components/PerformInspectionForm.js';
 import { showLoading, hideLoading, parseQueryString } from './utils/helpers.js';
 
 let router = null;
@@ -26,19 +27,22 @@ export function initRouter() {
   mainTableView = new MainTableView();
   console.log('✅ MainTableView instance created');
   
-  // Define routes - Navigo matches in order, so put GENERIC routes first, SPECIFIC routes last
+  // Define routes - Navigo matches in order, so put SPECIFIC routes first, GENERIC routes last
   router
-    .on('/:itemId', async (match) => {
-      console.log('✅ Route matched: /:itemId', match.data);
+    .on('/:itemId/:recordId/perform-inspection', async (match) => {
+      console.log('✅ Route matched: /:itemId/:recordId/perform-inspection', match.data);
+      await handlePerformInspectionView(match);
+    })
+    .on('/:itemId/:recordId/edit', async (match) => {
+      console.log('✅ Route matched: /:itemId/:recordId/edit', match.data);
       
-      // Safety guard - prevent literal routes from being caught
-      if (match.data.itemId === 'create' || match.data.itemId === 'schedules') {
-        console.error('❌ BUG: Literal route matched /:itemId pattern!');
-        console.error('   This should never happen - check route order');
+      // Prevent /schedules/* from matching this pattern
+      if (match.data.itemId === 'schedules') {
+        console.log('   ⚠️  Skipping - this is a schedules route');
         return;
       }
       
-      await handleItemDetailView(match);
+      await handleEditView(match);
     })
     .on('/:itemId/:recordId', async (match) => {
       console.log('✅ Route matched: /:itemId/:recordId', match.data);
@@ -51,16 +55,17 @@ export function initRouter() {
       
       await handleRecordDetailView(match);
     })
-    .on('/:itemId/:recordId/edit', async (match) => {
-      console.log('✅ Route matched: /:itemId/:recordId/edit', match.data);
+    .on('/:itemId', async (match) => {
+      console.log('✅ Route matched: /:itemId', match.data);
       
-      // Prevent /schedules/* from matching this pattern
-      if (match.data.itemId === 'schedules') {
-        console.log('   ⚠️  Skipping - this is a schedules route');
+      // Safety guard - prevent literal routes from being caught
+      if (match.data.itemId === 'create' || match.data.itemId === 'schedules') {
+        console.error('❌ BUG: Literal route matched /:itemId pattern!');
+        console.error('   This should never happen - check route order');
         return;
       }
       
-      await handleEditView(match);
+      await handleItemDetailView(match);
     })
     .on('/create', async (match) => {
       console.log('✅ Route matched: /create');
@@ -260,6 +265,30 @@ async function handleItemDetailView(match) {
     console.error('❌ Error rendering item detail:', error);
     hideLoading();
     renderError(container, 'Failed to load item details');
+  }
+}
+
+async function handlePerformInspectionView(match) {
+  console.log('📄 handlePerformInspectionView started');
+  const container = document.getElementById('main-content');
+  if (!container) {
+    console.error('❌ main-content container not found!');
+    return;
+  }
+  
+  try {
+    showLoading();
+    
+    const { itemId, recordId } = match.data;
+    console.log('🔄 Creating PerformInspectionForm:', { itemId, recordId });
+    const inspectionForm = new PerformInspectionForm(recordId, itemId);
+    await inspectionForm.render(container);
+    
+    hideLoading();
+  } catch (error) {
+    console.error('❌ Error rendering perform inspection view:', error);
+    hideLoading();
+    renderError(container, 'Failed to load inspection form');
   }
 }
 
