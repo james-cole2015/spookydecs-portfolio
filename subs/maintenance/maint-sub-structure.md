@@ -11,6 +11,8 @@ maintenance-records/
 │   ├── form.css                        # Form styles
 │   ├── photo-gallery.css               # Photo gallery styles
 │   └── schedules.css                   # NEW - Schedule template styles
+│   └── inspection-form.css                   # NEW - Schedule template styles
+
 │
 └── js/
     ├── main.js                         # App initialization
@@ -33,6 +35,7 @@ maintenance-records/
         ├── StatsCards.js               # Stats display
         ├── Tabs.js                     # Tab navigation
         ├── Filters.js                  # Filter components
+        ├── PerformInspectionForm.js        # Photo gallery
         ├── PhotoSwipeGallery.js        # Photo gallery
         ├── PhotoCarousel.js            # Photo carousel
         ├── PhotoUpload.js              # Photo upload
