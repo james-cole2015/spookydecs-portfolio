@@ -362,17 +362,3 @@ export async function fetchMultiplePhotos(photoIds) {
   // Filter out nulls (failed fetches)
   return results.filter(photo => photo !== null);
 }
-
-export async function performInspection(recordId, inspectionData) {
-  const cfg = await loadConfig();
-  const response = await fetch(
-    `${cfg.API_ENDPOINT}/admin/maintenance-records/${encodeURIComponent(recordId)}/inspect`,
-    {
-      method: 'POST',
-      headers: getHeaders(),
-      body: JSON.stringify(inspectionData)
-    }
-  );
-  
-  return handleResponse(response);
-}
