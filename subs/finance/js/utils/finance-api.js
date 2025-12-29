@@ -1,22 +1,34 @@
 // Finance API Client
 
 let API_ENDPOINT = '';
+let configLoaded = false;
 
 // Load configuration
 export async function loadConfig() {
+  if (configLoaded) return;
+  
   try {
     const response = await fetch('/config.json');
     const config = await response.json();
     API_ENDPOINT = config.API_ENDPOINT;
+    configLoaded = true;
+    console.log('Config loaded:', config);
     return config;
   } catch (error) {
     console.error('Failed to load config:', error);
-    throw error;
+    // Don't throw - use fallback
+    API_ENDPOINT = 'https://api.spookydecs.com';
+    configLoaded = true;
+    return { API_ENDPOINT };
   }
 }
 
-// Initialize config on module load
-await loadConfig();
+// Helper to ensure config is loaded before API calls
+async function ensureConfigLoaded() {
+  if (!configLoaded) {
+    await loadConfig();
+  }
+}
 
 // Helper function to handle API responses
 async function handleResponse(response) {
@@ -42,6 +54,8 @@ async function handleResponse(response) {
 
 // GET all cost records with optional filters
 export async function getAllCosts(filters = {}) {
+  await ensureConfigLoaded();
+  
   try {
     const params = new URLSearchParams();
     
@@ -71,6 +85,8 @@ export async function getAllCosts(filters = {}) {
 
 // GET single cost record by ID
 export async function getCostById(costId) {
+  await ensureConfigLoaded();
+  
   try {
     const response = await fetch(`${API_ENDPOINT}/finance/costs/${costId}`, {
       method: 'GET',
@@ -88,6 +104,8 @@ export async function getCostById(costId) {
 
 // POST create new cost record
 export async function createCost(costData) {
+  await ensureConfigLoaded();
+  
   try {
     const response = await fetch(`${API_ENDPOINT}/finance/costs`, {
       method: 'POST',
@@ -106,6 +124,8 @@ export async function createCost(costData) {
 
 // PUT update existing cost record
 export async function updateCost(costId, costData) {
+  await ensureConfigLoaded();
+  
   try {
     const response = await fetch(`${API_ENDPOINT}/finance/costs/${costId}`, {
       method: 'PUT',
@@ -124,6 +144,8 @@ export async function updateCost(costId, costData) {
 
 // DELETE cost record
 export async function deleteCost(costId) {
+  await ensureConfigLoaded();
+  
   try {
     const response = await fetch(`${API_ENDPOINT}/finance/costs/${costId}/delete`, {
       method: 'DELETE',
@@ -141,6 +163,8 @@ export async function deleteCost(costId) {
 
 // GET items for dropdown (from items table)
 export async function getItems(filters = {}) {
+  await ensureConfigLoaded();
+  
   try {
     const params = new URLSearchParams();
     

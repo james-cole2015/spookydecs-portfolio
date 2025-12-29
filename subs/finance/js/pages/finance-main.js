@@ -12,6 +12,7 @@ import { stateManager } from '../utils/state.js';
 
 export class FinanceMainPage {
   constructor() {
+    console.log('FinanceMainPage constructor called');
     this.costs = [];
     this.tabBar = null;
     this.table = null;
@@ -24,17 +25,29 @@ export class FinanceMainPage {
   }
 
   async init() {
+    console.log('FinanceMainPage init() called');
+    
     // Initialize components
     this.tabBar = new TabBar('tab-bar');
+    console.log('TabBar initialized');
+    
     this.drawer = new CostDetailDrawer();
+    console.log('Drawer initialized');
+    
     this.statsPanel = new StatsPanel('stats-container');
+    console.log('StatsPanel initialized');
     
     // Load initial data
+    console.log('Loading costs...');
     await this.loadCosts();
+    console.log('Costs loaded:', this.costs.length);
     
     // Initialize table and form
     this.initTable();
+    console.log('Table initialized');
+    
     this.initForm();
+    console.log('Form initialized');
     
     // Subscribe to state changes
     stateManager.subscribe((state) => {
