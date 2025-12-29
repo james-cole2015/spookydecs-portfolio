@@ -438,9 +438,10 @@ export class PerformInspectionForm {
         };
       }
       
-      // Make API call
-      const apiUrl = appState.config?.API_ENDPOINT || '';
-      const response = await fetch(`${apiUrl}/admin/maintenance-records/${this.recordId}/inspect`, {
+// Make API call
+const apiUrl = appState.config?.API_ENDPOINT || '';
+console.log('About to POST to:', `${apiUrl}/admin/maintenance-records/${this.recordId}/inspect`);
+const response = await fetch(`${apiUrl}/admin/maintenance-records/${this.recordId}/inspect`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
