@@ -104,6 +104,20 @@ export async function deleteRecord(recordId) {
   return handleResponse(response);
 }
 
+export async function performInspection(recordId, inspectionData) {
+  const cfg = await loadConfig();
+  const response = await fetch(
+    `${cfg.API_ENDPOINT}/admin/maintenance-records/${encodeURIComponent(recordId)}/inspect`,
+    {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(inspectionData)
+    }
+  );
+  
+  return handleResponse(response);
+}
+
 // ============================================
 // ITEMS API
 // ============================================

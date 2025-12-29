@@ -1,11 +1,10 @@
-// Perform Inspection Form component
+// Perform Inspection Form component (Refactored)
 
 import { fetchRecord } from '../api.js';
 import { appState } from '../state.js';
-import { navigateTo } from '../router.js';
 import { formatDate, formatRecordType } from '../utils/formatters.js';
-import { performInspection } from '../api.js';
-
+import { InspectionTaskManager } from './inspection/InspectionTaskManager.js';
+import { InspectionFormSubmit } from './inspection/InspectionFormSubmit.js';
 
 export class PerformInspectionForm {
   constructor(recordId, itemId) {
@@ -13,7 +12,8 @@ export class PerformInspectionForm {
     this.itemId = itemId;
     this.record = null;
     this.item = null;
-    this.tasks = []; // Array of task objects to create
+    this.taskManager = new InspectionTaskManager();
+    this.formSubmit = new InspectionFormSubmit(recordId, itemId);
   }
   
   async render(container) {
@@ -192,73 +192,6 @@ export class PerformInspectionForm {
     `;
   }
   
-  renderTaskForm(index) {
-    return `
-      <div class="task-form" data-task-index="${index}">
-        <div class="task-form-header">
-          <h4>Task ${index + 1}</h4>
-          <button type="button" class="btn-remove-task" data-task-index="${index}">
-            Remove
-          </button>
-        </div>
-        
-        <div class="form-row">
-          <div class="form-group">
-            <label for="task-title-${index}">Title *</label>
-            <input 
-              type="text" 
-              id="task-title-${index}"
-              data-task-field="title"
-              data-task-index="${index}"
-              required
-              placeholder="Brief description of task"
-            >
-          </div>
-          
-          <div class="form-group">
-            <label for="task-type-${index}">Type *</label>
-            <select 
-              id="task-type-${index}"
-              data-task-field="record_type"
-              data-task-index="${index}"
-              required
-            >
-              <option value="repair">Repair</option>
-              <option value="maintenance">Preventive Maintenance</option>
-            </select>
-          </div>
-        </div>
-        
-        <div class="form-row">
-          <div class="form-group">
-            <label for="task-criticality-${index}">Criticality *</label>
-            <select 
-              id="task-criticality-${index}"
-              data-task-field="priority"
-              data-task-index="${index}"
-              required
-            >
-              <option value="low">Low</option>
-              <option value="medium" selected>Medium</option>
-              <option value="high">High</option>
-            </select>
-          </div>
-        </div>
-        
-        <div class="form-group">
-          <label for="task-description-${index}">Description</label>
-          <textarea 
-            id="task-description-${index}"
-            data-task-field="description"
-            data-task-index="${index}"
-            rows="2"
-            placeholder="Detailed description of work needed..."
-          ></textarea>
-        </div>
-      </div>
-    `;
-  }
-  
   attachEventListeners(container) {
     const form = container.querySelector('#inspection-form');
     const resultRadios = container.querySelectorAll('input[name="result"]');
@@ -276,8 +209,8 @@ export class PerformInspectionForm {
           retirementSection.style.display = 'none';
           
           // Add first task if none exist
-          if (this.tasks.length === 0) {
-            this.addTask(container);
+          if (this.taskManager.getTasks().length === 0) {
+            this.taskManager.addTask(container);
           }
         } else if (result === 'failed') {
           tasksSection.style.display = 'none';
@@ -292,211 +225,28 @@ export class PerformInspectionForm {
     // Add task button
     if (addTaskBtn) {
       addTaskBtn.addEventListener('click', () => {
-        this.addTask(container);
+        this.taskManager.addTask(container);
       });
     }
     
     // Form submission
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      this.handleSubmit(container);
+      await this.handleFormSubmit(container, form);
     });
   }
   
-  addTask(container) {
-    const tasksContainer = container.querySelector('#tasks-container');
-    const index = this.tasks.length;
-    
-    // Add empty task to array
-    this.tasks.push({
-      title: '',
-      record_type: 'repair',
-      priority: 'medium',
-      description: ''
-    });
-    
-    // Render task form
-    const taskHTML = this.renderTaskForm(index);
-    tasksContainer.insertAdjacentHTML('beforeend', taskHTML);
-    
-    // Attach event listeners to task fields
-    const taskForm = tasksContainer.querySelector(`[data-task-index="${index}"]`);
-    const taskInputs = taskForm.querySelectorAll('[data-task-field]');
-    
-    taskInputs.forEach(input => {
-      input.addEventListener('input', (e) => {
-        const taskIndex = parseInt(e.target.dataset.taskIndex);
-        const field = e.target.dataset.taskField;
-        this.tasks[taskIndex][field] = e.target.value;
-      });
-    });
-    
-    // Remove task button
-    const removeBtn = taskForm.querySelector('.btn-remove-task');
-    removeBtn.addEventListener('click', () => {
-      this.removeTask(container, index);
-    });
-  }
-  
-  removeTask(container, index) {
-    const tasksContainer = container.querySelector('#tasks-container');
-    const taskForm = tasksContainer.querySelector(`[data-task-index="${index}"]`);
-    
-    if (taskForm) {
-      taskForm.remove();
-    }
-    
-    // Remove from tasks array
-    this.tasks.splice(index, 1);
-    
-    // Re-render all tasks to update indices
-    this.rerenderTasks(container);
-  }
-  
-  rerenderTasks(container) {
-    const tasksContainer = container.querySelector('#tasks-container');
-    tasksContainer.innerHTML = '';
-    
-    const currentTasks = [...this.tasks];
-    this.tasks = [];
-    
-    currentTasks.forEach((task) => {
-      const index = this.tasks.length;
-      this.tasks.push(task);
-      
-      const taskHTML = this.renderTaskForm(index);
-      tasksContainer.insertAdjacentHTML('beforeend', taskHTML);
-      
-      // Re-populate values
-      const taskForm = tasksContainer.querySelector(`[data-task-index="${index}"]`);
-      const taskInputs = taskForm.querySelectorAll('[data-task-field]');
-      
-      taskInputs.forEach(input => {
-        const field = input.dataset.taskField;
-        input.value = task[field] || '';
-        
-        // Attach event listener
-        input.addEventListener('input', (e) => {
-          const taskIndex = parseInt(e.target.dataset.taskIndex);
-          const fieldName = e.target.dataset.taskField;
-          this.tasks[taskIndex][fieldName] = e.target.value;
-        });
-      });
-      
-      // Remove button
-      const removeBtn = taskForm.querySelector('.btn-remove-task');
-      removeBtn.addEventListener('click', () => {
-        this.removeTask(container, index);
-      });
-    });
-  }
-  
-  async handleSubmit(container) {
-    const form = container.querySelector('#inspection-form');
-    const formData = new FormData(form);
-    const submitBtn = container.querySelector('#submit-btn');
-    const errorDiv = container.querySelector('#form-error');
-    
-    // Disable submit button
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Processing...';
-    errorDiv.style.display = 'none';
-    
+  async handleFormSubmit(container, form) {
     try {
-      // Build request payload
-      const payload = {
-        inspector: formData.get('inspector'),
-        inspection_date: formData.get('inspection_date'),
-        result: formData.get('result'),
-        findings: formData.get('findings') || ''
-      };
+      const result = await this.formSubmit.handleSubmit(form, this.taskManager);
       
-      // Validate based on result
-      if (payload.result === 'maintenance_required') {
-        // Validate tasks
-        if (this.tasks.length === 0) {
-          throw new Error('At least one maintenance task is required');
-        }
-        
-        // Validate each task has required fields
-        for (let i = 0; i < this.tasks.length; i++) {
-          const task = this.tasks[i];
-          if (!task.title || !task.record_type) {
-            throw new Error(`Task ${i + 1} is missing required fields`);
-          }
-        }
-        
-        payload.tasks = this.tasks;
-      } else if (payload.result === 'failed') {
-        // Validate retirement details
-        const retirementReason = formData.get('retirement_reason');
-        if (!retirementReason) {
-          throw new Error('Retirement reason is required');
-        }
-        
-        payload.retirement_details = {
-          reason: retirementReason,
-          disposal_method: formData.get('disposal_method') || 'trash'
-        };
-      }
-      
-// Import API call
-const result = await performInspection(this.recordId, payload);
-
-      
-      // Show success message with links to created tasks
-      this.showSuccessMessage(container, result);
+      // Show success message
+      container.innerHTML = this.formSubmit.renderSuccessView(result);
       
     } catch (error) {
-      console.error('Failed to complete inspection:', error);
-      errorDiv.textContent = error.message;
-      errorDiv.style.display = 'block';
-      
-      // Re-enable submit button
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Complete Inspection';
+      // Error is already handled in formSubmit.handleSubmit
+      // Just log it here for debugging
+      console.error('Form submission failed:', error);
     }
-  }
-  
-  showSuccessMessage(container, result) {
-    const generatedTasks = result.generated_tasks || [];
-    
-    let tasksHTML = '';
-    if (generatedTasks.length > 0) {
-      tasksHTML = `
-        <div class="success-tasks">
-          <h3>Created Maintenance Tasks (${generatedTasks.length})</h3>
-          <ul class="task-links">
-            ${generatedTasks.map(task => `
-              <li>
-                <a href="/${this.itemId}/${task.record_id}">
-                  ${task.title}
-                </a>
-                <span class="task-meta">${task.record_type} - ${task.criticality}</span>
-              </li>
-            `).join('')}
-          </ul>
-        </div>
-      `;
-    }
-    
-    container.innerHTML = `
-      <div class="success-container">
-        <div class="success-icon">✓</div>
-        <h1>Inspection Completed Successfully</h1>
-        <p>The inspection has been recorded and all maintenance tasks have been created.</p>
-        
-        ${tasksHTML}
-        
-        <div class="success-actions">
-          <a href="/${this.itemId}/${this.recordId}" class="btn-primary">
-            View Inspection Record
-          </a>
-          <a href="/${this.itemId}" class="btn-secondary">
-            Back to Item
-          </a>
-        </div>
-      </div>
-    `;
   }
 }

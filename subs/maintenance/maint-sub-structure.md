@@ -37,6 +37,9 @@ maintenance-records/
         ├── Filters.js                  # Filter components
         ├── PerformInspectionForm.js        # Photo gallery
         ├── PhotoSwipeGallery.js        # Photo gallery
+        └── inspection/                     (new folder)
+            ├── InspectionTaskManager.js
+            └── InspectionFormSubmit.js
         ├── PhotoCarousel.js            # Photo carousel
         ├── PhotoUpload.js              # Photo upload
         │
