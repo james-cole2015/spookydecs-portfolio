@@ -32,11 +32,22 @@ export class ItemDetailView {
     }
   }
   
+  renderBreadcrumbs() {
+    return `
+      <nav class="breadcrumbs">
+        <a href="/" class="breadcrumb-link">All Records</a>
+        <span class="breadcrumb-separator">/</span>
+        <span class="breadcrumb-current">${this.itemId}</span>
+      </nav>
+    `;
+  }
+  
   renderView() {
     return `
       <div class="detail-view">
+        ${this.renderBreadcrumbs()}
+        
         <div class="detail-header">
-          <button class="btn-back" onclick="history.back()">← Back</button>
           <div class="header-actions">
             <a href="/create?item_id=${this.itemId}" class="btn-primary">+ Create Record</a>
           </div>

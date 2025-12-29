@@ -11,15 +11,17 @@
 
 .filters-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   margin-bottom: 20px;
+  position: relative;
 }
 
 .filters-header h3 {
   font-size: 16px;
   font-weight: 600;
   color: #111827;
+  text-align: center;
 }
 
 .clear-filters-btn {
@@ -32,6 +34,8 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
+  position: absolute;
+  right: 0;
 }
 
 .clear-filters-btn:hover {
@@ -58,6 +62,7 @@
   font-size: 13px;
   font-weight: 500;
   color: #374151;
+  text-align: center;
 }
 
 /* Dropdown Filter */

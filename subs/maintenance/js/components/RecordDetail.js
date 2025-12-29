@@ -114,43 +114,47 @@ export class RecordDetailView {
     return `
       <div class="details-tab">
         <div class="detail-grid">
-          <div class="detail-section">
+          <div class="detail-section full-width">
             <h3>Record Information</h3>
-            <div class="detail-row">
-              <span class="detail-label">Record ID</span>
-              <span class="detail-value"><code>${this.record.record_id}</code></span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Item ID</span>
-              <span class="detail-value"><code>${this.itemId}</code></span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Record Type</span>
-              <span class="detail-value">${formatRecordType(this.record.record_type)}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Status</span>
-              <span class="detail-value">${formatStatus(this.record.status)}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Criticality</span>
-              <span class="detail-value">${formatCriticality(this.record.criticality)}</span>
+            <div class="horizontal-detail-row">
+              <div class="detail-item">
+                <span class="detail-label">Record ID</span>
+                <span class="detail-value"><code>${this.record.record_id}</code></span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Item ID</span>
+                <span class="detail-value"><code>${this.itemId}</code></span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Record Type</span>
+                <span class="detail-value">${formatRecordType(this.record.record_type)}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Status</span>
+                <span class="detail-value">${formatStatus(this.record.status)}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Criticality</span>
+                <span class="detail-value">${formatCriticality(this.record.criticality)}</span>
+              </div>
             </div>
           </div>
           
-          <div class="detail-section">
+          <div class="detail-section full-width">
             <h3>Scheduling</h3>
-            <div class="detail-row">
-              <span class="detail-label">Date Performed</span>
-              <span class="detail-value">${formatDate(this.record.date_performed)}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Performed By</span>
-              <span class="detail-value">${this.record.performed_by}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Est. Completion</span>
-              <span class="detail-value">${this.record.estimated_completion_date ? formatDate(this.record.estimated_completion_date) : 'N/A'}</span>
+            <div class="horizontal-detail-row">
+              <div class="detail-item">
+                <span class="detail-label">Date Performed</span>
+                <span class="detail-value">${formatDate(this.record.date_performed)}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Performed By</span>
+                <span class="detail-value">${this.record.performed_by}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Est. Completion</span>
+                <span class="detail-value">${this.record.estimated_completion_date ? formatDate(this.record.estimated_completion_date) : 'N/A'}</span>
+              </div>
             </div>
           </div>
           

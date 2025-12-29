@@ -25,7 +25,7 @@ export class Filters {
     return `
       <div class="filters-container">
         <div class="filters-header">
-          <h3>Filters</h3>
+          <h3>Record Filters</h3>
           ${this.hasActiveFilters() ? this.renderClearButton() : ''}
         </div>
         

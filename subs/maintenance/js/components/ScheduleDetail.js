@@ -112,22 +112,22 @@ export class ScheduleDetailView {
   renderDetail() {
     return `
       <div class="detail-view">
-        <div class="detail-header">
+        <div class="schedule-detail-header">
           <button class="btn-back" onclick="window.location.href='/schedules'">
             ← Back to Schedules
           </button>
           <div class="detail-actions">
-            <button class="btn-primary" id="btn-apply-to-items">
-              → Apply to Items
+            <button class="btn-icon btn-primary" id="btn-apply-to-items" title="Apply to Items">
+              👁️
             </button>
-            <button class="btn-secondary" id="btn-generate">
-              ↻ Generate More Records
+            <button class="btn-icon btn-secondary" id="btn-generate" title="Generate More Records">
+              ↻
             </button>
-            <button class="btn-secondary" id="btn-edit">
-              ✎ Edit
+            <button class="btn-icon btn-secondary" id="btn-edit" title="Edit">
+              ✎
             </button>
-            <button class="btn-danger" id="btn-delete">
-              🗑 Delete
+            <button class="btn-icon btn-danger-icon" id="btn-delete" title="Delete">
+              🗑️
             </button>
           </div>
         </div>
@@ -390,6 +390,7 @@ export class ScheduleDetailView {
         <thead>
           <tr>
             <th>Occurrence</th>
+            <th>Item ID</th>
             <th>Due Date</th>
             <th>Status</th>
             <th>Performed By</th>
@@ -407,6 +408,7 @@ export class ScheduleDetailView {
     return `
       <tr class="table-row clickable" data-record-id="${record.record_id}">
         <td>#${record.occurrence_number || '-'}</td>
+        <td><code>${record.item_id || 'N/A'}</code></td>
         <td>${formatDate(record.date_performed)}</td>
         <td>${formatStatus(record.status)}</td>
         <td>${record.performed_by || '-'}</td>
