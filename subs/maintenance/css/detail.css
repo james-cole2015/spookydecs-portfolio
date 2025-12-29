@@ -500,3 +500,97 @@
   font-weight: 600;
   color: #1F2937;
 }
+/* Compact Inline Stats Cards */
+.stat-card-compact {
+  padding: 12px 16px !important;
+  min-height: auto !important;
+}
+
+.stat-content-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stat-content-inline .stat-icon {
+  font-size: 18px;
+}
+
+.stat-content-inline .stat-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #6B7280;
+}
+
+.stat-content-inline .stat-separator {
+  color: #9CA3AF;
+  font-weight: 400;
+}
+
+.stat-content-inline .stat-value-inline {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1F2937;
+}
+
+/* Stats grid remains the same but cards are now compact */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+/* Section borders */
+.detail-section-border {
+  border-top: 1px solid #E5E7EB;
+  padding-top: 20px;
+  margin-top: 20px;
+}
+
+/* Base Stats Card Styles */
+.stat-card {
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #E5E7EB;
+  padding: 20px;
+}
+
+.stat-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.stat-icon {
+  font-size: 24px;
+}
+
+.stat-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: bold;
+  color: #1F2937;
+  line-height: 1;
+}
+
+.stat-subtitle {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #9CA3AF;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}

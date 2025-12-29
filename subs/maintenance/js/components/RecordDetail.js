@@ -113,22 +113,6 @@ export class RecordDetailView {
     
     return `
       <div class="details-tab">
-        <!-- Compact Stats Row -->
-        <div class="compact-stats-row">
-          <div class="compact-stat-item">
-            <span class="compact-stat-label">Status:</span>
-            <span class="compact-stat-value">${formatStatus(this.record.status)}</span>
-          </div>
-          <div class="compact-stat-item">
-            <span class="compact-stat-label">Type:</span>
-            <span class="compact-stat-value">${formatRecordType(this.record.record_type)}</span>
-          </div>
-          <div class="compact-stat-item">
-            <span class="compact-stat-label">Criticality:</span>
-            <span class="compact-stat-value">${formatCriticality(this.record.criticality)}</span>
-          </div>
-        </div>
-        
         <div class="detail-grid">
           <div class="detail-section full-width">
             <h3>Record Information</h3>
@@ -144,7 +128,7 @@ export class RecordDetailView {
             </div>
           </div>
           
-          <div class="detail-section full-width">
+          <div class="detail-section full-width detail-section-border">
             <h3>Scheduling</h3>
             <div class="horizontal-detail-row">
               <div class="detail-item">
@@ -162,13 +146,13 @@ export class RecordDetailView {
             </div>
           </div>
           
-          <div class="detail-section full-width">
+          <div class="detail-section full-width detail-section-border">
             <h3>Description</h3>
             <p class="detail-description">${this.record.description || 'No description provided'}</p>
           </div>
           
           ${materials.length > 0 ? `
-            <div class="detail-section full-width">
+            <div class="detail-section full-width detail-section-border">
               <h3>Materials Used</h3>
               <ul class="materials-list">
                 ${materials.map(m => `
@@ -181,7 +165,7 @@ export class RecordDetailView {
             </div>
           ` : ''}
           
-          <div class="detail-section full-width">
+          <div class="detail-section full-width detail-section-border">
             <h3>Timestamps</h3>
             <div class="timestamps-row">
               <div class="timestamp-item">

@@ -17,12 +17,13 @@ export class StatsCards {
     const { label, value, icon, color, subtitle } = stat;
     
     return `
-      <div class="stat-card" style="border-left: 4px solid ${color || '#6B7280'}">
-        <div class="stat-header">
+      <div class="stat-card stat-card-compact" style="border-left: 4px solid ${color || '#6B7280'}">
+        <div class="stat-content-inline">
           <span class="stat-icon">${icon || '📊'}</span>
           <span class="stat-label">${label}</span>
+          <span class="stat-separator">-</span>
+          <span class="stat-value-inline">${value}</span>
         </div>
-        <div class="stat-value">${value}</div>
         ${subtitle ? `<div class="stat-subtitle">${subtitle}</div>` : ''}
       </div>
     `;
@@ -41,6 +42,12 @@ export class StatsCards {
         value: record.record_type.charAt(0).toUpperCase() + record.record_type.slice(1),
         icon: '🔧',
         color: '#3B82F6'
+      },
+      {
+        label: 'Criticality',
+        value: (record.criticality || 'None').charAt(0).toUpperCase() + (record.criticality || 'None').slice(1),
+        icon: '⚠️',
+        color: this.getCriticalityColor(record.criticality)
       },
       {
         label: 'Total Cost',
@@ -112,5 +119,15 @@ export class StatsCards {
       'cancelled': '#EF4444'
     };
     return colors[status] || '#6B7280';
+  }
+  
+  static getCriticalityColor(criticality) {
+    const colors = {
+      'high': '#EF4444',
+      'medium': '#F59E0B',
+      'low': '#10B981',
+      'none': '#6B7280'
+    };
+    return colors[criticality?.toLowerCase()] || '#6B7280';
   }
 }
