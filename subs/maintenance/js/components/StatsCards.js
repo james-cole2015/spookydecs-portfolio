@@ -18,12 +18,12 @@ export class StatsCards {
     
     return `
       <div class="stat-card stat-card-compact" style="border-left: 4px solid ${color || '#6B7280'}">
-        <div class="stat-content-inline">
+        <div class="stat-header-compact">
           <span class="stat-icon">${icon || '📊'}</span>
-          <span class="stat-label">${label}</span>
           <span class="stat-separator">-</span>
-          <span class="stat-value-inline">${value}</span>
+          <span class="stat-label">${label}</span>
         </div>
+        <div class="stat-value-compact">${value}</div>
         ${subtitle ? `<div class="stat-subtitle">${subtitle}</div>` : ''}
       </div>
     `;
