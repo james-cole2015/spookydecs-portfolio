@@ -74,8 +74,7 @@ export class RecordDetailView {
   
   renderPerformInspectionButton() {
     // Only show for inspection records that are pending
-    if (this.record.record_type === 'inspection' && this.record.status === 'pending') {
-      return `
+if (this.record.record_type === 'inspection' && ['pending', 'Pending', 'PENDING','scheduled', 'SCHEDULED', 'Scheduled'].includes(this.record.status)) { return `
         <a href="/${this.itemId}/${this.recordId}/perform-inspection" class="btn-primary">
           Perform Inspection
         </a>
