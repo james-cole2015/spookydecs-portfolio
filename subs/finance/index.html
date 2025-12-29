@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpookyDecs - Finance</title>
+  
+  <!-- External Dependencies -->
+  <script src="https://unpkg.com/@tanstack/table-core@8.10.7/build/umd/index.production.js"></script>
+  <script src="https://unpkg.com/navigo@8.11.1/lib/navigo.min.js"></script>
+  
+  <!-- SpookyDecs Header Component -->
+  <script src="https://assets.spookydecs.com/components/spookydecs-header.js"></script>
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/finance.css">
+  <link rel="stylesheet" href="css/cost-detail.css">
+  <link rel="stylesheet" href="css/cost-form.css">
+</head>
+<body>
+  <!-- Header Component -->
+  <spookydecs-header 
+    page-title="Finance" 
+    user-name="Admin"
+    user-role="Administrator"
+    logout-url="/logout">
+  </spookydecs-header>
+
+  <!-- Main Container -->
+  <div id="app-container">
+    <!-- Tab Navigation -->
+    <div id="tab-bar"></div>
+    
+    <!-- Tab Content -->
+    <div id="tab-content">
+      <!-- Records Tab (default) -->
+      <div id="records-tab" class="tab-panel active">
+        <!-- Cost Records Table -->
+        <div id="table-container"></div>
+        
+        <!-- Add Cost Record Form -->
+        <div id="form-container"></div>
+      </div>
+      
+      <!-- Stats Tab -->
+      <div id="stats-tab" class="tab-panel">
+        <div id="stats-container"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail Drawer (hidden by default) -->
+  <div id="cost-detail-drawer" class="drawer"></div>
+
+  <!-- Modals -->
+  <div id="modal-container"></div>
+  <div id="toast-container"></div>
+
+  <!-- App Scripts -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
