@@ -4,6 +4,8 @@ import { fetchRecord } from '../api.js';
 import { appState } from '../state.js';
 import { navigateTo } from '../router.js';
 import { formatDate, formatRecordType } from '../utils/formatters.js';
+import { performInspection } from '../api.js';
+
 
 export class PerformInspectionForm {
   constructor(recordId, itemId) {
@@ -438,23 +440,9 @@ export class PerformInspectionForm {
         };
       }
       
-// Make API call
-const apiUrl = appState.config?.API_ENDPOINT || '';
-console.log('About to POST to:', `${apiUrl}/admin/maintenance-records/${this.recordId}/inspect`);
-const response = await fetch(`${apiUrl}/admin/maintenance-records/${this.recordId}/inspect`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to complete inspection');
-      }
-      
-      const result = await response.json();
+// Import API call
+const result = await performInspection(this.recordId, payload);
+
       
       // Show success message with links to created tasks
       this.showSuccessMessage(container, result);
