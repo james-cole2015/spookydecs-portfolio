@@ -647,3 +647,17 @@
     text-align: center;
   }
 }
+
+#filter-container {
+  flex: 1;
+  width: 100%;
+  max-width: 100%;
+}
+
+.controls-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start; /* Changed from center */
+  margin-bottom: 20px;
+  gap: 16px; /* Add gap for spacing */
+}
