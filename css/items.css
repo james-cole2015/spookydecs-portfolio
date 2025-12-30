@@ -277,6 +277,10 @@
   font-family: 'Courier New', monospace;
   font-size: 13px;
   color: #6b7280;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 0; /* Critical for table-layout: fixed */
 }
 
 .item-name {

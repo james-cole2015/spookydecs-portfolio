@@ -156,6 +156,9 @@ export class ItemsTable {
           case 'id':
             td.textContent = item.id || '-';
             td.className = 'item-id';
+            if (item.id) {
+              td.title = item.id; // Show full ID on hover
+            }
             break;
             
           case 'short_name':
