@@ -102,33 +102,38 @@ export class CostRecordsTable {
     this.container.innerHTML = `
       <div class="table-header">
         <h2>Cost Records (${this.filteredData.length})</h2>
-        <div class="table-filters">
-          <input 
-            type="text" 
-            class="filter-input" 
-            placeholder="Search..." 
-            value="${this.filters.search}"
-            id="search-input"
-          />
-          <select class="filter-select" id="type-filter">
-            <option value="all">All Types</option>
-            <option value="acquisition" ${this.filters.cost_type === 'acquisition' ? 'selected' : ''}>Acquisition</option>
-            <option value="repair" ${this.filters.cost_type === 'repair' ? 'selected' : ''}>Repair</option>
-            <option value="maintenance" ${this.filters.cost_type === 'maintenance' ? 'selected' : ''}>Maintenance</option>
-            <option value="supply_purchase" ${this.filters.cost_type === 'supply_purchase' ? 'selected' : ''}>Supply Purchase</option>
-            <option value="utility" ${this.filters.cost_type === 'utility' ? 'selected' : ''}>Utility</option>
-            <option value="other" ${this.filters.cost_type === 'other' ? 'selected' : ''}>Other</option>
-          </select>
-          <select class="filter-select" id="category-filter">
-            <option value="all">All Categories</option>
-            <option value="materials" ${this.filters.category === 'materials' ? 'selected' : ''}>Materials</option>
-            <option value="labor" ${this.filters.category === 'labor' ? 'selected' : ''}>Labor</option>
-            <option value="parts" ${this.filters.category === 'parts' ? 'selected' : ''}>Parts</option>
-            <option value="supplies" ${this.filters.category === 'supplies' ? 'selected' : ''}>Supplies</option>
-            <option value="decoration" ${this.filters.category === 'decoration' ? 'selected' : ''}>Decoration</option>
-            <option value="light" ${this.filters.category === 'light' ? 'selected' : ''}>Light</option>
-            <option value="accessory" ${this.filters.category === 'accessory' ? 'selected' : ''}>Accessory</option>
-          </select>
+        <div class="table-actions">
+          <div class="table-filters">
+            <input 
+              type="text" 
+              class="filter-input" 
+              placeholder="Search..." 
+              value="${this.filters.search}"
+              id="search-input"
+            />
+            <select class="filter-select" id="type-filter">
+              <option value="all">All Types</option>
+              <option value="acquisition" ${this.filters.cost_type === 'acquisition' ? 'selected' : ''}>Acquisition</option>
+              <option value="repair" ${this.filters.cost_type === 'repair' ? 'selected' : ''}>Repair</option>
+              <option value="maintenance" ${this.filters.cost_type === 'maintenance' ? 'selected' : ''}>Maintenance</option>
+              <option value="supply_purchase" ${this.filters.cost_type === 'supply_purchase' ? 'selected' : ''}>Supply Purchase</option>
+              <option value="utility" ${this.filters.cost_type === 'utility' ? 'selected' : ''}>Utility</option>
+              <option value="other" ${this.filters.cost_type === 'other' ? 'selected' : ''}>Other</option>
+            </select>
+            <select class="filter-select" id="category-filter">
+              <option value="all">All Categories</option>
+              <option value="materials" ${this.filters.category === 'materials' ? 'selected' : ''}>Materials</option>
+              <option value="labor" ${this.filters.category === 'labor' ? 'selected' : ''}>Labor</option>
+              <option value="parts" ${this.filters.category === 'parts' ? 'selected' : ''}>Parts</option>
+              <option value="supplies" ${this.filters.category === 'supplies' ? 'selected' : ''}>Supplies</option>
+              <option value="decoration" ${this.filters.category === 'decoration' ? 'selected' : ''}>Decoration</option>
+              <option value="light" ${this.filters.category === 'light' ? 'selected' : ''}>Light</option>
+              <option value="accessory" ${this.filters.category === 'accessory' ? 'selected' : ''}>Accessory</option>
+            </select>
+          </div>
+          <button class="btn-new-cost" id="btn-new-cost">
+            + New Cost Record
+          </button>
         </div>
       </div>
 
@@ -261,6 +266,14 @@ export class CostRecordsTable {
   }
 
   attachEventListeners() {
+    // New Cost Record button
+    const newCostBtn = this.container.querySelector('#btn-new-cost');
+    if (newCostBtn) {
+      newCostBtn.addEventListener('click', () => {
+        window.location.href = '/finance/new';
+      });
+    }
+
     // Search input
     const searchInput = this.container.querySelector('#search-input');
     if (searchInput) {
