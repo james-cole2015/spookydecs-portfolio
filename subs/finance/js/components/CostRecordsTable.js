@@ -60,12 +60,11 @@ export class CostRecordsTable {
 
   render() {
     // Debug: Check what's available
-    console.log('window.TanStackTable:', window.TanStackTable);
-    console.log('Available globals:', Object.keys(window).filter(k => k.includes('Table') || k.includes('tanstack')));
+    console.log('window.TableCore:', window.TableCore);
     
     // Check if TanStack Table is loaded
-    if (!window.TanStackTable) {
-      console.error('TanStack Table not loaded');
+    if (!window.TableCore) {
+      console.error('TanStack Table (TableCore) not loaded');
       this.container.innerHTML = '<div class="empty-state"><p>Error: Table library not loaded. Check console for details.</p></div>';
       return;
     }
@@ -76,7 +75,7 @@ export class CostRecordsTable {
       getSortedRowModel,
       getPaginationRowModel,
       createTable
-    } = window.TanStackTable;
+    } = window.TableCore;
 
     const columns = [
       {

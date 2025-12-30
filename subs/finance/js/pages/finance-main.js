@@ -88,15 +88,12 @@ export class FinanceMainPage {
   }
 
   initForm() {
-    this.form = new CostFormFields('form-container');
-    
-    this.form.onSubmit = (formData) => {
-      this.handleFormSubmit(formData);
-    };
-
-    this.form.onCancel = () => {
-      this.form.reset();
-    };
+    // Form moved to separate /finance/new page
+    // Hide the form container on main page
+    const formContainer = document.getElementById('form-container');
+    if (formContainer) {
+      formContainer.style.display = 'none';
+    }
   }
 
   handleRowClick(costId) {
