@@ -28,7 +28,8 @@ export class TabBar {
     TABS.forEach(tab => {
       const tabButton = document.createElement('button');
       tabButton.className = `tab-button ${tab.id === activeTab ? 'active' : ''}`;
-      tabButton.textContent = tab.label;
+      // Add icon to label
+      tabButton.textContent = `${tab.icon} ${tab.label}`;
       tabButton.dataset.tabId = tab.id;
       
       tabButton.addEventListener('click', () => {
@@ -49,7 +50,8 @@ export class TabBar {
     TABS.forEach(tab => {
       const option = document.createElement('option');
       option.value = tab.id;
-      option.textContent = tab.label;
+      // Add icon to mobile dropdown too
+      option.textContent = `${tab.icon} ${tab.label}`;
       if (tab.id === activeTab) option.selected = true;
       select.appendChild(option);
     });

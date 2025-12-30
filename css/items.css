@@ -86,7 +86,7 @@
   font-weight: 500;
 }
 
-/* Filter Bar */
+/* Filter Bar - UPDATED */
 .filter-bar {
   display: flex;
   flex-direction: column;
@@ -116,6 +116,7 @@
   box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
 }
 
+/* Filter Pills Row - UPDATED */
 .filters-container {
   display: flex;
   gap: 16px;
@@ -134,12 +135,14 @@
   border: 1px solid #e5e7eb;
   flex: 1;
   justify-content: center;
+  min-width: 0;
 }
 
 .filter-label {
   font-size: 13px;
   color: #6b7280;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .filter-pill-select {
@@ -151,6 +154,7 @@
   cursor: pointer;
   padding: 2px 4px;
   outline: none;
+  min-width: 60px;
 }
 
 .filter-pill-select:focus {
