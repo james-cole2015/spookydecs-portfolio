@@ -59,75 +59,72 @@ export class CostRecordsTable {
   }
 
   render() {
-    // Debug: Check what's available
-    console.log('window.TableCore:', window.TableCore);
-    
     // Check if TanStack Table is loaded
     if (!window.TableCore) {
       console.error('TanStack Table (TableCore) not loaded');
-      this.container.innerHTML = '<div class="empty-state"><p>Error: Table library not loaded. Check console for details.</p></div>';
+      this.container.innerHTML = '<div class="empty-state"><p>Error: Table library not loaded.</p></div>';
       return;
     }
 
     const { 
-      createColumnHelper,
       getCoreRowModel,
       getSortedRowModel,
-      getPaginationRowModel,
-      createTable
+      getPaginationRowModel
     } = window.TableCore;
 
+    // Define columns with proper structure
     const columns = [
       {
+        id: 'cost_id',
         accessorKey: 'cost_id',
         header: 'Cost ID',
-        size: 130,
-        cell: info => `<span class="cost-id">${info.getValue()}</span>`
+        size: 130
       },
       {
+        id: 'item_name',
         accessorKey: 'item_name',
         header: 'Item Name',
-        size: 200,
-        cell: info => `<strong>${info.getValue() || 'N/A'}</strong>`
+        size: 200
       },
       {
+        id: 'cost_type',
         accessorKey: 'cost_type',
         header: 'Type',
-        size: 140,
-        cell: info => {
-          const type = info.getValue();
-          return `<span class="cost-type-badge cost-type-${type}">${type.replace('_', ' ')}</span>`;
-        }
+        size: 140
       },
       {
+        id: 'category',
         accessorKey: 'category',
         header: 'Category',
-        size: 120,
-        cell: info => `<span class="category-badge">${info.getValue()}</span>`
+        size: 120
       },
       {
+        id: 'cost_date',
         accessorKey: 'cost_date',
         header: 'Date',
-        size: 110,
-        cell: info => `<span class="cost-date">${formatDate(info.getValue())}</span>`
+        size: 110
       },
       {
+        id: 'vendor',
         accessorKey: 'vendor',
         header: 'Vendor',
-        size: 140,
-        cell: info => info.getValue() || 'N/A'
+        size: 140
       },
       {
+        id: 'total_cost',
         accessorKey: 'total_cost',
         header: 'Amount',
-        size: 100,
-        cell: info => `<span class="cost-amount">${formatCurrency(info.getValue())}</span>`
+        size: 100
       }
     ];
 
-    this.table = createTable({
+    // Create table instance
+    const tableOptions = {
       data: this.filteredData,
-      columns,
+      columns: columns,
+      getCoreRowModel: getCoreRowModel(),
+      getSortedRowModel: getSortedRowModel(),
+      getPaginationRowModel: getPaginationRowModel(),
       state: {
         sorting: this.sorting,
         pagination: {
@@ -138,11 +135,10 @@ export class CostRecordsTable {
       onSortingChange: updater => {
         this.sorting = typeof updater === 'function' ? updater(this.sorting) : updater;
         this.render();
-      },
-      getCoreRowModel: getCoreRowModel(),
-      getSortedRowModel: getSortedRowModel(),
-      getPaginationRowModel: getPaginationRowModel()
-    });
+      }
+    };
+
+    this.table = window.TableCore.createTable(tableOptions);
 
     this.renderHTML();
   }
@@ -205,7 +201,7 @@ export class CostRecordsTable {
         const sortIcon = sortDir === 'asc' ? '↑' : sortDir === 'desc' ? '↓' : '';
         
         tableHTML += `
-          <th class="${canSort ? 'sortable' : ''}" data-column="${header.id}" style="width: ${header.column.getSize()}px">
+          <th class="${canSort ? 'sortable' : ''}" data-column="${header.id}" style="width: ${header.getSize()}px">
             ${header.column.columnDef.header}
             ${canSort ? `<span class="sort-icon">${sortIcon}</span>` : ''}
           </th>
@@ -226,10 +222,18 @@ export class CostRecordsTable {
       `;
     } else {
       rows.forEach(row => {
-        tableHTML += `<tr data-cost-id="${row.original.cost_id}">`;
-        row.getVisibleCells().forEach(cell => {
-          tableHTML += `<td>${cell.column.columnDef.cell(cell.getContext())}</td>`;
-        });
+        const cost = row.original;
+        tableHTML += `<tr data-cost-id="${cost.cost_id}">`;
+        
+        // Manually format each cell
+        tableHTML += `<td><span class="cost-id">${cost.cost_id}</span></td>`;
+        tableHTML += `<td><strong>${cost.item_name || 'N/A'}</strong></td>`;
+        tableHTML += `<td><span class="cost-type-badge cost-type-${cost.cost_type}">${cost.cost_type.replace('_', ' ')}</span></td>`;
+        tableHTML += `<td><span class="category-badge">${cost.category}</span></td>`;
+        tableHTML += `<td><span class="cost-date">${formatDate(cost.cost_date)}</span></td>`;
+        tableHTML += `<td>${cost.vendor || 'N/A'}</td>`;
+        tableHTML += `<td><span class="cost-amount">${formatCurrency(cost.total_cost)}</span></td>`;
+        
         tableHTML += '</tr>';
       });
     }
