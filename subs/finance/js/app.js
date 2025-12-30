@@ -2,6 +2,7 @@
 
 import { initRouter } from './utils/router.js';
 import { FinanceMainPage } from './pages/finance-main.js';
+import { NewCostRecordPage } from './pages/new-cost-record.js';
 
 console.log('App.js loaded');
 
@@ -15,6 +16,10 @@ document.addEventListener('DOMContentLoaded', () => {
     '/finance': () => {
       console.log('Route /finance matched, creating FinanceMainPage');
       new FinanceMainPage();
+    },
+    '/finance/costs/new-record': () => {
+      console.log('Route /finance/costs/new-record matched, creating NewCostRecordPage');
+      new NewCostRecordPage();
     }
   });
 
