@@ -2,7 +2,7 @@
 // Main orchestrator for items list view
 
 import { fetchAllItems } from '../api/items.js';
-import { saveTabState, restoreTabState, getFilteredItems, getAvailableClassTypes } from '../utils/state.js';
+import { saveTabState, restoreTabState, getFilteredItems, getAvailableClassTypes, getTabCounts } from '../utils/state.js';
 import { TabBar } from '../components/TabBar.js';
 import { FilterBar } from '../components/FilterBar.js';
 import { ItemsTable } from '../components/ItemsTable.js';
@@ -61,8 +61,11 @@ function renderPage() {
     currentState.filters.class_type = '';
   }
   
-  // Render components
-  tabBar.render(currentState.tab);
+  // Get tab counts
+  const tabCounts = getTabCounts(allItems);
+  
+  // Render components with tab counts
+  tabBar.render(currentState.tab, tabCounts);
   filterBar.render(currentState.filters, availableClassTypes);
   
   // Filter and render items

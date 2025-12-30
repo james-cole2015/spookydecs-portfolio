@@ -8,10 +8,12 @@ export class TabBar {
     this.container = document.getElementById(containerId);
     this.onTabChange = onTabChange;
     this.activeTab = 'decorations';
+    this.tabCounts = {};
   }
   
-  render(activeTab) {
+  render(activeTab, tabCounts = {}) {
     this.activeTab = activeTab;
+    this.tabCounts = tabCounts;
     
     if (!this.container) {
       console.error('TabBar container not found');
@@ -28,8 +30,14 @@ export class TabBar {
     TABS.forEach(tab => {
       const tabButton = document.createElement('button');
       tabButton.className = `tab-button ${tab.id === activeTab ? 'active' : ''}`;
-      // Add icon to label
-      tabButton.textContent = `${tab.icon} ${tab.label}`;
+      
+      // Create tab content with icon, label, and count
+      const count = tabCounts[tab.id] || 0;
+      tabButton.innerHTML = `
+        <span class="tab-label">${tab.icon} ${tab.label}</span>
+        <span class="tab-count">${count}</span>
+      `;
+      
       tabButton.dataset.tabId = tab.id;
       
       tabButton.addEventListener('click', () => {
@@ -50,8 +58,9 @@ export class TabBar {
     TABS.forEach(tab => {
       const option = document.createElement('option');
       option.value = tab.id;
-      // Add icon to mobile dropdown too
-      option.textContent = `${tab.icon} ${tab.label}`;
+      const count = tabCounts[tab.id] || 0;
+      // Add icon and count to mobile dropdown
+      option.textContent = `${tab.icon} ${tab.label} (${count})`;
       if (tab.id === activeTab) option.selected = true;
       select.appendChild(option);
     });

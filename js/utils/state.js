@@ -149,3 +149,28 @@ export function getAvailableClassTypes(items, currentTab) {
   
   return Array.from(classTypes).sort();
 }
+
+// NEW FUNCTION: Get item counts for each tab
+export function getTabCounts(items) {
+  const counts = {};
+  
+  // Initialize counts for all tabs
+  Object.keys(TAB_CLASS_MAP).forEach(tabId => {
+    counts[tabId] = 0;
+  });
+  
+  // Count items for each tab based on their class
+  if (items && Array.isArray(items)) {
+    items.forEach(item => {
+      // Find which tab this item belongs to
+      for (const [tabId, className] of Object.entries(TAB_CLASS_MAP)) {
+        if (item.class === className) {
+          counts[tabId]++;
+          break;
+        }
+      }
+    });
+  }
+  
+  return counts;
+}

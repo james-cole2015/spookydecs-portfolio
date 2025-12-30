@@ -661,3 +661,59 @@
   margin-bottom: 20px;
   gap: 16px; /* Add gap for spacing */
 }
+
+/* Tab Count Badge Styles - ADD TO items.css */
+
+.tab-button {
+  flex: 1;
+  padding: 14px 24px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-size: 18px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: -2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.tab-label {
+  display: inline-flex;
+  align-items: center;
+}
+
+.tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 20px;
+  padding: 0 6px;
+  background: #e5e7eb;
+  color: #6b7280;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  transition: all 0.2s;
+}
+
+.tab-button.active .tab-count {
+  background: #fed7aa;
+  color: #c2410c;
+}
+
+.tab-button:hover .tab-count {
+  background: #d1d5db;
+  color: #374151;
+}
+
+.tab-button.active:hover .tab-count {
+  background: #fdba74;
+  color: #9a3412;
+}
