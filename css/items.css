@@ -644,3 +644,12 @@
     text-align: center;
   }
 }
+
+.filter-search {
+  width: 100%;
+  background: lightblue; /* temporary - you'll see blue if it's full width */
+}
+
+.filters-container {
+  background: lightgreen; /* temporary - you'll see green background */
+}
