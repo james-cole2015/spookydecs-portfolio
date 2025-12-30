@@ -26,7 +26,8 @@ export async function getMaintenanceRecords(itemId, limit = 5) {
       limit: limit.toString()
     });
     
-    const url = `${apiEndpoint}/maintenance-records?${params.toString()}`;
+    // Use /admin/maintenance-records path as expected by Lambda
+    const url = `${apiEndpoint}/admin/maintenance-records?${params.toString()}`;
     
     console.log(`Fetching maintenance records from: ${url}`);
     
@@ -50,12 +51,14 @@ export async function getMaintenanceRecords(itemId, limit = 5) {
     const data = await response.json();
     
     // Handle different response formats
-    if (Array.isArray(data)) {
-      return data;
-    } else if (data.records && Array.isArray(data.records)) {
-      return data.records;
+    // Based on your Lambda, it returns { records: [...], count: N }
+    if (data.records && Array.isArray(data.records)) {
+      // Limit to the requested number of records
+      return data.records.slice(0, limit);
+    } else if (Array.isArray(data)) {
+      return data.slice(0, limit);
     } else if (data.Items && Array.isArray(data.Items)) {
-      return data.Items;
+      return data.Items.slice(0, limit);
     }
     
     console.warn('Unexpected API response format:', data);

@@ -472,6 +472,8 @@ export class ItemDetailView {
     return group;
   }
   
+// REPLACE the switchTab method in ItemDetailView.js with this:
+
   async switchTab(sectionName) {
     console.log('Switching to tab:', sectionName);
     
@@ -505,15 +507,15 @@ export class ItemDetailView {
           break;
         case 'deployments':
           console.log('Rendering deployments section');
-          sectionContent = await this.renderDeploymentsSection();
+          sectionContent = await this.renderDeploymentsSection(); // Already async
           break;
         case 'maintenance':
           console.log('Rendering maintenance section');
-          sectionContent = this.renderMaintenanceSection();
+          sectionContent = await this.renderMaintenanceSection(); // NOW ASYNC - must await
           break;
         case 'storage':
           console.log('Rendering storage section');
-          sectionContent = await this.renderStorageSection();
+          sectionContent = await this.renderStorageSection(); // Already async
           break;
         default:
           console.error('Unknown section:', sectionName);
@@ -622,6 +624,8 @@ export class ItemDetailView {
     return section;
   }
   
+// REPLACE the existing renderMaintenanceSection() method in ItemDetailView.js with this:
+
   async renderMaintenanceSection() {
     const section = document.createElement('div');
     section.className = 'section-panel active';
@@ -671,16 +675,21 @@ export class ItemDetailView {
     let statusPill = '';
     
     if (needsRepair) {
-      if (criticality === 'Critical') {
+      // Note: criticality values are lowercase: 'high', 'medium', 'low'
+      if (criticality === 'high') {
         statusClass = 'non-operational';
         statusIcon = '⚠️';
         statusLabel = 'Non-Operational';
-        statusPill = `<span class="pill pill-criticality-critical">Critical Priority</span>`;
+        statusPill = `<span class="pill pill-criticality-high">High Priority</span>`;
       } else {
         statusClass = 'needs-repair';
         statusIcon = '⚠️';
         statusLabel = 'Needs Repair';
-        statusPill = criticality ? `<span class="pill pill-criticality-${criticality.toLowerCase()}">${criticality} Priority</span>` : '';
+        if (criticality === 'medium') {
+          statusPill = `<span class="pill pill-criticality-medium">Medium Priority</span>`;
+        } else if (criticality === 'low') {
+          statusPill = `<span class="pill pill-criticality-low">Low Priority</span>`;
+        }
       }
     }
     
