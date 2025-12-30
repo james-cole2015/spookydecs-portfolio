@@ -90,15 +90,13 @@
 .filter-bar {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   width: 100%;
   box-sizing: border-box;
 }
 
 .filter-search {
-  flex: 1;
-  min-width: 0;
-  max-width: 100%;
+  width: 100%;
   box-sizing: border-box;
 }
 
@@ -120,9 +118,10 @@
 
 .filters-container {
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+  gap: 16px;
   align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;
 }
 
 .filter-pill-group {
@@ -133,6 +132,8 @@
   padding: 6px 12px;
   border-radius: 20px;
   border: 1px solid #e5e7eb;
+  flex: 1;
+  justify-content: center;
 }
 
 .filter-label {
@@ -166,6 +167,8 @@
   font-weight: 500;
   cursor: pointer;
   transition: background 0.2s;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .btn-clear-filters:hover {
@@ -177,7 +180,7 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 15px;
-  table-layout: fixed; /* Use fixed layout for consistent column widths */
+  table-layout: fixed;
 }
 
 .items-table thead {
@@ -243,7 +246,7 @@
   padding: 14px 18px;
   color: #374151;
   vertical-align: middle;
-  text-align: left; /* Default left align */
+  text-align: left;
   border-left: 1px solid #f3f4f6;
   border-right: 1px solid #f3f4f6;
 }
@@ -280,7 +283,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 0; /* Critical for table-layout: fixed */
+  max-width: 0;
 }
 
 .item-name {
@@ -356,9 +359,8 @@
   cursor: help;
 }
 
-.storage-tote {
-  font-family: 'Courier New', monospace;
-  font-size: 12px;
+.storage-location {
+  font-size: 13px;
   color: #6366f1;
   cursor: help;
 }
@@ -564,13 +566,6 @@
   display: inline;
 }
 
-/* Storage column style */
-.storage-location {
-  font-size: 13px;
-  color: #6366f1;
-  cursor: help;
-}
-
 /* Responsive */
 @media (max-width: 768px) {
   .app-container {
@@ -633,7 +628,12 @@
   }
   
   .filters-container {
-    width: 100%;
+    flex-wrap: wrap;
+  }
+  
+  .filter-pill-group {
+    flex: 1 1 45%;
+    min-width: 140px;
   }
   
   .item-count-container {

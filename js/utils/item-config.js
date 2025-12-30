@@ -55,9 +55,9 @@ export const ATTRIBUTE_LABELS = {
 
 // Tab configuration (3 tabs: Decorations, Lights, Accessories)
 export const TABS = [
-  { id: 'decorations', label: 'Decorations', class: 'Decoration' },
-  { id: 'lights', label: 'Lights', class: 'Light' },
-  { id: 'accessories', label: 'Accessories', class: 'Accessory' }
+  { id: 'decorations', label: 'Decorations', class: 'Decoration', icon: '✨' },
+  { id: 'lights', label: 'Lights', class: 'Light', icon: '💡' },
+  { id: 'accessories', label: 'Accessories', class: 'Accessory', icon: '⚙️' }
 ];
 
 // Filter options
