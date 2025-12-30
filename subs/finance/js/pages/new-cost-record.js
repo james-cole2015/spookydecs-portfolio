@@ -48,8 +48,13 @@ export class NewCostRecordPage {
             <p class="page-subtitle">Track expenses for maintenance, repairs, and equipment</p>
           </div>
           <div class="header-actions">
-            <button class="btn-secondary" id="btn-cancel">
-              Cancel
+            <button class="btn-primary" id="btn-extract-ai">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              Extract with AI
             </button>
           </div>
         </div>
@@ -78,13 +83,12 @@ export class NewCostRecordPage {
   }
   
   attachEventListeners() {
-    // Cancel button
-    const cancelBtn = document.getElementById('btn-cancel');
-    if (cancelBtn) {
-      cancelBtn.addEventListener('click', () => {
-        if (confirm('Discard changes and return to finance page?')) {
-          window.location.href = '/finance';
-        }
+    // Extract with AI button
+    const extractBtn = document.getElementById('btn-extract-ai');
+    if (extractBtn) {
+      extractBtn.addEventListener('click', () => {
+        // TODO: Open AI Extract modal in future implementation
+        alert('AI Receipt Extract feature coming soon!');
       });
     }
   }

@@ -332,8 +332,16 @@ export class CostFormFields {
   renderFormActions(isEditing) {
     return `
       <div class="form-actions">
-        <button type="button" class="btn-secondary" id="cancel-btn">Cancel</button>
+        <button type="button" class="btn-secondary" id="cancel-btn">
+          <span style="font-weight: bold; margin-right: 8px;">✕</span>
+          Cancel
+        </button>
         <button type="submit" class="btn-primary" id="submit-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
           ${isEditing ? 'Update Record' : 'Review & Submit'}
         </button>
       </div>
@@ -353,8 +361,9 @@ export class CostFormFields {
     const cancelBtn = this.container.querySelector('#cancel-btn');
     if (cancelBtn) {
       cancelBtn.addEventListener('click', () => {
-        if (this.onCancel) this.onCancel();
-        this.reset();
+        if (confirm('Discard changes and return to finance page?')) {
+          window.location.href = '/finance';
+        }
       });
     }
 
