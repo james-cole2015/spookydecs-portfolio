@@ -1,17 +1,15 @@
 // Cost Form Fields Component
 
 import { 
-  COST_TYPES, 
-  getCategoriesForCostType,
-  SUBCATEGORIES,
   FORM_DEFAULTS,
   validateCostRecord,
   calculateTotalCost,
   calculateValue,
   getRelatedIdConfig,
-  isRelatedIdRequired
+  getCategoriesForCostType
 } from '../utils/finance-config.js';
 import { getItems, getApiEndpoint } from '../utils/finance-api.js';
+import { CostFormRenderers } from './CostFormRenderers.js';
 
 export class CostFormFields {
   constructor(containerId, initialData = null) {
@@ -89,263 +87,13 @@ export class CostFormFields {
       </div>
 
       <form class="cost-form" id="cost-form">
-        ${this.renderManualEntry(isGift)}
-        ${!isEditing ? this.renderUploadOption() : ''}
-        ${this.renderFormActions(isEditing)}
+        ${CostFormRenderers.renderManualEntry(this.formData, this.errors, isGift)}
+        ${!isEditing ? CostFormRenderers.renderUploadOption() : ''}
+        ${CostFormRenderers.renderFormActions(isEditing)}
       </form>
     `;
 
     this.attachListeners();
-  }
-
-  renderManualEntry(isGift) {
-    return `
-      <div class="form-section">
-        ${this.renderField('item_name', 'Item Name', 'text', true)}
-        ${this.renderField('cost_date', 'Cost Date', 'date', true)}
-        ${this.renderSelectField('cost_type', 'Cost Type', COST_TYPES, true)}
-        ${this.renderCategoryField()}
-      </div>
-
-      ${this.formData.category ? `
-        <div class="form-section">
-          ${this.renderSubcategoryField()}
-        </div>
-      ` : ''}
-
-      <div class="form-section">
-        ${this.renderField('vendor', 'Vendor', 'text', true)}
-        ${this.renderField('purchase_date', 'Purchase Date', 'date', false, isGift)}
-        ${this.renderField('quantity', 'Quantity', 'number', false)}
-        ${this.renderField('unit_cost', 'Unit Cost', 'number', false)}
-      </div>
-
-      <div class="form-section">
-        ${this.renderField('total_cost', 'Total Cost', 'number', true, isGift)}
-        ${this.renderField('tax', 'Tax', 'number', false, isGift)}
-        ${this.renderField('value', 'Value', 'number', false, false)}
-        ${this.renderCurrencyField()}
-      </div>
-
-      ${this.renderDynamicRelatedField()}
-
-      <div class="form-section single-column">
-        ${this.renderTextarea('description', 'Description', false)}
-        ${this.renderTextarea('notes', 'Notes', false)}
-      </div>
-    `;
-  }
-
-  renderField(name, label, type, required, disabled = false) {
-    const value = this.formData[name] || '';
-    const error = this.errors[name];
-
-    return `
-      <div class="form-group">
-        <label class="form-label ${required ? 'required' : ''}" for="${name}">${label}</label>
-        <input
-          type="${type}"
-          id="${name}"
-          name="${name}"
-          class="form-input ${error ? 'error' : ''}"
-          value="${value}"
-          ${required ? 'required' : ''}
-          ${disabled ? 'disabled' : ''}
-          ${type === 'number' ? 'step="0.01" min="0"' : ''}
-        />
-        ${error ? `<span class="form-error">${error}</span>` : ''}
-      </div>
-    `;
-  }
-
-  renderSelectField(name, label, options, required) {
-    const value = this.formData[name] || '';
-    const error = this.errors[name];
-
-    let optionsHTML = '';
-    
-    // Add placeholder option for cost_type and category
-    if (name === 'cost_type') {
-      optionsHTML += '<option value="">Select Type</option>';
-    }
-    
-    optionsHTML += options.map(opt => 
-      `<option value="${opt.value}" ${value === opt.value ? 'selected' : ''}>${opt.label}</option>`
-    ).join('');
-
-    return `
-      <div class="form-group">
-        <label class="form-label ${required ? 'required' : ''}" for="${name}">${label}</label>
-        <select
-          id="${name}"
-          name="${name}"
-          class="form-select ${error ? 'error' : ''}"
-          ${required ? 'required' : ''}
-        >
-          ${optionsHTML}
-        </select>
-        ${error ? `<span class="form-error">${error}</span>` : ''}
-      </div>
-    `;
-  }
-
-  renderCategoryField() {
-    const costType = this.formData.cost_type || '';
-    
-    // If no cost type selected, show disabled dropdown
-    if (!costType) {
-      return `
-        <div class="form-group">
-          <label class="form-label required" for="category">Category</label>
-          <select
-            id="category"
-            name="category"
-            class="form-select"
-            required
-            disabled
-          >
-            <option value="">Select a Cost Type first</option>
-          </select>
-        </div>
-      `;
-    }
-    
-    const categories = getCategoriesForCostType(costType);
-    const value = this.formData.category || '';
-    const error = this.errors.category;
-
-    let optionsHTML = '<option value="">Select Category</option>';
-    optionsHTML += categories.map(opt => 
-      `<option value="${opt.value}" ${value === opt.value ? 'selected' : ''}>${opt.label}</option>`
-    ).join('');
-
-    return `
-      <div class="form-group">
-        <label class="form-label required" for="category">Category</label>
-        <select
-          id="category"
-          name="category"
-          class="form-select ${error ? 'error' : ''}"
-          required
-        >
-          ${optionsHTML}
-        </select>
-        ${error ? `<span class="form-error">${error}</span>` : ''}
-      </div>
-    `;
-  }
-
-  renderSubcategoryField() {
-    const category = this.formData.category;
-    if (!category || !SUBCATEGORIES[category]) return '';
-
-    const subcategories = SUBCATEGORIES[category].map(sub => ({
-      value: sub,
-      label: sub
-    }));
-
-    return this.renderSelectField('subcategory', 'Subcategory', subcategories, false);
-  }
-
-  renderCurrencyField() {
-    return `
-      <div class="form-group">
-        <label class="form-label" for="currency">Currency</label>
-        <input
-          type="text"
-          id="currency"
-          name="currency"
-          class="form-input"
-          value="USD"
-          disabled
-        />
-      </div>
-    `;
-  }
-
-  renderTextarea(name, label, required) {
-    const value = this.formData[name] || '';
-    const error = this.errors[name];
-
-    return `
-      <div class="form-group full-width">
-        <label class="form-label ${required ? 'required' : ''}" for="${name}">${label}</label>
-        <textarea
-          id="${name}"
-          name="${name}"
-          class="form-textarea ${error ? 'error' : ''}"
-          ${required ? 'required' : ''}
-        >${value}</textarea>
-        ${error ? `<span class="form-error">${error}</span>` : ''}
-      </div>
-    `;
-  }
-
-  renderDynamicRelatedField() {
-    const config = getRelatedIdConfig(this.formData.cost_type);
-    
-    // If no related field needed for this cost type, return empty
-    if (!config) return '';
-    
-    const fieldName = config.field;
-    const value = this.formData[fieldName] || '';
-    const isRequired = isRelatedIdRequired(this.formData.cost_type, this.formData.category);
-    const error = this.errors[fieldName];
-
-    return `
-      <div class="form-section single-column">
-        <div class="form-group related-selector">
-          <label class="form-label ${isRequired ? 'required' : ''}" for="${fieldName}">
-            ${config.label} ${isRequired ? '' : '(Optional)'}
-          </label>
-          <div class="related-input-wrapper">
-            <input
-              type="text"
-              id="related_search"
-              class="form-input related-search-input ${error ? 'error' : ''}"
-              placeholder="Search..."
-              autocomplete="off"
-            />
-            ${value ? `<button type="button" class="clear-related-btn" id="clear-related-btn" title="Clear selection">×</button>` : ''}
-          </div>
-          <input type="hidden" id="${fieldName}" name="${fieldName}" value="${value}" />
-          <div class="related-dropdown" id="related-dropdown"></div>
-          ${value ? `<span class="form-hint">Selected: ${value}</span>` : ''}
-          ${error ? `<span class="form-error">${error}</span>` : ''}
-        </div>
-      </div>
-    `;
-  }
-
-  renderUploadOption() {
-    return `
-      <div class="upload-section">
-        <button type="button" class="upload-btn" id="upload-receipt-btn" disabled>
-          <span class="upload-icon">📷</span>
-          <span>Upload Receipt - Auto Fill</span>
-        </button>
-        <p class="upload-hint">Coming in Phase 2: Upload receipt to auto-populate fields</p>
-      </div>
-    `;
-  }
-
-  renderFormActions(isEditing) {
-    return `
-      <div class="form-actions">
-        <button type="button" class="btn-secondary" id="cancel-btn">
-          <span style="font-weight: bold; margin-right: 8px;">✕</span>
-          Cancel
-        </button>
-        <button type="submit" class="btn-primary" id="submit-btn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
-            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-            <polyline points="17 21 17 13 7 13 7 21"></polyline>
-            <polyline points="7 3 7 8 15 8"></polyline>
-          </svg>
-          ${isEditing ? 'Update Record' : 'Review & Submit'}
-        </button>
-      </div>
-    `;
   }
 
   attachListeners() {
@@ -469,103 +217,45 @@ export class CostFormFields {
 
     if (!searchInput || !dropdown || !hiddenInput) return;
 
-    // Load related data
     const relatedData = await this.loadRelatedData(this.formData.cost_type);
 
-    // Clear button handler
+    // Clear button
     if (clearBtn) {
       clearBtn.addEventListener('click', () => {
         searchInput.value = '';
         hiddenInput.value = '';
         this.formData[config.field] = '';
-        this.render(); // Re-render to remove clear button
+        this.render();
       });
     }
 
+    // Search input
     searchInput.addEventListener('input', (e) => {
       const query = e.target.value.toLowerCase();
-      
       if (!query) {
         dropdown.classList.remove('visible');
         return;
       }
 
-      // Filter based on config search fields
-      const filtered = relatedData.filter(item => {
-        return config.searchFields.some(field => 
-          item[field]?.toLowerCase().includes(query)
-        );
-      });
+      const filtered = relatedData.filter(item => 
+        config.searchFields.some(field => item[field]?.toLowerCase().includes(query))
+      );
 
-      if (filtered.length > 0) {
-        dropdown.innerHTML = filtered.slice(0, 10).map(item => {
-          // Determine display fields based on endpoint
-          let primaryField, secondaryField, idField;
-          
-          if (config.endpoint.includes('/items')) {
-            primaryField = item.short_name;
-            secondaryField = item.id;
-            idField = item.id;
-          } else if (config.endpoint.includes('/maintenance-records')) {
-            primaryField = item.record_id;
-            secondaryField = item.short_description || item.item_id;
-            idField = item.record_id;
-          } else if (config.endpoint.includes('/ideas')) {
-            primaryField = item.idea_name || item.name;
-            secondaryField = item.id;
-            idField = item.id;
-          }
-
-          return `
-            <div class="related-option" data-id="${idField}" data-item-id="${item.item_id || ''}">
-              <div class="related-option-name">${primaryField}</div>
-              <div class="related-option-id">${secondaryField}</div>
-            </div>
-          `;
-        }).join('');
-        dropdown.classList.add('visible');
-      } else {
-        dropdown.innerHTML = '<div class="related-option">No results found</div>';
-        dropdown.classList.add('visible');
-      }
+      dropdown.innerHTML = this.buildDropdownOptions(filtered, config);
+      dropdown.classList.add('visible');
     });
 
+    // Selection
     dropdown.addEventListener('click', (e) => {
       const option = e.target.closest('.related-option');
-      if (option && option.dataset.id) {
-        const selectedId = option.dataset.id;
-        const selectedItem = relatedData.find(item => {
-          if (config.endpoint.includes('/items')) return item.id === selectedId;
-          if (config.endpoint.includes('/maintenance-records')) return item.record_id === selectedId;
-          if (config.endpoint.includes('/ideas')) return item.id === selectedId;
-        });
-        
-        if (selectedItem) {
-          // Set display name
-          let displayName;
-          if (config.endpoint.includes('/items')) {
-            displayName = selectedItem.short_name;
-          } else if (config.endpoint.includes('/maintenance-records')) {
-            displayName = selectedItem.record_id;
-            // Extract item_id from record and store it
-            if (selectedItem.item_id) {
-              this.formData.related_item_id = selectedItem.item_id;
-            }
-          } else if (config.endpoint.includes('/ideas')) {
-            displayName = selectedItem.idea_name || selectedItem.name;
-          }
-
-          searchInput.value = displayName;
-          hiddenInput.value = selectedId;
-          this.formData[config.field] = selectedId;
-        }
-        
+      if (option?.dataset.id) {
+        this.handleRelatedSelection(option.dataset.id, relatedData, config, searchInput, hiddenInput);
         dropdown.classList.remove('visible');
-        this.render(); // Re-render to show clear button
+        this.render();
       }
     });
 
-    // Close dropdown when clicking outside
+    // Close on outside click
     document.addEventListener('click', (e) => {
       if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
         dropdown.classList.remove('visible');
@@ -573,7 +263,62 @@ export class CostFormFields {
     });
   }
 
+  buildDropdownOptions(filtered, config) {
+    if (filtered.length === 0) return '<div class="related-option">No results found</div>';
+
+    return filtered.slice(0, 10).map(item => {
+      const { primaryField, secondaryField, idField } = this.getDisplayFields(item, config);
+      return `
+        <div class="related-option" data-id="${idField}" data-item-id="${item.item_id || ''}">
+          <div class="related-option-name">${primaryField}</div>
+          <div class="related-option-id">${secondaryField}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  getDisplayFields(item, config) {
+    if (config.endpoint.includes('/items')) {
+      return { primaryField: item.short_name, secondaryField: item.id, idField: item.id };
+    } else if (config.endpoint.includes('/maintenance-records')) {
+      return { primaryField: item.record_id, secondaryField: item.short_description || item.item_id, idField: item.record_id };
+    } else if (config.endpoint.includes('/ideas')) {
+      return { primaryField: item.idea_name || item.name, secondaryField: item.id, idField: item.id };
+    }
+  }
+
+  handleRelatedSelection(selectedId, relatedData, config, searchInput, hiddenInput) {
+    const selectedItem = relatedData.find(item => {
+      if (config.endpoint.includes('/items')) return item.id === selectedId;
+      if (config.endpoint.includes('/maintenance-records')) return item.record_id === selectedId;
+      if (config.endpoint.includes('/ideas')) return item.id === selectedId;
+    });
+    
+    if (selectedItem) {
+      const { primaryField } = this.getDisplayFields(selectedItem, config);
+      searchInput.value = primaryField;
+      hiddenInput.value = selectedId;
+      this.formData[config.field] = selectedId;
+
+      // Extract item_id from maintenance record
+      if (config.endpoint.includes('/maintenance-records') && selectedItem.item_id) {
+        this.formData.related_item_id = selectedItem.item_id;
+      }
+    }
+  }
+
   handleSubmit() {
+    // Collect current form values
+    const form = this.container.querySelector('#cost-form');
+    if (form) {
+      const formData = new FormData(form);
+      for (let [key, value] of formData.entries()) {
+        if (value) {
+          this.formData[key] = value;
+        }
+      }
+    }
+    
     // Validate form
     const validation = validateCostRecord(this.formData);
     
