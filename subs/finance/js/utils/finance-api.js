@@ -23,6 +23,12 @@ export async function loadConfig() {
   }
 }
 
+// Get API endpoint (ensures config is loaded)
+export async function getApiEndpoint() {
+  await ensureConfigLoaded();
+  return API_ENDPOINT;
+}
+
 // Helper to ensure config is loaded before API calls
 async function ensureConfigLoaded() {
   if (!configLoaded) {

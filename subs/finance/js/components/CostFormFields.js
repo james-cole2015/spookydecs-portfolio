@@ -11,7 +11,7 @@ import {
   getRelatedIdConfig,
   isRelatedIdRequired
 } from '../utils/finance-config.js';
-import { getItems, API_BASE_URL } from '../utils/finance-api.js';
+import { getItems, getApiEndpoint } from '../utils/finance-api.js';
 
 export class CostFormFields {
   constructor(containerId, initialData = null) {
@@ -43,8 +43,9 @@ export class CostFormFields {
     if (!config) return [];
 
     try {
+      const apiEndpoint = await getApiEndpoint();
       const endpoint = config.endpoint;
-      const response = await fetch(`${API_BASE_URL}${endpoint}`);
+      const response = await fetch(`${apiEndpoint}${endpoint}`);
       
       if (!response.ok) {
         throw new Error(`Failed to fetch from ${endpoint}`);
