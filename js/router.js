@@ -129,7 +129,6 @@ function getPageHTML(pageName) {
             <div id="tab-container"></div>
               <div id="filter-container"></div>
               <div class="item-count-container">
-                <span id="item-count">0 items</span>
               </div>
             </div>
             <div id="table-container"></div>
