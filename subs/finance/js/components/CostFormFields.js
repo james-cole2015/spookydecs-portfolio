@@ -78,7 +78,7 @@ export class CostFormFields {
       <div class="form-section">
         ${this.renderField('total_cost', 'Total Cost', 'number', true, isGift)}
         ${this.renderField('tax', 'Tax', 'number', false, isGift)}
-        ${this.renderField('value', 'Value', 'number', false, true)}
+        ${this.renderField('value', 'Value', 'number', false, false)}
         ${this.renderCurrencyField()}
       </div>
 
