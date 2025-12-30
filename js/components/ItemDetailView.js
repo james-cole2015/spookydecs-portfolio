@@ -675,17 +675,21 @@ export class ItemDetailView {
     let statusPill = '';
     
     if (needsRepair) {
-      // Note: criticality values are lowercase: 'high', 'medium', 'low'
-      if (criticality === 'high') {
+      // Note: criticality values are lowercase: 'critical', 'high', 'medium', 'low'
+      if (criticality === 'critical') {
+        // ONLY critical → Non-Operational (red)
         statusClass = 'non-operational';
         statusIcon = '⚠️';
         statusLabel = 'Non-Operational';
-        statusPill = `<span class="pill pill-criticality-high">High Priority</span>`;
+        statusPill = `<span class="pill pill-criticality-critical">Critical Priority</span>`;
       } else {
+        // high, medium, low → Needs Repair (yellow)
         statusClass = 'needs-repair';
         statusIcon = '⚠️';
         statusLabel = 'Needs Repair';
-        if (criticality === 'medium') {
+        if (criticality === 'high') {
+          statusPill = `<span class="pill pill-criticality-high">High Priority</span>`;
+        } else if (criticality === 'medium') {
           statusPill = `<span class="pill pill-criticality-medium">Medium Priority</span>`;
         } else if (criticality === 'low') {
           statusPill = `<span class="pill pill-criticality-low">Low Priority</span>`;

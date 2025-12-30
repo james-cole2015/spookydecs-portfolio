@@ -49,7 +49,14 @@
   color: #1f2937;
 }
 
-/* Criticality Pills (matching maintenance API: high, medium, low) */
+/* Criticality Pills (matching maintenance API: critical, high, medium, low) */
+.pill-criticality-critical {
+  background-color: #fee2e2;
+  color: #7f1d1d;
+  border: 1px solid #dc2626;
+  font-weight: 600;
+}
+
 .pill-criticality-high {
   background-color: #fecaca;
   color: #991b1b;
