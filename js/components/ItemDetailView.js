@@ -622,7 +622,7 @@ export class ItemDetailView {
     return section;
   }
   
-  renderMaintenanceSection() {
+  async renderMaintenanceSection() {
     const section = document.createElement('div');
     section.className = 'section-panel active';
     section.dataset.section = 'maintenance';
@@ -631,51 +631,103 @@ export class ItemDetailView {
     console.log('Item data:', this.item);
     console.log('Repair status:', this.item.repair_status);
     
+    // Get maintenance URL for the link
+    let maintenanceUrl;
+    try {
+      const { getMaintenanceUrl } = await import('../api/items.js');
+      maintenanceUrl = await getMaintenanceUrl();
+    } catch (error) {
+      console.error('Failed to load maintenance URL:', error);
+      section.innerHTML = `
+        <div class="error-section">
+          <div class="error-icon">⚠️</div>
+          <div class="error-message">Unable to load maintenance configuration.</div>
+        </div>
+      `;
+      return section;
+    }
+    
+    // Fetch maintenance records
+    let maintenanceRecords = [];
+    let recordsError = false;
+    
+    try {
+      const { getMaintenanceRecords } = await import('../api/maintenance.js');
+      maintenanceRecords = await getMaintenanceRecords(this.item.id, 5);
+      console.log('Fetched maintenance records:', maintenanceRecords);
+    } catch (error) {
+      console.error('Error fetching maintenance records:', error);
+      recordsError = true;
+    }
+    
+    // Determine repair status display
     const repairStatus = this.item.repair_status || {};
     const needsRepair = repairStatus.needs_repair || false;
     const criticality = repairStatus.criticality || null;
     
-    console.log('Needs repair:', needsRepair);
-    console.log('Criticality:', criticality);
+    let statusClass = 'operational';
+    let statusIcon = '✓';
+    let statusLabel = 'Operational';
+    let statusPill = '';
     
+    if (needsRepair) {
+      if (criticality === 'Critical') {
+        statusClass = 'non-operational';
+        statusIcon = '⚠️';
+        statusLabel = 'Non-Operational';
+        statusPill = `<span class="pill pill-criticality-critical">Critical Priority</span>`;
+      } else {
+        statusClass = 'needs-repair';
+        statusIcon = '⚠️';
+        statusLabel = 'Needs Repair';
+        statusPill = criticality ? `<span class="pill pill-criticality-${criticality.toLowerCase()}">${criticality} Priority</span>` : '';
+      }
+    }
+    
+    console.log('Status display:', { statusClass, statusLabel, criticality });
+    
+    // Build the HTML
     section.innerHTML = `
       <div class="field-group">
         <h4 class="subsection-title">Current Repair Status</h4>
-        ${needsRepair ? `
-          <div class="repair-status-card needs-repair">
-            <div class="repair-status-icon">⚠️</div>
-            <div class="repair-status-info">
-              <div class="repair-status-label">Repair Needed</div>
-              ${criticality ? `
-                <span class="pill pill-criticality-${criticality.toLowerCase()}">${criticality} Priority</span>
-              ` : ''}
-            </div>
-            <!-- Repair dashboard link commented out - waiting for repairs subdomain architecture
-            <a href="/repairs/${this.item.id}" class="btn-primary btn-small">
-              View in Repair Dashboard
-            </a>
-            -->
+        <div class="repair-status-card ${statusClass}">
+          <div class="repair-status-icon">${statusIcon}</div>
+          <div class="repair-status-info">
+            <div class="repair-status-label">${statusLabel}</div>
+            ${statusPill}
           </div>
+        </div>
+      </div>
+      
+      <div class="field-group">
+        <h4 class="subsection-title">Repair History</h4>
+        ${recordsError ? `
+          <div class="api-error-message">
+            <span class="error-icon">⚠️</span>
+            API Unavailable. Please refer to SpookyDecs Admin.
+          </div>
+        ` : maintenanceRecords.length === 0 ? `
+          <div class="placeholder-message">No Records Available</div>
         ` : `
-          <div class="repair-status-card operational">
-            <div class="repair-status-icon">✓</div>
-            <div class="repair-status-info">
-              <div class="repair-status-label">Operational</div>
-            </div>
+          <div class="maintenance-records-list">
+            ${maintenanceRecords.map(record => `
+              <div class="maintenance-record-item">
+                <span class="record-icon">🔧</span>
+                <div class="record-info">
+                  <div class="record-id">${record.record_id}</div>
+                  <div class="record-title">${record.title || 'Untitled'}</div>
+                </div>
+              </div>
+            `).join('')}
           </div>
         `}
       </div>
       
       <div class="field-group">
-        <h4 class="subsection-title">Repair History</h4>
-        <div class="placeholder-message">Repair history to be developed</div>
-      </div>
-      
-      <div class="field-group">
         <h4 class="subsection-title">Maintenance Records</h4>
-        <button class="btn-secondary" onclick="itemDetailPage.showMaintenancePlaceholder()">
-          View Maintenance Records
-        </button>
+        <a href="${maintenanceUrl}/${this.item.id}" class="btn-secondary" target="_blank" rel="noopener noreferrer">
+          View All Maintenance Records
+        </a>
       </div>
     `;
     
