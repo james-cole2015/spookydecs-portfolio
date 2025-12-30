@@ -1,4 +1,4 @@
-// Record detail view component
+// Record detail view component ---> i dont think this is actually used!!!!!
 
 import { fetchRecord, deleteRecord, getItemUrl, getCostsUrl, fetchMultiplePhotos } from '../api.js';
 import { appState } from '../state.js';
