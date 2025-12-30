@@ -422,33 +422,44 @@ export class CostFormFields {
     });
   }
 
-  handleSubmit() {
-    // Validate form
-    const validation = validateCostRecord(this.formData);
-    
-    if (!validation.isValid) {
-      this.errors = validation.errors;
-      this.render();
-      return;
-    }
-
-    // Clear errors
-    this.errors = {};
-
-    // Trigger submit callback
-    if (this.onSubmit) {
-      this.onSubmit(this.formData);
+handleSubmit() {
+  // Collect current form values
+  const form = this.container.querySelector('#cost-form');
+  if (form) {
+    const formData = new FormData(form);
+    for (let [key, value] of formData.entries()) {
+      if (value) {
+        this.formData[key] = value;
+      }
     }
   }
-
-  reset() {
-    this.formData = { ...FORM_DEFAULTS };
-    this.errors = {};
+  
+  // Validate form
+  const validation = validateCostRecord(this.formData);
+  
+  if (!validation.isValid) {
+    this.errors = validation.errors;
     this.render();
+    return;
   }
 
-  setData(data) {
-    this.formData = { ...data };
-    this.render();
+  // Clear errors
+  this.errors = {};
+
+  // Trigger submit callback
+  if (this.onSubmit) {
+    this.onSubmit(this.formData);
   }
+}
+
+reset() {
+  this.formData = { ...FORM_DEFAULTS };
+  this.errors = {};
+  this.render();
+}
+
+setData(data) {
+  this.formData = { ...data };
+  this.render();
+}
 }
