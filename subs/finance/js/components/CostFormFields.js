@@ -7,9 +7,11 @@ import {
   FORM_DEFAULTS,
   validateCostRecord,
   calculateTotalCost,
-  calculateValue
+  calculateValue,
+  getRelatedIdConfig,
+  isRelatedIdRequired
 } from '../utils/finance-config.js';
-import { getItems } from '../utils/finance-api.js';
+import { getItems, API_BASE_URL } from '../utils/finance-api.js';
 
 export class CostFormFields {
   constructor(containerId, initialData = null) {
@@ -17,6 +19,8 @@ export class CostFormFields {
     this.formData = initialData || { ...FORM_DEFAULTS };
     this.errors = {};
     this.items = [];
+    this.records = [];
+    this.ideas = [];
     this.onSubmit = null;
     this.onCancel = null;
     
@@ -31,6 +35,36 @@ export class CostFormFields {
     } catch (error) {
       console.error('Failed to load items:', error);
       this.items = [];
+    }
+  }
+
+  async loadRelatedData(costType) {
+    const config = getRelatedIdConfig(costType);
+    if (!config) return [];
+
+    try {
+      const endpoint = config.endpoint;
+      const response = await fetch(`${API_BASE_URL}${endpoint}`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch from ${endpoint}`);
+      }
+
+      const data = await response.json();
+      
+      // Handle different response structures
+      if (endpoint.includes('/items')) {
+        return data.items || data || [];
+      } else if (endpoint.includes('/maintenance-records')) {
+        return data.records || data || [];
+      } else if (endpoint.includes('/ideas')) {
+        return data.ideas || data || [];
+      }
+      
+      return data || [];
+    } catch (error) {
+      console.error(`Failed to load related data from ${config.endpoint}:`, error);
+      return [];
     }
   }
 
@@ -70,7 +104,7 @@ export class CostFormFields {
 
       <div class="form-section">
         ${this.renderField('vendor', 'Vendor', 'text', true)}
-        ${this.renderField('purchase_date', 'Purchase Date', 'date', false)}
+        ${this.renderField('purchase_date', 'Purchase Date', 'date', false, isGift)}
         ${this.renderField('quantity', 'Quantity', 'number', false)}
         ${this.renderField('unit_cost', 'Unit Cost', 'number', false)}
       </div>
@@ -82,7 +116,7 @@ export class CostFormFields {
         ${this.renderCurrencyField()}
       </div>
 
-      ${this.renderRelatedItemField()}
+      ${this.renderDynamicRelatedField()}
 
       <div class="form-section single-column">
         ${this.renderTextarea('description', 'Description', false)}
@@ -209,23 +243,37 @@ export class CostFormFields {
     `;
   }
 
-  renderRelatedItemField() {
-    const value = this.formData.related_item_id || '';
+  renderDynamicRelatedField() {
+    const config = getRelatedIdConfig(this.formData.cost_type);
+    
+    // If no related field needed for this cost type, return empty
+    if (!config) return '';
+    
+    const fieldName = config.field;
+    const value = this.formData[fieldName] || '';
+    const isRequired = isRelatedIdRequired(this.formData.cost_type, this.formData.category);
+    const error = this.errors[fieldName];
 
     return `
       <div class="form-section single-column">
-        <div class="form-group item-selector">
-          <label class="form-label" for="related_item_id">Related Item (Optional)</label>
-          <input
-            type="text"
-            id="related_item_search"
-            class="form-input item-search-input"
-            placeholder="Search for an item..."
-            autocomplete="off"
-          />
-          <input type="hidden" id="related_item_id" name="related_item_id" value="${value}" />
-          <div class="item-dropdown" id="item-dropdown"></div>
+        <div class="form-group related-selector">
+          <label class="form-label ${isRequired ? 'required' : ''}" for="${fieldName}">
+            ${config.label} ${isRequired ? '' : '(Optional)'}
+          </label>
+          <div class="related-input-wrapper">
+            <input
+              type="text"
+              id="related_search"
+              class="form-input related-search-input ${error ? 'error' : ''}"
+              placeholder="Search..."
+              autocomplete="off"
+            />
+            ${value ? `<button type="button" class="clear-related-btn" id="clear-related-btn" title="Clear selection">×</button>` : ''}
+          </div>
+          <input type="hidden" id="${fieldName}" name="${fieldName}" value="${value}" />
+          <div class="related-dropdown" id="related-dropdown"></div>
           ${value ? `<span class="form-hint">Selected: ${value}</span>` : ''}
+          ${error ? `<span class="form-error">${error}</span>` : ''}
         </div>
       </div>
     `;
@@ -339,8 +387,8 @@ export class CostFormFields {
       });
     }
 
-    // Item search
-    this.attachItemSearch();
+    // Related field search
+    this.attachRelatedSearch();
 
     // Track all form changes
     form.addEventListener('input', (e) => {
@@ -364,12 +412,29 @@ export class CostFormFields {
     this.formData.value = value;
   }
 
-  attachItemSearch() {
-    const searchInput = this.container.querySelector('#related_item_search');
-    const dropdown = this.container.querySelector('#item-dropdown');
-    const hiddenInput = this.container.querySelector('#related_item_id');
+  async attachRelatedSearch() {
+    const config = getRelatedIdConfig(this.formData.cost_type);
+    if (!config) return;
 
-    if (!searchInput || !dropdown) return;
+    const searchInput = this.container.querySelector('#related_search');
+    const dropdown = this.container.querySelector('#related-dropdown');
+    const hiddenInput = this.container.querySelector(`#${config.field}`);
+    const clearBtn = this.container.querySelector('#clear-related-btn');
+
+    if (!searchInput || !dropdown || !hiddenInput) return;
+
+    // Load related data
+    const relatedData = await this.loadRelatedData(this.formData.cost_type);
+
+    // Clear button handler
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        hiddenInput.value = '';
+        this.formData[config.field] = '';
+        this.render(); // Re-render to remove clear button
+      });
+    }
 
     searchInput.addEventListener('input', (e) => {
       const query = e.target.value.toLowerCase();
@@ -379,38 +444,78 @@ export class CostFormFields {
         return;
       }
 
-      const filtered = this.items.filter(item => 
-        item.short_name?.toLowerCase().includes(query) ||
-        item.id?.toLowerCase().includes(query)
-      );
+      // Filter based on config search fields
+      const filtered = relatedData.filter(item => {
+        return config.searchFields.some(field => 
+          item[field]?.toLowerCase().includes(query)
+        );
+      });
 
       if (filtered.length > 0) {
-        dropdown.innerHTML = filtered.slice(0, 10).map(item => `
-          <div class="item-option" data-item-id="${item.id}">
-            <div class="item-option-name">${item.short_name}</div>
-            <div class="item-option-id">${item.id}</div>
-          </div>
-        `).join('');
+        dropdown.innerHTML = filtered.slice(0, 10).map(item => {
+          // Determine display fields based on endpoint
+          let primaryField, secondaryField, idField;
+          
+          if (config.endpoint.includes('/items')) {
+            primaryField = item.short_name;
+            secondaryField = item.id;
+            idField = item.id;
+          } else if (config.endpoint.includes('/maintenance-records')) {
+            primaryField = item.record_id;
+            secondaryField = item.short_description || item.item_id;
+            idField = item.record_id;
+          } else if (config.endpoint.includes('/ideas')) {
+            primaryField = item.idea_name || item.name;
+            secondaryField = item.id;
+            idField = item.id;
+          }
+
+          return `
+            <div class="related-option" data-id="${idField}" data-item-id="${item.item_id || ''}">
+              <div class="related-option-name">${primaryField}</div>
+              <div class="related-option-id">${secondaryField}</div>
+            </div>
+          `;
+        }).join('');
         dropdown.classList.add('visible');
       } else {
-        dropdown.innerHTML = '<div class="item-option">No items found</div>';
+        dropdown.innerHTML = '<div class="related-option">No results found</div>';
         dropdown.classList.add('visible');
       }
     });
 
     dropdown.addEventListener('click', (e) => {
-      const option = e.target.closest('.item-option');
-      if (option && option.dataset.itemId) {
-        const itemId = option.dataset.itemId;
-        const item = this.items.find(i => i.id === itemId);
+      const option = e.target.closest('.related-option');
+      if (option && option.dataset.id) {
+        const selectedId = option.dataset.id;
+        const selectedItem = relatedData.find(item => {
+          if (config.endpoint.includes('/items')) return item.id === selectedId;
+          if (config.endpoint.includes('/maintenance-records')) return item.record_id === selectedId;
+          if (config.endpoint.includes('/ideas')) return item.id === selectedId;
+        });
         
-        if (item) {
-          searchInput.value = item.short_name;
-          hiddenInput.value = itemId;
-          this.formData.related_item_id = itemId;
+        if (selectedItem) {
+          // Set display name
+          let displayName;
+          if (config.endpoint.includes('/items')) {
+            displayName = selectedItem.short_name;
+          } else if (config.endpoint.includes('/maintenance-records')) {
+            displayName = selectedItem.record_id;
+            // Extract item_id from record and store it
+            if (selectedItem.item_id) {
+              this.formData.related_item_id = selectedItem.item_id;
+            }
+          } else if (config.endpoint.includes('/ideas')) {
+            displayName = selectedItem.idea_name || selectedItem.name;
+          }
+
+          searchInput.value = displayName;
+          hiddenInput.value = selectedId;
+          this.formData[config.field] = selectedId;
         }
         
         dropdown.classList.remove('visible');
+        this.render(); // Re-render to show clear button
       }
     });
 
@@ -422,44 +527,33 @@ export class CostFormFields {
     });
   }
 
-handleSubmit() {
-  // Collect current form values
-  const form = this.container.querySelector('#cost-form');
-  if (form) {
-    const formData = new FormData(form);
-    for (let [key, value] of formData.entries()) {
-      if (value) {
-        this.formData[key] = value;
-      }
+  handleSubmit() {
+    // Validate form
+    const validation = validateCostRecord(this.formData);
+    
+    if (!validation.isValid) {
+      this.errors = validation.errors;
+      this.render();
+      return;
+    }
+
+    // Clear errors
+    this.errors = {};
+
+    // Trigger submit callback
+    if (this.onSubmit) {
+      this.onSubmit(this.formData);
     }
   }
-  
-  // Validate form
-  const validation = validateCostRecord(this.formData);
-  
-  if (!validation.isValid) {
-    this.errors = validation.errors;
+
+  reset() {
+    this.formData = { ...FORM_DEFAULTS };
+    this.errors = {};
     this.render();
-    return;
   }
 
-  // Clear errors
-  this.errors = {};
-
-  // Trigger submit callback
-  if (this.onSubmit) {
-    this.onSubmit(this.formData);
+  setData(data) {
+    this.formData = { ...data };
+    this.render();
   }
-}
-
-reset() {
-  this.formData = { ...FORM_DEFAULTS };
-  this.errors = {};
-  this.render();
-}
-
-setData(data) {
-  this.formData = { ...data };
-  this.render();
-}
 }

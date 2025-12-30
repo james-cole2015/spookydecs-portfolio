@@ -84,6 +84,69 @@ export const FORM_DEFAULTS = {
   value: 0
 };
 
+// Related ID configuration by cost type
+export const RELATED_ID_CONFIG = {
+  acquisition: { 
+    field: 'related_item_id', 
+    label: 'Related Item', 
+    required: true, 
+    endpoint: '/items',
+    searchFields: ['short_name', 'id']
+  },
+  repair: { 
+    field: 'related_record_id', 
+    label: 'Related Record', 
+    required: false, 
+    endpoint: '/admin/maintenance-records',
+    searchFields: ['record_id', 'short_description']
+  },
+  maintenance: { 
+    field: 'related_record_id', 
+    label: 'Related Record', 
+    required: false, 
+    endpoint: '/admin/maintenance-records',
+    searchFields: ['record_id', 'short_description']
+  },
+  build: { 
+    field: 'related_idea_id', 
+    label: 'Related Idea', 
+    required: false, 
+    endpoint: '/ideas',
+    searchFields: ['idea_name', 'id']
+  },
+  supply_purchase: null, // No related field
+  gift: { 
+    field: 'related_item_id', 
+    label: 'Related Item', 
+    required: (category) => ['decoration', 'light', 'accessory'].includes(category),
+    endpoint: '/items',
+    searchFields: ['short_name', 'id']
+  },
+  other: { 
+    field: 'related_item_id', 
+    label: 'Related Item', 
+    required: false, 
+    endpoint: '/items',
+    searchFields: ['short_name', 'id']
+  }
+};
+
+// Get related ID config for a cost type
+export function getRelatedIdConfig(costType) {
+  return RELATED_ID_CONFIG[costType];
+}
+
+// Check if related ID is required for given cost type and category
+export function isRelatedIdRequired(costType, category) {
+  const config = RELATED_ID_CONFIG[costType];
+  if (!config) return false;
+  
+  if (typeof config.required === 'function') {
+    return config.required(category);
+  }
+  return config.required;
+}
+
 // Validation Functions
 export function validateCostRecord(record) {
   const errors = {};
@@ -93,6 +156,17 @@ export function validateCostRecord(record) {
       errors[field] = 'This field is required';
     }
   });
+
+  // Validate related ID based on cost type and category
+  const relatedIdConfig = getRelatedIdConfig(record.cost_type);
+  if (relatedIdConfig) {
+    const isRequired = isRelatedIdRequired(record.cost_type, record.category);
+    const relatedIdField = relatedIdConfig.field;
+    
+    if (isRequired && (!record[relatedIdField] || record[relatedIdField].trim() === '')) {
+      errors[relatedIdField] = `${relatedIdConfig.label} is required`;
+    }
+  }
 
   // For non-gift cost types, total cost must be > 0
   if (record.cost_type !== 'gift') {
