@@ -2,8 +2,8 @@
 
 import { CostFormFields } from '../components/CostFormFields.js';
 import { CostReviewModal } from '../components/CostReviewModal.js';
-import { createCostRecord } from '../utils/finance-api.js';
-import { showToast } from '../shared/toast.js';
+import { createCost } from '../utils/finance-api.js';
+import { toast } from '../shared/toast.js';
 
 export class NewCostRecordPage {
   constructor() {
@@ -112,13 +112,18 @@ export class NewCostRecordPage {
     // Validate
     const validation = this.formFields.validate();
     if (!validation.valid) {
-      showToast('error', 'Validation Error', validation.errors.join(', '));
+      toast.error(`Validation Error: ${validation.errors.join(', ')}`);
       return;
     }
     
     // Show review modal
-    this.reviewModal = new CostReviewModal(formData);
-    const confirmed = await this.reviewModal.show();
+    this.reviewModal = new CostReviewModal();
+    const confirmed = await new Promise((resolve) => {
+      this.reviewModal.show(formData, {
+        onConfirm: () => resolve(true),
+        onCancel: () => resolve(false)
+      });
+    });
     
     if (!confirmed) {
       console.log('User cancelled review');
@@ -127,11 +132,11 @@ export class NewCostRecordPage {
     
     // Save to API
     try {
-      showToast('info', 'Saving...', 'Creating cost record');
+      toast.info('Saving cost record...');
       
-      const result = await createCostRecord(formData);
+      const result = await createCost(formData);
       
-      showToast('success', 'Success', 'Cost record created successfully');
+      toast.success('Cost record created successfully');
       
       // Redirect to finance page after short delay
       setTimeout(() => {
@@ -140,7 +145,7 @@ export class NewCostRecordPage {
       
     } catch (error) {
       console.error('Failed to save cost record:', error);
-      showToast('error', 'Error', 'Failed to save cost record: ' + error.message);
+      toast.error(`Failed to save cost record: ${error.message}`);
     }
   }
 }
