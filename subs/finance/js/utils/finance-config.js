@@ -74,8 +74,8 @@ export const REQUIRED_FIELDS = [
 ];
 
 export const FORM_DEFAULTS = {
-  cost_type: 'acquisition',
-  category: 'decoration',
+  cost_type: '',
+  category: '',
   currency: 'USD',
   quantity: 1,
   unit_cost: 0,
@@ -89,9 +89,10 @@ export const RELATED_ID_CONFIG = {
   acquisition: { 
     field: 'related_item_id', 
     label: 'Related Item', 
-    required: true, 
+    required: (category) => ['decoration', 'light', 'accessory'].includes(category),
     endpoint: '/items',
-    searchFields: ['short_name', 'id']
+    searchFields: ['short_name', 'id'],
+    classFilter: ['Decoration', 'Light', 'Accessory']
   },
   repair: { 
     field: 'related_record_id', 
@@ -120,14 +121,16 @@ export const RELATED_ID_CONFIG = {
     label: 'Related Item', 
     required: (category) => ['decoration', 'light', 'accessory'].includes(category),
     endpoint: '/items',
-    searchFields: ['short_name', 'id']
+    searchFields: ['short_name', 'id'],
+    classFilter: ['Decoration', 'Light', 'Accessory']
   },
   other: { 
     field: 'related_item_id', 
     label: 'Related Item', 
     required: false, 
     endpoint: '/items',
-    searchFields: ['short_name', 'id']
+    searchFields: ['short_name', 'id'],
+    classFilter: ['Decoration', 'Light', 'Accessory']
   }
 };
 

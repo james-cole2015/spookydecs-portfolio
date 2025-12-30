@@ -54,8 +54,18 @@ export class CostFormFields {
       const data = await response.json();
       
       // Handle different response structures
+      let items = [];
       if (endpoint.includes('/items')) {
-        return data.items || data || [];
+        items = data.items || data || [];
+        
+        // Filter by class if classFilter is specified
+        if (config.classFilter && config.classFilter.length > 0) {
+          items = items.filter(item => 
+            config.classFilter.includes(item.class)
+          );
+        }
+        
+        return items;
       } else if (endpoint.includes('/maintenance-records')) {
         return data.records || data || [];
       } else if (endpoint.includes('/ideas')) {
@@ -152,7 +162,14 @@ export class CostFormFields {
     const value = this.formData[name] || '';
     const error = this.errors[name];
 
-    let optionsHTML = options.map(opt => 
+    let optionsHTML = '';
+    
+    // Add placeholder option for cost_type and category
+    if (name === 'cost_type') {
+      optionsHTML += '<option value="">Select Type</option>';
+    }
+    
+    optionsHTML += options.map(opt => 
       `<option value="${opt.value}" ${value === opt.value ? 'selected' : ''}>${opt.label}</option>`
     ).join('');
 
@@ -173,12 +190,32 @@ export class CostFormFields {
   }
 
   renderCategoryField() {
-    const costType = this.formData.cost_type || 'acquisition';
+    const costType = this.formData.cost_type || '';
+    
+    // If no cost type selected, show disabled dropdown
+    if (!costType) {
+      return `
+        <div class="form-group">
+          <label class="form-label required" for="category">Category</label>
+          <select
+            id="category"
+            name="category"
+            class="form-select"
+            required
+            disabled
+          >
+            <option value="">Select a Cost Type first</option>
+          </select>
+        </div>
+      `;
+    }
+    
     const categories = getCategoriesForCostType(costType);
-    const value = this.formData.category || categories[0].value;
+    const value = this.formData.category || '';
     const error = this.errors.category;
 
-    let optionsHTML = categories.map(opt => 
+    let optionsHTML = '<option value="">Select Category</option>';
+    optionsHTML += categories.map(opt => 
       `<option value="${opt.value}" ${value === opt.value ? 'selected' : ''}>${opt.label}</option>`
     ).join('');
 
@@ -327,9 +364,8 @@ export class CostFormFields {
       costTypeSelect.addEventListener('change', (e) => {
         this.formData.cost_type = e.target.value;
         
-        // Reset category to first available option
-        const categories = getCategoriesForCostType(e.target.value);
-        this.formData.category = categories[0].value;
+        // Reset category when cost type changes
+        this.formData.category = '';
         
         // Handle gift logic
         if (e.target.value === 'gift') {
