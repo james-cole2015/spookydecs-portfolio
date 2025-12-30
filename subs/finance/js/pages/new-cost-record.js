@@ -51,9 +51,6 @@ export class NewCostRecordPage {
             <button class="btn-secondary" id="btn-cancel">
               Cancel
             </button>
-            <button class="btn-primary" id="btn-save">
-              Save Cost Record
-            </button>
           </div>
         </div>
         
@@ -71,6 +68,12 @@ export class NewCostRecordPage {
       itemId: itemId,
       recordId: recordId
     });
+    
+    // Set up form submit callback
+    this.formFields.onSubmit = (formData) => {
+      this.handleFormSubmit(formData);
+    };
+    
     this.formFields.render();
   }
   
@@ -84,68 +87,36 @@ export class NewCostRecordPage {
         }
       });
     }
-    
-    // Save button
-    const saveBtn = document.getElementById('btn-save');
-    if (saveBtn) {
-      saveBtn.addEventListener('click', () => {
-        this.handleSave();
-      });
-    }
-    
-    // Form submission
-    const form = document.getElementById('cost-record-form');
-    if (form) {
-      form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        this.handleSave();
-      });
-    }
   }
   
-  async handleSave() {
-    console.log('Handling save...');
-    
-    // Get form data
-    const formData = this.formFields.getFormData();
-    
-    // Validate
-    const validation = this.formFields.validate();
-    if (!validation.valid) {
-      toast.error(`Validation Error: ${validation.errors.join(', ')}`);
-      return;
-    }
+  async handleFormSubmit(formData) {
+    console.log('Handling form submission...', formData);
     
     // Show review modal
     this.reviewModal = new CostReviewModal();
-    const confirmed = await new Promise((resolve) => {
-      this.reviewModal.show(formData, {
-        onConfirm: () => resolve(true),
-        onCancel: () => resolve(false)
-      });
+    
+    this.reviewModal.show(formData, {
+      onConfirm: async () => {
+        try {
+          toast.info('Saving cost record...');
+          
+          const result = await createCost(formData);
+          
+          toast.success('Cost record created successfully');
+          
+          // Redirect to finance page after short delay
+          setTimeout(() => {
+            window.location.href = '/finance';
+          }, 1500);
+          
+        } catch (error) {
+          console.error('Failed to save cost record:', error);
+          toast.error(`Failed to save cost record: ${error.message}`);
+        }
+      },
+      onCancel: () => {
+        console.log('User cancelled review');
+      }
     });
-    
-    if (!confirmed) {
-      console.log('User cancelled review');
-      return;
-    }
-    
-    // Save to API
-    try {
-      toast.info('Saving cost record...');
-      
-      const result = await createCost(formData);
-      
-      toast.success('Cost record created successfully');
-      
-      // Redirect to finance page after short delay
-      setTimeout(() => {
-        window.location.href = '/finance';
-      }, 1500);
-      
-    } catch (error) {
-      console.error('Failed to save cost record:', error);
-      toast.error(`Failed to save cost record: ${error.message}`);
-    }
   }
 }
