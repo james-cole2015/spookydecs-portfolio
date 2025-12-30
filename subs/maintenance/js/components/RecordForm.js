@@ -175,14 +175,14 @@ export class RecordFormView {
         <h3>Scheduling</h3>
         <div class="form-row">
           <div class="form-group">
+            <label for="scheduled_date">Scheduled/Target Date</label>
+            <input type="date" id="scheduled_date" name="scheduled_date" class="form-input" 
+                   value="${record.scheduled_date ? record.scheduled_date.split('T')[0] : ''}">
+          </div>
+          <div class="form-group">
             <label for="date_performed">Date Performed <span class="required" id="date-performed-required" style="display: none;">*</span></label>
             <input type="date" id="date_performed" name="date_performed" class="form-input" 
                    value="${record.date_performed ? record.date_performed.split('T')[0] : ''}">
-          </div>
-          <div class="form-group">
-            <label for="estimated_completion_date">Est. Completion Date</label>
-            <input type="date" id="estimated_completion_date" name="estimated_completion_date" class="form-input" 
-                   value="${record.estimated_completion_date ? record.estimated_completion_date.split('T')[0] : ''}">
           </div>
         </div>
         <div class="form-group">
@@ -359,22 +359,37 @@ export class RecordFormView {
         }
       }
       
+      // Build base data object
       const data = {
         item_id: formData.get('item_id'),
         record_type: formData.get('record_type'),
         status: formData.get('status'),
         title: formData.get('title'),
         description: formData.get('description') || '',
-        date_performed: formData.get('date_performed') ? new Date(formData.get('date_performed')).toISOString() : null,
         performed_by: formData.get('performed_by'),
-        criticality: formData.get('criticality') || null,
-        estimated_completion_date: formData.get('estimated_completion_date') ? new Date(formData.get('estimated_completion_date')).toISOString() : null,
         materials_used: this.materials.filter(m => m.item),
         cost_record_ids: this.record?.cost_record_ids || [],
         total_cost: this.record?.total_cost || 0,
         attachments: attachments
       };
       
+      // Only add optional fields if they have values (to avoid DynamoDB null issues)
+      const scheduledDate = formData.get('scheduled_date');
+      if (scheduledDate) {
+        data.scheduled_date = new Date(scheduledDate).toISOString();
+      }
+      
+      const datePerformed = formData.get('date_performed');
+      if (datePerformed) {
+        data.date_performed = new Date(datePerformed).toISOString();
+      }
+      
+      const criticality = formData.get('criticality');
+      if (criticality) {
+        data.criticality = criticality;
+      }
+      
+      // Validate required fields
       if (!data.item_id || !data.record_type || !data.status || !data.title || !data.performed_by) {
         throw new Error('Please fill in all required fields');
       }
