@@ -72,9 +72,6 @@ function renderPage() {
   const filteredItems = getFilteredItems(allItems, currentState);
   itemsTable.render(filteredItems, currentState.tab);
   
-  // Update item count
-  updateItemCount(filteredItems.length, allItems.length);
-  
   // Save state
   saveTabState(currentState.tab, currentState.filters);
 }
@@ -91,17 +88,6 @@ function handleTabChange(newTab) {
 function handleFilterChange(newFilters) {
   currentState.filters = newFilters;
   renderPage();
-}
-
-function updateItemCount(filteredCount, totalCount) {
-  const countElement = document.getElementById('item-count');
-  if (countElement) {
-    if (filteredCount === totalCount) {
-      countElement.textContent = `${totalCount} items`;
-    } else {
-      countElement.textContent = `${filteredCount} of ${totalCount} items`;
-    }
-  }
 }
 
 function showError(message) {
