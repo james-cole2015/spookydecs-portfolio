@@ -2,12 +2,12 @@
 
 import { 
   COST_TYPES, 
-  CATEGORIES, 
+  getCategoriesForCostType,
   SUBCATEGORIES,
-  CURRENCY_OPTIONS,
   FORM_DEFAULTS,
   validateCostRecord,
-  calculateTotalCost
+  calculateTotalCost,
+  calculateValue
 } from '../utils/finance-config.js';
 import { getItems } from '../utils/finance-api.js';
 
@@ -36,6 +36,7 @@ export class CostFormFields {
 
   render() {
     const isEditing = !!this.formData.cost_id;
+    const isGift = this.formData.cost_type === 'gift';
 
     this.container.innerHTML = `
       <div class="form-header">
@@ -43,7 +44,7 @@ export class CostFormFields {
       </div>
 
       <form class="cost-form" id="cost-form">
-        ${this.renderManualEntry()}
+        ${this.renderManualEntry(isGift)}
         ${!isEditing ? this.renderUploadOption() : ''}
         ${this.renderFormActions(isEditing)}
       </form>
@@ -52,13 +53,13 @@ export class CostFormFields {
     this.attachListeners();
   }
 
-  renderManualEntry() {
+  renderManualEntry(isGift) {
     return `
       <div class="form-section">
         ${this.renderField('item_name', 'Item Name', 'text', true)}
         ${this.renderField('cost_date', 'Cost Date', 'date', true)}
         ${this.renderSelectField('cost_type', 'Cost Type', COST_TYPES, true)}
-        ${this.renderSelectField('category', 'Category', CATEGORIES, true)}
+        ${this.renderCategoryField()}
       </div>
 
       ${this.formData.category ? `
@@ -75,8 +76,10 @@ export class CostFormFields {
       </div>
 
       <div class="form-section">
-        ${this.renderField('total_cost', 'Total Cost', 'number', true)}
-        ${this.renderSelectField('currency', 'Currency', CURRENCY_OPTIONS, false)}
+        ${this.renderField('total_cost', 'Total Cost', 'number', true, isGift)}
+        ${this.renderField('tax', 'Tax', 'number', false, isGift)}
+        ${this.renderField('value', 'Value', 'number', false, true)}
+        ${this.renderCurrencyField()}
       </div>
 
       ${this.renderRelatedItemField()}
@@ -88,7 +91,7 @@ export class CostFormFields {
     `;
   }
 
-  renderField(name, label, type, required) {
+  renderField(name, label, type, required, disabled = false) {
     const value = this.formData[name] || '';
     const error = this.errors[name];
 
@@ -102,6 +105,7 @@ export class CostFormFields {
           class="form-input ${error ? 'error' : ''}"
           value="${value}"
           ${required ? 'required' : ''}
+          ${disabled ? 'disabled' : ''}
           ${type === 'number' ? 'step="0.01" min="0"' : ''}
         />
         ${error ? `<span class="form-error">${error}</span>` : ''}
@@ -133,6 +137,32 @@ export class CostFormFields {
     `;
   }
 
+  renderCategoryField() {
+    const costType = this.formData.cost_type || 'acquisition';
+    const categories = getCategoriesForCostType(costType);
+    const value = this.formData.category || categories[0].value;
+    const error = this.errors.category;
+
+    let optionsHTML = categories.map(opt => 
+      `<option value="${opt.value}" ${value === opt.value ? 'selected' : ''}>${opt.label}</option>`
+    ).join('');
+
+    return `
+      <div class="form-group">
+        <label class="form-label required" for="category">Category</label>
+        <select
+          id="category"
+          name="category"
+          class="form-select ${error ? 'error' : ''}"
+          required
+        >
+          ${optionsHTML}
+        </select>
+        ${error ? `<span class="form-error">${error}</span>` : ''}
+      </div>
+    `;
+  }
+
   renderSubcategoryField() {
     const category = this.formData.category;
     if (!category || !SUBCATEGORIES[category]) return '';
@@ -143,6 +173,22 @@ export class CostFormFields {
     }));
 
     return this.renderSelectField('subcategory', 'Subcategory', subcategories, false);
+  }
+
+  renderCurrencyField() {
+    return `
+      <div class="form-group">
+        <label class="form-label" for="currency">Currency</label>
+        <input
+          type="text"
+          id="currency"
+          name="currency"
+          class="form-input"
+          value="USD"
+          disabled
+        />
+      </div>
+    `;
   }
 
   renderTextarea(name, label, required) {
@@ -226,6 +272,27 @@ export class CostFormFields {
       });
     }
 
+    // Cost type change (to update categories and gift logic)
+    const costTypeSelect = this.container.querySelector('#cost_type');
+    if (costTypeSelect) {
+      costTypeSelect.addEventListener('change', (e) => {
+        this.formData.cost_type = e.target.value;
+        
+        // Reset category to first available option
+        const categories = getCategoriesForCostType(e.target.value);
+        this.formData.category = categories[0].value;
+        
+        // Handle gift logic
+        if (e.target.value === 'gift') {
+          this.formData.total_cost = 0;
+          this.formData.tax = 0;
+          this.formData.value = 0;
+        }
+        
+        this.render();
+      });
+    }
+
     // Category change (to update subcategory)
     const categorySelect = this.container.querySelector('#category');
     if (categorySelect) {
@@ -235,20 +302,41 @@ export class CostFormFields {
       });
     }
 
-    // Auto-calculate total cost
+    // Auto-calculate total cost from unit cost and quantity
     const quantityInput = this.container.querySelector('#quantity');
     const unitCostInput = this.container.querySelector('#unit_cost');
     const totalCostInput = this.container.querySelector('#total_cost');
 
     if (quantityInput && unitCostInput && totalCostInput) {
       const updateTotal = () => {
+        if (this.formData.cost_type === 'gift') return;
+        
         const quantity = quantityInput.value || 1;
         const unitCost = unitCostInput.value || 0;
         totalCostInput.value = calculateTotalCost(unitCost, quantity);
+        this.formData.total_cost = totalCostInput.value;
+        this.updateValue();
       };
 
       quantityInput.addEventListener('input', updateTotal);
       unitCostInput.addEventListener('input', updateTotal);
+    }
+
+    // Auto-calculate value when total cost changes
+    if (totalCostInput) {
+      totalCostInput.addEventListener('input', () => {
+        this.formData.total_cost = totalCostInput.value;
+        this.updateValue();
+      });
+    }
+
+    // Update value when tax changes
+    const taxInput = this.container.querySelector('#tax');
+    if (taxInput) {
+      taxInput.addEventListener('input', () => {
+        this.formData.tax = taxInput.value;
+        this.updateValue();
+      });
     }
 
     // Item search
@@ -260,6 +348,20 @@ export class CostFormFields {
         this.formData[e.target.name] = e.target.value;
       }
     });
+  }
+
+  updateValue() {
+    const valueInput = this.container.querySelector('#value');
+    if (!valueInput) return;
+
+    const value = calculateValue(
+      this.formData.cost_type,
+      this.formData.total_cost,
+      this.formData.tax
+    );
+
+    valueInput.value = value.toFixed(2);
+    this.formData.value = value;
   }
 
   attachItemSearch() {

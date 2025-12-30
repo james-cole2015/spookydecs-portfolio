@@ -4,26 +4,55 @@ export const COST_TYPES = [
   { value: 'acquisition', label: 'Acquisition' },
   { value: 'repair', label: 'Repair' },
   { value: 'maintenance', label: 'Maintenance' },
+  { value: 'build', label: 'Build' },
   { value: 'supply_purchase', label: 'Supply Purchase' },
-  { value: 'utility', label: 'Utility' },
+  { value: 'gift', label: 'Gift' },
   { value: 'other', label: 'Other' }
 ];
 
-export const CATEGORIES = [
-  { value: 'materials', label: 'Materials' },
-  { value: 'labor', label: 'Labor' },
-  { value: 'parts', label: 'Parts' },
-  { value: 'supplies', label: 'Supplies' },
-  { value: 'decoration', label: 'Decoration' },
-  { value: 'light', label: 'Light' },
-  { value: 'accessory', label: 'Accessory' }
-];
+// Dynamic categories based on cost type
+export const CATEGORIES_BY_COST_TYPE = {
+  acquisition: [
+    { value: 'decoration', label: 'Decoration' },
+    { value: 'light', label: 'Light' },
+    { value: 'accessory', label: 'Accessory' },
+    { value: 'other', label: 'Other' }
+  ],
+  repair: [
+    { value: 'parts', label: 'Parts' },
+    { value: 'consumables', label: 'Consumables' },
+    { value: 'other', label: 'Other' }
+  ],
+  maintenance: [
+    { value: 'parts', label: 'Parts' },
+    { value: 'consumables', label: 'Consumables' },
+    { value: 'other', label: 'Other' }
+  ],
+  build: [
+    { value: 'parts', label: 'Parts' },
+    { value: 'consumables', label: 'Consumables' },
+    { value: 'other', label: 'Other' }
+  ],
+  supply_purchase: [
+    { value: 'consumables', label: 'Consumables' }
+  ],
+  gift: [
+    { value: 'decoration', label: 'Decoration' },
+    { value: 'light', label: 'Light' },
+    { value: 'accessory', label: 'Accessory' },
+    { value: 'parts', label: 'Parts' },
+    { value: 'consumables', label: 'Consumables' }
+  ],
+  other: [
+    { value: 'other', label: 'Other' }
+  ]
+};
 
 export const SUBCATEGORIES = {
   materials: ['Wood', 'Metal', 'Fabric', 'Paint', 'Adhesive', 'Other'],
   labor: ['Installation', 'Repair', 'Maintenance', 'Consultation', 'Other'],
   parts: ['Electrical', 'Mechanical', 'Structural', 'Decorative', 'Other'],
-  supplies: ['Hardware', 'Tools', 'Consumables', 'Packaging', 'Other'],
+  consumables: ['Hardware', 'Tools', 'Supplies', 'Packaging', 'Other'],
   decoration: ['Inflatable', 'Animatronic', 'Static Prop', 'Signage', 'Other'],
   light: ['String Lights', 'Spot Lights', 'Projectors', 'Bulbs', 'Other'],
   accessory: ['Cords', 'Plugs', 'Receptacles', 'Stakes', 'Other']
@@ -46,11 +75,13 @@ export const REQUIRED_FIELDS = [
 
 export const FORM_DEFAULTS = {
   cost_type: 'acquisition',
-  category: 'materials',
+  category: 'decoration',
   currency: 'USD',
   quantity: 1,
   unit_cost: 0,
-  total_cost: 0
+  total_cost: 0,
+  tax: 0,
+  value: 0
 };
 
 // Validation Functions
@@ -63,8 +94,11 @@ export function validateCostRecord(record) {
     }
   });
 
-  if (record.total_cost !== undefined && record.total_cost <= 0) {
-    errors.total_cost = 'Total cost must be greater than 0';
+  // For non-gift cost types, total cost must be > 0
+  if (record.cost_type !== 'gift') {
+    if (record.total_cost !== undefined && record.total_cost <= 0) {
+      errors.total_cost = 'Total cost must be greater than 0';
+    }
   }
 
   if (record.quantity !== undefined && record.quantity <= 0) {
@@ -82,6 +116,19 @@ export function validateCostRecord(record) {
     isValid: Object.keys(errors).length === 0,
     errors
   };
+}
+
+// Get available categories for a given cost type
+export function getCategoriesForCostType(costType) {
+  return CATEGORIES_BY_COST_TYPE[costType] || CATEGORIES_BY_COST_TYPE.other;
+}
+
+// Calculate value based on cost type
+export function calculateValue(costType, totalCost, tax = 0) {
+  if (costType === 'gift') {
+    return 0;
+  }
+  return parseFloat(totalCost) || 0;
 }
 
 // Formatting Functions
