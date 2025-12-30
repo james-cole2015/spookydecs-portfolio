@@ -11,14 +11,14 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('DOM ready, initializing app...');
   console.log('Current pathname:', window.location.pathname);
   
-  // Initialize router
+  // Initialize router with all routes
   const router = initRouter({
     '/finance': () => {
-      console.log('Route /finance matched, creating FinanceMainPage');
+      console.log('Route: /finance');
       new FinanceMainPage();
     },
-    '/finance/costs/new-record': () => {
-      console.log('Route /finance/costs/new-record matched, creating NewCostRecordPage');
+    '/finance/new': () => {
+      console.log('Route: /finance/new');
       new NewCostRecordPage();
     }
   });
