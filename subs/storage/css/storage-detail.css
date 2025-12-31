@@ -1,0 +1,353 @@
+/**
+ * Storage Detail Page Styles
+ */
+
+/* ============================================
+   DETAIL VIEW LAYOUT
+   ============================================ */
+.storage-detail-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--spacing-md);
+}
+
+.storage-detail-view {
+  background: white;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+/* ============================================
+   DETAIL HEADER
+   ============================================ */
+.detail-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.detail-photo {
+  width: 100%;
+  height: 300px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg-secondary);
+}
+
+.detail-photo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.detail-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.detail-title-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.detail-title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.detail-id {
+  display: inline-block;
+  padding: 4px 8px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-family: monospace;
+}
+
+/* Pill-shaped badges */
+.detail-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.detail-badge {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: var(--radius-pill); /* Pill shaped */
+  font-size: 13px;
+  font-weight: 600;
+  background: #f3f4f6; /* Light grey */
+  color: var(--text-color);
+  text-transform: capitalize;
+}
+
+/* Season badge colors */
+.detail-badge.badge-halloween {
+  background: #fed7aa;
+  color: #9a3412;
+}
+
+.detail-badge.badge-christmas {
+  background: #fecaca;
+  color: #991b1b;
+}
+
+.detail-badge.badge-shared {
+  background: #ddd6fe;
+  color: #5b21b6;
+}
+
+/* Type badge */
+.detail-badge.detail-type-badge {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+/* Packed status badges */
+.detail-badge.packed-badge.packed {
+  background: #d1fae5;
+  color: var(--success-color);
+}
+
+.detail-badge.packed-badge.unpacked {
+  background: #f3f4f6;
+  color: var(--secondary-color);
+}
+
+.detail-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+/* ============================================
+   DETAIL BODY
+   ============================================ */
+.detail-body {
+  padding: var(--spacing-lg);
+}
+
+.detail-section {
+  margin-bottom: var(--spacing-xl);
+}
+
+.detail-section:last-child {
+  margin-bottom: 0;
+}
+
+.section-title {
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-color);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 2px solid var(--border-color);
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-md);
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.detail-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.detail-value {
+  font-size: 14px;
+  color: var(--text-color);
+}
+
+.detail-notes {
+  padding: var(--spacing-md);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--primary-color);
+}
+
+.detail-notes p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-color);
+}
+
+/* ============================================
+   CONTENTS SECTION
+   ============================================ */
+.contents-section {
+  margin-top: var(--spacing-xl);
+}
+
+.contents-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.contents-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.content-item {
+  display: flex;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.content-item:hover {
+  background: var(--bg-secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.content-photo {
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--bg-secondary);
+}
+
+.content-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.content-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.content-id-name {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.content-id {
+  padding: 2px 6px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-family: monospace;
+}
+
+.content-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.content-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.content-class {
+  font-weight: 500;
+}
+
+.content-separator {
+  color: var(--border-color);
+}
+
+.content-type {
+  font-style: italic;
+}
+
+.contents-empty {
+  text-align: center;
+  padding: var(--spacing-xl);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: var(--spacing-md);
+}
+
+.contents-empty h3 {
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: 18px;
+  color: var(--text-color);
+}
+
+.contents-empty p {
+  margin: 0 0 var(--spacing-lg) 0;
+  color: var(--text-secondary);
+}
+
+/* ============================================
+   RESPONSIVE - TABLET & DESKTOP
+   ============================================ */
+@media (min-width: 768px) {
+  .detail-header {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+  
+  .detail-photo {
+    width: 350px;
+    height: 350px;
+    flex-shrink: 0;
+  }
+  
+  .detail-info {
+    flex: 1;
+  }
+  
+  .detail-title {
+    font-size: 36px;
+  }
+  
+  .detail-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .detail-actions {
+    flex-direction: row;
+  }
+}
+
+@media (min-width: 1024px) {
+  .detail-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
