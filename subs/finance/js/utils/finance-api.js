@@ -285,7 +285,7 @@ export async function uploadAndProcessReceipt(file, contextData = {}) {
       category: contextData.category || null
     };
     
-    const response = await fetch(`${API_ENDPOINT}/finance/costs/ai_extract`, {
+    const response = await fetch(`${API_ENDPOINT}/finance/costs/ai-extract`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
