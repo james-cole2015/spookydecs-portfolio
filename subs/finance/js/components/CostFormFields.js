@@ -132,7 +132,7 @@ export class CostFormFields {
     this.attachListeners();
   }
 
-  attachListeners() {
+attachListeners() {
     const form = this.container.querySelector('#cost-form');
     
     // Form submission
@@ -151,15 +151,14 @@ export class CostFormFields {
       });
     }
 
-    // Upload receipt button
+    // Upload receipt button - MUST be before cost type listener since render() is called
     const uploadBtn = this.container.querySelector('#upload-receipt-btn');
     if (uploadBtn) {
-      uploadBtn.addEventListener('click', () => {
-        e.preventDefault();           // ADD THIS
-        e.stopPropagation();          // ADD THIS
-        e.stopImmediatePropagation(); // ADD THIS
-        console.log('Upload button clicked!'); // ADD THIS LINE
-        console.log('Modal:', this.receiptModal); // ADD THIS LINE
+      uploadBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        
         // Get context from URL params
         const urlParams = new URLSearchParams(window.location.search);
         const contextData = {
