@@ -155,6 +155,8 @@ export class CostFormFields {
     const uploadBtn = this.container.querySelector('#upload-receipt-btn');
     if (uploadBtn) {
       uploadBtn.addEventListener('click', () => {
+            console.log('Upload button clicked!'); // ADD THIS LINE
+    console.log('Modal:', this.receiptModal); // ADD THIS LINE
         // Get context from URL params
         const urlParams = new URLSearchParams(window.location.search);
         const contextData = {
