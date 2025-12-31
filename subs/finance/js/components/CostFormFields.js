@@ -10,6 +10,7 @@ import {
 } from '../utils/finance-config.js';
 import { getItems, getApiEndpoint } from '../utils/finance-api.js';
 import { CostFormRenderers } from './CostFormRenderers.js';
+import { ReceiptUploadModal } from './ReceiptUploadModal.js';
 
 export class CostFormFields {
   constructor(containerId, initialData = null) {
@@ -21,6 +22,11 @@ export class CostFormFields {
     this.ideas = [];
     this.onSubmit = null;
     this.onCancel = null;
+    
+    // Receipt modal integration
+    this.receiptModal = new ReceiptUploadModal();
+    this.currentExtractionId = null;
+    this.currentImageId = null;
     
     this.loadItems();
     this.render();
@@ -77,6 +83,36 @@ export class CostFormFields {
     }
   }
 
+  handleReceiptData(extractedData, extractionId, imageId) {
+    // Store extraction and image IDs for audit tracking
+    this.currentExtractionId = extractionId;
+    this.currentImageId = imageId;
+    
+    // Populate form with extracted data, preserving existing context
+    this.formData = {
+      ...this.formData,
+      vendor: extractedData.vendor || this.formData.vendor || '',
+      purchase_date: extractedData.purchase_date || this.formData.purchase_date || '',
+      cost_date: extractedData.purchase_date || this.formData.cost_date || '',
+      description: extractedData.description || this.formData.description || '',
+      item_name: extractedData.item_name || this.formData.item_name || '',
+      quantity: extractedData.quantity || this.formData.quantity || 1,
+      unit_cost: extractedData.unit_cost || this.formData.unit_cost || 0,
+      total_cost: extractedData.total_cost || this.formData.total_cost || 0,
+      cost_type: extractedData.cost_type || this.formData.cost_type || '',
+      category: extractedData.category || this.formData.category || '',
+      subcategory: extractedData.subcategory || this.formData.subcategory || ''
+    };
+    
+    // Re-render form with new data
+    this.render();
+    
+    console.log('Form populated with AI-extracted data', {
+      extractionId,
+      imageId
+    });
+  }
+
   render() {
     const isEditing = !!this.formData.cost_id;
     const isGift = this.formData.cost_type === 'gift';
@@ -112,6 +148,26 @@ export class CostFormFields {
         if (confirm('Discard changes and return to finance page?')) {
           window.location.href = '/finance';
         }
+      });
+    }
+
+    // Upload receipt button
+    const uploadBtn = this.container.querySelector('#upload-receipt-btn');
+    if (uploadBtn) {
+      uploadBtn.addEventListener('click', () => {
+        // Get context from URL params
+        const urlParams = new URLSearchParams(window.location.search);
+        const contextData = {
+          item_id: urlParams.get('item_id') || this.formData.related_item_id || null,
+          record_id: urlParams.get('record_id') || this.formData.related_record_id || null,
+          cost_type: urlParams.get('cost_type') || this.formData.cost_type || null,
+          category: urlParams.get('category') || this.formData.category || null
+        };
+        
+        // Open modal with context and callback
+        this.receiptModal.open(contextData, (extractedData, extractionId, imageId) => {
+          this.handleReceiptData(extractedData, extractionId, imageId);
+        });
       });
     }
 
@@ -331,15 +387,17 @@ export class CostFormFields {
     // Clear errors
     this.errors = {};
 
-    // Trigger submit callback
+    // Trigger submit callback with extraction and image IDs
     if (this.onSubmit) {
-      this.onSubmit(this.formData);
+      this.onSubmit(this.formData, this.currentExtractionId, this.currentImageId);
     }
   }
 
   reset() {
     this.formData = { ...FORM_DEFAULTS };
     this.errors = {};
+    this.currentExtractionId = null;
+    this.currentImageId = null;
     this.render();
   }
 

@@ -262,3 +262,100 @@ export async function getVendors() {
     return [];
   }
 }
+
+// Upload and process receipt with AI extraction
+export async function uploadAndProcessReceipt(file, contextData = {}) {
+  await ensureConfigLoaded();
+  
+  try {
+    // Convert file to base64
+    const fileBase64 = await fileToBase64(file);
+    
+    // Build request payload
+    const payload = {
+      file_data: fileBase64,
+      file_name: file.name,
+      file_type: file.type,
+      item_id: contextData.item_id || null,
+      record_id: contextData.record_id || null,
+      cost_type: contextData.cost_type || null,
+      category: contextData.category || null
+    };
+    
+    const response = await fetch(`${API_ENDPOINT}/finance/costs/ai_extract`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+    
+    return await handleResponse(response);
+  } catch (error) {
+    console.error('Error processing receipt:', error);
+    throw error;
+  }
+}
+
+// Helper function to convert File to base64
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      // Remove the data URL prefix (e.g., "data:image/png;base64,")
+      const base64 = reader.result.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// Update audit log with user modifications (called after cost is created)
+export async function updateAuditLog(extractionId, finalData, modifications) {
+  await ensureConfigLoaded();
+  
+  try {
+    const response = await fetch(`${API_ENDPOINT}/audit/ai-audit/finance/${extractionId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        final_data: finalData,
+        modifications: modifications,
+        user_modified: Object.keys(modifications).length > 0
+      })
+    });
+    
+    return await handleResponse(response);
+  } catch (error) {
+    console.error('Error updating audit log:', error);
+    // Don't throw - this is not critical
+    return null;
+  }
+}
+
+// Update image record after cost is created (move from pending to processed)
+export async function updateImageAfterCostCreation(imageId, costId) {
+  await ensureConfigLoaded();
+  
+  try {
+    const response = await fetch(`${API_ENDPOINT}/finance/images/update`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        image_id: imageId,
+        cost_id: costId
+      })
+    });
+    
+    return await handleResponse(response);
+  } catch (error) {
+    console.error('Error updating image:', error);
+    // Don't throw - this is not critical
+    return null;
+  }
+}

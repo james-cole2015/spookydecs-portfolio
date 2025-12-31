@@ -228,17 +228,17 @@ export class CostFormRenderers {
     `;
   }
 
-  static renderUploadOption() {
-    return `
-      <div class="upload-section">
-        <button type="button" class="upload-btn" id="upload-receipt-btn" disabled>
-          <span class="upload-icon">📷</span>
-          <span>Upload Receipt - Auto Fill</span>
-        </button>
-        <p class="upload-hint">Coming in Phase 2: Upload receipt to auto-populate fields</p>
-      </div>
-    `;
-  }
+static renderUploadOption() {
+  return `
+    <div class="upload-section">
+      <button type="button" class="upload-btn" id="upload-receipt-btn">
+        <span class="upload-icon">📷</span>
+        <span>Upload Receipt - AI Extract</span>
+      </button>
+      <p class="upload-hint">Upload a receipt image or PDF to automatically extract cost information</p>
+    </div>
+  `;
+}
 
   static renderFormActions(isEditing) {
     return `
