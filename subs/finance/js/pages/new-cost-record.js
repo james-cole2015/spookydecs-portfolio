@@ -2,6 +2,7 @@
 
 import { CostFormFields } from '../components/CostFormFields.js';
 import { CostReviewModal } from '../components/CostReviewModal.js';
+import { ReceiptUploadModal } from '../components/ReceiptUploadModal.js';
 import { createCost } from '../utils/finance-api.js';
 import { toast } from '../shared/toast.js';
 
@@ -9,6 +10,7 @@ export class NewCostRecordPage {
   constructor() {
     this.formFields = null;
     this.reviewModal = null;
+    this.receiptModal = null;
     this.init();
   }
   
@@ -68,6 +70,9 @@ export class NewCostRecordPage {
       </div>
     `;
     
+    // Initialize receipt modal
+    this.receiptModal = new ReceiptUploadModal();
+    
     // Render form fields
     this.formFields = new CostFormFields('cost-form-container', {
       itemId: itemId,
@@ -75,8 +80,8 @@ export class NewCostRecordPage {
     });
     
     // Set up form submit callback
-    this.formFields.onSubmit = (formData) => {
-      this.handleFormSubmit(formData);
+    this.formFields.onSubmit = (formData, extractionId, imageId) => {
+      this.handleFormSubmit(formData, extractionId, imageId);
     };
     
     this.formFields.render();
@@ -87,14 +92,33 @@ export class NewCostRecordPage {
     const extractBtn = document.getElementById('btn-extract-ai');
     if (extractBtn) {
       extractBtn.addEventListener('click', () => {
-        // TODO: Open AI Extract modal in future implementation
-        alert('AI Receipt Extract feature coming soon!');
+        // Get context from URL params
+        const urlParams = new URLSearchParams(window.location.search);
+        const contextData = {
+          item_id: urlParams.get('item_id') || this.formFields.formData.related_item_id || null,
+          record_id: urlParams.get('record_id') || this.formFields.formData.related_record_id || null,
+          cost_type: urlParams.get('cost_type') || this.formFields.formData.cost_type || null,
+          category: urlParams.get('category') || this.formFields.formData.category || null
+        };
+        
+        // Open modal with context and callback
+        this.receiptModal.open(contextData, (extractedData, extractionId, imageId) => {
+          this.formFields.handleReceiptData(extractedData, extractionId, imageId);
+        });
       });
     }
   }
   
-  async handleFormSubmit(formData) {
+  async handleFormSubmit(formData, extractionId, imageId) {
     console.log('Handling form submission...', formData);
+    
+    // Add extraction metadata if present
+    if (extractionId) {
+      formData.extraction_id = extractionId;
+    }
+    if (imageId) {
+      formData.image_id = imageId;
+    }
     
     // Show review modal
     this.reviewModal = new CostReviewModal();

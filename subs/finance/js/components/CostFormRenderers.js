@@ -228,18 +228,6 @@ export class CostFormRenderers {
     `;
   }
 
-static renderUploadOption() {
-  return `
-    <div class="upload-section">
-      <button type="button" class="upload-btn" id="upload-receipt-btn">
-        <span class="upload-icon">📷</span>
-        <span>Upload Receipt - AI Extract</span>
-      </button>
-      <p class="upload-hint">Upload a receipt image or PDF to automatically extract cost information</p>
-    </div>
-  `;
-}
-
   static renderFormActions(isEditing) {
     return `
       <div class="form-actions">

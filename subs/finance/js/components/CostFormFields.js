@@ -10,7 +10,6 @@ import {
 } from '../utils/finance-config.js';
 import { getItems, getApiEndpoint } from '../utils/finance-api.js';
 import { CostFormRenderers } from './CostFormRenderers.js';
-import { ReceiptUploadModal } from './ReceiptUploadModal.js';
 
 export class CostFormFields {
   constructor(containerId, initialData = null) {
@@ -23,8 +22,7 @@ export class CostFormFields {
     this.onSubmit = null;
     this.onCancel = null;
     
-    // Receipt modal integration
-    this.receiptModal = new ReceiptUploadModal();
+    // Receipt extraction tracking
     this.currentExtractionId = null;
     this.currentImageId = null;
     
@@ -124,7 +122,6 @@ export class CostFormFields {
 
       <form class="cost-form" id="cost-form">
         ${CostFormRenderers.renderManualEntry(this.formData, this.errors, isGift)}
-        ${!isEditing ? CostFormRenderers.renderUploadOption() : ''}
         ${CostFormRenderers.renderFormActions(isEditing)}
       </form>
     `;
@@ -132,7 +129,7 @@ export class CostFormFields {
     this.attachListeners();
   }
 
-attachListeners() {
+  attachListeners() {
     const form = this.container.querySelector('#cost-form');
     
     // Form submission
@@ -148,35 +145,6 @@ attachListeners() {
         if (confirm('Discard changes and return to finance page?')) {
           window.location.href = '/finance';
         }
-      });
-    }
-
-    // Upload receipt button - MUST be before cost type listener since render() is called
-    const uploadBtn = this.container.querySelector('#upload-receipt-btn');
-    if (uploadBtn) {
-      uploadBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-
-          console.log('=== UPLOAD BUTTON CLICKED ===');
-          console.log('this:', this);
-          console.log('this.receiptModal:', this.receiptModal);
-          console.log('typeof this.receiptModal:', typeof this.receiptModal);
-        
-        // Get context from URL params
-        const urlParams = new URLSearchParams(window.location.search);
-        const contextData = {
-          item_id: urlParams.get('item_id') || this.formData.related_item_id || null,
-          record_id: urlParams.get('record_id') || this.formData.related_record_id || null,
-          cost_type: urlParams.get('cost_type') || this.formData.cost_type || null,
-          category: urlParams.get('category') || this.formData.category || null
-        };
-        
-        // Open modal with context and callback
-        this.receiptModal.open(contextData, (extractedData, extractionId, imageId) => {
-          this.handleReceiptData(extractedData, extractionId, imageId);
-        });
       });
     }
 
