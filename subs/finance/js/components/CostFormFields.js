@@ -158,6 +158,11 @@ attachListeners() {
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
+
+          console.log('=== UPLOAD BUTTON CLICKED ===');
+          console.log('this:', this);
+          console.log('this.receiptModal:', this.receiptModal);
+          console.log('typeof this.receiptModal:', typeof this.receiptModal);
         
         // Get context from URL params
         const urlParams = new URLSearchParams(window.location.search);
