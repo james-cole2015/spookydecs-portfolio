@@ -267,35 +267,18 @@ export async function getVendors() {
 export async function uploadAndProcessReceipt(file, contextData = {}) {
   await ensureConfigLoaded();
   
+  console.log('=== uploadAndProcessReceipt called ===');
+  console.log('File:', file);
+  console.log('File name:', file.name);
+  console.log('File type:', file.type);
+  console.log('File size:', file.size);
+  
   try {
-    // Convert file to base64
+    console.log('Converting to base64...');
     const fileBase64 = await fileToBase64(file);
+    console.log('Base64 length:', fileBase64.length);
     
-    // Build request payload
-    const payload = {
-      file_data: fileBase64,
-      file_name: file.name,
-      file_type: file.type,
-      item_id: contextData.item_id || null,
-      record_id: contextData.record_id || null,
-      cost_type: contextData.cost_type || null,
-      category: contextData.category || null
-    };
-    
-    const response = await fetch(`${API_ENDPOINT}/finance/costs/ai_extract`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
-    
-    return await handleResponse(response);
-  } catch (error) {
-    console.error('Error processing receipt:', error);
-    throw error;
-  }
-}
+    // ... rest
 
 // Helper function to convert File to base64
 function fileToBase64(file) {
