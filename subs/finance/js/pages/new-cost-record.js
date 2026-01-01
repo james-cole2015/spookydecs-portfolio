@@ -3,7 +3,7 @@
 import { CostFormFields } from '../components/CostFormFields.js';
 import { CostReviewModal } from '../components/CostReviewModal.js';
 import { ReceiptUploadModal } from '../components/ReceiptUploadModal.js';
-import { createCost } from '../utils/finance-api.js';
+import { createCost, updateImageAfterCostCreation } from '../utils/finance-api.js';
 import { toast } from '../shared/toast.js';
 
 export class NewCostRecordPage {
@@ -129,6 +129,18 @@ export class NewCostRecordPage {
           toast.info('Saving cost record...');
           
           const result = await createCost(formData);
+          
+          // If we have an image_id, update the image record to move it to processed folder
+          if (imageId && result.cost_id) {
+            console.log('Moving receipt to processed folder...');
+            try {
+              await updateImageAfterCostCreation(imageId, result.cost_id);
+              console.log('Receipt moved successfully');
+            } catch (imageError) {
+              // Log but don't fail - image update is not critical
+              console.error('Failed to update image:', imageError);
+            }
+          }
           
           toast.success('Cost record created successfully');
           
