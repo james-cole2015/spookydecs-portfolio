@@ -1,10 +1,10 @@
-// Cost Record Detail Page Orchestrator
+// Cost Detail Page Orchestrator
 
 import { getCostById } from '../utils/finance-api.js';
-import { CostRecordDetailView } from '../components/CostRecordDetailView.js';
+import { CostDetailView } from '../components/CostDetailView.js';
 
-export async function renderCostRecordDetail(container, itemId, costId) {
-  console.log('📄 renderCostRecordDetail called:', { itemId, costId });
+export async function renderCostDetail(container, costId) {
+  console.log('📄 renderCostDetail called:', { costId });
   
   try {
     // Fetch cost record data
@@ -18,7 +18,7 @@ export async function renderCostRecordDetail(container, itemId, costId) {
     console.log('✅ Cost record data:', costData);
     
     // Create and render the view
-    const view = new CostRecordDetailView(costData, itemId);
+    const view = new CostDetailView(costData);
     await view.render(container);
     
   } catch (error) {
@@ -30,7 +30,7 @@ export async function renderCostRecordDetail(container, itemId, costId) {
         <div class="error-content">
           <h1>Error Loading Cost Record</h1>
           <p>${error.message}</p>
-          <button onclick="window.location.href='/${itemId}'" class="btn-secondary">Back to Item Costs</button>
+          <button onclick="window.location.href='/'" class="btn-secondary">Back to Finance</button>
         </div>
       </div>
     `;

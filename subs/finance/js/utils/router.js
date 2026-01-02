@@ -12,25 +12,16 @@ export function initRouter() {
   
   // Define routes - Specific routes first, generic routes last
   router
-    .on('/:itemId/:costId', async (match) => {
-      console.log('✅ Route matched: /:itemId/:costId', match.data);
-      
-      // Safety guard - prevent literal routes
-      if (match.data.itemId === 'new' || match.data.itemId === 'records' || 
-          match.data.itemId === 'statistics' || match.data.itemId === 'receipts') {
-        console.log('   ⚠️  Skipping - this is a literal route');
-        return;
-      }
-      
-      await handleCostRecordDetailView(match);
+    .on('/costs/:costId', async (match) => {
+      console.log('✅ Route matched: /costs/:costId', match.data);
+      await handleCostDetailView(match);
     })
     .on('/:itemId', async (match) => {
       console.log('✅ Route matched: /:itemId', match.data);
       
       // Safety guard - prevent literal routes
-      if (match.data.itemId === 'new' || match.data.itemId === 'records' || 
-          match.data.itemId === 'statistics' || match.data.itemId === 'receipts') {
-        console.error('❌ BUG: Literal route matched /:itemId pattern!');
+      if (match.data.itemId === 'new' || match.data.itemId === 'costs') {
+        console.log('   ⚠️  Skipping - this is a literal route');
         return;
       }
       
@@ -66,6 +57,33 @@ export function getRouter() {
 // ROUTE HANDLERS
 // ============================================
 
+async function handleCostDetailView(match) {
+  console.log('📄 handleCostDetailView started');
+  const container = document.getElementById('main-content');
+  
+  if (!container) {
+    console.error('❌ main-content container not found!');
+    return;
+  }
+  
+  try {
+    showLoading();
+    
+    const { costId } = match.data;
+    console.log('🔄 Loading cost record:', costId);
+    
+    // Dynamically import the cost detail page
+    const { renderCostDetail } = await import('../pages/cost-detail.js');
+    await renderCostDetail(container, costId);
+    
+    hideLoading();
+  } catch (error) {
+    console.error('❌ Error rendering cost detail:', error);
+    hideLoading();
+    renderError(container, 'Failed to load cost record');
+  }
+}
+
 async function handleItemCostsView(match) {
   console.log('📄 handleItemCostsView started');
   const container = document.getElementById('main-content');
@@ -79,7 +97,7 @@ async function handleItemCostsView(match) {
     showLoading();
     
     const { itemId } = match.data;
-    console.log('🔄 Loading item costs for:', itemId);
+    console.log('🔄 Loading item/idea/record costs for:', itemId);
     
     // Dynamically import the item costs page
     const { renderItemCosts } = await import('../pages/item-costs.js');
@@ -89,34 +107,7 @@ async function handleItemCostsView(match) {
   } catch (error) {
     console.error('❌ Error rendering item costs view:', error);
     hideLoading();
-    renderError(container, 'Failed to load item costs');
-  }
-}
-
-async function handleCostRecordDetailView(match) {
-  console.log('📄 handleCostRecordDetailView started');
-  const container = document.getElementById('main-content');
-  
-  if (!container) {
-    console.error('❌ main-content container not found!');
-    return;
-  }
-  
-  try {
-    showLoading();
-    
-    const { itemId, costId } = match.data;
-    console.log('🔄 Loading cost record:', { itemId, costId });
-    
-    // Dynamically import the cost record detail page
-    const { renderCostRecordDetail } = await import('../pages/cost-record-detail.js');
-    await renderCostRecordDetail(container, itemId, costId);
-    
-    hideLoading();
-  } catch (error) {
-    console.error('❌ Error rendering cost record detail:', error);
-    hideLoading();
-    renderError(container, 'Failed to load cost record details');
+    renderError(container, 'Failed to load costs');
   }
 }
 

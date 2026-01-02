@@ -106,7 +106,7 @@ export class CostHistoryList {
     container.querySelectorAll('[data-action="view-details"]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const costId = e.target.dataset.costId;
-        navigateTo(`/${this.itemId}/${costId}`);
+        navigateTo(`/costs/${costId}`);
       });
     });
 

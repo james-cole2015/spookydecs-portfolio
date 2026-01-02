@@ -275,8 +275,8 @@ export class CostDetailDrawer {
 
     if (viewBtn) {
       viewBtn.addEventListener('click', () => {
-        // Could expand to show more details or open in new view
-        console.log('View full details:', this.currentCost);
+        // Navigate to cost detail page
+        window.location.href = `/costs/${this.currentCost.cost_id}`;
       });
     }
 
