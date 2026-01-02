@@ -17,6 +17,8 @@
   <link rel="stylesheet" href="/css/cost-form.css">
   <link rel="stylesheet" href="/css/new-cost-record.css">
   <link rel="stylesheet" href="/css/receipt-upload-modal.css">
+  <link rel="stylesheet" href="/css/item-costs.css">
+  <link rel="stylesheet" href="/css/cost-record-detail.css">
 </head>
 <body>
   <!-- Header Component -->
@@ -27,31 +29,13 @@
     logout-url="/logout">
   </spookydecs-header>
 
-  <!-- Main Container -->
-  <div id="app-container">
-    <!-- Tab Navigation -->
-    <div id="tab-bar"></div>
-    
-    <!-- Tab Content -->
-    <div id="tab-content">
-      <!-- Records Tab (default) -->
-      <div id="records-tab" class="tab-panel active">
-        <!-- Cost Records Table -->
-        <div id="table-container"></div>
-        
-        <!-- Add Cost Record Form -->
-        <div id="form-container"></div>
-      </div>
-      
-      <!-- Stats Tab -->
-      <div id="stats-tab" class="tab-panel">
-        <div id="stats-container"></div>
-      </div>
-    </div>
+  <!-- Loading Indicator -->
+  <div id="loading-indicator" style="display: none;">
+    <div class="loading-spinner"></div>
   </div>
 
-  <!-- Detail Drawer (hidden by default) -->
-  <div id="cost-detail-drawer" class="drawer"></div>
+  <!-- Main Content Container (router manages this) -->
+  <div id="main-content"></div>
 
   <!-- Modals -->
   <div id="modal-container"></div>

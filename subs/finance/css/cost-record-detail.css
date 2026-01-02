@@ -1,0 +1,206 @@
+/* Cost Record Detail Page Styles */
+
+.cost-record-detail-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Related Item Banner */
+.related-item-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.related-item-banner span {
+  font-weight: 500;
+  color: #1e40af;
+}
+
+/* Cost Details Section */
+.cost-details-section {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.cost-details-section h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 1.5rem 0;
+}
+
+/* Detail Grid */
+.detail-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.75rem 0;
+}
+
+.detail-row.highlight {
+  background: #f9fafb;
+  padding: 1rem;
+  margin: 0.5rem -1rem;
+  border-radius: 6px;
+}
+
+.detail-label {
+  font-weight: 500;
+  color: #6b7280;
+  flex: 0 0 40%;
+}
+
+.detail-value {
+  color: #111827;
+  font-weight: 500;
+  text-align: right;
+  flex: 1;
+}
+
+.detail-row.highlight .detail-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #059669;
+}
+
+.detail-divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 0.5rem 0;
+}
+
+/* Description & Notes */
+.description-section {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.description-block,
+.notes-block {
+  margin-bottom: 1.5rem;
+}
+
+.description-block:last-child,
+.notes-block:last-child {
+  margin-bottom: 0;
+}
+
+.description-block h3,
+.notes-block h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 0.75rem 0;
+}
+
+.description-block p,
+.notes-block p {
+  color: #4b5563;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Receipt Section */
+.receipt-section {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.receipt-section h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 1rem 0;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.btn-danger {
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-danger:hover {
+  background-color: #dc2626;
+}
+
+.btn-danger:active {
+  background-color: #b91c1c;
+}
+
+/* Metadata Section */
+.metadata-section {
+  padding-top: 2rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.metadata-text {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  margin: 0.5rem 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .cost-record-detail-page {
+    padding: 1rem;
+  }
+
+  .detail-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .detail-label {
+    flex: none;
+  }
+
+  .detail-value {
+    text-align: left;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .related-item-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+}

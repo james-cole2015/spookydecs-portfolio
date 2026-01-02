@@ -1,4 +1,4 @@
-// Finance API Client
+// Finance API Client - Updated with item costs endpoint
 
 let API_ENDPOINT = '';
 let configLoaded = false;
@@ -16,7 +16,6 @@ export async function loadConfig() {
     return config;
   } catch (error) {
     console.error('Failed to load config:', error);
-    // Don't throw - use fallback
     API_ENDPOINT = 'https://api.spookydecs.com';
     configLoaded = true;
     return { API_ENDPOINT };
@@ -104,6 +103,25 @@ export async function getCostById(costId) {
     return await handleResponse(response);
   } catch (error) {
     console.error('Error fetching cost:', error);
+    throw error;
+  }
+}
+
+// GET all costs for a specific item
+export async function getItemCosts(itemId) {
+  await ensureConfigLoaded();
+  
+  try {
+    const response = await fetch(`${API_ENDPOINT}/finance/costs/item/${itemId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    return await handleResponse(response);
+  } catch (error) {
+    console.error('Error fetching item costs:', error);
     throw error;
   }
 }
@@ -200,7 +218,6 @@ export async function getCostStats(filters = {}) {
   try {
     const costs = await getAllCosts(filters);
     
-    // Calculate statistics
     const stats = {
       total_records: costs.length,
       total_amount: costs.reduce((sum, cost) => sum + (parseFloat(cost.total_cost) || 0), 0),
@@ -267,14 +284,12 @@ export async function getVendors() {
 export async function uploadAndProcessReceipt(file, contextData = {}) {
   await ensureConfigLoaded();
   
-  console.log('=== uploadAndProcessReceipt called ===');  // <-- ADD HERE
-  console.log('File:', file);                              // <-- ADD HERE
+  console.log('=== uploadAndProcessReceipt called ===');
+  console.log('File:', file);
   
   try {
-    // Convert file to base64
     const fileBase64 = await fileToBase64(file);
     
-    // Build request payload
     const payload = {
       file_data: fileBase64,
       file_name: file.name,
@@ -305,7 +320,6 @@ function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
-      // Remove the data URL prefix (e.g., "data:image/png;base64,")
       const base64 = reader.result.split(',')[1];
       resolve(base64);
     };
@@ -314,7 +328,7 @@ function fileToBase64(file) {
   });
 }
 
-// Update audit log with user modifications (called after cost is created)
+// Update audit log with user modifications
 export async function updateAuditLog(extractionId, finalData, modifications) {
   await ensureConfigLoaded();
   
@@ -334,12 +348,11 @@ export async function updateAuditLog(extractionId, finalData, modifications) {
     return await handleResponse(response);
   } catch (error) {
     console.error('Error updating audit log:', error);
-    // Don't throw - this is not critical
     return null;
   }
 }
 
-// Update image record after cost is created (move from pending to processed)
+// Update image record after cost is created
 export async function updateImageAfterCostCreation(imageId, costId) {
   await ensureConfigLoaded();
   
@@ -358,7 +371,6 @@ export async function updateImageAfterCostCreation(imageId, costId) {
     return await handleResponse(response);
   } catch (error) {
     console.error('Error updating image:', error);
-    // Don't throw - this is not critical
     return null;
   }
 }
