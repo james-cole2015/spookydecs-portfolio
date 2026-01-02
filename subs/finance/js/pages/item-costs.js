@@ -2,7 +2,6 @@
 
 import { getItemCosts } from '../utils/finance-api.js';
 import { ItemCostView } from '../components/ItemCostView.js';
-import { showToast } from '../shared/toast.js';
 
 export async function renderItemCosts(container, itemId) {
   console.log('📄 renderItemCosts called with itemId:', itemId);
@@ -20,7 +19,6 @@ export async function renderItemCosts(container, itemId) {
     
   } catch (error) {
     console.error('❌ Error loading item costs:', error);
-    showToast('Failed to load item costs: ' + error.message, 'error');
     
     // Show error in container
     container.innerHTML = `
@@ -28,7 +26,7 @@ export async function renderItemCosts(container, itemId) {
         <div class="error-content">
           <h1>Error Loading Item Costs</h1>
           <p>${error.message}</p>
-          <button onclick="window.location.href='/'"class="btn-secondary">Back to Finance</button>
+          <button onclick="window.location.href='/'" class="btn-secondary">Back to Finance</button>
         </div>
       </div>
     `;

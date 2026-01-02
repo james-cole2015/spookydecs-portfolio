@@ -2,8 +2,21 @@
 
 import { navigateTo } from '../utils/router.js';
 import { deleteCost } from '../utils/finance-api.js';
-import { showToast } from '../shared/toast.js';
-import { showModal } from '../shared/modal.js';
+
+// Optional imports - graceful fallback if not available
+let showToast, showModal;
+try {
+  const toastModule = await import('../shared/toast.js');
+  showToast = toastModule.showToast;
+} catch (e) {
+  showToast = (msg, type) => console.log(`[${type}] ${msg}`);
+}
+try {
+  const modalModule = await import('../shared/modal.js');
+  showModal = modalModule.showModal;
+} catch (e) {
+  showModal = async (opts) => window.confirm(opts.message);
+}
 
 export class CostRecordDetailView {
   constructor(costData, itemId) {

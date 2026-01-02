@@ -2,7 +2,6 @@
 
 import { getCostById } from '../utils/finance-api.js';
 import { CostRecordDetailView } from '../components/CostRecordDetailView.js';
-import { showToast } from '../shared/toast.js';
 
 export async function renderCostRecordDetail(container, itemId, costId) {
   console.log('📄 renderCostRecordDetail called:', { itemId, costId });
@@ -24,7 +23,6 @@ export async function renderCostRecordDetail(container, itemId, costId) {
     
   } catch (error) {
     console.error('❌ Error loading cost record:', error);
-    showToast('Failed to load cost record: ' + error.message, 'error');
     
     // Show error in container
     container.innerHTML = `
