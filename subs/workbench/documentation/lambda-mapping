@@ -1,0 +1,16 @@
+┌─────────────────────────────────────────────────────────────┬──────────────────────────────┐
+│ API Endpoint                                                │ Lambda Function              │
+├─────────────────────────────────────────────────────────────┼──────────────────────────────┤
+│ GET    /workbench/seasons                                   │ workbench-handler            │
+│ POST   /workbench/seasons                                   │ workbench-handler            │
+│ GET    /workbench/seasons/{season_id}                       │ workbench-handler            │
+│ PATCH  /workbench/seasons/{season_id}                       │ workbench-handler            │
+│ GET    /workbench/seasons/{season_id}/items                 │ workbench-handler            │
+│ POST   /workbench/seasons/{season_id}/items                 │ workbench-handler            │
+│ GET    /workbench/seasons/{season_id}/items/{item_id}       │ workbench-handler            │
+│ PATCH  /workbench/seasons/{season_id}/items/{item_id}       │ workbench-handler            │
+│ DELETE /workbench/seasons/{season_id}/items/{item_id}       │ workbench-handler            │
+├─────────────────────────────────────────────────────────────┼──────────────────────────────┤
+│ POST   /workbench/seasons/{season_id}/import                │ workbench-import-sync        │
+│ POST   /workbench/seasons/{season_id}/items/{item_id}/sync-back │ workbench-import-sync   │
+└─────────────────────────────────────────────────────────────┴──────────────────────────────┘
