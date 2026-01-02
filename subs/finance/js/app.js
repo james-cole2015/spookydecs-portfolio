@@ -12,6 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('Current pathname:', window.location.pathname);
   
   const path = window.location.pathname;
+  const appContainer = document.getElementById('app-container');
+  const mainContent = document.getElementById('main-content');
   
   // Check if this is an item or cost detail route
   const pathParts = path.split('/').filter(Boolean);
@@ -23,16 +25,22 @@ document.addEventListener('DOMContentLoaded', () => {
   // /{item_id}/{cost_id} → Cost detail (handled by router)
   
   if (pathParts.length === 0 || (pathParts.length === 1 && pathParts[0] === 'finance')) {
-    // Main finance page
+    // Main finance page - show app-container, hide main-content
     console.log('Route: Main finance page');
+    if (appContainer) appContainer.style.display = 'block';
+    if (mainContent) mainContent.style.display = 'none';
     new FinanceMainPage();
   } else if (path === '/new' || path === '/finance/new') {
-    // New cost form
+    // New cost form - show app-container, hide main-content
     console.log('Route: New cost form');
+    if (appContainer) appContainer.style.display = 'block';
+    if (mainContent) mainContent.style.display = 'none';
     new NewCostRecordPage();
   } else if (pathParts.length >= 1) {
-    // Item costs or cost detail - let the router handle it
+    // Item costs or cost detail - hide app-container, show main-content
     console.log('Route: Item/Cost detail, initializing router');
+    if (appContainer) appContainer.style.display = 'none';
+    if (mainContent) mainContent.style.display = 'block';
     initItemRouter();
   } else {
     // Unknown route - redirect to main

@@ -34,8 +34,26 @@
     <div class="loading-spinner"></div>
   </div>
 
-  <!-- Main Content Container (router manages this) -->
-  <div id="main-content"></div>
+  <!-- Main Content Container -->
+  <!-- For main finance page (FinanceMainPage class) -->
+  <div id="app-container" style="display: none;">
+    <div id="tab-bar"></div>
+    <div id="tab-content">
+      <div id="records-tab" class="tab-panel active">
+        <div id="table-container"></div>
+        <div id="form-container"></div>
+      </div>
+      <div id="stats-tab" class="tab-panel">
+        <div id="stats-container"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- For router-managed pages (item costs, cost details) -->
+  <div id="main-content" style="display: none;"></div>
+
+  <!-- Detail Drawer -->
+  <div id="cost-detail-drawer" class="drawer"></div>
 
   <!-- Modals -->
   <div id="modal-container"></div>
