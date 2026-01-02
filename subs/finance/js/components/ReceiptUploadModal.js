@@ -55,7 +55,7 @@ export class ReceiptUploadModal {
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     this.modal = document.getElementById('receipt-upload-modal');
-    this.attachListeners();
+    // Removed duplicate attachListeners() call from here
   }
 
   renderContent() {
@@ -276,12 +276,18 @@ export class ReceiptUploadModal {
 
     // Browse button
     if (browseBtn) {
-      browseBtn.addEventListener('click', () => fileInput.click());
+      browseBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent double trigger
+        fileInput.click();
+      });
     }
 
     // Change file button
     if (changeFileBtn) {
-      changeFileBtn.addEventListener('click', () => fileInput.click());
+      changeFileBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent double trigger
+        fileInput.click();
+      });
     }
 
     // File input change
@@ -313,7 +319,10 @@ export class ReceiptUploadModal {
         }
       });
 
-      dropZone.addEventListener('click', () => fileInput.click());
+      dropZone.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent double trigger
+        fileInput.click();
+      });
     }
 
     // Process button
@@ -334,6 +343,7 @@ export class ReceiptUploadModal {
       retryBtn.addEventListener('click', () => {
         this.state = 'upload';
         this.render();
+        this.attachListeners(); // Re-attach after render
       });
     }
   }
@@ -346,6 +356,7 @@ export class ReceiptUploadModal {
       retryBtn.addEventListener('click', () => {
         this.state = 'upload';
         this.render();
+        this.attachListeners(); // Re-attach after render
       });
     }
 
@@ -396,6 +407,7 @@ export class ReceiptUploadModal {
 
     this.state = 'processing';
     this.render();
+    this.attachListeners(); // Re-attach after render
 
     try {
       const result = await uploadAndProcessReceipt(this.selectedFile, this.contextData);
@@ -405,11 +417,13 @@ export class ReceiptUploadModal {
       this.imageId = result.image_id;
       this.state = 'review';
       this.render();
+      this.attachListeners(); // Re-attach after render
       
     } catch (error) {
       console.error('Receipt processing error:', error);
       this.state = 'error';
       this.render();
+      this.attachListeners(); // Re-attach after render
       
       const errorMsg = this.modal.querySelector('#error-message');
       if (errorMsg) {
