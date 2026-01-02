@@ -54,6 +54,6 @@ Operations for moving data between the workbench and external source tables.
 ## Bulk Operations
 
 ### Bulk Update
-**POST** `/workbench/seasons/{season_id}/items/bulk-update`
+**POST** `/workbench/seasons/{season_id}/items/end-season`
 * **Description:** Update multiple items at once.
 * **Use Case:** Useful for mass disposition at the end of a season.
