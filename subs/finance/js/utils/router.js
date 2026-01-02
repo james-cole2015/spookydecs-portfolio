@@ -12,22 +12,6 @@ export function initRouter() {
   
   // Define routes - Specific routes first, generic routes last
   router
-    .on('/new', async () => {
-      console.log('✅ Route matched: /new');
-      await handleNewCostView();
-    })
-    .on('/records', async () => {
-      console.log('✅ Route matched: /records');
-      await handleMainView('records');
-    })
-    .on('/statistics', async () => {
-      console.log('✅ Route matched: /statistics');
-      await handleMainView('statistics');
-    })
-    .on('/receipts', async () => {
-      console.log('✅ Route matched: /receipts');
-      await handleMainView('receipts');
-    })
     .on('/:itemId/:costId', async (match) => {
       console.log('✅ Route matched: /:itemId/:costId', match.data);
       
@@ -52,10 +36,6 @@ export function initRouter() {
       
       await handleItemCostsView(match);
     })
-    .on('/', async () => {
-      console.log('✅ Route matched: /');
-      await handleMainView('records');
-    })
     .notFound(() => {
       console.log('❌ Route NOT FOUND');
       console.log('   Current path:', window.location.pathname);
@@ -65,6 +45,8 @@ export function initRouter() {
   // Resolve initial route
   console.log('🚀 Resolving initial route...');
   router.resolve();
+  
+  return router;
 }
 
 export function navigateTo(path) {
@@ -83,54 +65,6 @@ export function getRouter() {
 // ============================================
 // ROUTE HANDLERS
 // ============================================
-
-async function handleMainView(tab = 'records') {
-  console.log('📄 handleMainView started, tab:', tab);
-  const container = document.getElementById('main-content');
-  
-  if (!container) {
-    console.error('❌ main-content container not found!');
-    return;
-  }
-  
-  try {
-    showLoading();
-    
-    // Dynamically import the main page
-    const { renderFinanceMain } = await import('../pages/finance-main.js');
-    await renderFinanceMain(container, tab);
-    
-    hideLoading();
-  } catch (error) {
-    console.error('❌ Error rendering main view:', error);
-    hideLoading();
-    renderError(container, 'Failed to load finance page');
-  }
-}
-
-async function handleNewCostView() {
-  console.log('📄 handleNewCostView started');
-  const container = document.getElementById('main-content');
-  
-  if (!container) {
-    console.error('❌ main-content container not found!');
-    return;
-  }
-  
-  try {
-    showLoading();
-    
-    // Dynamically import the new cost page
-    const { renderNewCostRecord } = await import('../pages/new-cost-record.js');
-    await renderNewCostRecord(container);
-    
-    hideLoading();
-  } catch (error) {
-    console.error('❌ Error rendering new cost view:', error);
-    hideLoading();
-    renderError(container, 'Failed to load cost creation form');
-  }
-}
 
 async function handleItemCostsView(match) {
   console.log('📄 handleItemCostsView started');
