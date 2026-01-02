@@ -216,7 +216,10 @@ export async function getItems(filters = {}) {
 // GET cost statistics
 export async function getCostStats(filters = {}) {
   try {
-    const costs = await getAllCosts(filters);
+    const response = await getAllCosts(filters);
+    
+    // Handle both array and object response formats
+    const costs = Array.isArray(response) ? response : (response.costs || []);
     
     const stats = {
       total_records: costs.length,
