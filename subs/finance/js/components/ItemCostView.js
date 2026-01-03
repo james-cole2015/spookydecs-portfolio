@@ -6,14 +6,50 @@ import { CostHistoryList } from './CostHistoryList.js';
 export class ItemCostView {
   constructor(data) {
     this.data = data;
-    this.itemId = data.item_id;
-    this.itemDetails = data.item_details;
+    this.itemId = data.item_id || data.idea_id || data.record_id;
+    this.itemDetails = data.item_details || data.idea_details || data.record_details;
     this.costs = data.costs || [];
-    this.summary = data.summary;
+    
+    // Calculate summary from costs if not provided
+    this.summary = this.calculateSummary(data.summary);
+  }
+
+  calculateSummary(providedSummary) {
+    // If summary is provided and has valid data, use it
+    if (providedSummary && providedSummary.total_cost > 0) {
+      return providedSummary;
+    }
+
+    // Otherwise, calculate from costs array
+    const summary = {
+      total_cost: 0,
+      current_value: 0,
+      breakdown: {}
+    };
+
+    this.costs.forEach(cost => {
+      const totalCost = parseFloat(cost.total_cost) || 0;
+      const value = parseFloat(cost.value) || totalCost;
+
+      summary.total_cost += totalCost;
+      summary.current_value += value;
+
+      // Build breakdown by cost_type
+      const costType = cost.cost_type || 'other';
+      if (!summary.breakdown[costType]) {
+        summary.breakdown[costType] = { count: 0, amount: 0 };
+      }
+      summary.breakdown[costType].count++;
+      summary.breakdown[costType].amount += totalCost;
+    });
+
+    return summary;
   }
 
   async render(container) {
     console.log('🎨 Rendering ItemCostView');
+    console.log('📊 Summary data:', this.summary);
+    console.log('📋 Costs count:', this.costs.length);
     
     container.innerHTML = this.getHTML();
     this.attachEventListeners();
@@ -58,12 +94,12 @@ export class ItemCostView {
           <div class="summary-cards">
             <div class="summary-card">
               <div class="card-label">Total Cost</div>
-              <div class="card-value">$${this.summary?.total_cost?.toFixed(2) || '0.00'}</div>
+              <div class="card-value">$${this.summary.total_cost.toFixed(2)}</div>
             </div>
             
             <div class="summary-card">
               <div class="card-label">Current Value</div>
-              <div class="card-value">$${this.summary?.current_value?.toFixed(2) || '0.00'}</div>
+              <div class="card-value">$${this.summary.current_value.toFixed(2)}</div>
             </div>
             
             <div class="summary-card">

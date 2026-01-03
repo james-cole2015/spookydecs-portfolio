@@ -9,6 +9,7 @@ export class StatsPanel {
     this.container = document.getElementById(containerId);
     this.stats = null;
     this.valueStats = null;
+    this.activeFilter = null;
     this.render();
   }
 
@@ -69,8 +70,13 @@ export class StatsPanel {
       return;
     }
 
+    // Check if there's an active category filter from state
+    const state = stateManager.getState();
+    this.activeFilter = state.categoryFilter || null;
+
     this.container.innerHTML = `
       <div class="stats-container">
+        ${this.activeFilter ? this.renderFilterBanner() : ''}
         ${this.renderSpendingSummary()}
         ${this.renderValueSummary()}
         ${this.renderCategoryCards()}
@@ -80,6 +86,17 @@ export class StatsPanel {
     `;
 
     this.attachEventListeners();
+  }
+
+  renderFilterBanner() {
+    return `
+      <div class="filter-banner">
+        <span class="filter-text">Filtering by category: <strong>${this.activeFilter}</strong></span>
+        <button class="btn-clear-filter" data-action="clear-filter">
+          <span class="clear-icon">×</span> Clear Filter
+        </button>
+      </div>
+    `;
   }
 
   renderSpendingSummary() {
@@ -166,7 +183,7 @@ export class StatsPanel {
           ${Object.entries(categories)
             .sort((a, b) => b[1].amount - a[1].amount)
             .map(([category, data]) => `
-              <div class="category-card" data-category="${category}">
+              <div class="category-card ${this.activeFilter === category ? 'active' : ''}" data-category="${category}">
                 <div class="category-name">${category}</div>
                 <div class="category-amount">${formatCurrency(data.amount)}</div>
                 <div class="category-count">${data.count} record${data.count !== 1 ? 's' : ''}</div>
@@ -215,7 +232,7 @@ export class StatsPanel {
           ` : ''}
           ${topVendor ? `
             <div class="insight-item">
-              <span class="insight-icon">🏪</span>
+              <span class="insight-icon">🪀</span>
               <span class="insight-text">
                 Top vendor: <strong>${topVendor[0]}</strong> 
                 (${formatCurrency(topVendor[1].amount)} across ${topVendor[1].count} purchases)
@@ -336,6 +353,18 @@ export class StatsPanel {
   }
 
   attachEventListeners() {
+    // Clear filter button
+    document.querySelectorAll('[data-action="clear-filter"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        stateManager.setState({ categoryFilter: null });
+        this.activeFilter = null;
+        this.render();
+        
+        // Trigger tab switch to records to show unfiltered table
+        document.querySelector('[data-tab="records"]')?.click();
+      });
+    });
+
     // Category cards - click to filter
     document.querySelectorAll('.category-card').forEach(card => {
       card.addEventListener('click', (e) => {

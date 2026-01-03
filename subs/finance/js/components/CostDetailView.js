@@ -1,7 +1,7 @@
 // Cost Detail View Component
 
 import { navigateTo } from '../utils/router.js';
-import { deleteCost } from '../utils/finance-api.js';
+import { deleteCost, getReceiptImage } from '../utils/finance-api.js';
 
 // Optional imports - graceful fallback if not available
 let showToast, showModal;
@@ -21,13 +21,33 @@ try {
 export class CostDetailView {
   constructor(costData) {
     this.costData = costData;
+    this.receiptImageData = null;
   }
 
   async render(container) {
     console.log('🎨 Rendering CostDetailView');
     
+    // Load receipt image if available
+    await this.loadReceiptImage();
+    
     container.innerHTML = this.getHTML();
     this.attachEventListeners();
+  }
+
+  async loadReceiptImage() {
+    const photoId = this.costData.receipt_data?.image_id;
+    if (!photoId) {
+      console.log('No receipt photo_id found');
+      return;
+    }
+
+    try {
+      console.log('📸 Loading receipt image:', photoId);
+      this.receiptImageData = await getReceiptImage(photoId);
+      console.log('✅ Receipt image loaded:', this.receiptImageData);
+    } catch (error) {
+      console.error('❌ Failed to load receipt image:', error);
+    }
   }
 
   getHTML() {
@@ -75,7 +95,7 @@ export class CostDetailView {
             ${cost.notes ? `<div class="notes-block"><h3>Notes</h3><p>${cost.notes}</p></div>` : ''}
           </div>
         ` : ''}
-        ${hasReceipt ? `<div class="receipt-section"><h3>Receipt</h3><button class="btn-secondary" data-action="view-receipt">📄 View Receipt</button></div>` : ''}
+        ${hasReceipt ? this.renderReceiptSection() : ''}
         <div class="action-buttons">
           <button class="btn-secondary" data-action="edit">Edit</button>
           <button class="btn-danger" data-action="delete">Delete</button>
@@ -90,14 +110,46 @@ export class CostDetailView {
 
   renderRelatedLinks(cost) {
     const links = [];
-    if (cost.related_item_id) links.push({ label: 'Item', id: cost.related_item_id, url: `/${cost.related_item_id}` });
-    if (cost.related_idea_id) links.push({ label: 'Idea', id: cost.related_idea_id, url: `/${cost.related_idea_id}` });
-    if (cost.related_record_id) links.push({ label: 'Maintenance Record', id: cost.related_record_id, url: `/${cost.related_record_id}` });
+    if (cost.related_item_id) links.push({ label: 'Item', id: cost.related_item_id, url: `/finance/${cost.related_item_id}` });
+    if (cost.related_idea_id) links.push({ label: 'Idea', id: cost.related_idea_id, url: `/finance/${cost.related_idea_id}` });
+    if (cost.related_record_id) links.push({ label: 'Maintenance Record', id: cost.related_record_id, url: `/finance/${cost.related_record_id}` });
     if (links.length === 0) return '';
     return `
       <div class="related-links-banner">
         <span class="related-label">Related:</span>
-        ${links.map(link => `<a href="${link.url}" class="related-link">${link.label}: ${link.id} →</a>`).join('')}
+        ${links.map(link => `<a href="${link.url}" class="related-link" data-navigate="${link.url}">${link.label}: ${link.id} →</a>`).join('')}
+      </div>
+    `;
+  }
+
+  renderReceiptSection() {
+    if (!this.receiptImageData) {
+      return `
+        <div class="receipt-section">
+          <h3>📄 Receipt</h3>
+          <p class="empty-message">Receipt image not available</p>
+        </div>
+      `;
+    }
+
+    const thumbnailUrl = this.receiptImageData.thumbnail_url;
+    const fullUrl = this.receiptImageData.cloudfront_url;
+
+    return `
+      <div class="receipt-section">
+        <h3>📄 Receipt</h3>
+        <div class="receipt-thumbnail-container">
+          <img 
+            src="${thumbnailUrl}" 
+            alt="Receipt thumbnail" 
+            class="receipt-thumbnail"
+            data-full-url="${fullUrl}"
+            data-action="view-receipt-full"
+          />
+          <button class="btn-view-full" data-full-url="${fullUrl}" data-action="view-receipt-full">
+            View Full Size →
+          </button>
+        </div>
       </div>
     `;
   }
@@ -113,15 +165,53 @@ export class CostDetailView {
   }
 
   attachEventListeners() {
-    document.querySelectorAll('[data-action="back"]').forEach(btn => btn.addEventListener('click', () => navigateTo('/')));
-    document.querySelectorAll('[data-action="view-receipt"]').forEach(btn => btn.addEventListener('click', () => { console.log('View receipt clicked'); showToast('Receipt viewer coming soon', 'info'); }));
-    document.querySelectorAll('[data-action="edit"]').forEach(btn => btn.addEventListener('click', () => { console.log('Edit cost clicked'); showToast('Edit functionality coming soon', 'info'); }));
-    document.querySelectorAll('[data-action="delete"]').forEach(btn => btn.addEventListener('click', () => this.handleDelete()));
+    // Back button
+    document.querySelectorAll('[data-action="back"]').forEach(btn => 
+      btn.addEventListener('click', () => navigateTo('/'))
+    );
+
+    // Related links - prevent default and use router
+    document.querySelectorAll('[data-navigate]').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const path = e.currentTarget.dataset.navigate;
+        navigateTo(path);
+      });
+    });
+
+    // View full receipt
+    document.querySelectorAll('[data-action="view-receipt-full"]').forEach(el => {
+      el.addEventListener('click', (e) => {
+        const fullUrl = e.currentTarget.dataset.fullUrl;
+        window.open(fullUrl, '_blank');
+      });
+    });
+
+    // Edit button
+    document.querySelectorAll('[data-action="edit"]').forEach(btn => 
+      btn.addEventListener('click', () => {
+        console.log('Edit cost clicked');
+        showToast('Edit functionality coming soon', 'info');
+      })
+    );
+
+    // Delete button
+    document.querySelectorAll('[data-action="delete"]').forEach(btn => 
+      btn.addEventListener('click', () => this.handleDelete())
+    );
   }
 
   async handleDelete() {
-    const confirmed = await showModal({ title: 'Delete Cost Record', message: 'Are you sure you want to delete this cost record? This action cannot be undone.', confirmText: 'Delete', cancelText: 'Cancel', type: 'danger' });
+    const confirmed = await showModal({ 
+      title: 'Delete Cost Record', 
+      message: 'Are you sure you want to delete this cost record? This action cannot be undone.', 
+      confirmText: 'Delete', 
+      cancelText: 'Cancel', 
+      type: 'danger' 
+    });
+    
     if (!confirmed) return;
+    
     try {
       await deleteCost(this.costData.cost_id);
       showToast('Cost record deleted successfully', 'success');

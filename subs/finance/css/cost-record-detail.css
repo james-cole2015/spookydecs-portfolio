@@ -6,11 +6,19 @@
   padding: 2rem;
 }
 
+.cost-detail-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
 /* Related Item Banner */
-.related-item-banner {
+.related-item-banner,
+.related-links-banner {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
+  gap: 1rem;
   background: #eff6ff;
   border: 1px solid #bfdbfe;
   border-radius: 8px;
@@ -18,9 +26,21 @@
   margin-bottom: 2rem;
 }
 
-.related-item-banner span {
-  font-weight: 500;
+.related-label {
+  font-weight: 600;
   color: #1e40af;
+}
+
+.related-link {
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.related-link:hover {
+  color: #2563eb;
+  text-decoration: underline;
 }
 
 /* Cost Details Section */
@@ -39,11 +59,12 @@
   margin: 0 0 1.5rem 0;
 }
 
-/* Detail Grid */
+/* Detail Grid - Reduced width for tighter spacing */
 .detail-grid {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  max-width: 600px; /* Reduced from full width */
 }
 
 .detail-row {
@@ -51,6 +72,7 @@
   justify-content: space-between;
   align-items: baseline;
   padding: 0.75rem 0;
+  gap: 2rem; /* Add gap to prevent touching */
 }
 
 .detail-row.highlight {
@@ -63,7 +85,8 @@
 .detail-label {
   font-weight: 500;
   color: #6b7280;
-  flex: 0 0 40%;
+  flex: 0 0 150px; /* Fixed width for labels */
+  min-width: 150px;
 }
 
 .detail-value {
@@ -71,6 +94,7 @@
   font-weight: 500;
   text-align: right;
   flex: 1;
+  word-break: break-word;
 }
 
 .detail-row.highlight .detail-value {
@@ -135,6 +159,47 @@
   margin: 0 0 1rem 0;
 }
 
+.receipt-thumbnail-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.receipt-thumbnail {
+  max-width: 200px;
+  height: auto;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.receipt-thumbnail:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+  transform: scale(1.02);
+}
+
+.btn-view-full {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-view-full:hover {
+  background: #2563eb;
+}
+
 /* Action Buttons */
 .action-buttons {
   display: flex;
@@ -176,8 +241,13 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-  .cost-record-detail-page {
+  .cost-record-detail-page,
+  .cost-detail-page {
     padding: 1rem;
+  }
+
+  .detail-grid {
+    max-width: 100%;
   }
 
   .detail-row {
@@ -188,6 +258,7 @@
 
   .detail-label {
     flex: none;
+    min-width: auto;
   }
 
   .detail-value {
@@ -198,9 +269,14 @@
     flex-direction: column;
   }
 
-  .related-item-banner {
+  .related-item-banner,
+  .related-links-banner {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.75rem;
+  }
+
+  .receipt-thumbnail {
+    max-width: 100%;
   }
 }

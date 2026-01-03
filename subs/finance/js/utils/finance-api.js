@@ -126,6 +126,28 @@ export async function getItemCosts(itemId) {
   }
 }
 
+// GET receipt image data by photo_id
+export async function getReceiptImage(photoId) {
+  await ensureConfigLoaded();
+  
+  try {
+    console.log('📸 Fetching receipt image from API:', photoId);
+    const response = await fetch(`${API_ENDPOINT}/images/${photoId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    const data = await handleResponse(response);
+    console.log('✅ Receipt image data received:', data);
+    return data;
+  } catch (error) {
+    console.error('❌ Error fetching receipt image:', error);
+    throw error;
+  }
+}
+
 // POST create new cost record
 export async function createCost(costData) {
   await ensureConfigLoaded();

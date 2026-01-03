@@ -12,20 +12,21 @@ export function initRouter() {
   
   // Define routes - Specific routes first, generic routes last
   router
-    .on('/costs/:costId', async (match) => {
-      console.log('✅ Route matched: /costs/:costId', match.data);
+    .on('/finance/new', async (match) => {
+      console.log('✅ Route matched: /finance/new', match.data);
+      await handleNewCostView(match);
+    })
+    .on('/finance/costs/:costId', async (match) => {
+      console.log('✅ Route matched: /finance/costs/:costId', match.data);
       await handleCostDetailView(match);
     })
-    .on('/:itemId', async (match) => {
-      console.log('✅ Route matched: /:itemId', match.data);
-      
-      // Safety guard - prevent literal routes
-      if (match.data.itemId === 'new' || match.data.itemId === 'costs') {
-        console.log('   ⚠️  Skipping - this is a literal route');
-        return;
-      }
-      
+    .on('/finance/:itemId', async (match) => {
+      console.log('✅ Route matched: /finance/:itemId', match.data);
       await handleItemCostsView(match);
+    })
+    .on('/finance', async () => {
+      console.log('✅ Route matched: /finance (main page)');
+      await handleFinanceMain();
     })
     .notFound(() => {
       console.log('❌ Route NOT FOUND');
@@ -42,8 +43,10 @@ export function initRouter() {
 
 export function navigateTo(path) {
   if (router) {
-    console.log('🔄 Navigating to:', path);
-    router.navigate(path);
+    // Ensure path starts with /finance
+    const fullPath = path.startsWith('/finance') ? path : `/finance${path}`;
+    console.log('🔄 Navigating to:', fullPath);
+    router.navigate(fullPath);
   } else {
     console.error('❌ Router not initialized');
   }
@@ -56,6 +59,56 @@ export function getRouter() {
 // ============================================
 // ROUTE HANDLERS
 // ============================================
+
+async function handleFinanceMain() {
+  console.log('📄 handleFinanceMain started');
+  const container = document.getElementById('main-content');
+  
+  if (!container) {
+    console.error('❌ main-content container not found!');
+    return;
+  }
+  
+  try {
+    showLoading();
+    
+    // Dynamically import the main finance page
+    const { FinanceMainPage } = await import('../pages/finance-main.js');
+    new FinanceMainPage();
+    
+    hideLoading();
+  } catch (error) {
+    console.error('❌ Error rendering finance main:', error);
+    hideLoading();
+    renderError(container, 'Failed to load finance page');
+  }
+}
+
+async function handleNewCostView(match) {
+  console.log('📄 handleNewCostView started');
+  const container = document.getElementById('main-content');
+  
+  if (!container) {
+    console.error('❌ main-content container not found!');
+    return;
+  }
+  
+  try {
+    showLoading();
+    
+    console.log('📄 Loading new cost form');
+    
+    // Dynamically import the new cost page
+    const { renderNewCostForm } = await import('../pages/new-cost-record.js');
+    await renderNewCostForm(container);
+    
+    hideLoading();
+  } catch (error) {
+    console.error('❌ Error rendering new cost form:', error);
+    hideLoading();
+    renderError(container, 'Failed to load new cost form');
+  }
+}
 
 async function handleCostDetailView(match) {
   console.log('📄 handleCostDetailView started');
@@ -70,7 +123,7 @@ async function handleCostDetailView(match) {
     showLoading();
     
     const { costId } = match.data;
-    console.log('🔄 Loading cost record:', costId);
+    console.log('📄 Loading cost record:', costId);
     
     // Dynamically import the cost detail page
     const { renderCostDetail } = await import('../pages/cost-detail.js');
@@ -97,7 +150,7 @@ async function handleItemCostsView(match) {
     showLoading();
     
     const { itemId } = match.data;
-    console.log('🔄 Loading item/idea/record costs for:', itemId);
+    console.log('📄 Loading item/idea/record costs for:', itemId);
     
     // Dynamically import the item costs page
     const { renderItemCosts } = await import('../pages/item-costs.js');
@@ -130,7 +183,7 @@ function renderNotFound() {
         <h1>404 - Page Not Found</h1>
         <p>The page you're looking for doesn't exist.</p>
         <p><small>Path: ${window.location.pathname}</small></p>
-        <button onclick="window.location.href='/'">Go Home</button>
+        <button onclick="window.location.href='/finance'" class="btn-primary">Go Home</button>
       </div>
     </div>
   `;
@@ -143,7 +196,7 @@ function renderError(container, message) {
       <div class="error-content">
         <h1>Error</h1>
         <p>${message}</p>
-        <button onclick="window.location.reload()">Reload Page</button>
+        <button onclick="window.location.reload()" class="btn-secondary">Reload Page</button>
       </div>
     </div>
   `;
