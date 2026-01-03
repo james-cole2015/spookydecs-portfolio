@@ -1,7 +1,6 @@
 // Workbench Router Module
-// Handles all routing with Navigo
+// Handles all routing with Navigo (loaded via script tag in index.html)
 
-import Navigo from 'https://cdn.jsdelivr.net/npm/navigo@8.11.1/lib/navigo.es.min.js';
 import { renderKanban } from './kanban-view.js';
 import { renderDetail } from './detail-view.js';
 import { renderCreateSeason } from './create-season-view.js';
@@ -11,8 +10,8 @@ import { toast } from './toast.js';
 let router = null;
 
 export function initRouter() {
-  // Initialize Navigo router
-  router = new Navigo('/', { hash: true });
+  // Navigo is loaded globally via script tag
+  router = new window.Navigo('/', { hash: true });
 
   // Define routes
   router
