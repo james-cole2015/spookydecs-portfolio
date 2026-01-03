@@ -2,7 +2,7 @@
 
 import { formatCurrency } from '../utils/finance-config.js';
 import { getCostStats, getItems } from '../utils/finance-api.js';
-import { stateManager } from './state.js';
+import { stateManager } from '../utils/state.js';
 
 export class StatsPanel {
   constructor(containerId) {
