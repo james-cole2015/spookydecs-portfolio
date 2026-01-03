@@ -1,6 +1,5 @@
 // Cost Detail View Component
 
-import { navigateTo } from '../utils/router.js';
 import { deleteCost, getReceiptImage } from '../utils/finance-api.js';
 
 // Optional imports - graceful fallback if not available
@@ -63,17 +62,45 @@ export class CostDetailView {
 
     return `
       <div class="cost-detail-page">
-        <div class="page-header">
-          <button class="btn-back" data-action="back">← Back to Finance</button>
-          <div class="detail-title">
+        <!-- Breadcrumbs -->
+        <nav class="breadcrumbs">
+          <a href="/finance" class="breadcrumb-link">Finance</a>
+          <span class="breadcrumb-separator">›</span>
+          <span class="breadcrumb-current">Cost Record</span>
+        </nav>
+
+        <!-- Page Header with Title and Actions -->
+        <div class="page-header-section">
+          <div class="header-left">
             <h1>Cost Record</h1>
             <p class="detail-subtitle">${cost.cost_id}</p>
           </div>
+          <div class="header-actions">
+            <button class="btn-action btn-edit" data-action="edit">
+              <span class="btn-icon">✏️</span>
+              Edit
+            </button>
+            <button class="btn-action btn-delete" data-action="delete">
+              <span class="btn-icon">🗑️</span>
+              Delete
+            </button>
+          </div>
         </div>
+
         ${this.renderRelatedLinks(cost)}
+        
+        <!-- Description Section (moved to top) -->
+        ${cost.description || cost.notes ? `
+          <div class="description-section">
+            ${cost.description ? `<div class="description-block"><h3>Description</h3><p>${cost.description}</p></div>` : ''}
+            ${cost.notes ? `<div class="notes-block"><h3>Notes</h3><p>${cost.notes}</p></div>` : ''}
+          </div>
+        ` : ''}
+
+        <!-- Cost Details Section (centered) -->
         <div class="cost-details-section">
           <h2>💰 Cost Details</h2>
-          <div class="detail-grid">
+          <div class="detail-grid-centered">
             <div class="detail-row"><span class="detail-label">Date</span><span class="detail-value">${formattedDate}</span></div>
             <div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">${this.formatCostType(cost.cost_type)}</span></div>
             <div class="detail-row"><span class="detail-label">Category</span><span class="detail-value">${this.formatCategory(cost.category)}</span></div>
@@ -89,17 +116,9 @@ export class CostDetailView {
             <div class="detail-row"><span class="detail-label">Item Value</span><span class="detail-value">$${parseFloat(cost.value || cost.total_cost).toFixed(2)}</span></div>
           </div>
         </div>
-        ${cost.description || cost.notes ? `
-          <div class="description-section">
-            ${cost.description ? `<div class="description-block"><h3>Description</h3><p>${cost.description}</p></div>` : ''}
-            ${cost.notes ? `<div class="notes-block"><h3>Notes</h3><p>${cost.notes}</p></div>` : ''}
-          </div>
-        ` : ''}
+
         ${hasReceipt ? this.renderReceiptSection() : ''}
-        <div class="action-buttons">
-          <button class="btn-secondary" data-action="edit">Edit</button>
-          <button class="btn-danger" data-action="delete">Delete</button>
-        </div>
+
         <div class="metadata-section">
           <p class="metadata-text">Created ${new Date(cost.created_at).toLocaleDateString()} by ${cost.created_by || 'system'}</p>
           ${cost.updated_at !== cost.created_at ? `<p class="metadata-text">Last updated ${new Date(cost.updated_at).toLocaleDateString()}</p>` : ''}
@@ -165,17 +184,20 @@ export class CostDetailView {
   }
 
   attachEventListeners() {
-    // Back button
-    document.querySelectorAll('[data-action="back"]').forEach(btn => 
-      btn.addEventListener('click', () => navigateTo('/'))
-    );
+    // Breadcrumb navigation
+    document.querySelectorAll('.breadcrumb-link').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.location.href = '/finance';
+      });
+    });
 
-    // Related links - prevent default and use router
+    // Related links - prevent default and navigate
     document.querySelectorAll('[data-navigate]').forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
         const path = e.currentTarget.dataset.navigate;
-        navigateTo(path);
+        window.location.href = path;
       });
     });
 
@@ -215,7 +237,7 @@ export class CostDetailView {
     try {
       await deleteCost(this.costData.cost_id);
       showToast('Cost record deleted successfully', 'success');
-      setTimeout(() => navigateTo('/'), 1000);
+      setTimeout(() => { window.location.href = '/finance'; }, 1000);
     } catch (error) {
       console.error('Error deleting cost:', error);
       showToast('Failed to delete cost record: ' + error.message, 'error');
