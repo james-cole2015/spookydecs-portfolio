@@ -20,13 +20,20 @@ export function initRouter() {
       console.log('✅ Route matched: /finance/costs/:costId', match.data);
       await handleCostDetailView(match);
     })
-    .on('/finance/:itemId', async (match) => {
-      console.log('✅ Route matched: /finance/:itemId', match.data);
-      await handleItemCostsView(match);
-    })
     .on('/finance', async () => {
       console.log('✅ Route matched: /finance (main page)');
       await handleFinanceMain();
+    })
+    .on('/finance/:itemId', async (match) => {
+      console.log('✅ Route matched: /finance/:itemId', match.data);
+      // Safety check - prevent literal routes from being treated as item IDs
+      const itemId = match.data.itemId;
+      if (itemId === 'new' || itemId === 'costs') {
+        console.log('   ⚠️ Skipping - this is a literal route');
+        renderNotFound();
+        return;
+      }
+      await handleItemCostsView(match);
     })
     .notFound(() => {
       console.log('❌ Route NOT FOUND');

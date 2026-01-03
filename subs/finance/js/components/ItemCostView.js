@@ -86,11 +86,16 @@ export class ItemCostView {
             <p class="item-subtitle">${this.itemId}${itemClassType ? ` • ${itemClassType}` : ''}</p>
           </div>
           
-          ${this.itemDetails ? `
-            <button class="btn-secondary" data-action="view-item">
-              View Item Details →
+          <div class="header-actions">
+            <button class="btn-primary" data-action="add-cost">
+              + Add New Cost
             </button>
-          ` : ''}
+            ${this.itemDetails ? `
+              <button class="btn-secondary" data-action="view-item">
+                View Item Details →
+              </button>
+            ` : ''}
+          </div>
         </div>
 
         <!-- Financial Summary -->
@@ -118,13 +123,6 @@ export class ItemCostView {
 
         <!-- Cost Breakdown -->
         ${this.renderBreakdown()}
-
-        <!-- Add Cost Button -->
-        <div class="action-bar">
-          <button class="btn-primary" data-action="add-cost">
-            + Add New Cost
-          </button>
-        </div>
 
         <!-- Cost History -->
         <div class="cost-history-section">
