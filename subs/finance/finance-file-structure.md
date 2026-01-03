@@ -1,39 +1,43 @@
 finance/
-├── index.html                          # Single entry point
-│
-├── css/
-│   ├── finance.css                     # Main styles (tabs, table, forms)
-│   ├── cost-detail.css                 # Detail drawer/page styles
-│   └── cost-form.css                   # Form-specific styles
-│   └── new-cost-record.css             # Form-specific styles
-│   └── receipt-upload-modal.css             # Form-specific styles
-│
-└── js/
-    ├── app.js                          # Router initialization
-    │
-    ├── utils/
-    │   ├── finance-config.js           # Constants, validation, cost types
-    │   ├── finance-api.js              # API client (GET, POST, PUT, DELETE)
-    │   ├── state.js                    # URL state management
-    │   └── router.js                   # Navigo router
-    │
-    ├── shared/
-    │   ├── toast.js                    # Toast notifications
-    │   └── modal.js                    # Confirmation modals
-    │
-    ├── components/
-    │   ├── TabBar.js                   # Tabs: Records | Stats | (Future: Receipts)
-    │   ├── CostRecordsTable.js         # TanStack Table implementation
-    │   ├── CostDetailDrawer.js         # Slide-out drawer with View/Edit/Delete
-    │   ├── CostFormFields.js           # Dynamic form field generator
-    │   ├── CostFormRenderers.js        # Dynamic form field generator
-    │   ├── CostReviewModal.js          # Review before submit
-    │   └── StatsPanel.js               # Stats placeholder 
-    │   └── ReceiptUploadModal.js       # Stats placeholder 
-    │
-    └── pages/
-        └── finance-main.js             # Main page orchestration
-        └── new-cost-record.js          # New Cost Form
+├── css
+│   ├── cost-detail.css
+│   ├── cost-form.css
+│   ├── cost-record-detail.css
+│   ├── finance.css
+│   ├── item-costs.css
+│   ├── new-cost-record.css
+│   ├── receipt-upload-modal.css
+│   └── stats-panel.css
+├── finance-file-structure.md
+├── index.html
+└── js
+    ├── app.js
+    ├── components
+    │   ├── CostDetailDrawer.js
+    │   ├── CostDetailView.js
+    │   ├── CostFormFields.js
+    │   ├── CostFormRenderers.js
+    │   ├── CostHistoryList.js
+    │   ├── CostRecordsTable.js
+    │   ├── CostReviewModal.js
+    │   ├── ItemCostView.js
+    │   ├── ReceiptUploadModal.js
+    │   ├── StatsPanel.js
+    │   └── TabBar.js
+    ├── pages
+    │   ├── cost-detail.js
+    │   ├── finance-main.js
+    │   ├── item-costs.js
+    │   └── new-cost-record.js
+    ├── shared
+    │   ├── modal.js
+    │   └── toast.js
+    └── utils
+        ├── finance-api.js
+        ├── finance-config.js
+        ├── helpers.js
+        ├── router.js
+        └── state.js
 
 lambdas/
 ├── finance-costs-handler.py            # Main CRUD operations for costs
