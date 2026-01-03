@@ -1,6 +1,5 @@
 // Item Cost View Component
 
-import { navigateTo } from '../utils/router.js';
 import { CostHistoryList } from './CostHistoryList.js';
 
 export class ItemCostView {
@@ -12,6 +11,10 @@ export class ItemCostView {
     
     // Calculate summary from costs if not provided
     this.summary = this.calculateSummary(data.summary);
+    
+    console.log('🎨 ItemCostView constructor');
+    console.log('📊 Summary:', this.summary);
+    console.log('📋 Costs:', this.costs);
   }
 
   calculateSummary(providedSummary) {
@@ -69,13 +72,16 @@ export class ItemCostView {
     
     return `
       <div class="item-costs-page">
+        <!-- Breadcrumbs -->
+        <nav class="breadcrumbs">
+          <a href="/finance" class="breadcrumb-link">Finance</a>
+          <span class="breadcrumb-separator">›</span>
+          <span class="breadcrumb-current">${itemName}</span>
+        </nav>
+
         <!-- Header -->
-        <div class="page-header">
-          <button class="btn-back" data-action="back">
-            ← Back to Finance
-          </button>
-          
-          <div class="item-title">
+        <div class="page-header-section">
+          <div class="header-left">
             <h1>${itemName}</h1>
             <p class="item-subtitle">${this.itemId}${itemClassType ? ` • ${itemClassType}` : ''}</p>
           </div>
@@ -95,6 +101,7 @@ export class ItemCostView {
             <div class="summary-card">
               <div class="card-label">Total Cost</div>
               <div class="card-value">$${this.summary.total_cost.toFixed(2)}</div>
+              <div class="card-count">${this.costs.length} record${this.costs.length !== 1 ? 's' : ''}</div>
             </div>
             
             <div class="summary-card">
@@ -121,7 +128,7 @@ export class ItemCostView {
 
         <!-- Cost History -->
         <div class="cost-history-section">
-          <h2>Cost History (${this.costs.length} records)</h2>
+          <h2>Cost History (${this.costs.length} record${this.costs.length !== 1 ? 's' : ''})</h2>
           <div id="cost-history-container"></div>
         </div>
       </div>
@@ -169,10 +176,11 @@ export class ItemCostView {
   }
 
   attachEventListeners() {
-    // Back button
-    document.querySelectorAll('[data-action="back"]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        navigateTo('/');
+    // Breadcrumb navigation
+    document.querySelectorAll('.breadcrumb-link').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.location.href = '/finance';
       });
     });
 
@@ -187,7 +195,7 @@ export class ItemCostView {
     // Add new cost
     document.querySelectorAll('[data-action="add-cost"]').forEach(btn => {
       btn.addEventListener('click', () => {
-        navigateTo(`/new?item_id=${this.itemId}`);
+        window.location.href = `/finance/new?item_id=${this.itemId}`;
       });
     });
   }

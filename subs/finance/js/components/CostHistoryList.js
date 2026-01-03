@@ -1,7 +1,5 @@
 // Cost History List Component
 
-import { navigateTo } from '../utils/router.js';
-
 export class CostHistoryList {
   constructor(costs, itemId) {
     this.costs = costs || [];
@@ -102,11 +100,11 @@ export class CostHistoryList {
   }
 
   attachEventListeners(container) {
-    // View details
+    // View details - use window.location for reliable navigation
     container.querySelectorAll('[data-action="view-details"]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const costId = e.target.dataset.costId;
-        navigateTo(`/costs/${costId}`);
+        window.location.href = `/finance/costs/${costId}`;
       });
     });
 
