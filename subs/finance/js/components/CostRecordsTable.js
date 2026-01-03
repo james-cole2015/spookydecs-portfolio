@@ -24,7 +24,28 @@ export class CostRecordsTable {
       direction: 'desc'
     };
     
+    // Subscribe to state changes
+    this.subscribeToState();
+    
     this.render();
+  }
+
+  subscribeToState() {
+    stateManager.subscribe((state) => {
+      // If category filter is set from stats panel
+      if (state.categoryFilter && state.categoryFilter !== this.filters.category) {
+        this.filters.category = state.categoryFilter;
+        this.currentPage = 0;
+        this.applyFilters();
+        this.render();
+        
+        // Clear the category filter from state after applying
+        // so it doesn't persist on tab switches
+        setTimeout(() => {
+          stateManager.setState({ categoryFilter: null });
+        }, 100);
+      }
+    });
   }
 
   updateData(data) {
@@ -270,7 +291,7 @@ export class CostRecordsTable {
     const newCostBtn = this.container.querySelector('#btn-new-cost');
     if (newCostBtn) {
       newCostBtn.addEventListener('click', () => {
-        window.location.href = '/finance/new';
+        window.location.href = '/new';
       });
     }
 
