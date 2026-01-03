@@ -4,6 +4,7 @@ import { formatCurrency, formatDate, formatDateTime } from '../utils/finance-con
 import { modal } from '../shared/modal.js';
 import { toast } from '../shared/toast.js';
 import { deleteCost } from '../utils/finance-api.js';
+import { navigateTo } from '../utils/router.js';
 
 export class CostDetailDrawer {
   constructor() {
@@ -87,23 +88,25 @@ export class CostDetailDrawer {
     return `
       <div class="detail-section">
         <h3 class="detail-section-title">Basic Information</h3>
-        <div class="detail-grid">
-          <div class="detail-field">
+        <div class="drawer-detail-list">
+          <div class="drawer-detail-item">
             <span class="detail-label">Cost ID</span>
             <span class="detail-value">${cost.cost_id}</span>
           </div>
-          <div class="detail-field">
+          <div class="drawer-detail-item">
             <span class="detail-label">Date</span>
             <span class="detail-value">${formatDate(cost.cost_date)}</span>
           </div>
-          <div class="detail-field full-width">
+          <div class="drawer-detail-item">
             <span class="detail-label">Item Name</span>
             <span class="detail-value">${cost.item_name || 'N/A'}</span>
           </div>
-          <div class="detail-field full-width">
+          ${cost.description ? `
+          <div class="drawer-detail-item full-width">
             <span class="detail-label">Description</span>
-            <span class="detail-value ${!cost.description ? 'empty' : ''}">${cost.description || 'No description'}</span>
+            <span class="detail-value">${cost.description}</span>
           </div>
+          ` : ''}
         </div>
       </div>
     `;
@@ -113,8 +116,8 @@ export class CostDetailDrawer {
     return `
       <div class="detail-section">
         <h3 class="detail-section-title">Cost Details</h3>
-        <div class="detail-grid">
-          <div class="detail-field">
+        <div class="drawer-detail-list">
+          <div class="drawer-detail-item">
             <span class="detail-label">Type</span>
             <span class="detail-value">
               <span class="cost-type-badge cost-type-${cost.cost_type}">
@@ -122,27 +125,27 @@ export class CostDetailDrawer {
               </span>
             </span>
           </div>
-          <div class="detail-field">
+          <div class="drawer-detail-item">
             <span class="detail-label">Category</span>
             <span class="detail-value">
               <span class="category-badge">${cost.category}</span>
             </span>
           </div>
           ${cost.subcategory ? `
-            <div class="detail-field">
+            <div class="drawer-detail-item">
               <span class="detail-label">Subcategory</span>
               <span class="detail-value">${cost.subcategory}</span>
             </div>
           ` : ''}
-          <div class="detail-field">
+          <div class="drawer-detail-item">
             <span class="detail-label">Quantity</span>
             <span class="detail-value">${cost.quantity || 1}</span>
           </div>
-          <div class="detail-field">
+          <div class="drawer-detail-item">
             <span class="detail-label">Unit Cost</span>
             <span class="detail-value">${formatCurrency(cost.unit_cost || cost.total_cost, cost.currency)}</span>
           </div>
-          <div class="detail-field">
+          <div class="drawer-detail-item highlight">
             <span class="detail-label">Total Amount</span>
             <span class="detail-value amount">${formatCurrency(cost.total_cost, cost.currency)}</span>
           </div>
@@ -155,12 +158,12 @@ export class CostDetailDrawer {
     return `
       <div class="detail-section">
         <h3 class="detail-section-title">Vendor Information</h3>
-        <div class="detail-grid">
-          <div class="detail-field">
+        <div class="drawer-detail-list">
+          <div class="drawer-detail-item">
             <span class="detail-label">Vendor</span>
             <span class="detail-value">${cost.vendor || 'N/A'}</span>
           </div>
-          <div class="detail-field">
+          <div class="drawer-detail-item">
             <span class="detail-label">Purchase Date</span>
             <span class="detail-value">${cost.purchase_date ? formatDate(cost.purchase_date) : 'N/A'}</span>
           </div>
@@ -170,29 +173,39 @@ export class CostDetailDrawer {
   }
 
   renderRelatedInfo(cost) {
-    if (!cost.related_item_id && !cost.related_record_id) {
+    if (!cost.related_item_id && !cost.related_record_id && !cost.related_idea_id) {
       return '';
     }
 
     return `
       <div class="detail-section">
         <h3 class="detail-section-title">Related Records</h3>
-        <div class="detail-grid">
+        <div class="drawer-detail-list">
           ${cost.related_item_id ? `
-            <div class="detail-field">
+            <div class="drawer-detail-item">
               <span class="detail-label">Related Item</span>
               <span class="detail-value">
-                <a href="/items/${cost.related_item_id}" class="related-item-link">
+                <a href="#" class="related-item-link" data-navigate="/finance/${cost.related_item_id}">
                   ${cost.related_item_id} →
                 </a>
               </span>
             </div>
           ` : ''}
+          ${cost.related_idea_id ? `
+            <div class="drawer-detail-item">
+              <span class="detail-label">Related Idea</span>
+              <span class="detail-value">
+                <a href="#" class="related-item-link" data-navigate="/finance/${cost.related_idea_id}">
+                  ${cost.related_idea_id} →
+                </a>
+              </span>
+            </div>
+          ` : ''}
           ${cost.related_record_id ? `
-            <div class="detail-field">
+            <div class="drawer-detail-item">
               <span class="detail-label">Related Maintenance</span>
               <span class="detail-value">
-                <a href="/maintenance/${cost.related_record_id}" class="related-item-link">
+                <a href="#" class="related-item-link" data-navigate="/finance/${cost.related_record_id}">
                   ${cost.related_record_id} →
                 </a>
               </span>
@@ -222,7 +235,7 @@ export class CostDetailDrawer {
           <div class="receipt-info">
             <div class="receipt-name">${receipt.receipt_id}</div>
             <div class="receipt-meta">
-              ${receipt.file_type} • ${(receipt.file_size / 1024).toFixed(1)} KB
+              ${receipt.file_type || 'Image'} ${receipt.file_size ? `• ${(receipt.file_size / 1024).toFixed(1)} KB` : ''}
             </div>
           </div>
           <button class="receipt-view-btn">View</button>
@@ -235,23 +248,23 @@ export class CostDetailDrawer {
     return `
       <div class="detail-section">
         <h3 class="detail-section-title">Metadata</h3>
-        <div class="detail-grid">
-          <div class="detail-field">
+        <div class="drawer-detail-list">
+          <div class="drawer-detail-item">
             <span class="detail-label">Created At</span>
             <span class="detail-value">${formatDateTime(cost.created_at)}</span>
           </div>
-          <div class="detail-field">
+          <div class="drawer-detail-item">
             <span class="detail-label">Created By</span>
             <span class="detail-value">${cost.created_by || 'System'}</span>
           </div>
           ${cost.updated_at ? `
-            <div class="detail-field">
+            <div class="drawer-detail-item">
               <span class="detail-label">Last Updated</span>
               <span class="detail-value">${formatDateTime(cost.updated_at)}</span>
             </div>
           ` : ''}
           ${cost.notes ? `
-            <div class="detail-field full-width">
+            <div class="drawer-detail-item full-width">
               <span class="detail-label">Notes</span>
               <span class="detail-value">${cost.notes}</span>
             </div>
@@ -275,8 +288,9 @@ export class CostDetailDrawer {
 
     if (viewBtn) {
       viewBtn.addEventListener('click', () => {
-        // Navigate to cost detail page
-        window.location.href = `/costs/${this.currentCost.cost_id}`;
+        // Navigate to cost detail page using router
+        navigateTo(`/costs/${this.currentCost.cost_id}`);
+        this.close();
       });
     }
 
@@ -292,6 +306,16 @@ export class CostDetailDrawer {
     if (deleteBtn) {
       deleteBtn.addEventListener('click', () => this.handleDelete());
     }
+
+    // Related item links - use router
+    this.drawer.querySelectorAll('[data-navigate]').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const path = e.currentTarget.dataset.navigate;
+        navigateTo(path);
+        this.close();
+      });
+    });
 
     // Receipt view button
     const receiptBtn = this.drawer.querySelector('.receipt-view-btn');

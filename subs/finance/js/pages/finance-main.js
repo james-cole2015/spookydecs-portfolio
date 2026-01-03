@@ -187,20 +187,8 @@ export class FinanceMainPage {
   }
 
   handleEditCost(cost) {
-    // Populate form with cost data
-    this.form.setData(cost);
-    
-    // Scroll to form
-    const formContainer = document.getElementById('form-container');
-    if (formContainer) {
-      formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    // Switch to records tab if not already there
-    const state = stateManager.getState();
-    if (state.tab !== 'records') {
-      this.tabBar.switchTab('records');
-    }
+    // Navigate to edit page with cost data
+    navigateTo(`/new?cost_id=${cost.cost_id}`);
   }
 
   async handleDeleteCost(costId) {
