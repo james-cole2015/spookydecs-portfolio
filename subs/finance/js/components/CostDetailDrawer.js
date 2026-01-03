@@ -4,7 +4,6 @@ import { formatCurrency, formatDate, formatDateTime } from '../utils/finance-con
 import { modal } from '../shared/modal.js';
 import { toast } from '../shared/toast.js';
 import { deleteCost } from '../utils/finance-api.js';
-import { navigateTo } from '../utils/router.js';
 
 export class CostDetailDrawer {
   constructor() {
@@ -288,8 +287,8 @@ export class CostDetailDrawer {
 
     if (viewBtn) {
       viewBtn.addEventListener('click', () => {
-        // Navigate to cost detail page using router
-        navigateTo(`/costs/${this.currentCost.cost_id}`);
+        // Navigate to cost detail page
+        window.location.href = `/finance/costs/${this.currentCost.cost_id}`;
         this.close();
       });
     }
@@ -307,12 +306,12 @@ export class CostDetailDrawer {
       deleteBtn.addEventListener('click', () => this.handleDelete());
     }
 
-    // Related item links - use router
+    // Related item links - navigate directly
     this.drawer.querySelectorAll('[data-navigate]').forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
         const path = e.currentTarget.dataset.navigate;
-        navigateTo(path);
+        window.location.href = path;
         this.close();
       });
     });
