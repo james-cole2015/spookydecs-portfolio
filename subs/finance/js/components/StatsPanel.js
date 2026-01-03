@@ -1,22 +1,65 @@
 // Stats Panel Component
 
 import { formatCurrency } from '../utils/finance-config.js';
-import { getCostStats } from '../utils/finance-api.js';
+import { getCostStats, getItems } from '../utils/finance-api.js';
+import { stateManager } from './state.js';
 
 export class StatsPanel {
   constructor(containerId) {
     this.container = document.getElementById(containerId);
     this.stats = null;
+    this.valueStats = null;
     this.render();
   }
 
   async loadStats(filters = {}) {
     try {
+      // Load cost stats
       this.stats = await getCostStats(filters);
+      
+      // Load value stats from items
+      await this.loadValueStats();
+      
       this.render();
     } catch (error) {
       console.error('Failed to load stats:', error);
       this.renderError();
+    }
+  }
+
+  async loadValueStats() {
+    try {
+      const response = await getItems({ status: 'Active' });
+      const items = Array.isArray(response) ? response : (response.items || []);
+      
+      this.valueStats = {
+        totalValue: 0,
+        bySeason: {},
+        byCategory: {},
+        itemCount: items.length
+      };
+
+      items.forEach(item => {
+        const value = parseFloat(item.vendor_metadata?.value || 0);
+        this.valueStats.totalValue += value;
+
+        // By season
+        const season = item.season || 'Unknown';
+        if (!this.valueStats.bySeason[season]) {
+          this.valueStats.bySeason[season] = 0;
+        }
+        this.valueStats.bySeason[season] += value;
+
+        // By category (using class_type)
+        const category = item.class_type || 'Unknown';
+        if (!this.valueStats.byCategory[category]) {
+          this.valueStats.byCategory[category] = 0;
+        }
+        this.valueStats.byCategory[category] += value;
+      });
+    } catch (error) {
+      console.error('Failed to load value stats:', error);
+      this.valueStats = null;
     }
   }
 
@@ -28,177 +71,192 @@ export class StatsPanel {
 
     this.container.innerHTML = `
       <div class="stats-container">
-        ${this.renderOverview()}
-        ${this.renderCategoryBreakdown()}
-        ${this.renderTypeBreakdown()}
-        ${this.renderTopVendors()}
-        ${this.renderMonthlyTrend()}
+        ${this.renderSpendingSummary()}
+        ${this.renderValueSummary()}
+        ${this.renderCategoryCards()}
+        ${this.renderInsights()}
+        ${this.renderBreakdowns()}
       </div>
-
-      <style>
-        .stats-container {
-          display: grid;
-          gap: 24px;
-        }
-
-        .stat-card {
-          background: white;
-          border-radius: 8px;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-          padding: 24px;
-        }
-
-        .stat-card-title {
-          font-size: 16px;
-          font-weight: 600;
-          margin-bottom: 16px;
-          color: #0f172a;
-        }
-
-        .overview-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 20px;
-        }
-
-        .overview-item {
-          text-align: center;
-        }
-
-        .overview-value {
-          font-size: 32px;
-          font-weight: 700;
-          color: #3b82f6;
-          margin-bottom: 8px;
-        }
-
-        .overview-label {
-          font-size: 13px;
-          color: #64748b;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-
-        .stat-list {
-          list-style: none;
-          padding: 0;
-          margin: 0;
-        }
-
-        .stat-item {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 12px 0;
-          border-bottom: 1px solid #f1f5f9;
-        }
-
-        .stat-item:last-child {
-          border-bottom: none;
-        }
-
-        .stat-item-label {
-          font-size: 14px;
-          color: #0f172a;
-        }
-
-        .stat-item-value {
-          font-size: 14px;
-          font-weight: 600;
-          color: #64748b;
-        }
-
-        .stat-bar {
-          margin-top: 8px;
-          height: 8px;
-          background: #e2e8f0;
-          border-radius: 4px;
-          overflow: hidden;
-        }
-
-        .stat-bar-fill {
-          height: 100%;
-          background: #3b82f6;
-          transition: width 0.3s ease;
-        }
-
-        .placeholder-chart {
-          background: #f8fafc;
-          border: 2px dashed #cbd5e1;
-          border-radius: 8px;
-          padding: 60px 20px;
-          text-align: center;
-          color: #64748b;
-        }
-
-        .placeholder-icon {
-          font-size: 48px;
-          margin-bottom: 12px;
-        }
-
-        @media (max-width: 768px) {
-          .overview-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-      </style>
     `;
+
+    this.attachEventListeners();
   }
 
-  renderOverview() {
+  renderSpendingSummary() {
     const totalAmount = this.stats.total_amount || 0;
     const totalRecords = this.stats.total_records || 0;
     const avgCost = totalRecords > 0 ? totalAmount / totalRecords : 0;
 
+    // Calculate this year (rough estimate based on dates)
+    const thisYearAmount = Object.entries(this.stats.by_month || {})
+      .filter(([month]) => month.startsWith('2026'))
+      .reduce((sum, [_, data]) => sum + data.amount, 0);
+
     return `
-      <div class="stat-card">
-        <h3 class="stat-card-title">Overview</h3>
-        <div class="overview-grid">
-          <div class="overview-item">
-            <div class="overview-value">${totalRecords}</div>
-            <div class="overview-label">Total Records</div>
+      <div class="stat-section">
+        <h3 class="section-title">💰 Spending Summary</h3>
+        <div class="summary-cards">
+          <div class="summary-card">
+            <div class="card-label">Total Spend</div>
+            <div class="card-value">${formatCurrency(totalAmount)}</div>
           </div>
-          <div class="overview-item">
-            <div class="overview-value">${formatCurrency(totalAmount)}</div>
-            <div class="overview-label">Total Spend</div>
+          <div class="summary-card">
+            <div class="card-label">This Year</div>
+            <div class="card-value">${formatCurrency(thisYearAmount)}</div>
           </div>
-          <div class="overview-item">
-            <div class="overview-value">${formatCurrency(avgCost)}</div>
-            <div class="overview-label">Average Cost</div>
+          <div class="summary-card">
+            <div class="card-label">Total Records</div>
+            <div class="card-value">${totalRecords}</div>
+          </div>
+          <div class="summary-card">
+            <div class="card-label">Avg per Record</div>
+            <div class="card-value">${formatCurrency(avgCost)}</div>
           </div>
         </div>
       </div>
     `;
   }
 
-  renderCategoryBreakdown() {
-    const categories = this.stats.by_category || {};
-    const maxAmount = Math.max(...Object.values(categories).map(c => c.amount), 1);
+  renderValueSummary() {
+    if (!this.valueStats) {
+      return `
+        <div class="stat-section">
+          <h3 class="section-title">💎 Value Summary</h3>
+          <p class="empty-message">Value data unavailable</p>
+        </div>
+      `;
+    }
+
+    const halloweenValue = this.valueStats.bySeason['Halloween'] || 0;
+    const christmasValue = this.valueStats.bySeason['Christmas'] || 0;
 
     return `
-      <div class="stat-card">
-        <h3 class="stat-card-title">By Category</h3>
-        <ul class="stat-list">
+      <div class="stat-section">
+        <h3 class="section-title">💎 Value Summary</h3>
+        <div class="summary-cards">
+          <div class="summary-card">
+            <div class="card-label">Total Value</div>
+            <div class="card-value">${formatCurrency(this.valueStats.totalValue)}</div>
+          </div>
+          <div class="summary-card">
+            <div class="card-label">Halloween</div>
+            <div class="card-value">${formatCurrency(halloweenValue)}</div>
+          </div>
+          <div class="summary-card">
+            <div class="card-label">Christmas</div>
+            <div class="card-value">${formatCurrency(christmasValue)}</div>
+          </div>
+          <div class="summary-card">
+            <div class="card-label">Active Items</div>
+            <div class="card-value">${this.valueStats.itemCount}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  renderCategoryCards() {
+    const categories = this.stats.by_category || {};
+    
+    return `
+      <div class="stat-section">
+        <h3 class="section-title">💸 Spending by Category</h3>
+        <p class="section-subtitle">Click a category to filter records</p>
+        <div class="category-cards">
           ${Object.entries(categories)
             .sort((a, b) => b[1].amount - a[1].amount)
-            .map(([category, data]) => {
-              const percentage = (data.amount / maxAmount) * 100;
-              return `
-                <li class="stat-item">
-                  <div style="flex: 1;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                      <span class="stat-item-label">${category}</span>
-                      <span class="stat-item-value">${formatCurrency(data.amount)}</span>
-                    </div>
-                    <div class="stat-bar">
-                      <div class="stat-bar-fill" style="width: ${percentage}%"></div>
-                    </div>
-                  </div>
-                </li>
-              `;
-            })
-            .join('')}
-        </ul>
+            .map(([category, data]) => `
+              <div class="category-card" data-category="${category}">
+                <div class="category-name">${category}</div>
+                <div class="category-amount">${formatCurrency(data.amount)}</div>
+                <div class="category-count">${data.count} record${data.count !== 1 ? 's' : ''}</div>
+              </div>
+            `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  renderInsights() {
+    const categories = this.stats.by_category || {};
+    const vendors = this.stats.by_vendor || {};
+    const types = this.stats.by_type || {};
+
+    // Calculate insights
+    const mostExpensiveCategory = Object.entries(categories)
+      .sort((a, b) => b[1].amount - a[1].amount)[0];
+    
+    const topVendor = Object.entries(vendors)
+      .sort((a, b) => b[1].amount - a[1].amount)[0];
+
+    const giftValue = types['gift']?.amount || 0;
+    const totalSpend = this.stats.total_amount || 0;
+    const giftPercentage = totalSpend > 0 ? (giftValue / totalSpend * 100).toFixed(0) : 0;
+
+    // Calculate overhead (categories that aren't item-specific)
+    const overheadCategories = ['materials', 'consumables', 'labor', 'other'];
+    const overheadCost = Object.entries(categories)
+      .filter(([cat]) => overheadCategories.includes(cat))
+      .reduce((sum, [_, data]) => sum + data.amount, 0);
+    const overheadPercentage = totalSpend > 0 ? (overheadCost / totalSpend * 100).toFixed(0) : 0;
+
+    return `
+      <div class="stat-section">
+        <h3 class="section-title">🏆 Insights</h3>
+        <div class="insights-list">
+          ${mostExpensiveCategory ? `
+            <div class="insight-item">
+              <span class="insight-icon">📊</span>
+              <span class="insight-text">
+                Most spending in <strong>${mostExpensiveCategory[0]}</strong> 
+                (${formatCurrency(mostExpensiveCategory[1].amount)})
+              </span>
+            </div>
+          ` : ''}
+          ${topVendor ? `
+            <div class="insight-item">
+              <span class="insight-icon">🏪</span>
+              <span class="insight-text">
+                Top vendor: <strong>${topVendor[0]}</strong> 
+                (${formatCurrency(topVendor[1].amount)} across ${topVendor[1].count} purchases)
+              </span>
+            </div>
+          ` : ''}
+          ${giftValue > 0 ? `
+            <div class="insight-item">
+              <span class="insight-icon">🎁</span>
+              <span class="insight-text">
+                Gifts received: ${formatCurrency(giftValue)} value (${giftPercentage}% of total)
+              </span>
+            </div>
+          ` : ''}
+          ${overheadCost > 0 ? `
+            <div class="insight-item">
+              <span class="insight-icon">📦</span>
+              <span class="insight-text">
+                Overhead costs: ${formatCurrency(overheadCost)} (${overheadPercentage}% of total)
+              </span>
+            </div>
+          ` : ''}
+          ${this.valueStats ? `
+            <div class="insight-item">
+              <span class="insight-icon">💎</span>
+              <span class="insight-text">
+                Total value vs cost: ${formatCurrency(this.valueStats.totalValue)} value 
+                from ${formatCurrency(totalSpend)} spent
+              </span>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  renderBreakdowns() {
+    return `
+      <div class="breakdowns-grid">
+        ${this.renderTypeBreakdown()}
+        ${this.renderTopVendors()}
       </div>
     `;
   }
@@ -209,7 +267,7 @@ export class StatsPanel {
 
     return `
       <div class="stat-card">
-        <h3 class="stat-card-title">By Cost Type</h3>
+        <h4 class="stat-card-title">By Cost Type</h4>
         <ul class="stat-list">
           ${Object.entries(types)
             .sort((a, b) => b[1].amount - a[1].amount)
@@ -218,8 +276,8 @@ export class StatsPanel {
               const label = type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
               return `
                 <li class="stat-item">
-                  <div style="flex: 1;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <div class="stat-item-content">
+                    <div class="stat-item-header">
                       <span class="stat-item-label">${label}</span>
                       <span class="stat-item-value">${formatCurrency(data.amount)}</span>
                     </div>
@@ -229,8 +287,7 @@ export class StatsPanel {
                   </div>
                 </li>
               `;
-            })
-            .join('')}
+            }).join('')}
         </ul>
       </div>
     `;
@@ -245,8 +302,8 @@ export class StatsPanel {
     if (topVendors.length === 0) {
       return `
         <div class="stat-card">
-          <h3 class="stat-card-title">Top 5 Vendors</h3>
-          <p style="color: #64748b; text-align: center; padding: 20px;">No vendor data available</p>
+          <h4 class="stat-card-title">Top 5 Vendors</h4>
+          <p class="empty-message">No vendor data available</p>
         </div>
       `;
     }
@@ -255,16 +312,16 @@ export class StatsPanel {
 
     return `
       <div class="stat-card">
-        <h3 class="stat-card-title">Top 5 Vendors</h3>
+        <h4 class="stat-card-title">Top 5 Vendors</h4>
         <ul class="stat-list">
           ${topVendors.map(([vendor, data]) => {
             const percentage = (data.amount / maxAmount) * 100;
             return `
               <li class="stat-item">
-                <div style="flex: 1;">
-                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="stat-item-content">
+                  <div class="stat-item-header">
                     <span class="stat-item-label">${vendor}</span>
-                    <span class="stat-item-value">${formatCurrency(data.amount)} (${data.count} purchases)</span>
+                    <span class="stat-item-value">${formatCurrency(data.amount)}</span>
                   </div>
                   <div class="stat-bar">
                     <div class="stat-bar-fill" style="width: ${percentage}%"></div>
@@ -278,17 +335,17 @@ export class StatsPanel {
     `;
   }
 
-  renderMonthlyTrend() {
-    return `
-      <div class="stat-card">
-        <h3 class="stat-card-title">Monthly Trend</h3>
-        <div class="placeholder-chart">
-          <div class="placeholder-icon">📊</div>
-          <p>Chart visualization coming soon</p>
-          <p style="font-size: 12px; margin-top: 8px;">Suggestion: Use Chart.js or Recharts for line/bar charts</p>
-        </div>
-      </div>
-    `;
+  attachEventListeners() {
+    // Category cards - click to filter
+    document.querySelectorAll('.category-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        const category = e.currentTarget.dataset.category;
+        // Switch to records tab and apply filter
+        stateManager.setState({ tab: 'records', categoryFilter: category });
+        // Trigger tab switch (this will be handled by TabBar component)
+        document.querySelector('[data-tab="records"]')?.click();
+      });
+    });
   }
 
   renderLoading() {
