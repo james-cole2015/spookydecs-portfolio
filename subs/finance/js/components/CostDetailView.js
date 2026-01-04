@@ -74,6 +74,12 @@ export class CostDetailView {
             <p class="detail-subtitle">${cost.cost_id}</p>
           </div>
           <div class="header-actions">
+            ${hasReceipt ? `
+              <button class="btn-action btn-receipt" data-action="view-receipt">
+                <span class="btn-icon">📄</span>
+                View Receipt
+              </button>
+            ` : ''}
             <button class="btn-action btn-edit" data-action="edit">
               <span class="btn-icon">✏️</span>
               Edit
@@ -97,7 +103,7 @@ export class CostDetailView {
 
         <!-- Cost Details Section (centered) -->
         <div class="cost-details-section">
-          <h2>💰 Cost Details</h2>
+          <h2 style="text-align: center;">💰 Cost Details</h2>
           <div class="detail-grid-centered">
             <div class="detail-row"><span class="detail-label">Date</span><span class="detail-value">${formattedDate}</span></div>
             <div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">${this.formatCostType(cost.cost_type)}</span></div>
@@ -114,8 +120,6 @@ export class CostDetailView {
             <div class="detail-row"><span class="detail-label">Item Value</span><span class="detail-value">$${parseFloat(cost.value || cost.total_cost).toFixed(2)}</span></div>
           </div>
         </div>
-
-        ${hasReceipt ? this.renderReceiptSection() : ''}
 
         <div class="metadata-section">
           <p class="metadata-text">Created ${new Date(cost.created_at).toLocaleDateString()} by ${cost.created_by || 'system'}</p>
@@ -135,38 +139,6 @@ export class CostDetailView {
       <div class="related-links-banner">
         <span class="related-label">Related:</span>
         ${links.map(link => `<a href="${link.url}" class="related-link" data-navigate="${link.url}">${link.label}: ${link.id} →</a>`).join('')}
-      </div>
-    `;
-  }
-
-  renderReceiptSection() {
-    if (!this.receiptImageData) {
-      return `
-        <div class="receipt-section">
-          <h3>📄 Receipt</h3>
-          <p class="empty-message">Receipt image not available</p>
-        </div>
-      `;
-    }
-
-    const thumbnailUrl = this.receiptImageData.thumbnail_url;
-    const fullUrl = this.receiptImageData.cloudfront_url;
-
-    return `
-      <div class="receipt-section">
-        <h3>📄 Receipt</h3>
-        <div class="receipt-thumbnail-container">
-          <img 
-            src="${thumbnailUrl}" 
-            alt="Receipt thumbnail" 
-            class="receipt-thumbnail"
-            data-full-url="${fullUrl}"
-            data-action="view-receipt-full"
-          />
-          <button class="btn-view-full" data-full-url="${fullUrl}" data-action="view-receipt-full">
-            View Full Size →
-          </button>
-        </div>
       </div>
     `;
   }
@@ -199,11 +171,14 @@ export class CostDetailView {
       });
     });
 
-    // View full receipt
-    document.querySelectorAll('[data-action="view-receipt-full"]').forEach(el => {
-      el.addEventListener('click', (e) => {
-        const fullUrl = e.currentTarget.dataset.fullUrl;
-        window.open(fullUrl, '_blank');
+    // View Receipt button
+    document.querySelectorAll('[data-action="view-receipt"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (this.costData.receipt_data?.cloudfront_url) {
+          window.open(this.costData.receipt_data.cloudfront_url, '_blank');
+        } else {
+          toast.error('Receipt not available');
+        }
       });
     });
 

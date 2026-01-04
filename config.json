@@ -1,3 +1,100 @@
 {
-  "API_ENDPOINT": "https://miinu7boec.execute-api.us-east-2.amazonaws.com/dev"
+  "API_ENDPOINT": "https://miinu7boec.execute-api.us-east-2.amazonaws.com/dev",
+  "AUDIT_TABLE": "SpookyDecs-AuditLog-Dev",
+  "HAL_GAL_URL": "https://assets.spookydecs.com/gallery/halloween",
+  "IDEAS_ADMIN_URL": "https://dev-ideas.spookydecs.com",
+  "INV_ADMIN_URL": "https://dev-inventory.spookydecs.com",
+  "INV_URL": "/inventory",
+  "MAINT_URL": "https://dev-maintenance.spookydecs.com",
+  "SCHEDULE_DEFAULTS": {
+    "days_before_reminder": 7,
+    "records_to_generate_ahead": 2
+  },
+  "TABLE_NAME": "spookydecs-items-dev",
+  "offseason": {
+    "title": "Inspirations & Installations",
+    "headline": "Inspirations & Installations",
+    "subline": "Organize, maintain, and save favorite setups.",
+    "countdownTarget": "2026-01-10T00:00:00",
+    "theme": "css/offseason.css",
+    "icon_link": "",
+    "favicon_url_offseason": "https://assets.spookydecs.com/icons/admin_gear_icon.svg",
+    "background_url": "https://assets.spookydecs.com/images/offseason_bg.jpg"
+  },
+  "ADMIN_URL": "https://dev-admin.spookydecs.com",
+  "CHR_GAL_URL": "https://assets.spookydecs.com/gallery/christmas",
+  "ENV": "dev",
+  "GALLERY_ADM_URL": "https://dev-gallery.spookydecs.com",
+  "ITEMS_ADMIN": "https://dev-items.spookydecs.com",
+  "REPAIR_ADMIN": "https://dev-repairs.spookydecs.com",
+  "STR_ADM_URL": "https://dev-storage.spookydecs.com",
+  "TOTE_API": "https://miinu7boec.execute-api.us-east-2.amazonaws.com/dev/storage/totes",
+  "christmas": {
+    "title": "Festive Collection",
+    "headline": "Festive Collection",
+    "subline": "Lights, displays, and festive ideas for every yard.",
+    "countdownTarget": "2025-12-25T00:00:00",
+    "theme": "css/christmas.css",
+    "icon_link": "https://assets.spookydecs.com/icons/christmas_icon.svg",
+    "favicon_url_christmas": "https://assets.spookydecs.com/icons/christmas_icon.svg",
+    "background_url": "https://assets.spookydecs.com/images/christmas_bg.jpg"
+  },
+  "test_var": "this will NOT print if loaded correctly",
+  "COGNITO_DOMAIN": "us-east-2bnxsu5let.auth.us-east-2.amazoncognito.com",
+  "DEPLOY_ADMIN": "https://dev-deployments.spookydecs.com",
+  "DEPLOY_URL": "https://dev.spookydecs.com/deployments.html",
+  "GALLERY_LINK_FROM_ADM": "https://dev.spookydecs.com/gallery",
+  "GALLERY_URL": "/gallery",
+  "IDEAS_URL": "https://dev.spookydecs.com/ideas.html",
+  "MAINTENANCE_RECORDS_ENDPOINT": "/admin/maintenance-records",
+  "SCHEDULES_ENDPOINT": "/admin/maintenance-schedules",
+  "cards": [
+    {
+      "title": "Inventory",
+      "desc": "Browse props, inflatables, and lights.",
+      "url": "/inventory/"
+    },
+    {
+      "title": "Deployments",
+      "desc": "View setups and installation plans.",
+      "url": "/deployments.html"
+    },
+    {
+      "title": "Ideas",
+      "desc": "DIYs, blueprints and inspiration.",
+      "url": "/ideas/"
+    },
+    {
+      "title": "Photo Gallery",
+      "desc": "See community displays and galleries.",
+      "url": "/gallery/"
+    }
+  ],
+  "halloween": {
+    "title": "The Haunted Hall",
+    "headline": "Haunted Hillside",
+    "subline": "Inflatables, props, and eerie inspiration to haunt your neighborhood.",
+    "countdownTarget": "2025-10-31T00:00:00",
+    "theme": "css/halloween.css",
+    "icon_link": "https://assets.spookydecs.com/icons/halloween_icon.svg",
+    "background_url": "https://assets.spookydecs.com/images/halloween_bg.jpg"
+  },
+  "COGNITO_CLIENT_ID": "11er9f8qa7jkvgelm6hernb2ed",
+  "GALLERY_API": "https://miinu7boec.execute-api.us-east-2.amazonaws.com/dev/gallery",
+  "GALLERY_TABLE": "spookydecs-gallery-images-dev",
+  "MAIN_URL": "https://dev.spookydecs.com",
+  "SEASON_DATES": {
+    "Halloween": {
+      "month": 8,
+      "day": 1
+    },
+    "Christmas": {
+      "month": 5,
+      "day": 1
+    },
+    "Shared": {
+      "month": 4,
+      "day": 1
+    }
+  }
 }
