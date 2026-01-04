@@ -148,6 +148,54 @@
   margin-top: 0.5rem;
 }
 
+/* Collapsible Card Styles (Mobile) */
+.summary-card.collapsible .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.summary-card.collapsible .card-header-content {
+  flex: 1;
+}
+
+.summary-card.collapsible .card-toggle {
+  background: none;
+  border: none;
+  padding: 0.25rem;
+  cursor: pointer;
+  color: #9ca3af;
+  font-size: 1.5rem;
+  line-height: 1;
+  transition: all 0.2s;
+  display: none; /* Hidden on desktop */
+}
+
+.summary-card.collapsible .card-toggle:hover {
+  color: #6b7280;
+}
+
+.summary-card.collapsible .chevron {
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+.summary-card.collapsible.expanded .chevron {
+  transform: rotate(90deg);
+}
+
+.summary-card.collapsible .card-details {
+  margin-top: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.card-info {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 0.5rem;
+}
+
 /* Cost Breakdown */
 .cost-breakdown {
   background: #f9fafb;
@@ -244,11 +292,44 @@
   margin-top: 2rem;
 }
 
-.cost-history-section h2 {
+.cost-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.cost-history-header h2 {
   font-size: 1.5rem;
   font-weight: 600;
   color: #111827;
-  margin: 0 0 1.5rem 0;
+  margin: 0;
+}
+
+.btn-inline-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.btn-inline-add:hover {
+  background: #2563eb;
+  transform: scale(1.05);
+}
+
+.btn-inline-add .plus-icon {
+  display: block;
 }
 
 /* Cost History List (in CostHistoryList component) */
@@ -361,7 +442,7 @@
   color: #6b7280;
 }
 
-/* Responsive */
+/* Responsive - Mobile */
 @media (max-width: 768px) {
   .item-costs-page {
     padding: 1rem;
@@ -392,9 +473,50 @@
     grid-template-columns: 1fr;
   }
 
+  /* Mobile Collapsible Cards */
+  .summary-card.collapsible .card-toggle {
+    display: block; /* Show toggle on mobile */
+  }
+
+  .summary-card.collapsible .card-details {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    margin-top: 0;
+  }
+
+  .summary-card.collapsible.expanded .card-details {
+    max-height: 200px;
+    opacity: 1;
+    margin-top: 0.5rem;
+  }
+
   .cost-info {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
+  }
+
+  /* Simplified mobile cost cards */
+  .cost-card {
+    padding: 1rem;
+  }
+
+  .cost-card-header {
+    margin-bottom: 0.5rem;
+  }
+
+  .cost-card-body {
+    margin-bottom: 0;
+  }
+
+  .cost-description,
+  .cost-meta,
+  .cost-card-actions {
+    display: none; /* Hide extra details on mobile */
+  }
+
+  .cost-info {
+    margin-bottom: 0;
   }
 }

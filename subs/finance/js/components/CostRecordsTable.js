@@ -122,7 +122,12 @@ export class CostRecordsTable {
 
     this.container.innerHTML = `
       <div class="table-header">
-        <h2>Cost Records (${this.filteredData.length})</h2>
+        <div class="table-header-title">
+          <h2>Cost Records (${this.filteredData.length})</h2>
+          <button class="btn-inline-add" id="btn-new-cost" title="Add New Cost Record">
+            <span class="plus-icon">+</span>
+          </button>
+        </div>
         <div class="table-actions">
           <div class="table-filters">
             <input 
@@ -152,9 +157,6 @@ export class CostRecordsTable {
               <option value="accessory" ${this.filters.category === 'accessory' ? 'selected' : ''}>Accessory</option>
             </select>
           </div>
-          <button class="btn-new-cost" id="btn-new-cost">
-            + New Cost Record
-          </button>
         </div>
       </div>
 
@@ -287,7 +289,7 @@ export class CostRecordsTable {
   }
 
   attachEventListeners() {
-    // New Cost Record button
+    // New Cost Record button (inline +)
     const newCostBtn = this.container.querySelector('#btn-new-cost');
     if (newCostBtn) {
       newCostBtn.addEventListener('click', () => {

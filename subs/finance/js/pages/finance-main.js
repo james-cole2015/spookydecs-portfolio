@@ -21,6 +21,7 @@ export class FinanceMainPage {
     this.form = null;
     this.statsPanel = null;
     this.isLoading = false;
+    this.backToTopBtn = null;
     
     this.init();
   }
@@ -52,6 +53,10 @@ export class FinanceMainPage {
     
     this.initForm();
     console.log('Form initialized');
+    
+    // Initialize back-to-top button
+    this.initBackToTopButton();
+    console.log('Back-to-top button initialized');
     
     // Subscribe to state changes
     stateManager.subscribe((state) => {
@@ -90,6 +95,40 @@ export class FinanceMainPage {
     
     buttonContainer.appendChild(addButton);
     statsContainer.parentNode.insertBefore(buttonContainer, statsContainer);
+  }
+
+  initBackToTopButton() {
+    // Create the button element
+    this.backToTopBtn = document.createElement('button');
+    this.backToTopBtn.className = 'back-to-top';
+    this.backToTopBtn.innerHTML = '↑';
+    this.backToTopBtn.setAttribute('aria-label', 'Back to top');
+    this.backToTopBtn.setAttribute('title', 'Back to top');
+    
+    // Add to body
+    document.body.appendChild(this.backToTopBtn);
+    
+    // Show/hide on scroll
+    let scrollTimeout;
+    window.addEventListener('scroll', () => {
+      clearTimeout(scrollTimeout);
+      
+      scrollTimeout = setTimeout(() => {
+        if (window.scrollY > 300) {
+          this.backToTopBtn.classList.add('visible');
+        } else {
+          this.backToTopBtn.classList.remove('visible');
+        }
+      }, 100);
+    });
+    
+    // Scroll to top on click
+    this.backToTopBtn.addEventListener('click', () => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
   }
 
   async loadCosts() {

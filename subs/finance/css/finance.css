@@ -71,6 +71,12 @@ body {
   gap: 16px;
 }
 
+.table-header-title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .table-header h2 {
   margin: 0;
   font-size: 18px;
@@ -88,6 +94,7 @@ body {
   display: flex;
   gap: 12px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .btn-new-cost {
@@ -107,6 +114,33 @@ body {
   background: #2563eb;
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+/* Inline Add Button (+ icon) */
+.btn-inline-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.btn-inline-add:hover {
+  background: #2563eb;
+  transform: scale(1.05);
+}
+
+.btn-inline-add .plus-icon {
+  display: block;
 }
 
 .filter-input {
@@ -248,8 +282,52 @@ body {
   cursor: not-allowed;
 }
 
+/* ===== Back to Top Button ===== */
+.back-to-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 48px;
+  height: 48px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  transition: all 0.3s ease;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(20px);
+}
+
+.back-to-top.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.back-to-top:hover {
+  background: #2563eb;
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5);
+}
+
+.back-to-top:active {
+  transform: translateY(-2px);
+}
+
 /* ===== Mobile Cards (< 768px) ===== */
 @media (max-width: 768px) {
+  body {
+    padding: 8px;
+  }
+
   .cost-table {
     display: none;
   }
@@ -318,6 +396,46 @@ body {
 
   .cost-card-value {
     color: #0f172a;
+  }
+
+  /* Mobile Table Header */
+  .table-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .table-header-title {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .table-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .table-filters {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .filter-input,
+  .filter-select {
+    width: 100%;
+    min-width: unset;
+  }
+
+  /* Back to Top - Mobile positioning */
+  .back-to-top {
+    bottom: 1rem;
+    right: 1rem;
+    width: 44px;
+    height: 44px;
+    font-size: 1.25rem;
   }
 }
 

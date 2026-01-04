@@ -12,6 +12,13 @@ export class ItemCostView {
     // Calculate summary from costs if not provided
     this.summary = this.calculateSummary(data.summary);
     
+    // Track expanded state for each summary card
+    this.expandedCards = {
+      totalCost: false,
+      currentValue: false,
+      totalRecords: false
+    };
+    
     console.log('🎨 ItemCostView constructor');
     console.log('📊 Summary:', this.summary);
     console.log('📋 Costs:', this.costs);
@@ -103,20 +110,52 @@ export class ItemCostView {
           <h2>💰 Financial Summary</h2>
           
           <div class="summary-cards">
-            <div class="summary-card">
-              <div class="card-label">Total Cost</div>
-              <div class="card-value">$${this.summary.total_cost.toFixed(2)}</div>
-              <div class="card-count">${this.costs.length} record${this.costs.length !== 1 ? 's' : ''}</div>
+            <!-- Total Cost Card -->
+            <div class="summary-card collapsible" data-card="totalCost">
+              <div class="card-header">
+                <div class="card-header-content">
+                  <div class="card-label">Total Cost</div>
+                  <div class="card-value">$${this.summary.total_cost.toFixed(2)}</div>
+                </div>
+                <button class="card-toggle" aria-label="Expand card">
+                  <span class="chevron">›</span>
+                </button>
+              </div>
+              <div class="card-details">
+                <div class="card-count">${this.costs.length} record${this.costs.length !== 1 ? 's' : ''}</div>
+              </div>
             </div>
             
-            <div class="summary-card">
-              <div class="card-label">Current Value</div>
-              <div class="card-value">$${this.summary.current_value.toFixed(2)}</div>
+            <!-- Current Value Card -->
+            <div class="summary-card collapsible" data-card="currentValue">
+              <div class="card-header">
+                <div class="card-header-content">
+                  <div class="card-label">Current Value</div>
+                  <div class="card-value">$${this.summary.current_value.toFixed(2)}</div>
+                </div>
+                <button class="card-toggle" aria-label="Expand card">
+                  <span class="chevron">›</span>
+                </button>
+              </div>
+              <div class="card-details">
+                <div class="card-info">Estimated current worth</div>
+              </div>
             </div>
             
-            <div class="summary-card">
-              <div class="card-label">Total Records</div>
-              <div class="card-value">${this.costs.length}</div>
+            <!-- Total Records Card -->
+            <div class="summary-card collapsible" data-card="totalRecords">
+              <div class="card-header">
+                <div class="card-header-content">
+                  <div class="card-label">Total Records</div>
+                  <div class="card-value">${this.costs.length}</div>
+                </div>
+                <button class="card-toggle" aria-label="Expand card">
+                  <span class="chevron">›</span>
+                </button>
+              </div>
+              <div class="card-details">
+                <div class="card-info">All cost entries for this item</div>
+              </div>
             </div>
           </div>
         </div>
@@ -126,7 +165,12 @@ export class ItemCostView {
 
         <!-- Cost History -->
         <div class="cost-history-section">
-          <h2>Cost History (${this.costs.length} record${this.costs.length !== 1 ? 's' : ''})</h2>
+          <div class="cost-history-header">
+            <h2>Cost History (${this.costs.length})</h2>
+            <button class="btn-inline-add" data-action="add-cost" aria-label="Add new cost">
+              <span class="plus-icon">+</span>
+            </button>
+          </div>
           <div id="cost-history-container"></div>
         </div>
       </div>
@@ -190,10 +234,29 @@ export class ItemCostView {
       });
     });
 
-    // Add new cost
+    // Add new cost (both buttons)
     document.querySelectorAll('[data-action="add-cost"]').forEach(btn => {
       btn.addEventListener('click', () => {
         window.location.href = `/finance/new?item_id=${this.itemId}`;
+      });
+    });
+
+    // Collapsible card toggles
+    document.querySelectorAll('.card-toggle').forEach(toggle => {
+      toggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const card = toggle.closest('.summary-card');
+        const cardType = card.dataset.card;
+        
+        // Toggle expanded state
+        this.expandedCards[cardType] = !this.expandedCards[cardType];
+        
+        // Update UI
+        if (this.expandedCards[cardType]) {
+          card.classList.add('expanded');
+        } else {
+          card.classList.remove('expanded');
+        }
       });
     });
   }

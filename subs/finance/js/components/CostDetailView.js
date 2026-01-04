@@ -8,6 +8,7 @@ export class CostDetailView {
   constructor(costData) {
     this.costData = costData;
     this.receiptImageData = null;
+    this.detailsExpanded = false; // Default collapsed on mobile
   }
 
   async render(container) {
@@ -75,18 +76,18 @@ export class CostDetailView {
           </div>
           <div class="header-actions">
             ${hasReceipt ? `
-              <button class="btn-action btn-receipt" data-action="view-receipt">
+              <button class="btn-action btn-receipt" data-action="view-receipt" title="View Receipt">
                 <span class="btn-icon">📄</span>
-                View Receipt
+                <span class="btn-text">View Receipt</span>
               </button>
             ` : ''}
-            <button class="btn-action btn-edit" data-action="edit">
+            <button class="btn-action btn-edit" data-action="edit" title="Edit">
               <span class="btn-icon">✏️</span>
-              Edit
+              <span class="btn-text">Edit</span>
             </button>
-            <button class="btn-action btn-delete" data-action="delete">
-              <span class="btn-icon">🗑️</span>
-              Delete
+            <button class="btn-action btn-delete" data-action="delete" title="Delete">
+              <span class="btn-icon">✕</span>
+              <span class="btn-text">Delete</span>
             </button>
           </div>
         </div>
@@ -101,23 +102,30 @@ export class CostDetailView {
           </div>
         ` : ''}
 
-        <!-- Cost Details Section (centered) -->
+        <!-- Cost Details Section (collapsible on mobile) -->
         <div class="cost-details-section">
-          <h2 style="text-align: center;">💰 Cost Details</h2>
-          <div class="detail-grid-centered">
-            <div class="detail-row"><span class="detail-label">Date</span><span class="detail-value">${formattedDate}</span></div>
-            <div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">${this.formatCostType(cost.cost_type)}</span></div>
-            <div class="detail-row"><span class="detail-label">Category</span><span class="detail-value">${this.formatCategory(cost.category)}</span></div>
-            ${cost.subcategory ? `<div class="detail-row"><span class="detail-label">Subcategory</span><span class="detail-value">${cost.subcategory}</span></div>` : ''}
-            <div class="detail-row"><span class="detail-label">Item Name</span><span class="detail-value">${cost.item_name || 'N/A'}</span></div>
-            <div class="detail-row"><span class="detail-label">Vendor</span><span class="detail-value">${cost.vendor}</span></div>
-            <div class="detail-row"><span class="detail-label">Payment Method</span><span class="detail-value">${cost.payment_method || 'Not specified'}</span></div>
-            <div class="detail-divider"></div>
-            <div class="detail-row"><span class="detail-label">Quantity</span><span class="detail-value">${cost.quantity || 1}</span></div>
-            <div class="detail-row"><span class="detail-label">Unit Cost</span><span class="detail-value">$${parseFloat(cost.unit_cost || cost.total_cost).toFixed(2)}</span></div>
-            ${cost.tax > 0 ? `<div class="detail-row"><span class="detail-label">Tax</span><span class="detail-value">$${parseFloat(cost.tax).toFixed(2)}</span></div>` : ''}
-            <div class="detail-row highlight"><span class="detail-label">Total Cost</span><span class="detail-value">$${parseFloat(cost.total_cost).toFixed(2)}</span></div>
-            <div class="detail-row"><span class="detail-label">Item Value</span><span class="detail-value">$${parseFloat(cost.value || cost.total_cost).toFixed(2)}</span></div>
+          <div class="details-header" data-action="toggle-details">
+            <h2>💰 Cost Details</h2>
+            <button class="details-toggle" aria-label="Toggle details">
+              <span class="chevron">›</span>
+            </button>
+          </div>
+          <div class="detail-content">
+            <div class="detail-grid-centered">
+              <div class="detail-row"><span class="detail-label">Date</span><span class="detail-value">${formattedDate}</span></div>
+              <div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">${this.formatCostType(cost.cost_type)}</span></div>
+              <div class="detail-row"><span class="detail-label">Category</span><span class="detail-value">${this.formatCategory(cost.category)}</span></div>
+              ${cost.subcategory ? `<div class="detail-row"><span class="detail-label">Subcategory</span><span class="detail-value">${cost.subcategory}</span></div>` : ''}
+              <div class="detail-row"><span class="detail-label">Item Name</span><span class="detail-value">${cost.item_name || 'N/A'}</span></div>
+              <div class="detail-row"><span class="detail-label">Vendor</span><span class="detail-value">${cost.vendor}</span></div>
+              <div class="detail-row"><span class="detail-label">Payment Method</span><span class="detail-value">${cost.payment_method || 'Not specified'}</span></div>
+              <div class="detail-divider"></div>
+              <div class="detail-row"><span class="detail-label">Quantity</span><span class="detail-value">${cost.quantity || 1}</span></div>
+              <div class="detail-row"><span class="detail-label">Unit Cost</span><span class="detail-value">$${parseFloat(cost.unit_cost || cost.total_cost).toFixed(2)}</span></div>
+              ${cost.tax > 0 ? `<div class="detail-row"><span class="detail-label">Tax</span><span class="detail-value">$${parseFloat(cost.tax).toFixed(2)}</span></div>` : ''}
+              <div class="detail-row highlight"><span class="detail-label">Total Cost</span><span class="detail-value">$${parseFloat(cost.total_cost).toFixed(2)}</span></div>
+              <div class="detail-row"><span class="detail-label">Item Value</span><span class="detail-value">$${parseFloat(cost.value || cost.total_cost).toFixed(2)}</span></div>
+            </div>
           </div>
         </div>
 
@@ -194,6 +202,28 @@ export class CostDetailView {
     document.querySelectorAll('[data-action="delete"]').forEach(btn => 
       btn.addEventListener('click', () => this.handleDelete())
     );
+
+    // Toggle details (mobile collapsible)
+    document.querySelectorAll('[data-action="toggle-details"]').forEach(header => {
+      header.addEventListener('click', () => {
+        const section = header.closest('.cost-details-section');
+        this.detailsExpanded = !this.detailsExpanded;
+        
+        if (this.detailsExpanded) {
+          section.classList.add('expanded');
+        } else {
+          section.classList.remove('expanded');
+        }
+      });
+    });
+
+    // Check if mobile on load and set default state
+    if (window.innerWidth < 768) {
+      const section = document.querySelector('.cost-details-section');
+      if (section && !this.detailsExpanded) {
+        section.classList.remove('expanded');
+      }
+    }
   }
 
   async handleDelete() {
