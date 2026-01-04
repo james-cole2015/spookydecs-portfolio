@@ -25,21 +25,26 @@ export class CostDetailView {
     console.log('📦 Full costData:', this.costData);
     console.log('🧾 receipt_data:', this.costData.receipt_data);
     
-    const photoId = this.costData.receipt_data?.image_id;
-    console.log('🎫 Extracted photo_id:', photoId);
-    
-    if (!photoId) {
-      console.log('❌ No receipt photo_id found');
+    // Check if receipt_data exists in the cost record
+    if (!this.costData.receipt_data) {
+      console.log('❌ No receipt_data found in cost record');
       return;
     }
-
-    try {
-      console.log('📸 Loading receipt image:', photoId);
-      this.receiptImageData = await getReceiptImage(photoId);
-      console.log('✅ Receipt image loaded:', this.receiptImageData);
-    } catch (error) {
-      console.error('❌ Failed to load receipt image:', error);
-    }
+    
+    // Use the receipt_data directly - no API call needed!
+    const receiptData = this.costData.receipt_data;
+    
+    console.log('✅ Using receipt_data from cost record:', receiptData);
+    
+    // Store it in the same format the component expects
+    this.receiptImageData = {
+      thumbnail_url: receiptData.thumbnail_url,
+      cloudfront_url: receiptData.cloudfront_url,
+      s3_key: receiptData.s3_key,
+      image_id: receiptData.image_id
+    };
+    
+    console.log('✅ Receipt image data ready:', this.receiptImageData);
   }
 
   getHTML() {
