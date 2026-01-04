@@ -9,7 +9,7 @@ import { StatsPanel } from '../components/StatsPanel.js';
 import { getAllCosts, createCost, updateCost } from '../utils/finance-api.js';
 import { toast } from '../shared/toast.js';
 import { stateManager } from '../utils/state.js';
-import { navigateTo } from '../utils/router.js';
+import { getRouter } from '../utils/router.js';
 
 export class FinanceMainPage {
   constructor() {
@@ -22,12 +22,16 @@ export class FinanceMainPage {
     this.statsPanel = null;
     this.isLoading = false;
     this.backToTopBtn = null;
+    this.router = null;
     
     this.init();
   }
 
   async init() {
     console.log('FinanceMainPage init() called');
+    
+    // Get router instance
+    this.router = getRouter();
     
     // Initialize components
     this.tabBar = new TabBar('tab-bar');
@@ -90,7 +94,9 @@ export class FinanceMainPage {
     addButton.className = 'btn-primary';
     addButton.textContent = '+ Add New Cost';
     addButton.addEventListener('click', () => {
-      navigateTo('/new');
+      if (this.router) {
+        this.router.navigate('/finance/new');
+      }
     });
     
     buttonContainer.appendChild(addButton);
@@ -162,11 +168,12 @@ export class FinanceMainPage {
   }
 
   handleRowClick(costId) {
-    // Navigate to the cost detail page instead of opening drawer
-    window.location.href = `/finance/costs/${costId}`;
-    
-    // Alternative using navigateTo if you have that set up:
-    // navigateTo(`/costs/${costId}`);
+    // Navigate to the cost detail page using the router
+    if (this.router) {
+      this.router.navigate(`/finance/costs/${costId}`);
+    } else {
+      console.error('Router not available');
+    }
   }
 
   handleFormSubmit(formData) {
@@ -222,7 +229,9 @@ export class FinanceMainPage {
 
   handleEditCost(cost) {
     // Navigate to edit page with cost data
-    navigateTo(`/new?cost_id=${cost.cost_id}`);
+    if (this.router) {
+      this.router.navigate(`/finance/new?cost_id=${cost.cost_id}`);
+    }
   }
 
   async handleDeleteCost(costId) {
