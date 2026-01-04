@@ -69,12 +69,13 @@ export function getRouter() {
 
 async function handleFinanceMain() {
   console.log('📄 handleFinanceMain started');
-  const container = document.getElementById('main-content');
   
-  if (!container) {
-    console.error('❌ main-content container not found!');
-    return;
-  }
+  // Make sure app-container is visible
+  const appContainer = document.getElementById('app-container');
+  const mainContent = document.getElementById('main-content');
+  
+  if (appContainer) appContainer.style.display = 'block';
+  if (mainContent) mainContent.style.display = 'none';
   
   try {
     showLoading();
@@ -87,15 +88,23 @@ async function handleFinanceMain() {
   } catch (error) {
     console.error('❌ Error rendering finance main:', error);
     hideLoading();
-    renderError(container, 'Failed to load finance page');
+    if (appContainer) {
+      renderError(appContainer, 'Failed to load finance page');
+    }
   }
 }
 
 async function handleNewCostView(match) {
   console.log('📄 handleNewCostView started');
-  const container = document.getElementById('main-content');
   
-  if (!container) {
+  // Make sure main-content is visible
+  const appContainer = document.getElementById('app-container');
+  const mainContent = document.getElementById('main-content');
+  
+  if (appContainer) appContainer.style.display = 'none';
+  if (mainContent) mainContent.style.display = 'block';
+  
+  if (!mainContent) {
     console.error('❌ main-content container not found!');
     return;
   }
@@ -109,22 +118,28 @@ async function handleNewCostView(match) {
     const { NewCostRecordPage } = await import('../pages/new-cost-record.js');
     
     // Clear container and instantiate the page
-    container.innerHTML = '<div id="app-container"></div>';
+    mainContent.innerHTML = '<div id="app-container"></div>';
     new NewCostRecordPage();
     
     hideLoading();
   } catch (error) {
     console.error('❌ Error rendering new cost form:', error);
     hideLoading();
-    renderError(container, 'Failed to load new cost form');
+    renderError(mainContent, 'Failed to load new cost form');
   }
 }
 
 async function handleCostDetailView(match) {
   console.log('📄 handleCostDetailView started');
-  const container = document.getElementById('main-content');
   
-  if (!container) {
+  // Make sure main-content is visible
+  const appContainer = document.getElementById('app-container');
+  const mainContent = document.getElementById('main-content');
+  
+  if (appContainer) appContainer.style.display = 'none';
+  if (mainContent) mainContent.style.display = 'block';
+  
+  if (!mainContent) {
     console.error('❌ main-content container not found!');
     return;
   }
@@ -137,21 +152,27 @@ async function handleCostDetailView(match) {
     
     // Dynamically import the cost detail page
     const { renderCostDetail } = await import('../pages/cost-detail.js');
-    await renderCostDetail(container, costId);
+    await renderCostDetail(mainContent, costId);
     
     hideLoading();
   } catch (error) {
     console.error('❌ Error rendering cost detail:', error);
     hideLoading();
-    renderError(container, 'Failed to load cost record');
+    renderError(mainContent, 'Failed to load cost record');
   }
 }
 
 async function handleItemCostsView(match) {
   console.log('📄 handleItemCostsView started');
-  const container = document.getElementById('main-content');
   
-  if (!container) {
+  // Make sure main-content is visible
+  const appContainer = document.getElementById('app-container');
+  const mainContent = document.getElementById('main-content');
+  
+  if (appContainer) appContainer.style.display = 'none';
+  if (mainContent) mainContent.style.display = 'block';
+  
+  if (!mainContent) {
     console.error('❌ main-content container not found!');
     return;
   }
@@ -164,13 +185,13 @@ async function handleItemCostsView(match) {
     
     // Dynamically import the item costs page
     const { renderItemCosts } = await import('../pages/item-costs.js');
-    await renderItemCosts(container, itemId);
+    await renderItemCosts(mainContent, itemId);
     
     hideLoading();
   } catch (error) {
     console.error('❌ Error rendering item costs view:', error);
     hideLoading();
-    renderError(container, 'Failed to load costs');
+    renderError(mainContent, 'Failed to load costs');
   }
 }
 
@@ -180,14 +201,18 @@ async function handleItemCostsView(match) {
 
 function renderNotFound() {
   console.log('📄 Rendering 404 page');
-  const container = document.getElementById('main-content');
+  const mainContent = document.getElementById('main-content');
+  const appContainer = document.getElementById('app-container');
   
-  if (!container) {
+  if (appContainer) appContainer.style.display = 'none';
+  if (mainContent) mainContent.style.display = 'block';
+  
+  if (!mainContent) {
     console.error('❌ main-content container not found!');
     return;
   }
   
-  container.innerHTML = `
+  mainContent.innerHTML = `
     <div class="error-container">
       <div class="error-content">
         <h1>404 - Page Not Found</h1>
