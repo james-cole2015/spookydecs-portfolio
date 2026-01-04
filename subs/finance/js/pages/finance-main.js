@@ -162,16 +162,11 @@ export class FinanceMainPage {
   }
 
   handleRowClick(costId) {
-    const cost = this.costs.find(c => c.cost_id === costId);
-    if (!cost) return;
-
-    this.drawer.open(cost, {
-      onEdit: (cost) => this.handleEditCost(cost),
-      onDelete: (costId) => this.handleDeleteCost(costId)
-    });
-
-    // Update URL state
-    stateManager.setState({ selectedCostId: costId });
+    // Navigate to the cost detail page instead of opening drawer
+    window.location.href = `/finance/costs/${costId}`;
+    
+    // Alternative using navigateTo if you have that set up:
+    // navigateTo(`/costs/${costId}`);
   }
 
   handleFormSubmit(formData) {
