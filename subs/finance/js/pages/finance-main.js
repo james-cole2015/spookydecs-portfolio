@@ -9,7 +9,7 @@ import { StatsPanel } from '../components/StatsPanel.js';
 import { getAllCosts, createCost, updateCost } from '../utils/finance-api.js';
 import { toast } from '../shared/toast.js';
 import { stateManager } from '../utils/state.js';
-import { getRouter } from '../utils/router.js';
+import { initRouter } from '../utils/router.js';
 
 export class FinanceMainPage {
   constructor() {
@@ -31,7 +31,7 @@ export class FinanceMainPage {
     console.log('FinanceMainPage init() called');
     
     // Get router instance
-    this.router = getRouter();
+    this.router = initRouter();
     
     // Initialize components
     this.tabBar = new TabBar('tab-bar');
