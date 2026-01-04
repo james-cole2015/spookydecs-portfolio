@@ -1,21 +1,8 @@
 // Cost Detail View Component
 
 import { deleteCost, getReceiptImage } from '../utils/finance-api.js';
-
-// Optional imports - graceful fallback if not available
-let showToast, showModal;
-try {
-  const toastModule = await import('../shared/toast.js');
-  showToast = toastModule.showToast;
-} catch (e) {
-  showToast = (msg, type) => console.log(`[${type}] ${msg}`);
-}
-try {
-  const modalModule = await import('../shared/modal.js');
-  showModal = modalModule.showModal;
-} catch (e) {
-  showModal = async (opts) => window.confirm(opts.message);
-}
+import { toast } from '../shared/toast.js';
+import { modal } from '../shared/modal.js';
 
 export class CostDetailView {
   constructor(costData) {
@@ -34,9 +21,15 @@ export class CostDetailView {
   }
 
   async loadReceiptImage() {
+    console.log('🔍 loadReceiptImage called');
+    console.log('📦 Full costData:', this.costData);
+    console.log('🧾 receipt_data:', this.costData.receipt_data);
+    
     const photoId = this.costData.receipt_data?.image_id;
+    console.log('🎫 Extracted photo_id:', photoId);
+    
     if (!photoId) {
-      console.log('No receipt photo_id found');
+      console.log('❌ No receipt photo_id found');
       return;
     }
 
@@ -213,7 +206,7 @@ export class CostDetailView {
     document.querySelectorAll('[data-action="edit"]').forEach(btn => 
       btn.addEventListener('click', () => {
         console.log('Edit cost clicked');
-        showToast('Edit functionality coming soon', 'info');
+        toast.info('Edit functionality coming soon');
       })
     );
 
@@ -224,7 +217,7 @@ export class CostDetailView {
   }
 
   async handleDelete() {
-    const confirmed = await showModal({ 
+    const confirmed = await modal.confirm({ 
       title: 'Delete Cost Record', 
       message: 'Are you sure you want to delete this cost record? This action cannot be undone.', 
       confirmText: 'Delete', 
@@ -236,11 +229,11 @@ export class CostDetailView {
     
     try {
       await deleteCost(this.costData.cost_id);
-      showToast('Cost record deleted successfully', 'success');
+      toast.success('Cost record deleted successfully');
       setTimeout(() => { window.location.href = '/finance'; }, 1000);
     } catch (error) {
       console.error('Error deleting cost:', error);
-      showToast('Failed to delete cost record: ' + error.message, 'error');
+      toast.error('Failed to delete cost record: ' + error.message);
     }
   }
 }
