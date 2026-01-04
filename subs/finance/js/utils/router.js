@@ -105,9 +105,12 @@ async function handleNewCostView(match) {
     
     console.log('📄 Loading new cost form');
     
-    // Dynamically import the new cost page
-    const { renderNewCostForm } = await import('../pages/new-cost-record.js');
-    await renderNewCostForm(container);
+    // Dynamically import the new cost page class
+    const { NewCostRecordPage } = await import('../pages/new-cost-record.js');
+    
+    // Clear container and instantiate the page
+    container.innerHTML = '<div id="app-container"></div>';
+    new NewCostRecordPage();
     
     hideLoading();
   } catch (error) {
