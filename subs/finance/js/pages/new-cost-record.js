@@ -36,9 +36,9 @@ export class NewCostRecordPage {
       <div class="new-cost-record-page">
         <!-- Breadcrumbs -->
         <nav class="breadcrumbs">
-          <a href="/finance" class="breadcrumb-link">Finance</a>
+          <a href="/" class="breadcrumb-link">Finance</a>
           <span class="breadcrumb-separator">/</span>
-          <a href="/finance" class="breadcrumb-link">Cost Records</a>
+          <a href="/" class="breadcrumb-link">Cost Records</a>
           <span class="breadcrumb-separator">/</span>
           <span class="breadcrumb-current">New Record</span>
         </nav>
@@ -146,7 +146,7 @@ export class NewCostRecordPage {
           
           // Redirect to finance page after short delay
           setTimeout(() => {
-            window.location.href = '/finance';
+            window.location.href = '/';
           }, 1500);
           
         } catch (error) {

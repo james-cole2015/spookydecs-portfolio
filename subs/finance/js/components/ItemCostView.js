@@ -81,7 +81,7 @@ export class ItemCostView {
       <div class="item-costs-page">
         <!-- Breadcrumbs -->
         <nav class="breadcrumbs">
-          <a href="/finance" class="breadcrumb-link">Finance</a>
+          <a href="/" class="breadcrumb-link">Finance</a>
           <span class="breadcrumb-separator">›</span>
           <span class="breadcrumb-current">${itemName}</span>
         </nav>
@@ -222,7 +222,7 @@ export class ItemCostView {
     document.querySelectorAll('.breadcrumb-link').forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
-        window.location.href = '/finance';
+        window.location.href = '/';
       });
     });
 
@@ -237,7 +237,7 @@ export class ItemCostView {
     // Add new cost (both buttons)
     document.querySelectorAll('[data-action="add-cost"]').forEach(btn => {
       btn.addEventListener('click', () => {
-        window.location.href = `/finance/new?item_id=${this.itemId}`;
+        window.location.href = `/create?item_id=${this.itemId}`;
       });
     });
 

@@ -293,7 +293,7 @@ export class CostRecordsTable {
     const newCostBtn = this.container.querySelector('#btn-new-cost');
     if (newCostBtn) {
       newCostBtn.addEventListener('click', () => {
-        window.location.href = '/new';
+        window.location.href = '/create';
       });
     }
 

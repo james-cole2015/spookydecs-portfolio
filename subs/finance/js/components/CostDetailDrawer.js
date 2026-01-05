@@ -184,7 +184,7 @@ export class CostDetailDrawer {
             <div class="drawer-detail-item">
               <span class="detail-label">Related Item</span>
               <span class="detail-value">
-                <a href="#" class="related-item-link" data-navigate="/finance/${cost.related_item_id}">
+                <a href="#" class="related-item-link" data-navigate="/${cost.related_item_id}">
                   ${cost.related_item_id} →
                 </a>
               </span>
@@ -194,7 +194,7 @@ export class CostDetailDrawer {
             <div class="drawer-detail-item">
               <span class="detail-label">Related Idea</span>
               <span class="detail-value">
-                <a href="#" class="related-item-link" data-navigate="/finance/${cost.related_idea_id}">
+                <a href="#" class="related-item-link" data-navigate="/${cost.related_idea_id}">
                   ${cost.related_idea_id} →
                 </a>
               </span>
@@ -204,7 +204,7 @@ export class CostDetailDrawer {
             <div class="drawer-detail-item">
               <span class="detail-label">Related Maintenance</span>
               <span class="detail-value">
-                <a href="#" class="related-item-link" data-navigate="/finance/${cost.related_record_id}">
+                <a href="#" class="related-item-link" data-navigate="/${cost.related_record_id}">
                   ${cost.related_record_id} →
                 </a>
               </span>
@@ -288,7 +288,7 @@ export class CostDetailDrawer {
     if (viewBtn) {
       viewBtn.addEventListener('click', () => {
         // Navigate to cost detail page
-        window.location.href = `/finance/costs/${this.currentCost.cost_id}`;
+        window.location.href = `/costs/${this.currentCost.cost_id}`;
         this.close();
       });
     }

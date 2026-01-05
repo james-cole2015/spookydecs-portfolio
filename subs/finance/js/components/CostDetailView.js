@@ -63,7 +63,7 @@ export class CostDetailView {
       <div class="cost-detail-page">
         <!-- Breadcrumbs -->
         <nav class="breadcrumbs">
-          <a href="/finance" class="breadcrumb-link">Finance</a>
+          <a href="/" class="breadcrumb-link">Finance</a>
           <span class="breadcrumb-separator">›</span>
           <span class="breadcrumb-current">Cost Record</span>
         </nav>
@@ -139,9 +139,9 @@ export class CostDetailView {
 
   renderRelatedLinks(cost) {
     const links = [];
-    if (cost.related_item_id) links.push({ label: 'Item', id: cost.related_item_id, url: `/finance/${cost.related_item_id}` });
-    if (cost.related_idea_id) links.push({ label: 'Idea', id: cost.related_idea_id, url: `/finance/${cost.related_idea_id}` });
-    if (cost.related_record_id) links.push({ label: 'Maintenance Record', id: cost.related_record_id, url: `/finance/${cost.related_record_id}` });
+    if (cost.related_item_id) links.push({ label: 'Item', id: cost.related_item_id, url: `/${cost.related_item_id}` });
+    if (cost.related_idea_id) links.push({ label: 'Idea', id: cost.related_idea_id, url: `/${cost.related_idea_id}` });
+    if (cost.related_record_id) links.push({ label: 'Maintenance Record', id: cost.related_record_id, url: `/${cost.related_record_id}` });
     if (links.length === 0) return '';
     return `
       <div class="related-links-banner">
@@ -166,7 +166,7 @@ export class CostDetailView {
     document.querySelectorAll('.breadcrumb-link').forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
-        window.location.href = '/finance';
+        window.location.href = '/';
       });
     });
 
@@ -240,7 +240,7 @@ export class CostDetailView {
     try {
       await deleteCost(this.costData.cost_id);
       toast.success('Cost record deleted successfully');
-      setTimeout(() => { window.location.href = '/finance'; }, 1000);
+      setTimeout(() => { window.location.href = '/'; }, 1000);
     } catch (error) {
       console.error('Error deleting cost:', error);
       toast.error('Failed to delete cost record: ' + error.message);
