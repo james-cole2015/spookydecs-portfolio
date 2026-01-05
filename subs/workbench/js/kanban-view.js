@@ -19,6 +19,7 @@ import { spinner } from './spinner.js';
 let currentSeasonId = null;
 let currentItems = [];
 let currentFilters = {
+  status: 'all',
   priority: 'all',
   recordType: 'all',
   sourceType: 'all'
@@ -82,11 +83,11 @@ function renderHeader(season, seasons) {
             `).join('')}
           </select>
         </div>
-        
-        <div class="header-actions">
-          <button id="create-season-btn" class="btn-secondary">New Season</button>
-          <button id="import-items-btn" class="btn-primary">Import Items</button>
-        </div>
+      </div>
+      
+      <div class="header-actions">
+        <button id="create-season-btn" class="btn-secondary">New Season</button>
+        <button id="import-items-btn" class="btn-primary">Import Items</button>
       </div>
       
       <div class="header-stats">
@@ -114,6 +115,16 @@ function renderHeader(season, seasons) {
 function renderFilters() {
   return `
     <div class="kanban-filters">
+      <div class="filter-group">
+        <label>Status:</label>
+        <select id="filter-status" class="filter-select">
+          <option value="all">All Statuses</option>
+          <option value="todo">To Do</option>
+          <option value="in_progress">In Progress</option>
+          <option value="completed">Completed</option>
+        </select>
+      </div>
+      
       <div class="filter-group">
         <label>Priority:</label>
         <select id="filter-priority" class="filter-select">
@@ -165,10 +176,15 @@ function renderColumn(status, title, items) {
   return `
     <div class="kanban-column" data-status="${status}">
       <div class="column-header">
-        <h3>${title}</h3>
-        <span class="item-count">${items.length}</span>
+        <div class="column-title-wrapper">
+          <button class="collapse-btn" data-status="${status}">
+            <span class="collapse-icon">▼</span>
+          </button>
+          <h3>${title}</h3>
+          <span class="item-count">${items.length}</span>
+        </div>
       </div>
-      <div class="column-content">
+      <div class="column-content" data-status="${status}">
         ${sortedItems.map(item => renderCard(item)).join('')}
       </div>
     </div>
@@ -176,6 +192,7 @@ function renderColumn(status, title, items) {
 }
 
 function renderCard(item) {
+console.log('Item data:', item); 
   const priorityColor = getPriorityColor(item.priority);
   
   return `
@@ -189,10 +206,13 @@ function renderCard(item) {
       
       <h4 class="card-title">${item.title}</h4>
       
-      <div class="card-meta">
-        <span class="meta-item">💰 ${formatCurrency(item.costs?.estimated_cost || 0)}</span>
-        ${item.materials?.length ? `<span class="meta-item">📦 ${item.materials.length} materials</span>` : ''}
-      </div>
+<div class="card-meta">
+  ${item.source_type === 'maintenance' && item.item_id ? 
+    `<span class="meta-item">🔧 Item: ${item.item_id}</span>` : 
+    item.source_type === 'idea' && item.source_id ? 
+    `<span class="meta-item">💡 Idea: ${item.source_id}</span>` : 
+    ''}
+</div>
       
       <div class="card-footer">
         <select class="status-dropdown" data-item-id="${item.workbench_item_id}">
@@ -208,6 +228,9 @@ function renderCard(item) {
 
 function filterItems(items) {
   return items.filter(item => {
+    if (currentFilters.status !== 'all' && item.workbench_status !== currentFilters.status) {
+      return false;
+    }
     if (currentFilters.priority !== 'all' && item.priority !== currentFilters.priority) {
       return false;
     }
@@ -235,6 +258,12 @@ function attachEventListeners() {
   // Import items button
   document.getElementById('import-items-btn')?.addEventListener('click', showImportModal);
 
+  // Status filter
+  document.getElementById('filter-status')?.addEventListener('change', (e) => {
+    currentFilters.status = e.target.value;
+    refreshKanbanBoard();
+  });
+
   // Filter dropdowns
   document.getElementById('filter-priority')?.addEventListener('change', (e) => {
     currentFilters.priority = e.target.value;
@@ -249,6 +278,24 @@ function attachEventListeners() {
   document.getElementById('filter-source-type')?.addEventListener('change', (e) => {
     currentFilters.sourceType = e.target.value;
     refreshKanbanBoard();
+  });
+
+  // Collapse buttons
+  document.querySelectorAll('.collapse-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const status = e.currentTarget.dataset.status;
+      const column = document.querySelector(`.kanban-column[data-status="${status}"]`);
+      const content = column.querySelector('.column-content');
+      const icon = e.currentTarget.querySelector('.collapse-icon');
+      
+      if (content.classList.contains('collapsed')) {
+        content.classList.remove('collapsed');
+        icon.textContent = '▼';
+      } else {
+        content.classList.add('collapsed');
+        icon.textContent = '▶';
+      }
+    });
   });
 
   // Status dropdowns on cards
@@ -344,10 +391,34 @@ function showImportModal() {
 function refreshKanbanBoard() {
   const board = document.querySelector('.kanban-board');
   if (board) {
-    board.innerHTML = '';
-    board.insertAdjacentHTML('beforeend', renderKanbanBoard());
+    // Get just the column HTML, not the wrapper
+    const filteredItems = filterItems(currentItems);
+    const itemsByStatus = groupBy(filteredItems, 'workbench_status');
     
-    // Re-attach event listeners for cards
+    board.innerHTML = `
+      ${renderColumn('todo', 'To Do', itemsByStatus.todo || [])}
+      ${renderColumn('in_progress', 'In Progress', itemsByStatus.in_progress || [])}
+      ${renderColumn('completed', 'Completed', itemsByStatus.completed || [])}
+    `;
+    
+    // Re-attach ALL event listeners
+    document.querySelectorAll('.collapse-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const status = e.currentTarget.dataset.status;
+        const column = document.querySelector(`.kanban-column[data-status="${status}"]`);
+        const content = column.querySelector('.column-content');
+        const icon = e.currentTarget.querySelector('.collapse-icon');
+        
+        if (content.classList.contains('collapsed')) {
+          content.classList.remove('collapsed');
+          icon.textContent = '▼';
+        } else {
+          content.classList.add('collapsed');
+          icon.textContent = '▶';
+        }
+      });
+    });
+    
     document.querySelectorAll('.status-dropdown').forEach(dropdown => {
       dropdown.addEventListener('change', handleStatusChange);
     });

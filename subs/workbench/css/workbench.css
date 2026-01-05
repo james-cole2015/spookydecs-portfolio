@@ -118,7 +118,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .season-selector {
@@ -142,8 +142,14 @@ body {
 }
 
 .header-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 12px;
+  margin-bottom: 24px;
+}
+
+.header-actions button {
+  width: 100%;
 }
 
 .header-stats {
@@ -211,13 +217,17 @@ body {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 24px;
+  grid-auto-columns: 1fr; /* Force any auto-generated columns to match */
 }
+
 
 .kanban-column {
   background: #f1f5f9;
   border-radius: 12px;
   padding: 16px;
   min-height: 400px;
+  max-width: 100%; /* Prevent overflow */
+  overflow: hidden; /* Prevent content from breaking layout */
 }
 
 .column-header {
@@ -502,4 +512,40 @@ body {
   .filter-select {
     flex: 1;
   }
+}
+/* Column header with collapse */
+.column-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.collapse-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  transition: color 0.15s;
+}
+
+.collapse-btn:hover {
+  color: #0f172a;
+}
+
+.collapse-icon {
+  font-size: 12px;
+  transition: transform 0.15s;
+}
+
+.column-content.collapsed {
+  display: none;
+}
+
+.column-header h3 {
+  flex: 1;
 }
