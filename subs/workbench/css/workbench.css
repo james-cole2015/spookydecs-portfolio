@@ -189,6 +189,7 @@ body {
   display: flex;
   gap: 24px;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .filter-group {
@@ -210,6 +211,30 @@ body {
   font-size: 14px;
   background: white;
   cursor: pointer;
+}
+
+/* Clear Filters Button */
+.clear-filters-btn {
+  margin-left: auto;
+  padding: 8px 16px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.clear-filters-btn:hover:not([disabled]) {
+  background: #dc2626;
+}
+
+.clear-filters-btn[disabled] {
+  background: #e2e8f0;
+  color: #94a3b8;
+  cursor: not-allowed;
 }
 
 /* Kanban Board */
@@ -503,6 +528,7 @@ body {
   .kanban-filters {
     flex-direction: column;
     gap: 12px;
+    align-items: stretch;
   }
 
   .filter-group {
@@ -511,6 +537,11 @@ body {
 
   .filter-select {
     flex: 1;
+  }
+
+  .clear-filters-btn {
+    margin-left: 0;
+    width: 100%;
   }
 }
 /* Column header with collapse */
