@@ -237,7 +237,7 @@ export class ItemCostView {
     // Add new cost (both buttons)
     document.querySelectorAll('[data-action="add-cost"]').forEach(btn => {
       btn.addEventListener('click', () => {
-        window.location.href = `/create?item_id=${this.itemId}`;
+        window.location.href = `/new?item_id=${this.itemId}`;
       });
     });
 
