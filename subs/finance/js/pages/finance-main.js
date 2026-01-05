@@ -163,7 +163,7 @@ export class FinanceMainPage {
 
   handleRowClick(costId) {
     // Navigate to the cost detail page using navigateTo
-    navigateTo(`/costs/${costId}`);
+    navigateTo(`/finance/costs/${costId}`);
   }
 
   handleFormSubmit(formData) {
@@ -219,7 +219,7 @@ export class FinanceMainPage {
 
   handleEditCost(cost) {
     // Navigate to edit page with cost data
-    navigateTo(`/new?cost_id=${cost.cost_id}`);
+    navigateTo(`/finance/new?cost_id=${cost.cost_id}`);
   }
 
   async handleDeleteCost(costId) {
