@@ -4,14 +4,23 @@ import { showLoading, hideLoading } from './helpers.js';
 let router = null;
 
 export function initRouter() {
-  router = new Navigo('/', { hash: false });
+  // Detect if we're in local dev (includes /subs/finance) or production (just /finance or /)
+  const isLocal = window.location.pathname.includes('/subs/finance');
+  const root = isLocal ? '/subs/finance' : '/';
+  
+  router = new Navigo(root, { hash: false });
   
   console.log('🔧 Finance router initialized');
+  console.log('📍 Root:', root);
   console.log('📍 Current location:', window.location.href);
   console.log('📍 Current pathname:', window.location.pathname);
   
   // Define routes - Specific routes first, generic routes last
   router
+    .on('/', () => {
+      console.log('✅ Route matched: / (root) - redirecting to /finance');
+      router.navigate('/finance');
+    })
     .on('/finance/new', async (match) => {
       console.log('✅ Route matched: /finance/new', match.data);
       await handleNewCostView(match);
