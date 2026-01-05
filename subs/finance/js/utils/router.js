@@ -17,24 +17,29 @@ export function initRouter() {
       console.log('✅ Route matched: / (main finance page)');
       await handleFinanceMain();
     })
-    .on('/new', async (match) => {
-      console.log('✅ Route matched: /new', match.data);
+    .on('/create', async (match) => {
+      console.log('✅ Route matched: /create', match.data);
       await handleNewCostView(match);
     })
     .on('/costs/:costId', async (match) => {
       console.log('✅ Route matched: /costs/:costId', match.data);
       await handleCostDetailView(match);
     })
-    .on('/:itemId', async (match) => {
-      console.log('✅ Route matched: /:itemId', match.data);
-      // Safety check - prevent literal routes from being treated as item IDs
-      const itemId = match.data.itemId;
-      if (itemId === 'new' || itemId === 'costs') {
-        console.log('   ⚠️ Skipping - this is a literal route');
-        renderNotFound();
-        return;
+    .on('/:itemId', {
+      before: (done, match) => {
+        const itemId = match.data.itemId;
+        // Reserved literal routes - don't match these as item IDs
+        if (['create', 'costs'].includes(itemId)) {
+          console.log('   ⚠️ Blocked reserved route from /:itemId handler:', itemId);
+          done(false); // Cancel this route match
+          return;
+        }
+        done(); // Allow the route to proceed
+      },
+      uses: async (match) => {
+        console.log('✅ Route matched: /:itemId', match.data);
+        await handleItemCostsView(match);
       }
-      await handleItemCostsView(match);
     })
     .notFound(() => {
       console.log('❌ Route NOT FOUND');
