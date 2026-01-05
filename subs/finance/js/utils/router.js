@@ -30,11 +30,10 @@ export function initRouter() {
         as: 'itemCosts',
         uses: async (match) => {
           const itemId = match.data.itemId;
-          // Block reserved literal routes
+          // Block reserved literal routes - return false to let other routes handle
           if (['create', 'costs'].includes(itemId)) {
-            console.log('   ⚠️ Blocked reserved route:', itemId);
-            renderNotFound();
-            return;
+            console.log('   ⚠️ Skipping reserved route:', itemId);
+            return false;
           }
           console.log('✅ Route matched: /:itemId', match.data);
           await handleItemCostsView(match);
