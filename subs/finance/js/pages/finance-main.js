@@ -90,7 +90,7 @@ export class FinanceMainPage {
     addButton.className = 'btn-primary';
     addButton.textContent = '+ Add New Cost';
     addButton.addEventListener('click', () => {
-      navigateTo('/new');
+      navigateTo('/finance/new');
     });
     
     buttonContainer.appendChild(addButton);
