@@ -17,8 +17,8 @@ export function initRouter() {
       console.log('✅ Route matched: / (main finance page)');
       await handleFinanceMain();
     })
-    .on('/create', async (match) => {
-      console.log('✅ Route matched: /create', match.data);
+    .on('/new', async (match) => {
+      console.log('✅ Route matched: /new', match.data);
       await handleNewCostView(match);
     })
     .on('/costs/:costId', async (match) => {
@@ -27,7 +27,7 @@ export function initRouter() {
     })
     .on('/:itemId', async ({ data }) => {
       // Only match if itemId doesn't look like a reserved route
-      if (data.itemId === 'create' || data.itemId === 'costs') {
+      if (data.itemId === 'new' || data.itemId === 'costs') {
         console.log('   ⚠️ Skipping reserved route:', data.itemId);
         return false; // Don't handle, let other routes match
       }
@@ -111,12 +111,12 @@ async function handleNewCostView(match) {
     
     console.log('📄 Loading new cost form');
     
-    // Dynamically import the new cost page class
-    const { NewCostRecordPage } = await import('../pages/new-cost-record.js');
+    // Dynamically import the new cost page function
+    const { renderNewCostRecord } = await import('../pages/new-cost-record.js');
     
-    // Clear container and instantiate the page
-    mainContent.innerHTML = '<div id="app-container"></div>';
-    new NewCostRecordPage();
+    // Clear container and render
+    mainContent.innerHTML = '';
+    await renderNewCostRecord(mainContent);
     
     hideLoading();
   } catch (error) {

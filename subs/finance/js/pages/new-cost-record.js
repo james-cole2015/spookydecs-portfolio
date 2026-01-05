@@ -6,33 +6,17 @@ import { ReceiptUploadModal } from '../components/ReceiptUploadModal.js';
 import { createCost, updateImageAfterCostCreation } from '../utils/finance-api.js';
 import { toast } from '../shared/toast.js';
 
-export class NewCostRecordPage {
-  constructor() {
-    this.formFields = null;
-    this.reviewModal = null;
-    this.receiptModal = null;
-    this.init();
-  }
+export async function renderNewCostRecord(container) {
+  console.log('📄 renderNewCostRecord called');
   
-  init() {
-    console.log('Initializing NewCostRecordPage');
-    this.render();
-    this.attachEventListeners();
-  }
-  
-  render() {
-    const appContainer = document.getElementById('app-container');
-    if (!appContainer) {
-      console.error('App container not found');
-      return;
-    }
-    
+  try {
     // Get URL parameters for pre-filling
     const urlParams = new URLSearchParams(window.location.search);
     const itemId = urlParams.get('item_id');
     const recordId = urlParams.get('record_id');
     
-    appContainer.innerHTML = `
+    // Render the page structure
+    container.innerHTML = `
       <div class="new-cost-record-page">
         <!-- Breadcrumbs -->
         <nav class="breadcrumbs">
@@ -70,93 +54,114 @@ export class NewCostRecordPage {
       </div>
     `;
     
+    console.log('✅ Page structure rendered');
+    
     // Initialize receipt modal
-    this.receiptModal = new ReceiptUploadModal();
+    const receiptModal = new ReceiptUploadModal();
     
     // Render form fields
-    this.formFields = new CostFormFields('cost-form-container', {
+    const formFields = new CostFormFields('cost-form-container', {
       itemId: itemId,
       recordId: recordId
     });
     
     // Set up form submit callback
-    this.formFields.onSubmit = (formData, extractionId, imageId) => {
-      this.handleFormSubmit(formData, extractionId, imageId);
+    formFields.onSubmit = (formData, extractionId, imageId) => {
+      handleFormSubmit(formData, extractionId, imageId);
     };
     
-    this.formFields.render();
+    formFields.render();
+    console.log('✅ Form fields rendered');
+    
+    // Attach event listeners
+    attachEventListeners(receiptModal, formFields);
+    console.log('✅ Event listeners attached');
+    
+  } catch (error) {
+    console.error('❌ Error rendering new cost record page:', error);
+    
+    // Show error in container
+    container.innerHTML = `
+      <div class="error-container">
+        <div class="error-content">
+          <h1>Error Loading Form</h1>
+          <p>${error.message}</p>
+          <button onclick="window.location.href='/'" class="btn-secondary">Back to Finance</button>
+        </div>
+      </div>
+    `;
   }
-  
-  attachEventListeners() {
-    // Extract with AI button
-    const extractBtn = document.getElementById('btn-extract-ai');
-    if (extractBtn) {
-      extractBtn.addEventListener('click', () => {
-        // Get context from URL params
-        const urlParams = new URLSearchParams(window.location.search);
-        const contextData = {
-          item_id: urlParams.get('item_id') || this.formFields.formData.related_item_id || null,
-          record_id: urlParams.get('record_id') || this.formFields.formData.related_record_id || null,
-          cost_type: urlParams.get('cost_type') || this.formFields.formData.cost_type || null,
-          category: urlParams.get('category') || this.formFields.formData.category || null
-        };
-        
-        // Open modal with context and callback
-        this.receiptModal.open(contextData, (extractedData, extractionId, imageId) => {
-          this.formFields.handleReceiptData(extractedData, extractionId, imageId);
-        });
+}
+
+function attachEventListeners(receiptModal, formFields) {
+  // Extract with AI button
+  const extractBtn = document.getElementById('btn-extract-ai');
+  if (extractBtn) {
+    extractBtn.addEventListener('click', () => {
+      // Get context from URL params
+      const urlParams = new URLSearchParams(window.location.search);
+      const contextData = {
+        item_id: urlParams.get('item_id') || formFields.formData.related_item_id || null,
+        record_id: urlParams.get('record_id') || formFields.formData.related_record_id || null,
+        cost_type: urlParams.get('cost_type') || formFields.formData.cost_type || null,
+        category: urlParams.get('category') || formFields.formData.category || null
+      };
+      
+      // Open modal with context and callback
+      receiptModal.open(contextData, (extractedData, extractionId, imageId) => {
+        formFields.handleReceiptData(extractedData, extractionId, imageId);
       });
-    }
-  }
-  
-  async handleFormSubmit(formData, extractionId, imageId) {
-    console.log('Handling form submission...', formData);
-    
-    // Add extraction metadata if present
-    if (extractionId) {
-      formData.extraction_id = extractionId;
-    }
-    if (imageId) {
-      formData.image_id = imageId;
-    }
-    
-    // Show review modal
-    this.reviewModal = new CostReviewModal();
-    
-    this.reviewModal.show(formData, {
-      onConfirm: async () => {
-        try {
-          toast.info('Saving cost record...');
-          
-          const result = await createCost(formData);
-          
-          // If we have an image_id, update the image record to move it to processed folder
-          if (imageId && result.cost_id) {
-            console.log('Moving receipt to processed folder...');
-            try {
-              await updateImageAfterCostCreation(imageId, result.cost_id);
-              console.log('Receipt moved successfully');
-            } catch (imageError) {
-              // Log but don't fail - image update is not critical
-              console.error('Failed to update image:', imageError);
-            }
-          }
-          
-          toast.success('Cost record created successfully');
-          
-          // Redirect to finance page after short delay
-          setTimeout(() => {
-            window.location.href = '/';
-          }, 1500);
-          
-        } catch (error) {
-          console.error('Failed to save cost record:', error);
-          toast.error(`Failed to save cost record: ${error.message}`);
-        }
-      },
-      onCancel: () => {
-        console.log('User cancelled review');
-      }
     });
   }
+}
+
+async function handleFormSubmit(formData, extractionId, imageId) {
+  console.log('Handling form submission...', formData);
+  
+  // Add extraction metadata if present
+  if (extractionId) {
+    formData.extraction_id = extractionId;
+  }
+  if (imageId) {
+    formData.image_id = imageId;
+  }
+  
+  // Show review modal
+  const reviewModal = new CostReviewModal();
+  
+  reviewModal.show(formData, {
+    onConfirm: async () => {
+      try {
+        toast.info('Saving cost record...');
+        
+        const result = await createCost(formData);
+        
+        // If we have an image_id, update the image record to move it to processed folder
+        if (imageId && result.cost_id) {
+          console.log('Moving receipt to processed folder...');
+          try {
+            await updateImageAfterCostCreation(imageId, result.cost_id);
+            console.log('Receipt moved successfully');
+          } catch (imageError) {
+            // Log but don't fail - image update is not critical
+            console.error('Failed to update image:', imageError);
+          }
+        }
+        
+        toast.success('Cost record created successfully');
+        
+        // Redirect to finance page after short delay
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 1500);
+        
+      } catch (error) {
+        console.error('Failed to save cost record:', error);
+        toast.error(`Failed to save cost record: ${error.message}`);
+      }
+    },
+    onCancel: () => {
+      console.log('User cancelled review');
+    }
+  });
 }
