@@ -90,7 +90,7 @@ export class FinanceMainPage {
     addButton.className = 'btn-primary';
     addButton.textContent = '+ Add New Cost';
     addButton.addEventListener('click', () => {
-      navigateTo('/finance/new');
+      navigateTo('/new');
     });
     
     buttonContainer.appendChild(addButton);
@@ -153,7 +153,7 @@ export class FinanceMainPage {
   }
 
   initForm() {
-    // Form moved to separate /finance/new page
+    // Form moved to separate /new page
     // Hide the form container on main page
     const formContainer = document.getElementById('form-container');
     if (formContainer) {
@@ -163,7 +163,7 @@ export class FinanceMainPage {
 
   handleRowClick(costId) {
     // Navigate to the cost detail page using navigateTo
-    navigateTo(`/finance/costs/${costId}`);
+    navigateTo(`/costs/${costId}`);
   }
 
   handleFormSubmit(formData) {
@@ -219,7 +219,7 @@ export class FinanceMainPage {
 
   handleEditCost(cost) {
     // Navigate to edit page with cost data
-    navigateTo(`/finance/new?cost_id=${cost.cost_id}`);
+    navigateTo(`/new?cost_id=${cost.cost_id}`);
   }
 
   async handleDeleteCost(costId) {

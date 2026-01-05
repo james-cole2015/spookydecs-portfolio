@@ -4,37 +4,29 @@ import { showLoading, hideLoading } from './helpers.js';
 let router = null;
 
 export function initRouter() {
-  // Detect if we're in local dev (includes /subs/finance) or production (just /finance or /)
-  const isLocal = window.location.pathname.includes('/subs/finance');
-  const root = isLocal ? '/subs/finance' : '/';
-  
-  router = new Navigo(root, { hash: false });
+  router = new Navigo('/', { hash: false });
   
   console.log('🔧 Finance router initialized');
-  console.log('📍 Root:', root);
+  console.log('📍 Root:', '/');
   console.log('📍 Current location:', window.location.href);
   console.log('📍 Current pathname:', window.location.pathname);
   
   // Define routes - Specific routes first, generic routes last
   router
-    .on('/', () => {
-      console.log('✅ Route matched: / (root) - redirecting to /finance');
-      router.navigate('/finance');
-    })
-    .on('/finance/new', async (match) => {
-      console.log('✅ Route matched: /finance/new', match.data);
-      await handleNewCostView(match);
-    })
-    .on('/finance/costs/:costId', async (match) => {
-      console.log('✅ Route matched: /finance/costs/:costId', match.data);
-      await handleCostDetailView(match);
-    })
-    .on('/finance', async () => {
-      console.log('✅ Route matched: /finance (main page)');
+    .on('/', async () => {
+      console.log('✅ Route matched: / (main finance page)');
       await handleFinanceMain();
     })
-    .on('/finance/:itemId', async (match) => {
-      console.log('✅ Route matched: /finance/:itemId', match.data);
+    .on('/new', async (match) => {
+      console.log('✅ Route matched: /new', match.data);
+      await handleNewCostView(match);
+    })
+    .on('/costs/:costId', async (match) => {
+      console.log('✅ Route matched: /costs/:costId', match.data);
+      await handleCostDetailView(match);
+    })
+    .on('/:itemId', async (match) => {
+      console.log('✅ Route matched: /:itemId', match.data);
       // Safety check - prevent literal routes from being treated as item IDs
       const itemId = match.data.itemId;
       if (itemId === 'new' || itemId === 'costs') {
@@ -59,10 +51,8 @@ export function initRouter() {
 
 export function navigateTo(path) {
   if (router) {
-    // Ensure path starts with /finance
-    const fullPath = path.startsWith('/finance') ? path : `/finance${path}`;
-    console.log('🔄 Navigating to:', fullPath);
-    router.navigate(fullPath);
+    console.log('🔄 Navigating to:', path);
+    router.navigate(path);
   } else {
     console.error('❌ Router not initialized');
   }
@@ -227,7 +217,7 @@ function renderNotFound() {
         <h1>404 - Page Not Found</h1>
         <p>The page you're looking for doesn't exist.</p>
         <p><small>Path: ${window.location.pathname}</small></p>
-        <button onclick="window.location.href='/finance'" class="btn-primary">Go Home</button>
+        <button onclick="window.location.href='/'" class="btn-primary">Go Home</button>
       </div>
     </div>
   `;
