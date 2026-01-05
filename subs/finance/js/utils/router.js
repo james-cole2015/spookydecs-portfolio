@@ -25,20 +25,14 @@ export function initRouter() {
       console.log('✅ Route matched: /costs/:costId', match.data);
       await handleCostDetailView(match);
     })
-    .on({
-      '/:itemId': {
-        as: 'itemCosts',
-        uses: async (match) => {
-          const itemId = match.data.itemId;
-          // Block reserved literal routes - return false to let other routes handle
-          if (['create', 'costs'].includes(itemId)) {
-            console.log('   ⚠️ Skipping reserved route:', itemId);
-            return false;
-          }
-          console.log('✅ Route matched: /:itemId', match.data);
-          await handleItemCostsView(match);
-        }
+    .on('/:itemId', async ({ data }) => {
+      // Only match if itemId doesn't look like a reserved route
+      if (data.itemId === 'create' || data.itemId === 'costs') {
+        console.log('   ⚠️ Skipping reserved route:', data.itemId);
+        return false; // Don't handle, let other routes match
       }
+      console.log('✅ Route matched: /:itemId', data);
+      await handleItemCostsView({ data });
     })
     .notFound(() => {
       console.log('❌ Route NOT FOUND');
