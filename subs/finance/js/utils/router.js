@@ -25,20 +25,20 @@ export function initRouter() {
       console.log('✅ Route matched: /costs/:costId', match.data);
       await handleCostDetailView(match);
     })
-    .on('/:itemId', {
-      before: (done, match) => {
-        const itemId = match.data.itemId;
-        // Reserved literal routes - don't match these as item IDs
-        if (['create', 'costs'].includes(itemId)) {
-          console.log('   ⚠️ Blocked reserved route from /:itemId handler:', itemId);
-          done(false); // Cancel this route match
-          return;
+    .on({
+      '/:itemId': {
+        as: 'itemCosts',
+        uses: async (match) => {
+          const itemId = match.data.itemId;
+          // Block reserved literal routes
+          if (['create', 'costs'].includes(itemId)) {
+            console.log('   ⚠️ Blocked reserved route:', itemId);
+            renderNotFound();
+            return;
+          }
+          console.log('✅ Route matched: /:itemId', match.data);
+          await handleItemCostsView(match);
         }
-        done(); // Allow the route to proceed
-      },
-      uses: async (match) => {
-        console.log('✅ Route matched: /:itemId', match.data);
-        await handleItemCostsView(match);
       }
     })
     .notFound(() => {
