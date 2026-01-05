@@ -3,3 +3,4 @@
 .json
 merge.py
 config.json
+/subs/*/config.json
