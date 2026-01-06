@@ -1,4 +1,4 @@
-// Finance API Client - Updated with item costs endpoint
+// Finance API Client - Updated with presigned URL upload flow
 
 let API_ENDPOINT = '';
 let configLoaded = false;
@@ -305,52 +305,85 @@ export async function getVendors() {
   }
 }
 
-// Upload and process receipt with AI extraction
-export async function uploadAndProcessReceipt(file, contextData = {}) {
+// Upload and process receipt with AI extraction (3-step flow)
+export async function uploadAndProcessReceipt(file, contextData = {}, onProgress = null) {
   await ensureConfigLoaded();
   
   console.log('=== uploadAndProcessReceipt called ===');
   console.log('File:', file);
   
   try {
-    const fileBase64 = await fileToBase64(file);
+    // STEP 1: Get presigned URL
+    if (onProgress) onProgress('requesting_presign');
     
-    const payload = {
-      file_data: fileBase64,
-      file_name: file.name,
-      file_type: file.type,
-      item_id: contextData.item_id || null,
-      record_id: contextData.record_id || null,
-      cost_type: contextData.cost_type || null,
-      category: contextData.category || null
-    };
-    
-    const response = await fetch(`${API_ENDPOINT}/finance/costs/ai-extract`, {
+    const presignResponse = await fetch(`${API_ENDPOINT}/admin/images/presign`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({
+        context: 'receipt',
+        photo_type: 'receipt',
+        season: 'shared',
+        files: [{
+          filename: file.name,
+          content_type: file.type
+        }]
+      })
     });
     
-    return await handleResponse(response);
+    const presignData = await handleResponse(presignResponse);
+    const upload = presignData.uploads[0]; // Extract first upload
+    
+    console.log('✅ Presigned URL received:', upload);
+    
+    // STEP 2: Upload directly to S3
+    if (onProgress) onProgress('uploading_to_s3');
+    
+    const uploadResponse = await fetch(upload.presigned_url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': file.type
+      },
+      body: file
+    });
+    
+    if (!uploadResponse.ok) {
+      throw new Error(`S3 upload failed: ${uploadResponse.status} ${uploadResponse.statusText}`);
+    }
+    
+    console.log('✅ File uploaded to S3');
+    
+    // STEP 3: Trigger AI processing
+    if (onProgress) onProgress('processing_with_ai');
+    
+    const processResponse = await fetch(`${API_ENDPOINT}/finance/costs/ai-extract`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        s3_key: upload.s3_key,
+        extraction_id: upload.extraction_id,
+        file_name: file.name,
+        file_type: file.type,
+        item_id: contextData.item_id || null,
+        record_id: contextData.record_id || null,
+        cost_type: contextData.cost_type || null,
+        category: contextData.category || null
+      })
+    });
+    
+    const result = await handleResponse(processResponse);
+    
+    console.log('✅ Processing complete:', result);
+    
+    return result;
+    
   } catch (error) {
     console.error('Error processing receipt:', error);
     throw error;
   }
-}
-
-// Helper function to convert File to base64
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = reader.result.split(',')[1];
-      resolve(base64);
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
 }
 
 // Update audit log with user modifications

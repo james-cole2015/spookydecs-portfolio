@@ -5,12 +5,14 @@ import { uploadAndProcessReceipt } from '../utils/finance-api.js';
 export class ReceiptUploadModal {
   constructor() {
     this.modal = null;
-    this.state = 'upload'; // upload | processing | review | error
+    this.state = 'upload'; // upload | uploading | processing | review | error
     this.extractedData = null;
     this.extractionId = null;
     this.imageId = null;
     this.onUseData = null;
     this.contextData = {}; // item_id, record_id, cost_type, category
+    this.uploadProgress = 0;
+    this.currentStep = '';
   }
 
   open(contextData = {}, onUseDataCallback) {
@@ -20,6 +22,8 @@ export class ReceiptUploadModal {
     this.extractedData = null;
     this.extractionId = null;
     this.imageId = null;
+    this.uploadProgress = 0;
+    this.currentStep = '';
     
     this.render();
     this.attachListeners();
@@ -55,13 +59,14 @@ export class ReceiptUploadModal {
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     this.modal = document.getElementById('receipt-upload-modal');
-    // Removed duplicate attachListeners() call from here
   }
 
   renderContent() {
     switch (this.state) {
       case 'upload':
         return this.renderUploadState();
+      case 'uploading':
+        return this.renderUploadingState();
       case 'processing':
         return this.renderProcessingState();
       case 'review':
@@ -117,6 +122,25 @@ export class ReceiptUploadModal {
             Process Receipt
           </button>
         </div>
+      </div>
+    `;
+  }
+
+  renderUploadingState() {
+    return `
+      <div class="uploading-state">
+        <div class="progress-container">
+          <div class="progress-circle">
+            <svg class="progress-ring" width="120" height="120">
+              <circle class="progress-ring-circle" stroke="#e2e8f0" stroke-width="8" fill="transparent" r="52" cx="60" cy="60"/>
+              <circle class="progress-ring-progress" stroke="#3b82f6" stroke-width="8" fill="transparent" r="52" cx="60" cy="60"
+                style="stroke-dasharray: 326.73; stroke-dashoffset: ${326.73 - (326.73 * this.uploadProgress / 100)}; transition: stroke-dashoffset 0.3s;"/>
+            </svg>
+            <div class="progress-text">${Math.round(this.uploadProgress)}%</div>
+          </div>
+        </div>
+        <h3>Uploading Receipt...</h3>
+        <p class="progress-step">${this.currentStep}</p>
       </div>
     `;
   }
@@ -277,7 +301,7 @@ export class ReceiptUploadModal {
     // Browse button
     if (browseBtn) {
       browseBtn.addEventListener('click', (e) => {
-        e.stopPropagation(); // Prevent double trigger
+        e.stopPropagation();
         fileInput.click();
       });
     }
@@ -285,7 +309,7 @@ export class ReceiptUploadModal {
     // Change file button
     if (changeFileBtn) {
       changeFileBtn.addEventListener('click', (e) => {
-        e.stopPropagation(); // Prevent double trigger
+        e.stopPropagation();
         fileInput.click();
       });
     }
@@ -320,7 +344,7 @@ export class ReceiptUploadModal {
       });
 
       dropZone.addEventListener('click', (e) => {
-        e.stopPropagation(); // Prevent double trigger
+        e.stopPropagation();
         fileInput.click();
       });
     }
@@ -343,7 +367,7 @@ export class ReceiptUploadModal {
       retryBtn.addEventListener('click', () => {
         this.state = 'upload';
         this.render();
-        this.attachListeners(); // Re-attach after render
+        this.attachListeners();
       });
     }
   }
@@ -356,7 +380,7 @@ export class ReceiptUploadModal {
       retryBtn.addEventListener('click', () => {
         this.state = 'upload';
         this.render();
-        this.attachListeners(); // Re-attach after render
+        this.attachListeners();
       });
     }
 
@@ -373,10 +397,10 @@ export class ReceiptUploadModal {
       return;
     }
 
-    // Validate file size (10MB limit)
-    const maxSize = 10 * 1024 * 1024;
+    // Validate file size (50MB limit for S3 direct upload)
+    const maxSize = 50 * 1024 * 1024;
     if (file.size > maxSize) {
-      alert('File size must be less than 10MB.');
+      alert('File size must be less than 50MB.');
       return;
     }
 
@@ -405,30 +429,61 @@ export class ReceiptUploadModal {
   async processReceipt() {
     if (!this.selectedFile) return;
 
-    this.state = 'processing';
+    this.state = 'uploading';
+    this.uploadProgress = 0;
+    this.currentStep = 'Preparing upload...';
     this.render();
-    this.attachListeners(); // Re-attach after render
+    this.attachListeners();
 
     try {
-      const result = await uploadAndProcessReceipt(this.selectedFile, this.contextData);
+      const result = await uploadAndProcessReceipt(
+        this.selectedFile, 
+        this.contextData,
+        (step) => this.handleProgress(step)
+      );
       
       this.extractedData = result.extracted_data;
       this.extractionId = result.extraction_id;
       this.imageId = result.image_id;
       this.state = 'review';
       this.render();
-      this.attachListeners(); // Re-attach after render
+      this.attachListeners();
       
     } catch (error) {
       console.error('Receipt processing error:', error);
       this.state = 'error';
       this.render();
-      this.attachListeners(); // Re-attach after render
+      this.attachListeners();
       
       const errorMsg = this.modal.querySelector('#error-message');
       if (errorMsg) {
         errorMsg.textContent = error.message || 'An error occurred while processing your receipt.';
       }
+    }
+  }
+
+  handleProgress(step) {
+    switch (step) {
+      case 'requesting_presign':
+        this.uploadProgress = 10;
+        this.currentStep = 'Getting upload URL...';
+        break;
+      case 'uploading_to_s3':
+        this.uploadProgress = 30;
+        this.currentStep = 'Uploading to cloud storage...';
+        this.state = 'uploading';
+        break;
+      case 'processing_with_ai':
+        this.uploadProgress = 70;
+        this.currentStep = 'Extracting data with AI...';
+        this.state = 'processing';
+        break;
+    }
+    
+    // Update UI if we're still in uploading/processing state
+    if (this.state === 'uploading' || this.state === 'processing') {
+      this.render();
+      this.attachListeners();
     }
   }
 
