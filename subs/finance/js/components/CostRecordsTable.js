@@ -194,6 +194,14 @@ export class CostRecordsTable {
     const endIdx = startIdx + this.pageSize;
     const pageData = this.filteredData.slice(startIdx, endIdx);
     const vendors = this.getUniqueVendors();
+    
+    // Check if any filters are active
+    const hasActiveFilters = 
+      this.filters.search !== '' ||
+      this.filters.cost_type !== 'all' ||
+      this.filters.category !== 'all' ||
+      this.filters.vendor !== 'all' ||
+      this.filters.date_range !== 'all';
 
     this.container.innerHTML = `
       <div class="table-header">
@@ -260,6 +268,13 @@ export class CostRecordsTable {
             id="end-date-input"
           />
         ` : ''}
+        <button 
+          class="btn-clear-filters" 
+          id="btn-clear-filters"
+          ${!hasActiveFilters ? 'disabled' : ''}
+        >
+          Clear Filters
+        </button>
       </div>
 
       <div class="table-count">
@@ -400,6 +415,26 @@ export class CostRecordsTable {
     if (newCostBtn) {
       newCostBtn.addEventListener('click', () => {
         window.location.href = '/new';
+      });
+    }
+
+    // Clear Filters button
+    const clearFiltersBtn = this.container.querySelector('#btn-clear-filters');
+    if (clearFiltersBtn) {
+      clearFiltersBtn.addEventListener('click', () => {
+        // Reset all filters
+        this.filters = {
+          search: '',
+          cost_type: 'all',
+          category: 'all',
+          vendor: 'all',
+          date_range: 'all',
+          start_date: '',
+          end_date: ''
+        };
+        this.currentPage = 0;
+        this.applyFilters();
+        this.render();
       });
     }
 

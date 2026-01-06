@@ -101,6 +101,32 @@ body {
   box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
 }
 
+.btn-clear-filters {
+  padding: 8px 16px;
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.btn-clear-filters:hover:not(:disabled) {
+  background: #fecaca;
+  border-color: #fca5a5;
+}
+
+.btn-clear-filters:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #f3f4f6;
+  color: #9ca3af;
+  border-color: #e5e7eb;
+}
+
 .table-filters {
   display: flex;
   gap: 12px;
