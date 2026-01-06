@@ -112,6 +112,8 @@ body {
   cursor: pointer;
   transition: all 0.15s;
   white-space: nowrap;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .btn-clear-filters:hover:not(:disabled) {
@@ -131,8 +133,9 @@ body {
   display: flex;
   gap: 12px;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   margin-bottom: 16px;
+  overflow-x: auto;
 }
 
 .table-count {
