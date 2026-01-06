@@ -1,0 +1,226 @@
+/* ============================================
+   MAINTENANCE SECTION STYLES
+   Add these to your item-detail.css file
+   ============================================ */
+
+/* Repair Status Cards */
+.repair-status-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: 8px;
+  border: 2px solid;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.repair-status-card.operational {
+  border-color: #10b981;
+  background: #f0fdf4;
+}
+
+.repair-status-card.needs-repair {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.repair-status-card.non-operational {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.repair-status-icon {
+  font-size: 2rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.repair-status-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.repair-status-label {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #1f2937;
+}
+
+/* Criticality Pills (matching maintenance API: critical, high, medium, low) */
+.pill-criticality-critical {
+  background-color: #fee2e2;
+  color: #7f1d1d;
+  border: 1px solid #dc2626;
+  font-weight: 600;
+}
+
+.pill-criticality-high {
+  background-color: #fecaca;
+  color: #991b1b;
+  border: 1px solid #ef4444;
+}
+
+.pill-criticality-medium {
+  background-color: #fef3c7;
+  color: #92400e;
+  border: 1px solid #f59e0b;
+}
+
+.pill-criticality-low {
+  background-color: #dbeafe;
+  color: #1e3a8a;
+  border: 1px solid #3b82f6;
+}
+
+/* Maintenance Records List */
+.maintenance-records-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.maintenance-record-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.maintenance-record-item:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  transform: translateX(2px);
+}
+
+.maintenance-record-item .record-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.maintenance-record-item .record-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.maintenance-record-item .record-id {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #1f2937;
+  font-family: 'Courier New', monospace;
+}
+
+.maintenance-record-item .record-title {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 0.125rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* API Error Message */
+.api-error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  color: #991b1b;
+  font-size: 0.875rem;
+}
+
+.api-error-message .error-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+/* Placeholder Message (for "No Records Available") */
+.placeholder-message {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 0.875rem;
+  font-style: italic;
+  background: #f9fafb;
+  border: 1px dashed #e5e7eb;
+  border-radius: 6px;
+}
+
+/* Error Section */
+.error-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  text-align: center;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+}
+
+.error-section .error-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.error-section .error-message {
+  color: #991b1b;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* Button Styling for Maintenance Records Link */
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem 1.25rem;
+  background: #f3f4f6;
+  color: #1f2937;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+  transform: translateY(-1px);
+}
+
+.btn-secondary:active {
+  transform: translateY(0);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .repair-status-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .repair-status-icon {
+    font-size: 1.5rem;
+  }
+  
+  .maintenance-record-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}

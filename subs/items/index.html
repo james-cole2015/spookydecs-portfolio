@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpookyDecs - Items</title>
+  
+  <!-- Navigo Router CDN -->
+  <script src="https://unpkg.com/navigo@8.11.1/lib/navigo.min.js"></script>
+  
+  <!-- CSS - Use absolute paths -->
+  <link rel="stylesheet" href="/css/shared.css">
+  <link rel="stylesheet" href="/css/items.css">
+  <link rel="stylesheet" href="/css/item-detail.css">
+  <link rel="stylesheet" href="/css/item-form.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+  <link rel="stylesheet" href="/css/crop-modal.css">
+  <link rel="stylesheet" href="/css/maintenance-section-styles.css">
+
+  
+</head>
+<body>
+  <!-- Dynamic content container - router loads pages here -->
+  <script src="https://assets.spookydecs.com/components/spookydecs-header.js"></script>
+  <spookydecs-header page-title="Items Management"></spookydecs-header>
+  <div id="app-root"></div>
+  
+  <!-- Cropper.js MUST load before module scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+  
+  <!-- Initialize router -->
+  <script type="module">
+    import { initRouter } from '/js/router.js';
+    
+    // Wait for DOM + config to load
+    document.addEventListener('DOMContentLoaded', () => {
+      initRouter();
+    });
+  </script>
+
+</body>
+</html>
