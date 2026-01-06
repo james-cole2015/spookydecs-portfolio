@@ -6,6 +6,7 @@ import { CostDetailDrawer } from '../components/CostDetailDrawer.js';
 import { CostFormFields } from '../components/CostFormFields.js';
 import { CostReviewModal } from '../components/CostReviewModal.js';
 import { StatsPanel } from '../components/StatsPanel.js';
+import { ReceiptsPage } from '../pages/receipts.js';
 import { getAllCosts, createCost, updateCost } from '../utils/finance-api.js';
 import { toast } from '../shared/toast.js';
 import { stateManager } from '../utils/state.js';
@@ -20,6 +21,7 @@ export class FinanceMainPage {
     this.drawer = null;
     this.form = null;
     this.statsPanel = null;
+    this.receiptsPage = null;
     this.isLoading = false;
     this.backToTopBtn = null;
     
@@ -62,6 +64,8 @@ export class FinanceMainPage {
     stateManager.subscribe((state) => {
       if (state.tab === 'stats') {
         this.statsPanel.loadStats();
+      } else if (state.tab === 'receipts') {
+        this.initReceiptsPage();
       }
     });
 
@@ -161,6 +165,14 @@ export class FinanceMainPage {
     }
   }
 
+  initReceiptsPage() {
+    // Initialize receipts page only when tab is activated
+    if (!this.receiptsPage) {
+      console.log('📄 Initializing Receipts page...');
+      this.receiptsPage = new ReceiptsPage();
+    }
+  }
+
   handleRowClick(costId) {
     // Navigate to the cost detail page using navigateTo
     navigateTo(`/costs/${costId}`);
@@ -211,6 +223,11 @@ export class FinanceMainPage {
         this.statsPanel.loadStats();
       }
 
+      // Refresh receipts if on receipts tab
+      if (state.tab === 'receipts' && this.receiptsPage) {
+        this.receiptsPage.refresh();
+      }
+
     } catch (error) {
       console.error('Failed to submit cost:', error);
       toast.error(`Failed to ${costData.cost_id ? 'update' : 'create'} cost record: ${error.message}`);
@@ -231,6 +248,11 @@ export class FinanceMainPage {
     const state = stateManager.getState();
     if (state.tab === 'stats') {
       this.statsPanel.loadStats();
+    }
+
+    // Refresh receipts if on receipts tab
+    if (state.tab === 'receipts' && this.receiptsPage) {
+      this.receiptsPage.refresh();
     }
 
     // Clear URL state

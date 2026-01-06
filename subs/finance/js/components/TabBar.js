@@ -7,6 +7,7 @@ export class TabBar {
     this.container = document.getElementById(containerId);
     this.tabs = [
       { id: 'records', label: 'Cost Records' },
+      { id: 'receipts', label: 'Receipts' },
       { id: 'stats', label: 'Statistics' }
     ];
     this.activeTab = 'records';
