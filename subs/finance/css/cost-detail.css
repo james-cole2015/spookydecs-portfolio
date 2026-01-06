@@ -52,7 +52,6 @@
 
 .header-left {
   flex: 1;
-  text-align: center;
 }
 
 .header-left h1 {
@@ -163,12 +162,38 @@
   margin-bottom: 2rem;
 }
 
+.details-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.details-toggle {
+  position: absolute;
+  right: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: none; /* Hidden by default, shown on mobile */
+}
+
+.details-toggle .chevron {
+  font-size: 1.5rem;
+  transition: transform 0.3s;
+}
+
+.cost-details-section.expanded .details-toggle .chevron {
+  transform: rotate(90deg);
+}
+
 .cost-details-section h2 {
   font-size: 1.5rem;
   font-weight: 600;
   color: #111827;
-  margin: 0 0 1.5rem 0;
-  text-align: center;
+  margin: 0;
 }
 
 /* Detail Grid - Reduced width for tighter spacing */
