@@ -38,9 +38,6 @@ export class FinanceMainPage {
     this.drawer = new CostDetailDrawer();
     console.log('Drawer initialized');
     
-    // Add "Add New Cost" button before stats container
-    this.renderAddCostButton();
-    
     this.statsPanel = new StatsPanel('stats-container');
     console.log('StatsPanel initialized');
     
@@ -77,28 +74,6 @@ export class FinanceMainPage {
         this.handleRowClick(cost.cost_id);
       }
     }
-  }
-
-  renderAddCostButton() {
-    const statsContainer = document.getElementById('stats-container');
-    if (!statsContainer) return;
-    
-    // Create button container
-    const buttonContainer = document.createElement('div');
-    buttonContainer.style.marginBottom = '2rem';
-    buttonContainer.style.display = 'flex';
-    buttonContainer.style.justifyContent = 'flex-end';
-    
-    // Create button
-    const addButton = document.createElement('button');
-    addButton.className = 'btn-primary';
-    addButton.textContent = '+ Add New Cost';
-    addButton.addEventListener('click', () => {
-      navigateTo('/new');
-    });
-    
-    buttonContainer.appendChild(addButton);
-    statsContainer.parentNode.insertBefore(buttonContainer, statsContainer);
   }
 
   initBackToTopButton() {
