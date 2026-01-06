@@ -316,21 +316,41 @@ export async function uploadAndProcessReceipt(file, contextData = {}, onProgress
     // STEP 1: Get presigned URL
     if (onProgress) onProgress('requesting_presign');
     
-    const presignResponse = await fetch(`${API_ENDPOINT}/admin/images/presign`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        context: 'receipt',
-        photo_type: 'receipt',
-        season: 'shared',
-        files: [{
-          filename: file.name,
-          content_type: file.type
-        }]
-      })
+    console.log('📤 Requesting presigned URL from:', `${API_ENDPOINT}/admin/images/presign`);
+    console.log('📤 Request body:', {
+      context: 'receipt',
+      photo_type: 'receipt',
+      season: 'shared',
+      files: [{
+        filename: file.name,
+        content_type: file.type
+      }]
     });
+    
+    let presignResponse;
+    try {
+      presignResponse = await fetch(`${API_ENDPOINT}/admin/images/presign`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          context: 'receipt',
+          photo_type: 'receipt',
+          season: 'shared',
+          files: [{
+            filename: file.name,
+            content_type: file.type
+          }]
+        })
+      });
+    } catch (fetchError) {
+      console.error('❌ Network error during presign request:', fetchError);
+      throw new Error(`Network error: Unable to reach ${API_ENDPOINT}/admin/images/presign. Check CORS and API Gateway configuration.`);
+    }
+    
+    console.log('📥 Presign response status:', presignResponse.status);
+    console.log('📥 Presign response ok:', presignResponse.ok);
     
     const presignData = await handleResponse(presignResponse);
     const upload = presignData.uploads[0]; // Extract first upload
