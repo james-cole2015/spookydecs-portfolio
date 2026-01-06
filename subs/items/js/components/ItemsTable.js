@@ -11,6 +11,15 @@ export class ItemsTable {
     this.currentTab = 'decorations';
     this.sortColumn = 'short_name';
     this.sortDirection = 'asc';
+    
+    // Add resize listener to re-render on viewport change
+    this.handleResize = this.debounce(() => {
+      if (this.items.length > 0) {
+        this.render(this.items, this.currentTab);
+      }
+    }, 250);
+    
+    window.addEventListener('resize', this.handleResize);
   }
   
   render(items, currentTab) {
@@ -31,7 +40,7 @@ export class ItemsTable {
     }
     
     // Check if mobile view
-    const isMobile = window.innerWidth < 768;
+    const isMobile = window.innerWidth <= 768;
     
     if (isMobile) {
       this.renderMobileCards(items);
@@ -301,5 +310,21 @@ export class ItemsTable {
         <div>Loading items...</div>
       </div>
     `;
+  }
+  
+  debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
+  
+  cleanup() {
+    window.removeEventListener('resize', this.handleResize);
   }
 }

@@ -87,14 +87,14 @@ export class ItemDetailView {
           </button>
         ` : ''}
         ${showFlagForRepairButton ? `
-          <button class="btn-icon btn-warning" onclick="itemDetailPage.handleFlagForRepair()" title="Flag for Repair">
-            ⚠️
+          <button class="btn-icon btn-flag" onclick="itemDetailPage.handleFlagForRepair()" title="Flag for Repair">
+            🚩
           </button>
         ` : ''}
         <button class="btn-icon btn-secondary" onclick="itemDetailPage.handleEdit()" title="Edit">
           ✏️
         </button>
-        <button class="btn-icon btn-warning" onclick="itemDetailPage.handleRetire()" title="Retire">
+        <button class="btn-icon btn-flag" onclick="itemDetailPage.handleRetire()" title="Retire">
           📦
         </button>
         <button class="btn-icon btn-danger" onclick="itemDetailPage.handleDelete()" title="Delete">

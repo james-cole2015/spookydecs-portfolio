@@ -661,13 +661,39 @@
 
 /* Icon-only buttons */
 .btn-icon {
-  min-width: 44px;
-  height: 44px;
-  padding: 0;
+  width: 48px !important;
+  height: 48px;
+  min-width: 48px;
+  padding: 0 !important;
   font-size: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 1px solid #d1d5db;
+}
+
+/* Maintenance/Flag button - light grey like edit */
+.btn-flag {
+  background: #f3f4f6 !important;
+  color: #dc2626 !important;
+  border: 1px solid #d1d5db !important;
+}
+
+.btn-flag:hover {
+  background: #e5e7eb !important;
+  border-color: #9ca3af !important;
+}
+
+/* Retire button - light yellow */
+.btn-retire {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+  border: 1px solid #fde047 !important;
+}
+
+.btn-retire:hover {
+  background: #fde68a !important;
+  border-color: #fbbf24 !important;
 }
 
 /* Subsection titles */

@@ -30,9 +30,12 @@ export class FilterBar {
     const filterBar = document.createElement('div');
     filterBar.className = 'filter-bar';
     
-    // Search input
+    // Search input with clear button
     const searchContainer = document.createElement('div');
     searchContainer.className = 'filter-search';
+    
+    const searchWrapper = document.createElement('div');
+    searchWrapper.className = 'search-wrapper';
     
     const searchInput = document.createElement('input');
     searchInput.type = 'text';
@@ -44,7 +47,20 @@ export class FilterBar {
       this.handleSearchInput(e.target.value);
     });
     
-    searchContainer.appendChild(searchInput);
+    // Clear button
+    const clearButton = document.createElement('button');
+    clearButton.className = 'search-clear-btn';
+    clearButton.innerHTML = '✕';
+    clearButton.style.display = this.filters.search ? 'block' : 'none';
+    clearButton.addEventListener('click', () => {
+      searchInput.value = '';
+      clearButton.style.display = 'none';
+      this.handleSearchInput('');
+    });
+    
+    searchWrapper.appendChild(searchInput);
+    searchWrapper.appendChild(clearButton);
+    searchContainer.appendChild(searchWrapper);
     filterBar.appendChild(searchContainer);
     
     // Filters container
@@ -77,16 +93,16 @@ export class FilterBar {
     );
     
     // Clear filters button
-    const clearButton = document.createElement('button');
-    clearButton.className = 'btn-clear-filters';
-    clearButton.textContent = '✕ Clear Filters';
-    clearButton.addEventListener('click', () => this.clearAllFilters());
+    const clearFiltersButton = document.createElement('button');
+    clearFiltersButton.className = 'btn-clear-filters';
+    clearFiltersButton.textContent = '✕ Clear Filters';
+    clearFiltersButton.addEventListener('click', () => this.clearAllFilters());
     
     // Only show if filters are active
     const hasActiveFilters = Object.values(this.filters).some(v => v !== '');
-    clearButton.style.display = hasActiveFilters ? 'inline-block' : 'none';
+    clearFiltersButton.style.display = hasActiveFilters ? 'inline-block' : 'none';
     
-    filtersContainer.appendChild(clearButton);
+    filtersContainer.appendChild(clearFiltersButton);
     
     filterBar.appendChild(filtersContainer);
     
@@ -150,6 +166,12 @@ export class FilterBar {
     // Debounce search input
     clearTimeout(this.searchDebounceTimer);
     
+    // Update clear button visibility
+    const clearButton = this.container.querySelector('.search-clear-btn');
+    if (clearButton) {
+      clearButton.style.display = value ? 'block' : 'none';
+    }
+    
     this.searchDebounceTimer = setTimeout(() => {
       this.filters.search = value;
       
@@ -183,13 +205,16 @@ export class FilterBar {
     const searchInput = this.container.querySelector('.search-input');
     if (searchInput) searchInput.value = '';
     
+    const clearButton = this.container.querySelector('.search-clear-btn');
+    if (clearButton) clearButton.style.display = 'none';
+    
     this.container.querySelectorAll('.filter-pill-select').forEach(select => {
       select.value = '';
     });
     
     // Hide clear button
-    const clearButton = this.container.querySelector('.btn-clear-filters');
-    if (clearButton) clearButton.style.display = 'none';
+    const clearFiltersButton = this.container.querySelector('.btn-clear-filters');
+    if (clearFiltersButton) clearFiltersButton.style.display = 'none';
     
     if (this.onFilterChange) {
       this.onFilterChange(this.filters);
@@ -214,6 +239,11 @@ export class FilterBar {
     // Update UI
     const searchInput = this.container.querySelector('.search-input');
     if (searchInput) searchInput.value = this.filters.search || '';
+    
+    const clearButton = this.container.querySelector('.search-clear-btn');
+    if (clearButton) {
+      clearButton.style.display = this.filters.search ? 'block' : 'none';
+    }
     
     this.container.querySelectorAll('.filter-pill-select').forEach(select => {
       const key = select.dataset.filterKey;

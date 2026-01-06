@@ -113,9 +113,14 @@
   box-sizing: border-box !important;
 }
 
+.search-wrapper {
+  position: relative;
+  width: 100%;
+}
+
 .search-input {
   width: 100% !important;
-  padding: 10px 16px;
+  padding: 10px 40px 10px 16px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
   font-size: 14px;
@@ -127,6 +132,27 @@
   outline: none;
   border-color: #f97316;
   box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+}
+
+.search-clear-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #9ca3af;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  display: none;
+}
+
+.search-clear-btn:hover {
+  background: #f3f4f6;
+  color: #1f2937;
 }
 
 /* Filter Pills Row - UPDATED */
