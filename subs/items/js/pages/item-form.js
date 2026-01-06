@@ -3,7 +3,19 @@
 
 import { fetchItemById, createItem, updateItem } from '../api/items.js';
 import { ItemFormWizard } from '../components/ItemFormWizard.js';
+import { addCostModal } from '../components/AddCostModal.js';
 import { toast } from '../shared/toast.js';
+
+let config = null;
+
+// Load config
+async function loadConfig() {
+  if (!config) {
+    const response = await fetch('/config.json');
+    config = await response.json();
+  }
+  return config;
+}
 
 export let wizard = null;
 
@@ -100,11 +112,22 @@ export async function handleSave() {
       }
     }
     
-    // Cleanup and navigate
+    // Check mode before cleanup
+    const isCreateMode = wizard.mode === 'create';
+    
+    // Cleanup wizard
     cleanup();
-    setTimeout(() => {
-      window.location.href = '/items';
-    }, 500);
+    
+    // For create mode, show cost modal
+    if (isCreateMode) {
+      const cfg = await loadConfig();
+      addCostModal.show(itemId, itemName, cfg.NEW_COST_URL);
+    } else {
+      // For edit mode, just navigate back
+      setTimeout(() => {
+        window.location.href = '/items';
+      }, 500);
+    }
     
   } catch (error) {
     console.error('Failed to save item:', error);

@@ -1,0 +1,117 @@
+/* Add Cost Modal Styles */
+
+.add-cost-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10000;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-cost-modal .modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+.add-cost-modal .modal-content {
+  position: relative;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  max-width: 480px;
+  width: 90%;
+  padding: 0;
+  animation: modalSlideIn 0.2s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.add-cost-modal .modal-header {
+  padding: 24px 24px 16px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.add-cost-modal .modal-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.add-cost-modal .modal-body {
+  padding: 24px;
+}
+
+.add-cost-modal .modal-message {
+  margin: 0 0 12px 0;
+  font-size: 15px;
+  color: #374151;
+  line-height: 1.5;
+}
+
+.add-cost-modal .modal-message strong {
+  color: #111827;
+  font-weight: 600;
+}
+
+.add-cost-modal .modal-hint {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.add-cost-modal .modal-footer {
+  padding: 16px 24px 24px 24px;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.add-cost-modal .btn-primary,
+.add-cost-modal .btn-secondary {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-cost-modal .btn-primary {
+  background: #2563eb;
+  color: white;
+}
+
+.add-cost-modal .btn-primary:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.add-cost-modal .btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.add-cost-modal .btn-secondary:hover {
+  background: #e5e7eb;
+}
