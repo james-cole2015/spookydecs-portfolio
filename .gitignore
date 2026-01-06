@@ -19,3 +19,4 @@ pnpm-lock.yaml
 
 # Optional: if you want to keep dev config out of repo
 public/config.json
+/public
