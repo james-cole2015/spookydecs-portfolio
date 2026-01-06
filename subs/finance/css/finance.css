@@ -67,8 +67,6 @@ body {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
-  flex-wrap: wrap;
-  gap: 16px;
 }
 
 .table-header-title {
@@ -81,20 +79,6 @@ body {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-}
-
-.table-actions {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.table-filters {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  flex-wrap: wrap;
 }
 
 .btn-new-cost {
@@ -116,31 +100,18 @@ body {
   box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
 }
 
-/* Inline Add Button (+ icon) */
-.btn-inline-add {
+.table-filters {
   display: flex;
+  gap: 12px;
   align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  background: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 1.25rem;
-  font-weight: 600;
-  line-height: 1;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
 }
 
-.btn-inline-add:hover {
-  background: #2563eb;
-  transform: scale(1.05);
-}
-
-.btn-inline-add .plus-icon {
-  display: block;
+.table-count {
+  font-size: 14px;
+  color: #64748b;
+  margin-bottom: 16px;
 }
 
 .filter-input {
@@ -158,6 +129,7 @@ body {
   font-size: 14px;
   background: white;
   cursor: pointer;
+  min-width: 150px;
 }
 
 /* ===== TanStack Table Styles ===== */
@@ -408,12 +380,6 @@ body {
   .table-header-title {
     width: 100%;
     justify-content: space-between;
-  }
-
-  .table-actions {
-    width: 100%;
-    flex-direction: column;
-    align-items: stretch;
   }
 
   .table-filters {

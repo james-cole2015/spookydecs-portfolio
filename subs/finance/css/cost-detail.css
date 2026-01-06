@@ -55,6 +55,7 @@
   font-weight: 700;
   color: #111827;
   margin: 0 0 0.5rem 0;
+  text-align: center;
 }
 
 .detail-subtitle {
@@ -163,6 +164,7 @@
   font-weight: 600;
   color: #111827;
   margin: 0 0 1.5rem 0;
+  text-align: center;
 }
 
 /* Detail Grid - Reduced width for tighter spacing */

@@ -16,7 +16,10 @@ export class CostRecordsTable {
       search: '',
       cost_type: 'all',
       category: 'all',
-      vendor: 'all'
+      vendor: 'all',
+      date_range: 'all',
+      start_date: '',
+      end_date: ''
     };
 
     this.sorting = {
@@ -54,9 +57,51 @@ export class CostRecordsTable {
     this.render();
   }
 
+  getUniqueVendors() {
+    const vendors = new Set();
+    this.data.forEach(cost => {
+      if (cost.vendor && cost.vendor !== 'N/A') {
+        vendors.add(cost.vendor);
+      }
+    });
+    return Array.from(vendors).sort();
+  }
+
+  calculateDateRange(preset) {
+    const today = new Date();
+    const startDate = new Date();
+    let endDate = new Date();
+
+    switch (preset) {
+      case 'last_30':
+        startDate.setDate(today.getDate() - 30);
+        break;
+      case 'last_90':
+        startDate.setDate(today.getDate() - 90);
+        break;
+      case 'this_year':
+        startDate.setMonth(0, 1); // January 1st
+        break;
+      case 'last_year':
+        startDate.setFullYear(today.getFullYear() - 1, 0, 1);
+        endDate.setFullYear(today.getFullYear() - 1, 11, 31);
+        break;
+      case 'custom':
+        return { start: '', end: '' };
+      default:
+        return { start: '', end: '' };
+    }
+
+    return {
+      start: startDate.toISOString().split('T')[0],
+      end: endDate.toISOString().split('T')[0]
+    };
+  }
+
   applyFilters() {
     let filtered = [...this.data];
 
+    // Search filter
     if (this.filters.search) {
       const searchLower = this.filters.search.toLowerCase();
       filtered = filtered.filter(cost =>
@@ -66,16 +111,45 @@ export class CostRecordsTable {
       );
     }
 
+    // Cost type filter
     if (this.filters.cost_type !== 'all') {
       filtered = filtered.filter(cost => cost.cost_type === this.filters.cost_type);
     }
 
+    // Category filter
     if (this.filters.category !== 'all') {
       filtered = filtered.filter(cost => cost.category === this.filters.category);
     }
 
+    // Vendor filter
     if (this.filters.vendor !== 'all') {
       filtered = filtered.filter(cost => cost.vendor === this.filters.vendor);
+    }
+
+    // Date range filter
+    if (this.filters.date_range !== 'all' && this.filters.date_range !== 'custom') {
+      const range = this.calculateDateRange(this.filters.date_range);
+      this.filters.start_date = range.start;
+      this.filters.end_date = range.end;
+    }
+
+    if (this.filters.start_date || this.filters.end_date) {
+      filtered = filtered.filter(cost => {
+        const costDate = new Date(cost.cost_date);
+        
+        if (this.filters.start_date && this.filters.end_date) {
+          const start = new Date(this.filters.start_date);
+          const end = new Date(this.filters.end_date);
+          return costDate >= start && costDate <= end;
+        } else if (this.filters.start_date) {
+          const start = new Date(this.filters.start_date);
+          return costDate >= start;
+        } else if (this.filters.end_date) {
+          const end = new Date(this.filters.end_date);
+          return costDate <= end;
+        }
+        return true;
+      });
     }
 
     this.filteredData = filtered;
@@ -119,45 +193,77 @@ export class CostRecordsTable {
     const startIdx = this.currentPage * this.pageSize;
     const endIdx = startIdx + this.pageSize;
     const pageData = this.filteredData.slice(startIdx, endIdx);
+    const vendors = this.getUniqueVendors();
 
     this.container.innerHTML = `
       <div class="table-header">
         <div class="table-header-title">
-          <h2>Cost Records (${this.filteredData.length})</h2>
-          <button class="btn-inline-add" id="btn-new-cost" title="Add New Cost Record">
-            <span class="plus-icon">+</span>
-          </button>
+          <h2>Cost Records</h2>
+          <button class="btn-new-cost" id="btn-new-cost">+ New Cost Record</button>
         </div>
-        <div class="table-actions">
-          <div class="table-filters">
-            <input 
-              type="text" 
-              class="filter-input" 
-              placeholder="Search..." 
-              value="${this.filters.search}"
-              id="search-input"
-            />
-            <select class="filter-select" id="type-filter">
-              <option value="all">All Types</option>
-              <option value="acquisition" ${this.filters.cost_type === 'acquisition' ? 'selected' : ''}>Acquisition</option>
-              <option value="repair" ${this.filters.cost_type === 'repair' ? 'selected' : ''}>Repair</option>
-              <option value="maintenance" ${this.filters.cost_type === 'maintenance' ? 'selected' : ''}>Maintenance</option>
-              <option value="supply_purchase" ${this.filters.cost_type === 'supply_purchase' ? 'selected' : ''}>Supply Purchase</option>
-              <option value="utility" ${this.filters.cost_type === 'utility' ? 'selected' : ''}>Utility</option>
-              <option value="other" ${this.filters.cost_type === 'other' ? 'selected' : ''}>Other</option>
-            </select>
-            <select class="filter-select" id="category-filter">
-              <option value="all">All Categories</option>
-              <option value="materials" ${this.filters.category === 'materials' ? 'selected' : ''}>Materials</option>
-              <option value="labor" ${this.filters.category === 'labor' ? 'selected' : ''}>Labor</option>
-              <option value="parts" ${this.filters.category === 'parts' ? 'selected' : ''}>Parts</option>
-              <option value="supplies" ${this.filters.category === 'supplies' ? 'selected' : ''}>Supplies</option>
-              <option value="decoration" ${this.filters.category === 'decoration' ? 'selected' : ''}>Decoration</option>
-              <option value="light" ${this.filters.category === 'light' ? 'selected' : ''}>Light</option>
-              <option value="accessory" ${this.filters.category === 'accessory' ? 'selected' : ''}>Accessory</option>
-            </select>
-          </div>
-        </div>
+      </div>
+
+      <div class="table-filters">
+        <input 
+          type="text" 
+          class="filter-input" 
+          placeholder="Search..." 
+          value="${this.filters.search}"
+          id="search-input"
+        />
+        <select class="filter-select" id="type-filter">
+          <option value="all">All Types</option>
+          <option value="acquisition" ${this.filters.cost_type === 'acquisition' ? 'selected' : ''}>Acquisition</option>
+          <option value="repair" ${this.filters.cost_type === 'repair' ? 'selected' : ''}>Repair</option>
+          <option value="maintenance" ${this.filters.cost_type === 'maintenance' ? 'selected' : ''}>Maintenance</option>
+          <option value="supply_purchase" ${this.filters.cost_type === 'supply_purchase' ? 'selected' : ''}>Supply Purchase</option>
+          <option value="utility" ${this.filters.cost_type === 'utility' ? 'selected' : ''}>Utility</option>
+          <option value="other" ${this.filters.cost_type === 'other' ? 'selected' : ''}>Other</option>
+        </select>
+        <select class="filter-select" id="category-filter">
+          <option value="all">All Categories</option>
+          <option value="materials" ${this.filters.category === 'materials' ? 'selected' : ''}>Materials</option>
+          <option value="labor" ${this.filters.category === 'labor' ? 'selected' : ''}>Labor</option>
+          <option value="parts" ${this.filters.category === 'parts' ? 'selected' : ''}>Parts</option>
+          <option value="supplies" ${this.filters.category === 'supplies' ? 'selected' : ''}>Supplies</option>
+          <option value="decoration" ${this.filters.category === 'decoration' ? 'selected' : ''}>Decoration</option>
+          <option value="light" ${this.filters.category === 'light' ? 'selected' : ''}>Light</option>
+          <option value="accessory" ${this.filters.category === 'accessory' ? 'selected' : ''}>Accessory</option>
+        </select>
+        <select class="filter-select" id="vendor-filter">
+          <option value="all">All Vendors</option>
+          ${vendors.map(vendor => `
+            <option value="${vendor}" ${this.filters.vendor === vendor ? 'selected' : ''}>${vendor}</option>
+          `).join('')}
+        </select>
+        <select class="filter-select" id="date-range-filter">
+          <option value="all">All Time</option>
+          <option value="last_30" ${this.filters.date_range === 'last_30' ? 'selected' : ''}>Last 30 Days</option>
+          <option value="last_90" ${this.filters.date_range === 'last_90' ? 'selected' : ''}>Last 90 Days</option>
+          <option value="this_year" ${this.filters.date_range === 'this_year' ? 'selected' : ''}>This Year</option>
+          <option value="last_year" ${this.filters.date_range === 'last_year' ? 'selected' : ''}>Last Year</option>
+          <option value="custom" ${this.filters.date_range === 'custom' ? 'selected' : ''}>Custom Range</option>
+        </select>
+        ${this.filters.date_range === 'custom' ? `
+          <input 
+            type="date" 
+            class="filter-input" 
+            placeholder="Start Date"
+            value="${this.filters.start_date}"
+            id="start-date-input"
+          />
+          <input 
+            type="date" 
+            class="filter-input" 
+            placeholder="End Date"
+            value="${this.filters.end_date}"
+            id="end-date-input"
+          />
+        ` : ''}
+      </div>
+
+      <div class="table-count">
+        ${this.filteredData.length} record${this.filteredData.length !== 1 ? 's' : ''}
       </div>
 
       ${isMobile ? this.renderMobileCards(pageData) : this.renderTable(pageData)}
@@ -289,7 +395,7 @@ export class CostRecordsTable {
   }
 
   attachEventListeners() {
-    // New Cost Record button (inline +)
+    // New Cost Record button
     const newCostBtn = this.container.querySelector('#btn-new-cost');
     if (newCostBtn) {
       newCostBtn.addEventListener('click', () => {
@@ -324,6 +430,56 @@ export class CostRecordsTable {
     if (categoryFilter) {
       categoryFilter.addEventListener('change', (e) => {
         this.filters.category = e.target.value;
+        this.currentPage = 0;
+        this.applyFilters();
+        this.render();
+      });
+    }
+
+    // Vendor filter
+    const vendorFilter = this.container.querySelector('#vendor-filter');
+    if (vendorFilter) {
+      vendorFilter.addEventListener('change', (e) => {
+        this.filters.vendor = e.target.value;
+        this.currentPage = 0;
+        this.applyFilters();
+        this.render();
+      });
+    }
+
+    // Date range filter
+    const dateRangeFilter = this.container.querySelector('#date-range-filter');
+    if (dateRangeFilter) {
+      dateRangeFilter.addEventListener('change', (e) => {
+        this.filters.date_range = e.target.value;
+        this.currentPage = 0;
+        
+        if (e.target.value === 'custom') {
+          // Just re-render to show date inputs
+          this.render();
+        } else {
+          this.applyFilters();
+          this.render();
+        }
+      });
+    }
+
+    // Custom date inputs
+    const startDateInput = this.container.querySelector('#start-date-input');
+    const endDateInput = this.container.querySelector('#end-date-input');
+    
+    if (startDateInput) {
+      startDateInput.addEventListener('change', (e) => {
+        this.filters.start_date = e.target.value;
+        this.currentPage = 0;
+        this.applyFilters();
+        this.render();
+      });
+    }
+
+    if (endDateInput) {
+      endDateInput.addEventListener('change', (e) => {
+        this.filters.end_date = e.target.value;
         this.currentPage = 0;
         this.applyFilters();
         this.render();
