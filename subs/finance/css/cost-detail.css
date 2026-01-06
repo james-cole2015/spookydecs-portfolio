@@ -50,12 +50,16 @@
   border-bottom: 2px solid #e5e7eb;
 }
 
+.header-left {
+  flex: 1;
+  text-align: center;
+}
+
 .header-left h1 {
   font-size: 2rem;
   font-weight: 700;
   color: #111827;
   margin: 0 0 0.5rem 0;
-  text-align: center;
 }
 
 .detail-subtitle {

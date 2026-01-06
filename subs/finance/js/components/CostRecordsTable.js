@@ -406,7 +406,18 @@ export class CostRecordsTable {
     // Search input
     const searchInput = this.container.querySelector('#search-input');
     if (searchInput) {
-      searchInput.addEventListener('input', (e) => {
+      // Update on Enter key
+      searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          this.filters.search = e.target.value;
+          this.currentPage = 0;
+          this.applyFilters();
+          this.render();
+        }
+      });
+      
+      // Update on blur (when user clicks away)
+      searchInput.addEventListener('blur', (e) => {
         this.filters.search = e.target.value;
         this.currentPage = 0;
         this.applyFilters();
