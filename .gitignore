@@ -4,3 +4,18 @@
 merge.py
 config.json
 /subs/*/config.json
+
+# Vite/Node
+node_modules/
+dist/
+*.local
+
+# Lock files (choose one based on your package manager)
+package-lock.json
+# or
+yarn.lock
+# or
+pnpm-lock.yaml
+
+# Optional: if you want to keep dev config out of repo
+public/config.json
