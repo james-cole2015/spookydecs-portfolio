@@ -372,14 +372,38 @@
   .page-header-section {
     flex-direction: column;
     gap: 1rem;
+    align-items: center;
   }
 
   .header-actions {
-    width: 100%;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: center;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    width: auto;
   }
 
   .btn-action {
-    flex: 1;
+    flex: 0 0 auto;
+    width: auto !important;
+    max-width: fit-content;
+    padding: 0.875rem 1rem !important;
+    font-size: 0.75rem;
+    min-width: 50px;
+  }
+  
+  .btn-action .btn-text {
+    display: none !important;
+  }
+  
+  .btn-action .btn-icon {
+    font-size: 1.25rem;
+    margin: 0;
+  }
+  
+  .btn-action {
+    gap: 0;
   }
 
   .detail-grid,
