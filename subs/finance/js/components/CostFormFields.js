@@ -105,9 +105,40 @@ export class CostFormFields {
     // Re-render form with new data
     this.render();
     
+    // Programmatically set dropdown values after DOM is ready
+    // This fixes the issue where selected attributes don't visually update
+    setTimeout(() => {
+      const costTypeSelect = document.getElementById('cost_type');
+      const categorySelect = document.getElementById('category');
+      const subcategorySelect = document.getElementById('subcategory');
+      
+      if (costTypeSelect && this.formData.cost_type) {
+        costTypeSelect.value = this.formData.cost_type;
+        // Trigger change event to ensure category dropdown updates
+        costTypeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      
+      // Set category after a brief delay to ensure options are rendered
+      setTimeout(() => {
+        if (categorySelect && this.formData.category) {
+          categorySelect.value = this.formData.category;
+          categorySelect.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        
+        // Set subcategory if present
+        setTimeout(() => {
+          if (subcategorySelect && this.formData.subcategory) {
+            subcategorySelect.value = this.formData.subcategory;
+          }
+        }, 50);
+      }, 50);
+    }, 0);
+    
     console.log('Form populated with AI-extracted data', {
       extractionId,
-      imageId
+      imageId,
+      cost_type: this.formData.cost_type,
+      category: this.formData.category
     });
   }
 
@@ -152,10 +183,13 @@ export class CostFormFields {
     const costTypeSelect = this.container.querySelector('#cost_type');
     if (costTypeSelect) {
       costTypeSelect.addEventListener('change', (e) => {
+        const oldCostType = this.formData.cost_type;
         this.formData.cost_type = e.target.value;
         
-        // Reset category when cost type changes
-        this.formData.category = '';
+        // Only reset category if cost type actually changed
+        if (oldCostType !== e.target.value) {
+          this.formData.category = '';
+        }
         
         // Handle gift logic
         if (e.target.value === 'gift') {
@@ -172,7 +206,14 @@ export class CostFormFields {
     const categorySelect = this.container.querySelector('#category');
     if (categorySelect) {
       categorySelect.addEventListener('change', (e) => {
+        const oldCategory = this.formData.category;
         this.formData.category = e.target.value;
+        
+        // Only reset subcategory if category actually changed
+        if (oldCategory !== e.target.value) {
+          this.formData.subcategory = '';
+        }
+        
         this.render();
       });
     }
