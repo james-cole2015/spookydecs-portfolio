@@ -1,6 +1,5 @@
 // Receipts Grid Component - Card grid with infinite scroll
 
-import { ReceiptModal } from './ReceiptModal.js';
 import { formatCurrency, formatDate } from '../utils/finance-config.js';
 
 export class ReceiptsGrid {
@@ -10,7 +9,6 @@ export class ReceiptsGrid {
     this.costsMap = costsMap; // Map of cost_id -> cost data
     this.displayedCount = 20; // Initial load
     this.batchSize = 20; // Load more per scroll
-    this.modal = new ReceiptModal();
     this.observer = null;
     
     this.render();
@@ -61,32 +59,10 @@ export class ReceiptsGrid {
     const date = receipt.created_at ? formatDate(receipt.created_at) : 'N/A';
     const itemName = cost.item_name || 'N/A';
     const costId = receipt.cost_id;
-    
-    // Check if it's a PDF
-    const isPDF = receipt.cloudfront_url?.toLowerCase().endsWith('.pdf') || 
-                  receipt.s3_key?.toLowerCase().endsWith('.pdf') ||
-                  receipt.thumbnail_url?.toLowerCase().endsWith('.pdf');
+    const receiptUrl = receipt.cloudfront_url || receipt.image_url;
     
     return `
       <div class="receipt-card" data-receipt-id="${receipt.image_id}">
-        <div class="receipt-card-thumbnail">
-          ${isPDF ? `
-            <div class="receipt-card-pdf-icon">
-              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="currentColor" fill-opacity="0.1"/>
-                <path d="M14 2V8H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M10 12H14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                <path d="M10 16H14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                <path d="M10 20H14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              </svg>
-              <div class="receipt-card-pdf-label">PDF</div>
-            </div>
-          ` : receipt.thumbnail_url ? `
-            <img src="${receipt.thumbnail_url}" alt="${vendor} receipt" loading="lazy" />
-          ` : `
-            <div class="receipt-card-thumbnail-placeholder">📄</div>
-          `}
-        </div>
         <div class="receipt-card-content">
           <div class="receipt-card-header">
             <div>
@@ -99,44 +75,39 @@ export class ReceiptsGrid {
               <span class="receipt-card-date-icon">📅</span>
               <span>${date}</span>
             </div>
-            ${costId ? `
-              <a href="/costs/${costId}" class="receipt-card-item-link" onclick="event.stopPropagation()">
-                <span class="receipt-card-item-icon">🔗</span>
-                <span>${itemName}</span>
-              </a>
-            ` : ''}
+            <div class="receipt-card-item-name">
+              <span class="receipt-card-item-icon">🏷️</span>
+              <span>${itemName}</span>
+            </div>
           </div>
+        </div>
+        <div class="receipt-card-footer">
+          <a href="${receiptUrl}" target="_blank" rel="noopener noreferrer" class="receipt-card-btn btn-view-receipt">
+            <span>View Receipt</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line>
+            </svg>
+          </a>
+          ${costId ? `
+            <a href="/costs/${costId}" target="_blank" rel="noopener noreferrer" class="receipt-card-btn btn-view-cost">
+              <span>View Cost Record</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
+            </a>
+          ` : ''}
         </div>
       </div>
     `;
   }
 
   attachEventListeners() {
-    // Card click to open modal
-    const cards = this.container.querySelectorAll('.receipt-card');
-    cards.forEach(card => {
-      card.addEventListener('click', () => {
-        const receiptId = card.dataset.receiptId;
-        const receipt = this.receipts.find(r => r.image_id === receiptId);
-        if (receipt) {
-          this.openReceiptModal(receipt);
-        }
-      });
-    });
-  }
-
-  openReceiptModal(receipt) {
-    const cost = this.costsMap[receipt.cost_id] || {};
-    
-    const modalData = {
-      vendor: cost.vendor || receipt.vendor || 'Unknown Vendor',
-      amount: cost.total_cost ? formatCurrency(cost.total_cost) : '',
-      date: receipt.created_at ? formatDate(receipt.created_at) : '',
-      cloudfront_url: receipt.cloudfront_url || receipt.image_url,
-      cost_id: receipt.cost_id
-    };
-    
-    this.modal.show(modalData);
+    // No click handlers needed - cards now have direct link buttons
+    // Buttons handle their own navigation via href attributes
   }
 
   setupInfiniteScroll() {
@@ -173,9 +144,6 @@ export class ReceiptsGrid {
   destroy() {
     if (this.observer) {
       this.observer.disconnect();
-    }
-    if (this.modal) {
-      this.modal.destroy();
     }
   }
 }
