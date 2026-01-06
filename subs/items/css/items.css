@@ -60,6 +60,10 @@
   cursor: pointer;
   transition: all 0.2s;
   margin-bottom: -2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .tab-button:hover {
@@ -76,14 +80,21 @@
 .controls-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 20px;
+  gap: 16px;
 }
 
 .item-count-container {
   font-size: 14px;
   color: #6b7280;
   font-weight: 500;
+}
+
+#filter-container {
+  flex: 1;
+  width: 100%;
+  max-width: 100%;
 }
 
 /* Filter Bar - UPDATED */
@@ -573,6 +584,43 @@
   display: inline;
 }
 
+/* Tab Count Badge Styles */
+.tab-label {
+  display: inline-flex;
+  align-items: center;
+}
+
+.tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 20px;
+  padding: 0 6px;
+  background: #e5e7eb;
+  color: #6b7280;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  transition: all 0.2s;
+}
+
+.tab-button.active .tab-count {
+  background: #fed7aa;
+  color: #c2410c;
+}
+
+.tab-button:hover .tab-count {
+  background: #d1d5db;
+  color: #374151;
+}
+
+.tab-button.active:hover .tab-count {
+  background: #fdba74;
+  color: #9a3412;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .app-container {
@@ -634,86 +682,16 @@
     width: 100%;
   }
   
+  /* Hide all filter dropdowns on mobile, keep only search */
   .filters-container {
-    flex-wrap: wrap;
+    display: none !important;
   }
   
-  .filter-pill-group {
-    flex: 1 1 45%;
-    min-width: 140px;
+  .filter-search {
+    width: 100% !important;
   }
   
   .item-count-container {
     text-align: center;
   }
-}
-
-#filter-container {
-  flex: 1;
-  width: 100%;
-  max-width: 100%;
-}
-
-.controls-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start; /* Changed from center */
-  margin-bottom: 20px;
-  gap: 16px; /* Add gap for spacing */
-}
-
-/* Tab Count Badge Styles - ADD TO items.css */
-
-.tab-button {
-  flex: 1;
-  padding: 14px 24px;
-  background: none;
-  border: none;
-  border-bottom: 3px solid transparent;
-  font-size: 18px;
-  font-weight: 500;
-  color: #6b7280;
-  cursor: pointer;
-  transition: all 0.2s;
-  margin-bottom: -2px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.tab-label {
-  display: inline-flex;
-  align-items: center;
-}
-
-.tab-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 24px;
-  height: 20px;
-  padding: 0 6px;
-  background: #e5e7eb;
-  color: #6b7280;
-  border-radius: 10px;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1;
-  transition: all 0.2s;
-}
-
-.tab-button.active .tab-count {
-  background: #fed7aa;
-  color: #c2410c;
-}
-
-.tab-button:hover .tab-count {
-  background: #d1d5db;
-  color: #374151;
-}
-
-.tab-button.active:hover .tab-count {
-  background: #fdba74;
-  color: #9a3412;
 }
