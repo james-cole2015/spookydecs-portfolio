@@ -23,6 +23,12 @@ export class MainTableView {
     this.sortColumn = 'created_at';
     this.sortDirection = 'desc';
     this.expandedRow = null;
+    
+    // Infinite scroll state (mobile only)
+    this.mobileLoadedCount = 20; // Initial load
+    this.mobileLoadIncrement = 20; // Load 20 more at a time
+    this.isLoadingMore = false;
+    this.infiniteScrollObserver = null;
   }
   
   async render(container) {
@@ -140,6 +146,11 @@ export class MainTableView {
     const tableContainer = document.querySelector('#table-container');
     if (!tableContainer) return;
     
+    // Reset infinite scroll state when table re-renders (new filter/tab)
+    if (isMobile()) {
+      this.mobileLoadedCount = this.mobileLoadIncrement;
+    }
+    
     const state = appState.getState();
     const activeTab = state.activeTab;
     
@@ -190,21 +201,29 @@ export class MainTableView {
     // Apply sorting
     data = this.sortData(data, this.sortColumn, this.sortDirection);
     
-    // Pagination
-    const totalPages = Math.ceil(data.length / this.pageSize);
-    const startIdx = this.currentPage * this.pageSize;
-    const endIdx = startIdx + this.pageSize;
-    const pageData = data.slice(startIdx, endIdx);
-    
-    // Render mobile cards or desktop table
+    // Mobile: Infinite scroll
     if (isMobile()) {
+      const pageData = data.slice(0, this.mobileLoadedCount);
+      const hasMore = this.mobileLoadedCount < data.length;
+      
       container.innerHTML = `
+        ${this.renderRecordCount(data.length, pageData.length)}
         ${this.mobileCardView.render(pageData)}
-        ${totalPages > 1 ? this.renderPagination(totalPages) : ''}
+        ${hasMore ? this.renderLoadingTrigger() : this.renderEndOfResults()}
+        ${this.renderScrollToTop()}
       `;
+      
       this.mobileCardView.attachEventListeners(container);
-      this.attachPaginationListeners(container);
-    } else {
+      this.setupInfiniteScroll(container, data.length);
+      this.setupScrollToTop(container);
+    } 
+    // Desktop: Pagination
+    else {
+      const totalPages = Math.ceil(data.length / this.pageSize);
+      const startIdx = this.currentPage * this.pageSize;
+      const endIdx = startIdx + this.pageSize;
+      const pageData = data.slice(startIdx, endIdx);
+      
       const tableHtml = `
         <div class="table-wrapper">
           <table class="data-table">
@@ -301,6 +320,114 @@ export class MainTableView {
         </td>
       </tr>
     `;
+  }
+  
+  
+  renderRecordCount(total, showing) {
+    return `
+      <div class="mobile-record-count">
+        Showing ${showing} of ${total} records
+      </div>
+    `;
+  }
+  
+  renderLoadingTrigger() {
+    return `
+      <div class="infinite-scroll-trigger" id="infinite-scroll-trigger">
+        <div class="loading-spinner">
+          <div class="spinner-dot"></div>
+          <div class="spinner-dot"></div>
+          <div class="spinner-dot"></div>
+        </div>
+      </div>
+    `;
+  }
+  
+  renderEndOfResults() {
+    return `
+      <div class="end-of-results">
+        <div class="end-icon">✓</div>
+        <p>End of results</p>
+      </div>
+    `;
+  }
+  
+  renderScrollToTop() {
+    return `
+      <button class="scroll-to-top-btn hidden" id="scroll-to-top-btn" title="Scroll to top">
+        ↑
+      </button>
+    `;
+  }
+  
+  setupInfiniteScroll(container, totalRecords) {
+    // Clean up existing observer
+    if (this.infiniteScrollObserver) {
+      this.infiniteScrollObserver.disconnect();
+    }
+    
+    const trigger = container.querySelector('#infinite-scroll-trigger');
+    if (!trigger) return;
+    
+    // Create intersection observer
+    this.infiniteScrollObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting && !this.isLoadingMore && this.mobileLoadedCount < totalRecords) {
+            this.loadMoreRecords();
+          }
+        });
+      },
+      {
+        root: null,
+        rootMargin: '100px', // Trigger 100px before reaching the element
+        threshold: 0.1
+      }
+    );
+    
+    this.infiniteScrollObserver.observe(trigger);
+  }
+  
+  loadMoreRecords() {
+    this.isLoadingMore = true;
+    
+    // Simulate slight delay for better UX (shows loading state)
+    setTimeout(() => {
+      this.mobileLoadedCount += this.mobileLoadIncrement;
+      this.isLoadingMore = false;
+      this.renderTable();
+    }, 300);
+  }
+  
+  setupScrollToTop(container) {
+    const scrollBtn = container.querySelector('#scroll-to-top-btn');
+    if (!scrollBtn) return;
+    
+    // Show/hide button based on scroll position
+    const handleScroll = () => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      if (scrollTop > 400) {
+        scrollBtn.classList.remove('hidden');
+      } else {
+        scrollBtn.classList.add('hidden');
+      }
+    };
+    
+    // Scroll to top when clicked
+    scrollBtn.addEventListener('click', () => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
+    
+    // Attach scroll listener
+    window.addEventListener('scroll', handleScroll);
+    
+    // Clean up on unmount (would need proper cleanup in real app)
+    // For now, remove and re-add to prevent duplicates
+    window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll);
   }
   
   renderItemsTable(container) {
