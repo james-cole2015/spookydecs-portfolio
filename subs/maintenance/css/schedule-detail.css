@@ -501,9 +501,40 @@
     box-shadow: none;
   }
   
-  /* Mobile Tabs - Hide on mobile */
+  /* Mobile Tabs - Show and make responsive */
   .schedule-detail-view .detail-view .detail-tabs {
-    display: none !important;
+    display: flex !important;
+    gap: 8px;
+    padding: 0 8px;
+    overflow: visible;
+    border-bottom: 2px solid #e5e7eb;
+    margin-bottom: 20px;
+  }
+  
+  .schedule-detail-view .detail-view .detail-tab-button {
+    flex: 1;
+    padding: 14px 12px;
+    font-size: 14px;
+    min-height: 48px;
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    white-space: nowrap;
+  }
+  
+  .schedule-detail-view .detail-tab-button .tab-icon {
+    font-size: 20px;
+  }
+  
+  .schedule-detail-view .detail-tab-button .tab-label {
+    font-size: 13px;
+    font-weight: 600;
+  }
+  
+  .schedule-detail-view .detail-tab-button .tab-count {
+    display: none;
   }
   
   /* Mobile Tab Panels */
