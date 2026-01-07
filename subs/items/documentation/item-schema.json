@@ -1,0 +1,75 @@
+{
+ "id": "DEC-INF-BIG_FELLA-040",
+ "adapter": "",
+ "class": "Decoration",
+ "class_type": "Inflatable",
+ "created_at": "2025-12-03T00:03:02.213944Z",
+ "date_acquired": "2023",
+ "deployment_data": {
+  "deployed": true,
+  "last_deployed_at": "2025-12-16T18:12:20.225719Z",
+  "last_deployment_id": "DEP-CHR-2025",
+  "previous_deployments": [
+   "DEP-CHR-2025"
+  ]
+ },
+ "general_notes": "",
+ "height_length": "20",
+ "images": {
+  "primary_photo_id": "PHOTO-20251219-172735-51b8c61c",
+  "secondary_photo_ids": [
+  ]
+ },
+ "maintenance": {
+  "applied_templates": [
+  ],
+  "generation_history": [
+   {
+    "due_date": "2026-01-06T05:30:22.643016Z",
+    "generated_at": "2026-01-06T05:30:22.643016Z",
+    "occurrence_number": null,
+    "record_id": "54479087-35b5-4167-84db-3952c9a71ab5",
+    "template_id": "manual"
+   }
+  ],
+  "stats": {
+   "last_maintenance_date": null,
+   "total_inspections": 0,
+   "total_maintenance": 0,
+   "total_repairs": 1
+  },
+  "template_history": [
+  ]
+ },
+ "packing_data": {
+  "packable": true,
+  "packing_status": true,
+  "single_packed": false,
+  "tote_id": "STOR-SELF-HAL-001",
+  "tote_location": ""
+ },
+ "power_data": {
+  "amps": "",
+  "watts": ""
+ },
+ "power_inlet": true,
+ "repair_status": {
+  "criticality": "high",
+  "highest_priority_record_id": "6221e84b-693a-4ee9-87ff-5491c3c6bfe4",
+  "needs_repair": true
+ },
+ "season": "Christmas",
+ "short_name": "Big Fella",
+ "stakes": "10",
+ "status": "Active",
+ "tethers": "4",
+ "updatedAt": "2025-12-19T17:27:36.064140Z",
+ "updatedBy": "system",
+ "updated_at": "2025-12-19T18:11:59.053223Z",
+ "vendor_metadata": {
+  "cost": "0",
+  "manufacturer": "Gemmy",
+  "value": "200",
+  "vendor_store": "Yard Inflatables"
+ }
+}

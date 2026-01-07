@@ -1,6 +1,7 @@
-// Tab navigation component
+// Tab navigation component with mobile dropdown support
 
 import { appState } from '../state.js';
+import { isMobile } from '../utils/responsive.js';
 
 export class Tabs {
   constructor(onTabChange) {
@@ -17,6 +18,14 @@ export class Tabs {
   render() {
     const activeTab = appState.getState().activeTab;
     
+    if (isMobile()) {
+      return this.renderMobileDropdown(activeTab);
+    } else {
+      return this.renderDesktopTabs(activeTab);
+    }
+  }
+  
+  renderDesktopTabs(activeTab) {
     const tabsHtml = this.tabs.map(tab => `
       <button 
         class="tab-button ${tab.id === activeTab ? 'active' : ''}" 
@@ -35,7 +44,31 @@ export class Tabs {
     `;
   }
   
+  renderMobileDropdown(activeTab) {
+    const options = this.tabs.map(tab => {
+      const count = this.getTabCountValue(tab.id);
+      return `
+        <option value="${tab.id}" ${tab.id === activeTab ? 'selected' : ''}>
+          ${tab.icon} ${tab.label} (${count})
+        </option>
+      `;
+    }).join('');
+    
+    return `
+      <div class="tabs-container">
+        <select class="tabs-mobile-select" id="tabs-mobile-select">
+          ${options}
+        </select>
+      </div>
+    `;
+  }
+  
   getTabCount(tabId) {
+    const count = this.getTabCountValue(tabId);
+    return `<span class="tab-count">${count}</span>`;
+  }
+  
+  getTabCountValue(tabId) {
     const state = appState.getState();
     let count = 0;
     
@@ -58,10 +91,18 @@ export class Tabs {
         break;
     }
     
-    return `<span class="tab-count">${count}</span>`;
+    return count;
   }
   
   attachEventListeners(container) {
+    if (isMobile()) {
+      this.attachMobileListeners(container);
+    } else {
+      this.attachDesktopListeners(container);
+    }
+  }
+  
+  attachDesktopListeners(container) {
     const buttons = container.querySelectorAll('.tab-button');
     
     buttons.forEach(button => {
@@ -74,5 +115,20 @@ export class Tabs {
         }
       });
     });
+  }
+  
+  attachMobileListeners(container) {
+    const select = container.querySelector('#tabs-mobile-select');
+    
+    if (select) {
+      select.addEventListener('change', (e) => {
+        const tabId = e.target.value;
+        appState.setActiveTab(tabId);
+        
+        if (this.onTabChange) {
+          this.onTabChange(tabId);
+        }
+      });
+    }
   }
 }

@@ -1,15 +1,22 @@
-// Main table view with TanStack Table integration and sorting
+// Main table view with TanStack Table integration, sorting, and mobile support
 
 import { appState } from '../state.js';
 import { Tabs } from './Tabs.js';
 import { Filters } from './Filters.js';
+import { MobileCardView } from './MobileCardView.js';
+import { MobileFilters } from './MobileFilters.js';
 import { navigateTo } from '../router.js';
 import { formatDate, formatStatus, formatCriticality, formatRecordTypePill, formatCurrency } from '../utils/formatters.js';
+import { isMobile } from '../utils/responsive.js';
 
 export class MainTableView {
   constructor() {
     this.tabs = new Tabs(() => this.renderTable());
     this.filters = new Filters(() => this.renderTable());
+    this.mobileCardView = new MobileCardView((recordId, itemId) => {
+      navigateTo(`/${itemId}/${recordId}`);
+    });
+    this.mobileFilters = new MobileFilters(() => this.renderTable());
     this.table = null;
     this.currentPage = 0;
     this.pageSize = 50;
@@ -24,12 +31,7 @@ export class MainTableView {
         <div class="view-header">
           <h1>Maintenance Records</h1>
           <div class="header-actions">
-            <button class="btn-secondary" id="btn-schedules">
-              📅 Maintenance Schedules
-            </button>
-            <button class="btn-primary" onclick="window.location.href='/create'">
-              + Create Record
-            </button>
+            ${this.renderHeaderButtons()}
           </div>
         </div>
         
@@ -39,23 +41,23 @@ export class MainTableView {
       </div>
     `;
     
-    // Add schedules button event listener
-    const schedulesBtn = container.querySelector('#btn-schedules');
-    if (schedulesBtn) {
-      schedulesBtn.addEventListener('click', () => {
-        navigateTo('/schedules');
-      });
-    }
+    // Add event listeners for header buttons
+    this.attachHeaderButtonListeners(container);
     
     // Render tabs
     const tabsContainer = container.querySelector('#tabs-container');
     tabsContainer.innerHTML = this.tabs.render();
     this.tabs.attachEventListeners(tabsContainer);
     
-    // Render filters
+    // Render filters (desktop or mobile)
     const filtersContainer = container.querySelector('#filters-container');
-    filtersContainer.innerHTML = this.filters.render();
-    this.filters.attachEventListeners(filtersContainer);
+    if (isMobile()) {
+      filtersContainer.innerHTML = this.mobileFilters.render();
+      this.mobileFilters.attachEventListeners(filtersContainer);
+    } else {
+      filtersContainer.innerHTML = this.filters.render();
+      this.filters.attachEventListeners(filtersContainer);
+    }
     
     // Subscribe to state changes
     appState.subscribe(() => {
@@ -69,13 +71,69 @@ export class MainTableView {
       // Update filters to show active selections
       const filtersContainer = container.querySelector('#filters-container');
       if (filtersContainer) {
-        filtersContainer.innerHTML = this.filters.render();
-        this.filters.attachEventListeners(filtersContainer);
+        if (isMobile()) {
+          // For mobile, we need to re-render the entire mobile filters
+          // but preserve the drawer state if it's open
+          const wasOpen = this.mobileFilters.isOpen;
+          filtersContainer.innerHTML = this.mobileFilters.render();
+          this.mobileFilters.attachEventListeners(filtersContainer);
+          if (wasOpen) {
+            const overlay = filtersContainer.querySelector('#mobile-filters-overlay');
+            const drawer = filtersContainer.querySelector('#mobile-filters-drawer');
+            if (overlay && drawer) {
+              this.mobileFilters.openDrawer(overlay, drawer);
+            }
+          }
+        } else {
+          filtersContainer.innerHTML = this.filters.render();
+          this.filters.attachEventListeners(filtersContainer);
+        }
       }
     });
     
     // Render table
     await this.renderTable();
+  }
+  
+  renderHeaderButtons() {
+    if (isMobile()) {
+      // Mobile: Icon buttons
+      return `
+        <button class="btn-mobile-icon btn-calendar" id="btn-schedules" title="Maintenance Schedules">
+          📅
+        </button>
+        <button class="btn-mobile-icon btn-create" id="btn-create" title="Create Record">
+          ➕
+        </button>
+      `;
+    } else {
+      // Desktop: Text buttons
+      return `
+        <button class="btn-secondary" id="btn-schedules">
+          📅 Maintenance Schedules
+        </button>
+        <button class="btn-primary" id="btn-create">
+          + Create Record
+        </button>
+      `;
+    }
+  }
+  
+  attachHeaderButtonListeners(container) {
+    const schedulesBtn = container.querySelector('#btn-schedules');
+    const createBtn = container.querySelector('#btn-create');
+    
+    if (schedulesBtn) {
+      schedulesBtn.addEventListener('click', () => {
+        navigateTo('/schedules');
+      });
+    }
+    
+    if (createBtn) {
+      createBtn.addEventListener('click', () => {
+        navigateTo('/create');
+      });
+    }
   }
   
   async renderTable() {
@@ -138,44 +196,54 @@ export class MainTableView {
     const endIdx = startIdx + this.pageSize;
     const pageData = data.slice(startIdx, endIdx);
     
-    const tableHtml = `
-      <div class="table-wrapper">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th class="sortable ${this.sortColumn === 'record_id' ? 'sort-' + this.sortDirection : ''}" data-column="record_id">
-                Record ID
-              </th>
-              <th class="sortable ${this.sortColumn === 'status' ? 'sort-' + this.sortDirection : ''}" data-column="status">
-                Status
-              </th>
-              <th class="sortable ${this.sortColumn === 'title' ? 'sort-' + this.sortDirection : ''}" data-column="title">
-                Title
-              </th>
-              <th class="sortable ${this.sortColumn === 'record_type' ? 'sort-' + this.sortDirection : ''}" data-column="record_type">
-                Type
-              </th>
-              <th class="sortable ${this.sortColumn === 'item_id' ? 'sort-' + this.sortDirection : ''}" data-column="item_id">
-                Item ID
-              </th>
-              <th class="sortable ${this.sortColumn === 'criticality' ? 'sort-' + this.sortDirection : ''}" data-column="criticality">
-                Criticality
-              </th>
-              <th class="sortable ${this.sortColumn === 'date_performed' ? 'sort-' + this.sortDirection : ''}" data-column="date_performed">
-                Date
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            ${pageData.map(record => this.renderRecordRow(record)).join('')}
-          </tbody>
-        </table>
-      </div>
-      ${totalPages > 1 ? this.renderPagination(totalPages) : ''}
-    `;
-    
-    container.innerHTML = tableHtml;
-    this.attachTableEventListeners(container);
+    // Render mobile cards or desktop table
+    if (isMobile()) {
+      container.innerHTML = `
+        ${this.mobileCardView.render(pageData)}
+        ${totalPages > 1 ? this.renderPagination(totalPages) : ''}
+      `;
+      this.mobileCardView.attachEventListeners(container);
+      this.attachPaginationListeners(container);
+    } else {
+      const tableHtml = `
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="sortable ${this.sortColumn === 'record_id' ? 'sort-' + this.sortDirection : ''}" data-column="record_id">
+                  Record ID
+                </th>
+                <th class="sortable ${this.sortColumn === 'status' ? 'sort-' + this.sortDirection : ''}" data-column="status">
+                  Status
+                </th>
+                <th class="sortable ${this.sortColumn === 'title' ? 'sort-' + this.sortDirection : ''}" data-column="title">
+                  Title
+                </th>
+                <th class="sortable ${this.sortColumn === 'record_type' ? 'sort-' + this.sortDirection : ''}" data-column="record_type">
+                  Type
+                </th>
+                <th class="sortable ${this.sortColumn === 'item_id' ? 'sort-' + this.sortDirection : ''}" data-column="item_id">
+                  Item ID
+                </th>
+                <th class="sortable ${this.sortColumn === 'criticality' ? 'sort-' + this.sortDirection : ''}" data-column="criticality">
+                  Criticality
+                </th>
+                <th class="sortable ${this.sortColumn === 'date_performed' ? 'sort-' + this.sortDirection : ''}" data-column="date_performed">
+                  Date
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              ${pageData.map(record => this.renderRecordRow(record)).join('')}
+            </tbody>
+          </table>
+        </div>
+        ${totalPages > 1 ? this.renderPagination(totalPages) : ''}
+      `;
+      
+      container.innerHTML = tableHtml;
+      this.attachTableEventListeners(container);
+    }
   }
   
   renderRecordRow(record) {
