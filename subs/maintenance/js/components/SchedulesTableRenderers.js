@@ -5,21 +5,59 @@ import {
   formatScheduleFrequency 
 } from '../utils/formatters.js';
 import { getTaskTypeOptions } from '../utils/scheduleHelpers.js';
+import { isMobile } from '../utils/responsive.js';
 
 // Class type options
 const CLASS_TYPES = [
   { value: 'INFLATABLE', label: 'Inflatable' },
   { value: 'ANIMATRONIC', label: 'Animatronic' },
-  { value: 'PROJECTION', label: 'Projection' },
   { value: 'STATIC_PROP', label: 'Static Prop' },
-  { value: 'LIGHTING', label: 'Lighting' },
-  { value: 'SOUND', label: 'Sound Equipment' },
-  { value: 'CONTROLLER', label: 'Controller' },
-  { value: 'OTHER', label: 'Other' }
+  { value: 'STRING_LIGHT', label: 'String Light' },
+  { value: 'SPOT_LIGHT', label: 'Spot Light' },
+  { value: 'CORD', label: 'Cord' },
+  { value: 'PLUG', label: 'Plug' }
 ];
 
 export class SchedulesTableRenderers {
   static renderFiltersHTML(filters, hasActiveFilters) {
+    const mobile = isMobile();
+    
+    if (mobile) {
+      return `
+        <div class="filters-bar">
+          <div class="filters-bar-header">
+            <h3>Template Filters</h3>
+          </div>
+          
+          <button class="mobile-filter-button" id="mobile-filter-toggle">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+            </svg>
+            Filters
+            ${hasActiveFilters ? '<span class="filter-active-badge">•</span>' : ''}
+          </button>
+          
+          <div class="mobile-filter-drawer" id="mobile-filter-drawer">
+            <div class="mobile-filter-header">
+              <h3>Filters</h3>
+              <button class="mobile-filter-close" id="mobile-filter-close">✕</button>
+            </div>
+            
+            <div class="mobile-filter-content">
+              ${this.renderFilterControls(filters)}
+            </div>
+            
+            <div class="mobile-filter-footer">
+              <button class="btn-secondary" id="btn-clear-filters-mobile">Clear All</button>
+              <button class="btn-primary" id="mobile-filter-apply">Apply</button>
+            </div>
+          </div>
+          <div class="mobile-filter-overlay" id="mobile-filter-overlay"></div>
+        </div>
+      `;
+    }
+    
+    // Desktop filters
     return `
       <div class="filters-bar">
         <div class="filters-bar-header">
@@ -28,44 +66,50 @@ export class SchedulesTableRenderers {
         </div>
         
         <div class="filters-grid">
-          <div class="filter-group">
-            <label>Class Type</label>
-            <select id="filter-class-type" class="filter-select">
-              <option value="all" ${filters.item_id === 'all' ? 'selected' : ''}>All Classes</option>
-              ${CLASS_TYPES.map(type => 
-                `<option value="${type.value}" ${filters.item_id === type.value ? 'selected' : ''}>${type.label}</option>`
-              ).join('')}
-            </select>
-          </div>
-          
-          <div class="filter-group">
-            <label>Task Type</label>
-            <select id="filter-task-type" class="filter-select">
-              <option value="all" ${filters.task_type === 'all' ? 'selected' : ''}>All Tasks</option>
-              ${getTaskTypeOptions().map(opt => 
-                `<option value="${opt.value}" ${filters.task_type === opt.value ? 'selected' : ''}>${opt.label}</option>`
-              ).join('')}
-            </select>
-          </div>
-          
-          <div class="filter-group">
-            <label>Default</label>
-            <select id="filter-default" class="filter-select">
-              <option value="all">All</option>
-              <option value="true">Default Only</option>
-              <option value="false">Non-Default Only</option>
-            </select>
-          </div>
-          
-          <div class="filter-group">
-            <label>Enabled</label>
-            <select id="filter-enabled" class="filter-select">
-              <option value="all" ${filters.enabled === 'all' ? 'selected' : ''}>All</option>
-              <option value="true" ${filters.enabled === 'true' ? 'selected' : ''}>Enabled</option>
-              <option value="false" ${filters.enabled === 'false' ? 'selected' : ''}>Disabled</option>
-            </select>
-          </div>
+          ${this.renderFilterControls(filters)}
         </div>
+      </div>
+    `;
+  }
+  
+  static renderFilterControls(filters) {
+    return `
+      <div class="filter-group">
+        <label>Enabled</label>
+        <select id="filter-enabled" class="filter-select">
+          <option value="all" ${filters.enabled === 'all' ? 'selected' : ''}>All</option>
+          <option value="true" ${filters.enabled === 'true' ? 'selected' : ''}>True</option>
+          <option value="false" ${filters.enabled === 'false' ? 'selected' : ''}>False</option>
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <label>Default Templates</label>
+        <select id="filter-default" class="filter-select">
+          <option value="all" ${filters.status === 'all' ? 'selected' : ''}>All</option>
+          <option value="true" ${filters.status === 'true' ? 'selected' : ''}>Yes</option>
+          <option value="false" ${filters.status === 'false' ? 'selected' : ''}>No</option>
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <label>Class Types</label>
+        <select id="filter-class-type" class="filter-select">
+          <option value="all" ${filters.item_id === 'all' ? 'selected' : ''}>All Classes</option>
+          ${CLASS_TYPES.map(type => 
+            `<option value="${type.value}" ${filters.item_id === type.value ? 'selected' : ''}>${type.label}</option>`
+          ).join('')}
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <label>Type</label>
+        <select id="filter-task-type" class="filter-select">
+          <option value="all" ${filters.task_type === 'all' ? 'selected' : ''}>All Types</option>
+          ${getTaskTypeOptions().map(opt => 
+            `<option value="${opt.value}" ${filters.task_type === opt.value ? 'selected' : ''}>${opt.label}</option>`
+          ).join('')}
+        </select>
       </div>
     `;
   }
@@ -104,6 +148,13 @@ export class SchedulesTableRenderers {
   }
   
   static renderTableHTML(pageData, sortColumn, sortDirection, expandedRow) {
+    const mobile = isMobile();
+    
+    if (mobile) {
+      return this.renderMobileCards(pageData, expandedRow);
+    }
+    
+    // Desktop table
     const rowsHTML = pageData.map(schedule => 
       this.renderScheduleRowHTML(schedule, sortColumn, sortDirection, expandedRow)
     ).join('');
@@ -133,6 +184,77 @@ export class SchedulesTableRenderers {
             ${rowsHTML}
           </tbody>
         </table>
+      </div>
+    `;
+  }
+  
+  static renderMobileCards(schedules, expandedRow) {
+    return `
+      <div class="mobile-schedules-cards">
+        ${schedules.map(schedule => this.renderMobileCard(schedule, expandedRow)).join('')}
+      </div>
+    `;
+  }
+  
+  static renderMobileCard(schedule, expandedRow) {
+    const isExpanded = expandedRow === schedule.schedule_id;
+    
+    // Get task type icon
+    const taskTypeIcons = {
+      'inspection': '🔍',
+      'maintenance': '🔨',
+      'repair': '🔧'
+    };
+    const taskIcon = taskTypeIcons[schedule.task_type] || '📋';
+    
+    return `
+      <div class="mobile-schedule-card ${isExpanded ? 'expanded' : ''}" data-schedule-id="${schedule.schedule_id}">
+        <div class="mobile-schedule-card-header">
+          <div class="mobile-schedule-card-title">${schedule.title}</div>
+          <span class="mobile-schedule-expand">${isExpanded ? '▼' : '▶'}</span>
+        </div>
+        
+        <div class="mobile-schedule-card-meta">
+          <span class="schedule-task-type">${taskIcon} ${formatTaskType(schedule.task_type)}</span>
+          <span class="schedule-frequency">📅 ${formatScheduleFrequency(schedule.frequency, schedule.season)}</span>
+        </div>
+        
+        <div class="mobile-schedule-card-badges">
+          <span class="class-type-badge">${schedule.class_type}</span>
+          ${schedule.is_default 
+            ? '<span class="badge-default">✓ Default</span>' 
+            : '<span class="badge-custom">Custom</span>'}
+          <span class="enabled-badge ${schedule.enabled ? 'enabled' : 'disabled'}">
+            ${schedule.enabled ? '✓ Enabled' : '✗ Disabled'}
+          </span>
+        </div>
+        
+        ${isExpanded ? this.renderMobileExpansion(schedule) : ''}
+      </div>
+    `;
+  }
+  
+  static renderMobileExpansion(schedule) {
+    return `
+      <div class="mobile-schedule-expansion">
+        <div class="mobile-expansion-actions">
+          <button class="expansion-btn view" data-action="view" data-id="${schedule.schedule_id}">
+            <span class="expansion-btn-icon">👁️</span>
+            <span class="expansion-btn-label">View</span>
+          </button>
+          <button class="expansion-btn apply" data-action="apply" data-id="${schedule.schedule_id}">
+            <span class="expansion-btn-icon">→</span>
+            <span class="expansion-btn-label">Apply</span>
+          </button>
+          <button class="expansion-btn edit" data-action="edit" data-id="${schedule.schedule_id}">
+            <span class="expansion-btn-icon">✎</span>
+            <span class="expansion-btn-label">Edit</span>
+          </button>
+          <button class="expansion-btn delete" data-action="delete" data-id="${schedule.schedule_id}">
+            <span class="expansion-btn-icon">✕</span>
+            <span class="expansion-btn-label">Delete</span>
+          </button>
+        </div>
       </div>
     `;
   }
