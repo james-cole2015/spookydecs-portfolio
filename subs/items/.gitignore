@@ -11,3 +11,4 @@ ID Generation: Should the Lambda auto-ge.md
 config.json
 .gitignore
 Modal Form: Should the create modal use .md
+/subs/*/documentation/
