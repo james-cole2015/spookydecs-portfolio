@@ -2,7 +2,6 @@
 
 
 items/
-├── buildspec.yml
 ├── css
 │   ├── add-cost-modal.css
 │   ├── crop-modal.css
@@ -11,7 +10,6 @@ items/
 │   ├── items.css
 │   ├── maintenance-section-styles.css
 │   └── shared.css
-├── generate-config.sh
 ├── index.html
 ├── items-sub-files.md
 └── js
