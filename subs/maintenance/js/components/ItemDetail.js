@@ -1,10 +1,11 @@
-// Item detail view component
+// Item detail view component with mobile enhancements
 
 import { fetchItem, fetchRecordsByItem, getItemUrl, getCostsUrl } from '../api.js';
 import { appState } from '../state.js';
 import { navigateTo } from '../router.js';
 import { formatDate, formatCurrency, formatStatus, formatRecordTypePill } from '../utils/formatters.js';
 import { StatsCards } from './StatsCards.js';
+import { isMobile } from '../utils/responsive.js';
 
 export class ItemDetailView {
   constructor(itemId) {
@@ -43,21 +44,32 @@ export class ItemDetailView {
   }
   
   renderView() {
+    const mobile = isMobile();
+    
     return `
-      <div class="detail-view">
+      <div class="detail-view item-detail-view">
         ${this.renderBreadcrumbs()}
         
-        <div class="detail-header">
-          <div class="header-actions">
-            <a href="/create?item_id=${this.itemId}" class="btn-primary">+ Create Record</a>
+        ${mobile ? '' : `
+          <div class="detail-header">
+            <div class="header-actions">
+              <a href="/create?item_id=${this.itemId}" class="btn-primary">+ Create Record</a>
+            </div>
           </div>
-        </div>
+        `}
         
         <div class="detail-title">
           <h1>${this.item.short_name || this.itemId}</h1>
-          <div class="title-meta">
-            ${this.item.class || 'Unknown'} • ${this.item.class_type || 'Unknown'} • ${this.item.season || 'Unknown'}
-          </div>
+          ${mobile ? `
+            <div class="header-actions">
+              <a href="/create?item_id=${this.itemId}" class="btn-primary">+ Create Record</a>
+            </div>
+          ` : ''}
+          ${mobile ? '' : `
+            <div class="title-meta">
+              ${this.item.class || 'Unknown'} • ${this.item.class_type || 'Unknown'} • ${this.item.season || 'Unknown'}
+            </div>
+          `}
         </div>
         
         <div class="item-links">
@@ -66,28 +78,59 @@ export class ItemDetailView {
           </a>
         </div>
         
-        ${StatsCards.renderItemStats(this.records)}
+        ${mobile ? '' : StatsCards.renderItemStats(this.records)}
         
-        <div class="detail-tabs">
-          <button class="tab-btn ${this.activeTab === 'upcoming' ? 'active' : ''}" data-tab="upcoming">
-            Upcoming Tasks
-            <span class="tab-count">${this.getUpcomingCount()}</span>
-          </button>
-          <button class="tab-btn ${this.activeTab === 'history' ? 'active' : ''}" data-tab="history">
-            Historical Records
-            <span class="tab-count">${this.getHistoricalCount()}</span>
-          </button>
-          <button class="tab-btn ${this.activeTab === 'costs' ? 'active' : ''}" data-tab="costs">
-            Costs
-          </button>
-          <button class="tab-btn ${this.activeTab === 'recurring' ? 'active' : ''}" data-tab="recurring">
-            Recurring Maintenance
-          </button>
-        </div>
+        ${this.renderTabs()}
         
         <div class="detail-content">
           ${this.renderTabContent()}
         </div>
+      </div>
+    `;
+  }
+  
+  renderTabs() {
+    const mobile = isMobile();
+    
+    if (mobile) {
+      return `
+        <div class="view-selector-label">View Selector</div>
+        <div class="detail-tabs">
+          <select class="tabs-mobile-select" id="item-tabs-select">
+            <option value="upcoming" ${this.activeTab === 'upcoming' ? 'selected' : ''}>
+              📅 Upcoming Tasks (${this.getUpcomingCount()})
+            </option>
+            <option value="history" ${this.activeTab === 'history' ? 'selected' : ''}>
+              📋 Historical Records (${this.getHistoricalCount()})
+            </option>
+            <option value="costs" ${this.activeTab === 'costs' ? 'selected' : ''}>
+              💰 Costs
+            </option>
+            <option value="recurring" ${this.activeTab === 'recurring' ? 'selected' : ''}>
+              🔄 Recurring Maintenance
+            </option>
+          </select>
+        </div>
+      `;
+    }
+    
+    // Desktop tabs
+    return `
+      <div class="detail-tabs">
+        <button class="tab-btn ${this.activeTab === 'upcoming' ? 'active' : ''}" data-tab="upcoming">
+          Upcoming Tasks
+          <span class="tab-count">${this.getUpcomingCount()}</span>
+        </button>
+        <button class="tab-btn ${this.activeTab === 'history' ? 'active' : ''}" data-tab="history">
+          Historical Records
+          <span class="tab-count">${this.getHistoricalCount()}</span>
+        </button>
+        <button class="tab-btn ${this.activeTab === 'costs' ? 'active' : ''}" data-tab="costs">
+          Costs
+        </button>
+        <button class="tab-btn ${this.activeTab === 'recurring' ? 'active' : ''}" data-tab="recurring">
+          Recurring Maintenance
+        </button>
       </div>
     `;
   }
@@ -164,6 +207,13 @@ export class ItemDetailView {
   }
   
   renderRecordsTable(records) {
+    const mobile = isMobile();
+    
+    if (mobile) {
+      return this.renderMobileCards(records);
+    }
+    
+    // Desktop table
     return `
       <table class="data-table">
         <thead>
@@ -187,6 +237,28 @@ export class ItemDetailView {
           `).join('')}
         </tbody>
       </table>
+    `;
+  }
+  
+  renderMobileCards(records) {
+    return `
+      <div class="mobile-records-cards">
+        ${records.map(record => `
+          <div class="mobile-record-card" data-record-id="${record.record_id}">
+            <div class="mobile-record-card-header">
+              <div class="mobile-record-card-title">${record.title}</div>
+            </div>
+            <div class="mobile-record-card-meta">
+              ${formatStatus(record.status)}
+              ${formatRecordTypePill(record.record_type)}
+            </div>
+            <div class="mobile-record-card-footer">
+              <div class="mobile-record-card-date">${formatDate(record.date_performed || record.created_at)}</div>
+              <div class="mobile-record-card-cost">${formatCurrency(record.total_cost || 0)}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
     `;
   }
   
@@ -262,24 +334,39 @@ export class ItemDetailView {
   }
   
   attachEventListeners(container) {
-    // Tab switching
-    const tabBtns = container.querySelectorAll('.tab-btn');
-    tabBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        this.activeTab = btn.getAttribute('data-tab');
-        const contentDiv = container.querySelector('.detail-content');
-        if (contentDiv) {
-          contentDiv.innerHTML = this.renderTabContent();
+    const mobile = isMobile();
+    
+    if (mobile) {
+      // Mobile dropdown listener
+      const select = container.querySelector('#item-tabs-select');
+      if (select) {
+        select.addEventListener('change', (e) => {
+          this.activeTab = e.target.value;
+          const contentDiv = container.querySelector('.detail-content');
+          if (contentDiv) {
+            contentDiv.innerHTML = this.renderTabContent();
+            this.attachTableListeners(contentDiv);
+          }
+        });
+      }
+    } else {
+      // Desktop tab buttons
+      const tabBtns = container.querySelectorAll('.tab-btn');
+      tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          this.activeTab = btn.getAttribute('data-tab');
+          const contentDiv = container.querySelector('.detail-content');
+          if (contentDiv) {
+            contentDiv.innerHTML = this.renderTabContent();
+            this.attachTableListeners(contentDiv);
+          }
           
-          // Re-attach table event listeners
-          this.attachTableListeners(contentDiv);
-        }
-        
-        // Update active tab button
-        tabBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+          // Update active tab button
+          tabBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        });
       });
-    });
+    }
     
     // Initial table listeners
     this.attachTableListeners(container);
@@ -290,6 +377,15 @@ export class ItemDetailView {
     rows.forEach(row => {
       row.addEventListener('click', () => {
         const recordId = row.getAttribute('data-record-id');
+        navigateTo(`/${this.itemId}/${recordId}`);
+      });
+    });
+    
+    // Mobile card listeners
+    const cards = container.querySelectorAll('.mobile-record-card');
+    cards.forEach(card => {
+      card.addEventListener('click', () => {
+        const recordId = card.getAttribute('data-record-id');
         navigateTo(`/${this.itemId}/${recordId}`);
       });
     });
