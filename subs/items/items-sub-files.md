@@ -1,7 +1,7 @@
 // Item Management Subdomain
 
 
-root/
+items/
 ├── buildspec.yml
 ├── css
 │   ├── add-cost-modal.css
