@@ -289,38 +289,39 @@ export class MainTableView {
     `;
   }
   
-  renderExpansionDrawer(record) {
-    const itemId = record.item_id || 'N/A';
-    const isInspection = record.record_type === 'inspection' && 
-                         ['pending', 'Pending', 'PENDING', 'scheduled', 'SCHEDULED', 'Scheduled'].includes(record.status);
-    
-    return `
-      <tr class="expansion-drawer">
-        <td colspan="7">
-          <div class="expansion-content">
-            <button class="expansion-btn view" data-action="view" data-record-id="${record.record_id}" data-item-id="${itemId}">
-              <span class="expansion-btn-icon">👁️</span>
-              <span class="expansion-btn-label">View</span>
+renderExpansionDrawer(record) {
+  const itemId = record.item_id || 'N/A';
+  const isInspection = record.record_type === 'inspection' && 
+                       ['pending', 'Pending', 'PENDING', 'scheduled', 'SCHEDULED', 'Scheduled'].includes(record.status);
+  
+  return `
+    <tr class="expansion-drawer">
+      <td colspan="7">
+        <div class="expansion-content">
+          <button class="expansion-btn view" data-action="view" data-record-id="${record.record_id}" data-item-id="${itemId}">
+            <span class="expansion-btn-icon">👁️</span>
+            <span class="expansion-btn-label">View</span>
+          </button>
+          <button class="expansion-btn edit" data-action="edit" data-record-id="${record.record_id}" data-item-id="${itemId}">
+            <span class="expansion-btn-icon">✎</span>
+            <span class="expansion-btn-label">Edit</span>
+          </button>
+          <button class="expansion-btn delete" data-action="delete" data-record-id="${record.record_id}" data-item-id="${itemId}">
+            <span class="expansion-btn-icon">✕</span>
+            <span class="expansion-btn-label">Delete</span>
+          </button>
+          ${isInspection ? `
+            <button class="expansion-btn inspect" data-action="inspect" data-record-id="${record.record_id}" data-item-id="${itemId}">
+              <span class="expansion-btn-icon">🔍</span>
+              <span class="expansion-btn-label">Inspect</span>
             </button>
-            <button class="expansion-btn edit" data-action="edit" data-record-id="${record.record_id}" data-item-id="${itemId}">
-              <span class="expansion-btn-icon">✎</span>
-              <span class="expansion-btn-label">Edit</span>
-            </button>
-            <button class="expansion-btn delete" data-action="delete" data-record-id="${record.record_id}" data-item-id="${itemId}">
-              <span class="expansion-btn-icon">✕</span>
-              <span class="expansion-btn-label">Delete</span>
-            </button>
-            ${isInspection ? `
-              <button class="expansion-btn inspect" data-action="inspect" data-record-id="${record.record_id}" data-item-id="${itemId}">
-                <span class="expansion-btn-icon">🔍</span>
-                <span class="expansion-btn-label">Inspect</span>
-              </button>
-            ` : ''}
-          </div>
-        </td>
-      </tr>
-    `;
-  }
+          ` : ''}
+        </div>
+      </td>
+    </tr>
+  `;
+}
+
   
   
   renderRecordCount(total, showing) {
@@ -536,72 +537,72 @@ export class MainTableView {
     `;
   }
   
-  attachTableEventListeners(container) {
-    const rows = container.querySelectorAll('.table-row');
-    rows.forEach(row => {
-      row.addEventListener('click', (e) => {
-        // Don't navigate if clicking expansion buttons
-        if (e.target.closest('.expansion-btn')) return;
-        
-        const recordId = row.getAttribute('data-record-id');
-        
-        // Toggle expansion
-        if (this.expandedRow === recordId) {
-          this.expandedRow = null;
-        } else {
-          this.expandedRow = recordId;
-        }
-        
-        this.renderTable();
-      });
+attachTableEventListeners(container) {
+  const rows = container.querySelectorAll('.table-row');
+  rows.forEach(row => {
+    row.addEventListener('click', (e) => {
+      // Don't navigate if clicking expansion buttons
+      if (e.target.closest('.expansion-btn')) return;
+      
+      const recordId = row.getAttribute('data-record-id');
+      
+      // Toggle expansion
+      if (this.expandedRow === recordId) {
+        this.expandedRow = null;
+      } else {
+        this.expandedRow = recordId;
+      }
+      
+      this.renderTable();
     });
+  });
     
-    // Expansion button actions
-    const expansionBtns = container.querySelectorAll('.expansion-btn');
-    expansionBtns.forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const action = btn.getAttribute('data-action');
-        const recordId = btn.getAttribute('data-record-id');
-        const itemId = btn.getAttribute('data-item-id');
-        
-        switch(action) {
-          case 'view':
-            navigateTo(`/${itemId}/${recordId}`);
-            break;
-          case 'edit':
-            navigateTo(`/${itemId}/${recordId}/edit`);
-            break;
-          case 'inspect':
-            navigateTo(`/${itemId}/${recordId}/perform-inspection`);
-            break;
-          case 'delete':
-            this.handleDelete(recordId);
-            break;
-        }
-      });
+  // Expansion button actions
+  const expansionBtns = container.querySelectorAll('.expansion-btn');
+  expansionBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const action = btn.getAttribute('data-action');
+      const recordId = btn.getAttribute('data-record-id');
+      const itemId = btn.getAttribute('data-item-id');
+      
+      switch(action) {
+        case 'view':
+          navigateTo(`/${encodeURIComponent(itemId)}/${recordId}`);
+          break;
+        case 'edit':
+          navigateTo(`/${encodeURIComponent(itemId)}/${recordId}/edit`);
+          break;
+        case 'inspect':
+          navigateTo(`/${encodeURIComponent(itemId)}/${recordId}/perform-inspection`);
+          break;
+        case 'delete':
+          this.handleDelete(recordId);
+          break;
+      }
     });
+  });
     
-    // Sorting event listeners
-    const sortHeaders = container.querySelectorAll('th.sortable');
-    sortHeaders.forEach(header => {
-      header.addEventListener('click', () => {
-        const column = header.getAttribute('data-column');
-        
-        // Toggle sort direction if same column, otherwise default to desc
-        if (this.sortColumn === column) {
-          this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
-        } else {
-          this.sortColumn = column;
-          this.sortDirection = 'desc';
-        }
-        
-        this.renderTable();
-      });
+  // Sorting event listeners
+  const sortHeaders = container.querySelectorAll('th.sortable');
+  sortHeaders.forEach(header => {
+    header.addEventListener('click', () => {
+      const column = header.getAttribute('data-column');
+      
+      // Toggle sort direction if same column, otherwise default to desc
+      if (this.sortColumn === column) {
+        this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+      } else {
+        this.sortColumn = column;
+        this.sortDirection = 'desc';
+      }
+      
+      this.renderTable();
     });
-    
-    this.attachPaginationListeners(container);
-  }
+  });
+  
+  this.attachPaginationListeners(container);
+}
   
   async handleDelete(recordId) {
     const state = appState.getState();
@@ -636,17 +637,17 @@ export class MainTableView {
     }
   }
   
-  attachItemsTableEventListeners(container) {
-    const rows = container.querySelectorAll('.table-row');
-    rows.forEach(row => {
-      row.addEventListener('click', () => {
-        const itemId = row.getAttribute('data-item-id');
-        navigateTo(`/${itemId}`);
-      });
+attachItemsTableEventListeners(container) {
+  const rows = container.querySelectorAll('.table-row');
+  rows.forEach(row => {
+    row.addEventListener('click', () => {
+      const itemId = row.getAttribute('data-item-id');
+      navigateTo(`/${encodeURIComponent(itemId)}`);
     });
-    
-    this.attachPaginationListeners(container);
-  }
+  });
+  
+  this.attachPaginationListeners(container);
+}
   
   attachPaginationListeners(container) {
     const paginationBtns = container.querySelectorAll('.pagination-btn');

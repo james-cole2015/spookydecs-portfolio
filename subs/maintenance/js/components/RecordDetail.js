@@ -40,18 +40,18 @@ export class RecordDetailView {
     }
   }
   
-  renderBreadcrumbs() {
-    const recordIdShort = this.record.record_id.substring(0, 8);
-    return `
-      <nav class="breadcrumbs">
-        <a href="/" class="breadcrumb-link">All Records</a>
-        <span class="breadcrumb-separator">/</span>
-        <a href="/${this.itemId}" class="breadcrumb-link">${this.itemId}</a>
-        <span class="breadcrumb-separator">/</span>
-        <span class="breadcrumb-current">${recordIdShort}...</span>
-      </nav>
-    `;
-  }
+renderBreadcrumbs() {
+  const recordIdShort = this.record.record_id.substring(0, 8);
+  return `
+    <nav class="breadcrumbs">
+      <a href="/" class="breadcrumb-link">All Records</a>
+      <span class="breadcrumb-separator">/</span>
+      <a href="/${encodeURIComponent(this.itemId)}" class="breadcrumb-link">${this.itemId}</a>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-current">${recordIdShort}...</span>
+    </nav>
+  `;
+}
   
   renderMobileStatusPills() {
     if (!isMobile()) return '';
@@ -146,175 +146,175 @@ export class RecordDetailView {
     }
   }
   
-  renderDetailsTab() {
-    const materials = this.record.materials_used || [];
-    
-    // Mobile: Collapsible sections
-    if (isMobile()) {
-      return `
-        <div class="details-tab">
-          ${this.renderCollapsibleSection(
-            'description',
-            'Description',
-            `<p class="detail-description">${this.record.description || 'No description provided'}</p>`
-          )}
-          
-          ${this.renderCollapsibleSection(
-            'scheduling',
-            'Scheduling',
-            `<div class="horizontal-detail-row">
-              <div class="detail-item">
-                <span class="detail-label">Date Performed</span>
-                <span class="detail-value">${formatDate(this.record.date_performed)}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Performed By</span>
-                <span class="detail-value">${this.record.performed_by}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Est. Completion</span>
-                <span class="detail-value">${this.record.estimated_completion_date ? formatDate(this.record.estimated_completion_date) : 'N/A'}</span>
-              </div>
-            </div>`
-          )}
-          
-          ${this.renderCollapsibleSection(
-            'record_info',
-            'Record Information',
-            `<div class="horizontal-detail-row">
-              <div class="detail-item">
-                <span class="detail-label">Record ID</span>
-                <span class="detail-value"><code>${this.record.record_id}</code></span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Item ID</span>
-                <span class="detail-value"><code>${this.itemId}</code></span>
-              </div>
-            </div>`
-          )}
-          
-          ${this.renderCollapsibleSection(
-            'timestamps',
-            'Timestamps',
-            `<div class="timestamps-row">
-              <div class="timestamp-item">
-                <span class="timestamp-label">Created</span>
-                <span class="timestamp-value">${formatDateTime(this.record.created_at)}</span>
-              </div>
-              <div class="timestamp-item">
-                <span class="timestamp-label">Updated</span>
-                <span class="timestamp-value">${formatDateTime(this.record.updated_at)}</span>
-              </div>
-              <div class="timestamp-item">
-                <span class="timestamp-label">Updated By</span>
-                <span class="timestamp-value">${this.record.updated_by || 'N/A'}</span>
-              </div>
-            </div>`
-          )}
-          
-          <div class="detail-section-links">
-            <h3>Related Links</h3>
-            <div class="link-buttons">
-              <a href="/${this.itemId}" class="btn-link">
-                View Item in Maintenance →
-              </a>
-              <a href="${getItemUrl(this.itemId)}" class="btn-link" target="_blank">
-                View Item in Items Subdomain →
-              </a>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-    
-    // Desktop: Traditional layout
+renderDetailsTab() {
+  const materials = this.record.materials_used || [];
+  
+  // Mobile: Collapsible sections
+  if (isMobile()) {
     return `
       <div class="details-tab">
-        <div class="detail-grid">
-          <div class="detail-section full-width">
-            <h3>Record Information</h3>
-            <div class="horizontal-detail-row">
-              <div class="detail-item">
-                <span class="detail-label">Record ID</span>
-                <span class="detail-value"><code>${this.record.record_id}</code></span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Item ID</span>
-                <span class="detail-value"><code>${this.itemId}</code></span>
-              </div>
+        ${this.renderCollapsibleSection(
+          'description',
+          'Description',
+          `<p class="detail-description">${this.record.description || 'No description provided'}</p>`
+        )}
+        
+        ${this.renderCollapsibleSection(
+          'scheduling',
+          'Scheduling',
+          `<div class="horizontal-detail-row">
+            <div class="detail-item">
+              <span class="detail-label">Date Performed</span>
+              <span class="detail-value">${formatDate(this.record.date_performed)}</span>
             </div>
-          </div>
-          
-          <div class="detail-section full-width detail-section-border">
-            <h3>Scheduling</h3>
-            <div class="horizontal-detail-row">
-              <div class="detail-item">
-                <span class="detail-label">Date Performed</span>
-                <span class="detail-value">${formatDate(this.record.date_performed)}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Performed By</span>
-                <span class="detail-value">${this.record.performed_by}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Est. Completion</span>
-                <span class="detail-value">${this.record.estimated_completion_date ? formatDate(this.record.estimated_completion_date) : 'N/A'}</span>
-              </div>
+            <div class="detail-item">
+              <span class="detail-label">Performed By</span>
+              <span class="detail-value">${this.record.performed_by}</span>
             </div>
-          </div>
-          
-          <div class="detail-section full-width detail-section-border">
-            <h3>Description</h3>
-            <p class="detail-description">${this.record.description || 'No description provided'}</p>
-          </div>
-          
-          ${materials.length > 0 ? `
-            <div class="detail-section full-width detail-section-border">
-              <h3>Materials Used</h3>
-              <ul class="materials-list">
-                ${materials.map(m => `
-                  <li>
-                    <strong>${m.item}</strong>
-                    ${m.quantity ? ` - ${m.quantity} ${m.unit || ''}` : ''}
-                  </li>
-                `).join('')}
-              </ul>
+            <div class="detail-item">
+              <span class="detail-label">Est. Completion</span>
+              <span class="detail-value">${this.record.estimated_completion_date ? formatDate(this.record.estimated_completion_date) : 'N/A'}</span>
             </div>
-          ` : ''}
-          
-          <div class="detail-section full-width detail-section-border">
-            <h3>Timestamps</h3>
-            <div class="timestamps-row">
-              <div class="timestamp-item">
-                <span class="timestamp-label">Created</span>
-                <span class="timestamp-value">${formatDateTime(this.record.created_at)}</span>
-              </div>
-              <div class="timestamp-item">
-                <span class="timestamp-label">Updated</span>
-                <span class="timestamp-value">${formatDateTime(this.record.updated_at)}</span>
-              </div>
-              <div class="timestamp-item">
-                <span class="timestamp-label">Updated By</span>
-                <span class="timestamp-value">${this.record.updated_by || 'N/A'}</span>
-              </div>
+          </div>`
+        )}
+        
+        ${this.renderCollapsibleSection(
+          'record_info',
+          'Record Information',
+          `<div class="horizontal-detail-row">
+            <div class="detail-item">
+              <span class="detail-label">Record ID</span>
+              <span class="detail-value"><code>${this.record.record_id}</code></span>
             </div>
-          </div>
-          
-          <div class="detail-section full-width">
-            <h3>Related Links</h3>
-            <div class="link-buttons">
-              <a href="/${this.itemId}" class="btn-link">
-                View Item in Maintenance →
-              </a>
-              <a href="${getItemUrl(this.itemId)}" class="btn-link" target="_blank">
-                View Item in Items Subdomain →
-              </a>
+            <div class="detail-item">
+              <span class="detail-label">Item ID</span>
+              <span class="detail-value"><code>${this.itemId}</code></span>
             </div>
+          </div>`
+        )}
+        
+        ${this.renderCollapsibleSection(
+          'timestamps',
+          'Timestamps',
+          `<div class="timestamps-row">
+            <div class="timestamp-item">
+              <span class="timestamp-label">Created</span>
+              <span class="timestamp-value">${formatDateTime(this.record.created_at)}</span>
+            </div>
+            <div class="timestamp-item">
+              <span class="timestamp-label">Updated</span>
+              <span class="timestamp-value">${formatDateTime(this.record.updated_at)}</span>
+            </div>
+            <div class="timestamp-item">
+              <span class="timestamp-label">Updated By</span>
+              <span class="timestamp-value">${this.record.updated_by || 'N/A'}</span>
+            </div>
+          </div>`
+        )}
+        
+        <div class="detail-section-links">
+          <h3>Related Links</h3>
+          <div class="link-buttons">
+            <a href="/${encodeURIComponent(this.itemId)}" class="btn-link">
+              View Item in Maintenance →
+            </a>
+            <a href="${getItemUrl(this.itemId)}" class="btn-link" target="_blank">
+              View Item in Items Subdomain →
+            </a>
           </div>
         </div>
       </div>
     `;
   }
+  
+  // Desktop: Traditional layout
+  return `
+    <div class="details-tab">
+      <div class="detail-grid">
+        <div class="detail-section full-width">
+          <h3>Record Information</h3>
+          <div class="horizontal-detail-row">
+            <div class="detail-item">
+              <span class="detail-label">Record ID</span>
+              <span class="detail-value"><code>${this.record.record_id}</code></span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Item ID</span>
+              <span class="detail-value"><code>${this.itemId}</code></span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="detail-section full-width detail-section-border">
+          <h3>Scheduling</h3>
+          <div class="horizontal-detail-row">
+            <div class="detail-item">
+              <span class="detail-label">Date Performed</span>
+              <span class="detail-value">${formatDate(this.record.date_performed)}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Performed By</span>
+              <span class="detail-value">${this.record.performed_by}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Est. Completion</span>
+              <span class="detail-value">${this.record.estimated_completion_date ? formatDate(this.record.estimated_completion_date) : 'N/A'}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="detail-section full-width detail-section-border">
+          <h3>Description</h3>
+          <p class="detail-description">${this.record.description || 'No description provided'}</p>
+        </div>
+        
+        ${materials.length > 0 ? `
+          <div class="detail-section full-width detail-section-border">
+            <h3>Materials Used</h3>
+            <ul class="materials-list">
+              ${materials.map(m => `
+                <li>
+                  <strong>${m.item}</strong>
+                  ${m.quantity ? ` - ${m.quantity} ${m.unit || ''}` : ''}
+                </li>
+              `).join('')}
+            </ul>
+          </div>
+        ` : ''}
+        
+        <div class="detail-section full-width detail-section-border">
+          <h3>Timestamps</h3>
+          <div class="timestamps-row">
+            <div class="timestamp-item">
+              <span class="timestamp-label">Created</span>
+              <span class="timestamp-value">${formatDateTime(this.record.created_at)}</span>
+            </div>
+            <div class="timestamp-item">
+              <span class="timestamp-label">Updated</span>
+              <span class="timestamp-value">${formatDateTime(this.record.updated_at)}</span>
+            </div>
+            <div class="timestamp-item">
+              <span class="timestamp-label">Updated By</span>
+              <span class="timestamp-value">${this.record.updated_by || 'N/A'}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="detail-section full-width">
+          <h3>Related Links</h3>
+          <div class="link-buttons">
+            <a href="/${encodeURIComponent(this.itemId)}" class="btn-link">
+              View Item in Maintenance →
+            </a>
+            <a href="${getItemUrl(this.itemId)}" class="btn-link" target="_blank">
+              View Item in Items Subdomain →
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
   
   renderCollapsibleSection(sectionId, title, content) {
     const isOpen = this.expandedSections[sectionId];

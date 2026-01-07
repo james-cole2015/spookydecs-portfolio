@@ -433,91 +433,91 @@ export class ScheduleDetailView {
     `;
   }
   
-  attachEventListeners(container) {
-    // Tab switching - desktop
-    const tabButtons = container.querySelectorAll('.detail-tab-button');
-    tabButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        const tab = button.getAttribute('data-tab');
-        this.switchTab(tab, container);
-      });
+attachEventListeners(container) {
+  // Tab switching - desktop
+  const tabButtons = container.querySelectorAll('.detail-tab-button');
+  tabButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const tab = button.getAttribute('data-tab');
+      this.switchTab(tab, container);
     });
-    
-    // Edit button
-    const editBtn = container.querySelector('#btn-edit');
-    if (editBtn) {
-      editBtn.addEventListener('click', () => {
-        navigateTo(`/schedules/${this.scheduleId}/edit`);
-      });
-    }
-    
-    // Apply to Items button (header)
-    const applyBtn = container.querySelector('#btn-apply-to-items');
-    if (applyBtn) {
-      applyBtn.addEventListener('click', () => {
-        navigateTo(`/schedules/${this.scheduleId}/apply`);
-      });
-    }
-    
-    // Apply Template button (from items tab empty state)
-    const applyFromItemsTab = container.querySelector('#apply-template-from-items-tab');
-    if (applyFromItemsTab) {
-      applyFromItemsTab.addEventListener('click', () => {
-        navigateTo(`/schedules/${this.scheduleId}/apply`);
-      });
-    }
-    
-    // Apply to More Items button
-    const applyMoreBtn = container.querySelector('#apply-more-items');
-    if (applyMoreBtn) {
-      applyMoreBtn.addEventListener('click', () => {
-        navigateTo(`/schedules/${this.scheduleId}/apply`);
-      });
-    }
-    
-    // Delete button
-    const deleteBtn = container.querySelector('#btn-delete');
-    if (deleteBtn) {
-      deleteBtn.addEventListener('click', () => {
-        this.handleDelete();
-      });
-    }
-    
-    // Generate more records button
-    const generateBtn = container.querySelector('#btn-generate');
-    if (generateBtn) {
-      generateBtn.addEventListener('click', () => {
-        this.handleGenerate();
-      });
-    }
-    
-    // Record row clicks
-    const recordRows = container.querySelectorAll('.table-row.clickable');
-    recordRows.forEach(row => {
-      row.addEventListener('click', (e) => {
-        if (e.target.classList.contains('btn-small')) return;
-        
-        const recordId = row.getAttribute('data-record-id');
-        const record = this.records.find(r => r.record_id === recordId);
-        if (record && record.item_id) {
-          navigateTo(`/${record.item_id}/${recordId}`);
-        }
-      });
-    });
-    
-    // View buttons
-    const viewBtns = container.querySelectorAll('.btn-small[data-record-id]');
-    viewBtns.forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const recordId = btn.getAttribute('data-record-id');
-        const record = this.records.find(r => r.record_id === recordId);
-        if (record && record.item_id) {
-          navigateTo(`/${record.item_id}/${recordId}`);
-        }
-      });
+  });
+  
+  // Edit button
+  const editBtn = container.querySelector('#btn-edit');
+  if (editBtn) {
+    editBtn.addEventListener('click', () => {
+      navigateTo(`/schedules/${this.scheduleId}/edit`);
     });
   }
+  
+  // Apply to Items button (header)
+  const applyBtn = container.querySelector('#btn-apply-to-items');
+  if (applyBtn) {
+    applyBtn.addEventListener('click', () => {
+      navigateTo(`/schedules/${this.scheduleId}/apply`);
+    });
+  }
+  
+  // Apply Template button (from items tab empty state)
+  const applyFromItemsTab = container.querySelector('#apply-template-from-items-tab');
+  if (applyFromItemsTab) {
+    applyFromItemsTab.addEventListener('click', () => {
+      navigateTo(`/schedules/${this.scheduleId}/apply`);
+    });
+  }
+  
+  // Apply to More Items button
+  const applyMoreBtn = container.querySelector('#apply-more-items');
+  if (applyMoreBtn) {
+    applyMoreBtn.addEventListener('click', () => {
+      navigateTo(`/schedules/${this.scheduleId}/apply`);
+    });
+  }
+  
+  // Delete button
+  const deleteBtn = container.querySelector('#btn-delete');
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', () => {
+      this.handleDelete();
+    });
+  }
+  
+  // Generate more records button
+  const generateBtn = container.querySelector('#btn-generate');
+  if (generateBtn) {
+    generateBtn.addEventListener('click', () => {
+      this.handleGenerate();
+    });
+  }
+  
+  // Record row clicks
+  const recordRows = container.querySelectorAll('.table-row.clickable');
+  recordRows.forEach(row => {
+    row.addEventListener('click', (e) => {
+      if (e.target.classList.contains('btn-small')) return;
+      
+      const recordId = row.getAttribute('data-record-id');
+      const record = this.records.find(r => r.record_id === recordId);
+      if (record && record.item_id) {
+        navigateTo(`/${encodeURIComponent(record.item_id)}/${recordId}`);
+      }
+    });
+  });
+  
+  // View buttons
+  const viewBtns = container.querySelectorAll('.btn-small[data-record-id]');
+  viewBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const recordId = btn.getAttribute('data-record-id');
+      const record = this.records.find(r => r.record_id === recordId);
+      if (record && record.item_id) {
+        navigateTo(`/${encodeURIComponent(record.item_id)}/${recordId}`);
+      }
+    });
+  });
+}
   
   attachItemRowListeners(container) {
     // Item row clicks
