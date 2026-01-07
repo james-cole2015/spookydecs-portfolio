@@ -3,6 +3,11 @@
 /* ===== MOBILE BREAKPOINT ===== */
 @media (max-width: 767px) {
   
+  /* ===== VIEW SELECTOR LABEL ===== */
+  .view-selector-label {
+    margin-bottom: 16px;
+  }
+  
   /* ===== TOP BUTTON BAR - Icon Buttons ===== */
   .header-actions {
     display: flex;
@@ -116,6 +121,15 @@
   
   .filters-mobile-trigger .filter-icon {
     font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6B7280;
+  }
+  
+  .filters-mobile-trigger .filter-icon svg {
+    width: 20px;
+    height: 20px;
   }
   
   .filters-mobile-trigger .filter-count {

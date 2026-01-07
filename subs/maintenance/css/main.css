@@ -199,6 +199,17 @@ body {
   font-weight: normal;
 }
 
+/* View Selector Label */
+.view-selector-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+  padding-left: 2px;
+}
+
 code {
   background-color: #F3F4F6;
   padding: 2px 6px;

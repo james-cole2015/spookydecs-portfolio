@@ -38,6 +38,7 @@ export class Tabs {
     `).join('');
     
     return `
+      <div class="view-selector-label">View Selector</div>
       <div class="tabs-container">
         ${tabsHtml}
       </div>
@@ -55,6 +56,7 @@ export class Tabs {
     }).join('');
     
     return `
+      <div class="view-selector-label">View Selector</div>
       <div class="tabs-container">
         <select class="tabs-mobile-select" id="tabs-mobile-select">
           ${options}

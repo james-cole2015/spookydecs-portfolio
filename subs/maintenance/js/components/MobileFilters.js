@@ -26,7 +26,14 @@ export class MobileFilters {
     return `
       <!-- Mobile Filter Trigger Button -->
       <button class="filters-mobile-trigger" id="mobile-filters-trigger">
-        <span class="filter-icon">🎛️</span>
+        <span class="filter-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 4.5H21V6.5H3V4.5Z" fill="currentColor"/>
+            <path d="M6 9.5H18V11.5H6V9.5Z" fill="currentColor"/>
+            <path d="M9 14.5H15V16.5H9V14.5Z" fill="currentColor"/>
+            <path d="M11 19.5H13V21.5H11V19.5Z" fill="currentColor"/>
+          </svg>
+        </span>
         <span>Filters</span>
         ${activeFilterCount > 0 ? `<span class="filter-count">${activeFilterCount}</span>` : ''}
       </button>
