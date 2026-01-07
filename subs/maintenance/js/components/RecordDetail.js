@@ -1,11 +1,12 @@
-// Record detail view component
+// Record detail view component with mobile enhancements
 
 import { fetchRecord, deleteRecord, getItemUrl, getCostsUrl, fetchMultiplePhotos } from '../api.js';
 import { appState } from '../state.js';
 import { navigateTo } from '../router.js';
-import { formatDate, formatDateTime, formatCurrency, formatStatus, formatCriticality, formatRecordType } from '../utils/formatters.js';
+import { formatDate, formatDateTime, formatCurrency, formatStatus, formatCriticality, formatRecordType, formatRecordTypePill } from '../utils/formatters.js';
 import { StatsCards } from './StatsCards.js';
 import { PhotoSwipeGallery } from './PhotoSwipeGallery.js';
+import { isMobile } from '../utils/responsive.js';
 
 export class RecordDetailView {
   constructor(recordId, itemId) {
@@ -15,6 +16,13 @@ export class RecordDetailView {
     this.item = null;
     this.activeTab = 'details';
     this.photoGallery = null;
+    // Track which sections are expanded (mobile)
+    this.expandedSections = {
+      description: true,      // Open by default
+      scheduling: true,       // Open by default
+      record_info: false,     // Closed by default
+      timestamps: false       // Closed by default
+    };
   }
   
   async render(container) {
@@ -45,24 +53,54 @@ export class RecordDetailView {
     `;
   }
   
+  renderMobileStatusPills() {
+    if (!isMobile()) return '';
+    
+    // Get pill styles from formatters - use formatRecordTypePill for proper styling
+    const statusHtml = formatStatus(this.record.status);
+    const typeHtml = formatRecordTypePill(this.record.record_type);
+    const criticalityHtml = formatCriticality(this.record.criticality);
+    
+    return `
+      <div class="mobile-status-pills">
+        ${statusHtml}
+        ${typeHtml}
+        ${criticalityHtml}
+      </div>
+    `;
+  }
+  
   renderView() {
+    const mobile = isMobile();
+    
     return `
       <div class="detail-view">
         ${this.renderBreadcrumbs()}
         
-        <div class="detail-header">
-          <div class="header-actions">
-            ${this.renderPerformInspectionButton()}
-            <a href="/${this.itemId}/${this.recordId}/edit" class="btn-secondary">Edit Record</a>
-            <button class="btn-danger" data-action="delete">Delete Record</button>
+        ${mobile ? '' : `
+          <div class="detail-header">
+            <div class="header-actions">
+              ${this.renderPerformInspectionButton()}
+              <a href="/${this.itemId}/${this.recordId}/edit" class="btn-secondary">Edit Record</a>
+              <button class="btn-danger" data-action="delete">Delete Record</button>
+            </div>
           </div>
-        </div>
+        `}
         
         <div class="detail-title">
           <h1>${this.record.title}</h1>
+          ${mobile ? `
+            <div class="header-actions">
+              ${this.renderPerformInspectionButton()}
+              <a href="/${this.itemId}/${this.recordId}/edit" class="btn-secondary">Edit Record</a>
+              <button class="btn-danger" data-action="delete">Delete Record</button>
+            </div>
+          ` : ''}
         </div>
         
-        ${StatsCards.renderRecordStats(this.record)}
+        ${this.renderMobileStatusPills()}
+        
+        ${mobile ? '' : StatsCards.renderRecordStats(this.record)}
         
         <div class="detail-tabs">
           <button class="tab-btn ${this.activeTab === 'details' ? 'active' : ''}" data-tab="details">
@@ -111,6 +149,85 @@ export class RecordDetailView {
   renderDetailsTab() {
     const materials = this.record.materials_used || [];
     
+    // Mobile: Collapsible sections
+    if (isMobile()) {
+      return `
+        <div class="details-tab">
+          ${this.renderCollapsibleSection(
+            'description',
+            'Description',
+            `<p class="detail-description">${this.record.description || 'No description provided'}</p>`
+          )}
+          
+          ${this.renderCollapsibleSection(
+            'scheduling',
+            'Scheduling',
+            `<div class="horizontal-detail-row">
+              <div class="detail-item">
+                <span class="detail-label">Date Performed</span>
+                <span class="detail-value">${formatDate(this.record.date_performed)}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Performed By</span>
+                <span class="detail-value">${this.record.performed_by}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Est. Completion</span>
+                <span class="detail-value">${this.record.estimated_completion_date ? formatDate(this.record.estimated_completion_date) : 'N/A'}</span>
+              </div>
+            </div>`
+          )}
+          
+          ${this.renderCollapsibleSection(
+            'record_info',
+            'Record Information',
+            `<div class="horizontal-detail-row">
+              <div class="detail-item">
+                <span class="detail-label">Record ID</span>
+                <span class="detail-value"><code>${this.record.record_id}</code></span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Item ID</span>
+                <span class="detail-value"><code>${this.itemId}</code></span>
+              </div>
+            </div>`
+          )}
+          
+          ${this.renderCollapsibleSection(
+            'timestamps',
+            'Timestamps',
+            `<div class="timestamps-row">
+              <div class="timestamp-item">
+                <span class="timestamp-label">Created</span>
+                <span class="timestamp-value">${formatDateTime(this.record.created_at)}</span>
+              </div>
+              <div class="timestamp-item">
+                <span class="timestamp-label">Updated</span>
+                <span class="timestamp-value">${formatDateTime(this.record.updated_at)}</span>
+              </div>
+              <div class="timestamp-item">
+                <span class="timestamp-label">Updated By</span>
+                <span class="timestamp-value">${this.record.updated_by || 'N/A'}</span>
+              </div>
+            </div>`
+          )}
+          
+          <div class="detail-section-links">
+            <h3>Related Links</h3>
+            <div class="link-buttons">
+              <a href="/${this.itemId}" class="btn-link">
+                View Item in Maintenance →
+              </a>
+              <a href="${getItemUrl(this.itemId)}" class="btn-link" target="_blank">
+                View Item in Items Subdomain →
+              </a>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
+    // Desktop: Traditional layout
     return `
       <div class="details-tab">
         <div class="detail-grid">
@@ -194,6 +311,22 @@ export class RecordDetailView {
               </a>
             </div>
           </div>
+        </div>
+      </div>
+    `;
+  }
+  
+  renderCollapsibleSection(sectionId, title, content) {
+    const isOpen = this.expandedSections[sectionId];
+    
+    return `
+      <div class="detail-section-collapsible">
+        <div class="detail-section-header" data-section="${sectionId}">
+          <h3>${title}</h3>
+          <span class="detail-section-toggle ${isOpen ? 'open' : ''}">▼</span>
+        </div>
+        <div class="detail-section-content ${isOpen ? 'open' : ''}">
+          ${content}
         </div>
       </div>
     `;
@@ -359,6 +492,11 @@ export class RecordDetailView {
         if (contentDiv) {
           contentDiv.innerHTML = this.renderTabContent();
           
+          // Re-attach collapsible listeners if on details tab
+          if (this.activeTab === 'details' && isMobile()) {
+            this.attachCollapsibleListeners(contentDiv);
+          }
+          
           // Load photos if on photos tab
           if (this.activeTab === 'photos') {
             await this.loadPhotosForTab(contentDiv);
@@ -379,6 +517,11 @@ export class RecordDetailView {
       });
     }
     
+    // Collapsible section listeners (mobile)
+    if (isMobile() && this.activeTab === 'details') {
+      this.attachCollapsibleListeners(container);
+    }
+    
     // Initialize photos if starting on photos tab
     if (this.activeTab === 'photos') {
       const contentDiv = container.querySelector('.detail-content');
@@ -386,6 +529,25 @@ export class RecordDetailView {
         this.loadPhotosForTab(contentDiv);
       }
     }
+  }
+  
+  attachCollapsibleListeners(container) {
+    const headers = container.querySelectorAll('.detail-section-header');
+    
+    headers.forEach(header => {
+      header.addEventListener('click', () => {
+        const sectionId = header.getAttribute('data-section');
+        const content = header.nextElementSibling;
+        const toggle = header.querySelector('.detail-section-toggle');
+        
+        // Toggle state
+        this.expandedSections[sectionId] = !this.expandedSections[sectionId];
+        
+        // Toggle classes
+        content.classList.toggle('open');
+        toggle.classList.toggle('open');
+      });
+    });
   }
   
   /**
