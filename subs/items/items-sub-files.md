@@ -2,43 +2,43 @@
 
 
 root/
-├── items.html                          # Main items list page
-├── item-detail.html                    # Item detail page
-├── item-form.html                      # Create/Edit form page
-│
-├── js/
-│   ├── router.js                       # Navigo router setup
-│   │
-│   ├── pages/
-│   │   ├── items-list.js              # Items list orchestration
-│   │   ├── item-detail.js             # Item detail orchestration
-│   │   └── item-form.js               # Form orchestration (create/edit)
-│   │
-│   ├── components/
-│   │   ├── ItemsTable.js              # Vanilla JS table component
-│   │   ├── CropModal.js               # Cropper modal for photo upload
-│   │   ├── FilterBar.js               # Search + pill filters
-│   │   ├── TabBar.js                  # Tab navigation component
-│   │   ├── ItemDetailView.js          # Detail page layout
-│   │   ├── ItemFormFields.js          # Dynamic form fields generator
-│   │   └── PhotoUploader.js           # Photo upload component (reusable)
-│   │
-│   ├── api/
-│   │   ├── items.js                   # Items CRUD operations
-│   │   └── photos.js                  # Photo upload/management
-│   │
-│   ├── utils/
-│   │   ├── state.js                   # URL state management
-│   │   └── item-config.js               # CLASS_HIERARCHY, CLASS_TYPE_ATTRIBUTES
-│   │
-│   └── shared/
-│       ├── modal.js                   # Confirmation modal (for delete)
-│       └── toast.js                   # Toast notifications
-│
-└── css/
-    ├── items.css                      # Items-specific styles
-    └── shared.css                     # Shared component styles
-    └── crop-modal.css                 # Styles for crop modal
-    ├── item-detail.css                # Items-specific styles
-    └── item-form.css                  # Shared component styles
-    
+├── buildspec.yml
+├── css
+│   ├── add-cost-modal.css
+│   ├── crop-modal.css
+│   ├── item-detail.css
+│   ├── item-form.css
+│   ├── items.css
+│   ├── maintenance-section-styles.css
+│   └── shared.css
+├── generate-config.sh
+├── index.html
+├── items-sub-files.md
+└── js
+    ├── api
+    │   ├── items.js
+    │   ├── maintenance.js
+    │   └── photos.js
+    ├── components
+    │   ├── AddCostModal.js
+    │   ├── CropModal.js
+    │   ├── FilterBar.js
+    │   ├── ItemDetailView.js
+    │   ├── ItemFormFields.js
+    │   ├── ItemFormSteps.js
+    │   ├── ItemFormWizard.js
+    │   ├── ItemsTable.js
+    │   ├── PhotoUploader.js
+    │   ├── StoreItemModal.js
+    │   └── TabBar.js
+    ├── pages
+    │   ├── item-detail.js
+    │   ├── item-form.js
+    │   └── items-list.js
+    ├── router.js
+    ├── shared
+    │   ├── modal.js
+    │   └── toast.js
+    └── utils
+        ├── item-config.js
+        └── state.js
