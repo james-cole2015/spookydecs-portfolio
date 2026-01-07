@@ -1,56 +1,59 @@
 maintenance-records/
-├── index.html                           # Main index
-├── config.json                          # API endpoints configuration
-│
-├── css/
-│   ├── main.css                         # Main styles
-│   ├── table.css                        # Table styles
-│   ├── filters.css                      # Filter bar styles
-│   ├── detail.css                       # Detail view styles
-│   ├── toast.css                        # Toast notification styles
-│   ├── form.css                         # Form styles
-│   ├── photo-gallery.css                # Photo gallery styles
-│   └── schedules.css                    # Schedule template styles
-│   └── inspection-form.css              # Schedule template styles
-
-│
-└── js/
-    ├── main.js                          # App initialization
-    ├── router.js                        # Schedule routes added
-    ├── state.js                         # Schedule state management
-    ├── api.js                           # Records & items only
-    ├── scheduleApi.js                   # Schedule template API
-    │
-    ├── utils/
-    │   ├── helpers.js                   # General utilities
-    │   ├── formatters.js                # Data formatting functions
-    │   ├── toast.js                     # Toast notifications
-    │   └── scheduleHelpers.js           # Schedule-specific utilities
-    │
-    └── components/
-        ├── MainTable.js                 # "Maintenance Schedules" button
-        ├── RecordDetail.js              # Record detail view
-        ├── ItemDetail.js                # Item detail view
-        ├── RecordForm.js                # Record create/edit form
-        ├── StatsCards.js                # Stats display
-        ├── Tabs.js                      # Tab navigation
-        ├── Filters.js                   # Filter components
-        ├── PerformInspectionForm.js     # Photo gallery
-        ├── PhotoSwipeGallery.js         # Photo gallery
-        └── inspection/                     )
-            ├── InspectionTaskManager.js # Task Manager for Inspections
-            └── InspectionFormSubmit.js. # Form Submit
-        ├── PhotoCarousel.js             # Photo carousel
-        ├── PhotoUpload.js               # Photo upload
-        │
-        ├── SchedulesTable.js            # Template list view
-        ├── ScheduleForm.js              # Template create/edit
-        ├── ScheduleDetail.js            # Template detail view
-        │
-        └── form/
-            ├── ItemSelector.js          # Item search/select
-            ├── MaterialsList.js         # Materials editor
-            └── ExistingPhotos.js        # Photo management
+├── css
+│   ├── detail.css
+│   ├── filters.css
+│   ├── form.css
+│   ├── inspection-form.css
+│   ├── item-detail.css
+│   ├── main.css
+│   ├── mobile.css
+│   ├── photo-gallery.css
+│   ├── schedule-detail-tabs.css
+│   ├── schedules.css
+│   ├── table.css
+│   └── toast.css
+├── index.html
+├── js
+│   ├── api.js
+│   ├── components
+│   │   ├── Filters.js
+│   │   ├── form
+│   │   │   ├── ExistingPhotos.js
+│   │   │   ├── ItemSelector.js
+│   │   │   └── MaterialsList.js
+│   │   ├── inspection
+│   │   │   ├── InspectionFormSubmit.js
+│   │   │   └── InspectionTaskManager.js
+│   │   ├── ItemDetail.js
+│   │   ├── MainTable.js
+│   │   ├── MobileCardView.js
+│   │   ├── MobileFilters.js
+│   │   ├── PerformInspectionForm.js
+│   │   ├── PhotoCarousel.js
+│   │   ├── PhotoSwipeGallery.js
+│   │   ├── PhotoUpload.js
+│   │   ├── RecordDetail.js
+│   │   ├── RecordForm.js
+│   │   ├── ScheduleDetail.js
+│   │   ├── ScheduleForm.js
+│   │   ├── SchedulesTable.js
+│   │   ├── SchedulesTableHandlers.js
+│   │   ├── SchedulesTableRenderers.js
+│   │   ├── StatsCards.js
+│   │   ├── Tabs.js
+│   │   └── TemplateApplication.js
+│   ├── main.js
+│   ├── RecordDetail.js
+│   ├── router.js
+│   ├── scheduleApi.js
+│   ├── state.js
+│   └── utils
+│       ├── formatters.js
+│       ├── helpers.js
+│       ├── responsive.js
+│       ├── scheduleHelpers.js
+│       └── toast.js
+└── maint-sub-structure.md
 
 backend/
 └── maintenance_schedule_handler.py    # NEW - Template CRUD Lambda

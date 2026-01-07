@@ -1,0 +1,266 @@
+/* Schedule Detail Mobile Styles */
+/* IMPORTANT: All styles are scoped to .schedule-detail-view to avoid conflicts with other detail pages */
+
+/* ===== DESKTOP STYLES (Default) ===== */
+
+/* Schedule Detail Header - Desktop */
+.schedule-detail-view .schedule-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 16px;
+}
+
+.schedule-detail-view .schedule-detail-header .btn-back {
+  padding: 10px 16px;
+  background-color: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.schedule-detail-view .schedule-detail-header .btn-back:hover {
+  background-color: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+/* Desktop Action Buttons */
+.schedule-detail-view .schedule-detail-header .detail-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.schedule-detail-view .schedule-detail-header .btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.schedule-detail-view .schedule-detail-header .btn-icon:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.schedule-detail-view .schedule-detail-header .btn-icon:active {
+  transform: translateY(0);
+}
+
+/* Desktop - Apply Button (Right arrow) - GREEN */
+.schedule-detail-view .schedule-detail-header #btn-apply-to-items {
+  background-color: #10B981;
+  color: white;
+}
+
+.schedule-detail-view .schedule-detail-header #btn-apply-to-items:hover {
+  background-color: #059669;
+}
+
+/* Desktop - Generate Button - BLUE */
+.schedule-detail-view .schedule-detail-header #btn-generate {
+  background-color: #3B82F6;
+  color: white;
+}
+
+.schedule-detail-view .schedule-detail-header #btn-generate:hover {
+  background-color: #2563EB;
+}
+
+/* Desktop - Edit Button - YELLOW */
+.schedule-detail-view .schedule-detail-header #btn-edit {
+  background-color: #F59E0B;
+  color: white;
+}
+
+.schedule-detail-view .schedule-detail-header #btn-edit:hover {
+  background-color: #D97706;
+}
+
+/* Desktop - Delete Button - RED with black text */
+.schedule-detail-view .schedule-detail-header #btn-delete {
+  background-color: #EF4444;
+  color: #000000;
+}
+
+.schedule-detail-view .schedule-detail-header #btn-delete:hover {
+  background-color: #DC2626;
+}
+
+/* Desktop tabs - fix height to prevent scrollbar */
+.schedule-detail-view .detail-view .detail-tabs {
+  min-height: 48px;
+  overflow: visible;
+}
+
+/* ===== MOBILE STYLES ===== */
+@media (max-width: 767px) {
+  
+  /* Mobile Schedule Detail Header */
+  .schedule-detail-view .schedule-detail-header {
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  
+  .schedule-detail-view .schedule-detail-header .btn-back {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 15px;
+  }
+  
+  /* Mobile Action Buttons - Single Row */
+  .schedule-detail-view .schedule-detail-header .detail-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 8px;
+    width: 100%;
+  }
+  
+  .schedule-detail-view .schedule-detail-header .detail-actions .btn-icon {
+    flex: 1;
+    padding: 14px 8px;
+    min-height: 56px;
+    border-radius: 8px;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+  
+  /* Mobile - Apply Button (Green with right arrow) */
+  .schedule-detail-view .schedule-detail-header #btn-apply-to-items {
+    background-color: #10B981 !important;
+    color: white !important;
+  }
+  
+  .schedule-detail-view .schedule-detail-header #btn-apply-to-items:active {
+    background-color: #059669 !important;
+  }
+  
+  /* Mobile - Generate Button (Blue) */
+  .schedule-detail-view .schedule-detail-header #btn-generate {
+    background-color: #3B82F6 !important;
+    color: white !important;
+  }
+  
+  .schedule-detail-view .schedule-detail-header #btn-generate:active {
+    background-color: #2563EB !important;
+  }
+  
+  /* Mobile - Edit Button (Yellow) */
+  .schedule-detail-view .schedule-detail-header #btn-edit {
+    background-color: #F59E0B !important;
+    color: white !important;
+  }
+  
+  .schedule-detail-view .schedule-detail-header #btn-edit:active {
+    background-color: #D97706 !important;
+  }
+  
+  /* Mobile - Delete Button (Red with black X) */
+  .schedule-detail-view .schedule-detail-header #btn-delete {
+    background-color: #EF4444 !important;
+    color: #000000 !important;
+  }
+  
+  .schedule-detail-view .schedule-detail-header #btn-delete:active {
+    background-color: #DC2626 !important;
+  }
+  
+  /* Remove hover effects on mobile (use active instead) */
+  .schedule-detail-view .schedule-detail-header .btn-icon:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  
+  /* ===== MOBILE TAB STYLES - Hide desktop tabs completely ===== */
+  
+  /* Hide desktop tabs on mobile */
+  .schedule-detail-view .detail-view .detail-tabs {
+    display: none !important;
+  }
+  
+  /* Mobile Tab Panels */
+  .schedule-detail-view .detail-view .detail-tab-panel {
+    display: none;
+  }
+  
+  .schedule-detail-view .detail-view .detail-tab-panel.active {
+    display: block !important;
+  }
+  
+  /* Mobile Detail Content */
+  .schedule-detail-view .detail-view .detail-content {
+    padding: 0;
+  }
+  
+  /* Mobile Detail Card Adjustments */
+  .schedule-detail-view .detail-view .detail-card {
+    border-radius: 8px;
+    margin-bottom: 16px;
+  }
+  
+  /* Mobile Items Table - Make it scrollable */
+  .schedule-detail-view .items-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .schedule-detail-view .items-using-template-table {
+    min-width: 600px;
+  }
+  
+  /* Mobile Card Header */
+  .schedule-detail-view .card-header-with-actions {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .schedule-detail-view .card-header-with-actions h3 {
+    font-size: 16px;
+  }
+  
+  /* Mobile Empty State */
+  .schedule-detail-view .empty-state {
+    padding: 40px 16px;
+  }
+  
+  .schedule-detail-view .empty-state-icon {
+    font-size: 48px;
+  }
+  
+  .schedule-detail-view .empty-state h3 {
+    font-size: 18px;
+  }
+  
+  .schedule-detail-view .empty-state p {
+    font-size: 13px;
+  }
+}
+
+/* ===== TABLET (768px - 1024px) ===== */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .schedule-detail-view .schedule-detail-header .btn-icon {
+    padding: 10px 14px;
+    font-size: 16px;
+  }
+}

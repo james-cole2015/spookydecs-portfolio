@@ -111,30 +111,32 @@ export class ScheduleDetailView {
   
   renderDetail() {
     return `
-      <div class="detail-view">
-        <div class="schedule-detail-header">
-          <button class="btn-back" onclick="window.location.href='/schedules'">
-            ← Back to Schedules
-          </button>
-          <div class="detail-actions">
-            <button class="btn-icon btn-primary" id="btn-apply-to-items" title="Apply to Items">
-              👁️
+      <div class="schedule-detail-view">
+        <div class="detail-view">
+          <div class="schedule-detail-header">
+            <button class="btn-back" onclick="window.location.href='/schedules'">
+              ← Back to Schedules
             </button>
-            <button class="btn-icon btn-secondary" id="btn-generate" title="Generate More Records">
-              ↻
-            </button>
-            <button class="btn-icon btn-secondary" id="btn-edit" title="Edit">
-              ✎
-            </button>
-            <button class="btn-icon btn-danger-icon" id="btn-delete" title="Delete">
-              🗑️
-            </button>
+            <div class="detail-actions">
+              <button class="btn-icon btn-primary" id="btn-apply-to-items" title="Apply to Items">
+                →
+              </button>
+              <button class="btn-icon btn-secondary" id="btn-generate" title="Generate More Records">
+                ↻
+              </button>
+              <button class="btn-icon btn-secondary" id="btn-edit" title="Edit">
+                ✎
+              </button>
+              <button class="btn-icon btn-danger-icon" id="btn-delete" title="Delete">
+                ✕
+              </button>
+            </div>
           </div>
-        </div>
-        
-        <div class="detail-content">
-          ${this.renderTabs()}
-          ${this.renderTabContent()}
+          
+          <div class="detail-content">
+            ${this.renderTabs()}
+            ${this.renderTabContent()}
+          </div>
         </div>
       </div>
     `;
@@ -149,7 +151,7 @@ export class ScheduleDetailView {
         </button>
         <button class="detail-tab-button ${this.activeTab === 'items' ? 'active' : ''}" data-tab="items">
           <span class="tab-icon">📦</span>
-          <span class="tab-label">Items Using This Template</span>
+          <span class="tab-label">Items</span>
           <span class="tab-count">0</span>
         </button>
       </div>
@@ -432,7 +434,7 @@ export class ScheduleDetailView {
   }
   
   attachEventListeners(container) {
-    // Tab switching
+    // Tab switching - desktop
     const tabButtons = container.querySelectorAll('.detail-tab-button');
     tabButtons.forEach(button => {
       button.addEventListener('click', () => {
@@ -547,7 +549,7 @@ export class ScheduleDetailView {
   switchTab(tab, container) {
     this.activeTab = tab;
     
-    // Update tab buttons
+    // Update desktop tab buttons
     const tabButtons = container.querySelectorAll('.detail-tab-button');
     tabButtons.forEach(button => {
       if (button.getAttribute('data-tab') === tab) {
