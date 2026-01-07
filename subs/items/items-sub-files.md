@@ -1,7 +1,7 @@
 // Item Management Subdomain
 
 
-items/
+items/ /test
 ├── css
 │   ├── add-cost-modal.css
 │   ├── crop-modal.css
