@@ -7,10 +7,10 @@ import STORAGE_CONFIG from './storage-config.js';
 
 // Get API base URL from config or environment
 const getApiBase = () => {
-  if (window.CONFIG && window.CONFIG.API_URL) {
-    return window.CONFIG.API_URL;
+  if (window.CONFIG && window.CONFIG.API_ENDPOINT) {
+    return window.CONFIG.API_ENDPOINT;
   }
-  return 'https://miinu7boec.execute-api.us-east-2.amazonaws.com/dev';
+  return 'https://api.spookydecs.com';
 };
 
 const API_BASE = getApiBase();
