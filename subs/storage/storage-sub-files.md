@@ -1,6 +1,6 @@
 # Storage Subdomain - File Structure
 
-## Complete File Organization
+## Complete File Structure
 
 ```
 storage/
