@@ -187,9 +187,10 @@ export class MainTableView {
     const state = appState.getState();
     let data = state.filteredRecords;
     
-    // Apply tab filter
-    if (state.activeTab !== 'all') {
-      const recordType = state.activeTab.replace('s', ''); // repairs -> repair
+    // Apply tab filter - FIX: properly remove trailing 's' from tab names
+    if (state.activeTab !== 'all' && state.activeTab !== 'items') {
+      // Remove trailing 's' to get record type: repairs -> repair, inspections -> inspection
+      const recordType = state.activeTab.endsWith('s') ? state.activeTab.slice(0, -1) : state.activeTab;
       data = data.filter(r => r.record_type === recordType);
     }
     
@@ -225,6 +226,7 @@ export class MainTableView {
       const pageData = data.slice(startIdx, endIdx);
       
       const tableHtml = `
+        ${totalPages > 1 ? this.renderPagination(totalPages, data.length) : ''}
         <div class="table-wrapper">
           <table class="data-table">
             <thead>
@@ -257,7 +259,6 @@ export class MainTableView {
             </tbody>
           </table>
         </div>
-        ${totalPages > 1 ? this.renderPagination(totalPages) : ''}
       `;
       
       container.innerHTML = tableHtml;
@@ -449,6 +450,7 @@ renderExpansionDrawer(record) {
     const pageData = sortedData.slice(startIdx, endIdx);
     
     const tableHtml = `
+      ${totalPages > 1 ? this.renderPagination(totalPages, sortedData.length) : ''}
       <div class="table-wrapper">
         <table class="data-table">
           <thead>
@@ -468,7 +470,6 @@ renderExpansionDrawer(record) {
           </tbody>
         </table>
       </div>
-      ${totalPages > 1 ? this.renderPagination(totalPages) : ''}
     `;
     
     container.innerHTML = tableHtml;
@@ -490,7 +491,10 @@ renderExpansionDrawer(record) {
     `;
   }
   
-  renderPagination(totalPages) {
+  renderPagination(totalPages, totalRecords) {
+    const startRecord = this.currentPage * this.pageSize + 1;
+    const endRecord = Math.min((this.currentPage + 1) * this.pageSize, totalRecords);
+    
     const pages = [];
     for (let i = 0; i < totalPages; i++) {
       pages.push(`
@@ -505,21 +509,26 @@ renderExpansionDrawer(record) {
     
     return `
       <div class="pagination">
-        <button 
-          class="pagination-btn" 
-          data-page="prev"
-          ${this.currentPage === 0 ? 'disabled' : ''}
-        >
-          Previous
-        </button>
-        ${pages.join('')}
-        <button 
-          class="pagination-btn" 
-          data-page="next"
-          ${this.currentPage === totalPages - 1 ? 'disabled' : ''}
-        >
-          Next
-        </button>
+        <span class="pagination-info">
+          Showing ${startRecord}-${endRecord} of ${totalRecords}
+        </span>
+        <div class="pagination-controls">
+          <button 
+            class="pagination-btn pagination-arrow" 
+            data-page="prev"
+            ${this.currentPage === 0 ? 'disabled' : ''}
+          >
+            ← Previous
+          </button>
+          ${pages.join('')}
+          <button 
+            class="pagination-btn pagination-arrow" 
+            data-page="next"
+            ${this.currentPage === totalPages - 1 ? 'disabled' : ''}
+          >
+            Next →
+          </button>
+        </div>
       </div>
     `;
   }

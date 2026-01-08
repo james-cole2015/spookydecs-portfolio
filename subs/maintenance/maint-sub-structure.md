@@ -1,4 +1,5 @@
 maintenance-records/
+.
 ├── css
 │   ├── detail.css
 │   ├── filters.css
@@ -8,7 +9,8 @@ maintenance-records/
 │   ├── main.css
 │   ├── mobile.css
 │   ├── photo-gallery.css
-│   ├── schedule-detail-tabs.css
+│   ├── schedule-detail.css
+│   ├── schedules-detail.css
 │   ├── schedules.css
 │   ├── table.css
 │   └── toast.css
