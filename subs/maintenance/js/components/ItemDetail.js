@@ -3,8 +3,7 @@
 import { fetchItem, fetchRecordsByItem, getItemUrl, getCostsUrl } from '../api.js';
 import { appState } from '../state.js';
 import { navigateTo } from '../router.js';
-import { formatDate, formatCurrency, formatStatus, formatRecordTypePill } from '../utils/formatters.js';
-import { StatsCards } from './StatsCards.js';
+import { formatDate, formatCurrency, formatStatus, formatRecordTypePill, formatSeverity } from '../utils/formatters.js';import { StatsCards } from './StatsCards.js';
 import { isMobile } from '../utils/responsive.js';
 
 export class ItemDetailView {
@@ -206,7 +205,7 @@ export class ItemDetailView {
     `;
   }
   
-  renderRecordsTable(records) {
+renderRecordsTable(records) {
     const mobile = isMobile();
     
     if (mobile) {
@@ -221,6 +220,7 @@ export class ItemDetailView {
             <th>Status</th>
             <th>Title</th>
             <th>Type</th>
+            <th>Severity</th>
             <th>Date</th>
             <th>Cost</th>
           </tr>
@@ -231,6 +231,7 @@ export class ItemDetailView {
               <td>${formatStatus(record.status)}</td>
               <td class="table-title">${record.title}</td>
               <td>${formatRecordTypePill(record.record_type)}</td>
+              <td>${formatSeverity(record.criticality)}</td>
               <td>${formatDate(record.date_performed || record.created_at)}</td>
               <td>${formatCurrency(record.total_cost || 0)}</td>
             </tr>
@@ -240,7 +241,7 @@ export class ItemDetailView {
     `;
   }
   
-  renderMobileCards(records) {
+renderMobileCards(records) {
     return `
       <div class="mobile-records-cards">
         ${records.map(record => `
@@ -251,6 +252,7 @@ export class ItemDetailView {
             <div class="mobile-record-card-meta">
               ${formatStatus(record.status)}
               ${formatRecordTypePill(record.record_type)}
+              ${formatSeverity(record.criticality)}
             </div>
             <div class="mobile-record-card-footer">
               <div class="mobile-record-card-date">${formatDate(record.date_performed || record.created_at)}</div>

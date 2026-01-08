@@ -15,6 +15,31 @@ export function formatDate(isoString) {
   }
 }
 
+export function formatSeverity(criticality) {
+  if (!criticality || criticality === 'null') {
+    return `<span class="pill-badge" style="background-color: #6B728020; color: #6B7280; border: 1px solid #6B728040;">None</span>`;
+  }
+  
+  const colors = {
+    'low': '#10B981',
+    'medium': '#F59E0B',
+    'high': '#EF4444',
+    'critical': '#DC2626'
+  };
+  
+  const labels = {
+    'low': 'Low',
+    'medium': 'Medium',
+    'high': 'High',
+    'critical': 'Critical'
+  };
+  
+  const color = colors[criticality] || '#6B7280';
+  const label = labels[criticality] || criticality;
+  
+  return `<span class="pill-badge" style="background-color: ${color}20; color: ${color}; border: 1px solid ${color}40;">${label}</span>`;
+}
+
 export function formatDateTime(isoString) {
   if (!isoString) return 'N/A';
   
