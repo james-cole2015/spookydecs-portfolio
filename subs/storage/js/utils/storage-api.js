@@ -5,40 +5,34 @@
 
 import STORAGE_CONFIG from './storage-config.js';
 
-// Get API base URL from config or environment
-const getApiBase = () => {
-  if (window.CONFIG && window.CONFIG.API_ENDPOINT) {
-    return window.CONFIG.API_ENDPOINT;
-  }
-  return 'https://api.spookydecs.com';
-};
+let config = null;
 
-const API_BASE = getApiBase();
-
-/**
- * Generic fetch wrapper with error handling
- */
-async function apiFetch(url, options = {}) {
+export async function loadConfig() {
+  if (config) return config;
+  
   try {
-    const response = await fetch(`${API_BASE}${url}`, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-      }
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || data.message || 'API request failed');
-    }
-
-    return data;
+    const response = await fetch('/config.json');
+    config = await response.json();
+    return config;
   } catch (error) {
-    console.error('API Error:', error);
-    throw error;
+    console.error('Failed to load config:', error);
+    throw new Error('Configuration not available');
   }
+}
+
+function getHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'Origin': window.location.origin
+  };
+}
+
+async function handleResponse(response) {
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+    throw new Error(error.error || `HTTP ${response.status}`);
+  }
+  return response.json();
 }
 
 /**
@@ -49,6 +43,7 @@ export const storageAPI = {
    * Get all storage units with optional filters
    */
   async getAll(filters = {}) {
+    const cfg = await loadConfig();
     const params = new URLSearchParams();
     
     Object.keys(filters).forEach(key => {
@@ -58,102 +53,139 @@ export const storageAPI = {
     });
 
     const queryString = params.toString();
-    const url = queryString ? `${STORAGE_CONFIG.API.STORAGE}?${queryString}` : STORAGE_CONFIG.API.STORAGE;
+    const url = queryString 
+      ? `${cfg.API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE}?${queryString}` 
+      : `${cfg.API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE}`;
     
-    const response = await apiFetch(url);
-    return response.storage_units || [];
+    const response = await fetch(url, { headers: getHeaders() });
+    const data = await handleResponse(response);
+    return data.storage_units || [];
   },
 
   /**
    * Get storage unit by ID
    */
   async getById(id) {
-    const response = await apiFetch(STORAGE_CONFIG.API.STORAGE_BY_ID(id));
-    return response.storage_unit;
+    const cfg = await loadConfig();
+    const response = await fetch(
+      `${cfg.API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_BY_ID(id)}`,
+      { headers: getHeaders() }
+    );
+    const data = await handleResponse(response);
+    return data.storage_unit;
   },
 
   /**
    * Create new tote
    */
   async createTote(data) {
-    const response = await apiFetch(STORAGE_CONFIG.API.STORAGE_TOTES, {
+    const cfg = await loadConfig();
+    const response = await fetch(`${cfg.API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_TOTES}`, {
       method: 'POST',
+      headers: getHeaders(),
       body: JSON.stringify(data)
     });
-    return response.storage_unit;
+    const result = await handleResponse(response);
+    return result.storage_unit;
   },
 
   /**
    * Create new self-contained storage unit
    */
   async createSelf(data) {
-    const response = await apiFetch(STORAGE_CONFIG.API.STORAGE_SELF, {
+    const cfg = await loadConfig();
+    const response = await fetch(`${cfg.API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_SELF}`, {
       method: 'POST',
+      headers: getHeaders(),
       body: JSON.stringify(data)
     });
-    return response.storage_unit;
+    const result = await handleResponse(response);
+    return result.storage_unit;
   },
 
   /**
    * Update storage unit metadata
    */
   async update(id, data) {
-    const response = await apiFetch(STORAGE_CONFIG.API.STORAGE_BY_ID(id), {
-      method: 'PUT',
-      body: JSON.stringify(data)
-    });
-    return response.storage_unit;
+    const cfg = await loadConfig();
+    const response = await fetch(
+      `${cfg.API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_BY_ID(id)}`,
+      {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify(data)
+      }
+    );
+    const result = await handleResponse(response);
+    return result.storage_unit;
   },
 
   /**
    * Delete storage unit (must be empty)
    */
   async delete(id) {
-    const response = await apiFetch(STORAGE_CONFIG.API.STORAGE_BY_ID(id), {
-      method: 'DELETE'
-    });
-    return response;
+    const cfg = await loadConfig();
+    const response = await fetch(
+      `${cfg.API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_BY_ID(id)}`,
+      {
+        method: 'DELETE',
+        headers: getHeaders()
+      }
+    );
+    return handleResponse(response);
   },
 
   /**
    * Add items to storage unit
    */
   async addItems(storageId, itemIds, markPacked = false) {
-    const response = await apiFetch(STORAGE_CONFIG.API.STORAGE_CONTENTS(storageId), {
-      method: 'POST',
-      body: JSON.stringify({
-        item_ids: itemIds,
-        mark_packed: markPacked
-      })
-    });
-    return response;
+    const cfg = await loadConfig();
+    const response = await fetch(
+      `${cfg.API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_CONTENTS(storageId)}`,
+      {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({
+          item_ids: itemIds,
+          mark_packed: markPacked
+        })
+      }
+    );
+    return handleResponse(response);
   },
 
   /**
    * Remove items from storage unit
    */
   async removeItems(storageId, itemIds) {
-    const response = await apiFetch(STORAGE_CONFIG.API.STORAGE_CONTENTS(storageId), {
-      method: 'DELETE',
-      body: JSON.stringify({
-        item_ids: itemIds
-      })
-    });
-    return response;
+    const cfg = await loadConfig();
+    const response = await fetch(
+      `${cfg.API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_CONTENTS(storageId)}`,
+      {
+        method: 'DELETE',
+        headers: getHeaders(),
+        body: JSON.stringify({
+          item_ids: itemIds
+        })
+      }
+    );
+    return handleResponse(response);
   },
 
   /**
    * Pack single-packed items (creates self-contained storage units)
    */
   async packSingleItems(itemIds, location) {
-    const response = await apiFetch('/storage/pack-single', {
+    const cfg = await loadConfig();
+    const response = await fetch(`${cfg.API_ENDPOINT}/storage/pack-single`, {
       method: 'POST',
+      headers: getHeaders(),
       body: JSON.stringify({
         item_ids: itemIds,
         location: location
       })
     });
-    return response;
+    return handleResponse(response);
   },
 
   /**
@@ -164,12 +196,15 @@ export const storageAPI = {
    * @returns {Promise<Object>} { photo_id, photo_url, thumb_cloudfront_url }
    */
   async uploadStoragePhoto(file, storageUnitId, season) {
+    const cfg = await loadConfig();
+    
     try {
       console.log('Starting storage photo upload:', { storageUnitId, season, fileName: file.name });
       
       // Step 1: Get presigned URL
-      const presignResponse = await apiFetch(STORAGE_CONFIG.API.IMAGES_PRESIGN, {
+      const presignResponse = await fetch(`${cfg.API_ENDPOINT}${STORAGE_CONFIG.API.IMAGES_PRESIGN}`, {
         method: 'POST',
+        headers: getHeaders(),
         body: JSON.stringify({
           context: 'storage',
           photo_type: 'storage',
@@ -182,14 +217,15 @@ export const storageAPI = {
         })
       });
       
-      console.log('Presign response:', presignResponse);
+      const presignData = await handleResponse(presignResponse);
+      console.log('Presign response:', presignData);
       
       // Response contains uploads array
-      if (!presignResponse.uploads || presignResponse.uploads.length === 0) {
+      if (!presignData.uploads || presignData.uploads.length === 0) {
         throw new Error('No presigned URLs returned');
       }
       
-      const upload = presignResponse.uploads[0];
+      const upload = presignData.uploads[0];
       const { presigned_url, photo_id, cloudfront_url } = upload;
 
       // Step 2: Upload to S3
@@ -210,8 +246,9 @@ export const storageAPI = {
 
       // Step 3: Confirm upload (triggers thumbnail generation)
       console.log('Confirming upload...');
-      const confirmResponse = await apiFetch('/admin/images/confirm', {
+      const confirmResponse = await fetch(`${cfg.API_ENDPOINT}/admin/images/confirm`, {
         method: 'POST',
+        headers: getHeaders(),
         body: JSON.stringify({
           context: 'storage',
           photo_type: 'storage',
@@ -234,10 +271,11 @@ export const storageAPI = {
         })
       });
       
-      console.log('Confirm response:', confirmResponse);
+      const confirmData = await handleResponse(confirmResponse);
+      console.log('Confirm response:', confirmData);
 
       const result = {
-        photo_id: confirmResponse.photo_ids ? confirmResponse.photo_ids[0] : null,
+        photo_id: confirmData.photo_ids ? confirmData.photo_ids[0] : null,
         photo_url: cloudfront_url,
         thumb_cloudfront_url: upload.thumb_cloudfront_url
       };
@@ -260,6 +298,7 @@ export const itemsAPI = {
    * Get all items with optional filters
    */
   async getAll(filters = {}) {
+    const cfg = await loadConfig();
     const params = new URLSearchParams();
     
     Object.keys(filters).forEach(key => {
@@ -269,10 +308,13 @@ export const itemsAPI = {
     });
 
     const queryString = params.toString();
-    const url = queryString ? `${STORAGE_CONFIG.API.ITEMS}?${queryString}` : STORAGE_CONFIG.API.ITEMS;
+    const url = queryString 
+      ? `${cfg.API_ENDPOINT}${STORAGE_CONFIG.API.ITEMS}?${queryString}` 
+      : `${cfg.API_ENDPOINT}${STORAGE_CONFIG.API.ITEMS}`;
     
-    const response = await apiFetch(url);
-    return response.items || [];
+    const response = await fetch(url, { headers: getHeaders() });
+    const data = await handleResponse(response);
+    return data.items || [];
   },
 
   /**
@@ -290,22 +332,29 @@ export const itemsAPI = {
    * Get item by ID
    */
   async getById(id) {
-    const response = await apiFetch(STORAGE_CONFIG.API.ITEMS_BY_ID(id));
-    return response.item;
+    const cfg = await loadConfig();
+    const response = await fetch(
+      `${cfg.API_ENDPOINT}${STORAGE_CONFIG.API.ITEMS_BY_ID(id)}`,
+      { headers: getHeaders() }
+    );
+    const data = await handleResponse(response);
+    return data.item;
   },
 
   /**
    * Bulk store items in a location
    */
   async bulkStore(itemIds, location) {
-    const response = await apiFetch('/admin/items/bulk', {
+    const cfg = await loadConfig();
+    const response = await fetch(`${cfg.API_ENDPOINT}/admin/items/bulk`, {
       method: 'PATCH',
+      headers: getHeaders(),
       body: JSON.stringify({
         item_ids: itemIds,
         location: location
       })
     });
-    return response;
+    return handleResponse(response);
   }
 };
 
@@ -319,9 +368,14 @@ export const photosAPI = {
   async getById(photoId) {
     if (!photoId) return null;
     
+    const cfg = await loadConfig();
+    
     try {
-      const response = await apiFetch(`/admin/images/${photoId}`);
-      return response;
+      const response = await fetch(
+        `${cfg.API_ENDPOINT}/admin/images/${photoId}`,
+        { headers: getHeaders() }
+      );
+      return handleResponse(response);
     } catch (error) {
       console.error(`Failed to fetch photo ${photoId}:`, error);
       return null;
@@ -338,7 +392,13 @@ export const photosAPI = {
     const validIds = photoIds.filter(id => id);
     
     // Fetch all photos in parallel
-    const photoPromises = validIds.map(id => this.getById(id));
+    const photoPromises = validIds.map(id => 
+      this.getById(id).catch(err => {
+        console.warn(`Failed to fetch photo ${id}:`, err);
+        return null;
+      })
+    );
+    
     const photos = await Promise.all(photoPromises);
     
     // Return as a map for easy lookup: { photo_id: photo_data }
