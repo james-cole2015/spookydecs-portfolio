@@ -60,6 +60,6 @@ maintenance-records/
 backend/
 └── maintenance_schedule_handler.py    # NEW - Template CRUD Lambda
 └── applyTemplatesToItems.py           # NEW - Template CRUD Lambda
-└── auto-apply-templates.py            # Applies default templates to items with matching class types
-└── sync_maintenance_to_items.py       # Adds record_ids to maintenance.generation_ids
+└── auto-apply-templates.py            # Applies default templates to items with matching class types; note that there is one for dev and one for prod
+└── sync_maintenance_to_items.py       # Adds record_ids to maintenance.generation_ids; note that there is one for dev and one for prod. 
 └── retirement_cleanup.py              # changes item.status to Retired
