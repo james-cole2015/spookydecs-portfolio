@@ -150,20 +150,6 @@ export function handleRetire() {
   });
 }
 
-export async function handleFlagForRepair() {
-  if (!currentItem) return;
-  
-  try {
-    const maintenanceUrl = await getMaintenanceUrl();
-    // FIX: Use encodeURIComponent to properly encode the item_id
-    const encodedItemId = encodeURIComponent(currentItem.id);
-    window.location.href = `${maintenanceUrl}/create?item_id=${encodedItemId}`;
-  } catch (error) {
-    console.error('Failed to navigate to maintenance subdomain:', error);
-    toast.error('Navigation Failed', 'Unable to access maintenance subdomain. Please check configuration.');
-  }
-}
-
 export function handleDelete() {
   if (!currentItem) return;
   
