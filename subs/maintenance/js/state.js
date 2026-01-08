@@ -234,9 +234,11 @@ class AppState {
     const { filters, activeTab } = this.state;
     
     // Apply tab filter
-    if (activeTab !== 'all' && activeTab !== 'items') {
-      filtered = filtered.filter(r => r.record_type === activeTab.replace('s', ''));
-    }
+if (activeTab !== 'all' && activeTab !== 'items') {
+  // Remove trailing 's' to match record_type values
+  const recordType = activeTab.endsWith('s') ? activeTab.slice(0, -1) : activeTab;
+  filtered = filtered.filter(r => r.record_type === recordType);
+}
     
     // Apply season filter
     if (filters.season.length > 0) {
