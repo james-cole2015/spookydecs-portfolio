@@ -293,10 +293,10 @@ export class SchedulesTableRenderers {
         <div class="mobile-schedule-card-badges">
           <span class="class-type-badge">${schedule.class_type}</span>
           ${schedule.is_default 
-            ? '<span class="badge-default">✓ Default</span>' 
+            ? '<span class="badge-default">Default</span>' 
             : '<span class="badge-custom">Custom</span>'}
           <span class="enabled-badge ${schedule.enabled ? 'enabled' : 'disabled'}">
-            ${schedule.enabled ? '✓ Enabled' : '✗ Disabled'}
+            ${schedule.enabled ? 'Enabled' : 'Disabled'}
           </span>
         </div>
         
@@ -348,12 +348,12 @@ export class SchedulesTableRenderers {
         <td>${formatScheduleFrequency(schedule.frequency, schedule.season)}</td>
         <td>
           ${schedule.is_default 
-            ? '<span class="badge-default">✓ Default</span>' 
+            ? '<span class="badge-default">Default</span>' 
             : '<span class="badge-custom">Custom</span>'}
         </td>
         <td>
           <span class="enabled-badge ${schedule.enabled ? 'enabled' : 'disabled'}">
-            ${schedule.enabled ? '✓ Yes' : '✗ No'}
+            ${schedule.enabled ? 'Yes' : 'No'}
           </span>
         </td>
         <td>
