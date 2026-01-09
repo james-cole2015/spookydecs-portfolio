@@ -5,7 +5,8 @@ import { appState } from '../state.js';
 import { navigateTo } from '../router.js';
 import { Toast } from '../utils/toast.js';
 import {
-  getTaskTypeOptions,
+  getRecordTypeOptions,
+  getCategoryOptions,
   getFrequencyOptions,
   getSeasonOptions,
   validateScheduleData,
@@ -117,21 +118,38 @@ export class ScheduleFormView {
   }
   
   renderTaskDetails(schedule) {
+    // Determine current values - support both old and new structure
+    const currentRecordType = schedule.record_type || schedule.task_type || '';
+    const currentCategory = schedule.category || 'Uncategorized';
+    
     return `
       <div class="form-section">
         <h3>Task Details</h3>
         
         <div class="form-row">
           <div class="form-group">
-            <label for="task_type">Task Type <span class="required">*</span></label>
-            <select id="task_type" name="task_type" class="form-input" required>
-              <option value="">Select task type...</option>
-              ${getTaskTypeOptions().map(opt => 
-                `<option value="${opt.value}" ${schedule.task_type === opt.value ? 'selected' : ''}>${opt.label}</option>`
+            <label for="record_type">Record Type <span class="required">*</span></label>
+            <select id="record_type" name="record_type" class="form-input" required>
+              <option value="">Select record type...</option>
+              ${getRecordTypeOptions().map(opt => 
+                `<option value="${opt.value}" ${currentRecordType === opt.value ? 'selected' : ''}>${opt.label}</option>`
               ).join('')}
             </select>
           </div>
           
+          <div class="form-group" id="category-group" style="${currentRecordType ? '' : 'display: none;'}">
+            <label for="category">Category <span class="required">*</span></label>
+            <select id="category" name="category" class="form-input" ${currentRecordType ? 'required' : ''}>
+              <option value="">Select category...</option>
+              ${this.renderCategoryOptions(currentRecordType, currentCategory)}
+            </select>
+            ${currentCategory === 'Uncategorized' && this.isEditMode ? 
+              '<small class="form-help" style="color: #d97706;">⚠️ Please select a valid category to update this template.</small>' : 
+              ''}
+          </div>
+        </div>
+        
+        <div class="form-row">
           <div class="form-group">
             <label for="enabled">Status <span class="required">*</span></label>
             <select id="enabled" name="enabled" class="form-input" required>
@@ -155,6 +173,15 @@ export class ScheduleFormView {
         </div>
       </div>
     `;
+  }
+  
+  renderCategoryOptions(recordType, currentCategory) {
+    if (!recordType) return '';
+    
+    const options = getCategoryOptions(recordType);
+    return options.map(opt => 
+      `<option value="${opt.value}" ${currentCategory === opt.value ? 'selected' : ''}>${opt.label}</option>`
+    ).join('');
   }
   
   renderFrequencySection(schedule) {
@@ -289,6 +316,34 @@ export class ScheduleFormView {
       e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, '');
     });
     
+    // Record type change - update category dropdown
+    const recordTypeSelect = form.querySelector('#record_type');
+    const categoryGroup = form.querySelector('#category-group');
+    const categorySelect = form.querySelector('#category');
+    
+    recordTypeSelect?.addEventListener('change', (e) => {
+      const recordType = e.target.value;
+      
+      if (recordType) {
+        // Show category dropdown
+        categoryGroup.style.display = '';
+        categorySelect.setAttribute('required', 'required');
+        
+        // Populate category options
+        const options = getCategoryOptions(recordType);
+        categorySelect.innerHTML = '<option value="">Select category...</option>' + 
+          options.map(opt => `<option value="${opt.value}">${opt.label}</option>`).join('');
+        
+      } else {
+        // Hide category dropdown
+        categoryGroup.style.display = 'none';
+        categorySelect.removeAttribute('required');
+        categorySelect.value = '';
+      }
+      
+      this.updatePreview(form);
+    });
+    
     // Frequency change - show/hide season
     const frequencySelect = form.querySelector('#frequency');
     const seasonGroup = form.querySelector('#season-group');
@@ -322,18 +377,18 @@ export class ScheduleFormView {
   updatePreview(form) {
     const formData = new FormData(form);
     const frequency = formData.get('frequency');
-    const taskType = formData.get('task_type');
+    const recordType = formData.get('record_type');
     const season = formData.get('season');
     const classType = formData.get('class_type');
     
-    if (!frequency || !taskType || !classType) return;
+    if (!frequency || !recordType || !classType) return;
     
     try {
       const nextDue = calculateNextDueDate(
         frequency,
         new Date(),
         season,
-        taskType
+        recordType
       );
       
       const previewSection = form.querySelector('#preview-section');
@@ -359,7 +414,8 @@ export class ScheduleFormView {
       
       const data = {
         class_type: formData.get('class_type'),
-        task_type: formData.get('task_type'),
+        record_type: formData.get('record_type'),
+        category: formData.get('category'),
         short_name: formData.get('short_name'),
         title: formData.get('title'),
         description: formData.get('description') || '',

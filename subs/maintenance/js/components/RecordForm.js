@@ -8,6 +8,7 @@ import { ItemSelector } from './form/ItemSelector.js';
 import { MaterialsList } from './form/MaterialsList.js';
 import { ExistingPhotos } from './form/ExistingPhotos.js';
 import { Toast } from '../utils/toast.js';
+import { getRecordTypeOptions, getCategoryOptions } from '../utils/scheduleHelpers.js';
 
 export class RecordFormView {
   constructor(recordId = null, itemId = null) {
@@ -113,6 +114,10 @@ export class RecordFormView {
   }
   
   renderRecordInfo(record) {
+    // Support both old and new structure
+    const currentRecordType = record.record_type || '';
+    const currentCategory = record.category || 'Uncategorized';
+    
     return `
       <div class="form-section">
         <h3>Record Information</h3>
@@ -122,12 +127,25 @@ export class RecordFormView {
             <label for="record_type">Record Type <span class="required">*</span></label>
             <select id="record_type" name="record_type" class="form-input" required>
               <option value="">Select type...</option>
-              <option value="repair" ${record.record_type === 'repair' ? 'selected' : ''}>Repair</option>
-              <option value="maintenance" ${record.record_type === 'maintenance' ? 'selected' : ''}>Maintenance</option>
-              <option value="inspection" ${record.record_type === 'inspection' ? 'selected' : ''}>Inspection</option>
+              ${getRecordTypeOptions().map(opt => 
+                `<option value="${opt.value}" ${currentRecordType === opt.value ? 'selected' : ''}>${opt.label}</option>`
+              ).join('')}
             </select>
           </div>
           
+          <div class="form-group" id="category-group" style="${currentRecordType ? '' : 'display: none;'}">
+            <label for="category">Category <span class="required">*</span></label>
+            <select id="category" name="category" class="form-input" ${currentRecordType ? 'required' : ''}>
+              <option value="">Select category...</option>
+              ${this.renderCategoryOptions(currentRecordType, currentCategory)}
+            </select>
+            ${currentCategory === 'Uncategorized' && this.isEditMode ? 
+              '<small class="form-help" style="color: #d97706;">⚠️ Please select a valid category to update this record.</small>' : 
+              ''}
+          </div>
+        </div>
+        
+        <div class="form-row">
           <div class="form-group">
             <label for="status">Status <span class="required">*</span></label>
             <select id="status" name="status" class="form-input" required>
@@ -167,6 +185,15 @@ export class RecordFormView {
         </div>
       </div>
     `;
+  }
+  
+  renderCategoryOptions(recordType, currentCategory) {
+    if (!recordType) return '';
+    
+    const options = getCategoryOptions(recordType);
+    return options.map(opt => 
+      `<option value="${opt.value}" ${currentCategory === opt.value ? 'selected' : ''}>${opt.label}</option>`
+    ).join('');
   }
   
   renderScheduling(record) {
@@ -248,15 +275,35 @@ export class RecordFormView {
       this.handleSubmit(form);
     });
     
-    // Criticality visibility and warning
+    // Record type change - update category dropdown and criticality visibility
     const recordTypeSelect = form.querySelector('#record_type');
+    const categoryGroup = form.querySelector('#category-group');
+    const categorySelect = form.querySelector('#category');
     const criticalityGroup = form.querySelector('#criticality-group');
     const criticalitySelect = form.querySelector('#criticality');
-    const criticalWarning = form.querySelector('#critical-warning');
     
-    if (recordTypeSelect && criticalityGroup) {
+    if (recordTypeSelect && categoryGroup && categorySelect) {
       recordTypeSelect.addEventListener('change', (e) => {
-        if (e.target.value === 'repair') {
+        const recordType = e.target.value;
+        
+        if (recordType) {
+          // Show category dropdown
+          categoryGroup.style.display = '';
+          categorySelect.setAttribute('required', 'required');
+          
+          // Populate category options
+          const options = getCategoryOptions(recordType);
+          categorySelect.innerHTML = '<option value="">Select category...</option>' + 
+            options.map(opt => `<option value="${opt.value}">${opt.label}</option>`).join('');
+        } else {
+          // Hide category dropdown
+          categoryGroup.style.display = 'none';
+          categorySelect.removeAttribute('required');
+          categorySelect.value = '';
+        }
+        
+        // Show/hide criticality for repairs
+        if (recordType === 'repair') {
           criticalityGroup.style.display = '';
           criticalitySelect.setAttribute('required', 'required');
         } else {
@@ -267,6 +314,7 @@ export class RecordFormView {
     }
     
     // Show warning when Critical is selected
+    const criticalWarning = form.querySelector('#critical-warning');
     if (criticalitySelect && criticalWarning) {
       criticalitySelect.addEventListener('change', (e) => {
         if (e.target.value === 'critical') {
@@ -363,6 +411,7 @@ export class RecordFormView {
       const data = {
         item_id: formData.get('item_id'),
         record_type: formData.get('record_type'),
+        category: formData.get('category'),
         status: formData.get('status'),
         title: formData.get('title'),
         description: formData.get('description') || '',
@@ -390,8 +439,12 @@ export class RecordFormView {
       }
       
       // Validate required fields
-      if (!data.item_id || !data.record_type || !data.status || !data.title || !data.performed_by) {
+      if (!data.item_id || !data.record_type || !data.category || !data.status || !data.title || !data.performed_by) {
         throw new Error('Please fill in all required fields');
+      }
+      
+      if (data.category === 'Uncategorized') {
+        throw new Error('Please select a valid category');
       }
       
       if (data.record_type === 'repair' && !data.criticality) {

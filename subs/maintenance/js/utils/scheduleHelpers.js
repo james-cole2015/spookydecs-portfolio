@@ -197,43 +197,80 @@ export function formatFrequency(frequency, season = null) {
 }
 
 /**
- * Get label for task type
+ * Get label for task type (DEPRECATED - use getCategoryLabel instead)
  * @param {string} taskType - Task type value
  * @returns {string} Human-readable label
  */
 export function getTaskTypeLabel(taskType) {
+  // Maintain backwards compatibility
+  return getCategoryLabel(taskType);
+}
+
+/**
+ * Get label for category
+ * @param {string} category - Category value
+ * @returns {string} Human-readable label
+ */
+export function getCategoryLabel(category) {
   const labelMap = {
-    'inspection': 'Inspection',
+    // Inspection categories
+    'exterior_inspection': 'Exterior Inspection',
+    'mechanical_check': 'Mechanical Check',
+    'paint_inspection': 'Paint Inspection',
+    
+    // Maintenance categories
     'cleaning': 'Cleaning',
     'repaint': 'Repaint',
     'lubrication': 'Lubrication',
+    
+    // Repair categories
+    'replacement': 'Replacement',
+    'repair': 'Repair',
+    
+    // Legacy/backwards compatibility
+    'inspection': 'Inspection',
     'battery_replacement': 'Battery Replacement',
     'fabric_check': 'Fabric Check',
     'electrical_check': 'Electrical Check',
     'custom': 'Custom'
   };
   
-  return labelMap[taskType] || taskType;
+  return labelMap[category] || category;
 }
 
 /**
- * Get icon/emoji for task type
- * @param {string} taskType - Task type value
+ * Get icon/emoji for task type or category
+ * @param {string} taskTypeOrCategory - Task type or category value
  * @returns {string} Icon/emoji
  */
-export function getTaskTypeIcon(taskType) {
+export function getTaskTypeIcon(taskTypeOrCategory) {
   const iconMap = {
+    // Record types
     'inspection': '🔍',
+    'maintenance': '🔧',
+    'repair': '🔨',
+    
+    // Inspection categories
+    'exterior_inspection': '🔍',
+    'mechanical_check': '⚙️',
+    'paint_inspection': '🎨',
+    
+    // Maintenance categories
     'cleaning': '🧹',
     'repaint': '🎨',
     'lubrication': '🛢️',
+    
+    // Repair categories
+    'replacement': '🔄',
+    
+    // Legacy
     'battery_replacement': '🔋',
     'fabric_check': '🧵',
     'electrical_check': '⚡',
     'custom': '🔧'
   };
   
-  return iconMap[taskType] || '📋';
+  return iconMap[taskTypeOrCategory] || '📋';
 }
 
 /**
@@ -246,7 +283,8 @@ export function validateScheduleData(data) {
   
   // Required fields for templates
   if (!data.class_type) errors.push('Class type is required');
-  if (!data.task_type) errors.push('Task type is required');
+  if (!data.record_type) errors.push('Record type is required');
+  if (!data.category || data.category === 'Uncategorized') errors.push('Category is required');
   if (!data.short_name) errors.push('Short name is required');
   if (!data.title) errors.push('Title is required');
   if (!data.frequency) errors.push('Frequency is required');
@@ -285,7 +323,46 @@ export function validateScheduleData(data) {
 }
 
 /**
- * Get task type options for dropdown
+ * Get record type options for dropdown
+ * @returns {Array} Array of {value, label} objects
+ */
+export function getRecordTypeOptions() {
+  return [
+    { value: 'inspection', label: 'Inspection' },
+    { value: 'maintenance', label: 'Maintenance' },
+    { value: 'repair', label: 'Repair' }
+  ];
+}
+
+/**
+ * Get category options for a given record type
+ * @param {string} recordType - 'inspection', 'maintenance', or 'repair'
+ * @returns {Array} Array of {value, label} objects
+ */
+export function getCategoryOptions(recordType) {
+  const categoryMap = {
+    'inspection': [
+      { value: 'exterior_inspection', label: 'Exterior Inspection' },
+      { value: 'mechanical_check', label: 'Mechanical Check' },
+      { value: 'paint_inspection', label: 'Paint Inspection' }
+    ],
+    'maintenance': [
+      { value: 'cleaning', label: 'Cleaning' },
+      { value: 'repaint', label: 'Repaint' },
+      { value: 'lubrication', label: 'Lubrication' }
+    ],
+    'repair': [
+      { value: 'replacement', label: 'Replacement' },
+      { value: 'repair', label: 'Repair' }
+    ]
+  };
+  
+  return categoryMap[recordType] || [];
+}
+
+/**
+ * Get task type options for dropdown (DEPRECATED - use getRecordTypeOptions and getCategoryOptions)
+ * Maintained for backwards compatibility
  * @returns {Array} Array of {value, label} objects
  */
 export function getTaskTypeOptions() {
