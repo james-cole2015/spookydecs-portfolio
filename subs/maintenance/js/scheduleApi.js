@@ -4,8 +4,8 @@ import { loadConfig } from './api.js';
 
 function getHeaders() {
   return {
-    'Content-Type': 'application/json',
-    'Origin': window.location.origin
+    'Content-Type': 'application/json'
+    // NOTE: Origin header is automatically set by browser - don't set it manually!
   };
 }
 
