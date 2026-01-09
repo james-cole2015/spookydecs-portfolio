@@ -4,7 +4,7 @@ import {
   formatTaskType,
   formatScheduleFrequency 
 } from '../utils/formatters.js';
-import { getTaskTypeOptions } from '../utils/scheduleHelpers.js';
+import { getRecordTypeOptions, getCategoryOptions, getCategoryLabel } from '../utils/scheduleHelpers.js';
 import { isMobile } from '../utils/responsive.js';
 
 // Class type options
@@ -17,6 +17,72 @@ const CLASS_TYPES = [
   { value: 'CORD', label: 'Cord' },
   { value: 'PLUG', label: 'Plug' }
 ];
+
+/**
+ * Format record type for display
+ * @param {string} recordType - The record type value
+ * @returns {string} Formatted display string
+ */
+function formatRecordType(recordType) {
+  const map = {
+    'inspection': 'Inspection',
+    'maintenance': 'Maintenance',
+    'repair': 'Repair'
+  };
+  return map[recordType] || recordType || 'Unknown';
+}
+
+/**
+ * Get the record type from a schedule (supports both old and new structure)
+ * @param {Object} schedule - Schedule object
+ * @returns {string} Record type
+ */
+function getScheduleRecordType(schedule) {
+  // New structure: record_type field
+  if (schedule.record_type) {
+    return schedule.record_type;
+  }
+  
+  // Old structure: derive from task_type
+  if (schedule.task_type) {
+    const taskTypeMap = {
+      'inspection': 'inspection',
+      'cleaning': 'maintenance',
+      'repaint': 'maintenance',
+      'lubrication': 'maintenance',
+      'battery_replacement': 'maintenance',
+      'fabric_check': 'inspection',
+      'electrical_check': 'inspection',
+      'mechanical_check': 'inspection',
+      'exterior_inspection': 'inspection',
+      'paint_inspection': 'inspection',
+      'replacement': 'repair',
+      'repair': 'repair',
+      'custom': 'maintenance'
+    };
+    return taskTypeMap[schedule.task_type] || 'maintenance';
+  }
+  
+  return 'maintenance';
+}
+
+/**
+ * Get the category from a schedule
+ * @param {Object} schedule - Schedule object
+ * @returns {string} Category display string
+ */
+function getScheduleCategory(schedule) {
+  if (schedule.category && schedule.category !== 'Uncategorized') {
+    return getCategoryLabel(schedule.category);
+  }
+  
+  // Fallback to task_type label for backwards compatibility
+  if (schedule.task_type) {
+    return getCategoryLabel(schedule.task_type);
+  }
+  
+  return 'Uncategorized';
+}
 
 export class SchedulesTableRenderers {
   static renderFiltersHTML(filters, hasActiveFilters) {
@@ -103,10 +169,10 @@ export class SchedulesTableRenderers {
       </div>
       
       <div class="filter-group">
-        <label>Type</label>
+        <label>Record Type</label>
         <select id="filter-task-type" class="filter-select">
           <option value="all" ${filters.task_type === 'all' ? 'selected' : ''}>All Types</option>
-          ${getTaskTypeOptions().map(opt => 
+          ${getRecordTypeOptions().map(opt => 
             `<option value="${opt.value}" ${filters.task_type === opt.value ? 'selected' : ''}>${opt.label}</option>`
           ).join('')}
         </select>
@@ -168,8 +234,10 @@ export class SchedulesTableRenderers {
                   data-column="schedule_id">Template ID</th>
               <th class="sortable ${sortColumn === 'class_type' ? 'sort-' + sortDirection : ''}" 
                   data-column="class_type">Class Type</th>
-              <th class="sortable ${sortColumn === 'task_type' ? 'sort-' + sortDirection : ''}" 
-                  data-column="task_type">Task Type</th>
+              <th class="sortable ${sortColumn === 'record_type' ? 'sort-' + sortDirection : ''}" 
+                  data-column="record_type">Type</th>
+              <th class="sortable ${sortColumn === 'category' ? 'sort-' + sortDirection : ''}" 
+                  data-column="category">Category</th>
               <th class="sortable ${sortColumn === 'title' ? 'sort-' + sortDirection : ''}" 
                   data-column="title">Title</th>
               <th class="sortable ${sortColumn === 'frequency' ? 'sort-' + sortDirection : ''}" 
@@ -199,13 +267,16 @@ export class SchedulesTableRenderers {
   static renderMobileCard(schedule, expandedRow) {
     const isExpanded = expandedRow === schedule.schedule_id;
     
-    // Get task type icon
+    // Get record type and icon
+    const recordType = getScheduleRecordType(schedule);
     const taskTypeIcons = {
       'inspection': '🔍',
-      'maintenance': '🔨',
-      'repair': '🔧'
+      'maintenance': '🔧',
+      'repair': '🔨'
     };
-    const taskIcon = taskTypeIcons[schedule.task_type] || '📋';
+    const taskIcon = taskTypeIcons[recordType] || '📋';
+    
+    const category = getScheduleCategory(schedule);
     
     return `
       <div class="mobile-schedule-card ${isExpanded ? 'expanded' : ''}" data-schedule-id="${schedule.schedule_id}">
@@ -215,7 +286,7 @@ export class SchedulesTableRenderers {
         </div>
         
         <div class="mobile-schedule-card-meta">
-          <span class="schedule-task-type">${taskIcon} ${formatTaskType(schedule.task_type)}</span>
+          <span class="schedule-task-type">${taskIcon} ${formatRecordType(recordType)} - ${category}</span>
           <span class="schedule-frequency">📅 ${formatScheduleFrequency(schedule.frequency, schedule.season)}</span>
         </div>
         
@@ -263,12 +334,16 @@ export class SchedulesTableRenderers {
     const templateId = schedule.schedule_id.substring(0, 20) + '...';
     const isExpanded = expandedRow === schedule.schedule_id;
     
+    const recordType = getScheduleRecordType(schedule);
+    const category = getScheduleCategory(schedule);
+    
     return `
       <tr class="table-row ${isExpanded ? 'expanded' : ''}" 
           data-schedule-id="${schedule.schedule_id}">
         <td><code class="template-id" title="${schedule.schedule_id}">${templateId}</code></td>
         <td><span class="class-type-badge">${schedule.class_type}</span></td>
-        <td>${formatTaskType(schedule.task_type)}</td>
+        <td>${formatRecordType(recordType)}</td>
+        <td>${category}</td>
         <td class="table-title">${schedule.title}</td>
         <td>${formatScheduleFrequency(schedule.frequency, schedule.season)}</td>
         <td>
@@ -292,7 +367,7 @@ export class SchedulesTableRenderers {
   static renderExpansionDrawerHTML(schedule) {
     return `
       <tr class="expansion-drawer">
-        <td colspan="8">
+        <td colspan="9">
           <div class="expansion-content">
             <button class="expansion-btn view" data-action="view" data-id="${schedule.schedule_id}">
               <span class="expansion-btn-icon">👁️</span>
