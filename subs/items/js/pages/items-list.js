@@ -72,8 +72,22 @@ function renderPage() {
   const filteredItems = getFilteredItems(allItems, currentState);
   itemsTable.render(filteredItems, currentState.tab);
   
+  // Update item count display
+  updateItemCount(filteredItems.length, allItems.length);
+  
   // Save state
   saveTabState(currentState.tab, currentState.filters);
+}
+
+function updateItemCount(filtered, total) {
+  const countContainer = document.getElementById('item-count');
+  if (countContainer) {
+    if (filtered === total) {
+      countContainer.textContent = `Showing ${total} item${total !== 1 ? 's' : ''}`;
+    } else {
+      countContainer.textContent = `Showing ${filtered} of ${total} item${total !== 1 ? 's' : ''}`;
+    }
+  }
 }
 
 function handleTabChange(newTab) {
@@ -103,25 +117,52 @@ function showError(message) {
   }
 }
 
+// Refresh items from API
+export async function refreshItems() {
+  console.log('Refreshing items...');
+  
+  // Show loading state in table
+  itemsTable.showLoading();
+  
+  try {
+    // Fetch fresh data from API with cache busting
+    allItems = await fetchAllItems(true);
+    
+    // Re-render with updated data
+    renderPage();
+    
+    console.log('Items refreshed successfully');
+    
+  } catch (error) {
+    console.error('Failed to refresh items:', error);
+    showError('Failed to refresh items. Please try again.');
+  }
+}
+
 // Action button handlers
 export function handleCreateItem() {
   navigate('/items/create');
 }
 
+export function handleRefreshItems() {
+  refreshItems();
+}
+
 export function handleRetireItem() {
   // TODO: Implement retire functionality
-  // For now, show a message
   alert('Retire functionality will be implemented in item detail view');
 }
 
 export function handleDeleteItem() {
   // TODO: Implement delete functionality
-  // For now, show a message
   alert('Delete functionality will be implemented in item detail view');
 }
 
 export function cleanup() {
   // Cleanup if needed when navigating away
+  if (itemsTable && itemsTable.cleanup) {
+    itemsTable.cleanup();
+  }
   tabBar = null;
   filterBar = null;
   itemsTable = null;

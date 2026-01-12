@@ -118,6 +118,10 @@ function getPageHTML(pageName) {
             <div class="header-content">
               <h1>Inventory Overview</h1>
               <div class="header-actions">
+                <button class="btn-secondary" onclick="itemsListPage.handleRefreshItems()" title="Refresh items list">
+                  <span class="btn-icon-only">🔄</span>
+                  <span class="btn-text">Refresh</span>
+                </button>
                 <button class="btn-primary btn-icon-mobile" onclick="itemsListPage.handleCreateItem()" title="Create Item">
                   <span class="btn-icon-only">+</span>
                   <span class="btn-text">+ Create Item</span>
@@ -127,9 +131,11 @@ function getPageHTML(pageName) {
           </header>
           <main class="main-content">
             <div id="tab-container"></div>
-              <div id="filter-container"></div>
+            <div class="controls-row">
               <div class="item-count-container">
+                <span id="item-count">Loading...</span>
               </div>
+              <div id="filter-container"></div>
             </div>
             <div id="table-container"></div>
           </main>

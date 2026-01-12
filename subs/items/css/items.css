@@ -721,3 +721,27 @@
     text-align: center;
   }
 }
+/* Refresh Button Animation */
+.btn-secondary.refreshing {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.btn-secondary.refreshing .btn-icon-only,
+.btn-secondary.refreshing .btn-text::before {
+  animation: rotate 1s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Make the refresh icon inline-block so it can rotate */
+.btn-secondary .btn-icon-only {
+  display: inline-block;
+}

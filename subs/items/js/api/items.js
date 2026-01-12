@@ -78,17 +78,25 @@ export async function getMaintenanceUrl() {
 
 /**
  * Fetch all items
+ * @param {boolean} bustCache - If true, adds timestamp to prevent caching
  * @returns {Promise<Array>} Array of item objects
  */
-export async function fetchAllItems() {
+export async function fetchAllItems(bustCache = false) {
   try {
     const apiEndpoint = await getApiEndpoint();
     
-    const response = await fetch(`${apiEndpoint}/items`, {
+    // Add cache-busting timestamp if requested
+    const url = bustCache 
+      ? `${apiEndpoint}/items?_t=${Date.now()}`
+      : `${apiEndpoint}/items`;
+    
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
-      }
+      },
+      // Force no-cache when bust cache is requested
+      ...(bustCache && { cache: 'no-cache' })
     });
     
     if (!response.ok) {
@@ -115,17 +123,25 @@ export async function fetchAllItems() {
 /**
  * Fetch a single item by ID
  * @param {string} itemId - Item ID (e.g., "DEC-INF-ZERO-011")
+ * @param {boolean} bustCache - If true, adds timestamp to prevent caching
  * @returns {Promise<Object>} Item object
  */
-export async function fetchItemById(itemId) {
+export async function fetchItemById(itemId, bustCache = false) {
   try {
     const apiEndpoint = await getApiEndpoint();
     
-    const response = await fetch(`${apiEndpoint}/items/${itemId}`, {
+    // Add cache-busting timestamp if requested
+    const url = bustCache
+      ? `${apiEndpoint}/items/${itemId}?_t=${Date.now()}`
+      : `${apiEndpoint}/items/${itemId}`;
+    
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
-      }
+      },
+      // Force no-cache when bust cache is requested
+      ...(bustCache && { cache: 'no-cache' })
     });
     
     if (!response.ok) {
