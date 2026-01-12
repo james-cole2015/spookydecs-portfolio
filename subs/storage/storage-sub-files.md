@@ -10,6 +10,7 @@ storage/
 ├── css/
 │   ├── storage.css                     # Main styles (tabs, filters, table, cards) 
 │   ├── storage-detail.css              # Detail page specific styles
+│   ├── photo-uploader.css              # Detail page specific styles
 │   └── wizard.css                      # Wizard styles (create & pack)
 │
 └── js/
@@ -30,6 +31,7 @@ storage/
     │   ├── FilterBar.js                # Search + filter dropdowns 
     │   ├── StorageTable.js             # Desktop table view 
     │   ├── StorageCards.js             # Mobile card view 
+    │   ├── StoragePhotoUploader.js     # Photo Uploader
     │   ├── StorageDetailView.js        # Detail page layout
     │   ├── ContentsPanel.js            # Contents list with thumbnails
     │   ├── CreateWizard.js             # 3-step creation wizard
