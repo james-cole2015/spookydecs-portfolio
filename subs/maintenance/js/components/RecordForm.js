@@ -428,11 +428,17 @@ export class RecordFormView {
       const dateScheduled = formData.get('date_scheduled');
       if (dateScheduled) {
         data.date_scheduled = new Date(dateScheduled).toISOString();
+      } else {
+        // Explicitly set to null to remove from DynamoDB if empty
+        data.date_scheduled = null;
       }
       
       const datePerformed = formData.get('date_performed');
       if (datePerformed) {
         data.date_performed = new Date(datePerformed).toISOString();
+      } else {
+        // Explicitly set to null to remove from DynamoDB if empty
+        data.date_performed = null;
       }
       
       const criticality = formData.get('criticality');
