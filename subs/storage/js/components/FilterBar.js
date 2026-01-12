@@ -1,6 +1,6 @@
 /**
  * FilterBar Component
- * Search box and filter dropdowns for storage list
+ * Search box and collapsible filter dropdowns for storage list
  */
 
 import { getFiltersFromUrl, saveFiltersToUrl } from '../utils/state.js';
@@ -13,6 +13,7 @@ export class FilterBar {
     this.showFilters = options.showFilters || ['location', 'class_type', 'packed', 'size'];
     this.container = null;
     this.debounceTimer = null;
+    this.filtersExpanded = false; // Track collapse state
   }
 
   /**
@@ -24,9 +25,13 @@ export class FilterBar {
     const filterBar = document.createElement('div');
     filterBar.className = 'filter-bar';
     
+    // Top row with search and toggle button
+    const topRow = document.createElement('div');
+    topRow.className = 'filter-bar-top';
+    
     // Search box
     const searchGroup = document.createElement('div');
-    searchGroup.className = 'filter-group filter-search';
+    searchGroup.className = 'filter-search';
     searchGroup.innerHTML = `
       <input 
         type="text" 
@@ -36,11 +41,26 @@ export class FilterBar {
         id="storage-search"
       >
     `;
-    filterBar.appendChild(searchGroup);
+    topRow.appendChild(searchGroup);
     
-    // Filter dropdowns container
+    // Filter toggle button with active count
+    const activeFilterCount = this.getActiveFilterCount();
+    const toggleBtn = document.createElement('button');
+    toggleBtn.className = `btn-toggle-filters ${this.filtersExpanded ? 'expanded' : ''}`;
+    toggleBtn.innerHTML = `
+      <span>Filters</span>
+      ${activeFilterCount > 0 ? `<span class="filter-count">${activeFilterCount}</span>` : ''}
+      <span class="toggle-icon">▼</span>
+    `;
+    toggleBtn.addEventListener('click', () => this.toggleFilters());
+    topRow.appendChild(toggleBtn);
+    
+    filterBar.appendChild(topRow);
+    
+    // Filter dropdowns container (collapsible)
     const filtersContainer = document.createElement('div');
-    filtersContainer.className = 'filters-container';
+    filtersContainer.className = `filters-container ${this.filtersExpanded ? 'expanded' : ''}`;
+    filtersContainer.id = 'filters-container';
     
     // Add filter dropdowns
     this.showFilters.forEach(filterKey => {
@@ -48,22 +68,59 @@ export class FilterBar {
       filtersContainer.appendChild(filterGroup);
     });
     
-    filterBar.appendChild(filtersContainer);
-    
     // Clear filters button (conditionally rendered)
     if (this.hasActiveFilters()) {
       const clearBtn = document.createElement('button');
       clearBtn.className = 'btn btn-clear-filters';
       clearBtn.textContent = 'Clear Filters';
       clearBtn.addEventListener('click', () => this.clearFilters());
-      filterBar.appendChild(clearBtn);
+      filtersContainer.appendChild(clearBtn);
     }
+    
+    filterBar.appendChild(filtersContainer);
     
     this.container.innerHTML = '';
     this.container.appendChild(filterBar);
     
     // Attach event listeners
     this.attachEventListeners();
+  }
+
+  /**
+   * Toggle filters visibility
+   */
+  toggleFilters() {
+    this.filtersExpanded = !this.filtersExpanded;
+    
+    const filtersContainer = this.container.querySelector('#filters-container');
+    const toggleBtn = this.container.querySelector('.btn-toggle-filters');
+    
+    if (this.filtersExpanded) {
+      filtersContainer.classList.add('expanded');
+      toggleBtn.classList.add('expanded');
+    } else {
+      filtersContainer.classList.remove('expanded');
+      toggleBtn.classList.remove('expanded');
+    }
+  }
+
+  /**
+   * Get count of active filters (excluding 'All' and empty search)
+   */
+  getActiveFilterCount() {
+    let count = 0;
+    
+    if (this.filters.search && this.filters.search !== '') {
+      count++;
+    }
+    
+    this.showFilters.forEach(filterKey => {
+      if (this.filters[filterKey] && this.filters[filterKey] !== 'All') {
+        count++;
+      }
+    });
+    
+    return count;
   }
 
   /**
@@ -149,7 +206,7 @@ export class FilterBar {
     this.filters[filterKey] = value;
     saveFiltersToUrl(this.filters);
     
-    // Re-render to show/hide clear button
+    // Re-render to update active filter count and clear button
     this.render(this.container);
     
     this.onChange(this.filters);

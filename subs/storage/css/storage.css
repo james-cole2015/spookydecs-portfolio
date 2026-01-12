@@ -137,20 +137,29 @@
 }
 
 /* ============================================
-   FILTER BAR
+   FILTER BAR - UPDATED WITH COLLAPSIBLE FILTERS
    ============================================ */
 .filter-bar {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
   margin-bottom: var(--spacing-lg);
-  padding: var(--spacing-md);
   background: var(--bg-secondary);
   border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+/* Top row with search and toggle */
+.filter-bar-top {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
 }
 
 .filter-search {
-  width: 100%;
+  flex: 1;
+  min-width: 0; /* Allow flex item to shrink below content size */
 }
 
 .filter-input {
@@ -159,13 +168,75 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   font-size: 14px;
+  box-sizing: border-box; /* Include padding in width calculation */
 }
 
+.filter-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Filter toggle button */
+.btn-toggle-filters {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: 10px 16px;
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-color);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-toggle-filters:hover {
+  background: var(--bg-secondary);
+  border-color: var(--primary-color);
+}
+
+.btn-toggle-filters:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.btn-toggle-filters .toggle-icon {
+  transition: transform 0.3s;
+  font-size: 12px;
+}
+
+.btn-toggle-filters.expanded .toggle-icon {
+  transform: rotate(180deg);
+}
+
+/* Filters container - collapsible */
 .filters-container {
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-sm);
-  width: 100%;
+  max-height: 0;
+  padding: 0;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: max-height 0.4s ease-in-out, 
+              padding 0.4s ease-in-out,
+              opacity 0.3s ease-in-out,
+              transform 0.3s ease-in-out;
+}
+
+.filters-container.expanded {
+  max-height: 300px;
+  padding: var(--spacing-md);
+  padding-top: 0;
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .filter-group {
@@ -191,20 +262,22 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-pill); /* Pill shaped */
   font-size: 14px;
-  background: #f3f4f6; /* Light grey */
+  background: white;
   cursor: pointer;
   transition: all 0.2s;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .filter-select:hover {
-  background: #e5e7eb;
+  background: #f9fafb;
+  border-color: var(--primary-color);
 }
 
 .filter-select:focus {
   outline: none;
   border-color: var(--primary-color);
-  background: white;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .btn-clear-filters {
@@ -218,11 +291,28 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
 }
 
 .btn-clear-filters:hover {
   background: #fecaca;
   border-color: #fca5a5;
+}
+
+/* Active filter indicator on toggle button */
+.btn-toggle-filters .filter-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  background: var(--primary-color);
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 10px;
+  margin-left: 4px;
 }
 
 /* ============================================
@@ -757,21 +847,17 @@
     display: none;
   }
   
-  /* Filter bar - horizontal layout */
-  .filter-bar {
-    flex-direction: row;
-    align-items: center;
-    flex-wrap: wrap;
+  /* Filter bar - horizontal layout for top row */
+  .filter-bar-top {
+    padding: var(--spacing-md);
   }
   
   .filter-search {
-    flex: 0 0 300px;
-    margin-right: var(--spacing-md);
+    flex: 0 1 400px; /* Fixed max-width, can shrink if needed */
+    max-width: 400px;
   }
   
   .filters-container {
-    flex: 1;
-    display: flex;
     flex-wrap: wrap;
     justify-content: flex-start;
   }
@@ -799,7 +885,8 @@
 
 @media (min-width: 1024px) {
   .filter-search {
-    flex: 0 0 350px;
+    flex: 0 1 450px;
+    max-width: 450px;
   }
 }
 
