@@ -163,18 +163,28 @@ renderDetailsTab() {
           'scheduling',
           'Scheduling',
           `<div class="horizontal-detail-row">
-            <div class="detail-item">
-              <span class="detail-label">Date Performed</span>
-              <span class="detail-value">${formatDate(this.record.date_performed)}</span>
-            </div>
+            ${this.record.date_scheduled ? `
+              <div class="detail-item">
+                <span class="detail-label">Scheduled Date</span>
+                <span class="detail-value">${formatDate(this.record.date_scheduled)}</span>
+              </div>
+            ` : ''}
+            ${this.record.date_performed ? `
+              <div class="detail-item">
+                <span class="detail-label">Date Performed</span>
+                <span class="detail-value">${formatDate(this.record.date_performed)}</span>
+              </div>
+            ` : ''}
             <div class="detail-item">
               <span class="detail-label">Performed By</span>
               <span class="detail-value">${this.record.performed_by}</span>
             </div>
-            <div class="detail-item">
-              <span class="detail-label">Est. Completion</span>
-              <span class="detail-value">${this.record.estimated_completion_date ? formatDate(this.record.estimated_completion_date) : 'N/A'}</span>
-            </div>
+            ${this.record.estimated_completion_date ? `
+              <div class="detail-item">
+                <span class="detail-label">Est. Completion</span>
+                <span class="detail-value">${formatDate(this.record.estimated_completion_date)}</span>
+              </div>
+            ` : ''}
           </div>`
         )}
         
@@ -248,18 +258,28 @@ renderDetailsTab() {
         <div class="detail-section full-width detail-section-border">
           <h3>Scheduling</h3>
           <div class="horizontal-detail-row">
-            <div class="detail-item">
-              <span class="detail-label">Date Performed</span>
-              <span class="detail-value">${formatDate(this.record.date_performed)}</span>
-            </div>
+            ${this.record.date_scheduled ? `
+              <div class="detail-item">
+                <span class="detail-label">Scheduled Date</span>
+                <span class="detail-value">${formatDate(this.record.date_scheduled)}</span>
+              </div>
+            ` : ''}
+            ${this.record.date_performed ? `
+              <div class="detail-item">
+                <span class="detail-label">Date Performed</span>
+                <span class="detail-value">${formatDate(this.record.date_performed)}</span>
+              </div>
+            ` : ''}
             <div class="detail-item">
               <span class="detail-label">Performed By</span>
               <span class="detail-value">${this.record.performed_by}</span>
             </div>
-            <div class="detail-item">
-              <span class="detail-label">Est. Completion</span>
-              <span class="detail-value">${this.record.estimated_completion_date ? formatDate(this.record.estimated_completion_date) : 'N/A'}</span>
-            </div>
+            ${this.record.estimated_completion_date ? `
+              <div class="detail-item">
+                <span class="detail-label">Est. Completion</span>
+                <span class="detail-value">${formatDate(this.record.estimated_completion_date)}</span>
+              </div>
+            ` : ''}
           </div>
         </div>
         

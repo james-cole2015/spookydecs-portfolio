@@ -276,6 +276,9 @@ export class MainTableView {
       ? `<span class="schedule-badge" title="Scheduled task">📅</span>` 
       : '';
     
+    // Show date_scheduled for all records (prioritize it over date_performed for display)
+    const displayDate = record.date_scheduled || record.date_performed || record.created_at;
+    
     return `
       <tr class="table-row ${isExpanded ? 'expanded' : ''}" data-record-id="${record.record_id}" data-item-id="${itemId}">
         <td><code>${recordId}</code></td>
@@ -284,7 +287,7 @@ export class MainTableView {
         <td>${formatRecordTypePill(record.record_type)}</td>
         <td><code>${itemId}</code></td>
         <td>${formatCriticality(record.criticality)}</td>
-        <td>${formatDate(record.date_performed || record.created_at)}</td>
+        <td>${formatDate(displayDate)}</td>
       </tr>
       ${isExpanded ? this.renderExpansionDrawer(record) : ''}
     `;

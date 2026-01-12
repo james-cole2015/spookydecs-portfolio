@@ -202,14 +202,16 @@ export class RecordFormView {
         <h3>Scheduling</h3>
         <div class="form-row">
           <div class="form-group">
-            <label for="scheduled_date">Scheduled/Target Date</label>
-            <input type="date" id="scheduled_date" name="scheduled_date" class="form-input" 
-                   value="${record.scheduled_date ? record.scheduled_date.split('T')[0] : ''}">
+            <label for="date_scheduled">Scheduled Date</label>
+            <input type="date" id="date_scheduled" name="date_scheduled" class="form-input" 
+                   value="${record.date_scheduled ? record.date_scheduled.split('T')[0] : ''}">
+            <small class="form-help">When is this work scheduled to happen?</small>
           </div>
           <div class="form-group">
             <label for="date_performed">Date Performed <span class="required" id="date-performed-required" style="display: none;">*</span></label>
             <input type="date" id="date_performed" name="date_performed" class="form-input" 
                    value="${record.date_performed ? record.date_performed.split('T')[0] : ''}">
+            <small class="form-help">When was this work actually completed?</small>
           </div>
         </div>
         <div class="form-group">
@@ -423,9 +425,9 @@ export class RecordFormView {
       };
       
       // Only add optional fields if they have values (to avoid DynamoDB null issues)
-      const scheduledDate = formData.get('scheduled_date');
-      if (scheduledDate) {
-        data.scheduled_date = new Date(scheduledDate).toISOString();
+      const dateScheduled = formData.get('date_scheduled');
+      if (dateScheduled) {
+        data.date_scheduled = new Date(dateScheduled).toISOString();
       }
       
       const datePerformed = formData.get('date_performed');
