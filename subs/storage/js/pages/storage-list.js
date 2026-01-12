@@ -7,6 +7,7 @@ import { storageAPI } from '../utils/storage-api.js';
 import { formatStorageUnit } from '../utils/storage-config.js';
 import { getActiveTab, setActiveTab, getFiltersFromUrl, saveFiltersToUrl } from '../utils/state.js';
 import { TabBar } from '../components/TabBar.js';
+import { ViewSelector } from '../components/ViewSelector.js';
 import { FilterBar } from '../components/FilterBar.js';
 import { StorageTable } from '../components/StorageTable.js';
 import { StorageCards } from '../components/StorageCards.js';
@@ -25,6 +26,7 @@ let currentState = {
 };
 
 let tabBar;
+let viewSelector;
 let filterBar;
 let storageTable;
 let storageCards;
@@ -58,6 +60,7 @@ export async function renderStorageList() {
         </div>
       </div>
       
+      <div id="view-selector-container"></div>
       <div id="tab-container"></div>
       
       <div class="controls-row">
@@ -86,8 +89,19 @@ export async function renderStorageList() {
   currentState.filters = getFiltersFromUrl();
   
   // Initialize components
+  const tabs = ['All', 'Halloween', 'Christmas', 'Shared'];
+  
+  // TabBar for desktop
   tabBar = new TabBar({
+    tabs: tabs,
     activeTab: currentState.tab,
+    onChange: handleTabChange
+  });
+  
+  // ViewSelector for mobile
+  viewSelector = new ViewSelector({
+    views: tabs,
+    activeView: currentState.tab,
     onChange: handleTabChange
   });
   
@@ -133,8 +147,14 @@ async function loadData() {
  * Render page
  */
 function renderPage() {
-  // Render tabs
+  // Render view selector (mobile) and tabs (desktop)
+  const viewSelectorContainer = document.getElementById('view-selector-container');
   const tabContainer = document.getElementById('tab-container');
+  
+  if (viewSelectorContainer) {
+    viewSelector.render(viewSelectorContainer);
+  }
+  
   if (tabContainer) {
     tabBar.render(tabContainer);
   }
@@ -257,10 +277,15 @@ function filterStorage(storage, state) {
 }
 
 /**
- * Handle tab change
+ * Handle tab/view change
  */
 function handleTabChange(newTab) {
   currentState.tab = newTab.toLowerCase();
+  
+  // Sync both components
+  if (tabBar) tabBar.setActive(newTab);
+  if (viewSelector) viewSelector.setActive(newTab);
+  
   renderPage();
 }
 

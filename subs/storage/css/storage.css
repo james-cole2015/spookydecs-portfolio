@@ -37,10 +37,65 @@
 }
 
 /* ============================================
-   TAB BAR
+   VIEW SELECTOR (MOBILE)
+   ============================================ */
+.view-selector {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+}
+
+.view-selector-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-color);
+  white-space: nowrap;
+}
+
+.view-selector-dropdown {
+  flex: 1;
+  padding: 10px 16px;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-color);
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%236b7280' d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 40px;
+}
+
+.view-selector-dropdown:hover {
+  border-color: var(--primary-color);
+}
+
+.view-selector-dropdown:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Hide view selector on desktop */
+@media (min-width: 769px) {
+  .view-selector {
+    display: none;
+  }
+}
+
+/* ============================================
+   TAB BAR (DESKTOP)
    ============================================ */
 .tab-bar {
-  display: flex;
+  display: none; /* Hidden on mobile */
   gap: 0;
   margin-bottom: var(--spacing-lg);
   border-bottom: 2px solid var(--border-color);
@@ -56,7 +111,7 @@
   border: none;
   border-bottom: 3px solid transparent;
   color: var(--text-secondary);
-  font-size: 16px; /* Increased from 14px */
+  font-size: 16px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
@@ -72,6 +127,13 @@
   color: var(--primary-color);
   border-bottom-color: var(--primary-color);
   font-weight: 600;
+}
+
+/* Show tab bar on desktop */
+@media (min-width: 769px) {
+  .tab-bar {
+    display: flex;
+  }
 }
 
 /* ============================================
