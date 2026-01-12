@@ -1,5 +1,4 @@
 maintenance-records/
-.
 ├── css
 │   ├── detail.css
 │   ├── filters.css
@@ -13,6 +12,7 @@ maintenance-records/
 │   ├── schedules-detail.css
 │   ├── schedules.css
 │   ├── table.css
+│   ├── template-application.css
 │   └── toast.css
 ├── index.html
 ├── js
@@ -34,7 +34,10 @@ maintenance-records/
 │   │   ├── PhotoCarousel.js
 │   │   ├── PhotoSwipeGallery.js
 │   │   ├── PhotoUpload.js
-│   │   ├── RecordDetail.js
+│   │   ├── RecordDetailActions.js
+│   │   ├── RecordDetailRenderer.js
+│   │   ├── RecordDetailTabs.js
+│   │   ├── RecordDetailView.js
 │   │   ├── RecordForm.js
 │   │   ├── ScheduleDetail.js
 │   │   ├── ScheduleForm.js

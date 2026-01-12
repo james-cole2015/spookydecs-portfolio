@@ -62,13 +62,13 @@
   <script type="module" src="https://assets.spookydecs.com/components/modal.js"></script>
   <script type="module" src="https://assets.spookydecs.com/components/toast.js"></script>
   
-  <!-- App Scripts (load in order) - ES6 modules are deferred automatically -->
+<!-- App Scripts (load in order) - ES6 modules are deferred automatically -->
   <!-- Utilities (no dependencies) -->
   <script type="module" src="/js/utils/helpers.js"></script>
   <script type="module" src="/js/utils/formatters.js"></script>
   <script type="module" src="/js/utils/toast.js"></script>
   <script type="module" src="/js/utils/scheduleHelpers.js"></script>
-  <script type="module" src="/js/utils/responsive.js"></script>  <!-- NEW: Responsive utilities -->
+  <script type="module" src="/js/utils/responsive.js"></script>  
 
   <!-- Core (depends on utils) -->
   <script type="module" src="/js/api.js"></script>
@@ -79,8 +79,8 @@
   <script type="module" src="/js/components/StatsCards.js"></script>
   <script type="module" src="/js/components/Tabs.js"></script>
   <script type="module" src="/js/components/Filters.js"></script>
-  <script type="module" src="/js/components/MobileCardView.js"></script>  <!-- NEW: Mobile cards -->
-  <script type="module" src="/js/components/MobileFilters.js"></script>  <!-- NEW: Mobile filters -->
+  <script type="module" src="/js/components/MobileCardView.js"></script>  
+  <script type="module" src="/js/components/MobileFilters.js"></script>  
   <script type="module" src="/js/components/PhotoSwipeGallery.js"></script>
   <script type="module" src="/js/components/PhotoCarousel.js"></script>
   <script type="module" src="/js/components/PhotoUpload.js"></script>
@@ -98,8 +98,14 @@
   <script type="module" src="/js/components/form/MaterialsList.js"></script>
   <script type="module" src="/js/components/form/ExistingPhotos.js"></script>
 
+  <!-- RecordDetailView sub-components (depend on api, utils, simple components) -->
+  <script type="module" src="/js/components/RecordDetailRenderer.js"></script>
+  <script type="module" src="/js/components/RecordDetailTabs.js"></script>
+  <script type="module" src="/js/components/RecordDetailActions.js"></script>
+
   <!-- Complex components (depend on sub-components) -->
   <script type="module" src="/js/components/MainTable.js"></script>
+  <script type="module" src="/js/components/RecordDetailView.js"></script>
   <script type="module" src="/js/components/RecordDetail.js"></script>
   <script type="module" src="/js/components/ItemDetail.js"></script>
   <script type="module" src="/js/components/RecordForm.js"></script>

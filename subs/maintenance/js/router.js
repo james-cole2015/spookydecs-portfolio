@@ -2,7 +2,7 @@
 
 import { appState } from './state.js';
 import { MainTableView } from './components/MainTable.js';
-import { RecordDetailView } from './components/RecordDetail.js';
+import { RecordDetailView } from './components/RecordDetailView.js';
 import { ItemDetailView } from './components/ItemDetail.js';
 import { RecordFormView } from './components/RecordForm.js';
 import { SchedulesTableView } from './components/SchedulesTable.js';
