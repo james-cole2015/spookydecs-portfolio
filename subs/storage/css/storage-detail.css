@@ -202,13 +202,23 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--spacing-md);
+  margin-bottom: calc(var(--spacing-xl) + var(--spacing-lg)); /* Even more spacing - approximately 56px */
+}
+
+/* Panel header for ContentsPanel component */
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: calc(var(--spacing-xl) + var(--spacing-lg)); /* Match contents-header spacing */
+  padding-bottom: var(--spacing-md);
+  border-bottom: 2px solid var(--border-color);
 }
 
 .contents-list {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-md); /* Increased from sm to md for more spacing between items */
 }
 
 .content-item {

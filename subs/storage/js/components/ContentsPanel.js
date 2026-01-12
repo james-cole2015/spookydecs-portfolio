@@ -86,16 +86,7 @@ export class ContentsPanel {
           
           <div class="content-info">
             <div class="content-id-name">
-              <code class="content-id">${item.id}</code>
               <span class="content-name">${item.short_name}</span>
-            </div>
-            
-            <div class="content-meta">
-              <span class="content-class">${item.class || ''}</span>
-              ${item.class_type ? `
-                <span class="content-separator">•</span>
-                <span class="content-type">${item.class_type}</span>
-              ` : ''}
             </div>
           </div>
           
