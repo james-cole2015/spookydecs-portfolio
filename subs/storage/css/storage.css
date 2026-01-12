@@ -137,13 +137,16 @@
 }
 
 /* ============================================
-   FILTER BAR - UPDATED WITH COLLAPSIBLE FILTERS
+   FILTER BAR - CENTERED WITH COLLAPSIBLE FILTERS
    ============================================ */
 .filter-bar {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
   margin-bottom: var(--spacing-lg);
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 1200px; /* Constrain width for centering */
   background: var(--bg-secondary);
   border-radius: var(--radius-md);
   overflow: hidden;
@@ -153,12 +156,14 @@
 .filter-bar-top {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--spacing-md);
   padding: var(--spacing-md);
 }
 
 .filter-search {
   flex: 1;
+  max-width: 500px; /* Limit search bar width */
   min-width: 0; /* Allow flex item to shrink below content size */
 }
 
@@ -220,6 +225,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-sm);
+  justify-content: center; /* Center filter dropdowns */
   max-height: 0;
   padding: 0;
   overflow: hidden;
@@ -281,7 +287,7 @@
 }
 
 .btn-clear-filters {
-  align-self: flex-start;
+  align-self: center; /* Center the clear button */
   background: #fee2e2; /* Light red */
   color: #dc2626; /* Red text */
   border: 1px solid #fecaca;
@@ -847,19 +853,18 @@
     display: none;
   }
   
-  /* Filter bar - horizontal layout for top row */
+  /* Filter bar - maintain centering */
   .filter-bar-top {
     padding: var(--spacing-md);
   }
   
   .filter-search {
-    flex: 0 1 400px; /* Fixed max-width, can shrink if needed */
-    max-width: 400px;
+    max-width: 600px; /* Wider on desktop */
   }
   
   .filters-container {
     flex-wrap: wrap;
-    justify-content: flex-start;
+    justify-content: center;
   }
   
   .filter-dropdown {
@@ -885,8 +890,7 @@
 
 @media (min-width: 1024px) {
   .filter-search {
-    flex: 0 1 450px;
-    max-width: 450px;
+    max-width: 700px; /* Even wider on large screens */
   }
 }
 
