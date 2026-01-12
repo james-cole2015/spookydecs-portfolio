@@ -1,6 +1,7 @@
 /**
  * CreateWizard Component
  * 3-step wizard for creating storage units (Tote or Self-contained)
+ * FIXED: Properly initializes StoragePhotoUploader via callback
  */
 
 import { StorageFormFields } from './StorageFormFields.js';
@@ -10,13 +11,13 @@ export class CreateWizard {
   constructor(options = {}) {
     this.onComplete = options.onComplete || (() => {});
     this.onCancel = options.onCancel || (() => {});
+    this.onPhotoStepRender = options.onPhotoStepRender || null; // NEW: Callback for photo step
     this.container = null;
     
     // Wizard state
     this.currentStep = 1;
     this.selectedType = null; // 'Tote' or 'Self'
     this.formData = {};
-    this.photoData = null;
     
     // Components
     this.formFields = null;
@@ -244,34 +245,9 @@ export class CreateWizard {
       </div>
     `;
     
-    // Initialize PhotoUploader from assets
-    this.initPhotoUploader();
-  }
-
-  /**
-   * Initialize PhotoUploader component
-   */
-  async initPhotoUploader() {
-    try {
-      // Import PhotoUploader from assets
-      const { PhotoUploader } = await import('https://assets.spookydecs.com/components/PhotoUploader.js');
-      
-      const uploaderContainer = this.container.querySelector('#photo-uploader');
-      
-      const photoUploader = new PhotoUploader({
-        onUpload: (photoData) => {
-          this.photoData = photoData;
-        },
-        onRemove: () => {
-          this.photoData = null;
-        }
-      });
-      
-      photoUploader.render(uploaderContainer);
-    } catch (error) {
-      console.error('Error loading PhotoUploader:', error);
-      const uploaderContainer = this.container.querySelector('#photo-uploader');
-      uploaderContainer.innerHTML = '<p class="form-help">Photo upload unavailable</p>';
+    // **FIX: Call the parent's photo step render callback**
+    if (this.onPhotoStepRender && typeof this.onPhotoStepRender === 'function') {
+      this.onPhotoStepRender();
     }
   }
 
@@ -391,13 +367,8 @@ export class CreateWizard {
    * Complete wizard
    */
   complete() {
-    // Build final data
-    const finalData = {
-      ...this.formData,
-      images: this.photoData || {}
-    };
-    
-    this.onComplete(this.selectedType, finalData);
+    // Pass form data to parent - photo handling is done in storage-create.js
+    this.onComplete(this.selectedType, this.formData);
   }
 }
 

@@ -1,6 +1,7 @@
 /**
  * Storage Detail Page
  * Display storage unit details and contents
+ * FIXED: Now loads storage unit photos from photos API
  */
 
 import { storageAPI, photosAPI } from '../utils/storage-api.js';
@@ -57,6 +58,21 @@ async function loadStorageUnit(storageId) {
     
     // Normalize data
     currentStorageUnit = formatStorageUnit(data);
+    
+    // **FIX: Enrich storage unit itself with photo URL**
+    if (currentStorageUnit.images?.photo_id) {
+      try {
+        const photoData = await photosAPI.getById(currentStorageUnit.images.photo_id);
+        if (photoData) {
+          currentStorageUnit.images.photo_url = photoData.cloudfront_url;
+          currentStorageUnit.images.thumb_cloudfront_url = photoData.thumb_cloudfront_url;
+          console.log('Storage unit photo loaded:', photoData.cloudfront_url);
+        }
+      } catch (photoError) {
+        console.warn('Failed to load storage unit photo:', photoError);
+        // Continue without photo - will show placeholder
+      }
+    }
     
     // Enrich contents with photo URLs
     const enrichedContents = await enrichContentsWithPhotos(currentStorageUnit.contents_details || []);
@@ -178,5 +194,3 @@ async function handleDelete(unit) {
     }
   });
 }
-
-// export default { renderStorageDetail };

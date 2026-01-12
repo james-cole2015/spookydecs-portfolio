@@ -5,13 +5,11 @@
 
 import { storageAPI } from '../utils/storage-api.js';
 import { CreateWizard } from '../components/CreateWizard.js';
+import { StoragePhotoUploader } from '../components/StoragePhotoUploader.js';
 import { showSuccess, showError } from '../shared/toast.js';
 import { navigate } from '../utils/router.js';
 import { showLoading, hideLoading } from '../app.js';
 
-// PhotoUploader will be loaded from assets CDN
-// Import it dynamically when needed
-let PhotoUploader = null;
 let createWizard = null;
 let photoUploader = null;
 
@@ -28,10 +26,7 @@ export async function renderCreateWizard() {
     </div>
   `;
   
-  // Load PhotoUploader class
-  await loadPhotoUploader();
-  
-  // Initialize wizard
+  // Initialize wizard with photo step callback
   createWizard = new CreateWizard({
     onComplete: handleCreate,
     onCancel: handleCancel,
@@ -42,54 +37,37 @@ export async function renderCreateWizard() {
 }
 
 /**
- * Load PhotoUploader dynamically from assets CDN
+ * Initialize StoragePhotoUploader component
+ * Called by CreateWizard when rendering photo step (step 3)
  */
-async function loadPhotoUploader() {
-  if (PhotoUploader) return; // Already loaded
+function initPhotoUploader() {
+  const uploaderContainer = document.getElementById('photo-uploader');
   
-  try {
-    const module = await import('https://assets.spookydecs.com/components/PhotoUploader.js');
-    PhotoUploader = module.PhotoUploader;
-    console.log('PhotoUploader loaded successfully');
-  } catch (error) {
-    console.error('Failed to load PhotoUploader:', error);
-    // Continue without photo upload capability
-  }
-}
-
-/**
- * Initialize PhotoUploader component
- * Called by CreateWizard when rendering photo step
- */
-function initPhotoUploader(containerElement) {
-  if (!PhotoUploader) {
-    console.warn('PhotoUploader not available');
-    const container = document.getElementById('photo-uploader-container');
-    if (container) {
-      container.innerHTML = `
-        <div class="form-help text-muted">
-          Photo upload unavailable. You can add a photo after creation.
-        </div>
-      `;
-    }
+  if (!uploaderContainer) {
+    console.warn('Photo uploader container not found');
     return;
   }
   
   try {
-    // Initialize with maxPhotos = 1 for storage
-    photoUploader = new PhotoUploader('photo-uploader-container', 1);
+    // Create a container div with ID for StoragePhotoUploader
+    uploaderContainer.innerHTML = '<div id="storage-photo-uploader-container"></div>';
+    
+    // Initialize StoragePhotoUploader
+    photoUploader = new StoragePhotoUploader('storage-photo-uploader-container', {
+      onChange: (file) => {
+        console.log('Photo selected:', file ? file.name : 'none');
+      }
+    });
+    
     photoUploader.render();
-    console.log('PhotoUploader initialized');
+    console.log('StoragePhotoUploader initialized');
   } catch (error) {
-    console.error('Error initializing PhotoUploader:', error);
-    const container = document.getElementById('photo-uploader-container');
-    if (container) {
-      container.innerHTML = `
-        <div class="form-help text-muted">
-          Photo upload initialization failed. You can add a photo after creation.
-        </div>
-      `;
-    }
+    console.error('Error initializing StoragePhotoUploader:', error);
+    uploaderContainer.innerHTML = `
+      <div class="form-help text-muted">
+        Photo upload unavailable. You can add a photo after creation.
+      </div>
+    `;
   }
 }
 
@@ -99,6 +77,8 @@ function initPhotoUploader(containerElement) {
 async function handleCreate(classType, formData) {
   try {
     showLoading();
+    
+    console.log('Creating storage unit:', { classType, formData });
     
     // Step 1: Create storage unit
     let newStorageUnit;
@@ -112,14 +92,13 @@ async function handleCreate(classType, formData) {
     console.log('Storage unit created:', newStorageUnit.id);
     
     // Step 2: Upload photo if selected
-    if (photoUploader && photoUploader.hasPhotos()) {
+    if (photoUploader && photoUploader.hasPhoto()) {
       try {
-        const files = photoUploader.getSelectedFiles();
-        const file = files[0]; // Only 1 photo for storage
+        const file = photoUploader.getSelectedFile();
         
         console.log('Uploading photo for storage unit:', newStorageUnit.id);
         
-        // Use storageAPI upload method (not PhotoUploader's built-in upload)
+        // Upload photo using storageAPI
         const photoData = await storageAPI.uploadStoragePhoto(
           file,
           newStorageUnit.id,

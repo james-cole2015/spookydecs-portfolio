@@ -1,0 +1,210 @@
+/**
+ * StoragePhotoUploader Styles
+ * Add this to your wizard.css or create a new photo-uploader.css
+ */
+
+/* Photo Uploader Container */
+.storage-photo-uploader {
+  margin: 1.5rem 0;
+}
+
+.uploader-header {
+  margin-bottom: 0.75rem;
+}
+
+.uploader-header .form-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  color: #1f2937;
+}
+
+.uploader-header .optional {
+  font-weight: 400;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.uploader-header .form-help {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* Dropzone */
+.uploader-dropzone {
+  position: relative;
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  background: #f9fafb;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.uploader-dropzone:hover {
+  border-color: #9ca3af;
+  background: #f3f4f6;
+}
+
+.uploader-dropzone.dragover {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+/* Dropzone Content (initial state) */
+.dropzone-content {
+  text-align: center;
+  padding: 2rem;
+}
+
+.dropzone-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.dropzone-text {
+  font-size: 1rem;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.dropzone-text strong {
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+.dropzone-hint {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* Photo Preview */
+.photo-preview-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.photo-preview-container.hidden {
+  display: none;
+}
+
+.photo-preview-img {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 4px;
+  object-fit: contain;
+}
+
+.photo-preview-overlay {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}
+
+.btn-remove-photo {
+  background: rgba(220, 38, 38, 0.9);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background 0.2s ease;
+}
+
+.btn-remove-photo:hover {
+  background: rgba(220, 38, 38, 1);
+}
+
+.btn-remove-photo span {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.photo-info {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  right: 1rem;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 0.75rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.photo-name {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.photo-size {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.75rem;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .dropzone-content {
+    padding: 1.5rem;
+  }
+  
+  .dropzone-icon {
+    font-size: 2.5rem;
+  }
+  
+  .photo-preview-img {
+    max-height: 250px;
+  }
+}
+
+/* Current Photo Display (for Edit page) */
+.current-photo-section {
+  margin-bottom: 1.5rem;
+}
+
+.current-photo-preview {
+  margin-top: 0.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+  background: #f9fafb;
+}
+
+.current-photo-img {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 4px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Photo Upload Section in Wizard */
+.photo-upload-section {
+  margin-bottom: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.photo-upload-section h3 {
+  margin-bottom: 1rem;
+}
