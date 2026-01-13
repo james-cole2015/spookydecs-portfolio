@@ -1,16 +1,25 @@
 // System Map Component
-import { calculateSystemHealth } from '../utils/admin-api.js';
+import { calculateSystemHealth, getSubdomainUrls } from '../utils/admin-api.js';
 
 export class SystemMap {
     constructor() {
         this.health = {};
+        this.urls = {};
         this.subdomains = [
+            {
+                id: 'ideas',
+                icon: '💡',
+                title: 'Ideas',
+                description: 'Brainstorm and plan future decoration projects and seasonal themes.',
+                urlKey: 'ideas',
+                healthKey: 'ideas'
+            },
             {
                 id: 'items',
                 icon: '📦',
                 title: 'Items',
                 description: 'Manage your decoration, light, and accessory inventory.',
-                url: '/items',
+                urlKey: 'items',
                 healthKey: 'items'
             },
             {
@@ -18,7 +27,7 @@ export class SystemMap {
                 icon: '🗄️',
                 title: 'Storage',
                 description: 'Organize totes, bins, and storage locations across shed and garage.',
-                url: '/storage',
+                urlKey: 'storage',
                 healthKey: 'storage'
             },
             {
@@ -26,7 +35,7 @@ export class SystemMap {
                 icon: '🎯',
                 title: 'Deployments',
                 description: 'Track what\'s out and when for each holiday season.',
-                url: '/deployments',
+                urlKey: 'deployments',
                 healthKey: 'deployments'
             },
             {
@@ -34,7 +43,7 @@ export class SystemMap {
                 icon: '💰',
                 title: 'Finance',
                 description: 'Track costs, receipts, and spending across all seasons.',
-                url: '/finance',
+                urlKey: 'finance',
                 healthKey: 'finance'
             },
             {
@@ -42,25 +51,46 @@ export class SystemMap {
                 icon: '🔧',
                 title: 'Maintenance',
                 description: 'Schedule repairs, inspections, and maintenance tasks for your items.',
-                url: '/maintenance-records',
+                urlKey: 'maintenance',
                 healthKey: 'maintenance'
+            },
+            {
+                id: 'workbench',
+                icon: '🛠️',
+                title: 'Workbench',
+                description: 'Project workspace for repairs, modifications, and custom builds.',
+                urlKey: 'workbench',
+                healthKey: 'workbench'
             },
             {
                 id: 'photos',
                 icon: '📸',
                 title: 'Photos',
                 description: 'Visual catalog and documentation for all items.',
-                url: '/photos',
-                healthKey: 'photos'
+                urlKey: 'photos',
+                healthKey: 'photos',
+                placeholder: true
+            },
+            {
+                id: 'audit',
+                icon: '📋',
+                title: 'Audit',
+                description: 'Review system logs, changes, and activity across all subdomains.',
+                urlKey: 'audit',
+                healthKey: 'audit'
             }
         ];
     }
 
     async init() {
         try {
-            this.health = await calculateSystemHealth();
+            // Load both health data and URLs in parallel
+            [this.health, this.urls] = await Promise.all([
+                calculateSystemHealth(),
+                getSubdomainUrls()
+            ]);
         } catch (error) {
-            console.error('Failed to load system health:', error);
+            console.error('Failed to load system data:', error);
         }
     }
 
@@ -81,18 +111,23 @@ export class SystemMap {
     renderCard(subdomain) {
         const healthData = this.health[subdomain.healthKey] || { healthy: true };
         const healthIcon = this.getHealthIcon(healthData);
+        const url = this.urls[subdomain.urlKey] || '';
+        const isPlaceholder = subdomain.placeholder || !url;
         
         return `
-            <div class="system-card">
+            <div class="system-card ${isPlaceholder ? 'system-card-placeholder' : ''}">
                 <div class="system-card-header">
                     <span class="system-card-icon">${subdomain.icon}</span>
                     <h3 class="system-card-title">${subdomain.title}</h3>
                     <span class="system-card-health">${healthIcon}</span>
                 </div>
                 <p class="system-card-description">${subdomain.description}</p>
-                <a href="${subdomain.url}" class="system-card-action">
-                    View ${subdomain.title} →
-                </a>
+                ${isPlaceholder 
+                    ? `<span class="system-card-placeholder-text">Coming Soon</span>`
+                    : `<a href="${url}" target="_blank" rel="noopener noreferrer" class="system-card-action">
+                        View ${subdomain.title} →
+                    </a>`
+                }
             </div>
         `;
     }

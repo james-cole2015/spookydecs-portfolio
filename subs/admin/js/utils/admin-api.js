@@ -1,19 +1,44 @@
 // Admin API utilities
 
+let configCache = null;
+
 /**
  * Load configuration from config.json
  */
-export async function loadConfig() {
+async function loadConfig() {
+    if (configCache) return configCache;
+    
     try {
         const response = await fetch('/config.json');
         if (!response.ok) {
             throw new Error('Failed to load config');
         }
-        return await response.json();
+        configCache = await response.json();
+        return configCache;
     } catch (error) {
         console.error('Error loading config:', error);
         throw error;
     }
+}
+
+/**
+ * Get all subdomain URLs from config
+ * @returns {Promise<Object>} Object containing all subdomain URLs
+ */
+export async function getSubdomainUrls() {
+    const config = await loadConfig();
+    
+    return {
+        ideas: config.IDEAS_ADMIN_URL || '',
+        items: config.ITEMS_ADMIN || '',
+        finance: config.finance_url || '',
+        maintenance: config.MAINT_URL || '',
+        storage: config.STR_ADM_URL || '',
+        workbench: config.WORKBENCH_URL || '',
+        deployments: config.DEPLOY_ADMIN || '',
+        audit: config.AUDIT_ADMIN || '',
+        photos: '' // Placeholder - no config URL yet
+    };
 }
 
 /**
@@ -56,3 +81,6 @@ export async function submitIrisQuery(query) {
         timestamp: new Date().toISOString()
     };
 }
+
+// Export config loader for use in other modules
+export { loadConfig };
