@@ -30,14 +30,15 @@ export async function getSubdomainUrls() {
     
     return {
         ideas: config.IDEAS_ADMIN_URL || '',
-        items: config.ITEMS_ADMIN || '',
+        items: config.INV_ADMIN_URL || '',
         finance: config.finance_url || '',
         maintenance: config.MAINT_URL || '',
         storage: config.STR_ADM_URL || '',
         workbench: config.WORKBENCH_URL || '',
         deployments: config.DEPLOY_ADMIN || '',
         audit: config.AUDIT_ADMIN || '',
-        photos: '' // Placeholder - no config URL yet
+        images: '', // Placeholder - no config URL yet
+        gallery: '' // Placeholder - no config URL yet
     };
 }
 

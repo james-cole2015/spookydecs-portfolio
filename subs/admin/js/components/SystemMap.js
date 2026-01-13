@@ -63,12 +63,21 @@ export class SystemMap {
                 healthKey: 'workbench'
             },
             {
-                id: 'photos',
+                id: 'images',
                 icon: '📸',
-                title: 'Photos',
+                title: 'Images',
                 description: 'Visual catalog and documentation for all items.',
-                urlKey: 'photos',
-                healthKey: 'photos',
+                urlKey: 'images',
+                healthKey: 'images',
+                placeholder: true
+            },
+            {
+                id: 'gallery',
+                icon: '🖼️',
+                title: 'Gallery',
+                description: 'Gallery of Previous Displays, Community Displays, and Project Builds.',
+                urlKey: 'gallery',
+                healthKey: 'gallery',
                 placeholder: true
             },
             {
