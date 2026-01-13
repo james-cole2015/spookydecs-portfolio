@@ -81,6 +81,8 @@ body {
     border-radius: 8px;
     padding: 1.5rem;
     transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
 }
 
 .system-card:hover {
@@ -113,9 +115,9 @@ body {
 .system-card-description {
     color: var(--text-secondary);
     font-size: 0.875rem;
-    margin-bottom: 1.25rem;
     line-height: 1.5;
-    min-height: 60px;
+    flex-grow: 1;
+    margin-bottom: 1.25rem;
 }
 
 .system-card-action {
@@ -129,11 +131,23 @@ body {
     font-weight: 500;
     border: 1px solid var(--primary-blue);
     transition: all 0.2s ease;
+    align-self: flex-start;
+    margin-top: auto;
 }
 
 .system-card-action:hover {
     background: linear-gradient(90deg, #81d4fa 0%, #4fc3f7 100%);
     box-shadow: 0 2px 6px rgba(129, 212, 250, 0.3);
+}
+
+.system-card-placeholder {
+    opacity: 0.6;
+}
+
+.system-card-placeholder-text {
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-top: auto;
 }
 
 /* Header Link */
