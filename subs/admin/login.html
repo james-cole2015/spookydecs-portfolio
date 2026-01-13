@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SpookyDecs Admin Login</title>
+<style>
+  body { font-family: Arial, sans-serif; background:#111; color:#f4f4f4; display:flex; align-items:center; justify-content:center; height:100vh; margin:0; }
+  .login-container { background: rgba(34,34,34,0.95); border:2px solid #f47c3c; border-radius:10px; padding:36px; width:340px; box-shadow:0 0 20px rgba(255,140,0,0.25); text-align:center; }
+  h2 { margin:0 0 18px; color:#f47c3c; font-size:1.25rem; }
+  input { width: 92%; padding:10px; margin:10px 0; border-radius:6px; border:1px solid #444; background:#222; color:#fff; }
+  button { width:95%; padding:10px; margin-top:8px; background:#f47c3c; color:#111; border:none; border-radius:6px; font-weight:600; cursor:pointer; }
+  button:hover { background:#ff9248; }
+  .error { color:#ff6666; font-size:0.9rem; margin-top:10px; min-height:1.2em; }
+  .small { font-size:0.85rem; color:#bbb; margin-top:8px; }
+  .link { color:#cfcfcf; text-decoration:underline; cursor:pointer; font-size:0.85rem; display:block; margin-top:8px; }
+  .hidden { display:none; }
+</style>
+</head>
+<body>
+
+<div class="login-container" role="main">
+  <h2 id="formTitle">SpookyDecs Admin Login</h2>
+
+  <!-- Standard login fields -->
+  <div id="loginFields">
+    <input id="username" type="text" placeholder="Username" autocomplete="username" />
+    <input id="password" type="password" placeholder="Password" autocomplete="current-password" />
+    <button id="loginBtn">Sign In</button>
+  </div>
+
+  <!-- Inline new password form -->
+  <div id="newPasswordFields" class="hidden">
+    <input id="newPassword" type="password" placeholder="Enter New Password" />
+    <input id="confirmPassword" type="password" placeholder="Confirm New Password" />
+    <button id="newPasswordBtn">Set New Password</button>
+  </div>
+
+  <div id="errorMsg" class="error" aria-live="polite"></div>
+  <div class="small">You will be returned to the admin site after a successful sign-in.</div>
+  <div class="link" id="help">Need help? Contact admin</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@5.2.7/dist/amazon-cognito-identity.min.js"></script>
+
+<script>
+(function() {
+  // ---------- CONFIG ----------
+  const USER_POOL_ID = 'us-east-2_BnxSu5LEt';
+  const CLIENT_ID    = '11er9f8qa7jkvgelm6hernb2ed';
+
+  const hostname = window.location.hostname.toLowerCase();
+  const isDev = hostname.includes('dev-') || hostname.includes('dev.');
+  const adminRoot = isDev ? 'https://dev-admin.spookydecs.com' : 'https://admin.spookydecs.com';
+  const requestedReturn = new URLSearchParams(window.location.search).get('returnUrl');
+  const returnUrl = requestedReturn && requestedReturn.startsWith('http') ? requestedReturn : adminRoot;
+
+  const usernameEl = document.getElementById('username');
+  const passwordEl = document.getElementById('password');
+  const loginBtn = document.getElementById('loginBtn');
+  const errorMsg = document.getElementById('errorMsg');
+
+  const newPasswordFields = document.getElementById('newPasswordFields');
+  const newPasswordEl = document.getElementById('newPassword');
+  const confirmPasswordEl = document.getElementById('confirmPassword');
+  const newPasswordBtn = document.getElementById('newPasswordBtn');
+  const loginFields = document.getElementById('loginFields');
+  const formTitle = document.getElementById('formTitle');
+
+  const TOKEN_KEY = 'spookydecs_id_token';
+  const USER_KEY = 'spookydecs_username';
+
+  const poolData = { UserPoolId: USER_POOL_ID, ClientId: CLIENT_ID };
+  const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+  let cognitoUserGlobal = null;
+  let newPasswordUserAttributes = null;
+
+  function showError(msg, err) { console.error(msg, err||''); errorMsg.textContent = msg; }
+
+  function login() {
+    errorMsg.textContent = '';
+    const username = usernameEl.value && usernameEl.value.trim();
+    const password = passwordEl.value && passwordEl.value.trim();
+
+    if (!username || !password) { showError('Please enter both username and password.'); return; }
+
+    const authDetails = new AmazonCognitoIdentity.AuthenticationDetails({ Username: username, Password: password });
+    const userData = { Username: username, Pool: userPool };
+    const cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+    cognitoUserGlobal = cognitoUser;
+
+    loginBtn.disabled = true; loginBtn.textContent = 'Signing in...';
+
+    cognitoUser.authenticateUser(authDetails, {
+      onSuccess: (result) => {
+        const idToken = result.getIdToken().getJwtToken();
+        localStorage.setItem(TOKEN_KEY, idToken);
+        localStorage.setItem(USER_KEY, username);
+        window.location.href = returnUrl;
+      },
+      onFailure: (err) => {
+        let message = 'Login failed. Please try again.';
+        if (err && err.code === 'NotAuthorizedException') message = 'Incorrect username or password.';
+        if (err && err.code === 'UserNotFoundException') message = 'User does not exist.';
+        if (err && err.message) message = err.message;
+        showError(message, err);
+        loginBtn.disabled = false; loginBtn.textContent = 'Sign In';
+      },
+      newPasswordRequired: (userAttributes, requiredAttributes) => {
+        // remove attributes SDK adds
+        delete userAttributes.email_verified;
+        newPasswordUserAttributes = userAttributes;
+
+        // swap forms inline
+        loginFields.classList.add('hidden');
+        newPasswordFields.classList.remove('hidden');
+        formTitle.textContent = 'Set New Password';
+      }
+    });
+  }
+
+  function setNewPassword() {
+    errorMsg.textContent = '';
+    const newPass = newPasswordEl.value.trim();
+    const confirmPass = confirmPasswordEl.value.trim();
+    if (!newPass || !confirmPass) { showError('Please enter and confirm the new password.'); return; }
+    if (newPass !== confirmPass) { showError('Passwords do not match.'); return; }
+
+    cognitoUserGlobal.completeNewPasswordChallenge(newPass, newPasswordUserAttributes, {
+      onSuccess: (result) => {
+        const idToken = result.getIdToken().getJwtToken();
+        localStorage.setItem(TOKEN_KEY, idToken);
+        localStorage.setItem(USER_KEY, cognitoUserGlobal.getUsername());
+        window.location.href = returnUrl;
+      },
+      onFailure: (err) => {
+        showError('Failed to set new password. ' + (err.message || ''));
+      }
+    });
+  }
+
+  // Bind events
+  [usernameEl, passwordEl].forEach(el => el.addEventListener('keydown', (e) => { if(e.key==='Enter') login(); }));
+  loginBtn.addEventListener('click', login);
+  newPasswordBtn.addEventListener('click', setNewPassword);
+
+  // Auto redirect if token valid
+  (function autoRedirectIfTokenValid() {
+    try {
+      const raw = localStorage.getItem(TOKEN_KEY);
+      if (!raw) return;
+      const payload = JSON.parse(atob(raw.split('.')[1]));
+      const now = Math.floor(Date.now() / 1000);
+      if (payload && payload.exp && payload.exp > now + 30) window.location.href = returnUrl;
+    } catch(e){}
+  })();
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+<!-- ====== Admin Christmas Header ====== -->
+<header style="background-color: #2a4d2a; color: #fff; padding: 15px 40px; display: flex; align-items: center; justify-content: space-between; font-family: Arial, sans-serif; border-bottom: 1px solid #88cc88;">
+  <div style="display: flex; align-items: center;">
+    <img src="https://www.spookydecs.com/icons/christmas-tree-svgrepo-com.svg" alt="Christmas Logo" style="height: 40px; margin-right: 12px;">
+    <h1 style="margin: 0; font-size: 1.4rem; color: #cce0aa;">SpookyDecs Portal</h1>
+  </div>
+
+  <nav>
+    <ul style="list-style: none; display: flex; gap: 20px; margin: 0; padding: 0; font-size: 1rem;">
+      <li><a href="/dashboard" style="color: #fff; text-decoration: none;">Dashboard</a></li>
+      <li><a href="/inventory" style="color: #fff; text-decoration: none;">Inventory</a></li>
+      <li><a href="/reports" style="color: #fff; text-decoration: none;">Reports</a></li>
+      <li><a href="/settings" style="color: #cce0aa; text-decoration: none;">Settings</a></li>
+      <li><a href="/logout" style="color: #fff; text-decoration: none;">Logout</a></li>
+    </ul>
+  </nav>
+</header>
+
+<!-- ====== Admin Christmas Footer ====== -->
+<footer style="background-color: #1f3a1f; color: #fff; padding: 25px 40px; font-family: Arial, sans-serif; border-top: 1px solid #88cc88;">
+  <div style="text-align: center; font-size: 0.9rem; color: #ccc; display: flex; align-items: center; justify-content: center; gap: 6px;">
+    &copy; 2025 SpookyDecs Network | Admin Area
+    <img src="https://www.svgrepo.com/show/307240/snowflake.svg" alt="Snowflake Icon" style="height: 16px; width: 16px;">
+  </div>
+</footer>
