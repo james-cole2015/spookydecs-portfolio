@@ -1,0 +1,23 @@
+{
+ "rule_id": "MISSING_PRIMARY_PHOTO",
+ "check_type": "schedule",
+ "created_at": "2026-01-14T14:07:38.407238Z",
+ "description": "Decoration items without primary photo starting with PHOTO",
+ "entity_types": [
+  "Item"
+ ],
+ "is_active": true,
+ "rule_config": {
+  "check_field": "images.primary_photo_id",
+  "item_classes": [
+   "Decoration"
+  ],
+  "message_template": "Decoration '{short_name}' is missing a primary photo",
+  "validation_type": "starts_with",
+  "validation_value": "PHOTO"
+ },
+ "rule_name": "Missing Primary Photos",
+ "schedule_expression": "cron(0 2 * * ? *)",
+ "severity": "Attention",
+ "updated_at": "2026-01-14T14:07:38.407238Z"
+}

@@ -1,0 +1,19 @@
+{
+  "violation_id": "a3c5e7f9-1234-5678-90ab-cdef12345678",
+  "rule_id": "REPAIR_BLOCKER_CRITICAL",
+  "entity_id": "DEC-INF-ZERO-011",
+  "entity_type": "Item",
+  "severity": "Critical",
+  "status": "open",
+  "detected_at": "2026-01-13T10:30:00.000Z",
+  "last_evaluated_at": "2026-01-13T10:30:00.000Z",
+  "resolved_at": null,
+  "violation_details": {
+    "repair_criticality": "High",
+    "deployment_window_days": 14,
+    "deployment_id": "DEP-HAL-2026",
+    "message": "Critical repair needed before Halloween deployment in 14 days"
+  },
+  "created_at": "2026-01-13T10:30:00.000Z",
+  "updated_at": "2026-01-13T10:30:00.000Z"
+}
