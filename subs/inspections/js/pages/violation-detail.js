@@ -54,6 +54,8 @@ function renderViolationContent() {
     const statusConfig = getStatusConfig(currentViolation.status);
     const details = currentViolation.violation_details || {};
 
+    const canDismiss = currentViolation.severity !== 'Critical' && currentViolation.status === 'open';
+
     content.innerHTML = `
         <div class="violation-page-header">
             <div class="violation-title-section">
@@ -66,6 +68,17 @@ function renderViolationContent() {
                         ${statusConfig.label}
                     </span>
                 </div>
+            </div>
+            
+            <div class="violation-header-actions">
+                <button 
+                    class="btn btn-secondary" 
+                    id="dismiss-violation-btn"
+                    ${!canDismiss ? 'disabled' : ''}
+                    ${!canDismiss && currentViolation.severity === 'Critical' ? 'title="Critical violations cannot be dismissed"' : ''}
+                >
+                    Dismiss
+                </button>
             </div>
         </div>
 
@@ -105,6 +118,10 @@ function renderViolationContent() {
                         <dd>${formatDate(currentViolation.dismissed_at)}</dd>
                         <dt>Dismissed By:</dt>
                         <dd>${sanitizeHtml(currentViolation.dismissed_by || 'N/A')}</dd>
+                        ${currentViolation.violation_details?.dismissal_notes ? `
+                            <dt>Dismissal Reason:</dt>
+                            <dd>${sanitizeHtml(currentViolation.violation_details.dismissal_notes)}</dd>
+                        ` : ''}
                     ` : ''}
                     
                     <dt>Updated:</dt>
@@ -136,12 +153,15 @@ function renderViolationContent() {
 
                 <div class="violation-actions-card">
                     <h3>Actions</h3>
-                    <div class="action-buttons">
-                        ${currentViolation.status === 'open' ? `
-                            <button class="btn btn-secondary" id="dismiss-btn">
-                                Dismiss Violation
-                            </button>
-                        ` : ''}
+                    
+                    ${currentViolation.severity === 'Critical' && currentViolation.status === 'open' ? `
+                        <div class="critical-notice">
+                            ⚠️ <strong>Critical violations cannot be dismissed.</strong>
+                            <p>Please fix the issue or contact admin to adjust the rule severity.</p>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="delete-section">
                         <button class="btn btn-danger" id="delete-btn">
                             Delete Violation
                         </button>
@@ -165,16 +185,39 @@ function attachViolationDetailListeners() {
         saveNotesBtn.addEventListener('click', saveViolationNotes);
     }
 
-    // Dismiss
-    const dismissBtn = document.getElementById('dismiss-btn');
-    if (dismissBtn) {
-        dismissBtn.addEventListener('click', dismissViolation);
+    // Dismiss button (opens modal)
+    const dismissBtn = document.getElementById('dismiss-violation-btn');
+    if (dismissBtn && !dismissBtn.disabled) {
+        dismissBtn.addEventListener('click', openDismissModal);
     }
 
     // Delete
     const deleteBtn = document.getElementById('delete-btn');
     if (deleteBtn) {
         deleteBtn.addEventListener('click', deleteViolation);
+    }
+}
+
+/**
+ * Open dismiss modal
+ */
+function openDismissModal() {
+    const modal = new DismissViolationModal(currentViolation, handleDismissSuccess);
+    modal.show();
+}
+
+/**
+ * Handle successful dismissal
+ */
+async function handleDismissSuccess() {
+    // Reload the violation to show updated status
+    try {
+        const violationData = await InspectorAPI.getViolation(currentViolation.violation_id);
+        currentViolation = violationData.violation;
+        renderViolationContent();
+    } catch (error) {
+        console.error('Error reloading violation:', error);
+        showErrorToast('Failed to refresh violation details');
     }
 }
 
@@ -205,30 +248,6 @@ async function saveViolationNotes() {
         saveBtn.disabled = false;
         saveBtn.textContent = 'Save Notes';
     }
-}
-
-/**
- * Dismiss violation
- */
-async function dismissViolation() {
-    showConfirmModal(
-        'Dismiss Violation',
-        'Are you sure you want to dismiss this violation? It will be marked as dismissed and hidden from active violations.',
-        async () => {
-            try {
-                await InspectorAPI.dismissViolation(currentViolation.violation_id);
-                showSuccessToast('Violation dismissed successfully');
-                
-                // Navigate back after brief delay
-                setTimeout(() => {
-                    history.back();
-                }, 1000);
-                
-            } catch (error) {
-                showErrorToast(`Failed to dismiss violation: ${error.message}`);
-            }
-        }
-    );
 }
 
 /**

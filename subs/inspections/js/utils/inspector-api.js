@@ -33,13 +33,21 @@ const InspectorAPI = {
             const result = await response.json();
 
             if (!result.success) {
-                throw new Error(result.error || 'Request failed');
+                const errorMsg = result.error || 'Request failed';
+                const errorDetails = result.details ? ` - ${JSON.stringify(result.details)}` : '';
+                throw new Error(`${errorMsg}${errorDetails}`);
             }
 
             return result.data;
 
         } catch (error) {
             console.error(`API Error (${endpoint}):`, error);
+            console.error('Full error details:', {
+                endpoint,
+                url,
+                error: error.message,
+                stack: error.stack
+            });
             throw error;
         }
     },
@@ -150,9 +158,10 @@ const InspectorAPI = {
     /**
      * Dismiss violation
      */
-    async dismissViolation(violationId) {
+    async dismissViolation(violationId, dismissalNotes) {
         return this.request(`/admin/inspector/violations/${violationId}/dismiss`, {
-            method: 'PATCH'
+            method: 'PATCH',
+            body: JSON.stringify({ dismissal_notes: dismissalNotes })
         });
     },
 
