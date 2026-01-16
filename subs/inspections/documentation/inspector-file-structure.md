@@ -3,7 +3,8 @@ inspector/
 ├── css/
 │   ├── inspector.css                   # Main dashboard styles
 │   ├── rule-detail.css                 # Rule detail page
-│   ├── dismiss-modal-styles.css                 # Rule detail page
+│   ├── violation-reason.css                 # Rule detail page
+│   ├── dismiss-modal-styles.css        # Dismiss detail styling
 │   └── violation-detail.css            # Modal and item violations
 └── js/
     ├── app.js                          # Main entry point
@@ -11,6 +12,7 @@ inspector/
     │   ├── router.js                   # Navigo routing
     │   ├── inspector-api.js            # API client
     │   ├── inspector-config.js         # Constants and helpers
+    │   ├── violation-helperjs          # helper for routing rule violations
     │   └── state.js                    # URL state management
     ├── shared/
     │   ├── toast.js                    # Toast notifications
