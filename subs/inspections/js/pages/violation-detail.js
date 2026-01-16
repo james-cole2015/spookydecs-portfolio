@@ -56,6 +56,19 @@ function renderViolationContent() {
 
     const canDismiss = currentViolation.severity !== 'Critical' && currentViolation.status === 'open';
 
+    // Generate violation reason HTML using helper
+    const violationReasonHtml = renderViolationReason(currentViolation);
+
+    // Determine item display based on violation type
+    const isDuplicate = currentViolation.rule_id === 'DUPLICATE_LIGHTS' || currentViolation.rule_id === 'DUPLICATE_ITEMS';
+    const itemDisplay = isDuplicate 
+        ? `${sanitizeHtml(details.item1_short_name || 'Unknown')} & ${sanitizeHtml(details.item2_short_name || 'Unknown')}`
+        : sanitizeHtml(details.item_short_name || currentViolation.entity_id);
+    
+    const itemClass = isDuplicate
+        ? sanitizeHtml(details.item1_class || 'Unknown')
+        : sanitizeHtml(details.item_class || 'Unknown');
+
     content.innerHTML = `
         <div class="violation-page-header">
             <div class="violation-title-section">
@@ -90,14 +103,25 @@ function renderViolationContent() {
                     <dt>Violation ID:</dt>
                     <dd class="violation-id">${sanitizeHtml(currentViolation.violation_id)}</dd>
                     
-                    <dt>Item:</dt>
-                    <dd>${sanitizeHtml(details.item_short_name || currentViolation.entity_id)}</dd>
+                    <dt>${isDuplicate ? 'Items:' : 'Item:'}</dt>
+                    <dd>${itemDisplay}</dd>
                     
                     <dt>Entity ID:</dt>
                     <dd>${sanitizeHtml(currentViolation.entity_id)}</dd>
                     
+                    ${isDuplicate ? `
+                        <dt>Item 1 ID:</dt>
+                        <dd>${sanitizeHtml(details.item1_id || 'N/A')}</dd>
+                        
+                        <dt>Item 2 ID:</dt>
+                        <dd>${sanitizeHtml(details.item2_id || 'N/A')}</dd>
+                    ` : ''}
+                    
                     <dt>Entity Type:</dt>
                     <dd>${sanitizeHtml(currentViolation.entity_type)}</dd>
+                    
+                    <dt>Item Class:</dt>
+                    <dd>${itemClass}</dd>
                     
                     <dt>Rule ID:</dt>
                     <dd>${sanitizeHtml(currentViolation.rule_id)}</dd>
@@ -139,6 +163,11 @@ function renderViolationContent() {
                 <div class="violation-issue-card">
                     <h3>Issue Description</h3>
                     <p class="violation-message">${sanitizeHtml(details.message || 'No message available')}</p>
+                </div>
+
+                <!-- NEW: Violation Reason Section -->
+                <div class="violation-reason-card">
+                    ${violationReasonHtml}
                 </div>
 
                 <div class="violation-notes-card">
