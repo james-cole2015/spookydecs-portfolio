@@ -139,6 +139,79 @@
     background: var(--color-light-gray);
 }
 
+/* Edit Description Modal Form Styles */
+.modal-dialog {
+    min-width: 500px;
+    max-width: 600px;
+}
+
+.modal-body .form-group {
+    margin-bottom: 1.5rem;
+    width: 100%;
+}
+
+.modal-body .form-group:last-child {
+    margin-bottom: 0;
+}
+
+.modal-body .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--color-text);
+    font-size: 0.875rem;
+}
+
+.modal-body .form-control {
+    display: block;
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-family: inherit;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+}
+
+.modal-body .form-control:focus {
+    outline: none;
+    border-color: var(--color-info);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.modal-body .form-control:disabled,
+.modal-body .form-control[disabled] {
+    background-color: #f9fafb;
+    color: var(--color-text-secondary);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.modal-body .form-control[readonly] {
+    background-color: #f9fafb;
+    color: var(--color-text-secondary);
+}
+
+.modal-body textarea.form-control {
+    resize: vertical;
+    min-height: 150px;
+    font-family: inherit;
+    line-height: 1.6;
+}
+
+.modal-body .char-counter {
+    margin-top: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--color-text-secondary);
+    text-align: right;
+}
+
+.modal-body .char-counter #char-count {
+    font-weight: 600;
+    color: var(--color-text);
+}
+
 @media (max-width: 768px) {
     .rule-header {
         flex-direction: column;
@@ -147,5 +220,10 @@
 
     .rule-info-grid {
         grid-template-columns: 1fr;
+    }
+    
+    .modal-dialog {
+        min-width: unset;
+        width: 95%;
     }
 }

@@ -74,6 +74,9 @@ function renderRuleDetailContent() {
                 </div>
             </div>
             <div class="rule-actions-section">
+                <button class="btn btn-secondary" id="edit-description-btn">
+                    ✏️ Edit Description
+                </button>
                 <button class="btn btn-primary" id="run-rule-btn">
                     ▶ Run Rule
                 </button>
@@ -106,6 +109,9 @@ function renderRuleDetailContent() {
                     
                     <dt>Last Updated:</dt>
                     <dd>${formatDate(currentRule.updated_at)}</dd>
+                    
+                    <dt>Updated By:</dt>
+                    <dd>${sanitizeHtml(currentRule.updated_by || 'N/A')}</dd>
                 </dl>
             </div>
 
@@ -196,6 +202,12 @@ function renderRuleViolations() {
  * Attach event listeners
  */
 function attachRuleDetailListeners() {
+    // Edit description button
+    const editBtn = document.getElementById('edit-description-btn');
+    if (editBtn) {
+        editBtn.addEventListener('click', openEditDescriptionModal);
+    }
+
     // Run rule button
     const runBtn = document.getElementById('run-rule-btn');
     if (runBtn) {
@@ -215,6 +227,124 @@ function attachRuleDetailListeners() {
             openViolationDetail(violationId);
         });
     });
+}
+
+/**
+ * Open edit description modal
+ */
+function openEditDescriptionModal() {
+    const maxChars = 1000;
+    const currentDescription = currentRule.description || '';
+    const updatedAt = new Date().toISOString();
+    
+    const contentHtml = `
+        <div class="form-group">
+            <label for="rule-description-input">Description</label>
+            <textarea 
+                id="rule-description-input" 
+                class="form-control" 
+                rows="6"
+                maxlength="${maxChars}"
+                placeholder="Enter rule description..."
+            >${sanitizeHtml(currentDescription)}</textarea>
+            <div class="char-counter">
+                <span id="char-count">${currentDescription.length}</span> / ${maxChars} characters
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>Updated By</label>
+            <input 
+                type="text" 
+                class="form-control" 
+                value="frontend-update" 
+                readonly 
+                disabled
+            />
+        </div>
+        
+        <div class="form-group">
+            <label>Updated At</label>
+            <input 
+                type="text" 
+                class="form-control" 
+                value="${updatedAt}" 
+                readonly 
+                disabled
+            />
+        </div>
+    `;
+    
+    const modal = showModal('Edit Rule Description', contentHtml, [
+        {
+            label: 'Cancel',
+            action: 'cancel',
+            primary: false,
+            onClick: () => {}
+        },
+        {
+            label: 'Save',
+            action: 'save',
+            primary: true,
+            onClick: () => saveDescription(),
+            closeOnClick: false
+        }
+    ]);
+    
+    // Attach character counter
+    const textarea = modal.querySelector('#rule-description-input');
+    const charCount = modal.querySelector('#char-count');
+    if (textarea && charCount) {
+        textarea.addEventListener('input', () => {
+            charCount.textContent = textarea.value.length;
+        });
+        
+        // Focus textarea
+        setTimeout(() => textarea.focus(), 100);
+    }
+}
+
+/**
+ * Save description
+ */
+async function saveDescription() {
+    const textarea = document.querySelector('#rule-description-input');
+    if (!textarea) return;
+    
+    const newDescription = textarea.value.trim();
+    
+    if (!newDescription) {
+        showErrorToast('Description cannot be empty');
+        return;
+    }
+    
+    const saveBtn = document.querySelector('[data-action="save"]');
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving...';
+    }
+    
+    try {
+        const updates = {
+            description: newDescription,
+            updated_by: 'frontend-update'
+        };
+        
+        const response = await InspectorAPI.updateRule(currentRule.rule_id, updates);
+        currentRule = response.rule;
+        
+        showSuccessToast('Description updated successfully');
+        closeModal();
+        renderRuleDetailContent();
+        
+    } catch (error) {
+        console.error('Error updating description:', error);
+        showErrorToast(`Failed to update description: ${error.message}`);
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save';
+        }
+    }
 }
 
 /**

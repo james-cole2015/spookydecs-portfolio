@@ -85,6 +85,16 @@ const InspectorAPI = {
     },
 
     /**
+     * Update a rule
+     */
+    async updateRule(ruleId, updates) {
+        return this.request(`/admin/inspector/rules/${ruleId}`, {
+            method: 'PATCH',
+            body: JSON.stringify(updates)
+        });
+    },
+
+    /**
      * Deactivate rule (DELETE)
      */
     async deleteRule(ruleId) {
@@ -220,4 +230,4 @@ const InspectorAPI = {
 
         return allViolations;
     }
-};
+}
