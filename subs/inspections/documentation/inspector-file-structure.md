@@ -3,6 +3,7 @@ inspector/
 ├── css/
 │   ├── inspector.css                   # Main dashboard styles
 │   ├── rule-detail.css                 # Rule detail page
+│   ├── dismiss-modal-styles.css                 # Rule detail page
 │   └── violation-detail.css            # Modal and item violations
 └── js/
     ├── app.js                          # Main entry point
@@ -16,11 +17,11 @@ inspector/
     │   └── modal.js                    # Modal dialogs
     ├── components/
     │   ├── StatsBar.js                 # Stats display
+    │   ├── DismissViolationModal.js    # Dismiss modal
     │   ├── TabBar.js                   # Tab navigation
     │   ├── RulesList.js                # Rules accordion
     │   ├── ViolationsTable.js          # Violations with infinite scroll
     │   ├── ItemViolationsView.js       # Item-grouped violations
-    │   └── ViolationDetailModal.js     # Edit/dismiss/delete modal
     └── pages/
         ├── inspector-dashboard.js      # Dashboard orchestration
         └── rule-detail.js              # Rule detail page
