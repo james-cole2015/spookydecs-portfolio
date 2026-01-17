@@ -28,7 +28,7 @@ export class ItemFormWizard {
       class: '',
       class_type: '',
       season: '',
-      status: 'Active'
+      status: 'Packed'  // Changed from 'Active' to 'Packed'
     };
   }
   
@@ -230,41 +230,42 @@ export class ItemFormWizard {
   
   // Data preparation for API
   prepareItemData() {
+    // Transform snake_case form fields to camelCase API fields
     const data = {
-      class: this.formData.class,
-      class_type: this.formData.class_type,
-      short_name: this.formData.short_name,
+      type: this.formData.class,                    // class → type
+      category: this.formData.class_type,           // class_type → category
+      shortName: this.formData.short_name,          // short_name → shortName
       season: this.formData.season,
-      status: this.formData.status || 'Active'
+      status: this.mode === 'create' ? 'Packed' : (this.formData.status || 'Active')
     };
     
-    // Optional fields
-    if (this.formData.date_acquired) data.date_acquired = this.formData.date_acquired;
-    if (this.formData.general_notes) data.general_notes = this.formData.general_notes;
+    // Optional basic fields
+    if (this.formData.date_acquired) data.dateAcquired = this.formData.date_acquired;
+    if (this.formData.general_notes) data.generalNotes = this.formData.general_notes;
     
-    // Class-specific fields
-    if (this.formData.height_length) data.height_length = this.formData.height_length;
+    // Class-specific fields - transform to camelCase
+    if (this.formData.height_length) data.heightLength = this.formData.height_length;
     if (this.formData.stakes) data.stakes = this.formData.stakes;
     if (this.formData.tethers) data.tethers = this.formData.tethers;
     if (this.formData.color) data.color = this.formData.color;
-    if (this.formData.bulb_type) data.bulb_type = this.formData.bulb_type;
+    if (this.formData.bulb_type) data.bulbType = this.formData.bulb_type;
     if (this.formData.length) data.length = this.formData.length;
-    if (this.formData.male_ends) data.male_ends = this.formData.male_ends;
-    if (this.formData.female_ends) data.female_ends = this.formData.female_ends;
+    if (this.formData.male_ends) data.maleEnds = this.formData.male_ends;
+    if (this.formData.female_ends) data.femaleEnds = this.formData.female_ends;
     if (this.formData.watts) data.watts = this.formData.watts;
     if (this.formData.amps) data.amps = this.formData.amps;
     if (this.formData.adapter) data.adapter = this.formData.adapter;
-    if (this.formData.power_inlet !== undefined) data.power_inlet = this.formData.power_inlet;
+    if (this.formData.power_inlet !== undefined) data.powerInlet = this.formData.power_inlet;
     
-    // Vendor metadata
+    // Vendor metadata - these are already renamed in form (vendor_cost → cost, etc.)
     if (this.formData.vendor_cost) data.cost = this.formData.vendor_cost;
     if (this.formData.vendor_value) data.value = this.formData.vendor_value;
     if (this.formData.vendor_manufacturer) data.manufacturer = this.formData.vendor_manufacturer;
-    if (this.formData.vendor_store) data.vendor_store = this.formData.vendor_store;
+    if (this.formData.vendor_store) data.vendorStore = this.formData.vendor_store;
     
     // Storage data
-    if (this.formData.storage_tote_id) data.tote_id = this.formData.storage_tote_id;
-    if (this.formData.storage_location) data.tote_location = this.formData.storage_location;
+    if (this.formData.storage_tote_id) data.toteId = this.formData.storage_tote_id;
+    if (this.formData.storage_location) data.toteLocation = this.formData.storage_location;
     
     return data;
   }

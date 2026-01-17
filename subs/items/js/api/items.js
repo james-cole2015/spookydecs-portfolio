@@ -195,10 +195,10 @@ export async function createItem(itemData) {
   try {
     const apiEndpoint = await getApiEndpoint();
     
-    console.log('Sending POST to:', `${apiEndpoint}/admin/items`);
+    console.log('Sending POST to:', `${apiEndpoint}/items`);
     console.log('Request body:', JSON.stringify(itemData, null, 2));
     
-    const response = await fetch(`${apiEndpoint}/admin/items`, {
+    const response = await fetch(`${apiEndpoint}/items`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -396,7 +396,7 @@ export async function bulkStore(itemIds, location) {
   try {
     const apiEndpoint = await getApiEndpoint();
     
-    const response = await fetch(`${apiEndpoint}/admin/items/bulk`, {
+    const response = await fetch(`${apiEndpoint}/items/bulk`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json'
