@@ -87,6 +87,14 @@ export class SystemMap {
                 description: 'Review system logs, changes, and activity across all subdomains.',
                 urlKey: 'audit',
                 healthKey: 'audit'
+            },
+            {
+                id: 'inspector',
+                icon: '🔍',
+                title: 'Inspector',
+                description: 'Data quality checks to identify and correct data integrity issues.',
+                urlKey: 'inspector',
+                healthKey: 'inspector'
             }
         ];
     }
