@@ -147,12 +147,15 @@ export async function deleteRecord(recordId) {
   const json = await handleResponse(response);
   return json.data.deleted_record;
 }
+// ============================================
+// PERFORM INSPECTION - Updated for new response format
+// ============================================
 
 /**
- * Perform an inspection (if you have this endpoint)
+ * Perform an inspection and complete it
  * @param {string} recordId - Record ID
  * @param {Object} inspectionData - Inspection data
- * @returns {Promise<Object>} Response data
+ * @returns {Promise<Object>} Response with inspection and generated tasks
  */
 export async function performInspection(recordId, inspectionData) {
   const cfg = await loadConfig();
@@ -165,7 +168,11 @@ export async function performInspection(recordId, inspectionData) {
     }
   );
   
-  return handleResponse(response);
+  const json = await handleResponse(response);
+  
+  // Lambda returns { success: true, data: { inspection: {...}, generated_tasks: [...] }, message: '...', timestamp: '...' }
+  // Return the data object which contains both inspection and generated_tasks
+  return json.data;
 }
 
 // ============================================
