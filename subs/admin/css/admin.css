@@ -1,0 +1,183 @@
+/* Admin Dashboard - Main Styles */
+
+:root {
+    --primary-blue: #81d4fa;
+    --light-blue: #e1f5fe;
+    --dark-blue: #0277bd;
+    --neutral-gray: #f5f7fa;
+    --border-gray: #e0e0e0;
+    --text-primary: #0f172a;
+    --text-secondary: #64748b;
+    --white: #ffffff;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --error: #ef4444;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: system-ui, 'Segoe UI', Roboto, Arial, sans-serif;
+    background-color: var(--white);
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
+#app-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Page Title */
+.page-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--dark-blue);
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+/* Dashboard Layout */
+.dashboard-container {
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* System Map Grid */
+.system-map-container {
+    grid-column: 1 / -1;
+}
+
+.system-map-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--dark-blue);
+    margin-bottom: 1rem;
+}
+
+.system-map-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+/* System Map Cards */
+.system-card {
+    background: var(--white);
+    border: 1px solid var(--border-gray);
+    border-radius: 8px;
+    padding: 1.5rem;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.system-card:hover {
+    box-shadow: 0 4px 12px rgba(129, 212, 250, 0.15);
+    border-color: var(--primary-blue);
+}
+
+.system-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.system-card-icon {
+    font-size: 1.5rem;
+}
+
+.system-card-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.system-card-health {
+    margin-left: auto;
+    font-size: 1.25rem;
+}
+
+.system-card-description {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    flex-grow: 1;
+    margin-bottom: 1.25rem;
+}
+
+.system-card-action {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(90deg, #b3e5fc 0%, #81d4fa 100%);
+    color: var(--text-primary);
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border: 1px solid var(--primary-blue);
+    transition: all 0.2s ease;
+    align-self: flex-start;
+    margin-top: auto;
+}
+
+.system-card-action:hover {
+    background: linear-gradient(90deg, #81d4fa 0%, #4fc3f7 100%);
+    box-shadow: 0 2px 6px rgba(129, 212, 250, 0.3);
+}
+
+.system-card-placeholder {
+    opacity: 0.6;
+}
+
+.system-card-placeholder-text {
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-top: auto;
+}
+
+/* Header Link */
+.header-link {
+    color: var(--dark-blue);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    transition: color 0.2s ease;
+}
+
+.header-link:hover {
+    color: var(--primary-blue);
+    text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .dashboard-container {
+        grid-template-columns: 1fr;
+    }
+    
+    #app-container {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .system-map-grid {
+        grid-template-columns: 1fr;
+    }
+}
