@@ -1,5 +1,6 @@
 // Items API Client
 // Wrapper for items Lambda endpoints
+// Updated to work with standardized lambda_utils response format
 
 let configCache = null;
 
@@ -105,8 +106,12 @@ export async function fetchAllItems(bustCache = false) {
     
     const data = await response.json();
     
-    // Handle different response formats (some APIs return { items: [...] })
-    if (Array.isArray(data)) {
+    // Handle standardized response format: { success: true, data: { items: [...] } }
+    if (data.success && data.data && data.data.items && Array.isArray(data.data.items)) {
+      return data.data.items;
+    }
+    // Fallback for old format
+    else if (Array.isArray(data)) {
       return data;
     } else if (data.items && Array.isArray(data.items)) {
       return data.items;
@@ -148,7 +153,18 @@ export async function fetchItemById(itemId, bustCache = false) {
       throw new Error(`Failed to fetch item ${itemId}: ${response.status} ${response.statusText}`);
     }
     
-    return await response.json();
+    const data = await response.json();
+    
+    // Handle standardized response format: { success: true, data: {...item...} }
+    if (data.success && data.data) {
+      return data.data;
+    }
+    // Fallback for old format (item object directly)
+    else if (data.id) {
+      return data;
+    } else {
+      throw new Error('Invalid response format from API');
+    }
   } catch (error) {
     console.error(`Error fetching item ${itemId}:`, error);
     throw error;
@@ -189,10 +205,23 @@ export async function createItem(itemData) {
         errorData = { message: errorText };
       }
       
-      throw new Error(errorData.message || `Failed to create item: ${response.status}`);
+      // Handle standardized error format: { success: false, error: "...", details: {...} }
+      const errorMessage = errorData.error || errorData.message || `Failed to create item: ${response.status}`;
+      throw new Error(errorMessage);
     }
     
-    return await response.json();
+    const data = await response.json();
+    
+    // Handle standardized response format: { success: true, data: { preview: {...}, confirmation: {...} } }
+    if (data.success && data.data) {
+      return data.data; // Return the data object which contains preview and confirmation
+    }
+    // Fallback for old format
+    else if (data.preview || data.confirmation) {
+      return data;
+    } else {
+      throw new Error('Invalid response format from API');
+    }
   } catch (error) {
     console.error('Error creating item:', error);
     throw error;
@@ -218,11 +247,33 @@ export async function updateItem(itemId, itemData) {
     });
     
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Failed to update item: ${response.status}`);
+      const errorText = await response.text();
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch (e) {
+        errorData = { message: errorText };
+      }
+      
+      // Handle standardized error format
+      const errorMessage = errorData.error || errorData.message || `Failed to update item: ${response.status}`;
+      throw new Error(errorMessage);
     }
     
-    return await response.json();
+    const data = await response.json();
+    
+    // Handle standardized response format: { success: true, data: { item: {...} } }
+    if (data.success && data.data && data.data.item) {
+      return data.data.item;
+    }
+    // Fallback for old format
+    else if (data.item) {
+      return data.item;
+    } else if (data.id) {
+      return data;
+    } else {
+      throw new Error('Invalid response format from API');
+    }
   } catch (error) {
     console.error(`Error updating item ${itemId}:`, error);
     throw error;
@@ -246,11 +297,29 @@ export async function deleteItem(itemId) {
     });
     
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Failed to delete item: ${response.status}`);
+      const errorText = await response.text();
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch (e) {
+        errorData = { message: errorText };
+      }
+      
+      // Handle standardized error format
+      const errorMessage = errorData.error || errorData.message || `Failed to delete item: ${response.status}`;
+      throw new Error(errorMessage);
     }
     
-    return await response.json();
+    const data = await response.json();
+    
+    // Handle standardized response format: { success: true, data: { item_id: "..." }, message: "..." }
+    if (data.success) {
+      return data; // Return entire response with message
+    }
+    // Fallback for old format
+    else {
+      return data;
+    }
   } catch (error) {
     console.error(`Error deleting item ${itemId}:`, error);
     throw error;
@@ -324,11 +393,29 @@ export async function bulkStore(itemIds, location) {
     });
     
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || errorData.message || `Failed to store items: ${response.status}`);
+      const errorText = await response.text();
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch (e) {
+        errorData = { message: errorText };
+      }
+      
+      // Handle standardized error format
+      const errorMessage = errorData.error || errorData.message || `Failed to store items: ${response.status}`;
+      throw new Error(errorMessage);
     }
     
-    return await response.json();
+    const data = await response.json();
+    
+    // Handle standardized response format: { success: true, data: { items_stored: N, location: "...", item_ids: [...] }, message: "..." }
+    if (data.success && data.data) {
+      return data.data; // Return data object
+    }
+    // Fallback for old format
+    else {
+      return data;
+    }
   } catch (error) {
     console.error('Error bulk storing items:', error);
     throw error;
