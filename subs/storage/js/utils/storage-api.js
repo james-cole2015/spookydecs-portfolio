@@ -1,6 +1,7 @@
 /**
  * Storage API Client
  * Handles all HTTP requests to the storage endpoints
+ * Updated to handle standardized lambda_utils response format
  */
 
 import STORAGE_CONFIG from './storage-config.js';
@@ -30,7 +31,14 @@ function getHeaders() {
 async function handleResponse(response) {
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: 'Unknown error' }));
-    throw new Error(error.error || `HTTP ${response.status}`);
+    // Handle standardized error format: { success: false, error: "...", details: {...} }
+    const errorMessage = error.error || error.message || `HTTP ${response.status}`;
+    const errorDetails = error.details || null;
+    
+    const err = new Error(errorMessage);
+    err.details = errorDetails;
+    err.statusCode = response.status;
+    throw err;
   }
   return response.json();
 }
@@ -59,6 +67,12 @@ export const storageAPI = {
     
     const response = await fetch(url, { headers: getHeaders() });
     const data = await handleResponse(response);
+    
+    // Handle standardized response format: { success: true, data: { storage_units: [...], count: N } }
+    if (data.success && data.data) {
+      return data.data.storage_units || [];
+    }
+    // Fallback for old format
     return data.storage_units || [];
   },
 
@@ -72,7 +86,13 @@ export const storageAPI = {
       { headers: getHeaders() }
     );
     const data = await handleResponse(response);
-    return data.storage_unit;
+    
+    // Handle standardized response format: { success: true, data: { storage_unit: {...} } }
+    if (data.success && data.data && data.data.storage_unit) {
+      return data.data.storage_unit;
+    }
+    // Fallback for old format
+    return data.storage_unit || null;
   },
 
   /**
@@ -86,7 +106,13 @@ export const storageAPI = {
       body: JSON.stringify(data)
     });
     const result = await handleResponse(response);
-    return result.storage_unit;
+    
+    // Handle standardized response format: { success: true, data: { storage_unit: {...} } }
+    if (result.success && result.data && result.data.storage_unit) {
+      return result.data.storage_unit;
+    }
+    // Fallback for old format
+    return result.storage_unit || null;
   },
 
   /**
@@ -100,7 +126,13 @@ export const storageAPI = {
       body: JSON.stringify(data)
     });
     const result = await handleResponse(response);
-    return result.storage_unit;
+    
+    // Handle standardized response format: { success: true, data: { storage_unit: {...} } }
+    if (result.success && result.data && result.data.storage_unit) {
+      return result.data.storage_unit;
+    }
+    // Fallback for old format
+    return result.storage_unit || null;
   },
 
   /**
@@ -117,7 +149,13 @@ export const storageAPI = {
       }
     );
     const result = await handleResponse(response);
-    return result.storage_unit;
+    
+    // Handle standardized response format: { success: true, data: { storage_unit: {...} } }
+    if (result.success && result.data && result.data.storage_unit) {
+      return result.data.storage_unit;
+    }
+    // Fallback for old format
+    return result.storage_unit || null;
   },
 
   /**
@@ -132,7 +170,14 @@ export const storageAPI = {
         headers: getHeaders()
       }
     );
-    return handleResponse(response);
+    const result = await handleResponse(response);
+    
+    // Handle standardized response format: { success: true, data: { id: "..." }, message: "..." }
+    if (result.success) {
+      return result;
+    }
+    // Fallback for old format
+    return result;
   },
 
   /**
@@ -151,7 +196,14 @@ export const storageAPI = {
         })
       }
     );
-    return handleResponse(response);
+    const result = await handleResponse(response);
+    
+    // Handle standardized response format: { success: true, data: { storage_id, items_added, total_contents, ... } }
+    if (result.success && result.data) {
+      return result.data;
+    }
+    // Fallback for old format (returns the data directly)
+    return result;
   },
 
   /**
@@ -169,7 +221,14 @@ export const storageAPI = {
         })
       }
     );
-    return handleResponse(response);
+    const result = await handleResponse(response);
+    
+    // Handle standardized response format: { success: true, data: { storage_id, items_removed, remaining_contents } }
+    if (result.success && result.data) {
+      return result.data;
+    }
+    // Fallback for old format
+    return result;
   },
 
   /**
@@ -185,7 +244,14 @@ export const storageAPI = {
         location: location
       })
     });
-    return handleResponse(response);
+    const result = await handleResponse(response);
+    
+    // Handle standardized response format: { success: true, data: { units_created, location, storage_units: [...] } }
+    if (result.success && result.data) {
+      return result.data;
+    }
+    // Fallback for old format
+    return result;
   },
 
   /**
@@ -292,6 +358,7 @@ export const storageAPI = {
 
 /**
  * Items API methods (for fetching unpacked items)
+ * Updated to handle standardized lambda_utils response format
  */
 export const itemsAPI = {
   /**
@@ -314,6 +381,12 @@ export const itemsAPI = {
     
     const response = await fetch(url, { headers: getHeaders() });
     const data = await handleResponse(response);
+    
+    // Handle standardized response format: { success: true, data: { items: [...] } }
+    if (data.success && data.data && data.data.items) {
+      return data.data.items;
+    }
+    // Fallback for old format
     return data.items || [];
   },
 
@@ -338,7 +411,19 @@ export const itemsAPI = {
       { headers: getHeaders() }
     );
     const data = await handleResponse(response);
-    return data.item;
+    
+    // Handle standardized response format: { success: true, data: {...item...} }
+    if (data.success && data.data) {
+      return data.data;
+    }
+    // Fallback for old format
+    else if (data.item) {
+      return data.item;
+    } else if (data.id) {
+      return data;
+    }
+    
+    return null;
   },
 
   /**
@@ -354,7 +439,14 @@ export const itemsAPI = {
         location: location
       })
     });
-    return handleResponse(response);
+    const data = await handleResponse(response);
+    
+    // Handle standardized response format: { success: true, data: { items_stored: N, ... } }
+    if (data.success && data.data) {
+      return data.data;
+    }
+    // Fallback for old format
+    return data;
   }
 };
 
@@ -375,7 +467,14 @@ export const photosAPI = {
         `${cfg.API_ENDPOINT}/admin/images/${photoId}`,
         { headers: getHeaders() }
       );
-      return handleResponse(response);
+      const data = await handleResponse(response);
+      
+      // Handle standardized response format if photos Lambda is updated
+      if (data.success && data.data) {
+        return data.data;
+      }
+      // Fallback for current format
+      return data;
     } catch (error) {
       console.error(`Failed to fetch photo ${photoId}:`, error);
       return null;
