@@ -55,11 +55,16 @@ export function initRouter() {
       
       await handleRecordDetailView(match);
     })
+    .on('/maintenance', async () => {
+      console.log('✅ Route matched: /maintenance');
+      // Show main table view (same as root /)
+      await handleMainView();
+    })
     .on('/:itemId', async (match) => {
       console.log('✅ Route matched: /:itemId', match.data);
       
       // Safety guard - prevent literal routes from being caught
-      if (match.data.itemId === 'create' || match.data.itemId === 'schedules') {
+      if (match.data.itemId === 'create' || match.data.itemId === 'schedules' || match.data.itemId === 'maintenance') {
         console.error('❌ BUG: Literal route matched /:itemId pattern!');
         console.error('   This should never happen - check route order');
         return;
