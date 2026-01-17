@@ -106,17 +106,32 @@ export async function fetchAllItems(bustCache = false) {
     
     const data = await response.json();
     
+    // Debug logging
+    console.log('fetchAllItems response:', {
+      hasSuccess: 'success' in data,
+      successValue: data.success,
+      hasData: 'data' in data,
+      dataType: data.data ? typeof data.data : 'undefined',
+      hasDataItems: data.data && 'items' in data.data,
+      dataItemsIsArray: data.data && Array.isArray(data.data.items),
+      topLevelKeys: Object.keys(data)
+    });
+    
     // Handle standardized response format: { success: true, data: { items: [...] } }
     if (data.success && data.data && data.data.items && Array.isArray(data.data.items)) {
+      console.log('Using standardized format, returning', data.data.items.length, 'items');
       return data.data.items;
     }
     // Fallback for old format
     else if (Array.isArray(data)) {
+      console.log('Using array format, returning', data.length, 'items');
       return data;
     } else if (data.items && Array.isArray(data.items)) {
+      console.log('Using items property format, returning', data.items.length, 'items');
       return data.items;
     } else {
       console.error('Unexpected response format:', data);
+      console.error('Full response structure:', JSON.stringify(data, null, 2));
       return [];
     }
   } catch (error) {
