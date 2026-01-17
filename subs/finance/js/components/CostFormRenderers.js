@@ -26,15 +26,15 @@ export class CostFormRenderers {
 
       <div class="form-section">
         ${this.renderField('vendor', 'Vendor', 'text', true, formData, errors)}
-        ${this.renderField('purchase_date', 'Purchase Date', 'date', false, formData, errors, isGift)}
+        ${this.renderField('purchase_date', 'Purchase Date', 'date', false, formData, errors)}
         ${this.renderField('quantity', 'Quantity', 'number', false, formData, errors)}
         ${this.renderField('unit_cost', 'Unit Cost', 'number', false, formData, errors)}
       </div>
 
       <div class="form-section">
-        ${this.renderField('total_cost', 'Total Cost', 'number', true, formData, errors, isGift)}
-        ${this.renderField('tax', 'Tax', 'number', false, formData, errors, isGift)}
-        ${this.renderField('value', 'Value', 'number', false, formData, errors, false)}
+        ${this.renderField('total_cost', 'Total Cost', 'number', !isGift, formData, errors, false)}
+        ${this.renderField('tax', 'Tax', 'number', false, formData, errors)}
+        ${this.renderField('value', 'Value', 'number', isGift, formData, errors, !isGift)}
         ${this.renderCurrencyField()}
       </div>
 
@@ -61,7 +61,7 @@ export class CostFormRenderers {
           class="form-input ${error ? 'error' : ''}"
           value="${value}"
           ${required ? 'required' : ''}
-          ${disabled ? 'disabled' : ''}
+          ${disabled ? 'readonly' : ''}
           ${type === 'number' ? 'step="0.01" min="0"' : ''}
         />
         ${error ? `<span class="form-error">${error}</span>` : ''}

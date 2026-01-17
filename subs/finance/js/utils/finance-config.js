@@ -64,12 +64,12 @@ export const CURRENCY_OPTIONS = [
   { value: 'GBP', label: 'GBP (£)' }
 ];
 
+// Base required fields (not including total_cost or value - those are conditional)
 export const REQUIRED_FIELDS = [
   'item_name',
   'cost_type',
   'category',
   'cost_date',
-  'total_cost',
   'vendor'
 ];
 
@@ -154,11 +154,25 @@ export function isRelatedIdRequired(costType, category) {
 export function validateCostRecord(record) {
   const errors = {};
 
+  // Validate base required fields
   REQUIRED_FIELDS.forEach(field => {
     if (!record[field] || record[field].toString().trim() === '') {
       errors[field] = 'This field is required';
     }
   });
+
+  // Conditional validation based on cost_type
+  if (record.cost_type === 'gift') {
+    // For gifts: value is required, total_cost is optional
+    if (!record.value || parseFloat(record.value) <= 0) {
+      errors.value = 'Value is required for gifts';
+    }
+  } else {
+    // For non-gifts: total_cost is required and must be > 0
+    if (!record.total_cost || parseFloat(record.total_cost) <= 0) {
+      errors.total_cost = 'Total cost must be greater than 0';
+    }
+  }
 
   // Validate related ID based on cost type and category
   const relatedIdConfig = getRelatedIdConfig(record.cost_type);
@@ -171,17 +185,12 @@ export function validateCostRecord(record) {
     }
   }
 
-  // For non-gift cost types, total cost must be > 0
-  if (record.cost_type !== 'gift') {
-    if (record.total_cost !== undefined && record.total_cost <= 0) {
-      errors.total_cost = 'Total cost must be greater than 0';
-    }
-  }
-
+  // Quantity validation
   if (record.quantity !== undefined && record.quantity <= 0) {
     errors.quantity = 'Quantity must be greater than 0';
   }
 
+  // Date validation
   if (record.cost_date) {
     const date = new Date(record.cost_date);
     if (isNaN(date.getTime())) {
@@ -203,6 +212,7 @@ export function getCategoriesForCostType(costType) {
 // Calculate value based on cost type
 export function calculateValue(costType, totalCost, tax = 0) {
   if (costType === 'gift') {
+    // For gifts, value should be manually entered, not calculated
     return 0;
   }
   return parseFloat(totalCost) || 0;

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inspector | SpookyDecs</title>
+    
+    <!-- Header Component Script (load first) -->
+    <script src="https://assets.spookydecs.com/components/spookydecs-header.js"></script>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/inspector.css">
+    <link rel="stylesheet" href="css/rule-detail.css">
+    <link rel="stylesheet" href="css/dismiss-modal-styles.css">
+    <link rel="stylesheet" href="css/rule-detail.css">
+    <link rel="stylesheet" href="css/violation-detail.css">
+    <link rel="stylesheet" href="css/violation-reason.css">
+</head>
+<body>
+    <!-- SpookyDecs Header -->
+    <spookydecs-header 
+        page-title="Inspector" 
+        user-name="Admin"
+        user-role="Administrator"
+        logout-url="/logout">
+    </spookydecs-header>
+    
+    <!-- Main Content -->
+    <main id="app-container">
+        <!-- Content will be dynamically rendered by router -->
+    </main>
+    
+    <!-- Navigo Router -->
+    <script src="https://unpkg.com/navigo@8.11.1/lib/navigo.min.js"></script>
+    
+    <!-- Shared utilities -->
+    <script src="js/shared/toast.js"></script>
+    <script src="js/shared/modal.js"></script>
+    
+    <!-- Utils -->
+    <script src="js/utils/inspector-config.js"></script>
+    <script src="js/utils/violation-helper.js"></script>
+    <script src="js/utils/state.js"></script>
+    <script src="js/utils/inspector-api.js"></script>
+    <script src="js/utils/router.js"></script>
+    
+    <!-- Components -->
+    <script src="js/components/StatsBar.js"></script>
+    <script src="js/components/TabBar.js"></script>
+    <script src="js/components/RulesList.js"></script>
+    <script src="js/components/ViolationsTable.js"></script>
+    <script src="js/components/ItemViolationsView.js"></script>
+    <script src="js/components/DismissViolationModal.js"></script>    
+    
+    <!-- Pages -->
+    <script src="js/pages/inspector-dashboard.js"></script>
+    <script src="js/pages/rule-detail.js"></script>
+    <script src="js/pages/violation-detail.js"></script>
+    
+    <!-- Main App -->
+    <script src="js/app.js"></script>
+</body>
+</html>

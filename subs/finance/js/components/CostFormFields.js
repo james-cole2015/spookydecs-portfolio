@@ -191,12 +191,8 @@ export class CostFormFields {
           this.formData.category = '';
         }
         
-        // Handle gift logic
-        if (e.target.value === 'gift') {
-          this.formData.total_cost = 0;
-          this.formData.tax = 0;
-          this.formData.value = 0;
-        }
+        // Don't auto-set any values when switching to gift
+        // Let user enter them manually
         
         this.render();
       });
@@ -218,7 +214,7 @@ export class CostFormFields {
       });
     }
 
-    // Auto-calculate total cost from unit cost and quantity
+    // Auto-calculate total cost from unit cost and quantity (for non-gifts)
     const quantityInput = this.container.querySelector('#quantity');
     const unitCostInput = this.container.querySelector('#unit_cost');
     const totalCostInput = this.container.querySelector('#total_cost');
@@ -238,20 +234,32 @@ export class CostFormFields {
       unitCostInput.addEventListener('input', updateTotal);
     }
 
-    // Auto-calculate value when total cost changes
+    // Auto-calculate value when total cost changes (for non-gifts)
     if (totalCostInput) {
       totalCostInput.addEventListener('input', () => {
         this.formData.total_cost = totalCostInput.value;
-        this.updateValue();
+        if (this.formData.cost_type !== 'gift') {
+          this.updateValue();
+        }
       });
     }
 
-    // Update value when tax changes
+    // Update value when tax changes (for non-gifts)
     const taxInput = this.container.querySelector('#tax');
     if (taxInput) {
       taxInput.addEventListener('input', () => {
         this.formData.tax = taxInput.value;
-        this.updateValue();
+        if (this.formData.cost_type !== 'gift') {
+          this.updateValue();
+        }
+      });
+    }
+
+    // For gifts, value is manually entered (not calculated)
+    const valueInput = this.container.querySelector('#value');
+    if (valueInput) {
+      valueInput.addEventListener('input', () => {
+        this.formData.value = valueInput.value;
       });
     }
 
@@ -269,6 +277,9 @@ export class CostFormFields {
   updateValue() {
     const valueInput = this.container.querySelector('#value');
     if (!valueInput) return;
+
+    // Only auto-calculate for non-gifts
+    if (this.formData.cost_type === 'gift') return;
 
     const value = calculateValue(
       this.formData.cost_type,
