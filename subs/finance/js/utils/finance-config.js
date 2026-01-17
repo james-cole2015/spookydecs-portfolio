@@ -6,7 +6,6 @@ export const COST_TYPES = [
   { value: 'maintenance', label: 'Maintenance' },
   { value: 'build', label: 'Build' },
   { value: 'supply_purchase', label: 'Supply Purchase' },
-  { value: 'gift', label: 'Gift' },
   { value: 'other', label: 'Other' }
 ];
 
@@ -34,13 +33,6 @@ export const CATEGORIES_BY_COST_TYPE = {
     { value: 'other', label: 'Other' }
   ],
   supply_purchase: [
-    { value: 'consumables', label: 'Consumables' }
-  ],
-  gift: [
-    { value: 'decoration', label: 'Decoration' },
-    { value: 'light', label: 'Light' },
-    { value: 'accessory', label: 'Accessory' },
-    { value: 'parts', label: 'Parts' },
     { value: 'consumables', label: 'Consumables' }
   ],
   other: [
@@ -81,7 +73,8 @@ export const FORM_DEFAULTS = {
   unit_cost: 0,
   total_cost: 0,
   tax: 0,
-  value: 0
+  value: 0,
+  is_gift: false
 };
 
 // Related ID configuration by cost type
@@ -116,14 +109,6 @@ export const RELATED_ID_CONFIG = {
     searchFields: ['idea_name', 'id']
   },
   supply_purchase: null, // No related field
-  gift: { 
-    field: 'related_item_id', 
-    label: 'Related Item', 
-    required: (category) => ['decoration', 'light', 'accessory'].includes(category),
-    endpoint: '/items',
-    searchFields: ['short_name', 'id'],
-    classFilter: ['Decoration', 'Light', 'Accessory']
-  },
   other: { 
     field: 'related_item_id', 
     label: 'Related Item', 
@@ -161,11 +146,19 @@ export function validateCostRecord(record) {
     }
   });
 
-  // Conditional validation based on cost_type
-  if (record.cost_type === 'gift') {
-    // For gifts: value is required, total_cost is optional
+  // Get is_gift flag (defaults to false)
+  const isGift = record.is_gift === true || record.is_gift === 'true';
+
+  // Conditional validation based on is_gift flag
+  if (isGift) {
+    // For gifts: value is required, total_cost is optional (can be 0)
     if (!record.value || parseFloat(record.value) <= 0) {
-      errors.value = 'Value is required for gifts';
+      errors.value = 'Value is required for gifts and must be greater than 0';
+    }
+    
+    // total_cost can be 0 or positive for gifts
+    if (record.total_cost && parseFloat(record.total_cost) < 0) {
+      errors.total_cost = 'Total cost cannot be negative';
     }
   } else {
     // For non-gifts: total_cost is required and must be > 0
@@ -209,9 +202,9 @@ export function getCategoriesForCostType(costType) {
   return CATEGORIES_BY_COST_TYPE[costType] || CATEGORIES_BY_COST_TYPE.other;
 }
 
-// Calculate value based on cost type
-export function calculateValue(costType, totalCost, tax = 0) {
-  if (costType === 'gift') {
+// Calculate value based on is_gift flag
+export function calculateValue(isGift, totalCost, tax = 0) {
+  if (isGift) {
     // For gifts, value should be manually entered, not calculated
     return 0;
   }
@@ -293,6 +286,13 @@ export function filterCosts(costs, filters) {
     // Vendor filter
     if (filters.vendor && filters.vendor !== 'all') {
       if (cost.vendor !== filters.vendor) return false;
+    }
+
+    // is_gift filter
+    if (filters.is_gift !== undefined && filters.is_gift !== 'all') {
+      const filterIsGift = filters.is_gift === true || filters.is_gift === 'true';
+      const costIsGift = cost.is_gift === true;
+      if (costIsGift !== filterIsGift) return false;
     }
 
     // Date range filter

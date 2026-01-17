@@ -1,0 +1,37 @@
+/* Gift Checkbox Styling - Add to cost-form.css */
+
+.gift-checkbox-group {
+  grid-column: 1 / -1; /* Full width in grid */
+  margin-top: 8px;
+}
+
+.gift-checkbox-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.gift-checkbox {
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  cursor: pointer;
+  accent-color: #4f46e5; /* Primary color */
+}
+
+.checkbox-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.gift-checkbox:checked ~ .checkbox-text {
+  color: #4f46e5;
+}
+
+.gift-checkbox-group .form-hint {
+  font-size: 13px;
+  color: #6b7280;
+  font-style: italic;
+}
