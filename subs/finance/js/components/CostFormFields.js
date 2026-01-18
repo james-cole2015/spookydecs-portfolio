@@ -53,12 +53,22 @@ export class CostFormFields {
         throw new Error(`Failed to fetch from ${endpoint}`);
       }
 
-      const data = await response.json();
+      const json = await response.json();
+      
+      // Unwrap success_response if present
+      const data = (json && typeof json === 'object' && 'data' in json) ? json.data : json;
       
       // Handle different response structures
       let items = [];
       if (endpoint.includes('/items')) {
+        // Try multiple possible response structures
         items = data.items || data || [];
+        
+        // Ensure items is actually an array
+        if (!Array.isArray(items)) {
+          console.error('Expected items array but got:', typeof items, items);
+          return [];
+        }
         
         // Filter by class if classFilter is specified
         if (config.classFilter && config.classFilter.length > 0) {
@@ -69,12 +79,14 @@ export class CostFormFields {
         
         return items;
       } else if (endpoint.includes('/maintenance-records')) {
-        return data.records || data || [];
+        const records = data.records || data || [];
+        return Array.isArray(records) ? records : [];
       } else if (endpoint.includes('/ideas')) {
-        return data.ideas || data || [];
+        const ideas = data.ideas || data || [];
+        return Array.isArray(ideas) ? ideas : [];
       }
       
-      return data || [];
+      return Array.isArray(data) ? data : [];
     } catch (error) {
       console.error(`Failed to load related data from ${config.endpoint}:`, error);
       return [];
