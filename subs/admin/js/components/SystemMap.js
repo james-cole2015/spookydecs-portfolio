@@ -106,6 +106,8 @@ export class SystemMap {
                 calculateSystemHealth(),
                 getSubdomainUrls()
             ]);
+                    console.log('🔍 DEBUG - Loaded URLs:', this.urls);  // Add this
+        console.log('🔍 DEBUG - Inspector URL:', this.urls.inspector);  // And this
         } catch (error) {
             console.error('Failed to load system data:', error);
         }
