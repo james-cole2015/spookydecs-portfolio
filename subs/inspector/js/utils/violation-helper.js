@@ -14,15 +14,12 @@ function getViolationReason(violation) {
     };
   }
 
-  // Route to specific handler based on rule type
-  if (rule_id === 'MISSING_PACKING_DATA') {
-    return handleMissingPackingData(violation_details);
+  // Check if this is a "missing fields" type violation
+  if (violation_details.missing_fields && Array.isArray(violation_details.missing_fields)) {
+    return handleMissingFields(violation_details);
   }
-  
-  if (rule_id === 'MISSING_DEPLOYMENT_DATA') {
-    return handleMissingDeploymentData(violation_details);
-  }
-  
+
+  // Handle specific rule types that need custom rendering
   if (rule_id === 'MISSING_PRIMARY_PHOTO') {
     return handleMissingPrimaryPhoto(violation_details);
   }
@@ -39,55 +36,47 @@ function getViolationReason(violation) {
 }
 
 /**
- * Handle missing packing data violations
+ * Generic handler for any violation with missing_fields array
+ * Works for: MISSING_PACKING_DATA, MISSING_DEPLOYMENT_DATA, MISSING_VENDOR_METADATA, etc.
  */
-function handleMissingPackingData(details) {
+function handleMissingFields(details) {
   const missingFields = details.missing_fields || [];
   
   if (missingFields.length === 0) {
     return {
       type: 'list',
-      display: 'All packing data fields are present (unexpected violation state)'
+      display: 'All required fields are present (unexpected violation state)'
     };
   }
 
-  // Extract just the field names (remove "packing_data." prefix)
+  // Extract field names and format them nicely
   const fieldNames = missingFields.map(field => {
+    // Split on dots to get nested field path
     const parts = field.split('.');
-    return parts[parts.length - 1]; // Get last part (e.g., "tote_id" from "packing_data.tote_id")
+    
+    // If it's a nested field (e.g., "vendor_metadata.cost"), format it nicely
+    if (parts.length > 1) {
+      // Return as "cost (in vendor_metadata)" or just "cost" if preferred
+      return {
+        fullPath: field,
+        fieldName: parts[parts.length - 1], // Last part
+        parent: parts.slice(0, -1).join('.') // Everything except last part
+      };
+    }
+    
+    // Simple field (no nesting)
+    return {
+      fullPath: field,
+      fieldName: field,
+      parent: null
+    };
   });
 
   return {
     type: 'list',
     title: 'Missing Required Fields',
     items: fieldNames,
-    display: `Missing ${fieldNames.length} required field${fieldNames.length > 1 ? 's' : ''}`
-  };
-}
-
-/**
- * Handle missing deployment data violations
- */
-function handleMissingDeploymentData(details) {
-  const missingFields = details.missing_fields || [];
-  
-  if (missingFields.length === 0) {
-    return {
-      type: 'list',
-      display: 'All deployment data fields are present (unexpected violation state)'
-    };
-  }
-
-  // Extract just the field names (remove "deployment_data." prefix)
-  const fieldNames = missingFields.map(field => {
-    const parts = field.split('.');
-    return parts[parts.length - 1];
-  });
-
-  return {
-    type: 'list',
-    title: 'Missing Required Fields',
-    items: fieldNames,
+    count: fieldNames.length,
     display: `Missing ${fieldNames.length} required field${fieldNames.length > 1 ? 's' : ''}`
   };
 }
@@ -157,14 +146,30 @@ function renderViolationReason(violation) {
   }
 }
 
+/**
+ * Render list-type reasons (missing fields)
+ */
 function renderListReason(reason) {
-  const listItems = reason.items
-    .map(item => `<li><code>${item}</code></li>`)
-    .join('');
+  const listItems = reason.items.map(item => {
+    // item is an object with { fullPath, fieldName, parent }
+    if (item.parent) {
+      return `
+        <li>
+          <code class="field-name">${sanitizeHtml(item.fieldName)}</code>
+          <span class="field-path">in ${sanitizeHtml(item.parent)}</span>
+        </li>
+      `;
+    } else {
+      return `<li><code class="field-name">${sanitizeHtml(item.fieldName)}</code></li>`;
+    }
+  }).join('');
 
   return `
     <div class="violation-reason-section">
-      <h3>${reason.title || 'Violation Details'}</h3>
+      <h3>${sanitizeHtml(reason.title || 'Violation Details')}</h3>
+      <p class="missing-fields-summary">
+        <strong>${reason.count}</strong> required field${reason.count > 1 ? 's are' : ' is'} missing:
+      </p>
       <ul class="violation-reason-list">
         ${listItems}
       </ul>
@@ -172,32 +177,38 @@ function renderListReason(reason) {
   `;
 }
 
+/**
+ * Render field-type reasons (single missing field)
+ */
 function renderFieldReason(reason) {
   return `
     <div class="violation-reason-section">
       <h3>Missing Field</h3>
       <p class="violation-reason-field">
-        No value found for <code>${reason.field}</code>
+        No value found for <code>${sanitizeHtml(reason.field)}</code>
       </p>
     </div>
   `;
 }
 
+/**
+ * Render duplicate-type reasons
+ */
 function renderDuplicateReason(reason) {
   return `
     <div class="violation-reason-section">
       <h3>Duplicate Detection</h3>
       <div class="violation-reason-duplicate">
         <p>
-          <strong>Item 1:</strong> ${reason.item1.name}
-          ${reason.item1.id ? `<span class="item-id">(${reason.item1.id})</span>` : ''}
+          <strong>Item 1:</strong> ${sanitizeHtml(reason.item1.name)}
+          ${reason.item1.id ? `<span class="item-id">(${sanitizeHtml(reason.item1.id)})</span>` : ''}
         </p>
         <p>
-          <strong>Item 2:</strong> ${reason.item2.name}
-          ${reason.item2.id ? `<span class="item-id">(${reason.item2.id})</span>` : ''}
+          <strong>Item 2:</strong> ${sanitizeHtml(reason.item2.name)}
+          ${reason.item2.id ? `<span class="item-id">(${sanitizeHtml(reason.item2.id)})</span>` : ''}
         </p>
         <p>
-          <strong>Matching Field:</strong> <code>${reason.matchingField}</code>
+          <strong>Matching Field:</strong> <code>${sanitizeHtml(reason.matchingField)}</code>
         </p>
         <p>
           <strong>Similarity Score:</strong> ${Math.round(reason.similarityScore * 100)}%
@@ -207,11 +218,14 @@ function renderDuplicateReason(reason) {
   `;
 }
 
+/**
+ * Render generic reasons (fallback)
+ */
 function renderGenericReason(reason) {
   return `
     <div class="violation-reason-section">
       <h3>Violation Details</h3>
-      <p>${reason.display}</p>
+      <p>${sanitizeHtml(reason.display)}</p>
     </div>
   `;
 }
