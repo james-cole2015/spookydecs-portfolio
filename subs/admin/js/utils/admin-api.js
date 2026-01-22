@@ -36,7 +36,8 @@ export async function getSubdomainUrls() {
         storage: config.STR_ADM_URL || '',
         workbench: config.WORKBENCH_URL || '',
         deployments: config.DEPLOY_ADMIN || '',
-        audit: config.AUDIT_ADMIN || '',
+        audit: config.AUDIT_URL || '',
+        inspector: config.INSPECT_URL || '',
         images: '', // Placeholder - no config URL yet
         gallery: '' // Placeholder - no config URL yet
     };

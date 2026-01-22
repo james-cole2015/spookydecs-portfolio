@@ -365,6 +365,13 @@ async function runRule() {
         setTimeout(async () => {
             currentRuleViolations = await InspectorAPI.getViolationsForRule(currentRule.rule_id);
             renderRuleDetailContent();
+            
+            // Re-enable button after reload
+            const btn = document.getElementById('run-rule-btn');
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = '▶ Run Rule';
+            }
         }, 2000);
 
     } catch (error) {

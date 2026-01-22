@@ -53,12 +53,22 @@ export class CostFormFields {
         throw new Error(`Failed to fetch from ${endpoint}`);
       }
 
-      const data = await response.json();
+      const json = await response.json();
+      
+      // Unwrap success_response if present
+      const data = (json && typeof json === 'object' && 'data' in json) ? json.data : json;
       
       // Handle different response structures
       let items = [];
       if (endpoint.includes('/items')) {
+        // Try multiple possible response structures
         items = data.items || data || [];
+        
+        // Ensure items is actually an array
+        if (!Array.isArray(items)) {
+          console.error('Expected items array but got:', typeof items, items);
+          return [];
+        }
         
         // Filter by class if classFilter is specified
         if (config.classFilter && config.classFilter.length > 0) {
@@ -69,12 +79,14 @@ export class CostFormFields {
         
         return items;
       } else if (endpoint.includes('/maintenance-records')) {
-        return data.records || data || [];
+        const records = data.records || data || [];
+        return Array.isArray(records) ? records : [];
       } else if (endpoint.includes('/ideas')) {
-        return data.ideas || data || [];
+        const ideas = data.ideas || data || [];
+        return Array.isArray(ideas) ? ideas : [];
       }
       
-      return data || [];
+      return Array.isArray(data) ? data : [];
     } catch (error) {
       console.error(`Failed to load related data from ${config.endpoint}:`, error);
       return [];
@@ -99,7 +111,8 @@ export class CostFormFields {
       total_cost: extractedData.total_cost || this.formData.total_cost || 0,
       cost_type: extractedData.cost_type || this.formData.cost_type || '',
       category: extractedData.category || this.formData.category || '',
-      subcategory: extractedData.subcategory || this.formData.subcategory || ''
+      subcategory: extractedData.subcategory || this.formData.subcategory || '',
+      is_gift: extractedData.is_gift || this.formData.is_gift || false
     };
     
     // Re-render form with new data
@@ -111,11 +124,17 @@ export class CostFormFields {
       const costTypeSelect = document.getElementById('cost_type');
       const categorySelect = document.getElementById('category');
       const subcategorySelect = document.getElementById('subcategory');
+      const isGiftCheckbox = document.getElementById('is_gift');
       
       if (costTypeSelect && this.formData.cost_type) {
         costTypeSelect.value = this.formData.cost_type;
         // Trigger change event to ensure category dropdown updates
         costTypeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      
+      if (isGiftCheckbox && this.formData.is_gift) {
+        isGiftCheckbox.checked = true;
+        isGiftCheckbox.dispatchEvent(new Event('change', { bubbles: true }));
       }
       
       // Set category after a brief delay to ensure options are rendered
@@ -138,13 +157,14 @@ export class CostFormFields {
       extractionId,
       imageId,
       cost_type: this.formData.cost_type,
-      category: this.formData.category
+      category: this.formData.category,
+      is_gift: this.formData.is_gift
     });
   }
 
   render() {
     const isEditing = !!this.formData.cost_id;
-    const isGift = this.formData.cost_type === 'gift';
+    const isGift = this.formData.is_gift === true || this.formData.is_gift === 'true';
 
     this.container.innerHTML = `
       <div class="form-header">
@@ -179,7 +199,17 @@ export class CostFormFields {
       });
     }
 
-    // Cost type change (to update categories and gift logic)
+    // Gift checkbox change
+    const isGiftCheckbox = this.container.querySelector('#is_gift');
+    if (isGiftCheckbox) {
+      isGiftCheckbox.addEventListener('change', (e) => {
+        this.formData.is_gift = e.target.checked;
+        console.log('Gift checkbox changed:', this.formData.is_gift);
+        this.render();
+      });
+    }
+
+    // Cost type change (to update categories)
     const costTypeSelect = this.container.querySelector('#cost_type');
     if (costTypeSelect) {
       costTypeSelect.addEventListener('change', (e) => {
@@ -190,9 +220,6 @@ export class CostFormFields {
         if (oldCostType !== e.target.value) {
           this.formData.category = '';
         }
-        
-        // Don't auto-set any values when switching to gift
-        // Let user enter them manually
         
         this.render();
       });
@@ -221,7 +248,8 @@ export class CostFormFields {
 
     if (quantityInput && unitCostInput && totalCostInput) {
       const updateTotal = () => {
-        if (this.formData.cost_type === 'gift') return;
+        const isGift = this.formData.is_gift === true || this.formData.is_gift === 'true';
+        if (isGift) return;
         
         const quantity = quantityInput.value || 1;
         const unitCost = unitCostInput.value || 0;
@@ -238,7 +266,8 @@ export class CostFormFields {
     if (totalCostInput) {
       totalCostInput.addEventListener('input', () => {
         this.formData.total_cost = totalCostInput.value;
-        if (this.formData.cost_type !== 'gift') {
+        const isGift = this.formData.is_gift === true || this.formData.is_gift === 'true';
+        if (!isGift) {
           this.updateValue();
         }
       });
@@ -249,13 +278,15 @@ export class CostFormFields {
     if (taxInput) {
       taxInput.addEventListener('input', () => {
         this.formData.tax = taxInput.value;
-        if (this.formData.cost_type !== 'gift') {
+        const isGift = this.formData.is_gift === true || this.formData.is_gift === 'true';
+        if (!isGift) {
           this.updateValue();
         }
       });
     }
 
     // For gifts, value is manually entered (not calculated)
+    // For non-gifts, value is auto-calculated
     const valueInput = this.container.querySelector('#value');
     if (valueInput) {
       valueInput.addEventListener('input', () => {
@@ -268,7 +299,7 @@ export class CostFormFields {
 
     // Track all form changes
     form.addEventListener('input', (e) => {
-      if (e.target.name) {
+      if (e.target.name && e.target.type !== 'checkbox') {
         this.formData[e.target.name] = e.target.value;
       }
     });
@@ -279,10 +310,11 @@ export class CostFormFields {
     if (!valueInput) return;
 
     // Only auto-calculate for non-gifts
-    if (this.formData.cost_type === 'gift') return;
+    const isGift = this.formData.is_gift === true || this.formData.is_gift === 'true';
+    if (isGift) return;
 
     const value = calculateValue(
-      this.formData.cost_type,
+      isGift,
       this.formData.total_cost,
       this.formData.tax
     );
@@ -398,9 +430,17 @@ export class CostFormFields {
     if (form) {
       const formData = new FormData(form);
       for (let [key, value] of formData.entries()) {
-        if (value) {
+        if (key === 'is_gift') {
+          // Checkbox: if present in FormData, it's checked
+          this.formData[key] = true;
+        } else if (value) {
           this.formData[key] = value;
         }
+      }
+      
+      // If checkbox not in FormData, it's unchecked
+      if (!formData.has('is_gift')) {
+        this.formData.is_gift = false;
       }
     }
     

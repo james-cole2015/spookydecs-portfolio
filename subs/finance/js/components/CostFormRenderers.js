@@ -15,18 +15,20 @@ export class CostFormRenderers {
         ${this.renderField('item_name', 'Item Name', 'text', true, formData, errors)}
         ${this.renderField('cost_date', 'Cost Date', 'date', true, formData, errors)}
         ${this.renderSelectField('cost_type', 'Cost Type', COST_TYPES, true, formData, errors)}
-        ${this.renderCategoryField(formData, errors)}
+        ${this.renderGiftCheckbox(formData)}
       </div>
 
-      ${formData.category ? `
-        <div class="form-section">
-          ${this.renderSubcategoryField(formData, errors)}
-        </div>
-      ` : ''}
+      <div class="form-section">
+        ${this.renderCategoryField(formData, errors)}
+        ${formData.category && SUBCATEGORIES[formData.category] ? this.renderSubcategoryField(formData, errors) : ''}
+      </div>
 
       <div class="form-section">
         ${this.renderField('vendor', 'Vendor', 'text', true, formData, errors)}
         ${this.renderField('purchase_date', 'Purchase Date', 'date', false, formData, errors)}
+      </div>
+
+      <div class="form-section">
         ${this.renderField('quantity', 'Quantity', 'number', false, formData, errors)}
         ${this.renderField('unit_cost', 'Unit Cost', 'number', false, formData, errors)}
       </div>
@@ -43,6 +45,31 @@ export class CostFormRenderers {
       <div class="form-section single-column">
         ${this.renderTextarea('description', 'Description', false, formData, errors)}
         ${this.renderTextarea('notes', 'Notes', false, formData, errors)}
+      </div>
+    `;
+  }
+
+  static renderGiftCheckbox(formData) {
+    const isChecked = formData.is_gift === true || formData.is_gift === 'true';
+    
+    return `
+      <div class="form-group gift-checkbox-group">
+        <label class="gift-checkbox-label">
+          <input
+            type="checkbox"
+            id="is_gift"
+            name="is_gift"
+            class="gift-checkbox"
+            ${isChecked ? 'checked' : ''}
+            value="true"
+          />
+          <span class="checkbox-text">This was a gift</span>
+        </label>
+        <p class="form-hint" style="margin-top: 4px; margin-left: 24px;">
+          ${isChecked 
+            ? 'Total cost = what you paid (can be $0). Value = estimated worth.' 
+            : 'Check this box if you received this item/part as a gift.'}
+        </p>
       </div>
     `;
   }

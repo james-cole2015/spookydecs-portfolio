@@ -87,6 +87,14 @@ export class SystemMap {
                 description: 'Review system logs, changes, and activity across all subdomains.',
                 urlKey: 'audit',
                 healthKey: 'audit'
+            },
+            {
+                id: 'inspector',
+                icon: '🔍',
+                title: 'Inspector',
+                description: 'Data quality checks to identify and correct data integrity issues.',
+                urlKey: 'inspector',
+                healthKey: 'inspector'
             }
         ];
     }
@@ -98,6 +106,8 @@ export class SystemMap {
                 calculateSystemHealth(),
                 getSubdomainUrls()
             ]);
+                    console.log('🔍 DEBUG - Loaded URLs:', this.urls);  // Add this
+        console.log('🔍 DEBUG - Inspector URL:', this.urls.inspector);  // And this
         } catch (error) {
             console.error('Failed to load system data:', error);
         }

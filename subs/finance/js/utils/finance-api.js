@@ -1,4 +1,4 @@
-// Finance API Client - Updated with presigned URL upload flow
+// Finance API Client - Updated with presigned URL upload flow and success_response wrapper handling
 
 let API_ENDPOINT = '';
 let configLoaded = false;
@@ -35,7 +35,7 @@ async function ensureConfigLoaded() {
   }
 }
 
-// Helper function to handle API responses
+// Helper function to handle API responses with success_response wrapper
 async function handleResponse(response) {
   const contentType = response.headers.get('content-type');
   
@@ -44,14 +44,25 @@ async function handleResponse(response) {
     
     if (contentType?.includes('application/json')) {
       const errorData = await response.json();
-      errorMessage = errorData.message || errorData.error || errorMessage;
+      // Handle both old and new error formats
+      errorMessage = errorData.error || errorData.message || errorMessage;
     }
     
     throw new Error(errorMessage);
   }
 
   if (contentType?.includes('application/json')) {
-    return await response.json();
+    const json = await response.json();
+    
+    // Unwrap success_response structure if present
+    // New format: { success: true, data: {...}, timestamp: "..." }
+    // Old format: { items: [...] } or direct data
+    if (json && typeof json === 'object' && 'success' in json && 'data' in json) {
+      return json.data; // Return unwrapped data
+    }
+    
+    // Return as-is for old format or non-wrapped responses
+    return json;
   }
   
   return null;
@@ -296,7 +307,9 @@ export async function getCostStats(filters = {}) {
 // Get unique vendors for filter dropdown
 export async function getVendors() {
   try {
-    const costs = await getAllCosts();
+    const response = await getAllCosts();
+    // Handle both array and wrapped object formats
+    const costs = Array.isArray(response) ? response : (response.costs || []);
     const vendors = [...new Set(costs.map(cost => cost.vendor).filter(Boolean))];
     return vendors.sort();
   } catch (error) {

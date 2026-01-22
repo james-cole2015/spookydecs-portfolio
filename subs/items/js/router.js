@@ -9,7 +9,7 @@ export function initRouter() {
   router = new Navigo('/', { hash: false });
   
   // Define routes (order matters - more specific routes first)
-  router
+router
     .on('/items', () => {
       loadPage('items-list');
     })
@@ -17,23 +17,20 @@ export function initRouter() {
       loadPage('item-form', { mode: 'create' });
     })
     .on('/items/:id/edit', ({ data }) => {
-      // Only match if id is not 'create'
+      // Ignore if someone manually types /items/create/edit
       if (data.id === 'create') {
-        router.navigate('/items/create');
-        return;
+        return; // ← Just return, don't navigate
       }
       loadPage('item-form', { mode: 'edit', itemId: data.id });
     })
     .on('/items/:id', ({ data }) => {
-      // Only match if id is not 'create' or 'edit'
-      if (data.id === 'create') {
-        router.navigate('/items/create');
-        return;
+      // Ignore if someone manually types /items/create as a detail view
+      if (data.id === 'create' || data.id === 'edit') {
+        return; // ← Just return, don't navigate
       }
       loadPage('item-detail', { itemId: data.id });
     })
     .notFound(() => {
-      // Redirect to items list if route not found
       router.navigate('/items');
     });
   

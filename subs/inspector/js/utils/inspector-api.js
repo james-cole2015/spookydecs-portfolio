@@ -22,23 +22,33 @@ const InspectorAPI = {
         const url = `${this.getBaseUrl()}${endpoint}`;
         
         try {
-            const response = await fetch(url, {
-                ...options,
+            const config = {
+                method: options.method || 'GET',
                 headers: {
                     'Content-Type': 'application/json',
                     ...options.headers
                 }
-            });
+            };
 
+            // Stringify body if present
+            if (options.body) {
+                config.body = typeof options.body === 'string' 
+                    ? options.body 
+                    : JSON.stringify(options.body);
+            }
+
+            const response = await fetch(url, config);
             const result = await response.json();
 
-            if (!result.success) {
+            // Handle responses with explicit success field
+            if (result.hasOwnProperty('success') && !result.success) {
                 const errorMsg = result.error || 'Request failed';
                 const errorDetails = result.details ? ` - ${JSON.stringify(result.details)}` : '';
                 throw new Error(`${errorMsg}${errorDetails}`);
             }
 
-            return result.data;
+            // Return data if present, otherwise return the whole result
+            return result.data || result;
 
         } catch (error) {
             console.error(`API Error (${endpoint}):`, error);
@@ -90,7 +100,7 @@ const InspectorAPI = {
     async updateRule(ruleId, updates) {
         return this.request(`/admin/inspector/rules/${ruleId}`, {
             method: 'PATCH',
-            body: JSON.stringify(updates)
+            body: updates
         });
     },
 
@@ -114,7 +124,7 @@ const InspectorAPI = {
 
         return this.request(categoryConfig.endpoint, {
             method: 'POST',
-            body: JSON.stringify({ rule_id: ruleId })
+            body: { rule_id: ruleId }
         });
     },
 
@@ -161,7 +171,7 @@ const InspectorAPI = {
     async updateViolation(violationId, notes) {
         return this.request(`/admin/inspector/violations/${violationId}`, {
             method: 'PUT',
-            body: JSON.stringify({ notes })
+            body: { notes }
         });
     },
 
@@ -171,7 +181,7 @@ const InspectorAPI = {
     async dismissViolation(violationId, dismissalNotes) {
         return this.request(`/admin/inspector/violations/${violationId}/dismiss`, {
             method: 'PATCH',
-            body: JSON.stringify({ dismissal_notes: dismissalNotes })
+            body: { dismissal_notes: dismissalNotes }
         });
     },
 
@@ -230,4 +240,4 @@ const InspectorAPI = {
 
         return allViolations;
     }
-}
+};

@@ -34,15 +34,31 @@ async function handleResponse(response) {
 // MAINTENANCE RECORDS API
 // ============================================
 
+/**
+ * Fetch all maintenance records
+ * @returns {Promise<Object>} Object with records array
+ */
 export async function fetchAllRecords() {
   const cfg = await loadConfig();
   const response = await fetch(`${cfg.API_ENDPOINT}/admin/maintenance-records`, {
     headers: getHeaders()
   });
   
-  return handleResponse(response);
+  const json = await handleResponse(response);
+  
+  // Lambda returns { success: true, data: [...], message: '...', timestamp: '...' }
+  // Return in old format for compatibility with state.js
+  return {
+    records: json.data || [],
+    count: json.data?.length || 0
+  };
 }
 
+/**
+ * Fetch maintenance records for a specific item
+ * @param {string} itemId - Item ID to filter by
+ * @returns {Promise<Object>} Object with records array
+ */
 export async function fetchRecordsByItem(itemId) {
   const cfg = await loadConfig();
   const response = await fetch(
@@ -50,9 +66,20 @@ export async function fetchRecordsByItem(itemId) {
     { headers: getHeaders() }
   );
   
-  return handleResponse(response);
+  const json = await handleResponse(response);
+  
+  // Return in old format for compatibility
+  return {
+    records: json.data || [],
+    count: json.data?.length || 0
+  };
 }
 
+/**
+ * Fetch a single maintenance record by ID
+ * @param {string} recordId - Record ID
+ * @returns {Promise<Object>} Record object
+ */
 export async function fetchRecord(recordId) {
   const cfg = await loadConfig();
   const response = await fetch(
@@ -60,10 +87,15 @@ export async function fetchRecord(recordId) {
     { headers: getHeaders() }
   );
   
-  const data = await handleResponse(response);
-  return data.record;
+  const json = await handleResponse(response);
+  return json.data;
 }
 
+/**
+ * Create a new maintenance record
+ * @param {Object} recordData - Record data
+ * @returns {Promise<Object>} Created record
+ */
 export async function createRecord(recordData) {
   const cfg = await loadConfig();
   const response = await fetch(`${cfg.API_ENDPOINT}/admin/maintenance-records`, {
@@ -72,10 +104,16 @@ export async function createRecord(recordData) {
     body: JSON.stringify(recordData)
   });
   
-  const data = await handleResponse(response);
-  return data.record;
+  const json = await handleResponse(response);
+  return json.data;
 }
 
+/**
+ * Update an existing maintenance record
+ * @param {string} recordId - Record ID
+ * @param {Object} recordData - Updated record data
+ * @returns {Promise<Object>} Updated record
+ */
 export async function updateRecord(recordId, recordData) {
   const cfg = await loadConfig();
   const response = await fetch(
@@ -87,10 +125,15 @@ export async function updateRecord(recordId, recordData) {
     }
   );
   
-  const data = await handleResponse(response);
-  return data.record;
+  const json = await handleResponse(response);
+  return json.data;
 }
 
+/**
+ * Delete a maintenance record
+ * @param {string} recordId - Record ID
+ * @returns {Promise<Object>} Deleted record
+ */
 export async function deleteRecord(recordId) {
   const cfg = await loadConfig();
   const response = await fetch(
@@ -101,9 +144,19 @@ export async function deleteRecord(recordId) {
     }
   );
   
-  return handleResponse(response);
+  const json = await handleResponse(response);
+  return json.data.deleted_record;
 }
+// ============================================
+// PERFORM INSPECTION - Updated for new response format
+// ============================================
 
+/**
+ * Perform an inspection and complete it
+ * @param {string} recordId - Record ID
+ * @param {Object} inspectionData - Inspection data
+ * @returns {Promise<Object>} Response with inspection and generated tasks
+ */
 export async function performInspection(recordId, inspectionData) {
   const cfg = await loadConfig();
   const response = await fetch(
@@ -115,13 +168,22 @@ export async function performInspection(recordId, inspectionData) {
     }
   );
   
-  return handleResponse(response);
+  const json = await handleResponse(response);
+  
+  // Lambda returns { success: true, data: { inspection: {...}, generated_tasks: [...] }, message: '...', timestamp: '...' }
+  // Return the data object which contains both inspection and generated_tasks
+  return json.data;
 }
 
 // ============================================
 // ITEMS API
 // ============================================
 
+/**
+ * Fetch a single item by ID
+ * @param {string} itemId - Item ID
+ * @returns {Promise<Object>} Item object
+ */
 export async function fetchItem(itemId) {
   const cfg = await loadConfig();
   const response = await fetch(
@@ -129,9 +191,15 @@ export async function fetchItem(itemId) {
     { headers: getHeaders() }
   );
   
-  return handleResponse(response);
+  const json = await handleResponse(response);
+  return json.data;
 }
 
+/**
+ * Search for items by query string
+ * @param {string} query - Search query
+ * @returns {Promise<Object>} Object with items array
+ */
 export async function searchItems(query) {
   const cfg = await loadConfig();
   
@@ -144,10 +212,12 @@ export async function searchItems(query) {
     { headers: getHeaders() }
   );
   
-  const data = await handleResponse(response);
+  const json = await handleResponse(response);
+  const items = json.data?.items || [];
+  
   // Limit to 10 results
   return {
-    items: (data.items || []).slice(0, 10)
+    items: items.slice(0, 10)
   };
 }
 
@@ -170,20 +240,25 @@ export async function fetchAllItems(filters = {}) {
   
   const response = await fetch(url, { headers: getHeaders() });
   
-  const data = await handleResponse(response);
-  return data.items || [];
+  const json = await handleResponse(response);
+  return json.data?.items || [];
 }
 
 // ============================================
 // BATCH OPERATIONS
 // ============================================
 
+/**
+ * Fetch maintenance records for multiple items
+ * @param {string[]} itemIds - Array of item IDs
+ * @returns {Promise<Object>} Object with records array and count
+ */
 export async function fetchMultipleRecordsByItems(itemIds) {
   // Fetch records for multiple items in parallel
   const promises = itemIds.map(id => 
     fetchRecordsByItem(id).catch(err => {
       console.warn(`Failed to fetch records for ${id}:`, err);
-      return { records: [] };
+      return { records: [], count: 0 };
     })
   );
   
@@ -198,11 +273,20 @@ export async function fetchMultipleRecordsByItems(itemIds) {
 // UTILITY FUNCTIONS
 // ============================================
 
+/**
+ * Get URL for item admin page
+ * @param {string} itemId - Item ID
+ * @returns {string} URL
+ */
 export function getItemUrl(itemId) {
   if (!config) return '#';
   return `${config.ITEMS_ADMIN}/items/${itemId}`;
 }
 
+/**
+ * Get URL for costs page
+ * @returns {string} URL
+ */
 export function getCostsUrl() {
   if (!config) return '#';
   return config.COSTS_URL;

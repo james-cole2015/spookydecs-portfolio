@@ -46,7 +46,12 @@ export async function fetchSchedules(filters = {}) {
       headers: getHeaders()
     });
     
-    return handleResponse(response);
+    const json = await handleResponse(response);
+    
+    // Lambda returns { success: true, data: [...], message: '...', timestamp: '...' }
+    // Extract data array
+    return json.data || [];
+    
   } catch (error) {
     console.error('Error fetching schedules:', error);
     throw error;
@@ -69,7 +74,11 @@ export async function fetchSchedule(scheduleId) {
       }
     );
     
-    return handleResponse(response);
+    const json = await handleResponse(response);
+    
+    // Lambda returns { success: true, data: {...}, timestamp: ... }
+    return json.data;
+    
   } catch (error) {
     console.error('Error fetching schedule:', error);
     throw error;
@@ -93,7 +102,11 @@ export async function createSchedule(scheduleData) {
       }
     );
     
-    return handleResponse(response);
+    const json = await handleResponse(response);
+    
+    // Lambda returns { success: true, data: {...}, message: '...', timestamp: ... }
+    return json.data;
+    
   } catch (error) {
     console.error('Error creating schedule:', error);
     throw error;
@@ -118,7 +131,11 @@ export async function updateSchedule(scheduleId, scheduleData) {
       }
     );
     
-    return handleResponse(response);
+    const json = await handleResponse(response);
+    
+    // Lambda returns { success: true, data: {...}, message: '...', timestamp: ... }
+    return json.data;
+    
   } catch (error) {
     console.error('Error updating schedule:', error);
     throw error;
@@ -141,7 +158,11 @@ export async function deleteSchedule(scheduleId) {
       }
     );
     
-    return handleResponse(response);
+    const json = await handleResponse(response);
+    
+    // Lambda returns { success: true, data: { template_name: '...', cancelled_records: X }, message: '...', timestamp: ... }
+    return json.data;
+    
   } catch (error) {
     console.error('Error deleting schedule:', error);
     throw error;
@@ -164,7 +185,11 @@ export async function fetchScheduleRecords(scheduleId) {
       }
     );
     
-    return handleResponse(response);
+    const json = await handleResponse(response);
+    
+    // Lambda returns { success: true, data: [...], message: '...', timestamp: ... }
+    return json.data || [];
+    
   } catch (error) {
     console.error('Error fetching schedule records:', error);
     throw error;
@@ -189,7 +214,11 @@ export async function generateScheduleRecords(scheduleId, count = 2) {
       }
     );
     
-    return handleResponse(response);
+    const json = await handleResponse(response);
+    
+    // Lambda returns { success: true, data: {...}, message: '...', timestamp: ... }
+    return json.data;
+    
   } catch (error) {
     console.error('Error generating schedule records:', error);
     throw error;
@@ -214,7 +243,11 @@ export async function applyTemplateToItems(scheduleId, data) {
       }
     );
     
-    return handleResponse(response);
+    const json = await handleResponse(response);
+    
+    // Lambda returns { success: true, data: { items_updated: X, records_created: Y, ... }, message: '...', timestamp: ... }
+    return json.data;
+    
   } catch (error) {
     console.error('Error applying template to items:', error);
     throw error;

@@ -5,22 +5,34 @@ import { renderAbout } from '../pages/about.js';
 let router = null;
 
 export function initRouter(config) {
-    // Initialize Navigo router
-    router = new Navigo('/admin', { hash: false });
+    // Initialize Navigo router with /admin as root
+    router = new Navigo('/admin');
     
     // Define routes
     router
-        .on('/', () => {
-            renderDashboard(config);
+        .on('/', async () => {
+            console.log('📍 Navigating to: Dashboard');
+            try {
+                await renderDashboard(config);
+            } catch (error) {
+                console.error('Error rendering dashboard:', error);
+            }
         })
-        .on('/about', () => {
-            renderAbout(config);
+        .on('/about', async () => {
+            console.log('📍 Navigating to: About');
+            try {
+                await renderAbout(config);
+            } catch (error) {
+                console.error('Error rendering about page:', error);
+            }
         })
         .notFound(() => {
-            // Redirect to dashboard on 404
+            console.log('📍 Route not found, redirecting to dashboard');
             router.navigate('/');
-        })
-        .resolve();
+        });
+    
+    // Resolve routes
+    router.resolve();
     
     return router;
 }
@@ -28,6 +40,8 @@ export function initRouter(config) {
 export function navigate(path) {
     if (router) {
         router.navigate(path);
+    } else {
+        console.warn('Router not initialized');
     }
 }
 
