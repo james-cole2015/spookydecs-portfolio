@@ -1,4 +1,4 @@
-// Action Center Component
+// Action Center Component!
 import { fetchActionItems } from '../utils/admin-api.js';
 
 export class ActionCenter {
