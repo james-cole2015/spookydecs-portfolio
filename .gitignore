@@ -22,3 +22,4 @@ public/config.json
 /public
 package.json 
 vite.config.js
+app_docs/*
