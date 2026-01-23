@@ -163,7 +163,8 @@ function renderRuleViolations() {
         `;
     }
 
-    return `
+    // Desktop table
+    const tableView = `
         <table class="violations-table">
             <thead>
                 <tr>
@@ -199,6 +200,42 @@ function renderRuleViolations() {
             </tbody>
         </table>
     `;
+
+    // Mobile cards
+    const cardsView = `
+        <div class="violations-cards">
+            ${currentRuleViolations.map(v => {
+                const statusConfig = getStatusConfig(v.status);
+                return `
+                    <div class="violation-card" data-violation-id="${v.violation_id}">
+                        <div class="violation-card-item">
+                            ${sanitizeHtml(v.violation_details?.item_short_name || v.entity_id)}
+                        </div>
+                        <div class="violation-card-status">
+                            <span class="badge ${statusConfig.badge}">
+                                ${statusConfig.label}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
+
+    return `
+        <div class="violations-table-container" style="display: block;">
+            ${tableView}
+        </div>
+        <div class="violations-cards-container" style="display: none;">
+            ${cardsView}
+        </div>
+        <style>
+            @media (max-width: 768px) {
+                .violations-table-container { display: none !important; }
+                .violations-cards-container { display: block !important; }
+            }
+        </style>
+    `;
 }
 
 /**
@@ -223,10 +260,18 @@ function attachRuleDetailListeners() {
         deactivateBtn.addEventListener('click', deactivateRule);
     }
 
-    // View violation buttons
+    // View violation buttons (desktop table)
     document.querySelectorAll('.view-violation-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const violationId = btn.dataset.violationId;
+            openViolationDetail(violationId);
+        });
+    });
+
+    // Violation cards (mobile)
+    document.querySelectorAll('.violation-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+            const violationId = card.dataset.violationId;
             openViolationDetail(violationId);
         });
     });
