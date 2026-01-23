@@ -72,9 +72,6 @@ function renderRuleDetailContent() {
                         ${currentRule.is_active ? 'Active' : 'Inactive'}
                     </span>
                 </div>
-                <div class="rule-last-executed">
-                    Last executed: ${formatDateTime(currentRule.last_executed_at)}
-                </div>
             </div>
             <div class="rule-actions-section">
                 <button class="btn btn-secondary" id="edit-description-btn">
@@ -91,7 +88,10 @@ function renderRuleDetailContent() {
 
         <div class="rule-info-grid">
             <div class="info-card">
-                <h3>Description</h3>
+                <div class="info-card-header">
+                    <h3>Description</h3>
+                    <span class="last-executed-badge">Last executed: ${formatDateTime(currentRule.last_executed_at)}</span>
+                </div>
                 <p>${sanitizeHtml(currentRule.description)}</p>
             </div>
 
