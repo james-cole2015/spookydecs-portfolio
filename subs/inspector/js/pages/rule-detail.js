@@ -88,7 +88,10 @@ function renderRuleDetailContent() {
 
         <div class="rule-info-grid">
             <div class="info-card">
-                <h3>Description</h3>
+                <div class="info-card-header">
+                    <h3>Description</h3>
+                    <span class="last-executed-badge">Last executed: ${formatDateTime(currentRule.last_executed_at)}</span>
+                </div>
                 <p>${sanitizeHtml(currentRule.description)}</p>
             </div>
 
@@ -105,10 +108,10 @@ function renderRuleDetailContent() {
                     <dd>${sanitizeHtml(currentRule.check_type || 'N/A')}</dd>
                     
                     <dt>Created:</dt>
-                    <dd>${formatDate(currentRule.created_at)}</dd>
+                    <dd>${formatDateTime(currentRule.created_at)}</dd>
                     
                     <dt>Last Updated:</dt>
-                    <dd>${formatDate(currentRule.updated_at)}</dd>
+                    <dd>${formatDateTime(currentRule.updated_at)}</dd>
                     
                     <dt>Updated By:</dt>
                     <dd>${sanitizeHtml(currentRule.updated_by || 'N/A')}</dd>
@@ -160,7 +163,8 @@ function renderRuleViolations() {
         `;
     }
 
-    return `
+    // Desktop table
+    const tableView = `
         <table class="violations-table">
             <thead>
                 <tr>
@@ -196,6 +200,42 @@ function renderRuleViolations() {
             </tbody>
         </table>
     `;
+
+    // Mobile cards
+    const cardsView = `
+        <div class="violations-cards">
+            ${currentRuleViolations.map(v => {
+                const statusConfig = getStatusConfig(v.status);
+                return `
+                    <div class="violation-card" data-violation-id="${v.violation_id}">
+                        <div class="violation-card-item">
+                            ${sanitizeHtml(v.violation_details?.item_short_name || v.entity_id)}
+                        </div>
+                        <div class="violation-card-status">
+                            <span class="badge ${statusConfig.badge}">
+                                ${statusConfig.label}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
+
+    return `
+        <div class="violations-table-container" style="display: block;">
+            ${tableView}
+        </div>
+        <div class="violations-cards-container" style="display: none;">
+            ${cardsView}
+        </div>
+        <style>
+            @media (max-width: 768px) {
+                .violations-table-container { display: none !important; }
+                .violations-cards-container { display: block !important; }
+            }
+        </style>
+    `;
 }
 
 /**
@@ -220,10 +260,18 @@ function attachRuleDetailListeners() {
         deactivateBtn.addEventListener('click', deactivateRule);
     }
 
-    // View violation buttons
+    // View violation buttons (desktop table)
     document.querySelectorAll('.view-violation-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const violationId = btn.dataset.violationId;
+            openViolationDetail(violationId);
+        });
+    });
+
+    // Violation cards (mobile)
+    document.querySelectorAll('.violation-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+            const violationId = card.dataset.violationId;
             openViolationDetail(violationId);
         });
     });
@@ -361,9 +409,15 @@ async function runRule() {
         await InspectorAPI.executeRule(currentRule.rule_id, currentRule.rule_category);
         showSuccessToast('Rule executed successfully');
 
-        // Reload violations after a brief delay
+        // Reload rule and violations after a brief delay
         setTimeout(async () => {
-            currentRuleViolations = await InspectorAPI.getViolationsForRule(currentRule.rule_id);
+            const [ruleData, violationsData] = await Promise.all([
+                InspectorAPI.getRule(currentRule.rule_id),
+                InspectorAPI.getViolationsForRule(currentRule.rule_id)
+            ]);
+            
+            currentRule = ruleData.rule;
+            currentRuleViolations = violationsData;
             renderRuleDetailContent();
             
             // Re-enable button after reload
