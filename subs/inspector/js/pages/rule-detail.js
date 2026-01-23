@@ -72,6 +72,9 @@ function renderRuleDetailContent() {
                         ${currentRule.is_active ? 'Active' : 'Inactive'}
                     </span>
                 </div>
+                <div class="rule-last-executed">
+                    Last executed: ${formatDateTime(currentRule.last_executed_at)}
+                </div>
             </div>
             <div class="rule-actions-section">
                 <button class="btn btn-secondary" id="edit-description-btn">
@@ -105,10 +108,10 @@ function renderRuleDetailContent() {
                     <dd>${sanitizeHtml(currentRule.check_type || 'N/A')}</dd>
                     
                     <dt>Created:</dt>
-                    <dd>${formatDate(currentRule.created_at)}</dd>
+                    <dd>${formatDateTime(currentRule.created_at)}</dd>
                     
                     <dt>Last Updated:</dt>
-                    <dd>${formatDate(currentRule.updated_at)}</dd>
+                    <dd>${formatDateTime(currentRule.updated_at)}</dd>
                     
                     <dt>Updated By:</dt>
                     <dd>${sanitizeHtml(currentRule.updated_by || 'N/A')}</dd>
@@ -361,9 +364,15 @@ async function runRule() {
         await InspectorAPI.executeRule(currentRule.rule_id, currentRule.rule_category);
         showSuccessToast('Rule executed successfully');
 
-        // Reload violations after a brief delay
+        // Reload rule and violations after a brief delay
         setTimeout(async () => {
-            currentRuleViolations = await InspectorAPI.getViolationsForRule(currentRule.rule_id);
+            const [ruleData, violationsData] = await Promise.all([
+                InspectorAPI.getRule(currentRule.rule_id),
+                InspectorAPI.getViolationsForRule(currentRule.rule_id)
+            ]);
+            
+            currentRule = ruleData.rule;
+            currentRuleViolations = violationsData;
             renderRuleDetailContent();
             
             // Re-enable button after reload

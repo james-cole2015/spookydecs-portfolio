@@ -227,3 +227,8 @@
         width: 95%;
     }
 }
+.rule-last-executed {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: #6B7280;
+}

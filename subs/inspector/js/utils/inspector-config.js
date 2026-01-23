@@ -249,3 +249,24 @@ function calculateStats(violations) {
     
     return stats;
 }
+/**
+ * Format date to date and time only (no relative time)
+ * Example: "Jan 23, 2026 9:18 PM"
+ */
+function formatDateTime(dateString) {
+    if (!dateString) return 'Never';
+    
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
+    } catch (error) {
+        return 'N/A';
+    }
+}
