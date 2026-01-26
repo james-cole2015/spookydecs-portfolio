@@ -59,6 +59,57 @@ class RulesList {
     }
 
     /**
+     * Run rule (execute evaluation)
+     */
+    async runRule(ruleId, ruleName) {
+        const runBtn = this.container.querySelector(`[data-run-rule-id="${ruleId}"]`);
+        if (!runBtn) return;
+
+        const originalText = runBtn.innerHTML;
+        runBtn.disabled = true;
+        runBtn.innerHTML = 'Running...';
+
+        try {
+            // Find the rule to get its category
+            const rule = this.rules.find(r => r.rule_id === ruleId);
+            if (!rule) {
+                throw new Error('Rule not found');
+            }
+
+            await InspectorAPI.executeRule(ruleId, rule.rule_category);
+            showSuccessToast(`Rule "${ruleName}" executed successfully`);
+
+            // Reload violations for this rule
+            setTimeout(async () => {
+                try {
+                    const violationsData = await InspectorAPI.getAllViolations();
+                    this.violations = violationsData || [];
+                    this.violationsByRule = groupViolationsByRule(this.violations);
+                    
+                    // Update the rule's last_evaluated_at
+                    const updatedRuleData = await InspectorAPI.getRule(ruleId);
+                    const ruleIndex = this.rules.findIndex(r => r.rule_id === ruleId);
+                    if (ruleIndex !== -1 && updatedRuleData.rule) {
+                        this.rules[ruleIndex] = updatedRuleData.rule;
+                    }
+                    
+                    this.render();
+                } catch (error) {
+                    console.error('Error reloading violations:', error);
+                    runBtn.disabled = false;
+                    runBtn.innerHTML = originalText;
+                }
+            }, 2000);
+
+        } catch (error) {
+            console.error('Error running rule:', error);
+            showErrorToast(`Failed to run rule: ${error.message}`);
+            runBtn.disabled = false;
+            runBtn.innerHTML = originalText;
+        }
+    }
+
+    /**
      * Delete rule (deactivate)
      */
     async deleteRule(ruleId, ruleName) {
@@ -203,6 +254,7 @@ class RulesList {
                             <strong>${sanitizeHtml(rule.rule_name)}</strong>
                         </div>
                         <div class="rule-meta">
+                            <span class="last-executed-badge">Last executed: ${formatDateTime(rule.last_executed_at)}</span>
                             <span class="violation-count ${violationCount > 0 ? 'has-violations' : ''}">
                                 ${violationCount} violation${violationCount !== 1 ? 's' : ''}
                             </span>
@@ -214,21 +266,26 @@ class RulesList {
                             <p class="rule-description">${sanitizeHtml(rule.description)}</p>
                             
                             <div class="rule-actions">
-                                <button class="btn btn-sm btn-secondary view-rule-btn" 
+                                <button class="btn btn-secondary view-rule-btn" 
                                         data-rule-id="${rule.rule_id}">
                                     View Details
                                 </button>
-                                <button class="btn btn-sm btn-danger delete-rule-btn" 
+                                <button class="btn btn-danger delete-rule-btn" 
                                         data-rule-id="${rule.rule_id}"
                                         data-rule-name="${sanitizeHtml(rule.rule_name)}">
                                     Deactivate
+                                </button>
+                                <button class="btn btn-primary run-rule-btn" 
+                                        data-run-rule-id="${rule.rule_id}"
+                                        data-rule-name="${sanitizeHtml(rule.rule_name)}">
+                                    ▶ Run Rule
                                 </button>
                             </div>
                             
                             ${violations.length > 0 ? `
                                 <div class="violations-preview">
                                     <h4>Violations (${violations.length})</h4>
-                                    ${this.renderViolationsTable(violations.slice(0, 5))}
+                                    ${this.renderViolationsTable(violations.slice(0, 5), rule.last_executed_at)}
                                     ${violations.length > 5 ? `
                                         <p class="more-violations">
                                             ... and ${violations.length - 5} more
@@ -246,7 +303,7 @@ class RulesList {
     /**
      * Render violations table
      */
-    renderViolationsTable(violations) {
+    renderViolationsTable(violations, lastExecutedAt) {
         return `
             <table class="violations-table-mini">
                 <thead>
@@ -254,6 +311,7 @@ class RulesList {
                         <th>Item</th>
                         <th>Issue</th>
                         <th>Detected</th>
+                        <th>Last Executed</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -263,6 +321,7 @@ class RulesList {
                             <td>${sanitizeHtml(v.violation_details?.item_short_name || v.entity_id)}</td>
                             <td>${sanitizeHtml(truncateText(v.violation_details?.message || 'N/A', 60))}</td>
                             <td>${formatRelativeTime(v.detected_at)}</td>
+                            <td>${formatDateTime(lastExecutedAt)}</td>
                             <td>
                                 <button class="btn btn-sm btn-secondary view-violation-link" 
                                         data-violation-id="${v.violation_id}">
@@ -304,6 +363,16 @@ class RulesList {
                 const ruleId = btn.dataset.ruleId;
                 const ruleName = btn.dataset.ruleName;
                 this.deleteRule(ruleId, ruleName);
+            });
+        });
+
+        // Run rule
+        this.container.querySelectorAll('.run-rule-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const ruleId = btn.dataset.runRuleId;
+                const ruleName = btn.dataset.ruleName;
+                this.runRule(ruleId, ruleName);
             });
         });
 
