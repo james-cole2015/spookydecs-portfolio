@@ -91,6 +91,10 @@ body {
     color: var(--color-critical);
 }
 
+.stat-card.stat-attention .stat-value {
+    color: var(--color-warning);
+}
+
 .stat-card.stat-warning .stat-value {
     color: var(--color-warning);
 }

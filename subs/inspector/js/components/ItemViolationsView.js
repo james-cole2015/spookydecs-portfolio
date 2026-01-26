@@ -83,7 +83,8 @@ class ItemViolationsView {
         this.items.forEach(item => {
             const stats = calculateStats(item.violations);
             const criticalCount = stats.critical;
-            const warningCount = stats.attention + stats.warning;
+            const attentionCount = stats.attention;
+            const warningCount = stats.warning;
             const infoCount = stats.info;
 
             html += `
@@ -95,6 +96,7 @@ class ItemViolationsView {
                         </div>
                         <div class="item-stats">
                             ${criticalCount > 0 ? `<span class="badge severity-critical">🔴 ${criticalCount}</span>` : ''}
+                            ${attentionCount > 0 ? `<span class="badge severity-attention">🟡 ${attentionCount}</span>` : ''}
                             ${warningCount > 0 ? `<span class="badge severity-warning">🟡 ${warningCount}</span>` : ''}
                             ${infoCount > 0 ? `<span class="badge severity-info">🔵 ${infoCount}</span>` : ''}
                         </div>
