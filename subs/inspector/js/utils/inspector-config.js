@@ -51,21 +51,25 @@ const InspectorConfig = {
         }
     },
 
-    // Rule categories
-    RULE_CATEGORIES: {
-        field_validation: {
-            label: 'Field Validation',
-            endpoint: '/admin/inspector/rules/field-validation'
-        },
-        relationship_eval: {
-            label: 'Relationship Evaluation',
-            endpoint: '/admin/inspector/rules/relationship-eval'
-        },
-        duplicate_detection: {
-            label: 'Duplicate Detection',
-            endpoint: '/admin/inspector/rules/duplicate-detection'
-        }
+// Rule categories
+RULE_CATEGORIES: {
+    field_validation: {
+        label: 'Field Validation',
+        endpoint: '/admin/inspector/rules/field-validation'
     },
+    relationship_eval: {
+        label: 'Relationship Evaluation',
+        endpoint: '/admin/inspector/rules/relationship-eval'
+    },
+    duplicate_detection: {
+        label: 'Duplicate Detection',
+        endpoint: '/admin/inspector/rules/duplicate-detection'
+    },
+    required_related_entity: {
+        label: 'Required Related Entity',
+        endpoint: '/admin/inspector/rules/entity_relationship_eval'
+    }
+},
 
     // Pagination
     DEFAULT_PAGE_SIZE: 25,
