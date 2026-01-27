@@ -5,11 +5,15 @@
 
 let currentRule = null;
 let currentRuleViolations = [];
+let activeViolationsTab = 'open';
 
 /**
  * Render Rule Detail Page
  */
 async function renderRuleDetail(ruleId) {
+    // Reset to Open tab when loading a new rule
+    activeViolationsTab = 'open';
+
     const container = document.getElementById('app-container');
     
     container.innerHTML = `
@@ -152,13 +156,62 @@ function renderRuleDetailContent() {
 }
 
 /**
+ * Filter violations by status
+ */
+function filterViolationsByStatus(violations, status) {
+    return violations.filter(v => v.status === status);
+}
+
+/**
  * Render violations table for this rule
  */
 function renderRuleViolations() {
-    if (currentRuleViolations.length === 0) {
+    // Calculate counts for each status
+    const openViolations = filterViolationsByStatus(currentRuleViolations, 'open');
+    const resolvedViolations = filterViolationsByStatus(currentRuleViolations, 'resolved');
+    const dismissedViolations = filterViolationsByStatus(currentRuleViolations, 'dismissed');
+
+    // Get violations for active tab
+    const getActiveViolations = () => {
+        switch (activeViolationsTab) {
+            case 'open': return openViolations;
+            case 'resolved': return resolvedViolations;
+            case 'dismissed': return dismissedViolations;
+            default: return openViolations;
+        }
+    };
+
+    const activeViolations = getActiveViolations();
+
+    // Render tabs
+    const tabsHtml = `
+        <div class="violations-tabs">
+            <button class="violations-tab-btn ${activeViolationsTab === 'open' ? 'active' : ''}"
+                    data-violations-tab="open">
+                Open (${openViolations.length})
+            </button>
+            <button class="violations-tab-btn ${activeViolationsTab === 'resolved' ? 'active' : ''}"
+                    data-violations-tab="resolved">
+                Resolved (${resolvedViolations.length})
+            </button>
+            <button class="violations-tab-btn ${activeViolationsTab === 'dismissed' ? 'active' : ''}"
+                    data-violations-tab="dismissed">
+                Dismissed (${dismissedViolations.length})
+            </button>
+        </div>
+    `;
+
+    // Empty state for current tab
+    if (activeViolations.length === 0) {
+        const emptyMessages = {
+            open: 'No open violations',
+            resolved: 'No resolved violations',
+            dismissed: 'No dismissed violations'
+        };
         return `
+            ${tabsHtml}
             <div class="empty-state">
-                <p>✓ No violations found for this rule</p>
+                <p>✓ ${emptyMessages[activeViolationsTab]}</p>
             </div>
         `;
     }
@@ -176,7 +229,7 @@ function renderRuleViolations() {
                 </tr>
             </thead>
             <tbody>
-                ${currentRuleViolations.map(v => {
+                ${activeViolations.map(v => {
                     const statusConfig = getStatusConfig(v.status);
                     return `
                         <tr>
@@ -189,7 +242,7 @@ function renderRuleViolations() {
                             </td>
                             <td>${formatRelativeTime(v.detected_at)}</td>
                             <td>
-                                <button class="btn btn-sm btn-secondary view-violation-btn" 
+                                <button class="btn btn-sm btn-secondary view-violation-btn"
                                         data-violation-id="${v.violation_id}">
                                     View
                                 </button>
@@ -204,7 +257,7 @@ function renderRuleViolations() {
     // Mobile cards
     const cardsView = `
         <div class="violations-cards">
-            ${currentRuleViolations.map(v => {
+            ${activeViolations.map(v => {
                 const statusConfig = getStatusConfig(v.status);
                 return `
                     <div class="violation-card" data-violation-id="${v.violation_id}">
@@ -223,6 +276,7 @@ function renderRuleViolations() {
     `;
 
     return `
+        ${tabsHtml}
         <div class="violations-table-container" style="display: block;">
             ${tableView}
         </div>
@@ -259,6 +313,65 @@ function attachRuleDetailListeners() {
     if (deactivateBtn) {
         deactivateBtn.addEventListener('click', deactivateRule);
     }
+
+    // Violations tab buttons
+    document.querySelectorAll('.violations-tab-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const tab = btn.dataset.violationsTab;
+            if (tab && tab !== activeViolationsTab) {
+                activeViolationsTab = tab;
+                // Re-render the violations section only
+                const violationsSection = document.querySelector('.violations-section');
+                if (violationsSection) {
+                    violationsSection.innerHTML = `
+                        <h2>Violations (${currentRuleViolations.length})</h2>
+                        ${renderRuleViolations()}
+                    `;
+                    // Re-attach listeners for the violations section
+                    attachViolationsListeners();
+                }
+            }
+        });
+    });
+
+    // View violation buttons (desktop table)
+    document.querySelectorAll('.view-violation-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const violationId = btn.dataset.violationId;
+            openViolationDetail(violationId);
+        });
+    });
+
+    // Violation cards (mobile)
+    document.querySelectorAll('.violation-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+            const violationId = card.dataset.violationId;
+            openViolationDetail(violationId);
+        });
+    });
+}
+
+/**
+ * Attach event listeners for violations section only (used after tab switch)
+ */
+function attachViolationsListeners() {
+    // Violations tab buttons
+    document.querySelectorAll('.violations-tab-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const tab = btn.dataset.violationsTab;
+            if (tab && tab !== activeViolationsTab) {
+                activeViolationsTab = tab;
+                const violationsSection = document.querySelector('.violations-section');
+                if (violationsSection) {
+                    violationsSection.innerHTML = `
+                        <h2>Violations (${currentRuleViolations.length})</h2>
+                        ${renderRuleViolations()}
+                    `;
+                    attachViolationsListeners();
+                }
+            }
+        });
+    });
 
     // View violation buttons (desktop table)
     document.querySelectorAll('.view-violation-btn').forEach(btn => {
