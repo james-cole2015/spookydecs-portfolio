@@ -212,7 +212,8 @@ class RulesList {
 
             const severityConfig = getSeverityConfig(severity);
             const totalViolations = rules.reduce((sum, rule) => {
-                return sum + (this.violationsByRule[rule.rule_id]?.length || 0);
+                const ruleViolations = this.violationsByRule[rule.rule_id] || [];
+                return sum + ruleViolations.filter(v => !v.status || v.status === 'open').length;
             }, 0);
 
             html += `
@@ -242,7 +243,8 @@ class RulesList {
      */
     renderRulesInGroup(rules) {
         return rules.map(rule => {
-            const violations = this.violationsByRule[rule.rule_id] || [];
+            const allViolations = this.violationsByRule[rule.rule_id] || [];
+            const violations = allViolations.filter(v => !v.status || v.status === 'open');
             const isExpanded = this.expandedRules.has(rule.rule_id);
             const violationCount = violations.length;
 
@@ -284,12 +286,15 @@ class RulesList {
                             
                             ${violations.length > 0 ? `
                                 <div class="violations-preview">
-                                    <h4>Violations (${violations.length})</h4>
+                                    <h4>Open Violations (${violations.length})</h4>
                                     ${this.renderViolationsTable(violations.slice(0, 5), rule.last_executed_at)}
                                     ${violations.length > 5 ? `
-                                        <p class="more-violations">
-                                            ... and ${violations.length - 5} more
-                                        </p>
+                                        <div class="more-violations">
+                                            <button class="btn btn-secondary see-more-violations-btn"
+                                                    data-rule-id="${rule.rule_id}">
+                                                See More Violations (${violations.length - 5} more)
+                                            </button>
+                                        </div>
                                     ` : ''}
                                 </div>
                             ` : ''}
@@ -382,6 +387,15 @@ class RulesList {
                 e.stopPropagation();
                 const violationId = btn.dataset.violationId;
                 navigateTo(`/inspector/violations/${violationId}`);
+            });
+        });
+
+        // See more violations - navigate to rule detail page
+        this.container.querySelectorAll('.see-more-violations-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const ruleId = btn.dataset.ruleId;
+                this.viewRuleDetail(ruleId);
             });
         });
     }
