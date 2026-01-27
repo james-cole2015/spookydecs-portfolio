@@ -148,43 +148,51 @@ class DismissViolationModal {
         }
     }
 
-    /**
-     * Handle dismiss action
-     */
-    async handleDismiss() {
-        const textarea = document.getElementById('dismissal-reason');
-        const dismissalNotes = textarea.value.trim();
-        const submitBtn = document.getElementById('dismiss-submit-btn');
+/**
+ * Handle dismiss action
+ */
+async handleDismiss() {
+    const textarea = document.getElementById('dismissal-reason');
+    const dismissalNotes = textarea.value.trim();
+    const submitBtn = document.getElementById('dismiss-submit-btn');
 
-        // Final validation
-        if (dismissalNotes.length < this.minChars) {
-            showErrorToast(`Dismissal reason must be at least ${this.minChars} characters`);
-            return;
-        }
+    // Final validation
+    if (dismissalNotes.length < this.minChars) {
+        showErrorToast(`Dismissal reason must be at least ${this.minChars} characters`);
+        return;
+    }
 
-        if (dismissalNotes.length > this.maxChars) {
-            showErrorToast(`Dismissal reason cannot exceed ${this.maxChars} characters`);
-            return;
-        }
+    if (dismissalNotes.length > this.maxChars) {
+        showErrorToast(`Dismissal reason cannot exceed ${this.maxChars} characters`);
+        return;
+    }
 
-        // Disable button and show loading
+    // Disable button and show loading
+    if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.textContent = 'Dismissing...';
+    }
 
-        try {
-            await InspectorAPI.dismissViolation(this.violation.violation_id, dismissalNotes);
-            showSuccessToast('Violation dismissed successfully');
-            closeModal();
-            
-            // Call success callback
-            if (this.onDismissSuccess) {
-                this.onDismissSuccess();
-            }
-            
-        } catch (error) {
-            showErrorToast(`Failed to dismiss violation: ${error.message}`);
+    try {
+        await InspectorAPI.dismissViolation(this.violation.violation_id, dismissalNotes);
+        showSuccessToast('Violation dismissed successfully');
+        
+        // Close modal BEFORE callback (which might trigger re-renders)
+        closeModal();
+        
+        // Call success callback AFTER modal is closed
+        if (this.onDismissSuccess) {
+            this.onDismissSuccess();
+        }
+        
+    } catch (error) {
+        showErrorToast(`Failed to dismiss violation: ${error.message}`);
+        
+        // Re-enable button only on error (modal still open)
+        if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.textContent = 'Dismiss';
         }
     }
+}
 }
