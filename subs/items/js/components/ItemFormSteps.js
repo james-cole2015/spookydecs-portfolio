@@ -90,28 +90,6 @@ export class ItemFormSteps {
         <h3 class="section-title">Storage Information</h3>
         <div id="storage-fields" class="form-fields"></div>
       </div>
-      
-      ${this.wizard.formData.class === 'Decoration' ? `
-        <div class="form-section">
-          <h3 class="section-title">Photos (Optional)</h3>
-          <div class="photo-upload-section">
-            <p class="upload-description">Upload up to 3 photos for this decoration</p>
-            <button 
-              type="button"
-              class="btn-upload-photos" 
-              onclick="itemFormPage.openPhotoUploadModal()"
-            >
-              📷 Upload Photos
-            </button>
-            <div class="upload-status" id="upload-status">
-              ${this.wizard.uploadedPhotoIds.length > 0 
-                ? `<span class="upload-success">✓ ${this.wizard.uploadedPhotoIds.length} photo(s) uploaded</span>`
-                : '<span class="upload-hint">No photos uploaded yet</span>'
-              }
-            </div>
-          </div>
-        </div>
-      ` : ''}
     `;
     
     // After adding to DOM, render the form fields
@@ -236,15 +214,6 @@ export class ItemFormSteps {
                     <span class="preview-value">${data.storage_location}</span>
                   </div>
                 ` : ''}
-              </div>
-            </div>
-          ` : ''}
-          
-          ${this.wizard.uploadedPhotoIds.length > 0 ? `
-            <div class="preview-section">
-              <h4>Photos</h4>
-              <div class="preview-field">
-                <span class="upload-success">✓ ${this.wizard.uploadedPhotoIds.length} photo(s) ready to upload</span>
               </div>
             </div>
           ` : ''}
