@@ -5,6 +5,48 @@ import { navigate } from '../utils/router.js';
 import { confirmAction } from '../shared/modal.js';
 import { Breadcrumb } from './Breadcrumb.js';
 
+// Derive category from photo data
+function deriveCategory(photo) {
+  // If photo already has category field, use it
+  if (photo.category && IMAGES_CONFIG.CATEGORIES[photo.category]) {
+    return photo.category;
+  }
+  
+  // Derive category from photo_type and context
+  const photoType = photo.photo_type;
+  
+  // Check item context
+  if (photo.item_ids && photo.item_ids.length > 0) {
+    if (photoType === 'catalog') return 'item_catalog';
+    if (photoType === 'repair') return 'maintenance';
+    if (photoType === 'deployment') return 'deployments';
+  }
+  
+  // Check storage context
+  if (photo.storage_id) {
+    return 'storage';
+  }
+  
+  // Check deployment context
+  if (photo.deployment_id) {
+    return 'deployments';
+  }
+  
+  // Check idea context
+  if (photo.idea_id) {
+    if (photoType === 'build') return 'builds';
+    if (photoType === 'inspiration') return 'ideas';
+    return 'ideas'; // Default for idea context
+  }
+  
+  // Check photo_type directly
+  if (photoType === 'receipt') return 'receipts';
+  if (photoType === 'gallery') return 'gallery';
+  
+  // Fallback to misc
+  return 'misc';
+}
+
 export function ImageDetail(photo, isEditMode = false) {
   const wrapper = document.createElement('div');
 
@@ -26,7 +68,7 @@ export function ImageDetail(photo, isEditMode = false) {
   const container = document.createElement('div');
   container.className = 'image-detail';
 
-  const category = photo.category || photo.photo_type || 'misc';
+  const category = deriveCategory(photo);
   const categoryConfig = IMAGES_CONFIG.CATEGORIES[category] || IMAGES_CONFIG.CATEGORIES.misc;
 
   container.innerHTML = `

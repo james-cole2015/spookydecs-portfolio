@@ -12,8 +12,6 @@ import { navigate } from '../router.js';
 let currentItem = null;
 let detailView = null;
 
-
-
 export async function init(params) {
   console.log('Initializing item detail page...', params);
   
@@ -22,8 +20,6 @@ export async function init(params) {
     navigate('/items');
     return;
   }
-
-  
   
   // Show loading state
   showLoading();
@@ -77,6 +73,46 @@ function showError(message) {
 export function handleEdit() {
   if (!currentItem) return;
   navigate(`/items/${currentItem.id}/edit`);
+}
+
+// NEW: Upload photos from detail page
+export function handleUploadPhotos() {
+  if (!currentItem) return;
+  
+  // Only allow photo uploads for Decoration class
+  if (currentItem.class !== 'Decoration') {
+    toast.info('Info', 'Photo uploads are only available for Decoration items');
+    return;
+  }
+
+  const modal = document.createElement('photo-upload-modal');
+  modal.setAttribute('context', 'item');
+  modal.setAttribute('photo-type', 'catalog');
+  modal.setAttribute('season', currentItem.season || 'shared');
+  modal.setAttribute('item-id', currentItem.id);
+  modal.setAttribute('max-photos', '3');
+  
+  document.body.appendChild(modal);
+  
+  modal.addEventListener('upload-complete', async (e) => {
+    console.log('Photos uploaded:', e.detail.photo_ids);
+    toast.success('Photos Uploaded', `${e.detail.photo_ids.length} photo(s) uploaded successfully`);
+    
+    // Reload item detail to show new photos
+    try {
+      const updatedItem = await fetchItemById(currentItem.id);
+      const photos = await getPhotosForItem(updatedItem);
+      currentItem = updatedItem;
+      detailView.render(currentItem, photos);
+    } catch (error) {
+      console.error('Failed to reload item:', error);
+      toast.error('Reload Failed', 'Photos uploaded but failed to refresh view. Please reload the page.');
+    }
+  });
+  
+  modal.addEventListener('upload-cancel', () => {
+    console.log('Photo upload cancelled');
+  });
 }
 
 export function handleStoreItem() {

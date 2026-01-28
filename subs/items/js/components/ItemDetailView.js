@@ -58,14 +58,6 @@ export class ItemDetailView {
     const isReceptacle = this.item.class_type === 'Receptacle';
     const isDecoration = this.item.class === 'Decoration';
     
-    // DEBUG LOGGING
-    console.log('=== FLAG FOR REPAIR BUTTON DEBUG ===');
-    console.log('Item class:', this.item.class);
-    console.log('Item class_type:', this.item.class_type);
-    console.log('isDecoration:', isDecoration);
-    console.log('showFlagForRepairButton will be:', isDecoration);
-    console.log('====================================');
-    
     const showStoreButton = isNonPackable && !isReceptacle && isUnpacked;
     const showPackButton = isSinglePacked && isUnpacked;
     const showFlagForRepairButton = isDecoration;
@@ -84,6 +76,11 @@ export class ItemDetailView {
         ${showPackButton ? `
           <button class="btn btn-primary" onclick="itemDetailPage.handlePackItem()" title="Pack Item">
             📦 Pack Item
+          </button>
+        ` : ''}
+        ${isDecoration ? `
+          <button class="btn-icon btn-upload-photo" onclick="itemDetailPage.handleUploadPhotos()" title="Upload Photos">
+            📷
           </button>
         ` : ''}
         ${showFlagForRepairButton ? `
@@ -135,12 +132,23 @@ export class ItemDetailView {
     allPhotos.push(...this.photos.secondary);
     
     if (allPhotos.length === 0) {
-      carousel.innerHTML = `
-        <div class="no-photo">
-          <div class="no-photo-icon">📷</div>
-          <div class="no-photo-text">No photos</div>
-        </div>
-      `;
+      // Make no-photo state clickable for Decorations
+      if (this.item.class === 'Decoration') {
+        carousel.innerHTML = `
+          <div class="no-photo with-upload" onclick="itemDetailPage.handleUploadPhotos()">
+            <div class="no-photo-icon">📷</div>
+            <div class="no-photo-text">No photos yet</div>
+            <div class="no-photo-upload-hint">Click to upload photos</div>
+          </div>
+        `;
+      } else {
+        carousel.innerHTML = `
+          <div class="no-photo">
+            <div class="no-photo-icon">📷</div>
+            <div class="no-photo-text">No photos</div>
+          </div>
+        `;
+      }
       return carousel;
     }
     
@@ -472,8 +480,6 @@ export class ItemDetailView {
     return group;
   }
   
-// REPLACE the switchTab method in ItemDetailView.js with this:
-
   async switchTab(sectionName) {
     console.log('Switching to tab:', sectionName);
     
@@ -507,15 +513,15 @@ export class ItemDetailView {
           break;
         case 'deployments':
           console.log('Rendering deployments section');
-          sectionContent = await this.renderDeploymentsSection(); // Already async
+          sectionContent = await this.renderDeploymentsSection();
           break;
         case 'maintenance':
           console.log('Rendering maintenance section');
-          sectionContent = await this.renderMaintenanceSection(); // NOW ASYNC - must await
+          sectionContent = await this.renderMaintenanceSection();
           break;
         case 'storage':
           console.log('Rendering storage section');
-          sectionContent = await this.renderStorageSection(); // Already async
+          sectionContent = await this.renderStorageSection();
           break;
         default:
           console.error('Unknown section:', sectionName);
@@ -547,16 +553,9 @@ export class ItemDetailView {
     section.className = 'section-panel active';
     section.dataset.section = 'deployments';
     
-    console.log('Rendering Deployments Section');
-    console.log('Item data:', this.item);
-    console.log('Deployment data:', this.item.deployment_data);
-    
     const deploymentData = this.item.deployment_data || {};
     const previousDeployments = deploymentData.previous_deployments || [];
     const deploymentCount = Array.isArray(previousDeployments) ? previousDeployments.length : 0;
-    
-    console.log('Deployment count:', deploymentCount);
-    console.log('Previous deployments:', previousDeployments);
     
     if (deploymentCount === 0) {
       section.innerHTML = `
@@ -624,16 +623,10 @@ export class ItemDetailView {
     return section;
   }
   
-// REPLACE the existing renderMaintenanceSection() method in ItemDetailView.js with this:
-
   async renderMaintenanceSection() {
     const section = document.createElement('div');
     section.className = 'section-panel active';
     section.dataset.section = 'maintenance';
-    
-    console.log('Rendering Maintenance Section');
-    console.log('Item data:', this.item);
-    console.log('Repair status:', this.item.repair_status);
     
     // Get maintenance URL for the link
     let maintenanceUrl;
@@ -658,7 +651,6 @@ export class ItemDetailView {
     try {
       const { getMaintenanceRecords } = await import('../api/maintenance.js');
       maintenanceRecords = await getMaintenanceRecords(this.item.id, 5);
-      console.log('Fetched maintenance records:', maintenanceRecords);
     } catch (error) {
       console.error('Error fetching maintenance records:', error);
       recordsError = true;
@@ -675,15 +667,12 @@ export class ItemDetailView {
     let statusPill = '';
     
     if (needsRepair) {
-      // Note: criticality values are lowercase: 'critical', 'high', 'medium', 'low'
       if (criticality === 'critical') {
-        // ONLY critical → Non-Operational (red)
         statusClass = 'non-operational';
         statusIcon = '⚠️';
         statusLabel = 'Non-Operational';
         statusPill = `<span class="pill pill-criticality-critical">Critical Priority</span>`;
       } else {
-        // high, medium, low → Needs Repair (yellow)
         statusClass = 'needs-repair';
         statusIcon = '⚠️';
         statusLabel = 'Needs Repair';
@@ -696,8 +685,6 @@ export class ItemDetailView {
         }
       }
     }
-    
-    console.log('Status display:', { statusClass, statusLabel, criticality });
     
     // Build the HTML
     section.innerHTML = `
@@ -744,7 +731,6 @@ export class ItemDetailView {
       </div>
     `;
     
-    console.log('Maintenance section HTML created');
     return section;
   }
   
@@ -753,18 +739,9 @@ export class ItemDetailView {
     section.className = 'section-panel active';
     section.dataset.section = 'storage';
     
-    console.log('Rendering Storage Section');
-    console.log('Item data:', this.item);
-    console.log('Packing data:', this.item.packing_data);
-    
     const packingData = this.item.packing_data || {};
     const toteId = packingData.tote_id || null;
     const toteLocation = packingData.tote_location || null;
-    const isPackable = packingData.packable !== false; // Default true if not specified
-    
-    console.log('Tote ID:', toteId);
-    console.log('Tote Location:', toteLocation);
-    console.log('Is Packable:', isPackable);
     
     // Case 1: No storage info at all
     if (!toteId && !toteLocation) {
@@ -774,7 +751,6 @@ export class ItemDetailView {
           <div class="empty-message">Not currently stored</div>
         </div>
       `;
-      console.log('Storage section: showing empty state (no tote_id or location)');
       return section;
     }
     
@@ -815,7 +791,6 @@ export class ItemDetailView {
           </div>
         </div>
       `;
-      console.log('Storage section: showing tote storage card');
     } 
     // Case 3: Non-packable item stored at location (no tote_id, but has location)
     else {
@@ -836,7 +811,6 @@ export class ItemDetailView {
           </div>
         </div>
       `;
-      console.log('Storage section: showing non-packable location card');
     }
     
     return section;

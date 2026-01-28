@@ -61,6 +61,43 @@ function showLoading() {
   }
 }
 
+// NEW: Open photo upload modal
+export function openPhotoUploadModal() {
+  if (!wizard || !wizard.formData) {
+    toast.error('Error', 'Please complete the form first');
+    return;
+  }
+
+  // Only allow photo uploads for Decoration class
+  if (wizard.formData.class !== 'Decoration') {
+    toast.info('Info', 'Photo uploads are only available for Decoration items');
+    return;
+  }
+
+  const modal = document.createElement('photo-upload-modal');
+  modal.setAttribute('context', 'item');
+  modal.setAttribute('photo-type', 'catalog');
+  modal.setAttribute('season', wizard.formData.season || 'shared');
+  modal.setAttribute('max-photos', '3');
+  
+  // If editing, include item ID
+  if (wizard.mode === 'edit' && wizard.originalItem) {
+    modal.setAttribute('item-id', wizard.originalItem.id);
+  }
+  
+  document.body.appendChild(modal);
+  
+  modal.addEventListener('upload-complete', (e) => {
+    console.log('Photos uploaded:', e.detail.photo_ids);
+    wizard.uploadedPhotoIds = e.detail.photo_ids;
+    toast.success('Photos Uploaded', `${e.detail.photo_ids.length} photo(s) uploaded successfully`);
+  });
+  
+  modal.addEventListener('upload-cancel', () => {
+    console.log('Photo upload cancelled');
+  });
+}
+
 export async function handleSave() {
   const saveBtn = document.querySelector('.btn-save');
   if (saveBtn) {
@@ -84,6 +121,15 @@ export async function handleSave() {
       itemName = response.confirmation?.short_name || response.preview?.short_name;
       
       toast.success('Item Created', `${itemName} has been created`);
+      
+      // If photos were uploaded during create flow, they need to be associated with the new item
+      // This would require a separate API call to update photo metadata with the item_id
+      if (wizard.hasPhotos()) {
+        console.log('Photos were uploaded, but need to be associated with item:', itemId);
+        // TODO: Add API call to update photos with item_id
+        toast.info('Note', 'Photo association with new item will be implemented');
+      }
+      
     } else {
       // Update existing item
       response = await updateItem(wizard.originalItem.id, itemData);
@@ -91,25 +137,8 @@ export async function handleSave() {
       itemName = response.short_name || wizard.originalItem.short_name;
       
       toast.success('Item Updated', `${itemName} has been updated`);
-    }
-    
-    // Upload photos if any (decorations only)
-    if (wizard.photoUploader && wizard.photoUploader.hasPhotos()) {
-      try {
-        console.log('Uploading photos for item:', itemId);
-        await wizard.photoUploader.uploadPhotos(itemId, wizard.formData.season);
-        toast.success('Photos Uploaded', 'Photos have been added to the item');
-      } catch (photoError) {
-        console.error('Photo upload error:', photoError);
-        toast.error('Photo Upload Failed', photoError.message || 'Unknown error');
-        
-        // Re-enable button and stop
-        if (saveBtn) {
-          saveBtn.disabled = false;
-          saveBtn.textContent = '💾 Save Item';
-        }
-        return;
-      }
+      
+      // Photos uploaded during edit are already associated via item-id attribute in modal
     }
     
     // Check mode before cleanup

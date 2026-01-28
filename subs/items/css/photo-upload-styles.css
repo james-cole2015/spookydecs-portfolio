@@ -1,0 +1,149 @@
+/* Photo Upload Trigger Styles - Additional styles for CDN modal integration */
+
+/* Item Form - Photo Upload Section */
+.photo-upload-section {
+  padding: 20px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 2px dashed #d1d5db;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.photo-upload-section:hover {
+  border-color: #f97316;
+  background: #fff7ed;
+}
+
+.upload-description {
+  margin: 0 0 16px 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.btn-upload-photos {
+  padding: 12px 24px;
+  background: #f97316;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-upload-photos:hover {
+  background: #ea580c;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.btn-upload-photos:active {
+  transform: translateY(0);
+}
+
+.upload-status {
+  margin-top: 12px;
+  font-size: 13px;
+}
+
+.upload-hint {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.upload-success {
+  color: #059669;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Item Detail - Photo Upload Button in Header */
+.btn-upload-photo-detail {
+  padding: 10px 20px;
+  background: #f97316;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-upload-photo-detail:hover {
+  background: #ea580c;
+}
+
+/* Icon-only version for mobile/compact */
+.btn-icon.btn-upload-photo {
+  background: #f97316 !important;
+  color: white !important;
+  border: 1px solid #ea580c !important;
+}
+
+.btn-icon.btn-upload-photo:hover {
+  background: #ea580c !important;
+  border-color: #c2410c !important;
+}
+
+/* No Photos State - Enhanced CTA */
+.no-photo.with-upload {
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  margin: 8px;
+}
+
+.no-photo.with-upload:hover {
+  border-color: #f97316;
+  background: #fff7ed;
+}
+
+.no-photo-upload-hint {
+  font-size: 13px;
+  color: #f97316;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+/* Photo Count Badge */
+.photo-count-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: #d1fae5;
+  color: #065f46;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .btn-upload-photo-detail {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+  
+  .photo-upload-section {
+    padding: 16px;
+  }
+  
+  .btn-upload-photos {
+    width: 100%;
+    justify-content: center;
+  }
+}

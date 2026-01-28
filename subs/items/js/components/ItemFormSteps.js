@@ -1,9 +1,8 @@
 // Item Form Steps Component
 // Renders each step of the wizard
 
+import { CLASS_HIERARCHY } from '../utils/item-config.js';
 import { ItemFormFields } from './ItemFormFields.js';
-import { PhotoUploader } from './PhotoUploader.js';
-import { CLASS_HIERARCHY, TABS, getClassTypeIcon } from '../utils/item-config.js';
 
 export class ItemFormSteps {
   constructor(wizard) {
@@ -12,188 +11,291 @@ export class ItemFormSteps {
   
   // Step 1: Select Class
   renderStep1() {
-    const step = document.createElement('div');
-    step.className = 'step-panel';
+    const panel = document.createElement('div');
+    panel.className = 'step-panel';
     
-    step.innerHTML = `
+    panel.innerHTML = `
       <h2>Select Item Class</h2>
-      <p class="step-description">Choose the type of item you're adding</p>
+      <p class="step-description">Choose the primary category for your item</p>
+      
       <div class="class-selector">
-        ${TABS.map(tab => `
-          <div class="class-card ${this.wizard.formData.class === tab.class ? 'selected' : ''}" 
-               data-class="${tab.class}"
-               onclick="itemFormPage.wizard.selectClass('${tab.class}')">
-            <div class="class-icon">${this.getClassIcon(tab.class)}</div>
-            <div class="class-label">${tab.label}</div>
+        ${Object.keys(CLASS_HIERARCHY).map(className => `
+          <div 
+            class="class-card ${this.wizard.formData.class === className ? 'selected' : ''}" 
+            onclick="itemFormPage.wizard.selectClass('${className}')"
+          >
+            <div class="class-icon">${this.getClassIcon(className)}</div>
+            <div class="class-label">${className}</div>
           </div>
         `).join('')}
       </div>
     `;
     
-    return step;
+    return panel;
   }
   
   // Step 2: Select Class Type
   renderStep2() {
-    const step = document.createElement('div');
-    step.className = 'step-panel';
+    const panel = document.createElement('div');
+    panel.className = 'step-panel';
     
-    const classTypes = CLASS_HIERARCHY[this.wizard.formData.class] || [];
+    const selectedClass = this.wizard.formData.class;
+    const types = CLASS_HIERARCHY[selectedClass] || [];
     
-    step.innerHTML = `
-      <h2>Select ${this.wizard.formData.class} Type</h2>
-      <p class="step-description">What kind of ${this.wizard.formData.class.toLowerCase()} is this?</p>
+    panel.innerHTML = `
+      <h2>Select ${selectedClass} Type</h2>
+      <p class="step-description">Choose the specific type of ${selectedClass.toLowerCase()}</p>
+      
       <div class="type-selector">
-        ${classTypes.map(type => `
-          <div class="type-card ${this.wizard.formData.class_type === type ? 'selected' : ''}"
-               data-type="${type}"
-               onclick="itemFormPage.wizard.selectClassType('${type}')">
-            <div class="type-icon">${getClassTypeIcon(type)}</div>
+        ${types.map(type => `
+          <div 
+            class="type-card ${this.wizard.formData.class_type === type ? 'selected' : ''}" 
+            onclick="itemFormPage.wizard.selectClassType('${type}')"
+          >
+            <div class="type-icon">${this.getTypeIcon(type)}</div>
             <div class="type-label">${type}</div>
           </div>
         `).join('')}
       </div>
     `;
     
-    return step;
+    return panel;
   }
   
-  // Step 3: Fill Details
+  // Step 3: Fill in Details
   renderStep3() {
-    const step = document.createElement('div');
-    step.className = 'step-panel';
+    const panel = document.createElement('div');
+    panel.className = 'step-panel';
     
-    step.innerHTML = `
+    panel.innerHTML = `
       <h2>Item Details</h2>
-      <p class="step-description">Fill in the information for this ${this.wizard.formData.class_type || 'item'}</p>
+      <p class="step-description">Fill in the required information for your ${this.wizard.formData.class_type || 'item'}</p>
       
       <div class="form-section">
         <h3 class="section-title">Basic Information</h3>
-        <div id="basic-fields"></div>
+        <div id="basic-fields" class="form-fields"></div>
       </div>
       
       <div class="form-section">
-        <h3 class="section-title">Specific Details</h3>
-        <div id="specific-fields"></div>
+        <h3 class="section-title">${this.wizard.formData.class} Specific Details</h3>
+        <div id="specific-fields" class="form-fields"></div>
       </div>
       
       <div class="form-section">
-        <h3 class="section-title">Acquisition</h3>
-        <div id="vendor-fields"></div>
+        <h3 class="section-title">Vendor Information</h3>
+        <div id="vendor-fields" class="form-fields"></div>
       </div>
       
       <div class="form-section">
-        <h3 class="section-title">Storage</h3>
-        <div id="storage-fields"></div>
+        <h3 class="section-title">Storage Information</h3>
+        <div id="storage-fields" class="form-fields"></div>
       </div>
       
       ${this.wizard.formData.class === 'Decoration' ? `
         <div class="form-section">
-          <h3 class="section-title">Photos</h3>
-          <div id="photo-uploader"></div>
+          <h3 class="section-title">Photos (Optional)</h3>
+          <div class="photo-upload-section">
+            <p class="upload-description">Upload up to 3 photos for this decoration</p>
+            <button 
+              type="button"
+              class="btn-upload-photos" 
+              onclick="itemFormPage.openPhotoUploadModal()"
+            >
+              📷 Upload Photos
+            </button>
+            <div class="upload-status" id="upload-status">
+              ${this.wizard.uploadedPhotoIds.length > 0 
+                ? `<span class="upload-success">✓ ${this.wizard.uploadedPhotoIds.length} photo(s) uploaded</span>`
+                : '<span class="upload-hint">No photos uploaded yet</span>'
+              }
+            </div>
+          </div>
         </div>
       ` : ''}
     `;
     
-    // Wait for DOM to update, then render fields
+    // After adding to DOM, render the form fields
     setTimeout(() => {
-      const basicFields = new ItemFormFields('basic-fields');
-      basicFields.renderBasicFields(this.wizard.formData);
-      
-      const specificFields = new ItemFormFields('specific-fields');
-      specificFields.renderClassSpecificFields(this.wizard.formData.class_type, this.wizard.formData);
-      
-      const vendorFields = new ItemFormFields('vendor-fields');
-      vendorFields.renderVendorFields(this.wizard.formData);
-      
-      const storageFields = new ItemFormFields('storage-fields');
-      storageFields.renderStorageFields(this.wizard.formData);
-      
-      // Photo uploader for decorations
-      if (this.wizard.formData.class === 'Decoration') {
-        this.wizard.photoUploader = new PhotoUploader('photo-uploader', 3);
-        this.wizard.photoUploader.render();
-      }
-    }, 10);
+      this.renderFormFields();
+    }, 0);
     
-    return step;
+    return panel;
+  }
+  
+  renderFormFields() {
+    // Render basic fields
+    const basicFields = new ItemFormFields('basic-fields');
+    basicFields.renderBasicFields(this.wizard.formData, this.wizard.mode);
+    
+    // Render class-specific fields
+    const specificFields = new ItemFormFields('specific-fields');
+    specificFields.renderClassSpecificFields(
+      this.wizard.formData.class,
+      this.wizard.formData.class_type,
+      this.wizard.formData
+    );
+    
+    // Render vendor fields
+    const vendorFields = new ItemFormFields('vendor-fields');
+    vendorFields.renderVendorFields(this.wizard.formData);
+    
+    // Render storage fields
+    const storageFields = new ItemFormFields('storage-fields');
+    storageFields.renderStorageFields(this.wizard.formData);
   }
   
   // Step 4: Preview
   renderStep4() {
-    // Collect all form data
-    this.wizard.collectFormData();
+    const panel = document.createElement('div');
+    panel.className = 'step-panel';
     
-    const step = document.createElement('div');
-    step.className = 'step-panel';
+    const data = this.wizard.formData;
     
-    step.innerHTML = `
+    panel.innerHTML = `
       <h2>Review & Confirm</h2>
-      <p class="step-description">Please review the information before saving</p>
+      <p class="step-description">Review all details before ${this.wizard.mode === 'create' ? 'creating' : 'updating'} the item</p>
       
       <div class="preview-card">
         <div class="preview-header">
           <div class="preview-title">
-            <span class="preview-icon">${getClassTypeIcon(this.wizard.formData.class_type)}</span>
-            ${this.wizard.formData.short_name || 'Unnamed Item'}
+            <span class="preview-icon">${this.getClassIcon(data.class)}</span>
+            ${data.short_name || 'Unnamed Item'}
           </div>
-          <div class="preview-class">${this.wizard.formData.class} - ${this.wizard.formData.class_type}</div>
+          <div class="preview-class">${data.class} - ${data.class_type}</div>
         </div>
         
         <div class="preview-sections">
-          ${this.renderPreviewSection('Basic Information', [
-            { label: 'Season', value: this.wizard.formData.season },
-            { label: 'Status', value: this.wizard.formData.status || 'Active' },
-            { label: 'Date Acquired', value: this.wizard.formData.date_acquired || '-' }
-          ])}
+          <div class="preview-section">
+            <h4>Basic Information</h4>
+            <div class="preview-fields">
+              <div class="preview-field">
+                <span class="preview-label">Season:</span>
+                <span class="preview-value">${data.season || 'Not set'}</span>
+              </div>
+              <div class="preview-field">
+                <span class="preview-label">Status:</span>
+                <span class="preview-value">${data.status || 'Packed'}</span>
+              </div>
+              ${data.date_acquired ? `
+                <div class="preview-field">
+                  <span class="preview-label">Date Acquired:</span>
+                  <span class="preview-value">${data.date_acquired}</span>
+                </div>
+              ` : ''}
+            </div>
+            ${data.general_notes ? `
+              <p class="preview-notes">${data.general_notes}</p>
+            ` : ''}
+          </div>
           
-          ${this.renderClassSpecificPreview()}
+          ${this.renderClassSpecificPreview(data)}
           
-          ${this.renderPreviewSection('Acquisition', [
-            { label: 'Cost', value: this.wizard.formData.vendor_cost ? `$${this.wizard.formData.vendor_cost}` : '-' },
-            { label: 'Value', value: this.wizard.formData.vendor_value ? `$${this.wizard.formData.vendor_value}` : '-' },
-            { label: 'Manufacturer', value: this.wizard.formData.vendor_manufacturer || '-' },
-            { label: 'Store', value: this.wizard.formData.vendor_store || '-' }
-          ])}
+          <div class="preview-section">
+            <h4>Vendor Information</h4>
+            <div class="preview-fields">
+              ${data.vendor_store ? `
+                <div class="preview-field">
+                  <span class="preview-label">Store:</span>
+                  <span class="preview-value">${data.vendor_store}</span>
+                </div>
+              ` : ''}
+              ${data.vendor_manufacturer ? `
+                <div class="preview-field">
+                  <span class="preview-label">Manufacturer:</span>
+                  <span class="preview-value">${data.vendor_manufacturer}</span>
+                </div>
+              ` : ''}
+              ${data.vendor_cost ? `
+                <div class="preview-field">
+                  <span class="preview-label">Cost:</span>
+                  <span class="preview-value">$${data.vendor_cost}</span>
+                </div>
+              ` : ''}
+              ${data.vendor_value ? `
+                <div class="preview-field">
+                  <span class="preview-label">Value:</span>
+                  <span class="preview-value">$${data.vendor_value}</span>
+                </div>
+              ` : ''}
+            </div>
+          </div>
           
-          ${this.renderPreviewSection('Storage', [
-            { label: 'Tote ID', value: this.wizard.formData.storage_tote_id || '-' },
-            { label: 'Location', value: this.wizard.formData.storage_location || '-' }
-          ])}
-          
-          ${this.wizard.formData.general_notes ? `
+          ${data.storage_tote_id || data.storage_location ? `
             <div class="preview-section">
-              <h4>Notes</h4>
-              <p class="preview-notes">${this.wizard.formData.general_notes}</p>
+              <h4>Storage</h4>
+              <div class="preview-fields">
+                ${data.storage_tote_id ? `
+                  <div class="preview-field">
+                    <span class="preview-label">Tote ID:</span>
+                    <span class="preview-value">${data.storage_tote_id}</span>
+                  </div>
+                ` : ''}
+                ${data.storage_location ? `
+                  <div class="preview-field">
+                    <span class="preview-label">Location:</span>
+                    <span class="preview-value">${data.storage_location}</span>
+                  </div>
+                ` : ''}
+              </div>
             </div>
           ` : ''}
           
-          ${this.wizard.photoUploader && this.wizard.photoUploader.hasPhotos() ? `
+          ${this.wizard.uploadedPhotoIds.length > 0 ? `
             <div class="preview-section">
               <h4>Photos</h4>
-              <p>${this.wizard.photoUploader.getSelectedFiles().length} photo(s) will be uploaded</p>
+              <div class="preview-field">
+                <span class="upload-success">✓ ${this.wizard.uploadedPhotoIds.length} photo(s) ready to upload</span>
+              </div>
             </div>
           ` : ''}
         </div>
       </div>
     `;
     
-    return step;
+    return panel;
   }
   
-  // Helper: Render preview section
-  renderPreviewSection(title, fields) {
-    const nonEmptyFields = fields.filter(f => f.value && f.value !== '-');
-    if (nonEmptyFields.length === 0) return '';
+  renderClassSpecificPreview(data) {
+    const fields = [];
+    
+    // Decoration-specific
+    if (data.class === 'Decoration') {
+      if (data.height_length) fields.push(`Height/Length: ${data.height_length} ft`);
+      if (data.stakes) fields.push(`Stakes: ${data.stakes}`);
+      if (data.tethers) fields.push(`Tethers: ${data.tethers}`);
+      if (data.adapter) fields.push(`Adapter: ${data.adapter}`);
+    }
+    
+    // Light-specific
+    if (data.class === 'Light') {
+      if (data.color) fields.push(`Color: ${data.color}`);
+      if (data.bulb_type) fields.push(`Bulb Type: ${data.bulb_type}`);
+      if (data.length) fields.push(`Length: ${data.length} ft`);
+      if (data.watts) fields.push(`Watts: ${data.watts}W`);
+      if (data.amps) fields.push(`Amps: ${data.amps}A`);
+    }
+    
+    // Accessory-specific
+    if (data.class === 'Accessory') {
+      if (data.length) fields.push(`Length: ${data.length} ft`);
+      if (data.male_ends) fields.push(`Male Ends: ${data.male_ends}`);
+      if (data.female_ends) fields.push(`Female Ends: ${data.female_ends}`);
+    }
+    
+    // Power inlet
+    if (data.power_inlet !== undefined) {
+      fields.push(`Power Inlet: ${data.power_inlet ? 'Yes' : 'No'}`);
+    }
+    
+    if (fields.length === 0) return '';
     
     return `
       <div class="preview-section">
-        <h4>${title}</h4>
+        <h4>${data.class} Details</h4>
         <div class="preview-fields">
-          ${fields.map(f => `
+          ${fields.map(field => `
             <div class="preview-field">
-              <span class="preview-label">${f.label}:</span>
-              <span class="preview-value">${f.value}</span>
+              <span class="preview-value">${field}</span>
             </div>
           `).join('')}
         </div>
@@ -201,26 +303,7 @@ export class ItemFormSteps {
     `;
   }
   
-  // Helper: Render class-specific preview
-  renderClassSpecificPreview() {
-    const fields = [];
-    
-    ['height_length', 'stakes', 'tethers', 'color', 'bulb_type', 'length', 
-     'male_ends', 'female_ends', 'watts', 'amps', 'adapter'].forEach(key => {
-      if (this.wizard.formData[key]) {
-        fields.push({
-          label: key.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
-          value: this.wizard.formData[key]
-        });
-      }
-    });
-    
-    if (fields.length === 0) return '';
-    
-    return this.renderPreviewSection('Specifications', fields);
-  }
-  
-  // Helper: Get class icon
+  // Icon helpers
   getClassIcon(className) {
     const icons = {
       'Decoration': '🎃',
@@ -228,5 +311,19 @@ export class ItemFormSteps {
       'Accessory': '🔌'
     };
     return icons[className] || '📦';
+  }
+  
+  getTypeIcon(type) {
+    const icons = {
+      'Inflatable': '🎈',
+      'Animatronic': '🤖',
+      'Static Prop': '🗿',
+      'String Light': '💡',
+      'Spot Light': '🔦',
+      'Cord': '➰',
+      'Plug': '🔌',
+      'Receptacle': '⚡'
+    };
+    return icons[type] || '📦';
   }
 }

@@ -3,7 +3,6 @@
 
 import { ItemFormSteps } from './ItemFormSteps.js';
 import { ItemFormFields } from './ItemFormFields.js';
-import { PhotoUploader } from './PhotoUploader.js';
 import { toast } from '../shared/toast.js';
 
 export class ItemFormWizard {
@@ -12,7 +11,7 @@ export class ItemFormWizard {
     this.currentStep = mode === 'edit' ? 3 : 1;
     this.originalItem = originalItem;
     this.formData = this.initializeFormData();
-    this.photoUploader = null;
+    this.uploadedPhotoIds = []; // Track uploaded photos
   }
   
   initializeFormData() {
@@ -228,6 +227,15 @@ export class ItemFormWizard {
     this.renderStepContent();
   }
   
+  // Photo upload methods (NEW)
+  hasPhotos() {
+    return this.uploadedPhotoIds.length > 0;
+  }
+  
+  getPhotoIds() {
+    return this.uploadedPhotoIds;
+  }
+  
   // Data preparation for API
   prepareItemData() {
     // Transform snake_case form fields to camelCase API fields
@@ -271,7 +279,7 @@ export class ItemFormWizard {
   }
   
   cleanup() {
-    this.photoUploader = null;
+    this.uploadedPhotoIds = [];
     this.formData = {};
   }
 }
