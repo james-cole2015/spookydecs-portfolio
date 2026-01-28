@@ -83,15 +83,88 @@ function handleMissingFields(details) {
 
 /**
  * Handle missing primary photo violations
+ * Supports multiple violation types from reference_valid relationship check
  */
 function handleMissingPrimaryPhoto(details) {
-  const checkField = details.rule_config?.check_field || 'images.primary_photo_id';
+  const violationType = details.violation_type;
+  const referenceField = details.reference_field || 'images.primary_photo_id';
+  const referenceValue = details.reference_value;
   
-  return {
-    type: 'field',
-    field: checkField,
-    display: `No value for ${checkField}`
-  };
+  // Handle each violation type
+  switch (violationType) {
+    case 'missing_reference':
+      return {
+        type: 'photo_reference',
+        subtype: 'missing',
+        field: referenceField,
+        display: `No primary photo ID set`,
+        details: `The ${referenceField} field is empty or not set.`
+      };
+    
+    case 'invalid_format':
+      return {
+        type: 'photo_reference',
+        subtype: 'invalid_format',
+        field: referenceField,
+        value: referenceValue,
+        expectedPrefix: details.expected_prefix || 'PHOTO',
+        display: `Invalid photo ID format: '${referenceValue}'`,
+        details: `Expected ID to start with '${details.expected_prefix || 'PHOTO'}', but found '${referenceValue}'.`
+      };
+    
+    case 'reference_not_found':
+      return {
+        type: 'photo_reference',
+        subtype: 'not_found',
+        field: referenceField,
+        value: referenceValue,
+        display: `Photo '${referenceValue}' not found in images table`,
+        details: `The referenced photo ID does not exist in the images database.`
+      };
+    
+    case 'missing_url':
+      return {
+        type: 'photo_reference',
+        subtype: 'missing_url',
+        field: referenceField,
+        value: referenceValue,
+        urlField: details.url_field || 'cloudfront_url',
+        display: `Photo '${referenceValue}' has no CloudFront URL`,
+        details: `The photo exists in the images table but is missing a ${details.url_field || 'cloudfront_url'}.`
+      };
+    
+    case 'url_not_accessible':
+      return {
+        type: 'photo_reference',
+        subtype: 'url_not_accessible',
+        field: referenceField,
+        value: referenceValue,
+        url: details.url,
+        statusCode: details.status_code,
+        errorMessage: details.error_message,
+        display: `Photo URL is not accessible`,
+        details: details.error_message || `HTTP ${details.status_code || 'Error'}`
+      };
+    
+    case 'validation_error':
+      return {
+        type: 'photo_reference',
+        subtype: 'error',
+        field: referenceField,
+        value: referenceValue,
+        error: details.error,
+        display: `Error validating photo reference`,
+        details: details.error || 'An unexpected error occurred during validation.'
+      };
+    
+    // Fallback for old field validation format (backwards compatibility)
+    default:
+      return {
+        type: 'field',
+        field: referenceField,
+        display: `No value for ${referenceField}`
+      };
+  }
 }
 
 /**
@@ -135,6 +208,9 @@ function renderViolationReason(violation) {
     
     case 'field':
       return renderFieldReason(reason);
+    
+    case 'photo_reference':
+      return renderPhotoReferenceReason(reason);
     
     case 'duplicate':
       return renderDuplicateReason(reason);
@@ -187,6 +263,91 @@ function renderFieldReason(reason) {
       <p class="violation-reason-field">
         No value found for <code>${sanitizeHtml(reason.field)}</code>
       </p>
+    </div>
+  `;
+}
+
+/**
+ * Render photo reference violation reasons
+ */
+function renderPhotoReferenceReason(reason) {
+  let icon = '📷';
+  let title = 'Primary Photo Issue';
+  
+  // Customize icon and title based on subtype
+  switch (reason.subtype) {
+    case 'missing':
+      icon = '❌';
+      title = 'Missing Primary Photo';
+      break;
+    case 'invalid_format':
+      icon = '⚠️';
+      title = 'Invalid Photo ID Format';
+      break;
+    case 'not_found':
+      icon = '🔍';
+      title = 'Photo Not Found';
+      break;
+    case 'missing_url':
+      icon = '🔗';
+      title = 'Missing Photo URL';
+      break;
+    case 'url_not_accessible':
+      icon = '🚫';
+      title = 'Photo Not Accessible';
+      break;
+    case 'error':
+      icon = '⚠️';
+      title = 'Validation Error';
+      break;
+  }
+
+  let detailsHtml = `<p class="violation-reason-description">${sanitizeHtml(reason.details)}</p>`;
+  
+  // Add specific details based on subtype
+  if (reason.subtype === 'invalid_format' && reason.value) {
+    detailsHtml += `
+      <div class="violation-reason-details">
+        <p><strong>Current Value:</strong> <code>${sanitizeHtml(reason.value)}</code></p>
+        <p><strong>Expected Format:</strong> Must start with <code>${sanitizeHtml(reason.expectedPrefix)}</code></p>
+      </div>
+    `;
+  } else if (reason.subtype === 'not_found' && reason.value) {
+    detailsHtml += `
+      <div class="violation-reason-details">
+        <p><strong>Photo ID:</strong> <code>${sanitizeHtml(reason.value)}</code></p>
+        <p>This photo ID does not exist in the images database.</p>
+      </div>
+    `;
+  } else if (reason.subtype === 'missing_url' && reason.value) {
+    detailsHtml += `
+      <div class="violation-reason-details">
+        <p><strong>Photo ID:</strong> <code>${sanitizeHtml(reason.value)}</code></p>
+        <p><strong>Missing Field:</strong> <code>${sanitizeHtml(reason.urlField)}</code></p>
+      </div>
+    `;
+  } else if (reason.subtype === 'url_not_accessible') {
+    detailsHtml += `
+      <div class="violation-reason-details">
+        ${reason.value ? `<p><strong>Photo ID:</strong> <code>${sanitizeHtml(reason.value)}</code></p>` : ''}
+        ${reason.url ? `<p><strong>URL:</strong> <code class="url-field">${sanitizeHtml(reason.url)}</code></p>` : ''}
+        ${reason.statusCode ? `<p><strong>HTTP Status:</strong> ${sanitizeHtml(String(reason.statusCode))}</p>` : ''}
+        ${reason.errorMessage ? `<p><strong>Error:</strong> ${sanitizeHtml(reason.errorMessage)}</p>` : ''}
+      </div>
+    `;
+  } else if (reason.subtype === 'error' && reason.error) {
+    detailsHtml += `
+      <div class="violation-reason-details">
+        <p><strong>Error Details:</strong></p>
+        <pre class="error-details">${sanitizeHtml(reason.error)}</pre>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="violation-reason-section">
+      <h3>${icon} ${sanitizeHtml(title)}</h3>
+      ${detailsHtml}
     </div>
   `;
 }
