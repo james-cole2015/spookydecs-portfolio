@@ -1,19 +1,19 @@
 /**
  * Storage Edit Page
- * Edit storage unit metadata with photo replacement
+ * Edit storage unit metadata with CDN photo upload modal for photo replacement
+ * UPDATED: Uses photo-upload-modal web component from CDN
  */
 
-import { storageAPI } from '../utils/storage-api.js';
+import { storageAPI, photosAPI } from '../utils/storage-api.js';
 import { formatStorageUnit, getPlaceholderImage } from '../utils/storage-config.js';
 import { StorageFormFields } from '../components/StorageFormFields.js';
-import { StoragePhotoUploader } from '../components/StoragePhotoUploader.js';
 import { showSuccess, showError } from '../shared/toast.js';
 import { navigate } from '../utils/router.js';
 import { showLoading, hideLoading } from '../app.js';
 
 let formFields = null;
 let currentStorageUnit = null;
-let photoUploader = null;
+let newPhotoData = null;
 
 /**
  * Render storage edit page
@@ -117,8 +117,7 @@ async function renderForm() {
       
       <div class="form-section">
         <h2 class="section-title">Photo</h2>
-        <div id="current-photo-container"></div>
-        <div id="photo-uploader-container"></div>
+        <div id="photo-section"></div>
       </div>
     </div>
   `;
@@ -154,18 +153,15 @@ async function renderForm() {
     itemField.closest('.form-field').style.display = 'none';
   }
   
-  // Render current photo
-  renderCurrentPhoto();
-  
-  // Initialize PhotoUploader
-  initPhotoUploader();
+  // Render photo section
+  renderPhotoSection();
 }
 
 /**
- * Render current photo display
+ * Render photo section with current photo and upload button
  */
-function renderCurrentPhoto() {
-  const container = document.getElementById('current-photo-container');
+function renderPhotoSection() {
+  const container = document.getElementById('photo-section');
   const photoUrl = currentStorageUnit.images?.photo_url || getPlaceholderImage();
   const hasPhoto = currentStorageUnit.images?.photo_url;
   
@@ -173,42 +169,105 @@ function renderCurrentPhoto() {
     <div class="current-photo-section">
       <label class="form-label">Current Photo</label>
       <div class="current-photo-preview">
-        <img src="${photoUrl}" alt="${currentStorageUnit.short_name}" class="current-photo-img" />
+        <img src="${photoUrl}" alt="${currentStorageUnit.short_name}" class="current-photo-img" id="current-photo-img" />
       </div>
-      ${hasPhoto 
-        ? '<p class="form-help">Upload a new photo below to replace the current one</p>' 
-        : '<p class="form-help">No photo currently set. Upload one below.</p>'
-      }
+      <button type="button" class="btn-replace-storage-photo" id="btn-replace-photo">
+        📷 ${hasPhoto ? 'Replace Photo' : 'Upload Photo'}
+      </button>
+      <p class="form-help" style="margin-top: 8px;">
+        ${hasPhoto 
+          ? 'Click to upload a new photo and replace the current one' 
+          : 'Upload a photo to help identify this storage unit'
+        }
+      </p>
     </div>
   `;
+  
+  // Attach click listener
+  document.getElementById('btn-replace-photo').addEventListener('click', openPhotoUploadModal);
 }
 
 /**
- * Initialize StoragePhotoUploader component
+ * Open photo upload modal
  */
-function initPhotoUploader() {
-  const uploaderContainer = document.getElementById('photo-uploader-container');
+function openPhotoUploadModal() {
+  // Create modal element
+  const modal = document.createElement('photo-upload-modal');
   
-  if (!uploaderContainer) {
-    console.warn('Photo uploader container not found');
-    return;
-  }
+  // Configure modal attributes
+  modal.setAttribute('context', 'storage');
+  modal.setAttribute('photo-type', 'storage');
+  modal.setAttribute('season', currentStorageUnit.season.toLowerCase());
+  modal.setAttribute('storage-id', currentStorageUnit.id);
+  modal.setAttribute('max-photos', '1');
+  modal.setAttribute('year', new Date().getFullYear().toString());
   
+  // Listen for upload complete
+  modal.addEventListener('upload-complete', (e) => {
+    handlePhotoUploadComplete(e.detail);
+  });
+  
+  // Listen for cancel
+  modal.addEventListener('upload-cancel', () => {
+    console.log('Photo upload cancelled');
+  });
+  
+  // Append to body
+  document.body.appendChild(modal);
+}
+
+/**
+ * Handle photo upload completion
+ */
+async function handlePhotoUploadComplete(detail) {
   try {
-    // Create a container div with ID
-    uploaderContainer.innerHTML = '<div id="storage-photo-uploader-edit"></div>';
-    
-    photoUploader = new StoragePhotoUploader('storage-photo-uploader-edit', {
-      onChange: (file) => {
-        console.log('New photo selected:', file ? file.name : 'none');
+    // Store new photo data
+    if (detail.photo_ids && detail.photo_ids.length > 0) {
+      const photo_id = detail.photo_ids[0];
+      
+      // Fetch photo details from images API
+      const photoDetails = await photosAPI.getById(photo_id);
+      
+      if (!photoDetails) {
+        showError('Photo uploaded but failed to retrieve details');
+        return;
       }
-    });
-    
-    photoUploader.render();
-    console.log('StoragePhotoUploader initialized for edit');
+      
+      const photo_url = photoDetails.cloudfront_url;
+      const thumb_cloudfront_url = photoDetails.thumb_cloudfront_url;
+      
+      // Update storage unit immediately with new photo
+      showLoading();
+      
+      await storageAPI.update(currentStorageUnit.id, {
+        images: {
+          photo_id: photo_id,
+          photo_url: photo_url,
+          thumb_cloudfront_url: thumb_cloudfront_url
+        }
+      });
+      
+      hideLoading();
+      
+      // Update UI to show new photo
+      const photoImg = document.getElementById('current-photo-img');
+      if (photoImg) {
+        photoImg.src = photo_url;
+      }
+      
+      // Update current storage unit data
+      currentStorageUnit.images = {
+        photo_id: photo_id,
+        photo_url: photo_url,
+        thumb_cloudfront_url: thumb_cloudfront_url
+      };
+      
+      showSuccess('Photo uploaded and saved successfully!');
+    }
   } catch (error) {
-    console.error('Error initializing StoragePhotoUploader:', error);
-    uploaderContainer.innerHTML = '<p class="form-help text-muted">Photo upload unavailable</p>';
+    console.error('Failed to update storage with photo:', error);
+    hideLoading();
+    showError('Photo upload failed. Please try again.');
   }
 }
 
@@ -238,36 +297,6 @@ async function handleSave(storageId) {
     // Only include size for totes
     if (currentStorageUnit.class_type === 'Tote') {
       updateData.size = formData.size;
-    }
-    
-    // Handle photo upload if new photo selected
-    if (photoUploader && photoUploader.hasPhoto()) {
-      try {
-        const file = photoUploader.getSelectedFile();
-        
-        console.log('Uploading new photo for storage unit:', storageId);
-        
-        // Upload photo using storageAPI
-        const photoData = await storageAPI.uploadStoragePhoto(
-          file,
-          storageId,
-          currentStorageUnit.season
-        );
-        
-        console.log('Photo uploaded successfully:', photoData.photo_id);
-        
-        // Add photo data to update payload
-        updateData.images = {
-          photo_id: photoData.photo_id,
-          photo_url: photoData.photo_url,
-          thumb_cloudfront_url: photoData.thumb_cloudfront_url
-        };
-      } catch (photoError) {
-        console.error('Photo upload failed:', photoError);
-        hideLoading();
-        showError('Photo upload failed. Please try again.');
-        return; // Don't proceed with update if photo upload fails
-      }
     }
     
     // Update storage unit

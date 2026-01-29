@@ -1,7 +1,7 @@
 /**
  * CreateWizard Component
  * 3-step wizard for creating storage units (Tote or Self-contained)
- * FIXED: Properly initializes StoragePhotoUploader via callback
+ * UPDATED: Uses CDN photo upload modal instead of custom uploader
  */
 
 import { StorageFormFields } from './StorageFormFields.js';
@@ -11,7 +11,6 @@ export class CreateWizard {
   constructor(options = {}) {
     this.onComplete = options.onComplete || (() => {});
     this.onCancel = options.onCancel || (() => {});
-    this.onPhotoStepRender = options.onPhotoStepRender || null; // NEW: Callback for photo step
     this.container = null;
     
     // Wizard state
@@ -185,9 +184,12 @@ export class CreateWizard {
         
         <div class="photo-upload-section">
           <h3 class="review-title">Photo (Optional)</h3>
-          <div id="photo-uploader-container">
-            <p class="form-help mb-md">You can add a photo now or later when editing the storage unit.</p>
-            <div id="photo-uploader"></div>
+          <p class="upload-description">Add a photo to help identify this storage unit</p>
+          <button type="button" class="btn-upload-storage-photo" id="btn-trigger-upload">
+            📷 Upload Photo
+          </button>
+          <div class="upload-success hidden" id="upload-success">
+            ✓ Photo uploaded successfully
           </div>
         </div>
         
@@ -244,11 +246,6 @@ export class CreateWizard {
         </div>
       </div>
     `;
-    
-    // **FIX: Call the parent's photo step render callback**
-    if (this.onPhotoStepRender && typeof this.onPhotoStepRender === 'function') {
-      this.onPhotoStepRender();
-    }
   }
 
   /**
@@ -367,7 +364,7 @@ export class CreateWizard {
    * Complete wizard
    */
   complete() {
-    // Pass form data to parent - photo handling is done in storage-create.js
+    // Pass form data to parent
     this.onComplete(this.selectedType, this.formData);
   }
 }

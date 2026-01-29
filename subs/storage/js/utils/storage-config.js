@@ -130,7 +130,6 @@ export const STORAGE_CONFIG = {
   // Table columns configuration for desktop view
   TABLE_COLUMNS: [
     { key: 'id', label: 'ID', sortable: true, width: '150px' },
-    { key: 'photo', label: 'Photo', sortable: false, width: '60px' },
     { key: 'short_name', label: 'Short Name', sortable: true, width: 'auto' },
     { key: 'class_type', label: 'Type', sortable: true, width: '80px' },
     { key: 'season', label: 'Season', sortable: true, width: '100px' },

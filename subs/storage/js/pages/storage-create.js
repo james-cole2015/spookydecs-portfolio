@@ -1,17 +1,17 @@
 /**
  * Storage Create Page
- * Create wizard for new storage units with photo upload
+ * Create wizard for new storage units with CDN photo upload modal
+ * UPDATED: Uses photo-upload-modal web component from CDN
  */
 
-import { storageAPI } from '../utils/storage-api.js';
+import { storageAPI, photosAPI } from '../utils/storage-api.js';
 import { CreateWizard } from '../components/CreateWizard.js';
-import { StoragePhotoUploader } from '../components/StoragePhotoUploader.js';
 import { showSuccess, showError } from '../shared/toast.js';
 import { navigate } from '../utils/router.js';
 import { showLoading, hideLoading } from '../app.js';
 
 let createWizard = null;
-let photoUploader = null;
+let uploadedPhotoData = null;
 
 /**
  * Render storage create page
@@ -26,48 +26,106 @@ export async function renderCreateWizard() {
     </div>
   `;
   
-  // Initialize wizard with photo step callback
+  // Initialize wizard
   createWizard = new CreateWizard({
     onComplete: handleCreate,
-    onCancel: handleCancel,
-    onPhotoStepRender: initPhotoUploader
+    onCancel: handleCancel
   });
   
   createWizard.render(document.getElementById('wizard-container'));
+  
+  // Wait for wizard to render, then attach photo upload button listener
+  setTimeout(() => {
+    attachPhotoUploadListener();
+  }, 100);
 }
 
 /**
- * Initialize StoragePhotoUploader component
- * Called by CreateWizard when rendering photo step (step 3)
+ * Attach listener to photo upload button in step 3
  */
-function initPhotoUploader() {
-  const uploaderContainer = document.getElementById('photo-uploader');
+function attachPhotoUploadListener() {
+  const uploadBtn = document.getElementById('btn-trigger-upload');
   
-  if (!uploaderContainer) {
-    console.warn('Photo uploader container not found');
+  if (uploadBtn) {
+    uploadBtn.addEventListener('click', openPhotoUploadModal);
+  }
+}
+
+/**
+ * Open photo upload modal
+ */
+function openPhotoUploadModal() {
+  // Get current form data from wizard
+  const formData = createWizard.formData;
+  
+  if (!formData.season) {
+    showError('Please complete the form before uploading photos');
     return;
   }
   
-  try {
-    // Create a container div with ID for StoragePhotoUploader
-    uploaderContainer.innerHTML = '<div id="storage-photo-uploader-container"></div>';
+  // Create modal element
+  const modal = document.createElement('photo-upload-modal');
+  
+  // Configure modal attributes
+  modal.setAttribute('context', 'storage');
+  modal.setAttribute('photo-type', 'storage');
+  modal.setAttribute('season', formData.season.toLowerCase());
+  modal.setAttribute('max-photos', '1');
+  modal.setAttribute('year', new Date().getFullYear().toString());
+  
+  // Listen for upload complete
+  modal.addEventListener('upload-complete', (e) => {
+    handlePhotoUploadComplete(e.detail);
+  });
+  
+  // Listen for cancel
+  modal.addEventListener('upload-cancel', () => {
+    console.log('Photo upload cancelled');
+  });
+  
+  // Append to body
+  document.body.appendChild(modal);
+}
+
+/**
+ * Handle photo upload completion
+ */
+async function handlePhotoUploadComplete(detail) {
+  // Store photo data
+  if (detail.photo_ids && detail.photo_ids.length > 0) {
+    const photo_id = detail.photo_ids[0];
     
-    // Initialize StoragePhotoUploader
-    photoUploader = new StoragePhotoUploader('storage-photo-uploader-container', {
-      onChange: (file) => {
-        console.log('Photo selected:', file ? file.name : 'none');
+    try {
+      // Fetch photo details from images API
+      const photoDetails = await photosAPI.getById(photo_id);
+      
+      if (photoDetails) {
+        uploadedPhotoData = {
+          photo_id: photo_id,
+          photo_url: photoDetails.cloudfront_url,  // FIX: Use cloudfront_url from photo record
+          thumb_cloudfront_url: photoDetails.thumb_cloudfront_url
+        };
+        
+        // Show success message in wizard
+        const successEl = document.getElementById('upload-success');
+        if (successEl) {
+          successEl.classList.remove('hidden');
+        }
+        
+        // Hide upload button
+        const uploadBtn = document.getElementById('btn-trigger-upload');
+        if (uploadBtn) {
+          uploadBtn.style.display = 'none';
+        }
+        
+        showSuccess('Photo uploaded successfully!');
+      } else {
+        showError('Photo uploaded but failed to retrieve details');
       }
-    });
-    
-    photoUploader.render();
-    console.log('StoragePhotoUploader initialized');
-  } catch (error) {
-    console.error('Error initializing StoragePhotoUploader:', error);
-    uploaderContainer.innerHTML = `
-      <div class="form-help text-muted">
-        Photo upload unavailable. You can add a photo after creation.
-      </div>
-    `;
+    } catch (error) {
+      console.error('Failed to fetch photo details:', error);
+      showError('Photo uploaded but failed to retrieve details');
+    }
   }
 }
 
@@ -91,36 +149,25 @@ async function handleCreate(classType, formData) {
     
     console.log('Storage unit created:', newStorageUnit.id);
     
-    // Step 2: Upload photo if selected
-    if (photoUploader && photoUploader.hasPhoto()) {
+    // Step 2: Update with photo if uploaded
+    if (uploadedPhotoData && uploadedPhotoData.photo_id) {
       try {
-        const file = photoUploader.getSelectedFile();
+        console.log('Updating storage unit with photo:', uploadedPhotoData.photo_id);
         
-        console.log('Uploading photo for storage unit:', newStorageUnit.id);
-        
-        // Upload photo using storageAPI
-        const photoData = await storageAPI.uploadStoragePhoto(
-          file,
-          newStorageUnit.id,
-          formData.season
-        );
-        
-        console.log('Photo uploaded successfully:', photoData.photo_id);
-        
-        // Step 3: Update storage unit with photo reference
+        // Update storage unit with photo reference
         await storageAPI.update(newStorageUnit.id, {
           images: {
-            photo_id: photoData.photo_id,
-            photo_url: photoData.photo_url,
-            thumb_cloudfront_url: photoData.thumb_cloudfront_url
+            photo_id: uploadedPhotoData.photo_id,
+            photo_url: uploadedPhotoData.photo_url,
+            thumb_cloudfront_url: uploadedPhotoData.thumb_cloudfront_url
           }
         });
         
         console.log('Storage unit updated with photo');
       } catch (photoError) {
-        console.error('Photo upload failed:', photoError);
+        console.error('Failed to update storage with photo:', photoError);
         // Don't fail the entire creation - just show warning
-        showError('Storage created but photo upload failed. You can add a photo later.');
+        showError('Storage created but photo attachment failed');
       }
     }
     
@@ -145,11 +192,8 @@ async function handleCreate(classType, formData) {
  * Handle wizard cancel
  */
 function handleCancel() {
-  // Clean up photo uploader
-  if (photoUploader) {
-    photoUploader.clear();
-    photoUploader = null;
-  }
+  // Clean up
+  uploadedPhotoData = null;
   
   navigate('/storage');
 }

@@ -3,7 +3,7 @@
  * Desktop table view for storage units
  */
 
-import STORAGE_CONFIG, { getPackedLabel, getPlaceholderImage } from '../utils/storage-config.js';
+import STORAGE_CONFIG, { getPackedLabel } from '../utils/storage-config.js';
 import { navigate } from '../utils/router.js';
 
 export class StorageTable {
@@ -99,13 +99,6 @@ export class StorageTable {
     tdId.className = 'storage-id';
     tdId.innerHTML = `<code>${unit.id}</code>`;
     tr.appendChild(tdId);
-    
-    // Photo column
-    const tdPhoto = document.createElement('td');
-    tdPhoto.className = 'storage-photo';
-    const photoUrl = unit.images?.photo_url || getPlaceholderImage();
-    tdPhoto.innerHTML = `<img src="${photoUrl}" alt="${unit.short_name}" class="storage-thumb">`;
-    tr.appendChild(tdPhoto);
     
     // Short name column
     const tdName = document.createElement('td');
