@@ -35,7 +35,7 @@ export async function renderNewCostRecord(container) {
             <p class="page-subtitle">Track expenses for maintenance, repairs, and equipment</p>
           </div>
           <div class="header-actions">
-            <button class="btn-primary" id="btn-extract-ai">
+            <button class="btn-primary" id="btn-extract-ai" title="Upload receipt to extract cost data">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="17 8 12 3 7 8"></polyline>
