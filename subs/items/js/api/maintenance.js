@@ -3,7 +3,21 @@
  * Handles requests to the maintenance subdomain API
  */
 
-import { loadConfig, getMaintenanceUrl } from './items.js';
+import { loadConfig } from './items.js';
+
+/**
+ * Get Maintenance subdomain URL from config
+ */
+async function getMaintenanceUrl() {
+  const config = await loadConfig();
+  
+  if (!config.MAINT_URL) {
+    console.error('MAINT_URL not found in config');
+    throw new Error('Maintenance URL not configured');
+  }
+  
+  return config.MAINT_URL;
+}
 
 /**
  * Fetch maintenance records for a specific item
@@ -79,3 +93,5 @@ export async function getMaintenancePageUrl(itemId) {
   const baseUrl = await getMaintenanceUrl();
   return `${baseUrl}/${itemId}`;
 }
+
+export { getMaintenanceUrl };

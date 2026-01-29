@@ -76,7 +76,7 @@ export class AddCostModal {
   
   navigateToItems() {
     setTimeout(() => {
-      window.location.href = '/items';
+      window.location.href = '/';
     }, 100);
   }
 }

@@ -1,91 +1,138 @@
 // TabBar Component
-// Handles tab navigation for items list
-
-import { TABS } from '../utils/item-config.js';
+// Sticky tab navigation with scroll indicators
 
 export class TabBar {
-  constructor(containerId, onTabChange) {
+  constructor(containerId, tabs, onTabChange) {
     this.container = document.getElementById(containerId);
+    this.tabs = tabs;
     this.onTabChange = onTabChange;
-    this.activeTab = 'decorations';
-    this.tabCounts = {};
+    this.activeTab = tabs[0]?.id || null;
+    this.scrollContainer = null;
   }
   
-  render(activeTab, tabCounts = {}) {
-    this.activeTab = activeTab;
-    this.tabCounts = tabCounts;
+  render() {
+    if (!this.container) return;
     
-    if (!this.container) {
-      console.error('TabBar container not found');
+    this.container.innerHTML = `
+      <div class="tab-bar-wrapper">
+        <div class="tab-bar-container" id="tab-bar-container">
+          <button class="tab-scroll-arrow tab-scroll-left hidden" id="scroll-left">
+            ←
+          </button>
+          
+          <div class="tab-bar-scroll" id="tab-bar-scroll">
+            <div class="tab-bar">
+              ${this.tabs.map(tab => `
+                <button 
+                  class="tab-item ${tab.id === this.activeTab ? 'active' : ''}"
+                  data-tab="${tab.id}"
+                  onclick="tabBar.setActiveTab('${tab.id}')"
+                >
+                  ${tab.label}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+          
+          <button class="tab-scroll-arrow tab-scroll-right hidden" id="scroll-right">
+            →
+          </button>
+        </div>
+      </div>
+    `;
+    
+    this.scrollContainer = document.getElementById('tab-bar-scroll');
+    this.updateScrollIndicators();
+    this.attachEventListeners();
+  }
+  
+  attachEventListeners() {
+    if (!this.scrollContainer) return;
+    
+    // Scroll event listener
+    this.scrollContainer.addEventListener('scroll', () => {
+      this.updateScrollIndicators();
+    });
+    
+    // Arrow click handlers
+    const leftArrow = document.getElementById('scroll-left');
+    const rightArrow = document.getElementById('scroll-right');
+    
+    if (leftArrow) {
+      leftArrow.addEventListener('click', () => {
+        this.scrollContainer.scrollBy({ left: -200, behavior: 'smooth' });
+      });
+    }
+    
+    if (rightArrow) {
+      rightArrow.addEventListener('click', () => {
+        this.scrollContainer.scrollBy({ left: 200, behavior: 'smooth' });
+      });
+    }
+    
+    // Window resize handler
+    window.addEventListener('resize', () => {
+      this.updateScrollIndicators();
+    });
+  }
+  
+  updateScrollIndicators() {
+    if (!this.scrollContainer) return;
+    
+    const container = document.getElementById('tab-bar-container');
+    const leftArrow = document.getElementById('scroll-left');
+    const rightArrow = document.getElementById('scroll-right');
+    
+    if (!container || !leftArrow || !rightArrow) return;
+    
+    const scrollLeft = this.scrollContainer.scrollLeft;
+    const scrollWidth = this.scrollContainer.scrollWidth;
+    const clientWidth = this.scrollContainer.clientWidth;
+    
+    // Check if content overflows
+    const hasOverflow = scrollWidth > clientWidth;
+    
+    if (!hasOverflow) {
+      // No overflow, hide everything
+      leftArrow.classList.add('hidden');
+      rightArrow.classList.add('hidden');
+      container.classList.remove('show-left-fade', 'show-right-fade');
       return;
     }
     
-    const tabBar = document.createElement('div');
-    tabBar.className = 'tab-bar';
+    // Show/hide left arrow and fade
+    if (scrollLeft > 10) {
+      leftArrow.classList.remove('hidden');
+      container.classList.add('show-left-fade');
+    } else {
+      leftArrow.classList.add('hidden');
+      container.classList.remove('show-left-fade');
+    }
     
-    // Desktop tabs
-    const desktopTabs = document.createElement('div');
-    desktopTabs.className = 'tab-bar-desktop';
-    
-    TABS.forEach(tab => {
-      const tabButton = document.createElement('button');
-      tabButton.className = `tab-button ${tab.id === activeTab ? 'active' : ''}`;
-      
-      // Create tab content with icon, label, and count
-      const count = tabCounts[tab.id] || 0;
-      tabButton.innerHTML = `
-        <span class="tab-label">${tab.icon} ${tab.label}</span>
-        <span class="tab-count">${count}</span>
-      `;
-      
-      tabButton.dataset.tabId = tab.id;
-      
-      tabButton.addEventListener('click', () => {
-        this.handleTabClick(tab.id);
-      });
-      
-      desktopTabs.appendChild(tabButton);
-    });
-    
-    // Mobile dropdown
-    const mobileDropdown = document.createElement('div');
-    mobileDropdown.className = 'tab-bar-mobile';
-    
-    const select = document.createElement('select');
-    select.className = 'tab-select';
-    select.value = activeTab;
-    
-    TABS.forEach(tab => {
-      const option = document.createElement('option');
-      option.value = tab.id;
-      const count = tabCounts[tab.id] || 0;
-      // Add icon and count to mobile dropdown
-      option.textContent = `${tab.icon} ${tab.label} (${count})`;
-      if (tab.id === activeTab) option.selected = true;
-      select.appendChild(option);
-    });
-    
-    select.addEventListener('change', (e) => {
-      this.handleTabClick(e.target.value);
-    });
-    
-    mobileDropdown.appendChild(select);
-    
-    tabBar.appendChild(desktopTabs);
-    tabBar.appendChild(mobileDropdown);
-    
-    this.container.innerHTML = '';
-    this.container.appendChild(tabBar);
+    // Show/hide right arrow and fade
+    const maxScroll = scrollWidth - clientWidth;
+    if (scrollLeft < maxScroll - 10) {
+      rightArrow.classList.remove('hidden');
+      container.classList.add('show-right-fade');
+    } else {
+      rightArrow.classList.add('hidden');
+      container.classList.remove('show-right-fade');
+    }
   }
   
-  handleTabClick(tabId) {
-    if (tabId === this.activeTab) return;
+  setActiveTab(tabId) {
+    if (this.activeTab === tabId) return;
     
     this.activeTab = tabId;
     
     // Update active state
-    this.container.querySelectorAll('.tab-button').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.tabId === tabId);
+    const tabs = this.container.querySelectorAll('.tab-item');
+    tabs.forEach(tab => {
+      if (tab.dataset.tab === tabId) {
+        tab.classList.add('active');
+      } else {
+        tab.classList.remove('active');
+      }
     });
     
     // Notify parent
@@ -94,18 +141,22 @@ export class TabBar {
     }
   }
   
-  setActiveTab(tabId) {
-    this.activeTab = tabId;
-    
-    // Update desktop tabs
-    this.container.querySelectorAll('.tab-button').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.tabId === tabId);
-    });
-    
-    // Update mobile dropdown
-    const select = this.container.querySelector('.tab-select');
-    if (select) {
-      select.value = tabId;
-    }
+  getActiveTab() {
+    return this.activeTab;
   }
+}
+
+// Global instance for onclick handlers
+let tabBar = null;
+
+export function initTabBar(containerId, tabs, onTabChange) {
+  tabBar = new TabBar(containerId, tabs, onTabChange);
+  tabBar.render();
+  
+  // Make available globally
+  if (typeof window !== 'undefined') {
+    window.tabBar = tabBar;
+  }
+  
+  return tabBar;
 }

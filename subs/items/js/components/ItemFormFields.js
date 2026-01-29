@@ -1,12 +1,11 @@
 // ItemFormFields Component
 // Generates dynamic form fields based on class and class_type
 
-import { 
-  CLASS_HIERARCHY, 
-  CLASS_TYPE_ATTRIBUTES, 
-  getAttributeLabel,
-  SEASON_OPTIONS,
-  STATUS_OPTIONS
+import {
+  CLASS_TYPE_ATTRIBUTES,
+  FIELD_METADATA,
+  SEASONS,
+  ITEM_STATUS
 } from '../utils/item-config.js';
 
 export class ItemFormFields {
@@ -37,17 +36,17 @@ export class ItemFormFields {
     fields.appendChild(this.createSelectField(
       'season',
       'Season',
-      SEASON_OPTIONS,
+      SEASONS.map(s => s.value),
       this.formData.season || '',
       true
     ));
-    
+
     // Status (for edit mode, create always defaults to Active)
     if (data.status) {
       fields.appendChild(this.createSelectField(
         'status',
         'Status',
-        STATUS_OPTIONS,
+        ITEM_STATUS.map(s => s.value),
         this.formData.status || 'Active',
         true
       ));
@@ -83,7 +82,7 @@ export class ItemFormFields {
     const fields = document.createElement('div');
     fields.className = 'form-fields';
     
-    const attributes = CLASS_TYPE_ATTRIBUTES[classType] || [];
+    const attributes = CLASS_TYPE_ATTRIBUTES[classType]?.fields || [];
     
     if (attributes.length === 0) {
       fields.innerHTML = '<div class="no-fields-message">No additional fields for this type</div>';
@@ -94,10 +93,10 @@ export class ItemFormFields {
     attributes.forEach(attr => {
       const value = this.formData[attr] || '';
       const isNumeric = this.isNumericField(attr);
-      
+
       fields.appendChild(this.createTextField(
         attr,
-        getAttributeLabel(attr),
+        FIELD_METADATA[attr]?.label || attr,
         value,
         false,
         isNumeric ? 'Enter a number' : '',

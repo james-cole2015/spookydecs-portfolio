@@ -78,7 +78,7 @@ export class ItemsTable {
       card.dataset.itemId = item.id;
       
       card.addEventListener('click', () => {
-        navigate(`/items/${item.id}`);
+        navigate(`/${item.id}`);
       });
       
       card.innerHTML = `
@@ -153,7 +153,7 @@ export class ItemsTable {
       
       // Click to navigate
       row.addEventListener('click', () => {
-        navigate(`/items/${item.id}`);
+        navigate(`/${item.id}`);
       });
       
       const columns = TABLE_COLUMNS[this.currentTab] || TABLE_COLUMNS.decorations;

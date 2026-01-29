@@ -3,39 +3,45 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SpookyDecs - Items</title>
+  <title>Items | SpookyDecs</title>
+
+    <!-- Header Component Script (load first) -->
+    <script src="https://assets.spookydecs.com/components/spookydecs-header.js"></script>
   
-  <!-- Navigo Router CDN -->
-  <script src="https://unpkg.com/navigo@8.11.1/lib/navigo.min.js"></script>
-  
-  <!-- CSS - Use absolute paths -->
-  <link rel="stylesheet" href="/css/shared.css">
+  <!-- Styles -->
   <link rel="stylesheet" href="/css/items.css">
   <link rel="stylesheet" href="/css/item-detail.css">
   <link rel="stylesheet" href="/css/item-form.css">
-  <link rel="stylesheet" href="/css/photo-upload-styles.css">
-  <link rel="stylesheet" href="/css/maintenance-section-styles.css">
-  <link rel="stylesheet" href="css/add-cost-modal.css">
+
+
   
-<script src="https://assets.spookydecs.com/components/photo-upload-service.js?nocache=1737942000"></script>
-<script src="https://assets.spookydecs.com/components/photo-upload-modal.js?nocache=1737942000"></script>
-  
+  <!-- Photo Upload Components -->
+  <script src="/js/shared/photo-upload-service.js"></script>
+  <script src="/js/shared/photo-upload-modal.js"></script>
 </head>
 <body>
-  <!-- Dynamic content container - router loads pages here -->
-  <script src="https://assets.spookydecs.com/components/spookydecs-header.js"></script>
-  <spookydecs-header page-title="Items Management"></spookydecs-header>
-  <div id="app-root"></div>
-  
-  <!-- Initialize router -->
-  <script type="module">
-    import { initRouter } from '/js/router.js';
-    
-    // Wait for DOM + config to load
-    document.addEventListener('DOMContentLoaded', () => {
-      initRouter();
-    });
-  </script>
 
+      <!-- SpookyDecs Header -->
+    <spookydecs-header 
+        page-title="Inspector" 
+        logout-url="/logout">
+    </spookydecs-header>
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="loading-overlay hidden">
+    <div class="spinner"></div>
+    <p>Loading...</p>
+  </div>
+  
+  <!-- Main App Container -->
+  <div id="app-container">
+    <!-- Router will inject content here -->
+  </div>
+  
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+  
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/navigo@8.11.1/lib/navigo.min.js"></script>
+  <script type="module" src="/js/app.js"></script>
 </body>
 </html>

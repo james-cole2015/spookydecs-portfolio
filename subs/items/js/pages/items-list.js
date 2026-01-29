@@ -2,168 +2,156 @@
 // Main orchestrator for items list view
 
 import { fetchAllItems } from '../api/items.js';
-import { saveTabState, restoreTabState, getFilteredItems, getAvailableClassTypes, getTabCounts } from '../utils/state.js';
-import { TabBar } from '../components/TabBar.js';
+import { ItemsCards } from '../components/ItemsCards.js';
 import { FilterBar } from '../components/FilterBar.js';
-import { ItemsTable } from '../components/ItemsTable.js';
-import { navigate } from '../router.js';
+import { navigate } from '../utils/router.js';
+import { toast } from '../shared/toast.js';
+import { modal } from '../shared/modal.js';
 
-let allItems = [];
-let currentState = {
-  tab: 'decorations',
-  filters: {
-    search: '',
-    season: '',
-    class_type: '',
-    repair_status: '',
-    status: ''
+class ItemsListPage {
+  constructor() {
+    this.allItems = [];
+    this.filteredItems = [];
+    this.cardsComponent = null;
+    this.filterBar = null;
   }
-};
-
-let tabBar;
-let filterBar;
-let itemsTable;
-
-export async function init() {
-  console.log('Initializing items list page...');
   
-  // Initialize components
-  tabBar = new TabBar('tab-container', handleTabChange);
-  filterBar = new FilterBar('filter-container', handleFilterChange);
-  itemsTable = new ItemsTable('table-container');
-  
-  // Restore state from URL/localStorage
-  currentState = restoreTabState();
-  
-  // Show loading state
-  itemsTable.showLoading();
-  
-  try {
-    // Fetch all items
-    allItems = await fetchAllItems();
+  async render() {
+    this.showLoading();
     
-    // Render page
-    renderPage();
+    const container = document.getElementById('app-container');
+    container.innerHTML = `
+      <div class="view-header">
+        <h1>Items</h1>
+        <button class="btn-primary" onclick="itemsPage.handleCreate()">
+          + Create Item
+        </button>
+      </div>
+      
+      <div id="filter-bar-container"></div>
+      
+      <div id="items-container"></div>
+    `;
     
-  } catch (error) {
-    console.error('Failed to load items:', error);
-    showError('Failed to load items. Please try again.');
-  }
-}
-
-function renderPage() {
-  // Get available class types for current tab
-  const availableClassTypes = getAvailableClassTypes(allItems, currentState.tab);
-  
-  // Clear class_type filter if it's not valid for current tab
-  if (currentState.filters.class_type && 
-      !availableClassTypes.includes(currentState.filters.class_type)) {
-    currentState.filters.class_type = '';
-  }
-  
-  // Get tab counts
-  const tabCounts = getTabCounts(allItems);
-  
-  // Render components with tab counts
-  tabBar.render(currentState.tab, tabCounts);
-  filterBar.render(currentState.filters, availableClassTypes);
-  
-  // Filter and render items
-  const filteredItems = getFilteredItems(allItems, currentState);
-  itemsTable.render(filteredItems, currentState.tab);
-  
-  // Update item count display
-  updateItemCount(filteredItems.length, allItems.length);
-  
-  // Save state
-  saveTabState(currentState.tab, currentState.filters);
-}
-
-function updateItemCount(filtered, total) {
-  const countContainer = document.getElementById('item-count');
-  if (countContainer) {
-    if (filtered === total) {
-      countContainer.textContent = `Showing ${total} item${total !== 1 ? 's' : ''}`;
-    } else {
-      countContainer.textContent = `Showing ${filtered} of ${total} item${total !== 1 ? 's' : ''}`;
+    try {
+      // Fetch items
+      this.allItems = await fetchAllItems(true);
+      
+      // Initialize components
+      this.filterBar = new FilterBar('filter-bar-container', (filters) => {
+        this.handleFilterChange(filters);
+      });
+      this.filterBar.render();
+      
+      this.cardsComponent = new ItemsCards('items-container');
+      
+      // Apply initial filters
+      this.filteredItems = this.filterBar.applyFilters(this.allItems);
+      this.cardsComponent.render(this.filteredItems);
+      
+      this.hideLoading();
+    } catch (error) {
+      console.error('Error loading items:', error);
+      this.hideLoading();
+      this.showError(error.message);
     }
   }
-}
-
-function handleTabChange(newTab) {
-  currentState.tab = newTab;
   
-  // Clear class_type filter when switching tabs (class types are tab-specific)
-  currentState.filters.class_type = '';
+  handleFilterChange(filters) {
+    this.filteredItems = this.filterBar.applyFilters(this.allItems);
+    this.cardsComponent.render(this.filteredItems);
+  }
   
-  renderPage();
-}
+  handleCreate() {
+    navigate('/create');
+  }
 
-function handleFilterChange(newFilters) {
-  currentState.filters = newFilters;
-  renderPage();
-}
+  handleView(itemId) {
+    navigate(`/${itemId}`);
+  }
 
-function showError(message) {
-  const container = document.getElementById('table-container');
-  if (container) {
+  handleEdit(itemId) {
+    navigate(`/${itemId}/edit`);
+  }
+  
+  async handleMore(itemId) {
+    const item = this.allItems.find(i => i.id === itemId);
+    if (!item) return;
+    
+    // Show options modal
+    const result = await modal.confirm(
+      'Item Actions',
+      `What would you like to do with ${item.short_name}?`,
+      'Delete',
+      'Cancel'
+    );
+    
+    if (result) {
+      // Handle delete
+      const confirmDelete = await modal.confirm(
+        'Confirm Delete',
+        `Are you sure you want to delete ${item.short_name}? This action cannot be undone.`,
+        'Delete',
+        'Cancel'
+      );
+      
+      if (confirmDelete) {
+        this.handleDelete(itemId);
+      }
+    }
+  }
+  
+  async handleDelete(itemId) {
+    try {
+      this.showLoading();
+      
+      // Import delete function
+      const { deleteItem } = await import('../api/items.js');
+      await deleteItem(itemId);
+      
+      toast.success('Item Deleted', 'Item has been permanently deleted.');
+      
+      // Reload items
+      await this.render();
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      this.hideLoading();
+      toast.error('Delete Failed', error.message);
+    }
+  }
+  
+  showLoading() {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) overlay.classList.remove('hidden');
+  }
+  
+  hideLoading() {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) overlay.classList.add('hidden');
+  }
+  
+  showError(message) {
+    const container = document.getElementById('app-container');
     container.innerHTML = `
-      <div class="error-state">
-        <div class="error-icon">⚠️</div>
-        <div class="error-message">${message}</div>
-        <button class="btn-retry" onclick="window.location.reload()">Retry</button>
+      <div class="error-container">
+        <h1>Error Loading Items</h1>
+        <p>${message}</p>
+        <button class="btn-primary" onclick="itemsPage.render()">
+          Try Again
+        </button>
       </div>
     `;
   }
 }
 
-// Refresh items from API
-export async function refreshItems() {
-  console.log('Refreshing items...');
-  
-  // Show loading state in table
-  itemsTable.showLoading();
-  
-  try {
-    // Fetch fresh data from API with cache busting
-    allItems = await fetchAllItems(true);
-    
-    // Re-render with updated data
-    renderPage();
-    
-    console.log('Items refreshed successfully');
-    
-  } catch (error) {
-    console.error('Failed to refresh items:', error);
-    showError('Failed to refresh items. Please try again.');
-  }
+// Global instance
+const itemsPage = new ItemsListPage();
+
+// Make available globally for onclick handlers
+if (typeof window !== 'undefined') {
+  window.itemsPage = itemsPage;
 }
 
-// Action button handlers
-export function handleCreateItem() {
-  navigate('/items/create');
-}
-
-export function handleRefreshItems() {
-  refreshItems();
-}
-
-export function handleRetireItem() {
-  // TODO: Implement retire functionality
-  alert('Retire functionality will be implemented in item detail view');
-}
-
-export function handleDeleteItem() {
-  // TODO: Implement delete functionality
-  alert('Delete functionality will be implemented in item detail view');
-}
-
-export function cleanup() {
-  // Cleanup if needed when navigating away
-  if (itemsTable && itemsTable.cleanup) {
-    itemsTable.cleanup();
-  }
-  tabBar = null;
-  filterBar = null;
-  itemsTable = null;
+export function renderItemsList() {
+  itemsPage.render();
 }

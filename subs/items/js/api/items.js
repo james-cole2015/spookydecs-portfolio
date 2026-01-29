@@ -4,6 +4,9 @@
 
 let configCache = null;
 
+// Allowed item classes for this subdomain
+const ALLOWED_CLASSES = ['Decoration', 'Light', 'Accessory'];
+
 // Load config from /config.json
 async function loadConfig() {
   if (configCache) return configCache;
@@ -118,22 +121,31 @@ export async function fetchAllItems(bustCache = false) {
     });
     
     // Handle standardized response format: { success: true, data: { items: [...] } }
+    let items = [];
     if (data.success && data.data && data.data.items && Array.isArray(data.data.items)) {
-      console.log('Using standardized format, returning', data.data.items.length, 'items');
-      return data.data.items;
+      console.log('Using standardized format, received', data.data.items.length, 'items');
+      items = data.data.items;
     }
     // Fallback for old format
     else if (Array.isArray(data)) {
-      console.log('Using array format, returning', data.length, 'items');
-      return data;
+      console.log('Using array format, received', data.length, 'items');
+      items = data;
     } else if (data.items && Array.isArray(data.items)) {
-      console.log('Using items property format, returning', data.items.length, 'items');
-      return data.items;
+      console.log('Using items property format, received', data.items.length, 'items');
+      items = data.items;
     } else {
       console.error('Unexpected response format:', data);
       console.error('Full response structure:', JSON.stringify(data, null, 2));
       return [];
     }
+
+    // Filter to only include allowed classes (Decoration, Light, Accessory)
+    const filteredItems = items.filter(item => ALLOWED_CLASSES.includes(item.class));
+    console.log('Filtered to', filteredItems.length, 'items with classes:', ALLOWED_CLASSES.join(', '));
+
+    // Resolve photo URLs for all items
+    const itemsWithPhotos = await resolveItemsPhotoUrls(filteredItems);
+    return itemsWithPhotos;
   } catch (error) {
     console.error('Error fetching items:', error);
     throw error;
@@ -171,15 +183,20 @@ export async function fetchItemById(itemId, bustCache = false) {
     const data = await response.json();
     
     // Handle standardized response format: { success: true, data: {...item...} }
+    let item;
     if (data.success && data.data) {
-      return data.data;
+      item = data.data;
     }
     // Fallback for old format (item object directly)
     else if (data.id) {
-      return data;
+      item = data;
     } else {
       throw new Error('Invalid response format from API');
     }
+
+    // Resolve photo URL
+    await resolveItemPhotoUrl(item);
+    return item;
   } catch (error) {
     console.error(`Error fetching item ${itemId}:`, error);
     throw error;
@@ -435,6 +452,97 @@ export async function bulkStore(itemIds, location) {
     console.error('Error bulk storing items:', error);
     throw error;
   }
+}
+
+/**
+ * Fetch image details by ID
+ * @param {string} imageId - Image ID
+ * @returns {Promise<Object|null>} Image object with cloudfront_url or null if not found
+ */
+export async function fetchImageById(imageId) {
+  try {
+    const apiEndpoint = await getApiEndpoint();
+
+    const response = await fetch(`${apiEndpoint}/admin/images/${imageId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      console.warn(`Failed to fetch image ${imageId}: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+
+    // Handle standardized response format
+    if (data.success && data.data) {
+      return data.data;
+    }
+    // Fallback for direct object
+    else if (data.cloudfront_url) {
+      return data;
+    }
+
+    return null;
+  } catch (error) {
+    console.warn(`Error fetching image ${imageId}:`, error);
+    return null;
+  }
+}
+
+/**
+ * Resolve photo URL for an item
+ * @param {Object} item - Item object
+ * @returns {Promise<Object>} Item with resolved cloudfront_url
+ */
+async function resolveItemPhotoUrl(item) {
+  if (item.images?.primary_photo_id) {
+    const image = await fetchImageById(item.images.primary_photo_id);
+    if (image?.cloudfront_url) {
+      item.images.cloudfront_url = image.cloudfront_url;
+    }
+  }
+  return item;
+}
+
+/**
+ * Resolve photo URLs for multiple items
+ * @param {Array} items - Array of item objects
+ * @returns {Promise<Array>} Items with resolved cloudfront_urls
+ */
+async function resolveItemsPhotoUrls(items) {
+  // Get unique photo IDs
+  const photoIds = [...new Set(
+    items
+      .filter(item => item.images?.primary_photo_id)
+      .map(item => item.images.primary_photo_id)
+  )];
+
+  if (photoIds.length === 0) return items;
+
+  // Fetch all images in parallel
+  const imagePromises = photoIds.map(id => fetchImageById(id));
+  const images = await Promise.all(imagePromises);
+
+  // Create lookup map
+  const imageMap = {};
+  photoIds.forEach((id, index) => {
+    if (images[index]?.cloudfront_url) {
+      imageMap[id] = images[index].cloudfront_url;
+    }
+  });
+
+  // Attach URLs to items
+  items.forEach(item => {
+    if (item.images?.primary_photo_id && imageMap[item.images.primary_photo_id]) {
+      item.images.cloudfront_url = imageMap[item.images.primary_photo_id];
+    }
+  });
+
+  return items;
 }
 
 // Create itemsAPI object for consistency with other subdomains
