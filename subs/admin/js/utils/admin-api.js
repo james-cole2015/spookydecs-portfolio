@@ -38,7 +38,7 @@ export async function getSubdomainUrls() {
         deployments: config.DEPLOY_ADMIN || '',
         audit: config.AUDIT_URL || '',
         inspector: config.INSPECT_URL || '',
-        images: '', // Placeholder - no config URL yet
+        images: config.IMAGES_URL ||'', 
         gallery: '' // Placeholder - no config URL yet
     };
 }

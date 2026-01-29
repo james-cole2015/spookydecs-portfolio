@@ -68,8 +68,7 @@ export class SystemMap {
                 title: 'Images',
                 description: 'Visual catalog and documentation for all items.',
                 urlKey: 'images',
-                healthKey: 'images',
-                placeholder: true
+                healthKey: 'images'
             },
             {
                 id: 'gallery',
