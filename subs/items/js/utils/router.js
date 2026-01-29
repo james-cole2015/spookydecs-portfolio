@@ -8,20 +8,41 @@ let router = null;
  * @param {Object} routes - Route handlers
  */
 export function initRouter(routes) {
+  // Initialize router with root path
   router = new Navigo('/', { hash: false });
   
-  // Register routes
-  Object.keys(routes).forEach(path => {
-    router.on(path, routes[path]);
-  });
+  console.log('🔧 Items router initialized');
   
-  // Not found handler
-  router.notFound(() => {
-    console.warn('Route not found, redirecting to /');
-    router.navigate('/');
-  });
+  // Register routes in specific order
+  router
+    .on('/', () => {
+      console.log('✅ Route matched: /');
+      routes['/']();
+    })
+    .on('/create', () => {
+      console.log('✅ Route matched: /create');
+      routes['/create']();
+    })
+    .on('/:id/edit', ({ data }) => {
+      console.log('✅ Route matched: /:id/edit', data);
+      routes['/:id/edit']({ data });
+    })
+    .on('/:id', ({ data }) => {
+      // Guard against reserved routes
+      if (data.id === 'create') {
+        console.log('   ⚠️ Skipping reserved route:', data.id);
+        return false; // Don't handle, let /create route match instead
+      }
+      console.log('✅ Route matched: /:id', data);
+      routes['/:id']({ data });
+    })
+    .notFound(() => {
+      console.warn('❌ Route not found, redirecting to /');
+      router.navigate('/');
+    });
   
   // Resolve the initial route
+  console.log('🚀 Resolving initial route...');
   router.resolve();
   
   return router;
@@ -32,10 +53,11 @@ export function initRouter(routes) {
  * @param {string} path - Path to navigate to
  */
 export function navigate(path) {
+  console.log('🔄 Navigating to:', path);
   if (router) {
     router.navigate(path);
   } else {
-    console.error('Router not initialized');
+    console.error('❌ Router not initialized');
   }
 }
 
