@@ -1,7 +1,8 @@
-// New Cost Record Page
+// New Cost Record Page - Updated for Multi-Item Support
 
 import { CostFormFields } from '../components/CostFormFields.js';
 import { CostReviewModal } from '../components/CostReviewModal.js';
+import { MultiItemReviewModal } from '../components/MultiItemReviewModal.js';
 import { ReceiptUploadModal } from '../components/ReceiptUploadModal.js';
 import { createCost, updateImageAfterCostCreation } from '../utils/finance-api.js';
 import { toast } from '../shared/toast.js';
@@ -65,9 +66,9 @@ export async function renderNewCostRecord(container) {
       recordId: recordId
     });
     
-    // Set up form submit callback
+    // Set up form submit callback (for manual entry)
     formFields.onSubmit = (formData, extractionId, imageId) => {
-      handleFormSubmit(formData, extractionId, imageId);
+      handleManualFormSubmit(formData, extractionId, imageId);
     };
     
     formFields.render();
@@ -107,16 +108,109 @@ function attachEventListeners(receiptModal, formFields) {
         category: urlParams.get('category') || formFields.formData.category || null
       };
       
-      // Open modal with context and callback
+      // Open modal with context and callback for MULTI-ITEM extraction
       receiptModal.open(contextData, (extractedData, extractionId, imageId) => {
-        formFields.handleReceiptData(extractedData, extractionId, imageId);
+        handleAIExtractedData(extractedData, extractionId, imageId);
       });
     });
   }
 }
 
-async function handleFormSubmit(formData, extractionId, imageId) {
-  console.log('Handling form submission...', formData);
+// NEW: Handle AI-extracted multi-item data
+async function handleAIExtractedData(extractedData, extractionId, imageId) {
+  console.log('📦 AI extracted data received:', extractedData);
+  
+  // Check if we have multiple items or single item
+  const items = extractedData.items || [];
+  const receiptMetadata = extractedData.receipt_metadata || {};
+  const lineItemsDetected = extractedData.line_items_detected !== false;
+
+  if (items.length === 0) {
+    toast.error('No items could be extracted from receipt');
+    return;
+  }
+
+  // Show multi-item review modal
+  const multiItemModal = new MultiItemReviewModal();
+  
+  await multiItemModal.show(
+    {
+      items: items,
+      receipt_metadata: receiptMetadata,
+      extraction_id: extractionId,
+      image_id: imageId,
+      line_items_detected: lineItemsDetected
+    },
+    {
+      onConfirm: (costRecords) => {
+        handleBatchCostRecordCreation(costRecords, extractionId, imageId);
+      },
+      onCancel: () => {
+        console.log('User cancelled multi-item review');
+      }
+    }
+  );
+}
+
+// NEW: Batch create multiple cost records
+async function handleBatchCostRecordCreation(costRecords, extractionId, imageId) {
+  console.log(`🔄 Creating ${costRecords.length} cost records...`, costRecords);
+  
+  const totalRecords = costRecords.length;
+  let successCount = 0;
+  let failCount = 0;
+  const createdCostIds = [];
+
+  // Show progress toast
+  toast.info(`Creating ${totalRecords} cost record${totalRecords > 1 ? 's' : ''}...`);
+
+  // Create records sequentially to avoid overwhelming API
+  for (let i = 0; i < costRecords.length; i++) {
+    const record = costRecords[i];
+    
+    try {
+      console.log(`Creating record ${i + 1}/${totalRecords}:`, record);
+      
+      const result = await createCost(record);
+      createdCostIds.push(result.cost_id);
+      successCount++;
+      
+      console.log(`✅ Created record ${i + 1}/${totalRecords}: ${result.cost_id}`);
+      
+    } catch (error) {
+      console.error(`❌ Failed to create record ${i + 1}/${totalRecords}:`, error);
+      failCount++;
+    }
+  }
+
+  // Update image record to associate with all created cost records
+  if (imageId && createdCostIds.length > 0) {
+    console.log('📸 Updating image record with cost IDs:', createdCostIds);
+    try {
+      await updateImageAfterCostCreation(imageId, createdCostIds);
+      console.log('✅ Image record updated');
+    } catch (imageError) {
+      // Log but don't fail - image update is not critical
+      console.error('⚠️ Failed to update image:', imageError);
+    }
+  }
+
+  // Show summary toast
+  if (failCount === 0) {
+    toast.success(`Successfully created ${successCount} cost record${successCount > 1 ? 's' : ''}`);
+  } else {
+    toast.warning(`Created ${successCount} record${successCount > 1 ? 's' : ''}, ${failCount} failed`);
+  }
+
+  // Redirect to finance page after short delay
+  setTimeout(() => {
+    window.location.href = '/';
+  }, 2000);
+}
+
+// EXISTING: Handle manual form submission (single record)
+async function handleManualFormSubmit(formData, extractionId, imageId) {
+  console.log('Handling manual form submission...', formData);
   
   // Add extraction metadata if present
   if (extractionId) {
@@ -126,7 +220,7 @@ async function handleFormSubmit(formData, extractionId, imageId) {
     formData.image_id = imageId;
   }
   
-  // Show review modal
+  // Show review modal for single record
   const reviewModal = new CostReviewModal();
   
   reviewModal.show(formData, {

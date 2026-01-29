@@ -444,10 +444,14 @@ export async function updateAuditLog(extractionId, finalData, modifications) {
 }
 
 // Update image record after cost is created
+// costId can be a single string or an array of strings for batch operations
 export async function updateImageAfterCostCreation(imageId, costId) {
   await ensureConfigLoaded();
   
   try {
+    // Support both single and multiple cost IDs
+    const costIds = Array.isArray(costId) ? costId : [costId];
+    
     const response = await fetch(`${API_ENDPOINT}/finance/images/update`, {
       method: 'POST',
       headers: {
@@ -455,7 +459,7 @@ export async function updateImageAfterCostCreation(imageId, costId) {
       },
       body: JSON.stringify({
         image_id: imageId,
-        cost_id: costId
+        cost_ids: costIds  // Changed to cost_ids array
       })
     });
     

@@ -442,12 +442,28 @@ export class ReceiptUploadModal {
         (step) => this.handleProgress(step)
       );
       
-      this.extractedData = result.extracted_data;
+      console.log('✅ Processing complete:', result);
+      
+      // Store the ENTIRE result (contains items array + metadata)
+      this.extractedData = result;
       this.extractionId = result.extraction_id;
       this.imageId = result.image_id;
-      this.state = 'review';
-      this.render();
-      this.attachListeners();
+      
+      // Check if we got multi-item or single-item response
+      if (result.items && Array.isArray(result.items)) {
+        console.log(`📦 Multi-item extraction: ${result.items.length} items detected`);
+        // Pass entire result to callback (new flow)
+        if (this.onUseData) {
+          this.onUseData(result, this.extractionId, this.imageId);
+        }
+        this.close();
+      } else {
+        // Fallback for old single-item format (shouldn't happen with new backend)
+        console.warn('⚠️ Single-item format detected (legacy)');
+        this.state = 'review';
+        this.render();
+        this.attachListeners();
+      }
       
     } catch (error) {
       console.error('Receipt processing error:', error);
@@ -488,6 +504,9 @@ export class ReceiptUploadModal {
   }
 
   useExtractedData() {
+    // Legacy method - no longer used
+    // Multi-item flow bypasses this and closes modal directly after extraction
+    console.warn('⚠️ useExtractedData called - this should not happen in multi-item flow');
     if (this.onUseData && this.extractedData) {
       this.onUseData(this.extractedData, this.extractionId, this.imageId);
     }
