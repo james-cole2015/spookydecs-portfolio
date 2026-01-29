@@ -280,10 +280,16 @@ class ItemDetailPage {
         </div>
       ` : ''}
 
-      <div class="section-divider"></div>
-      <button class="btn-link" onclick="itemDetailPage.handleViewAllMaintenance()">
-        View in Maintenance →
-      </button>
+      <div class="maintenance-cta">
+        <button class="btn-maintenance-link" onclick="itemDetailPage.handleViewAllMaintenance()">
+          <span class="btn-maintenance-icon">🔧</span>
+          <span class="btn-maintenance-text">
+            <span class="btn-maintenance-label">View in Maintenance</span>
+            <span class="btn-maintenance-sublabel">Open full maintenance details</span>
+          </span>
+          <span class="btn-maintenance-arrow">→</span>
+        </button>
+      </div>
     `;
   }
 
