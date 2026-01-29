@@ -64,14 +64,24 @@ export async function getMaintenanceRecords(itemId, limit = 5) {
     
     const data = await response.json();
     
-    // Handle different response formats
-    // Based on your Lambda, it returns { records: [...], count: N }
-    if (data.records && Array.isArray(data.records)) {
-      // Limit to the requested number of records
+    // Handle standardized response format: { success: true, data: [...] }
+    if (data.success && data.data && Array.isArray(data.data)) {
+      console.log(`Retrieved ${data.data.length} maintenance records for item: ${itemId}`);
+      return data.data.slice(0, limit);
+    }
+    // Handle legacy format: { records: [...], count: N }
+    else if (data.records && Array.isArray(data.records)) {
+      console.log(`Retrieved ${data.records.length} maintenance records (legacy format) for item: ${itemId}`);
       return data.records.slice(0, limit);
-    } else if (Array.isArray(data)) {
+    }
+    // Handle direct array format
+    else if (Array.isArray(data)) {
+      console.log(`Retrieved ${data.length} maintenance records (array format) for item: ${itemId}`);
       return data.slice(0, limit);
-    } else if (data.Items && Array.isArray(data.Items)) {
+    }
+    // Handle DynamoDB format
+    else if (data.Items && Array.isArray(data.Items)) {
+      console.log(`Retrieved ${data.Items.length} maintenance records (DynamoDB format) for item: ${itemId}`);
       return data.Items.slice(0, limit);
     }
     

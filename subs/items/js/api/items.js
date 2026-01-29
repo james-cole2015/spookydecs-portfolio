@@ -204,6 +204,21 @@ export async function fetchItemById(itemId, bustCache = false) {
 }
 
 /**
+ * Get Finance subdomain URL from config
+ * @returns {Promise<string>} Finance URL (e.g., "https://dev-finance.spookydecs.com")
+ */
+export async function getFinanceUrl() {
+  const config = await loadConfig();
+  
+  if (!config.NEW_COST_URL) {
+    console.error('NEW_COST_URL not found in config');
+    throw new Error('Finance URL not configured');
+  }
+  
+  return config.NEW_COST_URL;
+}
+
+/**
  * Create a new item
  * @param {Object} itemData - Item data object
  * @returns {Promise<Object>} Created item with ID
