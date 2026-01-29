@@ -44,16 +44,47 @@ export async function getSubdomainUrls() {
 }
 
 /**
- * Fetch action center items
- * Mock implementation - replace with actual API calls
+ * Fetch Inspector violation statistics
+ * @returns {Promise<Object>} Statistics object with by_severity, by_status, total
  */
-export async function fetchActionItems() {
-    // TODO: Replace with actual API endpoint
-    // For now, return empty placeholder
+export async function fetchInspectorStats() {
+    const config = await loadConfig();
+    const apiBase = config.API_ENDPOINT;
+    
+    if (!apiBase) {
+        throw new Error('API_ENDPOINT not configured');
+    }
+    
+    try {
+        const response = await fetch(`${apiBase}/admin/inspector/violations/stats`);
+        
+        if (!response.ok) {
+            throw new Error(`Failed to fetch inspector stats: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.error || 'Failed to fetch inspector stats');
+        }
+        
+        return result.data;
+    } catch (error) {
+        console.error('Error fetching inspector stats:', error);
+        throw error;
+    }
+}
+
+/**
+ * Fetch Workbench statistics (placeholder)
+ * @returns {Promise<Object>} Workbench stats with active, scheduled, completed counts
+ */
+export async function fetchWorkbenchStats() {
+    // TODO: Replace with actual API endpoint when workbench is implemented
     return {
-        critical: [],
-        upcoming: [],
-        informational: []
+        active: 0,
+        scheduled: 0,
+        completed: 0
     };
 }
 

@@ -1,5 +1,4 @@
 /* Action Center Styles */
-
 .action-center-container {
     background: var(--white);
     border: 1px solid var(--border-gray);
@@ -25,7 +24,188 @@
     overflow-y: auto;
 }
 
-/* Empty State */
+/* Grid Layout - Side by Side on Desktop */
+.action-center-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: stretch;
+}
+
+/* Inspector/Workbench Section Containers */
+.inspector-section,
+.workbench-section {
+    background: var(--neutral-gray);
+    border: 1px solid var(--border-gray);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.action-section-header {
+    padding: 1rem;
+    background: var(--white);
+    border-bottom: 1px solid var(--border-gray);
+    display: flex;
+    align-items: center;
+}
+
+.action-section-icon {
+    font-size: 1.25rem;
+    margin-right: 0.5rem;
+}
+
+.action-section-title {
+    font-size: 0.9375rem;
+    font-weight: 400;
+    color: var(--text-primary);
+}
+
+.action-section-body {
+    padding: 1rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Stats List */
+.stats-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex: 1;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.625rem 0.875rem;
+    background: var(--white);
+    border-radius: 6px;
+    border: 1px solid var(--border-gray);
+    transition: all 0.2s ease;
+}
+
+.stat-item:hover {
+    box-shadow: 0 2px 8px rgba(129, 212, 250, 0.1);
+}
+
+.stat-item.critical {
+    border-left: 3px solid var(--error);
+}
+
+.stat-item.attention {
+    border-left: 3px solid #ff8c00;
+}
+
+.stat-item.warning {
+    border-left: 3px solid var(--warning);
+}
+
+.stat-item.info {
+    border-left: 3px solid var(--success);
+}
+
+.stat-item.active {
+    border-left: 3px solid #8b5cf6;
+}
+
+.stat-item.scheduled {
+    border-left: 3px solid #06b6d4;
+}
+
+.stat-item.completed {
+    border-left: 3px solid var(--success);
+}
+
+.stat-icon {
+    font-size: 1.125rem;
+    flex-shrink: 0;
+}
+
+.stat-count {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    flex-shrink: 0;
+}
+
+.stat-label {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* Action Buttons */
+.action-section-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: auto;
+}
+
+.action-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.625rem 1rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.action-button.primary {
+    background: linear-gradient(90deg, #b3e5fc 0%, #81d4fa 100%);
+    color: var(--text-primary);
+    border: 1px solid var(--primary-blue);
+}
+
+.action-button.primary:hover {
+    background: linear-gradient(90deg, #81d4fa 0%, #4fc3f7 100%);
+    box-shadow: 0 2px 6px rgba(129, 212, 250, 0.3);
+}
+
+.action-button.secondary {
+    background-color: var(--white);
+    color: var(--dark-blue);
+    border: 1px solid var(--primary-blue);
+}
+
+.action-button.secondary:hover {
+    background: linear-gradient(90deg, #b3e5fc 0%, #81d4fa 100%);
+    box-shadow: 0 2px 6px rgba(129, 212, 250, 0.3);
+}
+
+/* Empty State - Inspector/Workbench Sections */
+.empty-state {
+    text-align: center;
+    padding: 2rem 1rem;
+}
+
+.empty-state-icon {
+    font-size: 3rem;
+    margin-bottom: 0.75rem;
+}
+
+.empty-state-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.empty-state-subtitle {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+/* Empty State - Original (for backward compatibility) */
 .action-center-empty {
     text-align: center;
     padding: 3rem 1.5rem;
@@ -68,24 +248,13 @@
     box-shadow: 0 2px 6px rgba(129, 212, 250, 0.3);
 }
 
-/* Severity Sections */
+/* Severity Sections (Original - for backward compatibility) */
 .action-section {
     margin-bottom: 2rem;
 }
 
 .action-section:last-child {
     margin-bottom: 0;
-}
-
-.action-section-header {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
 }
 
 .action-section-header.critical {
@@ -100,7 +269,7 @@
     color: var(--success);
 }
 
-/* Action Items */
+/* Action Items (Original - for backward compatibility) */
 .action-item {
     background: var(--neutral-gray);
     border: 1px solid var(--border-gray);
@@ -165,6 +334,57 @@
     box-shadow: 0 2px 6px rgba(129, 212, 250, 0.3);
 }
 
+/* Loading State */
+.action-center-loading {
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto 1rem;
+    border: 3px solid var(--border-gray);
+    border-top-color: var(--primary-blue);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.action-center-loading p {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+/* Error State */
+.action-center-error {
+    text-align: center;
+    padding: 2rem 1rem;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+}
+
+.error-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.error-message {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #991b1b;
+    margin-bottom: 0.5rem;
+}
+
+.error-details {
+    font-size: 0.875rem;
+    color: #dc2626;
+}
+
 /* Scrollbar Styling */
 .action-center-content::-webkit-scrollbar {
     width: 8px;
@@ -181,4 +401,47 @@
 
 .action-center-content::-webkit-scrollbar-thumb:hover {
     background: var(--primary-blue);
+}
+
+/* Responsive Design - Stacked on Mobile */
+@media (max-width: 768px) {
+    .action-center-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .action-section-header {
+        padding: 1rem;
+    }
+    
+    .action-section-body {
+        padding: 1rem;
+    }
+    
+    .stat-item {
+        padding: 0.75rem;
+    }
+    
+    .stat-count {
+        font-size: 1.25rem;
+    }
+}
+
+/* Small mobile adjustments */
+@media (max-width: 480px) {
+    .action-center-content {
+        padding: 1rem;
+    }
+    
+    .action-center-header {
+        padding: 0.875rem 1rem;
+    }
+    
+    .action-center-title {
+        font-size: 1.125rem;
+    }
+    
+    .stat-label {
+        font-size: 0.8125rem;
+    }
 }

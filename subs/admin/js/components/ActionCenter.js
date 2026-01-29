@@ -1,20 +1,32 @@
-// Action Center Component!
-import { fetchActionItems } from '../utils/admin-api.js';
+// Action Center Component
+import { fetchInspectorStats, fetchWorkbenchStats, getSubdomainUrls } from '../utils/admin-api.js';
 
 export class ActionCenter {
     constructor() {
-        this.items = {
-            critical: [],
-            upcoming: [],
-            informational: []
-        };
+        this.inspectorStats = null;
+        this.workbenchStats = null;
+        this.subdomainUrls = null;
+        this.loading = true;
+        this.error = null;
     }
 
     async init() {
         try {
-            this.items = await fetchActionItems();
+            // Fetch all data in parallel
+            const [inspector, workbench, urls] = await Promise.all([
+                fetchInspectorStats(),
+                fetchWorkbenchStats(),
+                getSubdomainUrls()
+            ]);
+            
+            this.inspectorStats = inspector;
+            this.workbenchStats = workbench;
+            this.subdomainUrls = urls;
+            this.loading = false;
         } catch (error) {
-            console.error('Failed to load action items:', error);
+            console.error('Failed to load action center data:', error);
+            this.error = error.message;
+            this.loading = false;
         }
     }
 
@@ -35,63 +47,136 @@ export class ActionCenter {
     }
 
     renderContent() {
-        const hasItems = this.items.critical.length > 0 || 
-                        this.items.upcoming.length > 0 || 
-                        this.items.informational.length > 0;
+        if (this.loading) {
+            return this.renderLoading();
+        }
         
-        if (!hasItems) {
-            return this.renderEmptyState();
+        if (this.error) {
+            return this.renderError();
         }
         
         return `
-            ${this.renderSection('critical', '🔴 NEEDS ATTENTION', this.items.critical)}
-            ${this.renderSection('upcoming', '🟡 UPCOMING', this.items.upcoming)}
-            ${this.renderSection('informational', '🟢 INFORMATIONAL', this.items.informational)}
-        `;
-    }
-
-    renderEmptyState() {
-        return `
-            <div class="action-center-empty">
-                <div class="action-center-empty-icon">✓</div>
-                <div class="action-center-empty-title">All Systems Operational</div>
-                <div class="action-center-empty-subtitle">0 critical issues · 0 upcoming tasks</div>
-                <a href="/admin" class="action-center-empty-action">View System Map</a>
+            <div class="action-center-grid">
+                ${this.renderInspectorSection()}
+                ${this.renderWorkbenchSection()}
             </div>
         `;
     }
 
-    renderSection(severity, title, items) {
-        if (items.length === 0) return '';
-        
+    renderLoading() {
         return `
-            <div class="action-section">
-                <div class="action-section-header ${severity}">${title}</div>
-                ${items.map(item => this.renderItem(item, severity)).join('')}
+            <div class="action-center-loading">
+                <div class="spinner"></div>
+                <p>Loading action center...</p>
             </div>
         `;
     }
 
-    renderItem(item, severity) {
+    renderError() {
         return `
-            <div class="action-item ${severity}">
-                <div class="action-item-title">${item.title}</div>
-                <div class="action-item-details">${item.details}</div>
-                <div class="action-item-actions">
-                    ${item.actions.map(action => `
-                        <a href="${action.url}" class="action-item-button">${action.label} →</a>
-                    `).join('')}
+            <div class="action-center-error">
+                <div class="error-icon">⚠️</div>
+                <div class="error-message">Failed to load action center</div>
+                <div class="error-details">${this.error}</div>
+            </div>
+        `;
+    }
+
+    renderInspectorSection() {
+        if (!this.inspectorStats) {
+            return '';
+        }
+
+        const { by_severity, total } = this.inspectorStats;
+        const inspectorUrl = this.subdomainUrls?.inspector || '#';
+
+        return `
+            <div class="action-section inspector-section">
+                <div class="action-section-header">
+                    <span class="action-section-icon">🔍</span>
+                    <span class="action-section-title"><strong>Inspector</strong> - Data Quality and Readiness</span>
+                </div>
+                
+                <div class="action-section-body">
+                    <div class="stats-list">
+                        <div class="stat-item critical">
+                            <span class="stat-icon">🔴</span>
+                            <span class="stat-count">${by_severity.Critical || 0}</span>
+                            <span class="stat-label">Critical</span>
+                        </div>
+                        
+                        <div class="stat-item attention">
+                            <span class="stat-icon">🟠</span>
+                            <span class="stat-count">${by_severity.Attention || 0}</span>
+                            <span class="stat-label">Attention</span>
+                        </div>
+                        
+                        <div class="stat-item warning">
+                            <span class="stat-icon">🟡</span>
+                            <span class="stat-count">${by_severity.Warning || 0}</span>
+                            <span class="stat-label">Warnings</span>
+                        </div>
+                        
+                        <div class="stat-item info">
+                            <span class="stat-icon">🟢</span>
+                            <span class="stat-count">${by_severity.Info || 0}</span>
+                            <span class="stat-label">Info</span>
+                        </div>
+                    </div>
+                    
+                    <div class="action-section-footer">
+                        <a href="${inspectorUrl}" class="action-button primary">
+                            View Violations →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    renderWorkbenchSection() {
+        if (!this.workbenchStats) {
+            return '';
+        }
+
+        const { active, scheduled, completed } = this.workbenchStats;
+        const workbenchUrl = this.subdomainUrls?.workbench || '#';
+
+        return `
+            <div class="action-section workbench-section">
+                <div class="action-section-header">
+                    <span class="action-section-icon">🔧</span>
+                    <span class="action-section-title"><strong>Workbench</strong> - Off-Season Operations</span>
+                </div>
+                
+                <div class="action-section-body">
+                    <div class="stats-list">
+                        <div class="stat-item active">
+                            <span class="stat-icon">⚙️</span>
+                            <span class="stat-count">${active || 0}</span>
+                            <span class="stat-label">Active Repairs</span>
+                        </div>
+                        
+                        <div class="stat-item scheduled">
+                            <span class="stat-icon">📅</span>
+                            <span class="stat-count">${scheduled || 0}</span>
+                            <span class="stat-label">Scheduled Builds</span>
+                        </div>
+                        
+                        <div class="stat-item completed">
+                            <span class="stat-icon">✓</span>
+                            <span class="stat-count">${completed || 0}</span>
+                            <span class="stat-label">Completed This Week</span>
+                        </div>
+                    </div>
+                    
+                    <div class="action-section-footer">
+                        <a href="${workbenchUrl}" class="action-button secondary">
+                            View Workbench →
+                        </a>
+                    </div>
                 </div>
             </div>
         `;
     }
 }
-
-// Example action items structure (for reference):
-// {
-//     title: "Critical Repairs Block Deployment",
-//     details: "3 items flagged critical · Halloween deployment: 14 days",
-//     actions: [
-//         { label: "View Repairs", url: "/maintenance" }
-//     ]
-// }
