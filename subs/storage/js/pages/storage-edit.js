@@ -2,6 +2,7 @@
  * Storage Edit Page
  * Edit storage unit metadata with CDN photo upload modal for photo replacement
  * UPDATED: Includes packed status checkbox
+ * UPDATED: Photo moved to top center, profile size, light blue upload button
  */
 
 import { storageAPI, photosAPI } from '../utils/storage-api.js';
@@ -34,6 +35,15 @@ export async function renderEditForm(storageId) {
         <div class="wizard-header">
           <h1 class="wizard-title">Edit Storage Unit</h1>
           <p class="wizard-subtitle" id="subtitle">Loading...</p>
+        </div>
+        
+        <div class="photo-header-section">
+          <div class="profile-photo-container">
+            <img src="" alt="Storage unit" class="profile-photo-img" id="current-photo-img" />
+          </div>
+          <button type="button" class="btn-upload-photo" id="btn-replace-photo">
+            📷 Upload Photo
+          </button>
         </div>
         
         <div class="wizard-body" id="form-container">
@@ -82,6 +92,9 @@ async function loadStorageUnit(storageId) {
     // Update subtitle
     document.getElementById('subtitle').textContent = currentStorageUnit.short_name;
     
+    // Update photo in header
+    updateHeaderPhoto();
+    
     // Render form
     await renderForm();
     
@@ -100,6 +113,30 @@ async function loadStorageUnit(storageId) {
 }
 
 /**
+ * Update header photo with current storage unit photo
+ */
+function updateHeaderPhoto() {
+  const photoUrl = currentStorageUnit.images?.photo_url || getPlaceholderImage();
+  const photoImg = document.getElementById('current-photo-img');
+  const uploadBtn = document.getElementById('btn-replace-photo');
+  
+  if (photoImg) {
+    photoImg.src = photoUrl;
+  }
+  
+  // Update button text based on whether photo exists
+  if (uploadBtn) {
+    const hasPhoto = currentStorageUnit.images?.photo_url;
+    uploadBtn.textContent = hasPhoto ? '📷 Replace Photo' : '📷 Upload Photo';
+  }
+  
+  // Attach click listener to upload button
+  if (uploadBtn) {
+    uploadBtn.addEventListener('click', openPhotoUploadModal);
+  }
+}
+
+/**
  * Render edit form
  */
 async function renderForm() {
@@ -114,11 +151,6 @@ async function renderForm() {
         </p>
         <div id="form-fields"></div>
         <div id="packed-field"></div>
-      </div>
-      
-      <div class="form-section">
-        <h2 class="section-title">Photo</h2>
-        <div id="photo-section"></div>
       </div>
     </div>
   `;
@@ -156,9 +188,6 @@ async function renderForm() {
   
   // Render packed status field (between size and general_notes)
   renderPackedField();
-  
-  // Render photo section
-  renderPhotoSection();
 }
 
 /**
@@ -203,36 +232,6 @@ function renderPackedField() {
       warning.classList.add('hidden');
     }
   });
-}
-
-/**
- * Render photo section with current photo and upload button
- */
-function renderPhotoSection() {
-  const container = document.getElementById('photo-section');
-  const photoUrl = currentStorageUnit.images?.photo_url || getPlaceholderImage();
-  const hasPhoto = currentStorageUnit.images?.photo_url;
-  
-  container.innerHTML = `
-    <div class="current-photo-section">
-      <label class="form-label">Current Photo</label>
-      <div class="current-photo-preview">
-        <img src="${photoUrl}" alt="${currentStorageUnit.short_name}" class="current-photo-img" id="current-photo-img" />
-      </div>
-      <button type="button" class="btn-replace-storage-photo" id="btn-replace-photo">
-        📷 ${hasPhoto ? 'Replace Photo' : 'Upload Photo'}
-      </button>
-      <p class="form-help" style="margin-top: 8px;">
-        ${hasPhoto 
-          ? 'Click to upload a new photo and replace the current one' 
-          : 'Upload a photo to help identify this storage unit'
-        }
-      </p>
-    </div>
-  `;
-  
-  // Attach click listener
-  document.getElementById('btn-replace-photo').addEventListener('click', openPhotoUploadModal);
 }
 
 /**
@@ -309,6 +308,12 @@ async function handlePhotoUploadComplete(detail) {
         photo_url: photo_url,
         thumb_cloudfront_url: thumb_cloudfront_url
       };
+      
+      // Update button text
+      const uploadBtn = document.getElementById('btn-replace-photo');
+      if (uploadBtn) {
+        uploadBtn.textContent = '📷 Replace Photo';
+      }
       
       showSuccess('Photo uploaded and saved successfully!');
     }
