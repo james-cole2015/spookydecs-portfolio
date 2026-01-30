@@ -778,3 +778,56 @@
     font-size: 12px;
   }
 }
+
+/* Packed Status Checkbox Styling */
+/* Add this to wizard.css */
+
+.checkbox-field {
+  margin: 0.5rem 0;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 1.125rem;
+  height: 1.125rem;
+  cursor: pointer;
+  accent-color: #f97316;
+}
+
+.checkbox-label span {
+  user-select: none;
+}
+
+.packed-warning {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: #fef3c7;
+  border: 1px solid #fbbf24;
+  border-radius: 6px;
+  color: #92400e;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.packed-warning.hidden {
+  display: none;
+}
+
+/* Ensure consistent spacing with other form fields */
+.form-field {
+  margin-bottom: 1.5rem;
+}
+
+.form-field:last-child {
+  margin-bottom: 0;
+}

@@ -1,18 +1,19 @@
 /**
  * Storage Edit Page
  * Edit storage unit metadata with CDN photo upload modal for photo replacement
- * UPDATED: Uses photo-upload-modal web component from CDN
+ * UPDATED: Includes packed status checkbox
  */
 
 import { storageAPI, photosAPI } from '../utils/storage-api.js';
 import { formatStorageUnit, getPlaceholderImage } from '../utils/storage-config.js';
 import { StorageFormFields } from '../components/StorageFormFields.js';
-import { showSuccess, showError } from '../shared/toast.js';
+import { showSuccess, showError, showWarning } from '../shared/toast.js';
 import { navigate } from '../utils/router.js';
 import { showLoading, hideLoading } from '../app.js';
 
 let formFields = null;
 let currentStorageUnit = null;
+let packedCheckbox = null;
 
 /**
  * Render storage edit page
@@ -112,6 +113,7 @@ async function renderForm() {
           Note: Season and Type cannot be changed after creation.
         </p>
         <div id="form-fields"></div>
+        <div id="packed-field"></div>
       </div>
       
       <div class="form-section">
@@ -152,8 +154,55 @@ async function renderForm() {
     itemField.closest('.form-field').style.display = 'none';
   }
   
+  // Render packed status field (between size and general_notes)
+  renderPackedField();
+  
   // Render photo section
   renderPhotoSection();
+}
+
+/**
+ * Render packed status checkbox field
+ */
+function renderPackedField() {
+  const container = document.getElementById('packed-field');
+  const isPacked = currentStorageUnit.packed || false;
+  const contentsCount = currentStorageUnit.contents_count || 0;
+  
+  container.innerHTML = `
+    <div class="form-field">
+      <label class="form-label">Packed Status</label>
+      <div class="checkbox-field">
+        <label class="checkbox-label">
+          <input 
+            type="checkbox" 
+            id="packed-checkbox" 
+            ${isPacked ? 'checked' : ''}
+          />
+          <span>Mark this storage unit as packed</span>
+        </label>
+      </div>
+      <p class="form-help">
+        Indicates whether this storage unit is currently packed and ready for storage
+      </p>
+      <div class="packed-warning hidden" id="packed-warning">
+        ⚠️ This storage unit is empty. Are you sure you want to mark it as packed?
+      </div>
+    </div>
+  `;
+  
+  // Store reference to checkbox
+  packedCheckbox = document.getElementById('packed-checkbox');
+  
+  // Add change event listener to show warning for empty storage
+  packedCheckbox.addEventListener('change', () => {
+    const warning = document.getElementById('packed-warning');
+    if (packedCheckbox.checked && contentsCount === 0) {
+      warning.classList.remove('hidden');
+    } else {
+      warning.classList.add('hidden');
+    }
+  });
 }
 
 /**
@@ -290,7 +339,8 @@ async function handleSave(storageId) {
     const updateData = {
       location: formData.location,
       short_name: formData.short_name,
-      general_notes: formData.general_notes
+      general_notes: formData.general_notes,
+      packed: packedCheckbox ? packedCheckbox.checked : currentStorageUnit.packed
     };
     
     // Only include size for totes
