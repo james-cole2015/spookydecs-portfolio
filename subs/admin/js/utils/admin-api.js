@@ -76,16 +76,40 @@ export async function fetchInspectorStats() {
 }
 
 /**
- * Fetch Workbench statistics (placeholder)
+ * Fetch Workbench statistics
  * @returns {Promise<Object>} Workbench stats with active, scheduled, completed counts
  */
 export async function fetchWorkbenchStats() {
-    // TODO: Replace with actual API endpoint when workbench is implemented
-    return {
-        active: 0,
-        scheduled: 0,
-        completed: 0
-    };
+    const config = await loadConfig();
+    const apiBase = config.API_ENDPOINT;
+    
+    if (!apiBase) {
+        throw new Error('API_ENDPOINT not configured');
+    }
+    
+    try {
+        const response = await fetch(`${apiBase}/stats/workbench`);
+        
+        if (!response.ok) {
+            throw new Error(`Failed to fetch workbench stats: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.error || 'Failed to fetch workbench stats');
+        }
+        
+        return result.data;
+    } catch (error) {
+        console.error('Error fetching workbench stats:', error);
+        // Return zeros on error to prevent UI breaking
+        return {
+            active: 0,
+            scheduled: 0,
+            completed: 0
+        };
+    }
 }
 
 /**
