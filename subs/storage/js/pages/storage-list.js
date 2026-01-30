@@ -1,43 +1,22 @@
 /**
  * Storage List Page
- * Main storage list view with tabs, filters, and responsive table/cards
+ * Main storage list view with filters and responsive card grid
  */
 
 import { storageAPI } from '../utils/storage-api.js';
 import { formatStorageUnit } from '../utils/storage-config.js';
-import { getActiveTab, setActiveTab, getFiltersFromUrl, saveFiltersToUrl } from '../utils/state.js';
-import { TabBar } from '../components/TabBar.js';
-import { ViewSelector } from '../components/ViewSelector.js';
+import { getFiltersFromUrl, saveFiltersToUrl } from '../utils/state.js';
 import { FilterBar } from '../components/FilterBar.js';
-import { StorageTable } from '../components/StorageTable.js';
 import { StorageCards } from '../components/StorageCards.js';
 import { navigate } from '../utils/router.js';
+import { showSuccess, showError } from '../shared/toast.js';
 
 let allStorage = [];
 let filteredStorage = [];
-let currentState = {
-  tab: 'all',
-  filters: {
-    search: '',
-    location: '',
-    packed: '',
-    class_type: ''
-  }
-};
+let currentFilters = {};
 
-let tabBar;
-let viewSelector;
 let filterBar;
-let storageTable;
 let storageCards;
-let isMobileView = false;
-
-/**
- * Check if mobile view
- */
-function checkIfMobile() {
-  return window.innerWidth <= 768;
-}
 
 /**
  * Render storage list page
@@ -52,7 +31,7 @@ export async function renderStorageList() {
         <h1 class="page-title">Storage Inventory</h1>
         <div class="page-actions">
           <button class="btn btn-secondary" id="btn-pack">
-            📦 Packing Wizard
+            📦 Pack Items
           </button>
           <button class="btn btn-primary" id="btn-create">
             ➕ Create Storage
@@ -60,17 +39,12 @@ export async function renderStorageList() {
         </div>
       </div>
       
-      <div id="view-selector-container"></div>
-      <div id="tab-container"></div>
+      <div id="filter-container"></div>
       
-      <div class="controls-row">
-        <div id="filter-container"></div>
-        <div class="item-count">
-          <span id="item-count">0 units</span>
-        </div>
+      <div class="list-controls">
+        <div class="item-count" id="item-count">0 units</div>
       </div>
       
-      <div id="table-container"></div>
       <div id="cards-container"></div>
     </div>
   `;
@@ -84,50 +58,41 @@ export async function renderStorageList() {
     navigate('/storage/create');
   });
   
-  // Restore state from URL
-  currentState.tab = getActiveTab().toLowerCase();
-  currentState.filters = getFiltersFromUrl();
+  // Restore filters from URL
+  currentFilters = getFiltersFromUrl();
   
   // Initialize components
-  const tabs = ['All', 'Halloween', 'Christmas', 'Shared'];
-  
-  // TabBar for desktop
-  tabBar = new TabBar({
-    tabs: tabs,
-    activeTab: currentState.tab,
-    onChange: handleTabChange
-  });
-  
-  // ViewSelector for mobile
-  viewSelector = new ViewSelector({
-    views: tabs,
-    activeView: currentState.tab,
-    onChange: handleTabChange
-  });
-  
   filterBar = new FilterBar({
-    filters: currentState.filters,
+    filters: currentFilters,
+    showFilters: ['season', 'location', 'class_type', 'packed'],
     onChange: handleFilterChange
   });
   
-  storageTable = new StorageTable();
-  storageCards = new StorageCards();
-  
-  // Check initial viewport
-  isMobileView = checkIfMobile();
-  
-  // Setup resize listener
-  setupResizeListener();
+  storageCards = new StorageCards({
+    data: [],
+    onDelete: handleDelete
+  });
   
   // Load data
   await loadData();
 }
 
 /**
- * Load storage data
+ * Load storage data from API
  */
 async function loadData() {
   try {
+    // Show loading state
+    const cardsContainer = document.getElementById('cards-container');
+    if (cardsContainer) {
+      cardsContainer.innerHTML = `
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading storage units...</p>
+        </div>
+      `;
+    }
+    
     // Fetch all storage units
     const data = await storageAPI.getAll({});
     allStorage = data.map(unit => formatStorageUnit(unit));
@@ -139,192 +104,146 @@ async function loadData() {
     
   } catch (error) {
     console.error('Failed to load storage:', error);
-    showError('Failed to load storage units');
+    showErrorState('Failed to load storage units. Please try again.');
   }
 }
 
 /**
- * Render page
+ * Render page components
  */
 function renderPage() {
-  // Render view selector (mobile) and tabs (desktop)
-  const viewSelectorContainer = document.getElementById('view-selector-container');
-  const tabContainer = document.getElementById('tab-container');
-  
-  if (viewSelectorContainer) {
-    viewSelector.render(viewSelectorContainer);
-  }
-  
-  if (tabContainer) {
-    tabBar.render(tabContainer);
-  }
-  
-  // Render filters
+  // Render filter bar
   const filterContainer = document.getElementById('filter-container');
   if (filterContainer) {
     filterBar.render(filterContainer);
   }
   
-  // Filter storage
-  filteredStorage = filterStorage(allStorage, currentState);
+  // Apply filters
+  filteredStorage = applyFilters(allStorage, currentFilters);
   
-  // Render appropriate view
-  renderResponsiveView();
+  // Render cards
+  const cardsContainer = document.getElementById('cards-container');
+  if (cardsContainer) {
+    storageCards.data = filteredStorage;
+    storageCards.render(cardsContainer);
+  }
   
   // Update count
   updateCount();
   
-  // Save state to URL
-  setActiveTab(currentState.tab);
-  saveFiltersToUrl(currentState.filters);
+  // Save filters to URL
+  saveFiltersToUrl(currentFilters);
 }
 
 /**
- * Render table or cards based on viewport
+ * Apply filters to storage data
  */
-function renderResponsiveView() {
-  const tableContainer = document.getElementById('table-container');
-  const cardsContainer = document.getElementById('cards-container');
-  
-  if (isMobileView) {
-    // Mobile: Show cards only
-    if (tableContainer) tableContainer.style.display = 'none';
-    if (cardsContainer) {
-      cardsContainer.style.display = 'block';
-      storageCards.data = filteredStorage;
-      storageCards.render(cardsContainer);
-    }
-  } else {
-    // Desktop: Show table only
-    if (tableContainer) {
-      tableContainer.style.display = 'block';
-      storageTable.data = filteredStorage;
-      storageTable.render(tableContainer);
-    }
-    if (cardsContainer) cardsContainer.style.display = 'none';
-  }
-}
-
-/**
- * Setup resize listener with debouncing
- */
-function setupResizeListener() {
-  let resizeTimeout;
-  
-  window.addEventListener('resize', () => {
-    clearTimeout(resizeTimeout);
-    
-    resizeTimeout = setTimeout(() => {
-      const wasMobile = isMobileView;
-      isMobileView = checkIfMobile();
-      
-      // Only re-render if view changed
-      if (wasMobile !== isMobileView) {
-        renderResponsiveView();
-      }
-    }, 250);
-  });
-}
-
-/**
- * Filter storage units
- */
-function filterStorage(storage, state) {
-  console.log('Filtering with state:', state);
-  console.log('Total storage before filter:', storage.length);
-  
+function applyFilters(storage, filters) {
   let filtered = [...storage];
   
-  // Filter by tab (season)
-  if (state.tab !== 'all') {
-    const seasonMap = {
-      'halloween': 'Halloween',
-      'christmas': 'Christmas',
-      'shared': 'Shared'
-    };
-    console.log('Filtering by season:', seasonMap[state.tab]);
-    filtered = filtered.filter(unit => {
-      console.log('Unit season:', unit.season, 'Match:', unit.season === seasonMap[state.tab]);
-      return unit.season === seasonMap[state.tab];
-    });
+  // Filter by season
+  if (filters.season && filters.season !== 'All') {
+    filtered = filtered.filter(unit => unit.season === filters.season);
   }
   
-  console.log('Filtered storage count:', filtered.length);
-  
-  // Apply other filters
-  if (state.filters.search) {
-    const searchTerm = state.filters.search.toLowerCase();
-    filtered = filtered.filter(unit =>
-      unit.id.toLowerCase().includes(searchTerm) ||
-      unit.short_name.toLowerCase().includes(searchTerm)
-    );
+  // Filter by location
+  if (filters.location && filters.location !== 'All') {
+    filtered = filtered.filter(unit => unit.location === filters.location);
   }
   
-  if (state.filters.location && state.filters.location !== 'All') {
-    filtered = filtered.filter(unit => unit.location === state.filters.location);
+  // Filter by class_type
+  if (filters.class_type && filters.class_type !== 'All') {
+    filtered = filtered.filter(unit => unit.class_type === filters.class_type);
   }
   
-  if (state.filters.packed && state.filters.packed !== 'All') {
-    const isPacked = state.filters.packed === 'true';
+  // Filter by packed status
+  if (filters.packed && filters.packed !== 'All') {
+    const isPacked = filters.packed === 'true';
     filtered = filtered.filter(unit => unit.packed === isPacked);
   }
   
-  if (state.filters.class_type && state.filters.class_type !== 'All') {
-    filtered = filtered.filter(unit => unit.class_type === state.filters.class_type);
+  // Filter by search
+  if (filters.search && filters.search.trim() !== '') {
+    const searchTerm = filters.search.toLowerCase().trim();
+    filtered = filtered.filter(unit => 
+      unit.id.toLowerCase().includes(searchTerm) ||
+      unit.short_name.toLowerCase().includes(searchTerm) ||
+      (unit.location && unit.location.toLowerCase().includes(searchTerm))
+    );
   }
   
   return filtered;
 }
 
 /**
- * Handle tab/view change
- */
-function handleTabChange(newTab) {
-  currentState.tab = newTab.toLowerCase();
-  
-  // Sync both components
-  if (tabBar) tabBar.setActive(newTab);
-  if (viewSelector) viewSelector.setActive(newTab);
-  
-  renderPage();
-}
-
-/**
  * Handle filter change
  */
 function handleFilterChange(newFilters) {
-  currentState.filters = newFilters;
+  currentFilters = newFilters;
   renderPage();
 }
 
 /**
- * Update item count
+ * Handle delete storage unit
  */
-function updateCount() {
-  const countElement = document.getElementById('item-count');
-  if (countElement) {
-    const count = filteredStorage.length;
-    const total = allStorage.length;
+async function handleDelete(unit) {
+  const confirmed = confirm(
+    `Are you sure you want to delete "${unit.short_name}"?\n\n` +
+    `This action cannot be undone. The storage unit must be empty before deletion.`
+  );
+  
+  if (!confirmed) return;
+  
+  try {
+    await storageAPI.delete(unit.id);
+    showSuccess('Storage unit deleted successfully');
     
-    if (count === total) {
-      countElement.textContent = `${total} units`;
+    // Reload data
+    await loadData();
+    
+  } catch (error) {
+    console.error('Failed to delete storage:', error);
+    
+    // Check if error is due to non-empty storage
+    if (error.message && error.message.includes('contents')) {
+      showError('Cannot delete storage unit with contents. Please remove all items first.');
     } else {
-      countElement.textContent = `${count} of ${total} units`;
+      showError('Failed to delete storage unit');
     }
   }
 }
 
 /**
- * Show error
+ * Update item count display
  */
-function showError(message) {
-  const tableContainer = document.getElementById('table-container');
-  if (tableContainer) {
-    tableContainer.innerHTML = `
+function updateCount() {
+  const countElement = document.getElementById('item-count');
+  if (!countElement) return;
+  
+  const filteredCount = filteredStorage.length;
+  const totalCount = allStorage.length;
+  
+  if (filteredCount === totalCount) {
+    countElement.textContent = `${totalCount} ${totalCount === 1 ? 'unit' : 'units'}`;
+  } else {
+    countElement.textContent = `${filteredCount} of ${totalCount} ${totalCount === 1 ? 'unit' : 'units'}`;
+  }
+}
+
+/**
+ * Show error state
+ */
+function showErrorState(message) {
+  const cardsContainer = document.getElementById('cards-container');
+  if (cardsContainer) {
+    cardsContainer.innerHTML = `
       <div class="error-state">
         <div class="error-icon">⚠️</div>
-        <div class="error-message">${message}</div>
-        <button class="btn btn-primary" onclick="window.location.reload()">Retry</button>
+        <h3>Error Loading Storage</h3>
+        <p>${message}</p>
+        <button class="btn btn-primary" onclick="window.location.reload()">
+          Retry
+        </button>
       </div>
     `;
   }

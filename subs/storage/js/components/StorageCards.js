@@ -1,9 +1,9 @@
 /**
  * StorageCards Component
- * Mobile card view for storage units
+ * Responsive card grid view for storage units (desktop + mobile)
  */
 
-import { getPackedLabel, getPlaceholderImage } from '../utils/storage-config.js';
+import { getPackedLabel } from '../utils/storage-config.js';
 import { navigate } from '../utils/router.js';
 
 export class StorageCards {
@@ -14,7 +14,7 @@ export class StorageCards {
   }
 
   /**
-   * Render the cards
+   * Render the card grid
    */
   render(containerElement) {
     this.container = containerElement;
@@ -24,106 +24,103 @@ export class StorageCards {
       return;
     }
     
-    const cardsContainer = document.createElement('div');
-    cardsContainer.className = 'storage-cards';
+    const cardsGrid = document.createElement('div');
+    cardsGrid.className = 'storage-cards-grid';
     
     this.data.forEach(unit => {
       const card = this.createCard(unit);
-      cardsContainer.appendChild(card);
+      cardsGrid.appendChild(card);
     });
     
     this.container.innerHTML = '';
-    this.container.appendChild(cardsContainer);
+    this.container.appendChild(cardsGrid);
   }
 
   /**
-   * Create storage card
+   * Create individual storage card
    */
   createCard(unit) {
     const card = document.createElement('div');
     card.className = 'storage-card';
     card.dataset.id = unit.id;
     
-    const photoUrl = unit.images?.photo_url || getPlaceholderImage();
-    const season = unit.season || unit.category || 'Unknown';
-    const classType = unit.class_type || 'Tote';
+    // Make entire card clickable
+    card.addEventListener('click', (e) => {
+      // Don't navigate if clicking on a button
+      if (!e.target.closest('.card-footer-btn')) {
+        navigate(`/storage/${unit.id}`);
+      }
+    });
+    
+    // Determine image source
+    const imageUrl = this.getImageUrl(unit);
+    const packedStatus = unit.packed ? 'packed' : 'unpacked';
+    const packedLabel = unit.packed ? 'Packed' : 'Unpacked';
     
     card.innerHTML = `
-      <div class="card-photo">
-        <img src="${photoUrl}" alt="${unit.short_name}">
-        <span class="packed-badge-overlay ${unit.packed ? 'packed' : 'unpacked'}">
-          ${getPackedLabel(unit.packed)}
-        </span>
+      <div class="card-image-container">
+        ${imageUrl ? `
+          <img src="${imageUrl}" alt="${unit.short_name}" class="card-image">
+        ` : `
+          <div class="card-image-placeholder">
+            <svg class="placeholder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+              <line x1="12" y1="22.08" x2="12" y2="12"></line>
+            </svg>
+          </div>
+        `}
+        <span class="card-badge card-badge-${packedStatus}">${packedLabel}</span>
       </div>
       
-      <div class="card-body">
-        <div class="card-header">
-          <h3 class="card-title">${unit.short_name}</h3>
-          <code class="card-id">${unit.id}</code>
+      <div class="card-content">
+        <h3 class="card-title">${unit.short_name}</h3>
+        <div class="card-id">${unit.id}</div>
+        <div class="card-info">
+          <span class="card-info-item">${unit.season || 'Unknown'}</span>
+          <span class="card-info-separator">•</span>
+          <span class="card-info-item">${unit.location || 'Unknown'}</span>
         </div>
-        
-        <div class="card-meta">
-          <div class="card-meta-item">
-            <span class="meta-label">Type:</span>
-            <span class="meta-value">${classType}</span>
-          </div>
-          
-          <div class="card-meta-item">
-            <span class="meta-label">Season:</span>
-            <span class="badge badge-${season.toLowerCase()}">${season}</span>
-          </div>
-          
-          <div class="card-meta-item">
-            <span class="meta-label">Location:</span>
-            <span class="meta-value">${unit.location || '-'}</span>
-          </div>
-          
-          ${unit.size ? `
-            <div class="card-meta-item">
-              <span class="meta-label">Size:</span>
-              <span class="meta-value">${unit.size}</span>
-            </div>
-          ` : ''}
-          
-          <div class="card-meta-item">
-            <span class="meta-label">Contents:</span>
-            <span class="meta-value">${unit.contents_count || 0} items</span>
-          </div>
-        </div>
-        
-        ${unit.general_notes ? `
-          <div class="card-notes">
-            <p>${unit.general_notes}</p>
-          </div>
-        ` : ''}
-        
-        <div class="card-actions">
-          <button class="btn btn-primary btn-view" data-id="${unit.id}">
-            View
-          </button>
-          <button class="btn btn-secondary btn-edit" data-id="${unit.id}">
-            Edit
-          </button>
-          <button class="btn btn-danger btn-delete" data-id="${unit.id}">
-            Delete
-          </button>
-        </div>
+      </div>
+      
+      <div class="card-footer">
+        <button class="card-footer-btn btn-view" data-action="view" data-id="${unit.id}">
+          View
+        </button>
+        <button class="card-footer-btn btn-edit" data-action="edit" data-id="${unit.id}">
+          Edit
+        </button>
+        <button class="card-footer-btn btn-pack" data-action="pack" data-id="${unit.id}" disabled>
+          Pack
+        </button>
       </div>
     `;
     
-    // Attach event listeners
-    this.attachCardListeners(card, unit);
+    // Attach footer button listeners
+    this.attachFooterListeners(card, unit);
     
     return card;
   }
 
   /**
-   * Attach event listeners to card buttons
+   * Get image URL from unit data
    */
-  attachCardListeners(card, unit) {
-    const viewBtn = card.querySelector('.btn-view');
-    const editBtn = card.querySelector('.btn-edit');
-    const deleteBtn = card.querySelector('.btn-delete');
+  getImageUrl(unit) {
+    if (!unit.images) return null;
+    
+    // Prefer thumbnail, fallback to full photo
+    return unit.images.thumb_cloudfront_url || 
+           unit.images.photo_url || 
+           null;
+  }
+
+  /**
+   * Attach event listeners to footer buttons
+   */
+  attachFooterListeners(card, unit) {
+    const viewBtn = card.querySelector('[data-action="view"]');
+    const editBtn = card.querySelector('[data-action="edit"]');
+    const packBtn = card.querySelector('[data-action="pack"]');
     
     if (viewBtn) {
       viewBtn.addEventListener('click', (e) => {
@@ -139,19 +136,13 @@ export class StorageCards {
       });
     }
     
-    if (deleteBtn) {
-      deleteBtn.addEventListener('click', (e) => {
+    if (packBtn) {
+      packBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        this.onDelete(unit);
+        // Pack functionality disabled for now
+        console.log('Pack button clicked (disabled)');
       });
     }
-    
-    // Make entire card clickable (except buttons)
-    card.addEventListener('click', (e) => {
-      if (!e.target.closest('button')) {
-        navigate(`/storage/${unit.id}`);
-      }
-    });
   }
 
   /**
@@ -162,7 +153,7 @@ export class StorageCards {
       <div class="empty-state">
         <div class="empty-icon">📦</div>
         <h3>No Storage Units Found</h3>
-        <p>No storage units match your filters.</p>
+        <p>No storage units match your current filters.</p>
         <button class="btn btn-primary" onclick="window.location.href='/storage/create'">
           Create Storage Unit
         </button>
@@ -175,7 +166,9 @@ export class StorageCards {
    */
   updateData(data) {
     this.data = data;
-    this.render(this.container);
+    if (this.container) {
+      this.render(this.container);
+    }
   }
 }
 

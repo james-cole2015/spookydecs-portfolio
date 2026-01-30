@@ -1,6 +1,7 @@
 /**
  * FilterBar Component
  * Search box and collapsible filter dropdowns for storage list
+ * Now includes Season filter (replacing TabBar)
  */
 
 import { getFiltersFromUrl, saveFiltersToUrl } from '../utils/state.js';
@@ -10,10 +11,10 @@ export class FilterBar {
   constructor(options = {}) {
     this.filters = options.filters || getFiltersFromUrl();
     this.onChange = options.onChange || (() => {});
-    this.showFilters = options.showFilters || ['location', 'class_type', 'packed', 'size'];
+    this.showFilters = options.showFilters || ['season', 'location', 'class_type', 'packed'];
     this.container = null;
     this.debounceTimer = null;
-    this.filtersExpanded = false; // Track collapse state
+    this.filtersExpanded = false; // Mobile collapse state
   }
 
   /**
@@ -25,54 +26,49 @@ export class FilterBar {
     const filterBar = document.createElement('div');
     filterBar.className = 'filter-bar';
     
-    // Top row with search and toggle button
-    const topRow = document.createElement('div');
-    topRow.className = 'filter-bar-top';
+    // Search and toggle button row
+    const searchRow = document.createElement('div');
+    searchRow.className = 'filter-search-row';
     
-    // Search box
-    const searchGroup = document.createElement('div');
-    searchGroup.className = 'filter-search';
-    searchGroup.innerHTML = `
-      <input 
-        type="text" 
-        class="filter-input" 
-        placeholder="🔍 Search storage units..."
-        value="${this.filters.search || ''}"
-        id="storage-search"
-      >
-    `;
-    topRow.appendChild(searchGroup);
+    // Search input
+    const searchInput = document.createElement('input');
+    searchInput.type = 'text';
+    searchInput.className = 'filter-search-input';
+    searchInput.placeholder = '🔍 Search storage units...';
+    searchInput.value = this.filters.search || '';
+    searchInput.id = 'storage-search';
+    searchRow.appendChild(searchInput);
     
-    // Filter toggle button with active count
-    const activeFilterCount = this.getActiveFilterCount();
+    // Filter toggle button (mobile)
+    const activeCount = this.getActiveFilterCount();
     const toggleBtn = document.createElement('button');
-    toggleBtn.className = `btn-toggle-filters ${this.filtersExpanded ? 'expanded' : ''}`;
+    toggleBtn.className = `btn-filters-toggle ${this.filtersExpanded ? 'expanded' : ''}`;
     toggleBtn.innerHTML = `
       <span>Filters</span>
-      ${activeFilterCount > 0 ? `<span class="filter-count">${activeFilterCount}</span>` : ''}
-      <span class="toggle-icon">▼</span>
+      ${activeCount > 0 ? `<span class="filter-badge">${activeCount}</span>` : ''}
+      <span class="toggle-arrow">${this.filtersExpanded ? '▲' : '▼'}</span>
     `;
     toggleBtn.addEventListener('click', () => this.toggleFilters());
-    topRow.appendChild(toggleBtn);
+    searchRow.appendChild(toggleBtn);
     
-    filterBar.appendChild(topRow);
+    filterBar.appendChild(searchRow);
     
-    // Filter dropdowns container (collapsible)
+    // Filter dropdowns container (collapsible on mobile)
     const filtersContainer = document.createElement('div');
-    filtersContainer.className = `filters-container ${this.filtersExpanded ? 'expanded' : ''}`;
-    filtersContainer.id = 'filters-container';
+    filtersContainer.className = `filter-dropdowns ${this.filtersExpanded ? 'expanded' : ''}`;
+    filtersContainer.id = 'filter-dropdowns';
     
-    // Add filter dropdowns
+    // Render each filter dropdown
     this.showFilters.forEach(filterKey => {
-      const filterGroup = this.createFilterDropdown(filterKey);
-      filtersContainer.appendChild(filterGroup);
+      const dropdown = this.createFilterDropdown(filterKey);
+      filtersContainer.appendChild(dropdown);
     });
     
-    // Clear filters button (conditionally rendered)
+    // Clear filters button
     if (this.hasActiveFilters()) {
       const clearBtn = document.createElement('button');
       clearBtn.className = 'btn btn-clear-filters';
-      clearBtn.textContent = 'Clear Filters';
+      clearBtn.textContent = 'Clear All';
       clearBtn.addEventListener('click', () => this.clearFilters());
       filtersContainer.appendChild(clearBtn);
     }
@@ -87,21 +83,89 @@ export class FilterBar {
   }
 
   /**
-   * Toggle filters visibility
+   * Toggle filters visibility (mobile)
    */
   toggleFilters() {
     this.filtersExpanded = !this.filtersExpanded;
     
-    const filtersContainer = this.container.querySelector('#filters-container');
-    const toggleBtn = this.container.querySelector('.btn-toggle-filters');
+    const filtersContainer = document.getElementById('filter-dropdowns');
+    const toggleBtn = this.container.querySelector('.btn-filters-toggle');
     
     if (this.filtersExpanded) {
       filtersContainer.classList.add('expanded');
       toggleBtn.classList.add('expanded');
+      toggleBtn.querySelector('.toggle-arrow').textContent = '▲';
     } else {
       filtersContainer.classList.remove('expanded');
       toggleBtn.classList.remove('expanded');
+      toggleBtn.querySelector('.toggle-arrow').textContent = '▼';
     }
+  }
+
+  /**
+   * Create filter dropdown
+   */
+  createFilterDropdown(filterKey) {
+    const group = document.createElement('div');
+    group.className = 'filter-group';
+    
+    const label = this.getFilterLabel(filterKey);
+    const options = this.getFilterOptions(filterKey);
+    const currentValue = this.filters[filterKey] || 'All';
+    
+    const select = document.createElement('select');
+    select.className = 'filter-select';
+    select.dataset.filter = filterKey;
+    
+    // Add "All" option
+    const allOption = document.createElement('option');
+    allOption.value = 'All';
+    allOption.textContent = `${label}: All`;
+    allOption.selected = currentValue === 'All';
+    select.appendChild(allOption);
+    
+    // Add other options
+    options.forEach(option => {
+      if (option !== 'All') {
+        const optionEl = document.createElement('option');
+        optionEl.value = option;
+        optionEl.textContent = `${label}: ${option}`;
+        optionEl.selected = option === currentValue;
+        select.appendChild(optionEl);
+      }
+    });
+    
+    group.appendChild(select);
+    return group;
+  }
+
+  /**
+   * Get filter options based on filter key
+   */
+  getFilterOptions(filterKey) {
+    const optionsMap = {
+      season: ['All', 'Halloween', 'Christmas', 'Shared'],
+      location: ['All', 'Shed', 'Attic', 'Crawl Space', 'Other'],
+      class_type: ['All', 'Tote', 'Self'],
+      packed: ['All', 'true', 'false'],
+      size: ['All', 'Small', 'Medium', 'Large', 'Extra Large']
+    };
+    
+    return optionsMap[filterKey] || ['All'];
+  }
+
+  /**
+   * Get human-readable filter label
+   */
+  getFilterLabel(filterKey) {
+    const labels = {
+      season: 'Season',
+      location: 'Location',
+      class_type: 'Type',
+      packed: 'Status',
+      size: 'Size'
+    };
+    return labels[filterKey] || filterKey;
   }
 
   /**
@@ -110,12 +174,13 @@ export class FilterBar {
   getActiveFilterCount() {
     let count = 0;
     
-    if (this.filters.search && this.filters.search !== '') {
+    if (this.filters.search && this.filters.search.trim() !== '') {
       count++;
     }
     
     this.showFilters.forEach(filterKey => {
-      if (this.filters[filterKey] && this.filters[filterKey] !== 'All') {
+      const value = this.filters[filterKey];
+      if (value && value !== 'All') {
         count++;
       }
     });
@@ -124,54 +189,10 @@ export class FilterBar {
   }
 
   /**
-   * Create filter dropdown
-   */
-  createFilterDropdown(filterKey) {
-    const group = document.createElement('div');
-    group.className = 'filter-group filter-dropdown';
-    
-    const label = this.getFilterLabel(filterKey);
-    const options = STORAGE_CONFIG.FILTER_OPTIONS[filterKey] || [];
-    const currentValue = this.filters[filterKey] || 'All';
-    
-    group.innerHTML = `
-      <select class="filter-select" data-filter="${filterKey}">
-        ${options.map(option => `
-          <option value="${option}" ${option === currentValue ? 'selected' : ''}>
-            ${label}: ${option}
-          </option>
-        `).join('')}
-      </select>
-    `;
-    
-    return group;
-  }
-
-  /**
-   * Get human-readable filter label
-   */
-  getFilterLabel(filterKey) {
-    const labels = {
-      location: 'Location',
-      class_type: 'Type',
-      packed: 'Status',
-      size: 'Size',
-      season: 'Season'
-    };
-    return labels[filterKey] || filterKey;
-  }
-
-  /**
    * Check if there are active filters
    */
   hasActiveFilters() {
-    return (
-      (this.filters.search && this.filters.search !== '') ||
-      (this.filters.location && this.filters.location !== 'All') ||
-      (this.filters.class_type && this.filters.class_type !== 'All') ||
-      (this.filters.packed && this.filters.packed !== 'All') ||
-      (this.filters.size && this.filters.size !== 'All')
-    );
+    return this.getActiveFilterCount() > 0;
   }
 
   /**
@@ -179,7 +200,7 @@ export class FilterBar {
    */
   attachEventListeners() {
     // Search input with debounce
-    const searchInput = this.container.querySelector('#storage-search');
+    const searchInput = document.getElementById('storage-search');
     if (searchInput) {
       searchInput.addEventListener('input', (e) => {
         clearTimeout(this.debounceTimer);
@@ -194,7 +215,8 @@ export class FilterBar {
     selects.forEach(select => {
       select.addEventListener('change', (e) => {
         const filterKey = e.target.dataset.filter;
-        this.handleFilterChange(filterKey, e.target.value);
+        const value = e.target.value;
+        this.handleFilterChange(filterKey, value);
       });
     });
   }
@@ -203,12 +225,16 @@ export class FilterBar {
    * Handle filter change
    */
   handleFilterChange(filterKey, value) {
+    // Update filters
     this.filters[filterKey] = value;
+    
+    // Save to URL
     saveFiltersToUrl(this.filters);
     
-    // Re-render to update active filter count and clear button
+    // Re-render to update active filter count
     this.render(this.container);
     
+    // Notify parent
     this.onChange(this.filters);
   }
 
@@ -221,7 +247,6 @@ export class FilterBar {
       location: 'All',
       class_type: 'All',
       packed: 'All',
-      size: 'All',
       search: ''
     };
     
@@ -247,24 +272,6 @@ export class FilterBar {
     if (this.container) {
       this.render(this.container);
     }
-  }
-
-  /**
-   * Update filter values in UI
-   */
-  updateUI() {
-    // Update search input
-    const searchInput = this.container.querySelector('#storage-search');
-    if (searchInput) {
-      searchInput.value = this.filters.search || '';
-    }
-    
-    // Update dropdowns
-    const selects = this.container.querySelectorAll('.filter-select');
-    selects.forEach(select => {
-      const filterKey = select.dataset.filter;
-      select.value = this.filters[filterKey] || 'All';
-    });
   }
 }
 

@@ -27,9 +27,7 @@ storage/
     │   └── modal.js                    # Modal dialogs 
     │
     ├── components/
-    │   ├── TabBar.js                   # Season tabs 
     │   ├── FilterBar.js                # Search + filter dropdowns 
-    │   ├── StorageTable.js             # Desktop table view 
     │   ├── StorageCards.js             # Mobile card view 
     │   ├── StoragePhotoUploader.js     # Photo Uploader
     │   ├── StorageDetailView.js        # Detail page layout
