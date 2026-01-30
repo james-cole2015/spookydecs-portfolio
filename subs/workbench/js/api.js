@@ -30,10 +30,14 @@ async function apiCall(endpoint, options = {}) {
   
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw new Error(error.message || `API Error: ${response.status}`);
+    throw new Error(error.error || error.message || `API Error: ${response.status}`);
   }
   
-  return response.json();
+  const result = await response.json();
+  
+  // Unwrap the data from the standardized response format
+  // Backend now returns { success, data, timestamp, message }
+  return result.data || result;  // Fallback to result if data doesn't exist (backwards compatibility)
 }
 
 // ============ SEASON MANAGEMENT ============

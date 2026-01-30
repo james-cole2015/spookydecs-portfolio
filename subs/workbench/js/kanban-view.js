@@ -33,13 +33,16 @@ export async function renderKanban(seasonId) {
     spinner.show('Loading workbench...');
 
     // Fetch season and items
-    const [season, seasons, itemsResponse] = await Promise.all([
+    const [season, seasonsResponse, itemsResponse] = await Promise.all([
       getSeason(seasonId),
       getSeasons(),
       getSeasonItems(seasonId)
     ]);
 
+    // Extract arrays from response objects
+    const seasons = seasonsResponse.seasons || [];
     currentItems = itemsResponse.items || [];
+    
     spinner.hide();
 
     // Render the kanban board
