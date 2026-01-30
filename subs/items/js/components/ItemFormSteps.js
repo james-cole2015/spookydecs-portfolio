@@ -40,7 +40,7 @@ export class ItemFormSteps {
     panel.className = 'step-panel';
     
     const selectedClass = this.wizard.formData.class;
-    const types = CLASS_HIERARCHY[selectedClass] || [];
+    const types = CLASS_HIERARCHY[selectedClass]?.types || [];
     
     panel.innerHTML = `
       <h2>Select ${selectedClass} Type</h2>

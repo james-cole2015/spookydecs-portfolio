@@ -91,26 +91,46 @@
 .step-content {
   min-height: 400px;
   margin-bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.step-panel {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .step-panel h2 {
   margin: 0 0 8px 0;
   font-size: 22px;
   color: #1f2937;
+  text-align: center;
 }
 
 .step-description {
   margin: 0 0 32px 0;
   font-size: 15px;
   color: #6b7280;
+  text-align: center;
 }
 
 /* Step 1 & 2: Class and Type Selection */
 .class-selector,
 .type-selector {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 16px;
+  justify-content: center;
+  width: 100%;
+}
+
+/* When 3+ cards, use space-evenly */
+.class-selector:has(.class-card:nth-child(3)),
+.type-selector:has(.type-card:nth-child(3)) {
+  justify-content: space-evenly;
 }
 
 .class-card,
@@ -121,6 +141,9 @@
   text-align: center;
   cursor: pointer;
   transition: all 0.2s;
+  min-width: 180px;
+  max-width: 220px;
+  flex: 0 1 auto;
 }
 
 .class-card:hover,
@@ -154,10 +177,11 @@
 /* Step 3: Form Fields */
 .form-section {
   margin-bottom: 32px;
-}
-
-.form-section:last-child {
-  margin-bottom: 0;
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .section-title {
@@ -167,67 +191,31 @@
   color: #1f2937;
   padding-bottom: 8px;
   border-bottom: 1px solid #e5e7eb;
+  text-align: center;
+  width: 100%;
 }
 
 .form-fields {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 20px;
+  width: 100%;
+  justify-content: center;
+}
+
+/* When 3+ items, use space-evenly */
+.form-fields:has(.form-group:nth-child(3)) {
+  justify-content: space-evenly;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 6px;
-}
-
-.form-group label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #374151;
-}
-
-.required {
-  color: #dc2626;
-  margin-left: 2px;
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
-  padding: 10px 14px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 14px;
-  font-family: inherit;
-  transition: border-color 0.2s;
-}
-
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-  outline: none;
-  border-color: #f97316;
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
-}
-
-.form-group.error input,
-.form-group.error select,
-.form-group.error textarea {
-  border-color: #dc2626;
-}
-
-.error-message {
-  font-size: 12px;
-  color: #dc2626;
-  min-height: 18px;
-}
-
-.no-fields-message {
-  text-align: center;
-  padding: 40px 20px;
-  color: #9ca3af;
-  font-size: 14px;
+  width: 100%;
+  max-width: 280px;
+  min-width: 200px;
+  flex: 0 1 auto;
 }
 
 /* Photo Uploader */
@@ -366,6 +354,8 @@
   border: 2px solid #e5e7eb;
   border-radius: 12px;
   overflow: hidden;
+  width: 100%;
+  max-width: 600px;
 }
 
 .preview-header {
@@ -471,43 +461,56 @@
   .wizard-container {
     padding: 24px 16px;
   }
-  
+
   .step-indicator {
     gap: 8px;
   }
-  
+
   .step-number {
     width: 40px;
     height: 40px;
     font-size: 16px;
   }
-  
+
   .step-connector {
     width: 40px;
   }
-  
+
   .class-selector,
   .type-selector {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: center;
   }
-  
+
+  .class-card,
+  .type-card {
+    width: 100%;
+    max-width: 300px;
+  }
+
   .form-fields {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: center;
   }
-  
+
+  .form-group {
+    max-width: 100%;
+    width: 100%;
+  }
+
   .preview-fields {
     grid-template-columns: 1fr;
   }
-  
+
   .step-actions {
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .action-buttons-right {
     width: 100%;
   }
-  
+
   .action-buttons-right button {
     flex: 1;
   }
