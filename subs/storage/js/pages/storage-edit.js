@@ -13,7 +13,6 @@ import { showLoading, hideLoading } from '../app.js';
 
 let formFields = null;
 let currentStorageUnit = null;
-let newPhotoData = null;
 
 /**
  * Render storage edit page

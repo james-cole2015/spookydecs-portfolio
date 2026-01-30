@@ -1,7 +1,7 @@
 /**
  * CreateWizard Component
  * 3-step wizard for creating storage units (Tote or Self-contained)
- * UPDATED: Uses CDN photo upload modal instead of custom uploader
+ * UPDATED: Uses CDN photo-upload-modal web component
  */
 
 import { StorageFormFields } from './StorageFormFields.js';
@@ -17,6 +17,7 @@ export class CreateWizard {
     this.currentStep = 1;
     this.selectedType = null; // 'Tote' or 'Self'
     this.formData = {};
+    this.uploadedPhotoIds = []; // Store photo IDs from upload
     
     // Components
     this.formFields = null;
@@ -178,6 +179,9 @@ export class CreateWizard {
     // Generate ID preview
     const idPreview = this.generateIdPreview();
     
+    // Check if photo was uploaded
+    const hasPhoto = this.uploadedPhotoIds.length > 0;
+    
     container.innerHTML = `
       <div class="wizard-step active">
         <h2 class="mb-lg">Review & Photo</h2>
@@ -186,9 +190,9 @@ export class CreateWizard {
           <h3 class="review-title">Photo (Optional)</h3>
           <p class="upload-description">Add a photo to help identify this storage unit</p>
           <button type="button" class="btn-upload-storage-photo" id="btn-trigger-upload">
-            📷 Upload Photo
+            📷 ${hasPhoto ? 'Change Photo' : 'Upload Photo'}
           </button>
-          <div class="upload-success hidden" id="upload-success">
+          <div class="upload-success ${hasPhoto ? '' : 'hidden'}" id="upload-success">
             ✓ Photo uploaded successfully
           </div>
         </div>
@@ -246,6 +250,12 @@ export class CreateWizard {
         </div>
       </div>
     `;
+    
+    // Attach photo upload button handler
+    const uploadBtn = container.querySelector('#btn-trigger-upload');
+    if (uploadBtn) {
+      uploadBtn.addEventListener('click', () => this.openPhotoUploadModal());
+    }
   }
 
   /**
@@ -260,6 +270,61 @@ export class CreateWizard {
     const seasonCode = STORAGE_CONFIG.SEASON_CODES[this.formData.season];
     
     return `STOR-${typeCode}-${seasonCode}-001`;
+  }
+
+  /**
+   * Open photo upload modal (CDN component)
+   */
+  openPhotoUploadModal() {
+    // Create modal element
+    const modal = document.createElement('photo-upload-modal');
+    
+    // Configure modal attributes
+    modal.setAttribute('context', 'storage');
+    modal.setAttribute('photo-type', 'storage');
+    modal.setAttribute('season', this.formData.season.toLowerCase());
+    modal.setAttribute('max-photos', '1');
+    modal.setAttribute('year', new Date().getFullYear().toString());
+    
+    // NOTE: We don't set storage-id yet since the storage unit doesn't exist
+    // The photo will be uploaded without storage_id, then we'll link it after creation
+    
+    // Listen for upload complete
+    modal.addEventListener('upload-complete', (e) => {
+      this.handlePhotoUploadComplete(e.detail);
+    });
+    
+    // Listen for cancel
+    modal.addEventListener('upload-cancel', () => {
+      console.log('Photo upload cancelled');
+    });
+    
+    // Append to body
+    document.body.appendChild(modal);
+  }
+
+  /**
+   * Handle photo upload completion
+   */
+  handlePhotoUploadComplete(detail) {
+    console.log('Photo upload complete:', detail);
+    
+    // Store photo IDs
+    if (detail.photo_ids && detail.photo_ids.length > 0) {
+      this.uploadedPhotoIds = detail.photo_ids;
+      
+      // Update UI to show success
+      const successEl = document.getElementById('upload-success');
+      if (successEl) {
+        successEl.classList.remove('hidden');
+      }
+      
+      // Update button text
+      const uploadBtn = document.getElementById('btn-trigger-upload');
+      if (uploadBtn) {
+        uploadBtn.textContent = '📷 Change Photo';
+      }
+    }
   }
 
   /**
@@ -364,8 +429,8 @@ export class CreateWizard {
    * Complete wizard
    */
   complete() {
-    // Pass form data to parent
-    this.onComplete(this.selectedType, this.formData);
+    // Pass form data and uploaded photo IDs to parent
+    this.onComplete(this.selectedType, this.formData, this.uploadedPhotoIds);
   }
 }
 
