@@ -47,21 +47,56 @@ export class ActionModal {
           <p class="modal-message"></p>
         </div>
         <div class="modal-footer">
-          <button class="btn-secondary" onclick="actionModal.handleSkip()">
-            Skip
+          <button type="button" class="btn-secondary btn-close">
+            Close
           </button>
-          <button class="btn-primary" onclick="actionModal.handleAddCost()">
-            💰 Add Cost
-          </button>
-          <button class="btn-primary" onclick="actionModal.handleAddPhoto()">
-            📷 Add Photo
-          </button>
+          <div class="modal-actions">
+            <button type="button" class="btn-success btn-add-cost">
+              💰 Add Cost
+            </button>
+            <button type="button" class="btn-primary btn-add-photo">
+              📷 Add Photo
+            </button>
+          </div>
         </div>
       </div>
     `;
     
     document.body.appendChild(this.modal);
     this.attachStyles();
+    this.attachEventListeners();
+  }
+
+  attachEventListeners() {
+    // Use event delegation on the entire modal
+    this.modal.addEventListener('click', (e) => {
+      const target = e.target;
+
+      // Clicking overlay closes modal
+      if (target.classList.contains('modal-overlay')) {
+        this.handleSkip();
+        return;
+      }
+
+      // Check for button clicks
+      if (target.closest('.btn-close')) {
+        e.preventDefault();
+        this.handleSkip();
+        return;
+      }
+
+      if (target.closest('.btn-add-cost')) {
+        e.preventDefault();
+        this.handleAddCost();
+        return;
+      }
+
+      if (target.closest('.btn-add-photo')) {
+        e.preventDefault();
+        this.handleAddPhoto();
+        return;
+      }
+    });
   }
   
   attachStyles() {
@@ -86,8 +121,9 @@ export class ActionModal {
         right: 0;
         bottom: 0;
         background: rgba(0, 0, 0, 0.5);
+        z-index: 1;
       }
-      
+
       .action-modal .modal-content {
         position: relative;
         background: white;
@@ -95,7 +131,41 @@ export class ActionModal {
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
         max-width: 500px;
         width: 90%;
-        z-index: 1;
+        z-index: 2;
+      }
+
+      .action-modal .btn-secondary,
+      .action-modal .btn-primary,
+      .action-modal .btn-success {
+        cursor: pointer;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: 500;
+        border: none;
+        position: relative;
+        z-index: 3;
+        pointer-events: auto;
+        min-width: 120px;
+        font-size: 14px;
+        text-align: center;
+      }
+
+      .action-modal .btn-secondary {
+        background-color: #e5e7eb;
+        color: #374151;
+      }
+
+      .action-modal .btn-secondary:hover {
+        background-color: #d1d5db;
+      }
+
+      .action-modal .btn-primary {
+        background-color: #3b82f6;
+        color: white;
+      }
+
+      .action-modal .btn-primary:hover {
+        background-color: #2563eb;
       }
       
       .action-modal .modal-header {
@@ -130,17 +200,43 @@ export class ActionModal {
         padding: 16px 24px;
         border-top: 1px solid #e5e7eb;
         display: flex;
-        gap: 12px;
-        justify-content: flex-end;
+        justify-content: space-between;
+        align-items: center;
       }
-      
+
+      .action-modal .modal-actions {
+        display: flex;
+        gap: 12px;
+      }
+
+      .action-modal .btn-success {
+        background-color: #16a34a;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+      }
+
+      .action-modal .btn-success:hover {
+        background-color: #15803d;
+      }
+
       @media (max-width: 768px) {
         .action-modal .modal-footer {
           flex-direction: column;
+          gap: 12px;
         }
-        
+
+        .action-modal .modal-actions {
+          width: 100%;
+          flex-direction: column;
+        }
+
         .action-modal .modal-footer .btn-primary,
-        .action-modal .modal-footer .btn-secondary {
+        .action-modal .modal-footer .btn-secondary,
+        .action-modal .modal-footer .btn-success {
           width: 100%;
         }
       }
