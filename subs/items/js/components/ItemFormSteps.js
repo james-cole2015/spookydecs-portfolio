@@ -108,7 +108,6 @@ export class ItemFormSteps {
     // Render class-specific fields
     const specificFields = new ItemFormFields('specific-fields');
     specificFields.renderClassSpecificFields(
-      this.wizard.formData.class,
       this.wizard.formData.class_type,
       this.wizard.formData
     );

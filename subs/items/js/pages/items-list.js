@@ -22,7 +22,7 @@ class ItemsListPage {
     const container = document.getElementById('app-container');
     container.innerHTML = `
       <div class="view-header">
-        <h1>Items</h1>
+        <h1>Inventory Management</h1>
         <button class="btn-primary" onclick="itemsPage.handleCreate()">
           + Create Item
         </button>
