@@ -5,6 +5,7 @@ import { renderImagesList } from './pages/images-list.js';
 import { renderImageDetail } from './pages/image-detail.js';
 import { renderImageUpload } from './pages/image-upload.js';
 import { renderPhotoBrowser } from './pages/photo-browser.js';
+import { renderGalleryManager } from './pages/gallery-manager.js';
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', async () => {
@@ -15,6 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initialize router
     const router = initRouter({
       '/images': renderImagesList,
+      '/images/gallery': renderGalleryManager,
       '/images/browse': renderPhotoBrowser,
       '/images/upload': renderImageUpload,
       '/images/:photoId': renderImageDetail,

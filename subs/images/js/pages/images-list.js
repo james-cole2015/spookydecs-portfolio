@@ -17,6 +17,7 @@ export async function renderImagesList() {
     <div class="page-header">
       <h1>Images</h1>
       <div class="header-actions">
+        <button class="btn btn-secondary" id="gallery-btn">🎨 Gallery Manager</button>
         <button class="btn btn-secondary" id="browse-btn">Browse Photos</button>
         <button class="btn btn-primary" id="upload-btn">Upload Images</button>
       </div>
@@ -30,8 +31,13 @@ export async function renderImagesList() {
   `;
   
   // Setup buttons
+  const galleryBtn = document.getElementById('gallery-btn');
   const browseBtn = document.getElementById('browse-btn');
   const uploadBtn = document.getElementById('upload-btn');
+  
+  galleryBtn.addEventListener('click', () => {
+    navigate('/images/gallery');
+  });
   
   browseBtn.addEventListener('click', () => {
     navigate('/images/browse');

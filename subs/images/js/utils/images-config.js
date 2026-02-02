@@ -46,11 +46,26 @@ export const IMAGES_CONFIG = {
       s3Path: 'deployments/',
       photoType: 'deployment'
     },
-    gallery: {
-      label: 'Gallery',
+    gallery_showcase: {
+      label: 'Gallery - Showcase',
       requiredFields: [],
-      s3Path: 'gallery/',
-      photoType: 'gallery'
+      s3Path: 'gallery/showcase/',
+      photoType: 'gallery_showcase',
+      gallerySection: 'showcase'
+    },
+    gallery_progress: {
+      label: 'Gallery - Progress', 
+      requiredFields: [],
+      s3Path: 'gallery/progress/',
+      photoType: 'build',
+      gallerySection: 'progress'
+    },
+    gallery_community: {
+      label: 'Gallery - Community',
+      requiredFields: [],
+      s3Path: 'gallery/community/',
+      photoType: 'gallery_community',
+      gallerySection: 'community'
     },
     misc: {
       label: 'Miscellaneous',
@@ -83,7 +98,9 @@ export const IMAGES_CONFIG = {
       { value: 'storage', label: 'Storage' },
       { value: 'receipts', label: 'Receipts' },
       { value: 'deployments', label: 'Deployments' },
-      { value: 'gallery', label: 'Gallery' },
+      { value: 'gallery_showcase', label: 'Gallery - Showcase' },
+      { value: 'gallery_progress', label: 'Gallery - Progress' },
+      { value: 'gallery_community', label: 'Gallery - Community' },
       { value: 'misc', label: 'Misc' }
     ],
     isPublic: [
@@ -127,6 +144,16 @@ export function validateCategory(category, data) {
 // Get photo type from category
 export function getPhotoType(category) {
   return IMAGES_CONFIG.CATEGORIES[category]?.photoType || 'catalog';
+}
+
+// Check if category is a gallery category
+export function isGalleryCategory(category) {
+  return category && category.startsWith('gallery_');
+}
+
+// Get gallery section from category
+export function getGallerySection(category) {
+  return IMAGES_CONFIG.CATEGORIES[category]?.gallerySection || null;
 }
 
 // Check if photo is orphaned (no references)

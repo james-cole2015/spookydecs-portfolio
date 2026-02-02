@@ -1,5 +1,5 @@
-// Image Upload Component
-import { IMAGES_CONFIG, validateCategory, getPhotoType } from '../utils/images-config.js';
+// Image Upload Component - Updated with Gallery Support
+import { IMAGES_CONFIG, validateCategory, getPhotoType, isGalleryCategory } from '../utils/images-config.js';
 import { getPresignedUrls, uploadToS3, confirmUpload } from '../utils/images-api.js';
 import { showToast } from '../shared/toast.js';
 import { navigate } from '../utils/router.js';
@@ -8,6 +8,10 @@ import { Autocomplete } from './Autocomplete.js';
 export function ImageUpload() {
   const container = document.createElement('div');
   container.className = 'upload-container';
+  
+  // Get category from URL if present
+  const urlParams = new URLSearchParams(window.location.search);
+  const preselectedCategory = urlParams.get('category') || '';
   
   container.innerHTML = `
     <div class="upload-header">
@@ -20,7 +24,7 @@ export function ImageUpload() {
         <select name="category" class="form-control" required>
           <option value="">Select category...</option>
           ${Object.entries(IMAGES_CONFIG.CATEGORIES).map(([key, config]) => `
-            <option value="${key}">${config.label}</option>
+            <option value="${key}" ${key === preselectedCategory ? 'selected' : ''}>${config.label}</option>
           `).join('')}
         </select>
         <div class="required-fields-notice"></div>
@@ -83,6 +87,12 @@ export function ImageUpload() {
   
   setupUploadHandlers(container);
   
+  // Trigger category change if preselected
+  if (preselectedCategory) {
+    const categorySelect = container.querySelector('[name="category"]');
+    categorySelect.dispatchEvent(new Event('change'));
+  }
+  
   return container;
 }
 
@@ -106,7 +116,10 @@ function setupUploadHandlers(container) {
     const config = IMAGES_CONFIG.CATEGORIES[category];
 
     // Update required fields notice
-    if (config.requiredFields.length > 0) {
+    if (isGalleryCategory(category)) {
+      requiredNotice.textContent = 'Gallery photos require Display Name';
+      requiredNotice.className = 'required-fields-notice active';
+    } else if (config.requiredFields.length > 0) {
       requiredNotice.textContent = `Required: ${config.requiredFields.join(', ')}`;
       requiredNotice.className = 'required-fields-notice active';
     } else {
@@ -144,6 +157,69 @@ function setupUploadHandlers(container) {
 }
 
 function renderDynamicUploadFields(config, container) {
+  // Gallery-specific fields (for all gallery categories)
+  if (config.gallerySection) {
+    const galleryFields = document.createElement('div');
+    galleryFields.className = 'gallery-fields';
+    galleryFields.innerHTML = `
+      <div class="form-group">
+        <label>Display Name <span class="required">*</span></label>
+        <input
+          type="text"
+          name="display_name"
+          class="form-control"
+          placeholder="e.g., Halloween 2025 - Front Yard"
+          required
+        />
+        <small>Name shown in public gallery</small>
+      </div>
+      
+      <div class="form-group">
+        <label>Location</label>
+        <input
+          type="text"
+          name="location"
+          class="form-control"
+          placeholder="e.g., Front Yard, Driveway, etc."
+        />
+        <small>Optional location description</small>
+      </div>
+      
+      <div class="form-group checkbox-group">
+        <label>
+          <input type="checkbox" name="is_featured" />
+          Mark as Featured
+        </label>
+        <small>Featured photos appear first in gallery</small>
+      </div>
+      
+      <div class="form-group">
+        <label>Sort Order</label>
+        <input
+          type="number"
+          name="sort_order"
+          class="form-control"
+          value="0"
+          min="0"
+          max="999"
+        />
+        <small>Lower numbers appear first (0-999)</small>
+      </div>
+      
+      ${config.gallerySection === 'community' ? `
+        <div class="form-group checkbox-group">
+          <label>
+            <input type="checkbox" name="visitor_uploaded" />
+            Visitor Uploaded
+          </label>
+          <small>Check if this was submitted by a visitor</small>
+        </div>
+      ` : ''}
+    `;
+    container.appendChild(galleryFields);
+  }
+  
+  // Regular required fields
   config.requiredFields.forEach(field => {
     const label = field === 'item_id' ? 'Item ID' :
                   field === 'storage_id' ? 'Storage ID' :
@@ -221,8 +297,11 @@ async function handleUpload(container, form) {
     return;
   }
   
+  const config = IMAGES_CONFIG.CATEGORIES[category];
+  
   // Collect data
   const data = {
+    context: 'gallery',
     category,
     season,
     year: parseInt(year),
@@ -231,8 +310,24 @@ async function handleUpload(container, form) {
     is_public: formData.get('is_public') === 'on'
   };
   
+  // Collect gallery_data fields if gallery category
+  if (config.gallerySection) {
+    data.gallery_data = {
+      display_name: formData.get('display_name') || '',
+      location: formData.get('location') || '',
+      is_featured: formData.get('is_featured') === 'on',
+      sort_order: parseInt(formData.get('sort_order') || '0'),
+      visitor_uploaded: formData.get('visitor_uploaded') === 'on'
+    };
+    
+    // Validate display_name
+    if (!data.gallery_data.display_name) {
+      showToast('Display Name is required for gallery photos', 'error');
+      return;
+    }
+  }
+  
   // Collect dynamic fields
-  const config = IMAGES_CONFIG.CATEGORIES[category];
   config.requiredFields.forEach(field => {
     // For autocomplete fields, get the value from the hidden input with _selected suffix
     let value;
@@ -275,7 +370,7 @@ async function handleUpload(container, form) {
     }));
     
     const uploadData = {
-      context: category,
+      context: config.gallerySection ? 'gallery' : category,
       photo_type: getPhotoType(category),
       season,
       year,
@@ -296,6 +391,12 @@ async function handleUpload(container, form) {
       
       await uploadToS3(upload.presigned_url, file, file.type);
       
+      // Upload thumbnail if present
+      if (upload.thumb_presigned_url) {
+        const thumbnail = await createThumbnail(file);
+        await uploadToS3(upload.thumb_presigned_url, thumbnail, 'image/jpeg');
+      }
+      
       // Update progress
       const progress = ((i + 1) / uploads.length) * 100;
       const progressFill = progressSection.querySelector('.progress-fill');
@@ -304,7 +405,7 @@ async function handleUpload(container, form) {
     
     // Step 3: Confirm upload
     const confirmData = {
-      context: category,
+      context: config.gallerySection ? 'gallery' : category,
       photo_type: getPhotoType(category),
       season,
       year,
@@ -327,14 +428,77 @@ async function handleUpload(container, form) {
       is_public: data.is_public
     };
     
+    // Add gallery_data if present
+    if (data.gallery_data) {
+      confirmData.display_name = data.gallery_data.display_name;
+      confirmData.location = data.gallery_data.location;
+      confirmData.is_featured = data.gallery_data.is_featured;
+      confirmData.sort_order = data.gallery_data.sort_order;
+      confirmData.visitor_uploaded = data.gallery_data.visitor_uploaded;
+    }
+    
     await confirmUpload(confirmData);
     
-    // Navigate back to list
-    navigate('/images');
+    // Navigate back to appropriate page
+    if (config.gallerySection) {
+      navigate('/images/gallery');
+    } else {
+      navigate('/images');
+    }
     
   } catch (error) {
     console.error('Upload error:', error);
     formSection.style.display = 'block';
     progressSection.style.display = 'none';
   }
+}
+
+// Create thumbnail helper
+async function createThumbnail(file, maxWidth = 300, maxHeight = 300) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    
+    reader.onload = (e) => {
+      const img = new Image();
+      
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        
+        // Calculate new dimensions
+        if (width > height) {
+          if (width > maxWidth) {
+            height *= maxWidth / width;
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width *= maxHeight / height;
+            height = maxHeight;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error('Failed to create thumbnail'));
+          }
+        }, 'image/jpeg', 0.85);
+      };
+      
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = e.target.result;
+    };
+    
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsDataURL(file);
+  });
 }
