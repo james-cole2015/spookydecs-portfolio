@@ -1,289 +1,129 @@
-// Receipt Upload Modal Component
+// Receipt Upload Modal Component - With PDF → Image Conversion
 
 import { uploadAndProcessReceipt } from '../utils/finance-api.js';
+import { toast } from '../shared/toast.js';
 
 export class ReceiptUploadModal {
   constructor() {
     this.modal = null;
-    this.state = 'upload'; // upload | uploading | processing | review | error
-    this.extractedData = null;
-    this.extractionId = null;
-    this.imageId = null;
-    this.onUseData = null;
-    this.contextData = {}; // item_id, record_id, cost_type, category
-    this.uploadProgress = 0;
-    this.currentStep = '';
+    this.onComplete = null;
+    this.contextData = {};
   }
 
-  open(contextData = {}, onUseDataCallback) {
+  open(contextData = {}, onComplete) {
     this.contextData = contextData;
-    this.onUseData = onUseDataCallback;
-    this.state = 'upload';
-    this.extractedData = null;
-    this.extractionId = null;
-    this.imageId = null;
-    this.uploadProgress = 0;
-    this.currentStep = '';
-    
-    this.render();
+    this.onComplete = onComplete;
+
+    this.modal = document.createElement('div');
+    this.modal.className = 'receipt-upload-modal';
+    this.modal.innerHTML = this.render();
+
+    document.body.appendChild(this.modal);
+
+    setTimeout(() => {
+      this.modal.classList.add('visible');
+    }, 10);
+
     this.attachListeners();
   }
 
-  close() {
-    if (this.modal) {
-      this.modal.remove();
-      this.modal = null;
-    }
-  }
-
   render() {
-    // Remove existing modal if present
-    if (this.modal) {
-      this.modal.remove();
-    }
-
-    const modalHTML = `
-      <div class="modal-overlay" id="receipt-upload-modal">
-        <div class="modal-container receipt-modal">
-          <div class="modal-header">
-            <h2>Upload Receipt</h2>
-            <button class="close-btn" id="close-modal-btn">&times;</button>
-          </div>
-          
-          <div class="modal-body">
-            ${this.renderContent()}
-          </div>
-        </div>
-      </div>
-    `;
-
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-    this.modal = document.getElementById('receipt-upload-modal');
-  }
-
-  renderContent() {
-    switch (this.state) {
-      case 'upload':
-        return this.renderUploadState();
-      case 'uploading':
-        return this.renderUploadingState();
-      case 'processing':
-        return this.renderProcessingState();
-      case 'review':
-        return this.renderReviewState();
-      case 'error':
-        return this.renderErrorState();
-      default:
-        return this.renderUploadState();
-    }
-  }
-
-  renderUploadState() {
     return `
-      <div class="upload-zone">
-        <input 
-          type="file" 
-          id="receipt-file-input" 
-          accept="image/*,.pdf"
-          style="display: none;"
-        />
-        
-        <div class="upload-area" id="upload-drop-zone">
-          <svg class="upload-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="17 8 12 3 7 8"></polyline>
-            <line x1="12" y1="3" x2="12" y2="15"></line>
-          </svg>
-          
-          <h3>Upload Receipt</h3>
-          <p>Drag and drop your receipt here, or click to browse</p>
-          <p class="file-types">Supports: Images (JPG, PNG) and PDFs</p>
-          
-          <button class="btn btn-primary" id="browse-btn">
-            Browse Files
-          </button>
+      <div class="receipt-upload-modal-content">
+        <div class="receipt-upload-modal-header">
+          <h2 class="receipt-upload-modal-title">Upload Receipt</h2>
+          <button class="receipt-upload-close-btn" aria-label="Close">×</button>
         </div>
 
-        <div class="selected-file" id="selected-file-display" style="display: none;">
-          <div class="file-info">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
-              <polyline points="13 2 13 9 20 9"></polyline>
+        <div class="receipt-upload-modal-body">
+          <div class="upload-area" id="upload-area">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
             </svg>
-            <span id="file-name"></span>
-            <span id="file-size"></span>
+            <p class="upload-text">
+              <strong>Click to upload</strong> or drag and drop
+            </p>
+            <p class="upload-hint">
+              PDF or Image files (JPEG, PNG, GIF, WebP)
+            </p>
           </div>
-          <button class="btn btn-secondary" id="change-file-btn">Change File</button>
-        </div>
 
-        <div class="modal-actions">
-          <button class="btn btn-secondary" id="cancel-upload-btn">Cancel</button>
-          <button class="btn btn-primary" id="process-receipt-btn" disabled>
-            Process Receipt
-          </button>
-        </div>
-      </div>
-    `;
-  }
+          <input type="file" id="receipt-file-input" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,application/pdf" style="display: none;">
 
-  renderUploadingState() {
-    return `
-      <div class="uploading-state">
-        <div class="progress-container">
-          <div class="progress-circle">
-            <svg class="progress-ring" width="120" height="120">
-              <circle class="progress-ring-circle" stroke="#e2e8f0" stroke-width="8" fill="transparent" r="52" cx="60" cy="60"/>
-              <circle class="progress-ring-progress" stroke="#3b82f6" stroke-width="8" fill="transparent" r="52" cx="60" cy="60"
-                style="stroke-dasharray: 326.73; stroke-dashoffset: ${326.73 - (326.73 * this.uploadProgress / 100)}; transition: stroke-dashoffset 0.3s;"/>
-            </svg>
-            <div class="progress-text">${Math.round(this.uploadProgress)}%</div>
+          <div class="processing-area" id="processing-area" style="display: none;">
+            <div class="processing-spinner"></div>
+            <p class="processing-text" id="processing-text">Processing...</p>
+            <div class="progress-bar">
+              <div class="progress-fill" id="progress-fill"></div>
+            </div>
+          </div>
+
+          <div class="preview-area" id="preview-area" style="display: none;">
+            <img id="preview-image" src="" alt="Receipt preview">
+            <p class="preview-filename" id="preview-filename"></p>
           </div>
         </div>
-        <h3>Uploading Receipt...</h3>
-        <p class="progress-step">${this.currentStep}</p>
-      </div>
-    `;
-  }
 
-  renderProcessingState() {
-    return `
-      <div class="processing-state">
-        <div class="spinner-container">
-          <div class="spinner"></div>
-        </div>
-        <h3>Processing Receipt...</h3>
-        <p>AI is extracting data from your receipt. This may take a few seconds.</p>
-      </div>
-    `;
-  }
-
-  renderReviewState() {
-    const data = this.extractedData || {};
-    
-    return `
-      <div class="review-state">
-        <div class="review-header">
-          <h3>Review Extracted Data</h3>
-          <p>Please review the extracted information and make any necessary corrections.</p>
-        </div>
-
-        <div class="extracted-fields">
-          ${this.renderField('Vendor', data.vendor)}
-          ${this.renderField('Purchase Date', data.purchase_date)}
-          ${this.renderField('Cost Type', data.cost_type)}
-          ${this.renderField('Category', data.category)}
-          ${this.renderField('Subcategory', data.subcategory)}
-          ${this.renderField('Description', data.description, true)}
-          ${this.renderField('Item Name', data.item_name)}
-          ${this.renderField('Quantity', data.quantity)}
-          ${this.renderField('Unit Cost', `$${data.unit_cost || '0.00'}`)}
-          ${this.renderField('Total Cost', `$${data.total_cost || '0.00'}`)}
-        </div>
-
-        ${this.renderConfidenceIndicator()}
-
-        <div class="modal-actions">
-          <button class="btn btn-secondary" id="retry-btn">Try Again</button>
-          <button class="btn btn-primary" id="use-data-btn">Use This Data</button>
-        </div>
-      </div>
-    `;
-  }
-
-  renderField(label, value, isTextarea = false) {
-    const displayValue = value || 'Not found';
-    const hasValue = value && value !== 'Not found';
-    const fieldClass = hasValue ? 'has-value' : 'no-value';
-
-    return `
-      <div class="field-row ${fieldClass}">
-        <label>${label}</label>
-        <div class="field-value">${displayValue}</div>
-      </div>
-    `;
-  }
-
-  renderConfidenceIndicator() {
-    const data = this.extractedData || {};
-    const missingFields = [];
-    
-    if (!data.vendor) missingFields.push('vendor');
-    if (!data.total_cost) missingFields.push('total cost');
-    if (!data.purchase_date) missingFields.push('purchase date');
-
-    if (missingFields.length === 0) {
-      return `
-        <div class="confidence-indicator high">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
-          High confidence extraction
-        </div>
-      `;
-    } else {
-      return `
-        <div class="confidence-indicator low">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="8" x2="12" y2="12"></line>
-            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-          </svg>
-          Some fields could not be extracted: ${missingFields.join(', ')}
-        </div>
-      `;
-    }
-  }
-
-  renderErrorState() {
-    return `
-      <div class="error-state">
-        <svg class="error-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <circle cx="12" cy="12" r="10"></circle>
-          <line x1="12" y1="8" x2="12" y2="12"></line>
-          <line x1="12" y1="16" x2="12.01" y2="16"></line>
-        </svg>
-        <h3>Processing Failed</h3>
-        <p id="error-message">An error occurred while processing your receipt. Please try again.</p>
-        
-        <div class="modal-actions">
-          <button class="btn btn-secondary" id="close-error-btn">Cancel</button>
-          <button class="btn btn-primary" id="retry-upload-btn">Try Again</button>
+        <div class="receipt-upload-modal-footer">
+          <button class="btn-secondary" id="cancel-upload-btn">Cancel</button>
         </div>
       </div>
     `;
   }
 
   attachListeners() {
-    if (!this.modal) return;
-
-    // Close modal
-    const closeBtn = this.modal.querySelector('#close-modal-btn');
-    if (closeBtn) {
-      closeBtn.addEventListener('click', () => this.close());
-    }
-
-    // Cancel button
+    const uploadArea = this.modal.querySelector('#upload-area');
+    const fileInput = this.modal.querySelector('#receipt-file-input');
+    const closeBtn = this.modal.querySelector('.receipt-upload-close-btn');
     const cancelBtn = this.modal.querySelector('#cancel-upload-btn');
-    if (cancelBtn) {
-      cancelBtn.addEventListener('click', () => this.close());
-    }
 
-    // Upload state listeners
-    if (this.state === 'upload') {
-      this.attachUploadListeners();
-    }
+    // Click to upload
+    uploadArea.addEventListener('click', () => {
+      fileInput.click();
+    });
 
-    // Review state listeners
-    if (this.state === 'review') {
-      this.attachReviewListeners();
-    }
+    // File selection
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        this.handleFileSelect(e.target.files[0]);
+      }
+    });
 
-    // Error state listeners
-    if (this.state === 'error') {
-      this.attachErrorListeners();
-    }
+    // Drag and drop
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('dragover');
+    });
 
-    // Click outside to close
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      
+      if (e.dataTransfer.files.length > 0) {
+        this.handleFileSelect(e.dataTransfer.files[0]);
+      }
+    });
+
+    // Close buttons
+    closeBtn.addEventListener('click', () => this.close());
+    cancelBtn.addEventListener('click', () => this.close());
+
+    // ESC key
+    const escHandler = (e) => {
+      if (e.key === 'Escape') {
+        this.close();
+        document.removeEventListener('keydown', escHandler);
+      }
+    };
+    document.addEventListener('keydown', escHandler);
+
+    // Click outside
     this.modal.addEventListener('click', (e) => {
       if (e.target === this.modal) {
         this.close();
@@ -291,225 +131,234 @@ export class ReceiptUploadModal {
     });
   }
 
-  attachUploadListeners() {
-    const fileInput = this.modal.querySelector('#receipt-file-input');
-    const dropZone = this.modal.querySelector('#upload-drop-zone');
-    const browseBtn = this.modal.querySelector('#browse-btn');
-    const changeFileBtn = this.modal.querySelector('#change-file-btn');
-    const processBtn = this.modal.querySelector('#process-receipt-btn');
+  async handleFileSelect(file) {
+    console.log('📄 File selected:', file.name, file.type);
 
-    // Browse button
-    if (browseBtn) {
-      browseBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        fileInput.click();
-      });
-    }
-
-    // Change file button
-    if (changeFileBtn) {
-      changeFileBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        fileInput.click();
-      });
-    }
-
-    // File input change
-    if (fileInput) {
-      fileInput.addEventListener('change', (e) => {
-        if (e.target.files.length > 0) {
-          this.handleFileSelected(e.target.files[0]);
-        }
-      });
-    }
-
-    // Drag and drop
-    if (dropZone) {
-      dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropZone.classList.add('drag-over');
-      });
-
-      dropZone.addEventListener('dragleave', () => {
-        dropZone.classList.remove('drag-over');
-      });
-
-      dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropZone.classList.remove('drag-over');
-        
-        if (e.dataTransfer.files.length > 0) {
-          this.handleFileSelected(e.dataTransfer.files[0]);
-        }
-      });
-
-      dropZone.addEventListener('click', (e) => {
-        e.stopPropagation();
-        fileInput.click();
-      });
-    }
-
-    // Process button
-    if (processBtn) {
-      processBtn.addEventListener('click', () => this.processReceipt());
-    }
-  }
-
-  attachReviewListeners() {
-    const useDataBtn = this.modal.querySelector('#use-data-btn');
-    const retryBtn = this.modal.querySelector('#retry-btn');
-
-    if (useDataBtn) {
-      useDataBtn.addEventListener('click', () => this.useExtractedData());
-    }
-
-    if (retryBtn) {
-      retryBtn.addEventListener('click', () => {
-        this.state = 'upload';
-        this.render();
-        this.attachListeners();
-      });
-    }
-  }
-
-  attachErrorListeners() {
-    const retryBtn = this.modal.querySelector('#retry-upload-btn');
-    const closeBtn = this.modal.querySelector('#close-error-btn');
-
-    if (retryBtn) {
-      retryBtn.addEventListener('click', () => {
-        this.state = 'upload';
-        this.render();
-        this.attachListeners();
-      });
-    }
-
-    if (closeBtn) {
-      closeBtn.addEventListener('click', () => this.close());
-    }
-  }
-
-  handleFileSelected(file) {
     // Validate file type
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+    const validTypes = [
+      'image/jpeg',
+      'image/jpg', 
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'application/pdf'
+    ];
+
     if (!validTypes.includes(file.type)) {
-      alert('Please select a valid image (JPG, PNG) or PDF file.');
+      toast.error('Invalid file type. Please upload a PDF or image file.');
       return;
     }
 
-    // Validate file size (50MB limit for S3 direct upload)
-    const maxSize = 50 * 1024 * 1024;
-    if (file.size > maxSize) {
-      alert('File size must be less than 50MB.');
-      return;
-    }
-
-    this.selectedFile = file;
-
-    // Update UI
-    const fileDisplay = this.modal.querySelector('#selected-file-display');
-    const fileName = this.modal.querySelector('#file-name');
-    const fileSize = this.modal.querySelector('#file-size');
-    const processBtn = this.modal.querySelector('#process-receipt-btn');
-
-    if (fileDisplay && fileName && fileSize && processBtn) {
-      fileDisplay.style.display = 'flex';
-      fileName.textContent = file.name;
-      fileSize.textContent = this.formatFileSize(file.size);
-      processBtn.disabled = false;
-    }
-  }
-
-  formatFileSize(bytes) {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-  }
-
-  async processReceipt() {
-    if (!this.selectedFile) return;
-
-    this.state = 'uploading';
-    this.uploadProgress = 0;
-    this.currentStep = 'Preparing upload...';
-    this.render();
-    this.attachListeners();
+    // Show processing UI
+    this.showProcessing('Preparing file...');
 
     try {
+      let processedFile = file;
+
+      // Convert PDF to Image if needed
+      if (file.type === 'application/pdf') {
+        console.log('🔄 PDF detected, converting to image...');
+        this.updateProcessingText('Converting PDF to image...');
+        
+        processedFile = await this.convertPdfToImage(file);
+        
+        console.log('✅ PDF converted to image:', processedFile.name, processedFile.type);
+      }
+
+      // Show preview
+      this.showPreview(processedFile);
+
+      // Upload and process with AI
+      this.updateProcessingText('Uploading receipt...');
+      
       const result = await uploadAndProcessReceipt(
-        this.selectedFile, 
+        processedFile,
         this.contextData,
-        (step) => this.handleProgress(step)
-      );
-      
-      console.log('✅ Processing complete:', result);
-      
-      // Store the ENTIRE result (contains items array + metadata)
-      this.extractedData = result;
-      this.extractionId = result.extraction_id;
-      this.imageId = result.image_id;
-      
-      // Check if we got multi-item or single-item response
-      if (result.items && Array.isArray(result.items)) {
-        console.log(`📦 Multi-item extraction: ${result.items.length} items detected`);
-        // Pass entire result to callback (new flow)
-        if (this.onUseData) {
-          this.onUseData(result, this.extractionId, this.imageId);
+        (status) => {
+          if (status === 'requesting_presign') {
+            this.updateProcessingText('Preparing upload...');
+            this.updateProgress(10);
+          } else if (status === 'uploading_to_s3') {
+            this.updateProcessingText('Uploading to cloud...');
+            this.updateProgress(40);
+          } else if (status === 'processing_with_ai') {
+            this.updateProcessingText('Extracting data with AI...');
+            this.updateProgress(70);
+          }
         }
+      );
+
+      this.updateProgress(100);
+      console.log('✅ Receipt processed:', result);
+
+      // Call completion callback with extracted data
+      if (this.onComplete) {
+        this.onComplete(result, result.extraction_id, result.image_id);
+      }
+
+      // Close modal
+      setTimeout(() => {
         this.close();
-      } else {
-        // Fallback for old single-item format (shouldn't happen with new backend)
-        console.warn('⚠️ Single-item format detected (legacy)');
-        this.state = 'review';
-        this.render();
-        this.attachListeners();
-      }
-      
+      }, 500);
+
     } catch (error) {
-      console.error('Receipt processing error:', error);
-      this.state = 'error';
-      this.render();
-      this.attachListeners();
+      console.error('❌ Error processing receipt:', error);
+      toast.error(`Failed to process receipt: ${error.message}`);
       
-      const errorMsg = this.modal.querySelector('#error-message');
-      if (errorMsg) {
-        errorMsg.textContent = error.message || 'An error occurred while processing your receipt.';
-      }
+      // Reset to upload state
+      this.showUploadArea();
     }
   }
 
-  handleProgress(step) {
-    switch (step) {
-      case 'requesting_presign':
-        this.uploadProgress = 10;
-        this.currentStep = 'Getting upload URL...';
-        break;
-      case 'uploading_to_s3':
-        this.uploadProgress = 30;
-        this.currentStep = 'Uploading to cloud storage...';
-        this.state = 'uploading';
-        break;
-      case 'processing_with_ai':
-        this.uploadProgress = 70;
-        this.currentStep = 'Extracting data with AI...';
-        this.state = 'processing';
-        break;
+  async convertPdfToImage(pdfFile) {
+    // Load PDF.js library dynamically
+    if (typeof pdfjsLib === 'undefined') {
+      await this.loadPdfJs();
     }
-    
-    // Update UI if we're still in uploading/processing state
-    if (this.state === 'uploading' || this.state === 'processing') {
-      this.render();
-      this.attachListeners();
+
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = async (e) => {
+        try {
+          const pdfData = new Uint8Array(e.target.result);
+
+          // Load PDF document
+          const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
+
+          // Get first page
+          const page = await pdf.getPage(1);
+
+          // Set scale for good quality (2x for high DPI)
+          const scale = 2.0;
+          const viewport = page.getViewport({ scale });
+
+          // Create canvas
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+
+          // Render PDF page to canvas
+          await page.render({
+            canvasContext: context,
+            viewport: viewport
+          }).promise;
+
+          // Convert canvas to blob (JPEG, 0.92 quality)
+          canvas.toBlob((blob) => {
+            if (!blob) {
+              reject(new Error('Failed to convert PDF to image'));
+              return;
+            }
+
+            // Create File object from blob
+            const imageFile = new File(
+              [blob],
+              pdfFile.name.replace(/\.pdf$/i, '.jpg'),
+              { type: 'image/jpeg' }
+            );
+
+            resolve(imageFile);
+          }, 'image/jpeg', 0.92);
+
+        } catch (error) {
+          reject(new Error(`PDF conversion failed: ${error.message}`));
+        }
+      };
+
+      reader.onerror = () => {
+        reject(new Error('Failed to read PDF file'));
+      };
+
+      reader.readAsArrayBuffer(pdfFile);
+    });
+  }
+
+  async loadPdfJs() {
+    return new Promise((resolve, reject) => {
+      // Load PDF.js from CDN
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      script.onload = () => {
+        // Set worker path
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        resolve();
+      };
+      script.onerror = () => {
+        reject(new Error('Failed to load PDF.js library'));
+      };
+      document.head.appendChild(script);
+    });
+  }
+
+  showProcessing(text) {
+    const uploadArea = this.modal.querySelector('#upload-area');
+    const processingArea = this.modal.querySelector('#processing-area');
+    const previewArea = this.modal.querySelector('#preview-area');
+
+    uploadArea.style.display = 'none';
+    processingArea.style.display = 'block';
+    previewArea.style.display = 'none';
+
+    this.updateProcessingText(text);
+    this.updateProgress(0);
+  }
+
+  updateProcessingText(text) {
+    const processingText = this.modal.querySelector('#processing-text');
+    if (processingText) {
+      processingText.textContent = text;
     }
   }
 
-  useExtractedData() {
-    // Legacy method - no longer used
-    // Multi-item flow bypasses this and closes modal directly after extraction
-    console.warn('⚠️ useExtractedData called - this should not happen in multi-item flow');
-    if (this.onUseData && this.extractedData) {
-      this.onUseData(this.extractedData, this.extractionId, this.imageId);
+  updateProgress(percent) {
+    const progressFill = this.modal.querySelector('#progress-fill');
+    if (progressFill) {
+      progressFill.style.width = `${percent}%`;
     }
-    this.close();
+  }
+
+  showPreview(file) {
+    const processingArea = this.modal.querySelector('#processing-area');
+    const previewArea = this.modal.querySelector('#preview-area');
+    const previewImage = this.modal.querySelector('#preview-image');
+    const previewFilename = this.modal.querySelector('#preview-filename');
+
+    // Create preview URL
+    const previewUrl = URL.createObjectURL(file);
+    previewImage.src = previewUrl;
+    previewFilename.textContent = file.name;
+
+    // Hide processing, show preview
+    processingArea.style.display = 'none';
+    previewArea.style.display = 'block';
+
+    // Clean up URL after image loads
+    previewImage.onload = () => {
+      URL.revokeObjectURL(previewUrl);
+    };
+  }
+
+  showUploadArea() {
+    const uploadArea = this.modal.querySelector('#upload-area');
+    const processingArea = this.modal.querySelector('#processing-area');
+    const previewArea = this.modal.querySelector('#preview-area');
+
+    uploadArea.style.display = 'block';
+    processingArea.style.display = 'none';
+    previewArea.style.display = 'none';
+  }
+
+  close() {
+    if (this.modal) {
+      this.modal.classList.remove('visible');
+      setTimeout(() => {
+        if (this.modal && this.modal.parentNode) {
+          this.modal.parentNode.removeChild(this.modal);
+        }
+        this.modal = null;
+      }, 200);
+    }
   }
 }
