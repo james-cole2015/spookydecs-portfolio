@@ -74,7 +74,7 @@ export async function renderShowcase() {
     // Fetch photos
     const photos = await galleryAPI.getPhotos('showcase', filters);
     
-    //console.log('Received photos:', photos.length);
+    console.log('Received photos:', photos.length);
 
     // Initialize hero carousel with featured photos only
     await heroCarousel.init(photos);
