@@ -36,7 +36,7 @@ export class FilterPopover {
       top: calc(100% + 8px);
       right: 0;
       width: 280px;
-      background: white;
+      background: var(--background);
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow-lg);
@@ -50,7 +50,7 @@ export class FilterPopover {
 
     popover.innerHTML = `
       <div class="filter-popover-header">
-        <h3 style="font-size: var(--text-base); font-weight: var(--font-semibold); margin-bottom: var(--spacing-lg);">
+        <h3 style="font-size: var(--text-base); font-weight: var(--font-semibold); margin-bottom: var(--spacing-lg); color: var(--text-primary);">
           Filter Displays
         </h3>
       </div>
@@ -68,7 +68,8 @@ export class FilterPopover {
               border: 1px solid var(--border);
               border-radius: var(--radius-md);
               font-size: var(--text-sm);
-              background: var(--background);
+              background: var(--surface);
+              color: var(--text-primary);
               cursor: pointer;
             "
           >
@@ -91,7 +92,8 @@ export class FilterPopover {
               border: 1px solid var(--border);
               border-radius: var(--radius-md);
               font-size: var(--text-sm);
-              background: var(--background);
+              background: var(--surface);
+              color: var(--text-primary);
               cursor: pointer;
             "
           >

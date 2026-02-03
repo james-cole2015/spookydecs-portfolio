@@ -91,6 +91,42 @@
   --container-padding: var(--spacing-lg);
 }
 
+/* Dark Theme */
+[data-theme="dark"] {
+  /* Background Colors */
+  --background: #0f172a;
+  --surface: #1e293b;
+  --border: #334155;
+  
+  /* Text Colors */
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  
+  /* Brand Colors - Adjusted for dark mode */
+  --primary-orange: #ff8c5a;
+  --primary-orange-hover: #ffa574;
+  --primary-orange-light: rgba(255, 140, 90, 0.15);
+  
+  /* Neutral Palette - Dark variants */
+  --gray-50: #1e293b;
+  --gray-100: #334155;
+  --gray-200: #475569;
+  --gray-300: #64748b;
+  --gray-400: #94a3b8;
+  --gray-500: #cbd5e1;
+  --gray-600: #e2e8f0;
+  --gray-700: #f1f5f9;
+  --gray-800: #f8fafc;
+  --gray-900: #ffffff;
+  
+  /* Shadows - Darker for dark mode */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+}
+
 /* Reset & Base Styles */
 * {
   box-sizing: border-box;
@@ -111,6 +147,7 @@ body {
   color: var(--text-primary);
   background-color: var(--background);
   min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Typography */
@@ -175,6 +212,7 @@ a:hover {
   top: 0;
   z-index: var(--z-sticky);
   box-shadow: var(--shadow-sm);
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .header-content {
@@ -273,6 +311,7 @@ a:hover {
 .btn-primary {
   background: var(--primary-orange);
   color: white;
+  transition: all var(--transition-base);
 }
 
 .btn-primary:hover {
@@ -284,6 +323,7 @@ a:hover {
 .btn-secondary {
   background: var(--gray-100);
   color: var(--text-primary);
+  transition: all var(--transition-base);
 }
 
 .btn-secondary:hover {
@@ -293,6 +333,7 @@ a:hover {
 .btn-ghost {
   background: transparent;
   color: var(--text-secondary);
+  transition: all var(--transition-base);
 }
 
 .btn-ghost:hover {
@@ -428,10 +469,18 @@ a:hover {
   
   .header-content {
     padding: var(--spacing-md);
+    flex-wrap: wrap;
   }
   
   .gallery-logo {
     font-size: var(--text-xl);
+  }
+  
+  /* Theme toggle and tabs on mobile */
+  .header-content > div:last-child {
+    width: 100%;
+    margin-top: var(--spacing-sm);
+    justify-content: space-between;
   }
   
   .gallery-footer {
