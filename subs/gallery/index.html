@@ -3,26 +3,62 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SpookyDecs - Images Management</title>
+  <title>SpookyDecs Gallery - Holiday Display Showcase</title>
   
-  <!-- Styles -->
-  <link rel="stylesheet" href="/images/css/images.css">
-  <link rel="stylesheet" href="/images/css/image-detail.css">
-  <link rel="stylesheet" href="/images/css/image-form.css">
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/gallery.css">
+  <link rel="stylesheet" href="css/hero-carousel.css">
+  <link rel="stylesheet" href="css/showcase.css">
+  <link rel="stylesheet" href="css/progress.css">
+  <link rel="stylesheet" href="css/community.css">
+  
+  <!-- PhotoSwipe CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@5.3.8/dist/photoswipe.css">
   
   <!-- Favicon -->
-  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎃</text></svg>">
 </head>
 <body>
-  <!-- Header Component -->
-  <spookydecs-header page-title="Images Management"></spookydecs-header>
-  
-  <!-- App Container -->
-  <div id="app">
-    <!-- Content will be dynamically rendered here -->
+  <!-- Gallery Container -->
+  <div class="gallery-container">
+    <!-- Header -->
+    <header class="gallery-header">
+      <div class="header-content">
+        <div class="gallery-logo">
+          <span>🎃</span> SpookyDecs Gallery
+        </div>
+        <div id="section-tabs"></div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="gallery-main">
+      <div id="app"></div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="gallery-footer">
+      <div class="footer-content">
+        <p class="footer-text">
+          SpookyDecs Gallery - Showcasing creative holiday displays
+        </p>
+        <div class="footer-links">
+          <a href="#" class="footer-link">About</a>
+          <a href="#" class="footer-link">Submit Your Display</a>
+          <a href="#" class="footer-link">Contact</a>
+        </div>
+      </div>
+    </footer>
   </div>
+
+  <!-- PhotoSwipe JS -->
+  <script type="module" src="https://cdn.jsdelivr.net/npm/photoswipe@5.3.8/dist/photoswipe.esm.min.js"></script>
   
-  <!-- Main Application Script (ES6 Module) -->
-  <script type="module" src="/images/js/app.js"></script>
+<!-- Navigo Router -->
+<script src="https://cdn.jsdelivr.net/npm/navigo@8.11.1/lib/navigo.min.js"></script>
+
+<!-- App JS -->
+<script type="module" src="js/app.js"></script>
+
 </body>
 </html>
