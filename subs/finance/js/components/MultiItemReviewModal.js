@@ -87,11 +87,11 @@ export class MultiItemReviewModal {
       .reduce((sum, item) => sum + (parseFloat(item.total_cost) || 0), 0);
 
     const modalHTML = `
-      <div class="modal-overlay multi-item-review-modal" id="multi-item-review-modal">
-        <div class="modal-container large">
-          <div class="modal-header">
+      <div class="multi-item-review-modal" id="multi-item-review-modal">
+        <div class="multi-item-review-modal-content">
+          <div class="multi-item-review-modal-header">
             <div>
-              <h2>Review Extracted Items</h2>
+              <h2 class="multi-item-review-modal-title">Review Extracted Items</h2>
               <p class="modal-subtitle">
                 ${this.items.length === 1 ? '1 item detected' : `${this.items.length} items detected`} from receipt
               </p>
@@ -99,12 +99,12 @@ export class MultiItemReviewModal {
             <button class="close-btn" id="close-modal-btn">&times;</button>
           </div>
           
-          <div class="modal-body">
+          <div class="multi-item-review-modal-body">
             ${this.renderSummaryBar(selectedCount, selectedTotal)}
             ${this.renderItemsList()}
           </div>
 
-          <div class="modal-footer">
+          <div class="multi-item-review-modal-footer">
             <button class="btn-secondary" id="cancel-btn">Go Back</button>
             <button class="btn-primary" id="confirm-btn" ${selectedCount === 0 ? 'disabled' : ''}>
               Create ${selectedCount} Cost ${selectedCount === 1 ? 'Record' : 'Records'}

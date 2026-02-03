@@ -165,11 +165,9 @@ export class ReceiptUploadModal {
         console.log('✅ PDF converted to image:', processedFile.name, processedFile.type);
       }
 
-      // Show preview
-      this.showPreview(processedFile);
-
-      // Upload and process with AI
+      // Upload and process with AI (keep processing UI visible)
       this.updateProcessingText('Uploading receipt...');
+      this.updateProgress(30);
       
       const result = await uploadAndProcessReceipt(
         processedFile,
@@ -177,18 +175,19 @@ export class ReceiptUploadModal {
         (status) => {
           if (status === 'requesting_presign') {
             this.updateProcessingText('Preparing upload...');
-            this.updateProgress(10);
+            this.updateProgress(40);
           } else if (status === 'uploading_to_s3') {
             this.updateProcessingText('Uploading to cloud...');
-            this.updateProgress(40);
+            this.updateProgress(60);
           } else if (status === 'processing_with_ai') {
-            this.updateProcessingText('Extracting data with AI...');
-            this.updateProgress(70);
+            this.updateProcessingText('AI Data Extraction In Progress..');
+            this.updateProgress(80);
           }
         }
       );
 
       this.updateProgress(100);
+      this.updateProcessingText('Complete!');
       console.log('✅ Receipt processed:', result);
 
       // Call completion callback with extracted data
@@ -293,19 +292,23 @@ export class ReceiptUploadModal {
   }
 
   showProcessing(text) {
+    if (!this.modal) return;
+    
     const uploadArea = this.modal.querySelector('#upload-area');
     const processingArea = this.modal.querySelector('#processing-area');
     const previewArea = this.modal.querySelector('#preview-area');
 
-    uploadArea.style.display = 'none';
-    processingArea.style.display = 'block';
-    previewArea.style.display = 'none';
+    if (uploadArea) uploadArea.style.display = 'none';
+    if (processingArea) processingArea.style.display = 'block';
+    if (previewArea) previewArea.style.display = 'none';
 
     this.updateProcessingText(text);
     this.updateProgress(0);
   }
 
   updateProcessingText(text) {
+    if (!this.modal) return;
+    
     const processingText = this.modal.querySelector('#processing-text');
     if (processingText) {
       processingText.textContent = text;
@@ -313,6 +316,8 @@ export class ReceiptUploadModal {
   }
 
   updateProgress(percent) {
+    if (!this.modal) return;
+    
     const progressFill = this.modal.querySelector('#progress-fill');
     if (progressFill) {
       progressFill.style.width = `${percent}%`;
@@ -320,10 +325,14 @@ export class ReceiptUploadModal {
   }
 
   showPreview(file) {
+    if (!this.modal) return;
+    
     const processingArea = this.modal.querySelector('#processing-area');
     const previewArea = this.modal.querySelector('#preview-area');
     const previewImage = this.modal.querySelector('#preview-image');
     const previewFilename = this.modal.querySelector('#preview-filename');
+
+    if (!previewImage || !previewFilename) return;
 
     // Create preview URL
     const previewUrl = URL.createObjectURL(file);
@@ -331,8 +340,8 @@ export class ReceiptUploadModal {
     previewFilename.textContent = file.name;
 
     // Hide processing, show preview
-    processingArea.style.display = 'none';
-    previewArea.style.display = 'block';
+    if (processingArea) processingArea.style.display = 'none';
+    if (previewArea) previewArea.style.display = 'block';
 
     // Clean up URL after image loads
     previewImage.onload = () => {
@@ -341,13 +350,15 @@ export class ReceiptUploadModal {
   }
 
   showUploadArea() {
+    if (!this.modal) return;
+    
     const uploadArea = this.modal.querySelector('#upload-area');
     const processingArea = this.modal.querySelector('#processing-area');
     const previewArea = this.modal.querySelector('#preview-area');
 
-    uploadArea.style.display = 'block';
-    processingArea.style.display = 'none';
-    previewArea.style.display = 'none';
+    if (uploadArea) uploadArea.style.display = 'block';
+    if (processingArea) processingArea.style.display = 'none';
+    if (previewArea) previewArea.style.display = 'none';
   }
 
   close() {
