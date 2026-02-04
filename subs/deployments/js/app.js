@@ -4,11 +4,13 @@ import { initRouter } from './utils/router.js';
 import { renderMainPage } from './pages/main.js';
 import { renderBuilder } from './pages/deployment-builder.js';
 import { renderZonesDashboard } from './pages/deployment-zones.js';
+import { renderDeploymentSession } from './pages/deployment-session.js';
 
 // Define routes
 const routes = [
   { path: '/deployments', handler: () => renderMainPage() },
   { path: '/deployments/builder', handler: () => renderBuilder() },
+  { path: '/deployments/:deploymentId/zones/:zoneCode/session', handler: (params) => renderDeploymentSession(params) },
   { path: '/deployments/:id/zones', handler: (params) => renderZonesDashboard(params.data.id) },
   { path: '/deployments/historical', handler: () => renderHistoricalPlaceholder() },
   { path: '/deployments/graphs', handler: () => renderGraphsPlaceholder() },

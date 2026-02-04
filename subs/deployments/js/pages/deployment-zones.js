@@ -66,11 +66,6 @@ export async function renderZonesDashboard(deploymentId) {
     const zoneCards = new ZoneCards(deploymentId, zones);
     zonesContainer.appendChild(zoneCards.render());
 
-    // Handle zone card clicks
-    zoneCards.onZoneClick((zoneCode) => {
-      handleZoneClick(deploymentId, zoneCode);
-    });
-
   } catch (error) {
     console.error('Error loading deployment:', error);
     app.innerHTML = `
@@ -85,14 +80,6 @@ export async function renderZonesDashboard(deploymentId) {
       </div>
     `;
   }
-}
-
-function handleZoneClick(deploymentId, zoneCode) {
-  // Placeholder for connection builder
-  alert(`Connection Builder coming soon!\n\nDeployment: ${deploymentId}\nZone: ${zoneCode}`);
-  
-  // TODO: Navigate to connection builder
-  // navigate(`/deployments/${deploymentId}/zones/${zoneCode}/builder`);
 }
 
 function getStatusColor(status) {

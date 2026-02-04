@@ -1,6 +1,8 @@
 // Zone Cards Component
 // Displays clickable zone cards with item counts
 
+import { navigate } from '../../utils/router.js';
+
 export class ZoneCards {
   constructor(deploymentId, zones) {
     this.deploymentId = deploymentId;
@@ -79,10 +81,14 @@ export class ZoneCards {
       </div>
     `;
 
-    // Attach click handler
+    // Attach click handler - navigate to session page
     card.addEventListener('click', () => {
+      const zoneCode = zone.zone_code;
+      navigate(`/deployments/${this.deploymentId}/zones/${zoneCode}/session`);
+      
+      // Also call custom callback if provided
       if (this.clickCallback) {
-        this.clickCallback(zone.zone_code);
+        this.clickCallback(zoneCode);
       }
     });
 

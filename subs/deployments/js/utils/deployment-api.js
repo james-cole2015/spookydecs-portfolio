@@ -118,3 +118,31 @@ export async function searchItems(filters = {}) {
 export async function getItem(itemId) {
   return await apiCall(`/items/${itemId}`);
 }
+
+// Session management
+
+export async function createSession(deploymentId, sessionData) {
+  return await apiCall(`/deployments/${deploymentId}/sessions`, 'POST', sessionData);
+}
+
+export async function endSession(deploymentId, sessionId, data) {
+  return await apiCall(`/deployments/${deploymentId}/sessions/${sessionId}`, 'PUT', data);
+}
+
+export async function getSession(deploymentId, sessionId) {
+  return await apiCall(`/deployments/${deploymentId}/sessions/${sessionId}`);
+}
+
+// Connection management
+
+export async function getAvailablePorts(deploymentId, zoneCode) {
+  return await apiCall(`/deployments/${deploymentId}/zones/${zoneCode}/ports`);
+}
+
+export async function createConnection(deploymentId, connectionData) {
+  return await apiCall(`/deployments/${deploymentId}/connections`, 'POST', connectionData);
+}
+
+export async function removeConnection(deploymentId, connectionId) {
+  return await apiCall(`/deployments/${deploymentId}/connections/${connectionId}`, 'DELETE');
+}

@@ -1,0 +1,21 @@
+{
+ "deployment_id": "DEP-HAL-2026",
+ "deployment_item_id": "ZONE-BY",
+ "created_at": "2026-02-04T18:10:35.535840Z",
+ "items_deployed": [
+ ],
+ "last_updated": "2026-02-04T18:10:35.535840Z",
+ "receptacle_id": "REC-BY-001",
+ "record_type": "zone",
+ "statistics": {
+  "by_class": {},
+  "by_class_type": {},
+  "item_count": 0,
+  "longest_session_minutes": 0,
+  "session_count": 0,
+  "total_setup_minutes": 0
+ },
+ "status": "not_started",
+ "zone_code": "BY",
+ "zone_name": "Back Yard"
+}
