@@ -155,3 +155,41 @@ export async function removeConnection(deploymentId, connectionId) {
 export async function getConnection(deploymentId, sessionId, connectionId) {
   return await apiCall(`/deployments/${deploymentId}/sessions/${sessionId}/connections/${connectionId}`);
 }
+/**
+ * Fetch image details by ID
+ * @param {string} imageId - Image ID
+ * @returns {Promise<Object|null>} Image object with cloudfront_url or null if not found
+ */
+export async function fetchImageById(imageId) {
+  try {
+    await loadConfig();
+
+    const response = await fetch(`${API_ENDPOINT}/admin/images/${imageId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      console.warn(`Failed to fetch image ${imageId}: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+
+    // Handle standardized response format
+    if (data.success && data.data) {
+      return data.data;
+    }
+    // Fallback for direct object
+    else if (data.cloudfront_url) {
+      return data;
+    }
+
+    return null;
+  } catch (error) {
+    console.warn(`Error fetching image ${imageId}:`, error);
+    return null;
+  }
+}

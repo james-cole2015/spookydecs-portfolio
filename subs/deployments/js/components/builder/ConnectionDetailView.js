@@ -105,6 +105,7 @@ export class ConnectionDetailView {
   renderItemCard(item, label) {
     const photoUrl = this.getItemPhotoUrl(item);
     const statusClass = this.getStatusClass(item.status);
+    const placeholderIcon = this.getPlaceholderIcon(item);
     
     return `
       <div class="item-detail-card">
@@ -116,7 +117,7 @@ export class ConnectionDetailView {
           </div>
         ` : `
           <div class="item-photo-placeholder">
-            <span class="placeholder-icon">📦</span>
+            <span class="placeholder-icon">${placeholderIcon}</span>
           </div>
         `}
         
@@ -159,6 +160,7 @@ export class ConnectionDetailView {
   
   renderIlluminatedItemCard(item) {
     const photoUrl = this.getItemPhotoUrl(item);
+    const placeholderIcon = this.getPlaceholderIcon(item);
     
     return `
       <div class="illuminated-item-card">
@@ -168,7 +170,7 @@ export class ConnectionDetailView {
           </div>
         ` : `
           <div class="illuminated-photo-placeholder">
-            <span class="placeholder-icon">💡</span>
+            <span class="placeholder-icon">${placeholderIcon}</span>
           </div>
         `}
         
@@ -241,19 +243,28 @@ export class ConnectionDetailView {
   }
   
   getItemPhotoUrl(item) {
-    // Try to get primary photo from images object
+    // Use placeholders for Light and Accessory classes
+    if (item.class === 'Light' || item.class === 'Accessory') {
+      return null; // Let placeholder show with class-specific emoji
+    }
+    
+    // For Decoration, use actual photo if available
     if (item.images?.primary_photo_url) {
       return item.images.primary_photo_url;
     }
     
-    // Try to get from primary_photo_id (for older structure)
-    if (item.images?.primary_photo_id) {
-      // Photo URL would need to be constructed or fetched
-      // For now, return null and let placeholder show
-      return null;
-    }
-    
     return null;
+  }
+  
+  getPlaceholderIcon(item) {
+    // Return class-specific emoji for placeholder
+    if (item.class === 'Light') {
+      return '💡';
+    }
+    if (item.class === 'Accessory') {
+      return '⚙️';
+    }
+    return '📦'; // Default for Decoration
   }
   
   getStatusClass(status) {

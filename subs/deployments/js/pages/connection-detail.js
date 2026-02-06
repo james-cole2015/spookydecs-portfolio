@@ -1,6 +1,6 @@
 // Connection Detail Page Handler
 
-import { getDeployment, getConnection, getItem } from '../utils/deployment-api.js';
+import { getDeployment, getConnection, getItem, fetchImageById } from '../utils/deployment-api.js';
 import { ConnectionDetailView } from '../components/builder/ConnectionDetailView.js';
 import { navigate } from '../utils/router.js';
 
@@ -81,7 +81,53 @@ export async function renderConnectionDetail(deploymentId, sessionId, connection
         .map(resp => resp.data);
     }
     
-    console.log('[ConnectionDetail] Loaded all data:', { 
+    console.log('[ConnectionDetail] Fetched items:', { fromItem, toItem, illuminatedItems });
+    
+    // Fetch primary photos for all items
+    const photoPromises = [];
+    
+    if (fromItem.images?.primary_photo_id) {
+      photoPromises.push(
+        fetchImageById(fromItem.images.primary_photo_id)
+          .then(photo => {
+            if (photo?.cloudfront_url) {
+              fromItem.images.primary_photo_url = photo.cloudfront_url;
+            }
+          })
+          .catch(err => console.warn('Failed to fetch fromItem photo:', err))
+      );
+    }
+    
+    if (toItem.images?.primary_photo_id) {
+      photoPromises.push(
+        fetchImageById(toItem.images.primary_photo_id)
+          .then(photo => {
+            if (photo?.cloudfront_url) {
+              toItem.images.primary_photo_url = photo.cloudfront_url;
+            }
+          })
+          .catch(err => console.warn('Failed to fetch toItem photo:', err))
+      );
+    }
+    
+    illuminatedItems.forEach(item => {
+      if (item.images?.primary_photo_id) {
+        photoPromises.push(
+          fetchImageById(item.images.primary_photo_id)
+            .then(photo => {
+              if (photo?.cloudfront_url) {
+                item.images.primary_photo_url = photo.cloudfront_url;
+              }
+            })
+            .catch(err => console.warn(`Failed to fetch illuminated item photo for ${item.id}:`, err))
+        );
+      }
+    });
+    
+    // Wait for all photos to load
+    await Promise.all(photoPromises);
+    
+    console.log('[ConnectionDetail] Loaded all data with photos:', { 
       connection: connectionData, 
       deployment, 
       zone,
@@ -151,3 +197,4 @@ function attachEventHandlers(deployment, zone, connection, itemsBaseUrl) {
     });
   });
 }
+
