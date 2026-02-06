@@ -27,8 +27,9 @@ export class ConnectionBuilder {
             <span class="zone-badge">${this.zone.zone_code}</span>
             ${this.zone.zone_name}
           </h2>
+          <p class="session-id">Session: ${this.session.session_id}</p>
           <p class="session-meta">
-            Session started at ${this.formatTime(this.session.start_time)}
+            Started at ${this.formatTime(this.session.start_time)}
           </p>
         </div>
         <button class="btn btn-danger btn-end-session">End Session</button>
