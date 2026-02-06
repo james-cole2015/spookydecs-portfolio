@@ -303,11 +303,12 @@ export class ConnectionBuilder {
     const modalBody = this.container.querySelector('.modal-body');
     const confirmBtn = this.container.querySelector('.btn-confirm-connection');
     
-    // Fetch available items (items with male_end or power_inlet)
+    // Fetch available items using connection_building mode
+    // This includes: Shared + seasonal items, Active + Pre-Deployment, connectable classes only
     try {
       const response = await searchItems({
         season: this.deployment.season,
-        status: 'Active'
+        connection_building: 'true'
       });
       
       console.log('[ConnectionBuilder] Search items response:', response);
@@ -403,11 +404,22 @@ export class ConnectionBuilder {
     
     try {
       // Determine to_port (Male_1 or power_inlet)
-      const toPort = parseInt(this.selectedDestination.male_ends || 0) > 0 ? 'Male_1' : 'Power_Inlet';
+      const toPort = parseInt(this.selectedDestination.male_ends || this.selectedDestination.maleEnds || 0) > 0 ? 'Male_1' : 'Power_Inlet';
+      
+      // Use session_id (not deployment_item_id)
+      const sessionId = this.session.session_id;
+      const deploymentItemId = this.session.deployment_item_id;  // Also send this
+      const zoneCode = this.zone.zone_code || this.zone.zoneCode;
+      
+      if (!sessionId) {
+        console.error('[ConnectionBuilder] ERROR - No session_id found in session object:', this.session);
+        throw new Error('Session ID is missing. Cannot create connection.');
+      }
       
       const connectionData = {
-        session_id: this.session.session_id,
-        zone_code: this.zone.zone_code,
+        session_id: sessionId,
+        session_deployment_item_id: deploymentItemId,  // Backend can use this for direct lookup
+        zone_code: zoneCode,
         from_item_id: this.selectedSource.item_id,
         from_port: this.selectedSourcePort,
         to_item_id: this.selectedDestination.id,

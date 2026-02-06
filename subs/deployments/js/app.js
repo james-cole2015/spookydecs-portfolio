@@ -4,18 +4,66 @@ import { initRouter } from './utils/router.js';
 import { renderMainPage } from './pages/main.js';
 import { renderBuilder } from './pages/deployment-builder.js';
 import { renderZonesDashboard } from './pages/deployment-zones.js';
+import { renderZoneDetail } from './pages/zone-detail.js';
 import { renderDeploymentSession } from './pages/deployment-session.js';
 
 // Define routes
+// IMPORTANT: Routes are matched in order - more specific routes MUST come before generic ones
 const routes = [
-  { path: '/deployments', handler: () => renderMainPage() },
-  { path: '/deployments/builder', handler: () => renderBuilder() },
-  { path: '/deployments/:deploymentId/zones/:zoneCode/session', handler: (params) => renderDeploymentSession(params) },
-  { path: '/deployments/:id/zones', handler: (params) => renderZonesDashboard(params.data.id) },
-  { path: '/deployments/historical', handler: () => renderHistoricalPlaceholder() },
-  { path: '/deployments/graphs', handler: () => renderGraphsPlaceholder() },
-  { path: '/deployments/stats', handler: () => renderStatsPlaceholder() },
-  { path: '/deployments/:id', handler: (params) => renderDetailPlaceholder(params.data.id) }
+  { 
+    path: '/deployments', 
+    handler: () => renderMainPage()
+  },
+  { 
+    path: '/deployments/builder', 
+    handler: () => renderBuilder()
+  },
+  { 
+    path: '/deployments/historical', 
+    handler: () => renderHistoricalPlaceholder()
+  },
+  { 
+    path: '/deployments/graphs', 
+    handler: () => renderGraphsPlaceholder()
+  },
+  { 
+    path: '/deployments/stats', 
+    handler: () => renderStatsPlaceholder()
+  },
+  { 
+    path: '/deployments/:id/zones/:zone/session', 
+    handler: (match) => {
+      // Navigo passes match object with params directly, not nested in 'data'
+      const params = match?.data || match;
+      console.log('[Router] Session route params:', params);
+      renderDeploymentSession(match);
+    }
+  },
+  { 
+    path: '/deployments/:id/zones/:zone', 
+    handler: (match) => {
+      // Navigo passes match object with params directly, not nested in 'data'
+      const params = match?.data || match;
+      console.log('[Router] Zone detail route params:', params);
+      renderZoneDetail(params.id, params.zone);
+    }
+  },
+  { 
+    path: '/deployments/:id/zones', 
+    handler: (match) => {
+      const params = match?.data || match;
+      console.log('[Router] Zones dashboard route params:', params);
+      renderZonesDashboard(params.id);
+    }
+  },
+  { 
+    path: '/deployments/:id', 
+    handler: (match) => {
+      const params = match?.data || match;
+      console.log('[Router] Deployment detail route params:', params);
+      renderDetailPlaceholder(params.id);
+    }
+  }
 ];
 
 // Initialize router

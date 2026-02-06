@@ -75,16 +75,16 @@ export class ZoneCards {
 
       <div class="zone-card-footer">
         <button class="btn-zone-action">
-          ${itemCount > 0 ? 'Manage Items' : 'Start Deployment'}
+          ${itemCount > 0 ? 'View Details' : 'Get Started'}
           <span class="icon">→</span>
         </button>
       </div>
     `;
 
-    // Attach click handler - navigate to session page
+    // Attach click handler - navigate to zone detail page
     card.addEventListener('click', () => {
       const zoneCode = zone.zone_code;
-      navigate(`/deployments/${this.deploymentId}/zones/${zoneCode}/session`);
+      navigate(`/deployments/${this.deploymentId}/zones/${zoneCode}`);
       
       // Also call custom callback if provided
       if (this.clickCallback) {

@@ -1,48 +1,94 @@
-// deployment-session.js
-// Page orchestrator for active deployment session
+// Deployment Session Page
+// Handles active connection building session
 
-import { getDeployment, createSession, endSession, getSession } from '../utils/deployment-api.js';
-import { createSessionStartModal } from '../components/builder/SessionStartModal.js';
+import { getDeployment, getSession } from '../utils/deployment-api.js';
 import { ConnectionBuilder } from '../components/builder/ConnectionBuilder.js';
-import { navigate } from '../utils/router.js';
 
-let currentDeployment = null;
-let currentZone = null;
-let currentSession = null;
-let connectionBuilder = null;
-
-export async function renderDeploymentSession({ data }) {
-  const { deploymentId, zoneCode } = data;
-  const appContainer = document.getElementById('app');
+export async function renderDeploymentSession(params) {
+  console.log('[renderDeploymentSession] Called with params:', params);
   
+  const app = document.getElementById('app');
+  
+  // Extract parameters - Navigo may pass them in different formats
+  let deploymentId, zoneCode;
+  
+  if (params.data) {
+    // Format: { data: { id: '...', zone: '...' } }
+    deploymentId = params.data.id;
+    zoneCode = params.data.zone;
+  } else if (params.id) {
+    // Format: { id: '...', zone: '...' }
+    deploymentId = params.id;
+    zoneCode = params.zone;
+  } else if (params.deploymentId) {
+    // Format: { deploymentId: '...', zoneCode: '...' }
+    deploymentId = params.deploymentId;
+    zoneCode = params.zoneCode;
+  } else {
+    console.error('[renderDeploymentSession] Could not extract parameters from:', params);
+  }
+  
+  console.log('[renderDeploymentSession] Extracted:', { deploymentId, zoneCode });
+  
+  if (!deploymentId || !zoneCode) {
+    app.innerHTML = `
+      <div class="error-container">
+        <h2>Invalid Session</h2>
+        <p>Missing deployment ID or zone code</p>
+        <button class="btn btn-primary" onclick="window.history.back()">Go Back</button>
+      </div>
+    `;
+    return;
+  }
+  
+  // Show loading
+  app.innerHTML = `
+    <div class="session-page">
+      <div class="loading-container">
+        <div class="spinner"></div>
+        <p>Loading session...</p>
+      </div>
+    </div>
+  `;
+
   try {
-    // Load deployment with zones
-    const response = await getDeployment(deploymentId, ['zones']);
-    currentDeployment = response.data.metadata;
-    const zones = response.data.zones || [];
+    // Fetch deployment
+    const deploymentResponse = await getDeployment(deploymentId, ['zones']);
     
-    // Find the requested zone
-    currentZone = zones.find(z => z.zone_code === zoneCode);
-    
-    if (!currentZone) {
+    if (!deploymentResponse.success) {
+      throw new Error('Failed to load deployment');
+    }
+
+    const { metadata, zones } = deploymentResponse.data;
+    const zone = zones.find(z => z.zone_code === zoneCode);
+
+    if (!zone) {
       throw new Error(`Zone ${zoneCode} not found`);
     }
+
+    // Fetch sessions for this zone to find active session
+    const { getZoneSessions } = await import('../utils/deployment-api.js');
+    const sessionsResponse = await getZoneSessions(deploymentId, zoneCode);
     
-    // Check if there's an active session for this zone
-    const hasActiveSession = await checkActiveSession(deploymentId, zoneCode);
-    
-    if (hasActiveSession) {
-      // Resume existing session
-      await loadSession(deploymentId, zoneCode);
-      renderConnectionBuilder(appContainer);
-    } else {
-      // Show start session modal
-      showStartSessionModal(appContainer);
+    if (!sessionsResponse.success) {
+      throw new Error('Failed to load sessions');
     }
     
+    // Find active session (end_time is null)
+    const activeSession = sessionsResponse.data.find(s => s.end_time === null);
+    
+    if (!activeSession) {
+      throw new Error('No active session found. Please start a session first.');
+    }
+    
+    console.log('[renderDeploymentSession] Active session:', activeSession);
+
+    // Render connection builder
+    renderConnectionBuilder(metadata, zone, activeSession);
+
   } catch (error) {
-    console.error('Error loading session:', error);
-    appContainer.innerHTML = `
+    console.error('[renderDeploymentSession] Error:', error);
+    app.innerHTML = `
       <div class="error-container">
         <h2>Error Loading Session</h2>
         <p>${error.message}</p>
@@ -52,109 +98,67 @@ export async function renderDeploymentSession({ data }) {
   }
 }
 
-async function checkActiveSession(deploymentId, zoneCode) {
-  // Check if zone status is in_progress
-  return currentZone.status === 'in_progress';
-}
-
-async function loadSession(deploymentId, zoneCode) {
-  // Find the most recent session for this zone
-  // This is simplified - you may need to query sessions differently
-  // For now, we'll check the zone for an active session reference
+function renderConnectionBuilder(deployment, zone, session) {
+  const app = document.getElementById('app');
+  app.innerHTML = '';
   
-  // Placeholder: In production, you'd query for active sessions
-  // For now, we'll create a mock session object
-  currentSession = {
-    deployment_item_id: `SESSION-${zoneCode}-ACTIVE`,
-    zone_code: zoneCode,
-    started_at: new Date().toISOString(),
-    ended_at: null
-  };
-}
-
-function showStartSessionModal(container) {
-  const modal = createSessionStartModal(
-    currentZone.zone_name,
-    currentZone.zone_code,
-    async (zoneCode) => {
-      await startSession(zoneCode);
-      renderConnectionBuilder(container);
-    },
-    () => {
-      // User cancelled, go back to zones
-      if (currentDeployment) {
-        navigate(`/deployments/${currentDeployment.deployment_id}/zones`);
-      } else {
-        navigate('/deployments');
-      }
-    }
-  );
+  // Create page container with breadcrumbs
+  const pageContainer = document.createElement('div');
+  pageContainer.className = 'session-page';
   
-  document.body.appendChild(modal);
-}
-
-async function startSession(zoneCode) {
-  try {
-    if (!currentDeployment) {
-      throw new Error('Deployment not loaded');
-    }
-    
-    const response = await createSession(currentDeployment.deployment_id, {
-      zone_code: zoneCode
-    });
-    
-    currentSession = response.data;
-    
-  } catch (error) {
-    console.error('Error starting session:', error);
-    throw error;
-  }
-}
-
-function renderConnectionBuilder(container) {
-  container.innerHTML = `
-    <div class="page-container">
-      <div id="connection-builder-mount"></div>
-    </div>
+  // Add breadcrumbs
+  const breadcrumbs = document.createElement('div');
+  breadcrumbs.className = 'breadcrumbs';
+  breadcrumbs.innerHTML = `
+    <a href="#" class="breadcrumb-link" data-path="/deployments">Deployments</a>
+    <span class="breadcrumb-separator">›</span>
+    <a href="#" class="breadcrumb-link" data-path="/deployments/${deployment.deployment_id}/zones">${deployment.season} ${deployment.year}</a>
+    <span class="breadcrumb-separator">›</span>
+    <a href="#" class="breadcrumb-link" data-path="/deployments/${deployment.deployment_id}/zones/${zone.zone_code}">${zone.zone_name}</a>
+    <span class="breadcrumb-separator">›</span>
+    <span class="breadcrumb-current">Active Session</span>
   `;
   
-  const mountPoint = container.querySelector('#connection-builder-mount');
+  // Attach breadcrumb navigation
+  breadcrumbs.querySelectorAll('.breadcrumb-link').forEach(link => {
+    link.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const path = link.dataset.path;
+      const { navigate } = await import('../utils/router.js');
+      navigate(path);
+    });
+  });
   
-  connectionBuilder = new ConnectionBuilder(
-    currentDeployment,
-    currentZone,
-    currentSession
-  );
-  
-  const builderElement = connectionBuilder.render();
-  mountPoint.appendChild(builderElement);
+  pageContainer.appendChild(breadcrumbs);
+
+  const builder = new ConnectionBuilder(deployment, zone, session);
+  const container = builder.render();
   
   // Listen for end session event
-  builderElement.addEventListener('end-session', async (e) => {
-    const { notes } = e.detail;
-    await handleEndSession(notes);
+  container.addEventListener('end-session', async (event) => {
+    const notes = event.detail.notes;
+    await handleEndSession(deployment.deployment_id, session.session_id, notes);
   });
+  
+  pageContainer.appendChild(container);
+  app.appendChild(pageContainer);
 }
 
-async function handleEndSession(notes) {
-  const confirmed = confirm(
-    'Are you sure you want to end this work session? This will calculate your work time and update deployment statistics.'
-  );
-  
-  if (!confirmed) return;
+async function handleEndSession(deploymentId, sessionId, notes) {
+  // Import at time of use to avoid circular dependency
+  const { endSession } = await import('../utils/deployment-api.js');
+  const { navigate } = await import('../utils/router.js');
   
   try {
-    await endSession(
-      currentDeployment.deployment_id,
-      currentSession.deployment_item_id,
-      { notes }
-    );
+    const response = await endSession(deploymentId, sessionId, { notes });
     
-    // Show success message
-    alert('Session ended successfully!');
-    
-    // Navigate back to zones dashboard
-    navigate(`/deployments/${currentDeployment.deployment_id}/zones`);
+    if (response.success) {
+      // Navigate back to zone detail
+      const zoneCode = response.data.zone_code;
+      navigate(`/deployments/${deploymentId}/zones/${zoneCode}`);
+    } else {
+      throw new Error('Failed to end session');
+    }
     
   } catch (error) {
     console.error('Error ending session:', error);
