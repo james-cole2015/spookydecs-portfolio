@@ -15,11 +15,21 @@ export function initRouter(routes) {
   // Navigo matches routes in registration order when using ONE strategy
   if (Array.isArray(routes)) {
     routes.forEach(({ path, handler }) => {
-      router.on(path, handler);
+      router.on(path, (match) => {
+        // Extract params from match object
+        // Navigo with ONE strategy passes params directly in match.data or match.params
+        const params = match?.data?.params || match?.params || match?.data || {};
+        console.log(`[Router] Matched route: ${path}`, params);
+        handler(params);
+      });
     });
   } else {
     Object.entries(routes).forEach(([path, handler]) => {
-      router.on(path, handler);
+      router.on(path, (match) => {
+        const params = match?.data?.params || match?.params || match?.data || {};
+        console.log(`[Router] Matched route: ${path}`, params);
+        handler(params);
+      });
     });
   }
 

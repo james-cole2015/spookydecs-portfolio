@@ -38,9 +38,12 @@ export class ZoneDetailView {
       <div class="zone-detail-content">
         ${this.renderStatsSection()}
         ${this.renderQuickActions()}
-        ${this.renderSessionHistorySection()}
       </div>
     `;
+    
+    // Append session history as element (not HTML string)
+    const contentDiv = container.querySelector('.zone-detail-content');
+    contentDiv.appendChild(this.renderSessionHistorySection());
     
     return container;
   }
@@ -148,6 +151,7 @@ export class ZoneDetailView {
   
   renderSessionHistorySection() {
     const sessionHistory = new SessionHistory(this.sessions);
+    
     const historyContainer = document.createElement('div');
     historyContainer.className = 'session-history-section';
     
@@ -161,7 +165,7 @@ export class ZoneDetailView {
     historyContainer.appendChild(header);
     historyContainer.appendChild(sessionHistory.render());
     
-    return historyContainer.outerHTML;
+    return historyContainer; // Return the element, not outerHTML
   }
   
   getZoneIcon() {

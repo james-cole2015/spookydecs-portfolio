@@ -1,216 +1,155 @@
-// Zone Detail Page
-// Shows zone overview, session history, and quick actions
+// Zone Detail Page Handler
 
-import { navigate } from '../utils/router.js';
-import { getDeployment, getZoneSessions, createSession, endSession } from '../utils/deployment-api.js';
+import { getDeployment, getZoneSessions, createSession } from '../utils/deployment-api.js';
 import { ZoneDetailView } from '../components/builder/ZoneDetailView.js';
+import { navigate } from '../utils/router.js';
+import { createSessionStartModal } from '../components/builder/SessionStartModal.js';
 
 export async function renderZoneDetail(deploymentId, zoneCode) {
   const app = document.getElementById('app');
   
   // Show loading state
   app.innerHTML = `
-    <div class="zone-detail-page">
-      <div class="loading-container">
-        <div class="spinner"></div>
-        <p>Loading zone details...</p>
-      </div>
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Loading zone details...</p>
     </div>
   `;
-
+  
   try {
-    // Fetch deployment and zone data
-    const deploymentResponse = await getDeployment(deploymentId, ['zones']);
+    console.log('[ZoneDetail] Fetching data for:', { deploymentId, zoneCode });
     
-    if (!deploymentResponse.success) {
-      throw new Error('Failed to load deployment');
-    }
-
-    const { metadata, zones } = deploymentResponse.data;
+    // Fetch deployment with zones and zone sessions in parallel
+    const [deploymentResponse, sessionsResponse] = await Promise.all([
+      getDeployment(deploymentId, ['zones']),
+      getZoneSessions(deploymentId, zoneCode)
+    ]);
+    
+    const deploymentData = deploymentResponse.data;
+    const sessions = sessionsResponse.data || [];
+    
+    console.log('[ZoneDetail] Loaded data:', { deployment: deploymentData, sessions });
+    
+    // Extract metadata and zones from response
+    const deployment = deploymentData.metadata || deploymentData;
+    const zones = deploymentData.zones || [];
+    
+    // Find the zone
     const zone = zones.find(z => z.zone_code === zoneCode);
-
+    
     if (!zone) {
-      throw new Error(`Zone ${zoneCode} not found`);
+      throw new Error(`Zone ${zoneCode} not found in deployment`);
     }
-
-    // Fetch sessions for this zone
-    const sessionsResponse = await getZoneSessions(deploymentId, zoneCode);
-    const sessions = sessionsResponse.success ? sessionsResponse.data : [];
-
-    // Check for active session
-    const activeSession = sessions.find(s => s.end_time === null);
-
-    // Render page
-    renderZoneDetailView(metadata, zone, sessions, activeSession);
-
+    
+    // Find active session (has start_time but no end_time)
+    const activeSession = sessions.find(s => s.start_time && !s.end_time);
+    
+    // Render zone detail view
+    const zoneDetailView = new ZoneDetailView(deployment, zone, sessions, activeSession);
+    const container = zoneDetailView.render();
+    
+    app.innerHTML = '';
+    app.appendChild(container);
+    
+    // Attach event handlers
+    attachEventHandlers(deployment, zone, sessions, activeSession);
+    
   } catch (error) {
-    console.error('Error loading zone details:', error);
+    console.error('[ZoneDetail] Error loading zone:', error);
+    
     app.innerHTML = `
-      <div class="zone-detail-page">
-        <div class="error-container">
-          <h2>Error Loading Zone</h2>
-          <p>${error.message}</p>
-          <button class="btn btn-primary" onclick="window.history.back()">
-            Go Back
-          </button>
-        </div>
+      <div class="error-container">
+        <div class="error-icon">⚠️</div>
+        <h2>Failed to Load Zone</h2>
+        <p>${error.message}</p>
+        <button class="btn btn-primary btn-back">← Back to Zones</button>
       </div>
     `;
-  }
-}
-
-function renderZoneDetailView(deployment, zone, sessions, activeSession) {
-  const app = document.getElementById('app');
-  
-  // Clear loading state
-  app.innerHTML = '';
-  
-  // Create page container
-  const pageContainer = document.createElement('div');
-  pageContainer.className = 'zone-detail-page';
-  
-  // Add breadcrumbs
-  const breadcrumbs = document.createElement('div');
-  breadcrumbs.className = 'breadcrumbs';
-  breadcrumbs.innerHTML = `
-    <a href="#" class="breadcrumb-link" data-path="/deployments">Deployments</a>
-    <span class="breadcrumb-separator">›</span>
-    <a href="#" class="breadcrumb-link" data-path="/deployments/${deployment.deployment_id}/zones">${deployment.season} ${deployment.year}</a>
-    <span class="breadcrumb-separator">›</span>
-    <span class="breadcrumb-current">${zone.zone_name}</span>
-  `;
-  
-  // Attach breadcrumb navigation
-  breadcrumbs.querySelectorAll('.breadcrumb-link').forEach(link => {
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-      const path = link.dataset.path;
-      navigate(path);
-    });
-  });
-  
-  pageContainer.appendChild(breadcrumbs);
-  
-  // Create view container
-  const container = document.createElement('div');
-  container.className = 'zone-detail-container';
-  
-  // Render zone detail view
-  const detailView = new ZoneDetailView(deployment, zone, sessions, activeSession);
-  container.appendChild(detailView.render());
-  
-  pageContainer.appendChild(container);
-  
-  // Attach event listeners
-  attachEventHandlers(pageContainer, deployment, zone, activeSession);
-  
-  app.appendChild(pageContainer);
-}
-
-function attachEventHandlers(container, deployment, zone, activeSession) {
-  const deploymentId = deployment.deployment_id;
-  const zoneCode = zone.zone_code;
-  
-  // Back button
-  const backBtn = container.querySelector('.btn-back');
-  if (backBtn) {
-    backBtn.addEventListener('click', () => {
+    
+    app.querySelector('.btn-back')?.addEventListener('click', () => {
       navigate(`/deployments/${deploymentId}/zones`);
     });
   }
+}
+
+function attachEventHandlers(deployment, zone, sessions, activeSession) {
+  const app = document.getElementById('app');
   
-  // Start new session button
-  const startSessionBtn = container.querySelector('.btn-start-session');
-  if (startSessionBtn) {
-    startSessionBtn.addEventListener('click', async () => {
-      await handleStartSession(deploymentId, zoneCode);
-    });
-  }
+  // Back button
+  document.querySelector('.btn-back')?.addEventListener('click', () => {
+    navigate(`/deployments/${deployment.deployment_id}/zones`);
+  });
+  
+  // Start session button
+  document.querySelector('.btn-start-session')?.addEventListener('click', async () => {
+    const modal = createSessionStartModal(
+      zone.zone_name,
+      zone.zone_code,
+      async (zoneCode) => {
+        // onConfirm callback - create the session
+        try {
+          console.log('[ZoneDetail] Creating session for zone:', zoneCode);
+          
+          const response = await createSession(deployment.deployment_id, {
+            zone_code: zoneCode
+          });
+          
+          console.log('[ZoneDetail] Session created:', response);
+          
+          // Reload page to refresh data
+          window.location.reload();
+          
+        } catch (error) {
+          console.error('[ZoneDetail] Error creating session:', error);
+          throw error; // Re-throw so modal can handle it
+        }
+      },
+      () => {
+        // onCancel callback (optional)
+        console.log('[ZoneDetail] Session creation cancelled');
+      }
+    );
+    document.body.appendChild(modal);
+  });
   
   // Resume session button
-  const resumeSessionBtn = container.querySelector('.btn-resume-session');
-  if (resumeSessionBtn) {
-    resumeSessionBtn.addEventListener('click', () => {
-      navigate(`/deployments/${deploymentId}/zones/${zoneCode}/session`);
-    });
-  }
+  document.querySelector('.btn-resume-session')?.addEventListener('click', () => {
+    if (activeSession) {
+      navigate(`/deployments/${deployment.deployment_id}/zones/${zone.zone_code}/session`);
+    }
+  });
   
   // End session button
-  const endSessionBtn = container.querySelector('.btn-end-session');
-  if (endSessionBtn && activeSession) {
-    endSessionBtn.addEventListener('click', async () => {
-      await handleEndSession(deploymentId, activeSession.session_id);
-    });
-  }
-  
-  // View items button
-  const viewItemsBtn = container.querySelector('.btn-view-items');
-  if (viewItemsBtn) {
-    viewItemsBtn.addEventListener('click', () => {
-      // TODO: Implement item list view for zone
-      showToast('Item list view coming soon', 'info');
-    });
-  }
-}
-
-async function handleStartSession(deploymentId, zoneCode) {
-  try {
-    console.log('[handleStartSession] Creating session for:', { deploymentId, zoneCode });
-    showToast('Starting session...', 'info');
+  document.querySelector('.btn-end-session')?.addEventListener('click', async () => {
+    if (!activeSession) return;
     
-    const response = await createSession(deploymentId, { zone_code: zoneCode });
+    const confirmed = confirm('Are you sure you want to end this session?');
+    if (!confirmed) return;
     
-    console.log('[handleStartSession] Session created:', response);
-    
-    if (response.success) {
-      showToast('Session started', 'success');
-      // Navigate to connection builder with correct route
-      const sessionPath = `/deployments/${deploymentId}/zones/${zoneCode}/session`;
-      console.log('[handleStartSession] Navigating to:', sessionPath);
-      navigate(sessionPath);
-    } else {
-      throw new Error('Failed to start session');
-    }
-    
-  } catch (error) {
-    console.error('[handleStartSession] Error:', error);
-    showToast(error.message || 'Failed to start session', 'error');
-  }
-}
-
-async function handleEndSession(deploymentId, sessionId) {
-  const notes = prompt('Add notes for this session (optional):');
-  
-  if (notes === null) return; // User cancelled
-  
-  try {
-    showToast('Ending session...', 'info');
-    
-    const response = await endSession(deploymentId, sessionId, { notes });
-    
-    if (response.success) {
-      showToast('Session ended', 'success');
+    try {
+      // TODO: Call endSession API
+      console.log('[ZoneDetail] End session:', activeSession.session_id);
+      
       // Reload page to refresh data
       window.location.reload();
-    } else {
-      throw new Error('Failed to end session');
+      
+    } catch (error) {
+      console.error('[ZoneDetail] Error ending session:', error);
+      alert('Failed to end session. Please try again.');
     }
-    
-  } catch (error) {
-    console.error('Error ending session:', error);
-    showToast(error.message || 'Failed to end session', 'error');
-  }
-}
-
-function showToast(message, type = 'info') {
-  const toast = document.createElement('div');
-  toast.className = `toast toast-${type}`;
-  toast.textContent = message;
-  document.body.appendChild(toast);
+  });
   
-  setTimeout(() => toast.classList.add('show'), 10);
-  setTimeout(() => {
-    toast.classList.remove('show');
-    setTimeout(() => toast.remove(), 300);
-  }, 3000);
+  // View items button
+  document.querySelector('.btn-view-items')?.addEventListener('click', () => {
+    // TODO: Navigate to items view for this zone
+    console.log('[ZoneDetail] View items for zone:', zone.zone_code);
+    alert('Items view coming soon');
+  });
+  
+  // Session click handler - attach to app container since events bubble up
+  app.addEventListener('session-click', (e) => {
+    const session = e.detail.session;
+    console.log('[ZoneDetail] Session clicked:', session.session_id);
+    navigate(`/deployments/${deployment.deployment_id}/zones/${zone.zone_code}/sessions/${session.session_id}`);
+  });
 }

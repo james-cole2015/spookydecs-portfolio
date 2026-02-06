@@ -5,6 +5,7 @@ export class SessionHistory {
   constructor(sessions) {
     this.sessions = sessions;
     this.expandedSessions = new Set();
+    console.log('[SessionHistory] Constructor called with sessions:', sessions);
   }
   
   render() {
@@ -48,6 +49,9 @@ export class SessionHistory {
     });
     
     container.appendChild(table);
+    
+    console.log('[SessionHistory] Rendered table with', sortedSessions.length, 'sessions');
+    
     return container;
   }
   
@@ -66,6 +70,9 @@ export class SessionHistory {
     if (isExpanded) {
       row.classList.add('expanded');
     }
+    
+    // Make row clickable
+    row.style.cursor = 'pointer';
     
     const startTime = new Date(session.start_time);
     const dateStr = startTime.toLocaleDateString('en-US', { 
@@ -114,10 +121,33 @@ export class SessionHistory {
       ${isExpanded ? this.renderConnectionsDetail(session) : ''}
     `;
     
+    // Attach row click handler BEFORE expand button handler
+    row.addEventListener('click', (e) => {
+      console.log('[SessionHistory] Row clicked:', session.session_id);
+      console.log('[SessionHistory] Click target:', e.target);
+      console.log('[SessionHistory] Is expand button?', e.target.closest('.btn-expand'));
+      
+      // Don't navigate if clicking expand button
+      if (e.target.closest('.btn-expand')) {
+        console.log('[SessionHistory] Click was on expand button, ignoring');
+        return;
+      }
+      
+      console.log('[SessionHistory] Dispatching session-click event');
+      
+      // Dispatch event to parent to handle navigation
+      const event = new CustomEvent('session-click', {
+        detail: { session },
+        bubbles: true
+      });
+      row.dispatchEvent(event);
+    });
+    
     // Attach expand/collapse handler
     const expandBtn = row.querySelector('.btn-expand');
     if (expandBtn) {
       expandBtn.addEventListener('click', (e) => {
+        console.log('[SessionHistory] Expand button clicked');
         e.stopPropagation();
         this.toggleSessionExpansion(session.session_id, row);
       });

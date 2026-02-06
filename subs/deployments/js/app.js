@@ -6,6 +6,7 @@ import { renderBuilder } from './pages/deployment-builder.js';
 import { renderZonesDashboard } from './pages/deployment-zones.js';
 import { renderZoneDetail } from './pages/zone-detail.js';
 import { renderDeploymentSession } from './pages/deployment-session.js';
+import { renderSessionDetail } from './pages/session-detail.js';
 
 // Define routes
 // IMPORTANT: Routes are matched in order - more specific routes MUST come before generic ones
@@ -30,36 +31,40 @@ const routes = [
     path: '/deployments/stats', 
     handler: () => renderStatsPlaceholder()
   },
+  // SESSION DETAIL ROUTE - Must come BEFORE zone detail route
   { 
-    path: '/deployments/:id/zones/:zone/session', 
-    handler: (match) => {
-      // Navigo passes match object with params directly, not nested in 'data'
-      const params = match?.data || match;
-      console.log('[Router] Session route params:', params);
-      renderDeploymentSession(match);
+    path: '/deployments/:id/zones/:zone/sessions/:sessionId', 
+    handler: (params) => {
+      console.log('[Router] Session detail route params:', params);
+      renderSessionDetail(params.id, params.zone, params.sessionId);
     }
   },
+  // ACTIVE SESSION ROUTE - Must come BEFORE zone detail route
+  { 
+    path: '/deployments/:id/zones/:zone/session', 
+    handler: (params) => {
+      console.log('[Router] Active session route params:', params);
+      renderDeploymentSession(params);
+    }
+  },
+  // ZONE DETAIL ROUTE
   { 
     path: '/deployments/:id/zones/:zone', 
-    handler: (match) => {
-      // Navigo passes match object with params directly, not nested in 'data'
-      const params = match?.data || match;
+    handler: (params) => {
       console.log('[Router] Zone detail route params:', params);
       renderZoneDetail(params.id, params.zone);
     }
   },
   { 
     path: '/deployments/:id/zones', 
-    handler: (match) => {
-      const params = match?.data || match;
+    handler: (params) => {
       console.log('[Router] Zones dashboard route params:', params);
       renderZonesDashboard(params.id);
     }
   },
   { 
     path: '/deployments/:id', 
-    handler: (match) => {
-      const params = match?.data || match;
+    handler: (params) => {
       console.log('[Router] Deployment detail route params:', params);
       renderDetailPlaceholder(params.id);
     }

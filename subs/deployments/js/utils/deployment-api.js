@@ -1,4 +1,4 @@
-// Deployment API Client - DEBUG VERSION
+// Deployment API Client
 // Handles all API calls to the deployments backend
 
 let API_ENDPOINT = '';
@@ -11,10 +11,9 @@ async function loadConfig() {
     const response = await fetch('/config.json');
     const config = await response.json();
     API_ENDPOINT = config.API_ENDPOINT;
-    console.log('[API] Loaded config, endpoint:', API_ENDPOINT);
     return API_ENDPOINT;
   } catch (error) {
-    console.error('[API] Failed to load config:', error);
+    console.error('Failed to load config:', error);
     throw new Error('Failed to load API configuration');
   }
 }
@@ -25,13 +24,6 @@ async function apiCall(endpoint, method = 'GET', body = null) {
   
   const url = `${API_ENDPOINT}${endpoint}`;
   
-  console.log('[API] Making request:', {
-    method,
-    url,
-    endpoint,
-    hasBody: !!body
-  });
-  
   const options = {
     method,
     headers: {
@@ -41,28 +33,16 @@ async function apiCall(endpoint, method = 'GET', body = null) {
   
   if (body) {
     options.body = JSON.stringify(body);
-    console.log('[API] Request body:', body);
   }
   
-  try {
-    const response = await fetch(url, options);
-    
-    console.log('[API] Response status:', response.status, response.statusText);
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('[API] Error response:', errorData);
-      throw new Error(errorData.error || `API error: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    console.log('[API] Success response:', data);
-    return data;
-    
-  } catch (error) {
-    console.error('[API] Fetch failed:', error);
-    throw error;
+  const response = await fetch(url, options);
+  
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || `API error: ${response.status}`);
   }
+  
+  return await response.json();
 }
 
 // Deployment CRUD operations
@@ -155,10 +135,7 @@ export async function getSession(deploymentId, sessionId) {
 }
 
 export async function getZoneSessions(deploymentId, zoneCode) {
-  console.log('[API] getZoneSessions called with:', { deploymentId, zoneCode });
-  const endpoint = `/deployments/${deploymentId}/zones/${zoneCode}/sessions`;
-  console.log('[API] getZoneSessions endpoint:', endpoint);
-  return await apiCall(endpoint);
+  return await apiCall(`/deployments/${deploymentId}/zones/${zoneCode}/sessions`);
 }
 
 // Connection management
