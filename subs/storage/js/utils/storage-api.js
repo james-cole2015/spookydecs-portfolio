@@ -14,6 +14,10 @@ export async function loadConfig() {
   try {
     const response = await fetch('/config.json');
     config = await response.json();
+    
+    // Also assign to window.CONFIG for CDN components to access
+    window.CONFIG = config;
+    
     return config;
   } catch (error) {
     console.error('Failed to load config:', error);
