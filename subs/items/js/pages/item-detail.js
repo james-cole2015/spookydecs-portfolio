@@ -22,9 +22,9 @@ class ItemDetailPage {
       // Fetch item data
       this.item = await fetchItemById(itemId, true);
       
-      // Fetch maintenance records
+      // Fetch maintenance records (get all, not just 5)
       try {
-        this.maintenanceRecords = await getMaintenanceRecords(itemId, 5);
+        this.maintenanceRecords = await getMaintenanceRecords(itemId, 100);
       } catch (error) {
         console.warn('Failed to load maintenance records:', error);
         this.maintenanceRecords = [];
@@ -47,6 +47,46 @@ class ItemDetailPage {
       this.hideLoading();
       this.showError(error.message);
     }
+  }
+  
+  /**
+   * Get in-progress maintenance records
+   */
+  getInProgressRecords() {
+    return this.maintenanceRecords.filter(record => record.status === 'in_progress');
+  }
+  
+  /**
+   * Get completed maintenance records (for Recent Maintenance section)
+   */
+  getCompletedRecords() {
+    return this.maintenanceRecords
+      .filter(record => record.status === 'completed')
+      .sort((a, b) => {
+        const dateA = new Date(a.date_performed || a.created_at);
+        const dateB = new Date(b.date_performed || b.created_at);
+        return dateB - dateA; // Most recent first
+      })
+      .slice(0, 5); // Limit to 5 most recent
+  }
+  
+  /**
+   * Get scheduled maintenance records from generation_history (for Upcoming Maintenance section)
+   */
+  getUpcomingMaintenance() {
+    const history = this.item.maintenance?.generation_history || [];
+    const now = new Date();
+
+    // Filter for future due dates, sort by date, limit to 2
+    const upcoming = history
+      .filter(entry => {
+        const dueDate = new Date(entry.due_date);
+        return dueDate > now;
+      })
+      .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
+      .slice(0, 2);
+      
+    return upcoming;
   }
   
   renderPage() {
@@ -127,6 +167,7 @@ class ItemDetailPage {
   
   renderBadges() {
     const badges = [];
+    const inProgressRecords = this.getInProgressRecords();
     
     if (this.item.deployment_data?.deployed) {
       badges.push('<span class="item-badge badge-deployed">Deployed</span>');
@@ -140,6 +181,16 @@ class ItemDetailPage {
     
     if (this.item.repair_status?.needs_repair) {
       badges.push('<span class="item-badge badge-repair">Needs Repair</span>');
+    }
+    
+    // Add in-progress link
+    if (inProgressRecords.length > 0) {
+      const recordText = inProgressRecords.length === 1 ? 'record' : 'records';
+      badges.push(`
+        <a href="#" class="in-progress-link" onclick="event.preventDefault(); itemDetailPage.handleViewAllMaintenance();">
+          ${inProgressRecords.length} ${recordText} in progress
+        </a>
+      `);
     }
     
     return badges.join('');
@@ -232,19 +283,28 @@ class ItemDetailPage {
     const status = this.item.repair_status?.status;
     const appliedTemplates = this.item.maintenance?.applied_templates || [];
     const upcomingMaintenance = this.getUpcomingMaintenance();
+    const completedRecords = this.getCompletedRecords();
+    const inProgressRecords = this.getInProgressRecords();
 
     return `
       <div class="detail-section">
         <h2 class="section-title">Current Status</h2>
-        ${hasRepair ? `
-          <div class="item-badge badge-repair" style="margin-bottom: 16px;">
-            Needs Repair
-          </div>
-        ` : `
-          <div class="item-badge badge-operational" style="margin-bottom: 16px;">
-            ${status || 'Operational'}
-          </div>
-        `}
+        <div class="status-badges">
+          ${hasRepair ? `
+            <div class="item-badge badge-repair">
+              Needs Repair
+            </div>
+          ` : `
+            <div class="item-badge badge-operational">
+              ${status || 'Operational'}
+            </div>
+          `}
+          ${inProgressRecords.length > 0 ? `
+            <a href="#" class="in-progress-link-status" onclick="event.preventDefault(); itemDetailPage.handleViewAllMaintenance();">
+              ${inProgressRecords.length} ${inProgressRecords.length === 1 ? 'record' : 'records'} in progress
+            </a>
+          ` : ''}
+        </div>
       </div>
 
       <div class="section-divider"></div>
@@ -255,7 +315,7 @@ class ItemDetailPage {
           <div class="template-list">
             ${appliedTemplates.map(templateId => `
               <div class="template-item">
-                <span class="template-id">${this.escapeHtml(templateId)}</span>
+                <span class="template-id">${this.escapeHtml(String(templateId))}</span>
               </div>
             `).join('')}
           </div>
@@ -272,11 +332,11 @@ class ItemDetailPage {
         </div>
       ` : ''}
 
-      ${this.maintenanceRecords.length > 0 ? `
+      ${completedRecords.length > 0 ? `
         <div class="section-divider"></div>
         <div class="detail-section">
           <h2 class="section-title">Recent Maintenance</h2>
-          ${this.renderMaintenanceRecords()}
+          ${this.renderMaintenanceRecords(completedRecords)}
         </div>
       ` : ''}
 
@@ -293,17 +353,6 @@ class ItemDetailPage {
     `;
   }
 
-  getUpcomingMaintenance() {
-    const history = this.item.maintenance?.generation_history || [];
-    const now = new Date();
-
-    // Filter for future due dates, sort by date, limit to 2
-    return history
-      .filter(entry => new Date(entry.due_date) > now)
-      .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
-      .slice(0, 2);
-  }
-
   renderUpcomingMaintenance(upcomingItems) {
     return upcomingItems.map(entry => `
       <div class="maintenance-item upcoming">
@@ -313,29 +362,37 @@ class ItemDetailPage {
         <div class="maintenance-ids">
           <div class="maintenance-id-row">
             <span class="maintenance-id-label">Template:</span>
-            <span class="maintenance-id-value">${this.escapeHtml(entry.template_id)}</span>
+            <span class="maintenance-id-value">${this.escapeHtml(String(entry.template_id))}</span>
           </div>
           <div class="maintenance-id-row">
             <span class="maintenance-id-label">Record:</span>
-            <span class="maintenance-id-value">${this.escapeHtml(entry.record_id)}</span>
+            <span class="maintenance-id-value">${this.escapeHtml(String(entry.record_id))}</span>
           </div>
         </div>
       </div>
     `).join('');
   }
   
-  renderMaintenanceRecords() {
-    return this.maintenanceRecords.map(record => `
-      <div class="maintenance-item">
-        <div class="maintenance-header">
-          <div class="maintenance-date">${new Date(record.date).toLocaleDateString()}</div>
-          <div class="maintenance-type">${record.type || 'Maintenance'}</div>
+  renderMaintenanceRecords(records) {
+    return records.map(record => {
+      // Use date_performed if available, otherwise fall back to date_scheduled or created_at
+      const displayDate = record.date_performed || record.date_scheduled || record.created_at;
+      
+      return `
+        <div class="maintenance-item">
+          <div class="maintenance-header">
+            <div class="maintenance-date">${new Date(displayDate).toLocaleDateString()}</div>
+            <div class="maintenance-type">${record.record_type || 'Maintenance'}</div>
+          </div>
+          ${record.title ? `
+            <div class="maintenance-title">${this.escapeHtml(record.title)}</div>
+          ` : ''}
+          ${record.description ? `
+            <div class="maintenance-notes">${this.escapeHtml(record.description)}</div>
+          ` : ''}
         </div>
-        ${record.notes ? `
-          <div class="maintenance-notes">${this.escapeHtml(record.notes)}</div>
-        ` : ''}
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
   
   renderPhotosTab() {

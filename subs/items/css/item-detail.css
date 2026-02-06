@@ -100,6 +100,52 @@
   gap: 8px;
   flex-wrap: wrap;
   margin-bottom: 12px;
+  align-items: center;
+}
+
+/* In-progress link in badges area */
+.in-progress-link {
+  font-size: 13px;
+  color: #F59E0B;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  display: inline-block;
+}
+
+.in-progress-link:hover {
+  color: #D97706;
+  background: #FEF3C7;
+}
+
+/* Status badges container in maintenance tab */
+.status-badges {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* In-progress link in status section */
+.in-progress-link-status {
+  font-size: 14px;
+  color: #F59E0B;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  display: inline-block;
+  border: 1px solid #FCD34D;
+  background: #FFFBEB;
+}
+
+.in-progress-link-status:hover {
+  color: #D97706;
+  background: #FEF3C7;
+  border-color: #FBBF24;
 }
 
 .detail-meta {
@@ -373,6 +419,13 @@
   border-radius: 4px;
   background: #DBEAFE;
   color: #1E40AF;
+}
+
+.maintenance-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 4px;
 }
 
 .maintenance-notes {
