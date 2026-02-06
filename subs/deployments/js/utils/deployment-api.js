@@ -151,3 +151,7 @@ export async function createConnection(deploymentId, connectionData) {
 export async function removeConnection(deploymentId, connectionId) {
   return await apiCall(`/deployments/${deploymentId}/connections/${connectionId}`, 'DELETE');
 }
+
+export async function getConnection(deploymentId, sessionId, connectionId) {
+  return await apiCall(`/deployments/${deploymentId}/sessions/${sessionId}/connections/${connectionId}`);
+}

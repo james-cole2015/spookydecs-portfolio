@@ -7,6 +7,7 @@ import { renderZonesDashboard } from './pages/deployment-zones.js';
 import { renderZoneDetail } from './pages/zone-detail.js';
 import { renderDeploymentSession } from './pages/deployment-session.js';
 import { renderSessionDetail } from './pages/session-detail.js';
+import { renderConnectionDetail } from './pages/connection-detail.js';
 
 // Define routes
 // IMPORTANT: Routes are matched in order - more specific routes MUST come before generic ones
@@ -60,6 +61,14 @@ const routes = [
     handler: (params) => {
       console.log('[Router] Zones dashboard route params:', params);
       renderZonesDashboard(params.id);
+    }
+  },
+  // CONNECTION DETAIL ROUTE - Must come BEFORE generic deployment detail route
+  { 
+    path: '/deployments/:id/sessions/:sessionId/connections/:connectionId', 
+    handler: (params) => {
+      console.log('[Router] Connection detail route params:', params);
+      renderConnectionDetail(params.id, params.sessionId, params.connectionId);
     }
   },
   { 

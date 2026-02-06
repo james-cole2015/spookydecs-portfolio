@@ -166,12 +166,13 @@ export class SessionDetailView {
         ` : `
           <div class="connections-list">
             ${connectionIds.map(connId => `
-              <div class="connection-card">
+              <a href="/deployments/${this.deployment.deployment_id}/sessions/${this.session.session_id}/connections/${connId}" class="connection-card connection-link">
                 <div class="connection-icon">🔌</div>
                 <div class="connection-info">
                   <div class="connection-id">${connId}</div>
+                  <div class="connection-link-text">View Details →</div>
                 </div>
-              </div>
+              </a>
             `).join('')}
           </div>
         `}

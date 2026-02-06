@@ -175,7 +175,7 @@ export class SessionHistory {
           <h4>Connections (${connections.length})</h4>
           <div class="connections-list">
             ${connections.map(conn => `
-              <div class="connection-item">
+              <a href="/deployments/${session.deployment_id || ''}/sessions/${session.session_id}/connections/${conn.connection_id}" class="connection-item connection-item-link">
                 <div class="connection-flow">
                   <span class="conn-from">${conn.from_item_id}</span>
                   <span class="conn-port">${conn.from_port}</span>
@@ -191,7 +191,7 @@ export class SessionHistory {
                 ${conn.notes ? `
                   <div class="connection-notes">${conn.notes}</div>
                 ` : ''}
-              </div>
+              </a>
             `).join('')}
           </div>
         </div>
