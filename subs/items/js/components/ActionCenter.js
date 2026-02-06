@@ -2,7 +2,7 @@
 // Action buttons for item management
 // Handles: Upload Photo, Flag for Repair, Retire Item, Delete Item
 
-import { updateItem, deleteItem, retireItem, getMaintenanceUrl, getFinanceUrl } from '../api/items.js';
+import { deleteItem, retireItem, getMaintenanceUrl, getFinanceUrl } from '../api/items.js';
 import { toast } from '../shared/toast.js';
 import { modal } from '../shared/modal.js';
 import { navigate } from '../utils/router.js';
@@ -75,35 +75,16 @@ export class ActionCenter {
       uploadModal.setAttribute('is-primary', 'true');
       
       // Handle upload complete
-      uploadModal.addEventListener('upload-complete', async (e) => {
+      // Note: photo-upload-service already links photos to item during confirm step
+      uploadModal.addEventListener('upload-complete', (e) => {
         const { photo_ids } = e.detail;
-        
+
         if (photo_ids && photo_ids.length > 0) {
-          try {
-            // Update item with new primary photo
-            const updateData = {
-              images: {
-                ...(this.item.images || {}),
-                primary_photo_id: photo_ids[0],
-                secondary_photo_ids: [
-                  ...(this.item.images?.secondary_photo_ids || []),
-                  ...photo_ids.slice(1)
-                ]
-              }
-            };
-            
-            const updatedItem = await updateItem(this.item.id, updateData);
-            
-            toast.success('Photo Uploaded', 'Item photo has been updated');
-            
-            // Callback to refresh item data
-            if (this.onPhotoUploaded) {
-              this.onPhotoUploaded(updatedItem);
-            }
-            
-          } catch (error) {
-            console.error('Failed to update item with photo:', error);
-            toast.error('Update Failed', 'Photo uploaded but failed to update item');
+          toast.success('Photo Uploaded', 'Item photo has been updated');
+
+          // Callback to refresh item data
+          if (this.onPhotoUploaded) {
+            this.onPhotoUploaded();
           }
         }
       });
