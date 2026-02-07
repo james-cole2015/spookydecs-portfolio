@@ -106,15 +106,15 @@ function renderConnectionBuilder(deployment, zone, session) {
   const pageContainer = document.createElement('div');
   pageContainer.className = 'session-page';
   
-  // Add breadcrumbs
+  // Add breadcrumbs with /builder prefix
   const breadcrumbs = document.createElement('div');
   breadcrumbs.className = 'breadcrumbs';
   breadcrumbs.innerHTML = `
     <a href="#" class="breadcrumb-link" data-path="/deployments">Deployments</a>
     <span class="breadcrumb-separator">›</span>
-    <a href="#" class="breadcrumb-link" data-path="/deployments/${deployment.deployment_id}/zones">${deployment.season} ${deployment.year}</a>
+    <a href="#" class="breadcrumb-link" data-path="/deployments/builder/${deployment.deployment_id}/zones">${deployment.season} ${deployment.year}</a>
     <span class="breadcrumb-separator">›</span>
-    <a href="#" class="breadcrumb-link" data-path="/deployments/${deployment.deployment_id}/zones/${zone.zone_code}">${zone.zone_name}</a>
+    <a href="#" class="breadcrumb-link" data-path="/deployments/builder/${deployment.deployment_id}/zones/${zone.zone_code}">${zone.zone_name}</a>
     <span class="breadcrumb-separator">›</span>
     <span class="breadcrumb-current">Active Session</span>
   `;
@@ -153,9 +153,9 @@ async function handleEndSession(deploymentId, sessionId, notes) {
     const response = await endSession(deploymentId, sessionId, { notes });
     
     if (response.success) {
-      // Navigate back to zone detail
+      // Navigate back to zone detail with /builder prefix
       const zoneCode = response.data.zone_code;
-      navigate(`/deployments/${deploymentId}/zones/${zoneCode}`);
+      navigate(`/deployments/builder/${deploymentId}/zones/${zoneCode}`);
     } else {
       throw new Error('Failed to end session');
     }

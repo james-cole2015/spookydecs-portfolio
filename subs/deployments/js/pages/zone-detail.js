@@ -96,8 +96,8 @@ function attachEventHandlers(deployment, zone, sessions, activeSession) {
           
           console.log('[ZoneDetail] Session created:', response);
           
-          // Force full page reload to refresh UI state
-          window.location.href = `/deployments/builder/${deployment.deployment_id}/zones/${zone.zone_code}`;
+          // Navigate directly to the active session builder
+          window.location.href = `/deployments/builder/${deployment.deployment_id}/zones/${zone.zone_code}/session`;
           
         } catch (error) {
           console.error('[ZoneDetail] Error creating session:', error);
