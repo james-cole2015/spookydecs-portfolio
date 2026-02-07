@@ -1,6 +1,6 @@
 // Zone Detail Page Handler
 
-import { getDeployment, getZoneSessions, createSession } from '../utils/deployment-api.js';
+import { getDeployment, getZoneSessions, createSession, endSession } from '../utils/deployment-api.js';
 import { ZoneDetailView } from '../components/builder/ZoneDetailView.js';
 import { navigate } from '../utils/router.js';
 import { createSessionStartModal } from '../components/builder/SessionStartModal.js';
@@ -96,8 +96,8 @@ function attachEventHandlers(deployment, zone, sessions, activeSession) {
           
           console.log('[ZoneDetail] Session created:', response);
           
-          // Reload page to refresh data
-          window.location.reload();
+          // Force full page reload to refresh UI state
+          window.location.href = `/deployments/builder/${deployment.deployment_id}/zones/${zone.zone_code}`;
           
         } catch (error) {
           console.error('[ZoneDetail] Error creating session:', error);
@@ -127,11 +127,17 @@ function attachEventHandlers(deployment, zone, sessions, activeSession) {
     if (!confirmed) return;
     
     try {
-      // TODO: Call endSession API
-      console.log('[ZoneDetail] End session:', activeSession.session_id);
+      console.log('[ZoneDetail] Ending session:', activeSession.session_id);
       
-      // Reload page to refresh data
-      window.location.reload();
+      // Call API to end the session
+      await endSession(deployment.deployment_id, activeSession.session_id, {
+        end_time: new Date().toISOString()
+      });
+      
+      console.log('[ZoneDetail] Session ended successfully');
+      
+      // Force full page reload to refresh UI state
+      window.location.href = `/deployments/builder/${deployment.deployment_id}/zones/${zone.zone_code}`;
       
     } catch (error) {
       console.error('[ZoneDetail] Error ending session:', error);
