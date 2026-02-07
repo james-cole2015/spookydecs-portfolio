@@ -32,17 +32,17 @@ const routes = [
     path: '/deployments/stats', 
     handler: () => renderStatsPlaceholder()
   },
-  // SESSION DETAIL ROUTE - Must come BEFORE zone detail route
+  // SESSION DETAIL ROUTE - Most specific zone route, must come first
   { 
-    path: '/deployments/:id/zones/:zone/sessions/:sessionId', 
+    path: '/deployments/builder/:id/zones/:zone/sessions/:sessionId', 
     handler: (params) => {
       console.log('[Router] Session detail route params:', params);
       renderSessionDetail(params.id, params.zone, params.sessionId);
     }
   },
-  // ACTIVE SESSION ROUTE - Must come BEFORE zone detail route
+  // ACTIVE SESSION ROUTE - Must come before zone detail route
   { 
-    path: '/deployments/:id/zones/:zone/session', 
+    path: '/deployments/builder/:id/zones/:zone/session', 
     handler: (params) => {
       console.log('[Router] Active session route params:', params);
       renderDeploymentSession(params);
@@ -50,25 +50,26 @@ const routes = [
   },
   // ZONE DETAIL ROUTE
   { 
-    path: '/deployments/:id/zones/:zone', 
+    path: '/deployments/builder/:id/zones/:zone', 
     handler: (params) => {
       console.log('[Router] Zone detail route params:', params);
       renderZoneDetail(params.id, params.zone);
     }
   },
+  // ZONES DASHBOARD
   { 
-    path: '/deployments/:id/zones', 
+    path: '/deployments/builder/:id/zones', 
     handler: (params) => {
       console.log('[Router] Zones dashboard route params:', params);
       renderZonesDashboard(params.id);
     }
   },
-  // CONNECTION DETAIL ROUTE - Must come BEFORE generic deployment detail route
+  // CONNECTION DETAIL ROUTE - Must come AFTER all zone routes (least specific)
   { 
-    path: '/deployments/:id/sessions/:sessionId/connections/:connectionId', 
+    path: '/deployments/builder/:deploymentId/:sessionId/:connectionId', 
     handler: (params) => {
       console.log('[Router] Connection detail route params:', params);
-      renderConnectionDetail(params.id, params.sessionId, params.connectionId);
+      renderConnectionDetail(params.deploymentId, params.sessionId, params.connectionId);
     }
   },
   { 

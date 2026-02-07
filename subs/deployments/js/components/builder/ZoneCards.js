@@ -84,7 +84,7 @@ export class ZoneCards {
     // Attach click handler - navigate to zone detail page
     card.addEventListener('click', () => {
       const zoneCode = zone.zone_code;
-      navigate(`/deployments/${this.deploymentId}/zones/${zoneCode}`);
+      navigate(`/deployments/builder/${this.deploymentId}/zones/${zoneCode}`);
       
       // Also call custom callback if provided
       if (this.clickCallback) {

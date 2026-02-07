@@ -45,8 +45,8 @@ export class SessionDetailView {
   }
   
   renderBreadcrumbs() {
-    const zonesRoute = `/deployments/${this.deployment.deployment_id}/zones`;
-    const zoneRoute = `/deployments/${this.deployment.deployment_id}/zones/${this.zone.zone_code}`;
+    const zonesRoute = `/deployments/builder/${this.deployment.deployment_id}/zones`;
+    const zoneRoute = `/deployments/builder/${this.deployment.deployment_id}/zones/${this.zone.zone_code}`;
     
     return `
       <nav class="breadcrumbs">
@@ -166,7 +166,7 @@ export class SessionDetailView {
         ` : `
           <div class="connections-list">
             ${connectionIds.map(connId => `
-              <a href="/deployments/${this.deployment.deployment_id}/sessions/${this.session.session_id}/connections/${connId}" class="connection-card connection-link">
+              <a href="/deployments/builder/${this.deployment.deployment_id}/${this.session.session_id}/${connId}" class="connection-card connection-link">
                 <div class="connection-icon">🔌</div>
                 <div class="connection-info">
                   <div class="connection-id">${connId}</div>

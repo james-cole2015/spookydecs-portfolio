@@ -67,7 +67,7 @@ export async function renderZoneDetail(deploymentId, zoneCode) {
     `;
     
     app.querySelector('.btn-back')?.addEventListener('click', () => {
-      navigate(`/deployments/${deploymentId}/zones`);
+      navigate(`/deployments/builder/${deploymentId}/zones`);
     });
   }
 }
@@ -77,7 +77,7 @@ function attachEventHandlers(deployment, zone, sessions, activeSession) {
   
   // Back button
   document.querySelector('.btn-back')?.addEventListener('click', () => {
-    navigate(`/deployments/${deployment.deployment_id}/zones`);
+    navigate(`/deployments/builder/${deployment.deployment_id}/zones`);
   });
   
   // Start session button
@@ -115,7 +115,7 @@ function attachEventHandlers(deployment, zone, sessions, activeSession) {
   // Resume session button
   document.querySelector('.btn-resume-session')?.addEventListener('click', () => {
     if (activeSession) {
-      navigate(`/deployments/${deployment.deployment_id}/zones/${zone.zone_code}/session`);
+      navigate(`/deployments/builder/${deployment.deployment_id}/zones/${zone.zone_code}/session`);
     }
   });
   
@@ -150,6 +150,6 @@ function attachEventHandlers(deployment, zone, sessions, activeSession) {
   app.addEventListener('session-click', (e) => {
     const session = e.detail.session;
     console.log('[ZoneDetail] Session clicked:', session.session_id);
-    navigate(`/deployments/${deployment.deployment_id}/zones/${zone.zone_code}/sessions/${session.session_id}`);
+    navigate(`/deployments/builder/${deployment.deployment_id}/zones/${zone.zone_code}/sessions/${session.session_id}`);
   });
 }

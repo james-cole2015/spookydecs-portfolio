@@ -38,7 +38,7 @@ export async function renderBuilder() {
       if (activeDeployments.length > 0) {
         // Active deployment exists - redirect to zones dashboard
         const deployment = activeDeployments[0];
-        navigate(`/deployments/${deployment.deployment_id}/zones`);
+        navigate(`/deployments/builder/${deployment.deployment_id}/zones`);
         return;
       }
     }
@@ -145,7 +145,7 @@ async function handleFormSubmit(formData) {
       // Navigate to zone dashboard after short delay
       setTimeout(() => {
         const deploymentId = response.data.metadata.deployment_id;
-        navigate(`/deployments/${deploymentId}/zones`);
+        navigate(`/deployments/builder/${deploymentId}/zones`);
       }, 1000);
     } else {
       showError('Failed to create deployment');

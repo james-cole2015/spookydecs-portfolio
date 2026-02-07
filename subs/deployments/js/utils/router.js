@@ -33,10 +33,20 @@ export function initRouter(routes) {
     });
   }
 
-  // Handle not found
+  // Handle not found - updated to prevent flash during navigation
   router.notFound(() => {
-    console.warn('Route not found, redirecting to /deployments');
-    router.navigate('/deployments');
+    const currentPath = window.location.pathname;
+    console.warn('Route not found:', currentPath);
+    
+    // Only redirect if we're truly on an unknown route
+    // Don't redirect if already on a /deployments route (prevents flash during navigation)
+    if (!currentPath.startsWith('/deployments')) {
+      console.log('Redirecting to /deployments from:', currentPath);
+      router.navigate('/deployments');
+    } else {
+      console.log('Route not matched but staying on deployments path:', currentPath);
+      // Don't redirect - let the route settle
+    }
   });
 
   // Resolve initial route

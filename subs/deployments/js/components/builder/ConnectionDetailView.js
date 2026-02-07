@@ -47,9 +47,9 @@ export class ConnectionDetailView {
   }
   
   renderBreadcrumbs() {
-    const zonesRoute = `/deployments/${this.deployment.deployment_id}/zones`;
-    const zoneRoute = `/deployments/${this.deployment.deployment_id}/zones/${this.zone.zone_code}`;
-    const sessionRoute = `/deployments/${this.deployment.deployment_id}/zones/${this.zone.zone_code}/sessions/${this.connection.session_id}`;
+    const zonesRoute = `/deployments/builder/${this.deployment.deployment_id}/zones`;
+    const zoneRoute = `/deployments/builder/${this.deployment.deployment_id}/zones/${this.zone.zone_code}`;
+    const sessionRoute = `/deployments/builder/${this.deployment.deployment_id}/zones/${this.zone.zone_code}/sessions/${this.connection.session_id}`;
     
     return `
       <nav class="breadcrumbs">
