@@ -109,6 +109,11 @@ export async function searchItems(filters = {}) {
   if (filters.search) params.append('search', filters.search);
   if (filters.connection_building) params.append('connection_building', filters.connection_building);
   
+  // NEW - Add exclude_deployment parameter
+  if (filters.exclude_deployment) {
+    params.append('exclude_deployment', filters.exclude_deployment);
+  }
+  
   if (params.toString()) {
     endpoint += `?${params.toString()}`;
   }
@@ -153,6 +158,23 @@ export async function removeConnection(deploymentId, connectionId) {
 }
 
 /**
+ * Update connection (for marking items as removed)
+ * @param {string} deploymentId - Deployment ID
+ * @param {string} connectionId - Connection ID
+ * @param {Object} updates - Updates to apply { state: boolean, removal_reason: string }
+ * @returns {Promise<Object>} API response
+ */
+export async function updateConnection(deploymentId, connectionId, updates) {
+  console.log('[deployment-api] updateConnection:', { deploymentId, connectionId, updates });
+  
+  return await apiCall(
+    `/deployments/${deploymentId}/connections/${connectionId}`,
+    'PATCH',
+    updates
+  );
+}
+
+/**
  * Update connection with photo IDs
  * @param {string} deploymentId - Deployment ID
  * @param {string} connectionId - Connection ID
@@ -172,6 +194,7 @@ export async function updateConnectionPhotos(deploymentId, connectionId, photoId
 export async function getConnection(deploymentId, sessionId, connectionId) {
   return await apiCall(`/deployments/${deploymentId}/sessions/${sessionId}/connections/${connectionId}`);
 }
+
 /**
  * Fetch image details by ID
  * @param {string} imageId - Image ID

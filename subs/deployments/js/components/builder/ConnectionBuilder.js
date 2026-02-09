@@ -1,5 +1,6 @@
 // ConnectionBuilder.js
 // Main orchestrator for connection topology building
+// UPDATED: Added handleRemoveItem() for marking connections as removed
 
 import { getAvailablePorts } from '../../utils/deployment-api.js';
 import { SourcesList } from './SourcesList.js';
@@ -129,9 +130,9 @@ export class ConnectionBuilder {
     connectionsContainer.appendChild(this.connectionsList.render());
     countBadge.textContent = this.connections.length;
     
-    // Listen for remove requests
+    // UPDATED - Listen for remove-connection event (this will trigger handleRemoveItem)
     this.connectionsList.container.addEventListener('remove-connection', (e) => {
-      this.handleRemoveConnection(e.detail.connectionId);
+      this.handleRemoveItem(e.detail.connectionId);
     });
   }
   
@@ -156,27 +157,39 @@ export class ConnectionBuilder {
     });
   }
   
-  async handleRemoveConnection(connectionId) {
-    console.log('[ConnectionBuilder] Removing connection:', connectionId);
+  /**
+   * NEW - Handle removing an item from the deployment
+   * Marks connection as state: false (removed)
+   */
+  async handleRemoveItem(connectionId) {
+    console.log('[ConnectionBuilder] Removing item via connection:', connectionId);
     
-    const confirmed = confirm('Remove this connection?');
-    if (!confirmed) return;
+    const reason = prompt('Why are you removing this item? (optional)');
+    if (reason === null) return; // User cancelled
     
     try {
-      const { removeConnection } = await import('../../utils/deployment-api.js');
-      await removeConnection(this.deployment.deployment_id, connectionId);
+      const { updateConnection } = await import('../../utils/deployment-api.js');
       
-      console.log('[ConnectionBuilder] Connection removed successfully');
+      await updateConnection(
+        this.deployment.deployment_id,
+        connectionId,
+        {
+          state: false,
+          removal_reason: reason || 'Item removed during session'
+        }
+      );
+      
+      console.log('[ConnectionBuilder] Item marked as removed');
       
       // Remove from pending photos
       delete this.pendingPhotoIds[connectionId];
       
-      this.showToast('Connection removed', 'success');
-      await this.loadData(); // Reload
+      this.showToast('Item removed from deployment', 'success');
+      await this.loadData(); // Reload to update UI
       
     } catch (error) {
-      console.error('[ConnectionBuilder] Error removing connection:', error);
-      this.showToast('Failed to remove connection', 'error');
+      console.error('[ConnectionBuilder] Error removing item:', error);
+      this.showToast('Failed to remove item', 'error');
     }
   }
   
