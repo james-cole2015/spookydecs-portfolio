@@ -152,6 +152,23 @@ export async function removeConnection(deploymentId, connectionId) {
   return await apiCall(`/deployments/${deploymentId}/connections/${connectionId}`, 'DELETE');
 }
 
+/**
+ * Update connection with photo IDs
+ * @param {string} deploymentId - Deployment ID
+ * @param {string} connectionId - Connection ID
+ * @param {string[]} photoIds - Array of photo IDs to add
+ * @returns {Promise<Object>} API response
+ */
+export async function updateConnectionPhotos(deploymentId, connectionId, photoIds) {
+  console.log('[deployment-api] updateConnectionPhotos:', { deploymentId, connectionId, photoIds });
+  
+  return await apiCall(
+    `/deployments/${deploymentId}/connections/${connectionId}/photos`,
+    'PATCH',
+    { photo_ids: photoIds }
+  );
+}
+
 export async function getConnection(deploymentId, sessionId, connectionId) {
   return await apiCall(`/deployments/${deploymentId}/sessions/${sessionId}/connections/${connectionId}`);
 }
