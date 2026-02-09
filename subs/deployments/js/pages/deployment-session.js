@@ -137,31 +137,39 @@ function renderConnectionBuilder(deployment, zone, session) {
   // Listen for end session event
   container.addEventListener('end-session', async (event) => {
     const notes = event.detail.notes;
-    await handleEndSession(deployment.deployment_id, session.session_id, notes);
+    
+    try {
+      console.log('[deployment-session] Handling end-session event');
+      await handleEndSession(deployment.deployment_id, session.session_id, notes, zone.zone_code);
+      
+      // Close any open modals (EndSessionReview)
+      document.querySelectorAll('.review-modal').forEach(modal => modal.remove());
+      
+    } catch (error) {
+      console.error('[deployment-session] Error in end-session handler:', error);
+      // Don't close modal - let ConnectionBuilder's error handler deal with it
+      throw error;
+    }
   });
   
   pageContainer.appendChild(container);
   app.appendChild(pageContainer);
 }
 
-async function handleEndSession(deploymentId, sessionId, notes) {
+async function handleEndSession(deploymentId, sessionId, notes, zoneCode) {
   // Import at time of use to avoid circular dependency
   const { endSession } = await import('../utils/deployment-api.js');
   const { navigate } = await import('../utils/router.js');
   
-  try {
-    const response = await endSession(deploymentId, sessionId, { notes });
-    
-    if (response.success) {
-      // Navigate back to zone detail with /builder prefix
-      const zoneCode = response.data.zone_code;
-      navigate(`/deployments/builder/${deploymentId}/zones/${zoneCode}`);
-    } else {
-      throw new Error('Failed to end session');
-    }
-    
-  } catch (error) {
-    console.error('Error ending session:', error);
-    alert('Failed to end session: ' + error.message);
+  console.log('[deployment-session] Calling endSession API');
+  
+  const response = await endSession(deploymentId, sessionId, { notes });
+  
+  if (response.success) {
+    console.log('[deployment-session] Session ended successfully, navigating...');
+    // Navigate back to zone detail with /builder prefix
+    navigate(`/deployments/builder/${deploymentId}/zones/${zoneCode}`);
+  } else {
+    throw new Error('Failed to end session');
   }
 }

@@ -215,58 +215,60 @@ export class ConnectionBuilder {
     // Listen for end session confirmation
     this.endSessionReview.container.addEventListener('end-session-confirmed', async (e) => {
       const { notes, skipPhotos } = e.detail;
-      await this.handleEndSession(notes, skipPhotos);
+      
+      try {
+        await this.handleEndSession(notes, skipPhotos);
+        // Success - modal will be closed by parent navigation
+      } catch (error) {
+        // Error - show in modal and re-enable buttons
+        console.error('[ConnectionBuilder] End session failed:', error);
+        this.endSessionReview.showError(error.message || 'Failed to end session. Please try again.');
+      }
     });
   }
   
   async handleEndSession(notes, skipPhotos) {
     console.log('[ConnectionBuilder] Ending session, skipPhotos:', skipPhotos);
     
-    try {
-      // 1. Update connections with photos (if not skipping)
-      if (!skipPhotos) {
-        const { updateConnectionPhotos } = await import('../../utils/deployment-api.js');
-        
-        const updatePromises = Object.keys(this.pendingPhotoIds)
-          .filter(connectionId => {
-            const photoIds = this.pendingPhotoIds[connectionId];
-            const connection = this.connections.find(c => c.connection_id === connectionId);
-            const existingPhotos = connection?.photo_ids || [];
-            const newPhotos = photoIds.filter(pid => !existingPhotos.includes(pid));
-            return newPhotos.length > 0;
-          })
-          .map(connectionId => {
-            const photoIds = this.pendingPhotoIds[connectionId];
-            const connection = this.connections.find(c => c.connection_id === connectionId);
-            const existingPhotos = connection?.photo_ids || [];
-            const newPhotos = photoIds.filter(pid => !existingPhotos.includes(pid));
-            
-            console.log('[ConnectionBuilder] Updating connection', connectionId, 'with new photos:', newPhotos);
-            
-            return updateConnectionPhotos(
-              this.deployment.deployment_id,
-              connectionId,
-              newPhotos
-            );
-          });
-        
-        if (updatePromises.length > 0) {
-          await Promise.all(updatePromises);
-          console.log('[ConnectionBuilder] All connections updated with photos');
-        }
+    // 1. Update connections with photos (if not skipping)
+    if (!skipPhotos) {
+      const { updateConnectionPhotos } = await import('../../utils/deployment-api.js');
+      
+      const updatePromises = Object.keys(this.pendingPhotoIds)
+        .filter(connectionId => {
+          const photoIds = this.pendingPhotoIds[connectionId];
+          const connection = this.connections.find(c => c.connection_id === connectionId);
+          const existingPhotos = connection?.photo_ids || [];
+          const newPhotos = photoIds.filter(pid => !existingPhotos.includes(pid));
+          return newPhotos.length > 0;
+        })
+        .map(connectionId => {
+          const photoIds = this.pendingPhotoIds[connectionId];
+          const connection = this.connections.find(c => c.connection_id === connectionId);
+          const existingPhotos = connection?.photo_ids || [];
+          const newPhotos = photoIds.filter(pid => !existingPhotos.includes(pid));
+          
+          console.log('[ConnectionBuilder] Updating connection', connectionId, 'with new photos:', newPhotos);
+          
+          return updateConnectionPhotos(
+            this.deployment.deployment_id,
+            connectionId,
+            newPhotos
+          );
+        });
+      
+      if (updatePromises.length > 0) {
+        console.log('[ConnectionBuilder] Waiting for photo updates...');
+        await Promise.all(updatePromises);
+        console.log('[ConnectionBuilder] All connections updated with photos');
       }
-      
-      // 2. Fire end-session event (deployment-session.js handles the API call)
-      const event = new CustomEvent('end-session', {
-        detail: { notes }
-      });
-      this.container.dispatchEvent(event);
-      
-    } catch (error) {
-      console.error('[ConnectionBuilder] Error ending session:', error);
-      this.showToast('Failed to end session: ' + error.message, 'error');
-      throw error; // Re-throw to let EndSessionReview handle UI state
     }
+    
+    // 2. Fire end-session event (deployment-session.js handles the API call and navigation)
+    const event = new CustomEvent('end-session', {
+      detail: { notes }
+    });
+    this.container.dispatchEvent(event);
   }
   
   formatTime(isoString) {

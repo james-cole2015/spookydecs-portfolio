@@ -233,15 +233,46 @@ export class EndSessionReview {
     
     const confirmBtn = this.container.querySelector('.btn-end-session-confirm');
     const skipBtn = this.container.querySelector('.btn-skip-photos');
+    const cancelBtn = this.container.querySelector('.btn-cancel-review');
     
+    // Disable all buttons and show loading state
     confirmBtn.disabled = true;
     skipBtn.disabled = true;
-    confirmBtn.textContent = 'Ending...';
+    cancelBtn.disabled = true;
+    confirmBtn.textContent = skipPhotos ? 'Ending Session...' : 'Saving Photos & Ending...';
     
     // Dispatch event to parent
     this.container.dispatchEvent(new CustomEvent('end-session-confirmed', {
       detail: { notes, skipPhotos }
     }));
+  }
+  
+  showError(message) {
+    // Re-enable buttons on error
+    const confirmBtn = this.container.querySelector('.btn-end-session-confirm');
+    const skipBtn = this.container.querySelector('.btn-skip-photos');
+    const cancelBtn = this.container.querySelector('.btn-cancel-review');
+    
+    if (confirmBtn) confirmBtn.disabled = false;
+    if (skipBtn) skipBtn.disabled = false;
+    if (cancelBtn) cancelBtn.disabled = false;
+    if (confirmBtn) confirmBtn.textContent = 'End Session';
+    
+    // Show error in modal
+    const modalBody = this.container.querySelector('.review-modal-body');
+    if (!modalBody) return;
+    
+    const existingError = modalBody.querySelector('.error-message');
+    if (existingError) {
+      existingError.remove();
+    }
+    
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-message';
+    errorDiv.style.cssText = 'background: #fee; border: 1px solid #fcc; color: #c33; padding: 1rem; margin-bottom: 1rem; border-radius: 4px;';
+    errorDiv.textContent = message;
+    
+    modalBody.insertBefore(errorDiv, modalBody.firstChild);
   }
   
   close() {
