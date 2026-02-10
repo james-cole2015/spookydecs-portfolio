@@ -680,23 +680,26 @@
 }
 
 .btn-remove-connection {
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: 50%;
-  border: none;
-  background: var(--danger-color);
-  color: white;
-  font-size: 1.25rem;
-  cursor: pointer;
-  transition: all 0.2s;
+  width: 2rem;
+  height: 2rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: white;
+  color: var(--gray-500, #6b7280);
+  border: 1px solid var(--gray-300, #d1d5db);
+  border-radius: 4px;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
 }
 
 .btn-remove-connection:hover {
-  background: #b91c1c;
-  transform: scale(1.1);
+  background: #DC2626;
+  color: white;
+  border-color: #DC2626;
 }
 
 /* Source Cards */

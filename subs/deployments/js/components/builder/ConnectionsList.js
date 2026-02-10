@@ -36,7 +36,7 @@ export class ConnectionsList {
             <div class="node-port">${conn.to_port}</div>
           </div>
         </div>
-        <button class="btn-remove-connection" title="Remove connection">×</button>
+        <button class="btn-remove-connection" title="Deactivate connection">×</button>
       </div>
     `).join('');
     

@@ -274,18 +274,19 @@
   align-items: center;
   justify-content: center;
   background: var(--white);
-  color: var(--gray-600);
+  color: var(--gray-500);
   border: 1px solid var(--gray-300);
-  border-radius: 50%;
+  border-radius: 4px;
   font-size: 1.25rem;
   line-height: 1;
   cursor: pointer;
   transition: all 0.2s;
+  flex-shrink: 0;
 }
 
 .btn-remove-connection:hover {
   background: #DC2626;
-  color: var(--white);
+  color: white;
   border-color: #DC2626;
 }
 
