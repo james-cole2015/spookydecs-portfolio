@@ -1,6 +1,5 @@
 // ConnectionBuilder.js
 // Main orchestrator for connection topology building
-// UPDATED: Added handleRemoveItem() for marking connections as removed
 
 import { getAvailablePorts } from '../../utils/deployment-api.js';
 import { SourcesList } from './SourcesList.js';
@@ -15,9 +14,8 @@ export class ConnectionBuilder {
     this.session = session;
     this.availablePorts = [];
     this.connections = [];
-    this.pendingPhotoIds = {}; // { connection_id: [photo_ids] }
+    this.pendingPhotoIds = {};
     
-    // Child components
     this.sourcesList = null;
     this.connectionsList = null;
     this.connectionModal = null;
@@ -44,7 +42,6 @@ export class ConnectionBuilder {
       </div>
       
       <div class="builder-content">
-        <!-- Left: Available sources -->
         <div class="sources-panel">
           <div class="panel-header">
             <h3>Available Connections</h3>
@@ -52,7 +49,6 @@ export class ConnectionBuilder {
           <div class="sources-list"></div>
         </div>
         
-        <!-- Right: Connections made -->
         <div class="connections-panel">
           <div class="panel-header">
             <h3>Connections</h3>
@@ -71,7 +67,6 @@ export class ConnectionBuilder {
   }
   
   attachEventListeners() {
-    // End session button
     this.container.querySelector('.btn-end-session').addEventListener('click', () => {
       this.handleEndSessionClick();
     });
@@ -111,18 +106,15 @@ export class ConnectionBuilder {
   }
   
   renderChildren() {
-    // Render sources list
     const sourcesContainer = this.container.querySelector('.sources-list');
     this.sourcesList = new SourcesList(this.availablePorts);
     sourcesContainer.innerHTML = '';
     sourcesContainer.appendChild(this.sourcesList.render());
     
-    // Listen for connect requests
     this.sourcesList.container.addEventListener('connect-item', (e) => {
       this.handleConnectItem(e.detail.item);
     });
     
-    // Render connections list
     const connectionsContainer = this.container.querySelector('.connections-list');
     const countBadge = this.container.querySelector('.connections-count');
     this.connectionsList = new ConnectionsList(this.connections);
@@ -130,7 +122,6 @@ export class ConnectionBuilder {
     connectionsContainer.appendChild(this.connectionsList.render());
     countBadge.textContent = this.connections.length;
     
-    // UPDATED - Listen for remove-connection event (this will trigger handleRemoveItem)
     this.connectionsList.container.addEventListener('remove-connection', (e) => {
       this.handleRemoveItem(e.detail.connectionId);
     });
@@ -139,27 +130,25 @@ export class ConnectionBuilder {
   handleConnectItem(item) {
     console.log('[ConnectionBuilder] Starting connection from:', item);
     
-    // Create and show connection modal
     this.connectionModal = new ConnectionModal(item, this.deployment, this.zone, this.session);
     document.body.appendChild(this.connectionModal.render());
     
-    // Listen for connection created
     this.connectionModal.container.addEventListener('connection-created', async (e) => {
       const { connectionId } = e.detail;
       
-      // Initialize pending photos for new connection
       if (connectionId) {
         this.pendingPhotoIds[connectionId] = [];
       }
       
       this.showToast('Connection created', 'success');
-      await this.loadData(); // Reload
+      await this.loadData();
     });
   }
   
   /**
-   * NEW - Handle removing an item from the deployment
-   * Marks connection as state: false (removed)
+   * Handle removing an item from the deployment.
+   * Sends removal_reason only — Lambda sets connection_type = 'removal'
+   * and records removed_in_session automatically.
    */
   async handleRemoveItem(connectionId) {
     console.log('[ConnectionBuilder] Removing item via connection:', connectionId);
@@ -174,18 +163,17 @@ export class ConnectionBuilder {
         this.deployment.deployment_id,
         connectionId,
         {
-          state: false,
           removal_reason: reason || 'Item removed during session'
         }
       );
       
-      console.log('[ConnectionBuilder] Item marked as removed');
+      console.log('[ConnectionBuilder] Item marked as removal');
       
       // Remove from pending photos
       delete this.pendingPhotoIds[connectionId];
       
       this.showToast('Item removed from deployment', 'success');
-      await this.loadData(); // Reload to update UI
+      await this.loadData();
       
     } catch (error) {
       console.error('[ConnectionBuilder] Error removing item:', error);
@@ -196,7 +184,6 @@ export class ConnectionBuilder {
   async handleEndSessionClick() {
     console.log('[ConnectionBuilder] End session clicked');
     
-    // Create and show end session review
     this.endSessionReview = new EndSessionReview(
       this.deployment,
       this.zone,
@@ -207,7 +194,6 @@ export class ConnectionBuilder {
     
     document.body.appendChild(this.endSessionReview.render());
     
-    // Listen for photo updates
     this.endSessionReview.container.addEventListener('photos-updated', (e) => {
       const { connectionId, photoIds } = e.detail;
       
@@ -215,7 +201,6 @@ export class ConnectionBuilder {
         this.pendingPhotoIds[connectionId] = [];
       }
       
-      // Append new photo IDs (avoid duplicates)
       photoIds.forEach(pid => {
         if (!this.pendingPhotoIds[connectionId].includes(pid)) {
           this.pendingPhotoIds[connectionId].push(pid);
@@ -225,15 +210,12 @@ export class ConnectionBuilder {
       console.log('[ConnectionBuilder] Updated pendingPhotoIds:', this.pendingPhotoIds);
     });
     
-    // Listen for end session confirmation
     this.endSessionReview.container.addEventListener('end-session-confirmed', async (e) => {
       const { notes, skipPhotos } = e.detail;
       
       try {
         await this.handleEndSession(notes, skipPhotos);
-        // Success - modal will be closed by parent navigation
       } catch (error) {
-        // Error - show in modal and re-enable buttons
         console.error('[ConnectionBuilder] End session failed:', error);
         this.endSessionReview.showError(error.message || 'Failed to end session. Please try again.');
       }
@@ -243,7 +225,6 @@ export class ConnectionBuilder {
   async handleEndSession(notes, skipPhotos) {
     console.log('[ConnectionBuilder] Ending session, skipPhotos:', skipPhotos);
     
-    // 1. Update connections with photos (if not skipping)
     if (!skipPhotos) {
       const { updateConnectionPhotos } = await import('../../utils/deployment-api.js');
       
@@ -252,8 +233,7 @@ export class ConnectionBuilder {
           const photoIds = this.pendingPhotoIds[connectionId];
           const connection = this.connections.find(c => c.connection_id === connectionId);
           const existingPhotos = connection?.photo_ids || [];
-          const newPhotos = photoIds.filter(pid => !existingPhotos.includes(pid));
-          return newPhotos.length > 0;
+          return photoIds.filter(pid => !existingPhotos.includes(pid)).length > 0;
         })
         .map(connectionId => {
           const photoIds = this.pendingPhotoIds[connectionId];
@@ -277,7 +257,6 @@ export class ConnectionBuilder {
       }
     }
     
-    // 2. Fire end-session event (deployment-session.js handles the API call and navigation)
     const event = new CustomEvent('end-session', {
       detail: { notes }
     });
@@ -286,10 +265,10 @@ export class ConnectionBuilder {
   
   formatTime(isoString) {
     const date = new Date(isoString);
-    return date.toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
       minute: '2-digit',
-      hour12: true 
+      hour12: true
     });
   }
   
