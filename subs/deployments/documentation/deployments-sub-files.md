@@ -16,6 +16,7 @@ deployments/
 │   ├── session.css               # Session-related pages and session history table
 │   ├── session-detail.css        # Session detail page layout, metadata, and items grid
 │   ├── shared.css                # Common styles used across deployment pages
+│   ├── staging.css               # Staging area page layout, tote cards, and breadcrumb
 │   ├── stats.css                 # Styles for deployment stats view (placeholder)
 │   └── zone-detail.css           # Zone detail page, banners, stats cards, quick actions
 ├── documentation/
@@ -37,12 +38,14 @@ deployments/
     │       ├── SessionHistory.js        # Expandable session history table component
     │       ├── SessionStartModal.js     # Modal factory for session start confirmation
     │       ├── SourcesList.js           # Renders list of items with available ports for connections
+    │       ├── StagingView.js           # Staging area view with tote selection and deployment staging
     │       ├── ZoneCards.js             # Clickable zone cards displaying item counts and session stats
     │       └── ZoneDetailView.js        # Zone detail layout with stats and quick actions
     ├── pages/
     │   ├── connection-detail.js   # Connection detail page with item photos and illuminates
     │   ├── deployment-builder.js  # Create deployment page with active deployment check
     │   ├── deployment-session.js  # Active connection building session handler
+    │   ├── deployment-staging.js  # Staging page orchestration with tote loading and staging
     │   ├── deployment-zones.js    # Zone dashboard showing zone cards for a deployment
     │   ├── main.js                # Landing page with option cards for Builder, Historical, Graphs, Stats
     │   ├── session-detail.js      # Session detail page with metadata, items, and connections
@@ -57,6 +60,7 @@ deployments/
 ```
 /deployments                          → Landing page with 4 option cards
 /deployments/builder                  → Create deployment form (redirects to zones if active deployment exists)
+/deployments/builder/:id/staging      → Staging area for selecting and staging totes
 /deployments/builder/:id/zones        → Zone dashboard for managing deployment zones
 /deployments/builder/:id/zones/:zone  → Zone detail with session management and stats
 /deployments/builder/:id/zones/:zone/session   → Active session with connection builder
@@ -135,6 +139,10 @@ Connections:
   removeConnection(deploymentId, connectionId) → Remove a connection
   getConnection(deploymentId, sessionId, connectionId) → Get connection detail by ID
   updateConnectionPhotos(deploymentId, connectionId, photoIds) → Attach photos to a connection
+
+Staging:
+  getStagingTotes(deploymentId)                  → Get totes available for staging
+  stageTote(deploymentId, body)                  → Stage a tote for deployment
 
 Images:
   fetchImageById(imageId)                      → Fetch image details (cloudfront_url) by ID
