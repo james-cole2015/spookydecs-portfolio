@@ -533,3 +533,95 @@ textarea.form-control {
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
+/* Section Headers */
+.zones-section-header {
+  margin: var(--spacing-2xl) 0 var(--spacing-lg) 0;
+}
+
+.zones-section-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* Staging Section */
+.staging-section {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-bottom: var(--spacing-2xl);
+}
+
+/* Match zone cards grid on larger screens */
+@media (min-width: 640px) {
+  .staging-section {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .staging-section {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Staging Card Specific Styles - matches zone card */
+.staging-card {
+  background: var(--white);
+  border: 2px solid var(--gray-200);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.staging-card:hover {
+  border-color: var(--primary-blue);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+.staging-card:active {
+  transform: translateY(0);
+}
+
+.staging-card .card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.staging-card .card-icon {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.staging-card .card-header h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin: 0;
+}
+
+.staging-card .card-content {
+  margin-bottom: 1rem;
+}
+
+.staging-card .card-description {
+  color: var(--gray-600);
+  font-size: 0.95rem;
+}
+
+.staging-card .card-footer {
+  border-top: 1px solid var(--gray-200);
+  padding-top: 1rem;
+  margin-top: 1rem;
+}
+
+.staging-card .card-action {
+  color: var(--primary-blue);
+  font-weight: 600;
+  font-size: 1rem;
+}

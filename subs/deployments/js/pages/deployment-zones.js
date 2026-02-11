@@ -56,7 +56,7 @@ export async function renderZonesDashboard(deploymentId) {
     
     container.innerHTML = `
       <div class="zones-header">
-        <button class="btn-back">← Back to Builder</button>
+        <button class="btn-back">← Back to Deployments</button>
         <div class="deployment-info">
           <h1>${deployment.deployment_id || deploymentId}</h1>
           <p class="deployment-meta">
@@ -65,6 +65,29 @@ export async function renderZonesDashboard(deploymentId) {
             <span class="status-badge status-${deployment.status || 'unknown'}">${(deployment.status || 'unknown').replace(/_/g, ' ')}</span>
           </p>
         </div>
+      </div>
+      
+      <div class="zones-section-header">
+        <h2>Setup</h2>
+      </div>
+      
+      <div class="staging-section">
+        <div class="staging-card zone-card" data-nav="/deployments/builder/${deploymentId}/staging">
+          <div class="card-header">
+            <div class="card-icon">📦</div>
+            <h2>Staging Area</h2>
+          </div>
+          <div class="card-content">
+            <p class="card-description">Prepare totes and items for deployment</p>
+          </div>
+          <div class="card-footer">
+            <span class="card-action">Stage Items →</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="zones-section-header">
+        <h2>Deployment Zones</h2>
       </div>
     `;
     
@@ -87,12 +110,12 @@ export async function renderZonesDashboard(deploymentId) {
         <div class="error-icon">⚠️</div>
         <h2>Failed to Load Deployment</h2>
         <p>${error.message}</p>
-        <button class="btn btn-primary btn-back">← Back to Builder</button>
+        <button class="btn btn-primary btn-back">← Back to Deployments</button>
       </div>
     `;
     
     app.querySelector('.btn-back')?.addEventListener('click', () => {
-      navigate('/deployments/builder');
+      navigate('/deployments');
     });
   }
 }
@@ -100,15 +123,23 @@ export async function renderZonesDashboard(deploymentId) {
 function attachEventHandlers(deploymentId) {
   // Back button
   document.querySelector('.btn-back')?.addEventListener('click', () => {
-    navigate('/deployments/builder');
+    navigate('/deployments');
+  });
+  
+  // Staging card click
+  document.querySelector('.staging-card')?.addEventListener('click', (e) => {
+    const navPath = e.currentTarget.dataset.nav;
+    if (navPath) {
+      navigate(navPath);
+    }
   });
   
   // Zone card clicks
-  document.querySelectorAll('.zone-card').forEach(card => {
+  document.querySelectorAll('.zone-card:not(.staging-card)').forEach(card => {
     card.addEventListener('click', () => {
       const zoneCode = card.dataset.zoneCode;
       if (zoneCode) {
-        navigate(`/deployments/${deploymentId}/zones/${zoneCode}`);
+        navigate(`/deployments/builder/${deploymentId}/zones/${zoneCode}`);
       }
     });
   });

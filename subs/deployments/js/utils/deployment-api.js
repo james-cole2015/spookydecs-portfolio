@@ -182,3 +182,11 @@ export async function fetchImageById(imageId) {
     return null;
   }
 }
+
+export async function getStagingTotes(deploymentId) {
+  return await apiCall(`/deployments/${deploymentId}/stage`);
+}
+
+export async function stageTote(deploymentId, body) {
+  return await apiCall(`/deployments/${deploymentId}/stage`, 'POST', body);
+}

@@ -8,6 +8,8 @@ import { renderZoneDetail } from './pages/zone-detail.js';
 import { renderDeploymentSession } from './pages/deployment-session.js';
 import { renderSessionDetail } from './pages/session-detail.js';
 import { renderConnectionDetail } from './pages/connection-detail.js';
+import { renderStagingPage } from './pages/deployment-staging.js';
+
 
 // Define routes
 // IMPORTANT: Routes are matched in order - more specific routes MUST come before generic ones
@@ -32,6 +34,17 @@ const routes = [
     path: '/deployments/stats', 
     handler: () => renderStatsPlaceholder()
   },
+
+  // STAGING - must come BEFORE all :id/zones* routes
+  // Static segment 'staging' must be registered before any route where that position is a wildcard (:zone)
+  { 
+    path: '/deployments/builder/:id/staging', 
+    handler: (params) => {
+      console.log('[Router] Staging route params:', params);
+      renderStagingPage(params.id);
+    }
+  },
+
   // SESSION DETAIL ROUTE - Most specific zone route, must come first
   { 
     path: '/deployments/builder/:id/zones/:zone/sessions/:sessionId', 
