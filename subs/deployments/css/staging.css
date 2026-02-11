@@ -6,59 +6,59 @@
 .staging-breadcrumb {
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-md) 0;
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-  margin-bottom: var(--spacing-lg);
+  gap: 0.5rem;
+  padding: 1rem 0;
+  font-size: 0.875rem;
+  color: var(--gray-600);
+  margin-bottom: 1.5rem;
 }
 
 .breadcrumb-link {
   background: none;
   border: none;
   padding: 0;
-  color: var(--text-secondary);
+  color: var(--gray-600);
   text-decoration: none;
   cursor: pointer;
-  font-size: var(--text-sm);
+  font-size: 0.875rem;
   transition: color 0.2s;
 }
 
 .breadcrumb-link:hover {
-  color: var(--text-primary);
+  color: var(--gray-900);
 }
 
 .breadcrumb-sep {
-  color: var(--text-secondary);
+  color: var(--gray-600);
   opacity: 0.5;
 }
 
 .breadcrumb-current {
-  color: var(--text-primary);
-  font-weight: var(--font-medium);
+  color: var(--gray-900);
+  font-weight: 500;
 }
 
 /* ─── Page Header ────────────────────────────────────────────────────────── */
 
 .staging-page {
-  padding: var(--spacing-xl) 0;
+  padding: 2rem 0;
   min-height: calc(100vh - 200px);
 }
 
 .staging-header {
-  margin-bottom: var(--spacing-2xl);
+  margin-bottom: 2rem;
 }
 
 .staging-title {
-  font-size: var(--text-3xl);
-  font-weight: var(--font-bold);
-  color: var(--text-primary);
-  margin-bottom: var(--spacing-xs);
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 0.5rem;
 }
 
 .staging-subtitle {
-  font-size: var(--text-base);
-  color: var(--text-secondary);
+  font-size: 1rem;
+  color: var(--gray-600);
 }
 
 /* ─── Loading & Error States ─────────────────────────────────────────────── */
@@ -68,16 +68,16 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--spacing-4xl) 0;
-  color: var(--text-secondary);
-  gap: var(--spacing-md);
+  padding: 4rem 0;
+  color: var(--gray-600);
+  gap: 1rem;
 }
 
 .spinner {
   width: 2rem;
   height: 2rem;
-  border: 3px solid var(--border-color);
-  border-top-color: var(--accent-color);
+  border: 3px solid var(--gray-200);
+  border-top-color: var(--primary-blue);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
@@ -90,38 +90,38 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-4xl) 0;
-  color: var(--text-secondary);
+  gap: 1rem;
+  padding: 4rem 0;
+  color: var(--gray-600);
 }
 
 .staging-error-banner {
   background: #fee2e2;
   border: 1px solid #fca5a5;
   color: #b91c1c;
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--radius-md);
-  font-size: var(--text-sm);
-  margin-bottom: var(--spacing-lg);
+  padding: 0.75rem 1rem;
+  border-radius: var(--border-radius);
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
 }
 
 .btn-back {
-  padding: var(--spacing-sm) var(--spacing-lg);
-  background: var(--surface-color);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  color: var(--text-primary);
+  padding: 0.75rem 1.5rem;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius);
+  color: var(--gray-900);
   cursor: pointer;
-  font-size: var(--text-sm);
+  font-size: 0.875rem;
 }
 
 /* ─── Empty State ────────────────────────────────────────────────────────── */
 
 .staging-empty {
   text-align: center;
-  padding: var(--spacing-4xl) 0;
-  color: var(--text-secondary);
-  font-size: var(--text-base);
+  padding: 4rem 0;
+  color: var(--gray-600);
+  font-size: 1rem;
 }
 
 /* ─── Tote Cards Grid ────────────────────────────────────────────────────── */
@@ -129,19 +129,19 @@
 .staging-totes {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: var(--spacing-lg);
+  gap: 1.5rem;
 }
 
 /* ─── Individual Tote Card ───────────────────────────────────────────────── */
 
 .staging-tote-card {
-  background: var(--surface-color);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-lg);
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: 1rem;
   transition: box-shadow 0.2s, opacity 0.3s;
 }
 
@@ -151,7 +151,7 @@
 
 .staging-tote-card.is-staged {
   opacity: 0.6;
-  background: var(--surface-muted, #f9fafb);
+  background: var(--gray-50);
 }
 
 /* ─── Card Header ────────────────────────────────────────────────────────── */
@@ -160,21 +160,21 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: var(--spacing-md);
+  gap: 1rem;
 }
 
 .tote-card-meta {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xs);
+  gap: 0.5rem;
   flex: 1;
   min-width: 0;
 }
 
 .tote-card-name {
-  font-size: var(--text-lg);
-  font-weight: var(--font-semibold);
-  color: var(--text-primary);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--gray-900);
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -182,21 +182,21 @@
 }
 
 .staging-tote-card.is-staged .tote-card-name {
-  color: var(--text-secondary);
+  color: var(--gray-600);
 }
 
 .tote-card-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--spacing-xs);
+  gap: 0.5rem;
 }
 
 .tote-tag {
-  font-size: var(--text-xs);
-  background: var(--surface-subtle, #f3f4f6);
-  color: var(--text-secondary);
-  padding: 2px var(--spacing-xs);
-  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  background: var(--gray-100);
+  color: var(--gray-600);
+  padding: 2px 0.5rem;
+  border-radius: 4px;
 }
 
 /* ─── Card Actions ───────────────────────────────────────────────────────── */
@@ -206,20 +206,20 @@
 }
 
 .btn-stage-tote {
-  padding: var(--spacing-sm) var(--spacing-md);
-  background: var(--accent-color);
+  padding: 0.75rem 1rem;
+  background: var(--primary-blue);
   color: white;
   border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--text-sm);
-  font-weight: var(--font-medium);
+  border-radius: var(--border-radius);
+  font-size: 0.875rem;
+  font-weight: 500;
   cursor: pointer;
   transition: background 0.2s, opacity 0.2s;
   white-space: nowrap;
 }
 
 .btn-stage-tote:hover:not(:disabled) {
-  opacity: 0.85;
+  background: var(--primary-blue-dark);
 }
 
 .btn-stage-tote:disabled {
@@ -230,10 +230,10 @@
 .tote-staged-badge {
   display: inline-flex;
   align-items: center;
-  gap: var(--spacing-xs);
-  font-size: var(--text-sm);
-  font-weight: var(--font-medium);
-  color: var(--success-color, #16a34a);
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #16a34a;
 }
 
 /* ─── Card Summary ───────────────────────────────────────────────────────── */
@@ -241,20 +241,20 @@
 .tote-card-summary {
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
+  gap: 1rem;
+  font-size: 0.875rem;
+  color: var(--gray-600);
 }
 
 .tote-item-count {
-  font-weight: var(--font-medium);
+  font-weight: 500;
 }
 
 .btn-see-items {
   background: none;
   border: none;
-  color: var(--accent-color);
-  font-size: var(--text-sm);
+  color: var(--primary-blue);
+  font-size: 0.875rem;
   cursor: pointer;
   padding: 0;
   text-decoration: underline;
@@ -269,8 +269,8 @@
 
 .tote-items-list {
   display: none;
-  border-top: 1px solid var(--border-color);
-  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--gray-200);
+  padding-top: 1rem;
 }
 
 .tote-items-list.is-expanded {
@@ -283,20 +283,20 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xs);
+  gap: 0.5rem;
 }
 
 .tote-item-row {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
-  font-size: var(--text-sm);
-  color: var(--text-primary);
-  padding: var(--spacing-xs) 0;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--gray-900);
+  padding: 0.5rem 0;
 }
 
 .tote-item-row.item-staged {
-  color: var(--text-secondary);
+  color: var(--gray-600);
   font-style: italic;
 }
 
@@ -309,21 +309,21 @@
 }
 
 .tote-item-staged-label {
-  font-size: var(--text-xs);
-  color: var(--text-secondary);
+  font-size: 0.75rem;
+  color: var(--gray-600);
   font-style: italic;
   flex-shrink: 0;
 }
 
 .tote-item-meta {
-  font-size: var(--text-xs);
-  color: var(--text-secondary);
+  font-size: 0.75rem;
+  color: var(--gray-600);
   flex-shrink: 0;
 }
 
 .tote-items-empty {
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
+  font-size: 0.875rem;
+  color: var(--gray-600);
   font-style: italic;
 }
 
@@ -335,7 +335,7 @@
   }
 
   .staging-title {
-    font-size: var(--text-2xl);
+    font-size: 1.5rem;
   }
 
   .tote-card-header {

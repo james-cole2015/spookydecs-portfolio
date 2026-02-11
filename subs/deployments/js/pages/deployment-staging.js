@@ -5,7 +5,14 @@ import { getDeployment, getStagingTotes, stageTote } from '../utils/deployment-a
 import { StagingView } from '../components/builder/StagingView.js';
 
 export async function renderStagingPage(deploymentId) {
+  console.log('[deployment-staging] deploymentId received:', deploymentId); // ADD THIS
+
   const app = document.getElementById('app');
+
+    if (!deploymentId) {
+    app.innerHTML = `<div>Error: No deployment ID provided</div>`;
+    return;
+  }
 
   app.innerHTML = `
     <div class="staging-page">
@@ -25,6 +32,9 @@ export async function renderStagingPage(deploymentId) {
 
     const deployment = deploymentRes.data;
     const totes = totesRes.data.totes || [];
+
+        console.log('[deployment-staging] Final totes count:', totes.length); // ADD THIS
+
 
     const view = new StagingView({
       deployment,
