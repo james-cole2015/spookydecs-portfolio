@@ -4,12 +4,13 @@
 import { navigate } from '../../utils/router.js';
 
 export class StagingView {
-  constructor({ deployment, totes, deploymentId, onStage }) {
+  constructor({ deployment, totes, stagedTotes, deploymentId, onStage }) {
     this.deployment = deployment;
     this.totes = totes;
+    this.stagedTotes = stagedTotes || [];
     this.deploymentId = deploymentId;
     this.onStage = onStage;
-    this.stagedToteIds = new Set();
+    this.newlyStagedToteIds = new Set(); // tracks totes staged this session
     this.expandedToteIds = new Set();
     this.container = null;
   }
@@ -33,11 +34,29 @@ export class StagingView {
       ${this._buildBreadcrumb()}
       <div class="staging-header">
         <h1 class="staging-title">Staging Area</h1>
-        <p class="staging-subtitle">Select totes to stage for this deployment</p>
+        <p class="staging-subtitle">Stage totes for deployment, or review what's already been staged.</p>
       </div>
       <div class="staging-error-banner" id="staging-error-banner" style="display:none;"></div>
-      <div class="staging-totes" id="staging-totes">
-        ${this._buildToteCards()}
+      <div class="staging-columns">
+        <div class="staging-column staging-column--available">
+          <div class="staging-column-header">
+            <h2 class="staging-column-title">Available to Stage</h2>
+            <span class="staging-column-count">${this.totes.length} tote${this.totes.length !== 1 ? 's' : ''}</span>
+          </div>
+          <div class="staging-totes" id="staging-totes-available">
+            ${this._buildAvailableToteCards()}
+          </div>
+        </div>
+
+        <div class="staging-column staging-column--staged">
+          <div class="staging-column-header">
+            <h2 class="staging-column-title">Already Staged</h2>
+            <span class="staging-column-count" id="staged-column-count">${this.stagedTotes.length} tote${this.stagedTotes.length !== 1 ? 's' : ''}</span>
+          </div>
+          <div class="staging-totes" id="staging-totes-staged">
+            ${this._buildStagedToteCards()}
+          </div>
+        </div>
       </div>
     `;
   }
@@ -55,20 +74,21 @@ export class StagingView {
     `;
   }
 
-  _buildToteCards() {
+  _buildAvailableToteCards() {
     if (!this.totes || this.totes.length === 0) {
-      return `
-        <div class="staging-empty">
-          <p>No totes available for staging for this deployment.</p>
-        </div>
-      `;
+      return `<div class="staging-empty"><p>No totes available to stage.</p></div>`;
     }
-
-    return this.totes.map(tote => this._buildToteCard(tote)).join('');
+    return this.totes.map(tote => this._buildToteCard(tote, false)).join('');
   }
 
-  _buildToteCard(tote) {
-    const isStaged = this.stagedToteIds.has(tote.id);
+  _buildStagedToteCards() {
+    if (!this.stagedTotes || this.stagedTotes.length === 0) {
+      return `<div class="staging-empty"><p>No totes have been staged yet.</p></div>`;
+    }
+    return this.stagedTotes.map(tote => this._buildToteCard(tote, true)).join('');
+  }
+
+  _buildToteCard(tote, isReadOnly) {
     const isExpanded = this.expandedToteIds.has(tote.id);
     const itemCount = tote.contents_count || 0;
     const season = tote.season || '';
@@ -76,20 +96,20 @@ export class StagingView {
     const size = tote.size || '';
 
     return `
-      <div class="staging-tote-card ${isStaged ? 'is-staged' : ''}" data-tote-id="${tote.id}">
+      <div class="staging-tote-card ${isReadOnly ? 'is-readonly' : ''}" data-tote-id="${tote.id}">
         <div class="tote-card-header">
           <div class="tote-card-meta">
             <h2 class="tote-card-name">${tote.short_name}</h2>
             <div class="tote-card-tags">
-              <span class="tote-tag">${season}</span>
-              <span class="tote-tag">${location}</span>
-              <span class="tote-tag">${size}</span>
+              ${season ? `<span class="tote-tag">${season}</span>` : ''}
+              ${location ? `<span class="tote-tag">${location}</span>` : ''}
+              ${size ? `<span class="tote-tag">${size}</span>` : ''}
             </div>
           </div>
           <div class="tote-card-actions">
-            ${isStaged
+            ${isReadOnly
               ? `<span class="tote-staged-badge">✓ Staged</span>`
-              : `<button class="btn-stage-tote" data-tote-id="${tote.id}" data-item-ids='${JSON.stringify((tote.contents || []))}'>
+              : `<button class="btn-stage-tote" data-tote-id="${tote.id}" data-item-ids='${JSON.stringify(tote.contents || [])}'>
                   Stage Tote
                 </button>`
             }
@@ -107,7 +127,7 @@ export class StagingView {
         </div>
 
         <div class="tote-items-list ${isExpanded ? 'is-expanded' : ''}" id="tote-items-${tote.id}">
-          ${this._buildItemsList(tote.contents_details || [], isStaged)}
+          ${this._buildItemsList(tote.contents_details || [], isReadOnly)}
         </div>
       </div>
     `;
@@ -132,7 +152,6 @@ export class StagingView {
   }
 
   _attachListeners() {
-    // Breadcrumb navigation
     this.container.addEventListener('click', (e) => {
       const navTarget = e.target.dataset.nav;
       if (navTarget) {
@@ -140,7 +159,6 @@ export class StagingView {
         return;
       }
 
-      // Stage Tote button
       if (e.target.classList.contains('btn-stage-tote')) {
         const toteId = e.target.dataset.toteId;
         const itemIds = JSON.parse(e.target.dataset.itemIds || '[]');
@@ -148,7 +166,6 @@ export class StagingView {
         return;
       }
 
-      // See Items toggle
       if (e.target.classList.contains('btn-see-items')) {
         const toteId = e.target.dataset.toteId;
         this._toggleItemsList(toteId, e.target);
@@ -168,7 +185,6 @@ export class StagingView {
 
     if (!confirmed) return;
 
-    // Disable button while in flight
     const btn = this.container.querySelector(`.btn-stage-tote[data-tote-id="${toteId}"]`);
     if (btn) {
       btn.disabled = true;
@@ -196,25 +212,50 @@ export class StagingView {
   }
 
   markToteAsStaged(toteId, itemIds) {
-    this.stagedToteIds.add(toteId);
+    this.newlyStagedToteIds.add(toteId);
 
-    const card = this.container.querySelector(`.staging-tote-card[data-tote-id="${toteId}"]`);
-    if (!card) return;
+    // Remove card from left column
+    const availableCard = this.container.querySelector(`#staging-totes-available .staging-tote-card[data-tote-id="${toteId}"]`);
+    const tote = this.totes.find(t => t.id === toteId);
 
-    // Grey out the card
-    card.classList.add('is-staged');
-
-    // Replace button with checkmark badge
-    const actions = card.querySelector('.tote-card-actions');
-    if (actions) {
-      actions.innerHTML = `<span class="tote-staged-badge">✓ Staged</span>`;
+    if (availableCard) {
+      availableCard.remove();
     }
 
-    // Update items list to show staged state
-    const itemsList = card.querySelector('.tote-items-list');
-    if (itemsList) {
-      const tote = this.totes.find(t => t.id === toteId);
-      itemsList.innerHTML = this._buildItemsList(tote?.contents_details || [], true);
+    // Update left column empty state if no totes remain
+    const availableContainer = this.container.querySelector('#staging-totes-available');
+    if (availableContainer && availableContainer.querySelectorAll('.staging-tote-card').length === 0) {
+      availableContainer.innerHTML = `<div class="staging-empty"><p>No totes available to stage.</p></div>`;
+    }
+
+    // Update left column count
+    const remaining = this.totes.filter(t => !this.newlyStagedToteIds.has(t.id)).length;
+    const availableHeader = this.container.querySelector('.staging-column--available .staging-column-count');
+    if (availableHeader) {
+      availableHeader.textContent = `${remaining} tote${remaining !== 1 ? 's' : ''}`;
+    }
+
+    // Add card to right column (remove empty state if present)
+    const stagedContainer = this.container.querySelector('#staging-totes-staged');
+    if (stagedContainer) {
+      const emptyState = stagedContainer.querySelector('.staging-empty');
+      if (emptyState) emptyState.remove();
+
+      if (tote) {
+        // Mark contents_details items as staged
+        tote.contents_details = (tote.contents_details || []).map(item => ({
+          ...item,
+          status: itemIds.includes(item.id) ? 'Staged' : item.status
+        }));
+        stagedContainer.insertAdjacentHTML('beforeend', this._buildToteCard(tote, true));
+      }
+    }
+
+    // Update right column count
+    const newStagedCount = this.stagedTotes.length + this.newlyStagedToteIds.size;
+    const stagedCountEl = this.container.querySelector('#staged-column-count');
+    if (stagedCountEl) {
+      stagedCountEl.textContent = `${newStagedCount} tote${newStagedCount !== 1 ? 's' : ''}`;
     }
   }
 

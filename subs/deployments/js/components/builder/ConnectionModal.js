@@ -1,5 +1,6 @@
 // ConnectionModal.js
-// Modal for selecting port and destination to create a connection
+// Modal for selecting a destination item to connect to a source.
+// Port selection removed — first available port on source is auto-assigned.
 
 import { searchItems, createConnection } from '../../utils/deployment-api.js';
 
@@ -9,228 +10,199 @@ export class ConnectionModal {
     this.deployment = deployment;
     this.zone = zone;
     this.session = session;
-    this.selectedPort = null;
     this.selectedDestination = null;
-    this.currentStep = 'select-port'; // 'select-port' or 'select-destination'
     this.container = null;
+    this.allItems = [];
+    this.searchQuery = '';
+    this.classFilter = 'all';
   }
-  
+
   render() {
     this.container = document.createElement('div');
     this.container.className = 'connection-modal';
-    this.container.style.display = 'flex';
-    
+
     this.container.innerHTML = `
       <div class="modal-content">
         <div class="modal-header">
-          <h3>Create Connection</h3>
+          <h3>Connect: ${this.sourceItem.short_name}</h3>
           <button class="btn-close-modal">&times;</button>
         </div>
-        <div class="modal-body"></div>
+        <div class="modal-body">
+          <p class="selection-label">
+            Select what to plug into <strong>${this.sourceItem.short_name}</strong>:
+          </p>
+          <div class="destination-filters">
+            <button class="dest-filter-btn active" data-class="all">All</button>
+            <button class="dest-filter-btn" data-class="Decoration">Decoration</button>
+            <button class="dest-filter-btn" data-class="Light">Light</button>
+            <button class="dest-filter-btn" data-class="Accessory">Accessory</button>
+          </div>
+          <div class="search-box">
+            <input type="text" class="destination-search" placeholder="Search items..." autocomplete="off">
+          </div>
+          <div class="destinations-list">
+            <div class="loading-state">Loading items...</div>
+          </div>
+        </div>
         <div class="modal-footer">
           <button class="btn btn-secondary btn-cancel-connection">Cancel</button>
           <button class="btn btn-primary btn-confirm-connection" disabled>Connect</button>
         </div>
       </div>
     `;
-    
+
     this.attachEventListeners();
-    this.renderPortSelection();
-    
+    this.loadDestinations();
+
     return this.container;
   }
-  
+
   attachEventListeners() {
-    this.container.querySelector('.btn-close-modal').addEventListener('click', () => {
-      this.close();
+    this.container.querySelector('.btn-close-modal').addEventListener('click', () => this.close());
+    this.container.querySelector('.btn-cancel-connection').addEventListener('click', () => this.close());
+    this.container.querySelector('.btn-confirm-connection').addEventListener('click', () => this.confirmConnection());
+
+    // Search
+    this.container.querySelector('.destination-search').addEventListener('input', (e) => {
+      this.searchQuery = e.target.value.toLowerCase().trim();
+      this.renderDestinationList();
     });
-    
-    this.container.querySelector('.btn-cancel-connection').addEventListener('click', () => {
-      this.close();
-    });
-    
-    this.container.querySelector('.btn-confirm-connection').addEventListener('click', () => {
-      this.confirmConnection();
-    });
-  }
-  
-  renderPortSelection() {
-    console.log('[ConnectionModal] Rendering port selection for:', {
-      item: this.sourceItem.item_id,
-      available_ports: this.sourceItem.available_ports
-    });
-    
-    const modalBody = this.container.querySelector('.modal-body');
-    
-    modalBody.innerHTML = `
-      <div class="port-selection">
-        <p class="selection-label">Select port on ${this.sourceItem.short_name}:</p>
-        <div class="ports-grid">
-          ${this.sourceItem.available_ports.map(port => `
-            <button class="port-btn" data-port="${port}">
-              <span class="port-icon">🔌</span>
-              <span class="port-label">${port}</span>
-            </button>
-          `).join('')}
-        </div>
-      </div>
-    `;
-    
-    // Attach port selection handlers
-    modalBody.querySelectorAll('.port-btn').forEach(btn => {
+
+    // Class filter chips
+    this.container.querySelectorAll('.dest-filter-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        // Remove previous selection
-        modalBody.querySelectorAll('.port-btn').forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-        
-        this.selectedPort = btn.dataset.port;
-        console.log('[ConnectionModal] Port selected:', this.selectedPort);
-        
-        this.currentStep = 'select-destination';
-        this.renderDestinationSelection();
+        this.container.querySelectorAll('.dest-filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        this.classFilter = btn.dataset.class;
+        this.renderDestinationList();
       });
     });
+
+    // Close on backdrop click
+    this.container.addEventListener('click', (e) => {
+      if (e.target === this.container) this.close();
+    });
   }
-  
-  async renderDestinationSelection() {
-    console.log('[ConnectionModal] Rendering destination selection');
-    
-    const modalBody = this.container.querySelector('.modal-body');
-    const confirmBtn = this.container.querySelector('.btn-confirm-connection');
-    
+
+  async loadDestinations() {
     try {
       const response = await searchItems({
         season: this.deployment.season,
         connection_building: 'true'
       });
-      
-      console.log('[ConnectionModal] Search items response:', response);
-      
-      const items = response.data.items || [];
-      
-      // Filter to items that can be connected (have male_end or power_inlet)
-      const connectableItems = items.filter(item => {
+
+      const items = response?.data?.items || [];
+
+      // Any item with a male end or power inlet can be a destination
+      this.allItems = items.filter(item => {
         const hasMaleEnd = parseInt(item.male_ends || 0) > 0;
         const hasPowerInlet = item.power_inlet === true;
         return hasMaleEnd || hasPowerInlet;
       });
-      
-      console.log('[ConnectionModal] Connectable items:', connectableItems.length);
-      
-      modalBody.innerHTML = `
-        <div class="destination-selection">
-          <p class="selection-label">
-            Connect ${this.sourceItem.short_name} (${this.selectedPort}) to:
-          </p>
-          <div class="search-box">
-            <input type="text" class="destination-search" placeholder="Search items...">
-          </div>
-          <div class="destinations-list">
-            ${connectableItems.map(item => `
-              <div class="destination-item" data-item-id="${item.id}">
-                <div class="item-info">
-                  <span class="item-id">${item.id}</span>
-                  <span class="item-name">${item.short_name}</span>
-                  <span class="item-class">${item.class}</span>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `;
-      
-      // Search functionality
-      const searchInput = modalBody.querySelector('.destination-search');
-      const destItems = modalBody.querySelectorAll('.destination-item');
-      
-      searchInput.addEventListener('input', (e) => {
-        const query = e.target.value.toLowerCase();
-        destItems.forEach(item => {
-          const text = item.textContent.toLowerCase();
-          item.style.display = text.includes(query) ? 'flex' : 'none';
-        });
-      });
-      
-      // Attach destination selection handlers
-      destItems.forEach(item => {
-        item.addEventListener('click', () => {
-          destItems.forEach(i => i.classList.remove('selected'));
-          item.classList.add('selected');
-          
-          const itemId = item.dataset.itemId;
-          const selectedItem = connectableItems.find(i => i.id === itemId);
-          this.selectedDestination = selectedItem;
-          
-          console.log('[ConnectionModal] Destination selected:', this.selectedDestination);
-          
-          confirmBtn.disabled = false;
-        });
-      });
-      
+
+      console.log('[ConnectionModal] Loaded destinations:', this.allItems.length);
+      this.renderDestinationList();
+
     } catch (error) {
-      console.error('[ConnectionModal] Error loading items:', error);
-      modalBody.innerHTML = `<p class="error-text">Failed to load items</p>`;
+      console.error('[ConnectionModal] Failed to load destinations:', error);
+      this.container.querySelector('.destinations-list').innerHTML = `
+        <p class="error-text">Failed to load items. Please close and try again.</p>
+      `;
     }
   }
-  
-  async confirmConnection() {
-    if (!this.sourceItem || !this.selectedPort || !this.selectedDestination) {
-      console.warn('[ConnectionModal] Cannot confirm - missing data');
+
+  getFilteredItems() {
+    return this.allItems.filter(item => {
+      const matchesClass = this.classFilter === 'all' || item.class === this.classFilter;
+      const matchesSearch = !this.searchQuery ||
+        item.short_name?.toLowerCase().includes(this.searchQuery) ||
+        item.id?.toLowerCase().includes(this.searchQuery);
+      return matchesClass && matchesSearch;
+    });
+  }
+
+  renderDestinationList() {
+    const list = this.container.querySelector('.destinations-list');
+    const filtered = this.getFilteredItems();
+
+    if (filtered.length === 0) {
+      list.innerHTML = `
+        <div class="empty-state">
+          <p>${this.allItems.length === 0 ? 'No items available' : 'No items match your search'}</p>
+        </div>
+      `;
       return;
     }
-    
-    console.log('[ConnectionModal] Confirming connection:', {
-      from: this.sourceItem.item_id,
-      fromPort: this.selectedPort,
-      to: this.selectedDestination.id
+
+    list.innerHTML = filtered.map(item => `
+      <div class="destination-item${this.selectedDestination?.id === item.id ? ' selected' : ''}"
+           data-item-id="${item.id}">
+        <div class="item-info">
+          <span class="item-id">${item.id}</span>
+          <span class="item-name">${item.short_name}</span>
+          <span class="item-class">${item.class}</span>
+        </div>
+      </div>
+    `).join('');
+
+    list.querySelectorAll('.destination-item').forEach(el => {
+      el.addEventListener('click', () => {
+        list.querySelectorAll('.destination-item').forEach(i => i.classList.remove('selected'));
+        el.classList.add('selected');
+
+        const itemId = el.dataset.itemId;
+        this.selectedDestination = this.allItems.find(i => i.id === itemId) || null;
+
+        console.log('[ConnectionModal] Destination selected:', this.selectedDestination?.id);
+        this.container.querySelector('.btn-confirm-connection').disabled = !this.selectedDestination;
+      });
     });
-    
+  }
+
+  async confirmConnection() {
+    if (!this.sourceItem || !this.selectedDestination) return;
+
+    // Auto-assign first available port on source
+    const fromPort = this.sourceItem.available_ports?.[0];
+    if (!fromPort) {
+      console.error('[ConnectionModal] No available ports on source item');
+      alert('No available ports on this source item.');
+      return;
+    }
+
     const confirmBtn = this.container.querySelector('.btn-confirm-connection');
     confirmBtn.disabled = true;
     confirmBtn.textContent = 'Connecting...';
-    
+
     try {
-      // Determine to_port (Male_1 or power_inlet)
-      const toPort = parseInt(this.selectedDestination.male_ends || this.selectedDestination.maleEnds || 0) > 0 
-        ? 'Male_1' 
+      const toPort = parseInt(this.selectedDestination.male_ends || 0) > 0
+        ? 'Male_1'
         : 'Power_Inlet';
-      
-      const sessionId = this.session.session_id;
-      const deploymentItemId = this.session.deployment_item_id;
-      const zoneCode = this.zone.zone_code || this.zone.zoneCode;
-      
-      if (!sessionId) {
-        console.error('[ConnectionModal] ERROR - No session_id found');
-        throw new Error('Session ID is missing');
-      }
-      
+
       const connectionData = {
-        session_id: sessionId,
-        session_deployment_item_id: deploymentItemId,
-        zone_code: zoneCode,
+        session_id: this.session.session_id,
+        session_deployment_item_id: this.session.deployment_item_id,
+        zone_code: this.zone.zone_code || this.zone.zoneCode,
         from_item_id: this.sourceItem.item_id,
-        from_port: this.selectedPort,
+        from_port: fromPort,
         to_item_id: this.selectedDestination.id,
         to_port: toPort,
         illuminates: [],
         notes: ''
       };
-      
-      console.log('[ConnectionModal] Creating connection with data:', connectionData);
-      
+
+      console.log('[ConnectionModal] Creating connection:', connectionData);
+
       const response = await createConnection(this.deployment.deployment_id, connectionData);
-      
-      console.log('[ConnectionModal] Connection created successfully:', response);
-      
-      // Dispatch event
+
+      console.log('[ConnectionModal] Connection created:', response?.data?.connection_id);
+
       this.container.dispatchEvent(new CustomEvent('connection-created', {
-        detail: { 
-          connectionId: response.data?.connection_id 
-        }
+        detail: { connectionId: response?.data?.connection_id }
       }));
-      
+
       this.close();
-      
+
     } catch (error) {
       console.error('[ConnectionModal] Error creating connection:', error);
       alert('Failed to create connection: ' + error.message);
@@ -238,7 +210,7 @@ export class ConnectionModal {
       confirmBtn.textContent = 'Connect';
     }
   }
-  
+
   close() {
     this.container.remove();
   }

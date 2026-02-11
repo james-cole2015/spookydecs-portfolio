@@ -119,17 +119,64 @@
 
 .staging-empty {
   text-align: center;
-  padding: 4rem 0;
-  color: var(--gray-600);
-  font-size: 1rem;
+  padding: 2rem 1rem;
+  color: var(--gray-400);
+  font-size: 0.875rem;
+  font-style: italic;
 }
 
-/* ─── Tote Cards Grid ────────────────────────────────────────────────────── */
+/* ─── Two-Column Layout ──────────────────────────────────────────────────── */
+
+.staging-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.staging-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.staging-column-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--gray-200);
+}
+
+.staging-column--staged .staging-column-header {
+  border-bottom-color: #16a34a;
+}
+
+.staging-column-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin: 0;
+}
+
+.staging-column--staged .staging-column-title {
+  color: #16a34a;
+}
+
+.staging-column-count {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+  background: var(--gray-100);
+  padding: 2px 0.5rem;
+  border-radius: 999px;
+}
+
+/* ─── Tote Cards ─────────────────────────────────────────────────────────── */
 
 .staging-totes {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 /* ─── Individual Tote Card ───────────────────────────────────────────────── */
@@ -138,20 +185,21 @@
   background: var(--white);
   border: 1px solid var(--gray-200);
   border-radius: var(--border-radius);
-  padding: 1.5rem;
+  padding: 1.25rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  transition: box-shadow 0.2s, opacity 0.3s;
+  transition: box-shadow 0.2s;
 }
 
-.staging-tote-card:not(.is-staged):hover {
+.staging-tote-card:not(.is-readonly):hover {
   box-shadow: var(--shadow-md);
 }
 
-.staging-tote-card.is-staged {
-  opacity: 0.6;
+.staging-tote-card.is-readonly {
   background: var(--gray-50);
+  border-color: var(--gray-200);
+  opacity: 0.85;
 }
 
 /* ─── Card Header ────────────────────────────────────────────────────────── */
@@ -172,7 +220,7 @@
 }
 
 .tote-card-name {
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--gray-900);
   margin: 0;
@@ -181,8 +229,8 @@
   text-overflow: ellipsis;
 }
 
-.staging-tote-card.is-staged .tote-card-name {
-  color: var(--gray-600);
+.staging-tote-card.is-readonly .tote-card-name {
+  color: var(--gray-700);
 }
 
 .tote-card-tags {
@@ -206,7 +254,7 @@
 }
 
 .btn-stage-tote {
-  padding: 0.75rem 1rem;
+  padding: 0.625rem 1rem;
   background: var(--primary-blue);
   color: white;
   border: none;
@@ -230,8 +278,8 @@
 .tote-staged-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.875rem;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: #16a34a;
 }
@@ -296,8 +344,7 @@
 }
 
 .tote-item-row.item-staged {
-  color: var(--gray-600);
-  font-style: italic;
+  color: var(--gray-500);
 }
 
 .tote-item-name {
@@ -310,30 +357,37 @@
 
 .tote-item-staged-label {
   font-size: 0.75rem;
-  color: var(--gray-600);
-  font-style: italic;
+  color: #16a34a;
+  font-weight: 500;
   flex-shrink: 0;
 }
 
 .tote-item-meta {
   font-size: 0.75rem;
-  color: var(--gray-600);
+  color: var(--gray-500);
   flex-shrink: 0;
 }
 
 .tote-items-empty {
   font-size: 0.875rem;
-  color: var(--gray-600);
+  color: var(--gray-400);
   font-style: italic;
 }
 
 /* ─── Responsive ─────────────────────────────────────────────────────────── */
 
-@media (max-width: 768px) {
-  .staging-totes {
+@media (max-width: 900px) {
+  .staging-columns {
     grid-template-columns: 1fr;
   }
 
+  .staging-column--staged {
+    border-top: 2px solid var(--gray-200);
+    padding-top: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
   .staging-title {
     font-size: 1.5rem;
   }

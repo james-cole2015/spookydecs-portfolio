@@ -5,11 +5,11 @@ import { getDeployment, getStagingTotes, stageTote } from '../utils/deployment-a
 import { StagingView } from '../components/builder/StagingView.js';
 
 export async function renderStagingPage(deploymentId) {
-  console.log('[deployment-staging] deploymentId received:', deploymentId); // ADD THIS
+  console.log('[deployment-staging] deploymentId received:', deploymentId);
 
   const app = document.getElementById('app');
 
-    if (!deploymentId) {
+  if (!deploymentId) {
     app.innerHTML = `<div>Error: No deployment ID provided</div>`;
     return;
   }
@@ -24,7 +24,6 @@ export async function renderStagingPage(deploymentId) {
   `;
 
   try {
-    // Fetch deployment and totes in parallel
     const [deploymentRes, totesRes] = await Promise.all([
       getDeployment(deploymentId),
       getStagingTotes(deploymentId)
@@ -32,13 +31,14 @@ export async function renderStagingPage(deploymentId) {
 
     const deployment = deploymentRes.data;
     const totes = totesRes.data.totes || [];
+    const stagedTotes = totesRes.data.staged_totes || [];
 
-        console.log('[deployment-staging] Final totes count:', totes.length); // ADD THIS
-
+    console.log('[deployment-staging] Stageable totes:', totes.length, '| Already staged:', stagedTotes.length);
 
     const view = new StagingView({
       deployment,
       totes,
+      stagedTotes,
       deploymentId,
       onStage: async (toteId, itemIds) => {
         await handleStageTote(deploymentId, toteId, itemIds, view);
