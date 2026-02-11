@@ -32,8 +32,7 @@ const CLASS_ICONS = {
  */
 export function createEligibleItemCard(item, onConnect) {
   const isDisabled = !!item.other_zone;
-  const showPortBadge = (item.class_type === 'Cord' || item.class_type === 'Plug' || item.class_type === 'Receptacle')
-    && typeof item.available_count === 'number';
+  const showPortBadge = typeof item.available_count === 'number' && item.available_count >= 0;
 
   const icon = CLASS_ICONS[item.class] || CLASS_ICONS['Accessory'];
 
