@@ -8,11 +8,12 @@ import { ConnectionModal } from './ConnectionModal.js';
 import { EndSessionReview } from './EndSessionReview.js';
 
 export class ConnectionBuilder {
-  constructor(deployment, zone, session) {
+  constructor(deployment, zone, session, zones = []) {
     this.deployment = deployment;
     this.zone = zone;
     this.session = session;
-    this.portsData = {};     // full response.data object
+    this.zones = zones;      // all deployment zones for cross-zone item exclusion
+    this.portsData = {};
     this.connections = [];
     this.pendingPhotoIds = {};
 
@@ -83,11 +84,9 @@ export class ConnectionBuilder {
 
       console.log('[ConnectionBuilder] Raw API response:', response);
 
-      // Pass full data object to SourcesList — it handles both legacy and new shape
       this.portsData = response.data || {};
       this.connections = response.data.connections || [];
 
-      // Initialize pendingPhotoIds from existing connection photo_ids
       this.pendingPhotoIds = {};
       this.connections.forEach(conn => {
         this.pendingPhotoIds[conn.connection_id] = [...(conn.photo_ids || [])];
@@ -104,7 +103,6 @@ export class ConnectionBuilder {
       console.error('[ConnectionBuilder] Error loading data:', error);
       this.showToast('Failed to load connection data', 'error');
 
-      // Render with empty data so panels still appear
       this.portsData = {};
       this.connections = [];
       this.renderChildren();
@@ -136,7 +134,13 @@ export class ConnectionBuilder {
   handleConnectItem(item) {
     console.log('[ConnectionBuilder] Starting connection from source:', item);
 
-    this.connectionModal = new ConnectionModal(item, this.deployment, this.zone, this.session);
+    this.connectionModal = new ConnectionModal(
+      item,
+      this.deployment,
+      this.zone,
+      this.session,
+      this.zones
+    );
     document.body.appendChild(this.connectionModal.render());
 
     this.connectionModal.container.addEventListener('connection-created', async (e) => {

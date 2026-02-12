@@ -5,11 +5,12 @@
 import { searchItems, createConnection } from '../../utils/deployment-api.js';
 
 export class ConnectionModal {
-  constructor(sourceItem, deployment, zone, session) {
+  constructor(sourceItem, deployment, zone, session, zones = []) {
     this.sourceItem = sourceItem;
     this.deployment = deployment;
     this.zone = zone;
     this.session = session;
+    this.zones = zones;      // all deployment zones for cross-zone exclusion
     this.selectedDestination = null;
     this.container = null;
     this.allItems = [];
@@ -17,13 +18,19 @@ export class ConnectionModal {
     this.classFilter = 'all';
   }
 
-  getConnectedItemIds() {
-    const connections = this.session?.connections || [];
-    return new Set(
-      connections
-        .filter(c => (c.connection_type ?? 'deployment') === 'deployment')
-        .map(c => c.to_item_id)
+  getExcludedItemIds() {
+    // All items deployed in any zone (set by end_session across all prior sessions)
+    const deployedAcrossZones = new Set(
+      this.zones.flatMap(z => z.items_deployed || [])
     );
+
+    // Items connected in the current active session (not yet ended)
+    const connections = this.session?.connections || [];
+    connections
+      .filter(c => (c.connection_type ?? 'deployment') === 'deployment')
+      .forEach(c => deployedAcrossZones.add(c.to_item_id));
+
+    return deployedAcrossZones;
   }
 
   render() {
@@ -71,13 +78,11 @@ export class ConnectionModal {
     this.container.querySelector('.btn-cancel-connection').addEventListener('click', () => this.close());
     this.container.querySelector('.btn-confirm-connection').addEventListener('click', () => this.confirmConnection());
 
-    // Search
     this.container.querySelector('.destination-search').addEventListener('input', (e) => {
       this.searchQuery = e.target.value.toLowerCase().trim();
       this.renderDestinationList();
     });
 
-    // Class filter chips
     this.container.querySelectorAll('.dest-filter-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         this.container.querySelectorAll('.dest-filter-btn').forEach(b => b.classList.remove('active'));
@@ -87,7 +92,6 @@ export class ConnectionModal {
       });
     });
 
-    // Close on backdrop click
     this.container.addEventListener('click', (e) => {
       if (e.target === this.container) this.close();
     });
@@ -101,15 +105,15 @@ export class ConnectionModal {
       });
 
       const items = response?.data?.items || [];
-      const connectedIds = this.getConnectedItemIds();
+      const excludedIds = this.getExcludedItemIds();
 
-      // Any item with a male end or power inlet can be a destination,
-      // excluding items already actively connected in this session
+      console.log('[ConnectionModal] Excluded item IDs:', [...excludedIds]);
+
+      // Items with a male end or power inlet, excluding anything already deployed anywhere
       this.allItems = items.filter(item => {
         const hasMaleEnd = parseInt(item.male_ends || 0) > 0;
         const hasPowerInlet = item.power_inlet === true;
-        const alreadyConnected = connectedIds.has(item.id);
-        return (hasMaleEnd || hasPowerInlet) && !alreadyConnected;
+        return (hasMaleEnd || hasPowerInlet) && !excludedIds.has(item.id);
       });
 
       console.log('[ConnectionModal] Loaded destinations:', this.allItems.length);
@@ -174,7 +178,6 @@ export class ConnectionModal {
   async confirmConnection() {
     if (!this.sourceItem || !this.selectedDestination) return;
 
-    // Auto-assign first available port on source
     const fromPort = this.sourceItem.available_ports?.[0];
     if (!fromPort) {
       console.error('[ConnectionModal] No available ports on source item');
