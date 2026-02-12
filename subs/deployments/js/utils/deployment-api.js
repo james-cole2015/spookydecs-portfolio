@@ -6,8 +6,12 @@ let API_ENDPOINT = '';
 async function loadConfig() {
   if (API_ENDPOINT) return API_ENDPOINT;
   try {
-    const response = await fetch('/config.json');
-    const config = await response.json();
+    const stage = window.location.hostname.includes('localhost') ||
+                  window.location.hostname.startsWith('dev-') ? 'dev' : 'prod';
+
+    const res = await fetch(`https://miinu7boec.execute-api.us-east-2.amazonaws.com/${stage}/admin/config`);
+    if (!res.ok) throw new Error(`Failed to load config: ${res.status}`);
+    const { data: config } = await res.json();
     API_ENDPOINT = config.API_ENDPOINT;
     return API_ENDPOINT;
   } catch (error) {
@@ -113,11 +117,6 @@ export async function getZoneSessions(deploymentId, zoneCode) {
   return await apiCall(`/deployments/${deploymentId}/zones/${zoneCode}/sessions`);
 }
 
-/**
- * Get all active (end_time = null) sessions for a deployment across all zones.
- * Returns an array of session objects, each with a zone_code field.
- * Used by the zones dashboard to show active-session indicators on zone cards.
- */
 export async function getActiveSessions(deploymentId) {
   return await apiCall(`/deployments/${deploymentId}/sessions/active`);
 }
@@ -136,10 +135,6 @@ export async function removeConnection(deploymentId, connectionId) {
   return await apiCall(`/deployments/${deploymentId}/connections/${connectionId}`, 'DELETE');
 }
 
-/**
- * Mark a connection as removed (connection_type = 'removal').
- * Only removal_reason is needed — Lambda handles connection_type and removed_in_session.
- */
 export async function updateConnection(deploymentId, connectionId, updates) {
   console.log('[deployment-api] updateConnection:', { deploymentId, connectionId, updates });
   return await apiCall(
@@ -162,10 +157,6 @@ export async function getConnection(deploymentId, sessionId, connectionId) {
   return await apiCall(`/deployments/${deploymentId}/sessions/${sessionId}/connections/${connectionId}`);
 }
 
-/**
- * Get connections marked as removed (connection_type = 'removal') for a session.
- * Uses removed_in_session to scope to current session only.
- */
 export async function getRemovedConnections(deploymentId, sessionId) {
   console.log('[deployment-api] getRemovedConnections:', { deploymentId, sessionId });
   return await apiCall(`/deployments/${deploymentId}/sessions/${sessionId}/connections?type=removal`);
