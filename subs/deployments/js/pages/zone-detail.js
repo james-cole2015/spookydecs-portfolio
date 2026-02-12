@@ -8,7 +8,6 @@ import { createSessionStartModal } from '../components/builder/SessionStartModal
 export async function renderZoneDetail(deploymentId, zoneCode) {
   const app = document.getElementById('app');
   
-  // Show loading state
   app.innerHTML = `
     <div class="loading-container">
       <div class="spinner"></div>
@@ -19,7 +18,6 @@ export async function renderZoneDetail(deploymentId, zoneCode) {
   try {
     console.log('[ZoneDetail] Fetching data for:', { deploymentId, zoneCode });
     
-    // Fetch deployment with zones and zone sessions in parallel
     const [deploymentResponse, sessionsResponse] = await Promise.all([
       getDeployment(deploymentId, ['zones']),
       getZoneSessions(deploymentId, zoneCode)
@@ -30,28 +28,23 @@ export async function renderZoneDetail(deploymentId, zoneCode) {
     
     console.log('[ZoneDetail] Loaded data:', { deployment: deploymentData, sessions });
     
-    // Extract metadata and zones from response
     const deployment = deploymentData.metadata || deploymentData;
     const zones = deploymentData.zones || [];
     
-    // Find the zone
     const zone = zones.find(z => z.zone_code === zoneCode);
     
     if (!zone) {
       throw new Error(`Zone ${zoneCode} not found in deployment`);
     }
     
-    // Find active session (has start_time but no end_time)
     const activeSession = sessions.find(s => s.start_time && !s.end_time);
     
-    // Render zone detail view
     const zoneDetailView = new ZoneDetailView(deployment, zone, sessions, activeSession);
     const container = zoneDetailView.render();
     
     app.innerHTML = '';
     app.appendChild(container);
     
-    // Attach event handlers
     attachEventHandlers(deployment, zone, sessions, activeSession);
     
   } catch (error) {
@@ -86,7 +79,6 @@ function attachEventHandlers(deployment, zone, sessions, activeSession) {
       zone.zone_name,
       zone.zone_code,
       async (zoneCode) => {
-        // onConfirm callback - create the session
         try {
           console.log('[ZoneDetail] Creating session for zone:', zoneCode);
           
@@ -96,16 +88,14 @@ function attachEventHandlers(deployment, zone, sessions, activeSession) {
           
           console.log('[ZoneDetail] Session created:', response);
           
-          // Navigate directly to the active session builder
           window.location.href = `/deployments/builder/${deployment.deployment_id}/zones/${zone.zone_code}/session`;
           
         } catch (error) {
           console.error('[ZoneDetail] Error creating session:', error);
-          throw error; // Re-throw so modal can handle it
+          throw error;
         }
       },
       () => {
-        // onCancel callback (optional)
         console.log('[ZoneDetail] Session creation cancelled');
       }
     );
@@ -129,14 +119,12 @@ function attachEventHandlers(deployment, zone, sessions, activeSession) {
     try {
       console.log('[ZoneDetail] Ending session:', activeSession.session_id);
       
-      // Call API to end the session
       await endSession(deployment.deployment_id, activeSession.session_id, {
         end_time: new Date().toISOString()
       });
       
       console.log('[ZoneDetail] Session ended successfully');
       
-      // Force full page reload to refresh UI state
       window.location.href = `/deployments/builder/${deployment.deployment_id}/zones/${zone.zone_code}`;
       
     } catch (error) {
@@ -145,14 +133,7 @@ function attachEventHandlers(deployment, zone, sessions, activeSession) {
     }
   });
   
-  // View items button
-  document.querySelector('.btn-view-items')?.addEventListener('click', () => {
-    // TODO: Navigate to items view for this zone
-    console.log('[ZoneDetail] View items for zone:', zone.zone_code);
-    alert('Items view coming soon');
-  });
-  
-  // Session click handler - attach to app container since events bubble up
+  // Session click handler
   app.addEventListener('session-click', (e) => {
     const session = e.detail.session;
     console.log('[ZoneDetail] Session clicked:', session.session_id);

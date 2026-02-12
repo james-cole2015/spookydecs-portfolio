@@ -2,6 +2,7 @@
 // Main layout for zone detail page
 
 import { SessionHistory } from './SessionHistory.js';
+import { ZoneItemsDrawer } from './ZoneItemsDrawer.js';
 
 export class ZoneDetailView {
   constructor(deployment, zone, sessions, activeSession) {
@@ -9,6 +10,7 @@ export class ZoneDetailView {
     this.zone = zone;
     this.sessions = sessions;
     this.activeSession = activeSession;
+    this.itemsDrawer = null;
   }
 
   render() {
@@ -48,9 +50,20 @@ export class ZoneDetailView {
     // Append the mobile stats drawer at the very end of the container
     container.appendChild(this.renderStatsDrawer());
 
-    // Wire up the drawer toggle after the element is ready
-    // (caller appends container to DOM, so use a microtask)
-    requestAnimationFrame(() => this._attachDrawerToggle(container));
+    // Mount items drawer
+    const hasItems = (this.zone.items_deployed || []).length > 0;
+    if (hasItems) {
+      this.itemsDrawer = new ZoneItemsDrawer(this.zone);
+      this.itemsDrawer.mount(container);
+    }
+
+    // Attach items drawer toggle synchronously (queries detached container node, no DOM needed)
+    this._attachItemsDrawerToggle(container);
+
+    // Stats drawer toggle needs rAF since it reads layout
+    requestAnimationFrame(() => {
+      this._attachDrawerToggle(container);
+    });
 
     return container;
   }
@@ -81,7 +94,6 @@ export class ZoneDetailView {
   }
 
   renderStatsSection() {
-    // Desktop-only inline stats grid (hidden on mobile via CSS)
     return `
       <div class="stats-section">
         ${this._statCardsHTML()}
@@ -90,7 +102,7 @@ export class ZoneDetailView {
   }
 
   renderQuickActions() {
-    const hasItems = (this.zone.statistics?.item_count || 0) > 0;
+    const hasItems = (this.zone.items_deployed || []).length > 0;
     const hasActiveSession = !!this.activeSession;
 
     return `
@@ -112,7 +124,7 @@ export class ZoneDetailView {
               <div class="action-icon">📋</div>
               <div class="action-content">
                 <h3>View Items</h3>
-                <p>See all ${this.zone.statistics.item_count} items in this zone</p>
+                <p>See all ${this.zone.items_deployed.length} items in this zone</p>
               </div>
             </button>
           ` : ''}
@@ -178,6 +190,16 @@ export class ZoneDetailView {
         e.preventDefault();
         toggle();
       }
+    });
+  }
+
+  _attachItemsDrawerToggle(container) {
+    const btn = container.querySelector('.btn-view-items');
+    console.log('[ZoneDetailView] btn-view-items found:', !!btn, '| itemsDrawer:', !!this.itemsDrawer);
+    if (!btn || !this.itemsDrawer) return;
+
+    btn.addEventListener('click', () => {
+      this.itemsDrawer.open();
     });
   }
 
