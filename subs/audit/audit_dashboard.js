@@ -18,7 +18,8 @@ let filters = {
 
 // Initialize
 async function init() {
-  API_BASE = await loadConfig();
+  const config = await loadConfig();
+  API_BASE = config.API_ENDPOINT;
   console.log('=== Audit Dashboard Initialized ===');
   console.log('API Endpoint:', API_BASE);
   console.log('===================================');

@@ -1,15 +1,22 @@
-// Load configuration from config.json
 export async function loadConfig() {
   try {
-    const response = await fetch('/config.json');
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    const stage = window.location.hostname.includes('localhost') ||
+                  window.location.hostname.startsWith('dev-') ? 'dev' : 'prod';
+
+    const res = await fetch(`https://miinu7boec.execute-api.us-east-2.amazonaws.com/${stage}/admin/config`);
+
+    if (!res.ok) {
+      throw new Error(`Failed to load config: ${res.status}`);
     }
-    const config = await response.json();
+
+    const { data: config } = await res.json();
+
     console.log('=== Configuration Loaded ===');
+    console.log('ENV:', config.ENV);
     console.log('API Endpoint:', config.API_ENDPOINT);
     console.log('===========================');
-    return config.API_ENDPOINT;
+
+    return config;
   } catch (error) {
     console.error('Failed to load config:', error);
     alert('Failed to load configuration. Please refresh the page.');
