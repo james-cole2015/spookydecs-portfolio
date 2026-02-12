@@ -8,20 +8,21 @@ import { ConnectionModal } from './ConnectionModal.js';
 import { EndSessionReview } from './EndSessionReview.js';
 
 export class ConnectionBuilder {
-  constructor(deployment, zone, session, zones = []) {
-    this.deployment = deployment;
-    this.zone = zone;
-    this.session = session;
-    this.zones = zones;      // all deployment zones for cross-zone item exclusion
-    this.portsData = {};
-    this.connections = [];
-    this.pendingPhotoIds = {};
+constructor(deployment, zone, session, zones = [], activeConnections = []) {
+  this.deployment = deployment;
+  this.zone = zone;
+  this.session = session;
+  this.zones = zones;
+  this.activeConnections = activeConnections;
+  this.portsData = {};
+  this.connections = [];
+  this.pendingPhotoIds = {};
 
-    this.sourcesList = null;
-    this.connectionsList = null;
-    this.connectionModal = null;
-    this.endSessionReview = null;
-  }
+  this.sourcesList = null;
+  this.connectionsList = null;
+  this.connectionModal = null;
+  this.endSessionReview = null;
+}
 
   render() {
     const container = document.createElement('div');
@@ -134,13 +135,14 @@ export class ConnectionBuilder {
   handleConnectItem(item) {
     console.log('[ConnectionBuilder] Starting connection from source:', item);
 
-    this.connectionModal = new ConnectionModal(
-      item,
-      this.deployment,
-      this.zone,
-      this.session,
-      this.zones
-    );
+ this.connectionModal = new ConnectionModal(
+  item,
+  this.deployment,
+  this.zone,
+  this.session,
+  this.zones,
+  this.connections   // live active connections from last loadData()
+);
     document.body.appendChild(this.connectionModal.render());
 
     this.connectionModal.container.addEventListener('connection-created', async (e) => {

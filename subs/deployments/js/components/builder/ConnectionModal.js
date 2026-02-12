@@ -5,33 +5,47 @@
 import { searchItems, createConnection } from '../../utils/deployment-api.js';
 
 export class ConnectionModal {
-  constructor(sourceItem, deployment, zone, session, zones = []) {
-    this.sourceItem = sourceItem;
-    this.deployment = deployment;
-    this.zone = zone;
-    this.session = session;
-    this.zones = zones;      // all deployment zones for cross-zone exclusion
-    this.selectedDestination = null;
-    this.container = null;
-    this.allItems = [];
-    this.searchQuery = '';
-    this.classFilter = 'all';
-  }
+constructor(sourceItem, deployment, zone, session, zones = [], activeConnections = []) {
+  this.sourceItem = sourceItem;
+  this.deployment = deployment;
+  this.zone = zone;
+  this.session = session;
+  this.zones = zones;
+  this.activeConnections = activeConnections;
+  this.selectedDestination = null;
+  this.container = null;
+  this.allItems = [];
+  this.searchQuery = '';
+  this.classFilter = 'all';
+}
 
-  getExcludedItemIds() {
-    // All items deployed in any zone (set by end_session across all prior sessions)
-    const deployedAcrossZones = new Set(
-      this.zones.flatMap(z => z.items_deployed || [])
-    );
+getExcludedItemIds() {
+  // Baseline: items committed from all prior ended sessions
+  const deployedAcrossZones = new Set(
+    this.zones.flatMap(z => z.items_deployed || [])
+  );
 
-    // Items connected in the current active session (not yet ended)
-    const connections = this.session?.connections || [];
-    connections
-      .filter(c => (c.connection_type ?? 'deployment') === 'deployment')
-      .forEach(c => deployedAcrossZones.add(c.to_item_id));
+  // Live active connections are the real-time source of truth.
+  // Build a set of currently-active to_item_ids from portsData.
+  const activeItemIds = new Set(
+    this.activeConnections.map(c => c.to_item_id)
+  );
 
-    return deployedAcrossZones;
-  }
+  // Add anything active in the current session not yet in zone.items_deployed
+  activeItemIds.forEach(id => deployedAcrossZones.add(id));
+
+  // Remove anything that zone.items_deployed thinks is deployed
+  // but is no longer in the active connections (i.e. was removed this session)
+  this.zones
+    .flatMap(z => z.items_deployed || [])
+    .forEach(id => {
+      if (!activeItemIds.has(id)) {
+        deployedAcrossZones.delete(id);
+      }
+    });
+
+  return deployedAcrossZones;
+}
 
   render() {
     this.container = document.createElement('div');
