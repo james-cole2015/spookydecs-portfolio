@@ -625,3 +625,61 @@ textarea.form-control {
   font-weight: 600;
   font-size: 1rem;
 }
+
+/* ─── ADD TO builder.css ───────────────────────────────────────────────────
+   Active Session Pulse Dot
+   Positioned absolute in top-right corner of .zone-card
+   Requires .zone-card to have position: relative (add below)
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* Ensure zone card is positioned for the absolute dot */
+.zone-card {
+  position: relative;
+}
+
+/* Dot container */
+.active-session-dot {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Pulsing outer ring */
+.dot-ring {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.35);
+  animation: session-pulse 1.8s ease-out infinite;
+}
+
+/* Solid inner dot */
+.dot-core {
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
+}
+
+@keyframes session-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  70% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}

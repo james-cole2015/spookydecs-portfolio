@@ -113,6 +113,15 @@ export async function getZoneSessions(deploymentId, zoneCode) {
   return await apiCall(`/deployments/${deploymentId}/zones/${zoneCode}/sessions`);
 }
 
+/**
+ * Get all active (end_time = null) sessions for a deployment across all zones.
+ * Returns an array of session objects, each with a zone_code field.
+ * Used by the zones dashboard to show active-session indicators on zone cards.
+ */
+export async function getActiveSessions(deploymentId) {
+  return await apiCall(`/deployments/${deploymentId}/sessions/active`);
+}
+
 // Connections
 
 export async function getAvailablePorts(deploymentId, zoneCode) {

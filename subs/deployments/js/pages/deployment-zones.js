@@ -1,6 +1,6 @@
 // Deployment Zones Dashboard Page Handler
 
-import { getDeployment } from '../utils/deployment-api.js';
+import { getDeployment, getActiveSessions } from '../utils/deployment-api.js';
 import { ZoneCards } from '../components/builder/ZoneCards.js';
 import { navigate } from '../utils/router.js';
 
@@ -20,26 +20,35 @@ export async function renderZonesDashboard(deploymentId) {
   try {
     console.log('[ZonesDashboard] Fetching deployment:', deploymentId);
     
-    // Fetch deployment with zones
-    const response = await getDeployment(deploymentId, ['zones']);
-    const deploymentData = response.data;
+    // Fetch deployment with zones and active sessions in parallel
+    const [deploymentResponse, activeSessionsResponse] = await Promise.all([
+      getDeployment(deploymentId, ['zones']),
+      getActiveSessions(deploymentId).catch(err => {
+        console.warn('[ZonesDashboard] Could not fetch active sessions:', err);
+        return { data: [] };
+      })
+    ]);
+
+    const deploymentData = deploymentResponse.data;
     
     console.log('[ZonesDashboard] Loaded deployment:', deploymentData);
-    console.log('[ZonesDashboard] Deployment structure:', {
-      hasMetadata: 'metadata' in deploymentData,
-      hasZones: 'zones' in deploymentData,
-      keys: Object.keys(deploymentData)
-    });
+    console.log('[ZonesDashboard] Active sessions:', activeSessionsResponse.data);
     
+    // Build zone_code → session map from active sessions
+    const activeSessions = {};
+    (activeSessionsResponse.data || []).forEach(session => {
+      if (session.zone_code) {
+        activeSessions[session.zone_code] = session;
+      }
+    });
+
     // Check structure and extract accordingly
     let deployment, zones;
     
     if (deploymentData.metadata && deploymentData.zones) {
-      // API returns {metadata: {...}, zones: [...]}
       deployment = deploymentData.metadata;
       zones = deploymentData.zones;
     } else if (Array.isArray(deploymentData.zones)) {
-      // API returns deployment object with zones array
       deployment = deploymentData;
       zones = deploymentData.zones;
     } else {
@@ -91,8 +100,8 @@ export async function renderZonesDashboard(deploymentId) {
       </div>
     `;
     
-    // Create and append zone cards
-    const zoneCards = new ZoneCards(deployment.deployment_id || deploymentId, zones);
+    // Create and append zone cards, passing active sessions map
+    const zoneCards = new ZoneCards(deployment.deployment_id || deploymentId, zones, activeSessions);
     const cardsContainer = zoneCards.render();
     container.appendChild(cardsContainer);
     

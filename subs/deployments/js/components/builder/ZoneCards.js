@@ -1,12 +1,13 @@
 // Zone Cards Component
-// Displays clickable zone cards with item counts
+// Displays clickable zone cards with item counts and active session indicators
 
 import { navigate } from '../../utils/router.js';
 
 export class ZoneCards {
-  constructor(deploymentId, zones) {
+  constructor(deploymentId, zones, activeSessions = {}) {
     this.deploymentId = deploymentId;
     this.zones = zones;
+    this.activeSessions = activeSessions; // { zone_code: session }
     this.clickCallback = null;
   }
 
@@ -44,8 +45,16 @@ export class ZoneCards {
 
     const itemCount = zone.statistics?.item_count || 0;
     const sessionCount = zone.statistics?.session_count || 0;
+    const hasActiveSession = !!this.activeSessions[zone.zone_code];
 
     card.innerHTML = `
+      ${hasActiveSession ? `
+        <div class="active-session-dot" title="Active session in progress">
+          <span class="dot-ring"></span>
+          <span class="dot-core"></span>
+        </div>
+      ` : ''}
+
       <div class="zone-card-header">
         <div class="zone-icon">${this.getZoneIcon(zone.zone_code)}</div>
         <div class="zone-title">
@@ -75,7 +84,7 @@ export class ZoneCards {
 
       <div class="zone-card-footer">
         <button class="btn-zone-action">
-          ${itemCount > 0 ? 'View Details' : 'Get Started'}
+          ${hasActiveSession ? 'Resume Session' : itemCount > 0 ? 'View Details' : 'Get Started'}
           <span class="icon">→</span>
         </button>
       </div>
@@ -86,7 +95,6 @@ export class ZoneCards {
       const zoneCode = zone.zone_code;
       navigate(`/deployments/builder/${this.deploymentId}/zones/${zoneCode}`);
       
-      // Also call custom callback if provided
       if (this.clickCallback) {
         this.clickCallback(zoneCode);
       }
