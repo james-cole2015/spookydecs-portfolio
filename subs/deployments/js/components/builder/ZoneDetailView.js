@@ -10,15 +10,15 @@ export class ZoneDetailView {
     this.sessions = sessions;
     this.activeSession = activeSession;
   }
-  
+
   render() {
     const container = document.createElement('div');
     container.className = 'zone-detail-container';
-    
+
     container.innerHTML = `
       <div class="zone-detail-header">
         <button class="btn-back">← Back to Zones</button>
-        
+
         <div class="zone-header-info">
           <div class="zone-title">
             <span class="zone-icon">${this.getZoneIcon()}</span>
@@ -40,22 +40,29 @@ export class ZoneDetailView {
         ${this.renderQuickActions()}
       </div>
     `;
-    
-    // Append session history as element (not HTML string)
+
+    // Append session history
     const contentDiv = container.querySelector('.zone-detail-content');
     contentDiv.appendChild(this.renderSessionHistorySection());
-    
+
+    // Append the mobile stats drawer at the very end of the container
+    container.appendChild(this.renderStatsDrawer());
+
+    // Wire up the drawer toggle after the element is ready
+    // (caller appends container to DOM, so use a microtask)
+    requestAnimationFrame(() => this._attachDrawerToggle(container));
+
     return container;
   }
-  
+
   renderActiveSessionBanner() {
     const startTime = new Date(this.activeSession.start_time);
-    const timeStr = startTime.toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
+    const timeStr = startTime.toLocaleTimeString('en-US', {
+      hour: 'numeric',
       minute: '2-digit',
-      hour12: true 
+      hour12: true
     });
-    
+
     return `
       <div class="active-session-banner">
         <div class="banner-content">
@@ -72,55 +79,20 @@ export class ZoneDetailView {
       </div>
     `;
   }
-  
+
   renderStatsSection() {
-    const stats = this.zone.statistics || {};
-    const itemCount = stats.item_count || 0;
-    const sessionCount = stats.session_count || 0;
-    const totalMinutes = stats.total_setup_minutes || 0;
-    const longestMinutes = stats.longest_session_minutes || 0;
-    
+    // Desktop-only inline stats grid (hidden on mobile via CSS)
     return `
       <div class="stats-section">
-        <div class="stat-card">
-          <div class="stat-icon">📦</div>
-          <div class="stat-content">
-            <div class="stat-value">${itemCount}</div>
-            <div class="stat-label">Items Deployed</div>
-          </div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon">🔧</div>
-          <div class="stat-content">
-            <div class="stat-value">${sessionCount}</div>
-            <div class="stat-label">Total Sessions</div>
-          </div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon">⏱️</div>
-          <div class="stat-content">
-            <div class="stat-value">${this.formatMinutes(totalMinutes)}</div>
-            <div class="stat-label">Total Time</div>
-          </div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon">⏲️</div>
-          <div class="stat-content">
-            <div class="stat-value">${this.formatMinutes(longestMinutes)}</div>
-            <div class="stat-label">Longest Session</div>
-          </div>
-        </div>
+        ${this._statCardsHTML()}
       </div>
     `;
   }
-  
+
   renderQuickActions() {
     const hasItems = (this.zone.statistics?.item_count || 0) > 0;
     const hasActiveSession = !!this.activeSession;
-    
+
     return `
       <div class="quick-actions-section">
         <h2>Quick Actions</h2>
@@ -134,7 +106,7 @@ export class ZoneDetailView {
               </div>
             </button>
           ` : ''}
-          
+
           ${hasItems ? `
             <button class="action-card btn-view-items">
               <div class="action-icon">📋</div>
@@ -148,47 +120,117 @@ export class ZoneDetailView {
       </div>
     `;
   }
-  
+
   renderSessionHistorySection() {
     const sessionHistory = new SessionHistory(this.sessions);
-    
+
     const historyContainer = document.createElement('div');
     historyContainer.className = 'session-history-section';
-    
+
     const header = document.createElement('div');
     header.className = 'section-header';
     header.innerHTML = `
       <h2>Session History</h2>
       <span class="session-count">${this.sessions.length} ${this.sessions.length === 1 ? 'session' : 'sessions'}</span>
     `;
-    
+
     historyContainer.appendChild(header);
     historyContainer.appendChild(sessionHistory.render());
-    
-    return historyContainer; // Return the element, not outerHTML
+
+    return historyContainer;
   }
-  
-  getZoneIcon() {
-    const icons = {
-      'FY': '🏡',
-      'BY': '🌳',
-      'SY': '🏠'
+
+  // ── Mobile stats drawer ──────────────────────────────────
+
+  renderStatsDrawer() {
+    const drawer = document.createElement('div');
+    drawer.className = 'stats-drawer';
+    drawer.setAttribute('aria-label', 'Zone statistics');
+
+    drawer.innerHTML = `
+      <div class="stats-drawer-handle" role="button" aria-expanded="false" tabindex="0">
+        <span class="stats-drawer-label">📊 Zone Stats</span>
+        <span class="stats-drawer-pill"></span>
+        <span class="stats-drawer-chevron">▲</span>
+      </div>
+      <div class="stats-drawer-body">
+        ${this._statCardsHTML()}
+      </div>
+    `;
+
+    return drawer;
+  }
+
+  _attachDrawerToggle(container) {
+    const drawer = container.querySelector('.stats-drawer');
+    if (!drawer) return;
+
+    const handle = drawer.querySelector('.stats-drawer-handle');
+
+    const toggle = () => {
+      const isOpen = drawer.classList.toggle('is-open');
+      handle.setAttribute('aria-expanded', String(isOpen));
     };
+
+    handle.addEventListener('click', toggle);
+    handle.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggle();
+      }
+    });
+  }
+
+  // ── Shared helpers ───────────────────────────────────────
+
+  _statCardsHTML() {
+    const stats = this.zone.statistics || {};
+    const itemCount = stats.item_count || 0;
+    const sessionCount = stats.session_count || 0;
+    const totalMinutes = stats.total_setup_minutes || 0;
+    const longestMinutes = stats.longest_session_minutes || 0;
+
+    return `
+      <div class="stat-card">
+        <div class="stat-icon">📦</div>
+        <div class="stat-content">
+          <span class="stat-value">${itemCount}</span>
+          <span class="stat-label">Items Deployed</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🔧</div>
+        <div class="stat-content">
+          <span class="stat-value">${sessionCount}</span>
+          <span class="stat-label">Total Sessions</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⏱️</div>
+        <div class="stat-content">
+          <span class="stat-value">${this.formatMinutes(totalMinutes)}</span>
+          <span class="stat-label">Total Time</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⏲️</div>
+        <div class="stat-content">
+          <span class="stat-value">${this.formatMinutes(longestMinutes)}</span>
+          <span class="stat-label">Longest Session</span>
+        </div>
+      </div>
+    `;
+  }
+
+  getZoneIcon() {
+    const icons = { 'FY': '🏡', 'BY': '🌳', 'SY': '🏠' };
     return icons[this.zone.zone_code] || '📍';
   }
-  
+
   formatMinutes(minutes) {
-    if (minutes < 60) {
-      return `${minutes}m`;
-    }
-    
+    if (minutes < 60) return `${minutes}m`;
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    
-    if (mins === 0) {
-      return `${hours}h`;
-    }
-    
-    return `${hours}h ${mins}m`;
+    return mins === 0 ? `${hours}h` : `${hours}h ${mins}m`;
   }
 }
