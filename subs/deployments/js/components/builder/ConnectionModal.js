@@ -17,6 +17,15 @@ export class ConnectionModal {
     this.classFilter = 'all';
   }
 
+  getConnectedItemIds() {
+    const connections = this.session?.connections || [];
+    return new Set(
+      connections
+        .filter(c => (c.connection_type ?? 'deployment') === 'deployment')
+        .map(c => c.to_item_id)
+    );
+  }
+
   render() {
     this.container = document.createElement('div');
     this.container.className = 'connection-modal';
@@ -92,12 +101,15 @@ export class ConnectionModal {
       });
 
       const items = response?.data?.items || [];
+      const connectedIds = this.getConnectedItemIds();
 
-      // Any item with a male end or power inlet can be a destination
+      // Any item with a male end or power inlet can be a destination,
+      // excluding items already actively connected in this session
       this.allItems = items.filter(item => {
         const hasMaleEnd = parseInt(item.male_ends || 0) > 0;
         const hasPowerInlet = item.power_inlet === true;
-        return hasMaleEnd || hasPowerInlet;
+        const alreadyConnected = connectedIds.has(item.id);
+        return (hasMaleEnd || hasPowerInlet) && !alreadyConnected;
       });
 
       console.log('[ConnectionModal] Loaded destinations:', this.allItems.length);
