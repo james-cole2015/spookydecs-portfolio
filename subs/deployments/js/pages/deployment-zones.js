@@ -77,10 +77,10 @@ export async function renderZonesDashboard(deploymentId) {
       </div>
       
       <div class="zones-section-header">
-        <h2>Setup</h2>
+        <h2>Builder Administration</h2>
       </div>
       
-      <div class="staging-section">
+<div class="staging-section">
         <div class="staging-card zone-card" data-nav="/deployments/builder/${deploymentId}/staging">
           <div class="card-header">
             <div class="card-icon">📦</div>
@@ -91,6 +91,32 @@ export async function renderZonesDashboard(deploymentId) {
           </div>
           <div class="card-footer">
             <span class="card-action">Stage Items →</span>
+          </div>
+        </div>
+
+        <div class="zone-card zone-card--placeholder">
+          <div class="card-header">
+            <div class="card-icon">✅</div>
+            <h2>Complete Deployment</h2>
+          </div>
+          <div class="card-content">
+            <p class="card-description">Finalize all records, mark items as deployed, and lock the deployment.</p>
+          </div>
+          <div class="card-footer">
+            <span class="card-action card-action--disabled">Coming Soon 🔒</span>
+          </div>
+        </div>
+
+        <div class="zone-card zone-card--placeholder">
+          <div class="card-header">
+            <div class="card-icon">🧹</div>
+            <h2>Deployment Teardown</h2>
+          </div>
+          <div class="card-content">
+            <p class="card-description">Begin removing items after the season ends and return them to storage.</p>
+          </div>
+          <div class="card-footer">
+            <span class="card-action card-action--disabled">Coming Soon 🔒</span>
           </div>
         </div>
       </div>

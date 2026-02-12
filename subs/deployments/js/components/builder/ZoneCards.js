@@ -11,7 +11,7 @@ export class ZoneCards {
     this.clickCallback = null;
   }
 
-  render() {
+render() {
     const container = document.createElement('div');
     container.className = 'zone-cards';
 
@@ -24,7 +24,6 @@ export class ZoneCards {
       return container;
     }
 
-    // Sort zones by code (FY, BY, SY)
     const sortedZones = [...this.zones].sort((a, b) => {
       const order = { 'FY': 1, 'BY': 2, 'SY': 3 };
       return (order[a.zone_code] || 99) - (order[b.zone_code] || 99);
@@ -90,7 +89,6 @@ export class ZoneCards {
       </div>
     `;
 
-    // Attach click handler - navigate to zone detail page
     card.addEventListener('click', () => {
       const zoneCode = zone.zone_code;
       navigate(`/deployments/builder/${this.deploymentId}/zones/${zoneCode}`);
@@ -99,6 +97,66 @@ export class ZoneCards {
         this.clickCallback(zoneCode);
       }
     });
+
+    return card;
+  }
+
+  createCompleteDeploymentCard() {
+    const card = document.createElement('div');
+    card.className = 'zone-card zone-card--placeholder';
+
+    card.innerHTML = `
+      <div class="zone-card-header">
+        <div class="zone-icon">✅</div>
+        <div class="zone-title">
+          <h3>Complete Deployment</h3>
+          <p class="zone-code">FINALIZE</p>
+        </div>
+      </div>
+
+      <div class="zone-card-body">
+        <p class="placeholder-description">
+          Finalize all records, mark items as deployed, and lock the deployment.
+        </p>
+      </div>
+
+      <div class="zone-card-footer">
+        <button class="btn-zone-action" disabled>
+          Coming Soon
+          <span class="icon">🔒</span>
+        </button>
+      </div>
+    `;
+
+    return card;
+  }
+
+  createTeardownCard() {
+    const card = document.createElement('div');
+    card.className = 'zone-card zone-card--placeholder';
+
+    card.innerHTML = `
+      <div class="zone-card-header">
+        <div class="zone-icon">📦</div>
+        <div class="zone-title">
+          <h3>Deployment Teardown</h3>
+          <p class="zone-code">TEARDOWN</p>
+        </div>
+      </div>
+
+      <div class="zone-card-body">
+        <p class="placeholder-description">
+          Begin removing items after the season ends and return them to storage.
+        </p>
+      </div>
+
+      <div class="zone-card-footer">
+        <button class="btn-zone-action" disabled>
+          Coming Soon
+          <span class="icon">🔒</span>
+        </button>
+      </div>
+    `;
 
     return card;
   }
