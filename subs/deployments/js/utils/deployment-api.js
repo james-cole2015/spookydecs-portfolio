@@ -2,6 +2,7 @@
 // Handles all API calls to the deployments backend
 
 let API_ENDPOINT = '';
+let ITEMS_ADMIN = '';
 
 async function loadConfig() {
   if (API_ENDPOINT) return API_ENDPOINT;
@@ -13,11 +14,17 @@ async function loadConfig() {
     if (!res.ok) throw new Error(`Failed to load config: ${res.status}`);
     const { data: config } = await res.json();
     API_ENDPOINT = config.API_ENDPOINT;
+    ITEMS_ADMIN = config.ITEMS_ADMIN || '';
     return API_ENDPOINT;
   } catch (error) {
     console.error('Failed to load config:', error);
     throw new Error('Failed to load API configuration');
   }
+}
+
+export async function getItemsAdminUrl() {
+  await loadConfig();
+  return ITEMS_ADMIN;
 }
 
 async function apiCall(endpoint, method = 'GET', body = null) {
@@ -76,6 +83,10 @@ export async function checkDeploymentExists(season, year) {
     console.error('Error checking deployment existence:', error);
     return false;
   }
+}
+
+export async function completeDeployment(deploymentId) {
+  return await apiCall(`/deployments/${deploymentId}/complete`, 'POST');
 }
 
 // Items

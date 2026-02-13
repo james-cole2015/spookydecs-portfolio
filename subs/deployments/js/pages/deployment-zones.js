@@ -94,7 +94,7 @@ export async function renderZonesDashboard(deploymentId) {
           </div>
         </div>
 
-        <div class="zone-card zone-card--placeholder">
+        <div class="staging-card zone-card" data-nav="/deployments/builder/${deploymentId}/zones/complete">
           <div class="card-header">
             <div class="card-icon">✅</div>
             <h2>Complete Deployment</h2>
@@ -103,7 +103,7 @@ export async function renderZonesDashboard(deploymentId) {
             <p class="card-description">Finalize all records, mark items as deployed, and lock the deployment.</p>
           </div>
           <div class="card-footer">
-            <span class="card-action card-action--disabled">Coming Soon 🔒</span>
+            <span class="card-action">Review &amp; Complete →</span>
           </div>
         </div>
 
@@ -161,13 +161,15 @@ function attachEventHandlers(deploymentId) {
     navigate('/deployments');
   });
   
-  // Staging card click
-  document.querySelector('.staging-card')?.addEventListener('click', (e) => {
+// Staging/action card clicks
+document.querySelectorAll('.staging-card').forEach(card => {
+  card.addEventListener('click', (e) => {
     const navPath = e.currentTarget.dataset.nav;
     if (navPath) {
       navigate(navPath);
     }
   });
+});
   
   // Zone card clicks
   document.querySelectorAll('.zone-card:not(.staging-card)').forEach(card => {
