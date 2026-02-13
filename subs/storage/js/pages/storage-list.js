@@ -1,7 +1,7 @@
 /**
  * Storage List Page
  * Main storage list view with filters, stats drawer, and responsive card grid
- * UPDATED: Added PageHeader with stats drawer
+ * UPDATED: Icon-only buttons, mobile-optimized
  */
 
 import { storageAPI, itemsAPI } from '../utils/storage-api.js';
@@ -55,19 +55,13 @@ export async function renderStorageList() {
   
   pageHeader.render(document.getElementById('page-header-container'));
   
-  // Add action buttons to header
+  // Add icon-only action buttons to header
   const actionsContainer = pageHeader.getActionsContainer();
   if (actionsContainer) {
     actionsContainer.innerHTML = `
-      <button class="btn btn-secondary" id="btn-stats">
-        📊 Stats
-      </button>
-      <button class="btn btn-secondary" id="btn-pack">
-        📦 Pack Items
-      </button>
-      <button class="btn btn-primary" id="btn-create">
-        ➕ Create Storage
-      </button>
+      <button class="btn btn-secondary btn-icon" id="btn-stats" title="View Stats" aria-label="View Statistics">📊</button>
+      <button class="btn btn-secondary btn-icon" id="btn-pack" title="Pack Items" aria-label="Pack Items">📦</button>
+      <button class="btn btn-primary btn-icon" id="btn-create" title="Create Storage" aria-label="Create New Storage">➕</button>
     `;
     
     // Attach button event listeners
@@ -185,14 +179,11 @@ function updateStatsButton(stats) {
   const unpackedCount = stats.unpacked_items || 0;
   
   if (unpackedCount > 0) {
-    statsBtn.innerHTML = `
-      📊 Stats
-      <span class="btn-badge">${unpackedCount}</span>
-    `;
     statsBtn.classList.add('has-badge');
+    statsBtn.setAttribute('data-badge', unpackedCount);
   } else {
-    statsBtn.innerHTML = '📊 Stats';
     statsBtn.classList.remove('has-badge');
+    statsBtn.removeAttribute('data-badge');
   }
 }
 
