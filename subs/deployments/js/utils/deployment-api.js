@@ -89,6 +89,16 @@ export async function completeDeployment(deploymentId) {
   return await apiCall(`/deployments/${deploymentId}/complete`, 'POST');
 }
 
+// Historical Deployments
+
+export async function listHistoricalDeployments() {
+  return await apiCall('/deployments/historical');
+}
+
+export async function getHistoricalDeployment(deploymentId) {
+  return await apiCall(`/deployments/historical/${deploymentId}`);
+}
+
 // Items
 
 export async function searchItems(filters = {}) {

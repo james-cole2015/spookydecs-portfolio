@@ -28,7 +28,7 @@ export function renderMainPage() {
           icon: '📋',
           title: 'Historical Deployments',
           description: 'Browse past deployments and review how your displays have evolved over time. Filter by season and year to find specific deployment records.',
-          active: false,
+          active: true,
           route: '/deployments/historical'
         })}
 

@@ -11,7 +11,7 @@ import { renderConnectionDetail } from './pages/connection-detail.js';
 import { renderStagingPage } from './pages/deployment-staging.js';
 import { renderCompletePage } from './pages/deployment-complete.js';
 import { renderTeardownPage } from './pages/deployment-teardown.js';
-
+import { renderHistoricalPage } from './pages/deployment-historical.js';
 
 
 // Define routes
@@ -25,10 +25,20 @@ const routes = [
     path: '/deployments/builder', 
     handler: () => renderBuilder()
   },
+
+  // HISTORICAL - specific id route must come before base route
+  {
+    path: '/deployments/historical/:id',
+    handler: (params) => {
+      console.log('[Router] Historical detail route params:', params);
+      renderHistoricalPage(params.id);
+    }
+  },
   { 
     path: '/deployments/historical', 
-    handler: () => renderHistoricalPlaceholder()
+    handler: () => renderHistoricalPage()
   },
+
   { 
     path: '/deployments/graphs', 
     handler: () => renderGraphsPlaceholder()
@@ -97,8 +107,7 @@ const routes = [
     }
   },
 
-{ path: '/deployments/builder/:id/teardown', handler: (params) => renderTeardownPage(params.id) },
-
+  { path: '/deployments/builder/:id/teardown', handler: (params) => renderTeardownPage(params.id) },
 
   { 
     path: '/deployments/:id', 
@@ -115,17 +124,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Placeholder render functions
-
-function renderHistoricalPlaceholder() {
-  const app = document.getElementById('app');
-  app.innerHTML = `
-    <div style="padding: 2rem; text-align: center;">
-      <h2>Historical Deployments</h2>
-      <p>Coming soon...</p>
-      <button onclick="window.history.back()">← Back</button>
-    </div>
-  `;
-}
 
 function renderGraphsPlaceholder() {
   const app = document.getElementById('app');
