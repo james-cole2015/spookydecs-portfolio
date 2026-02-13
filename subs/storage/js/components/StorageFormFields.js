@@ -1,7 +1,7 @@
 /**
  * StorageFormFields Component
  * Dynamic form field generator for storage creation/editing
- * PATCHED: Skip validation for disabled fields
+ * PATCHED: Fixed item filtering for self-contained units
  */
 
 import { getFormFields, getFieldOptions, validateField } from '../utils/storage-config.js';
@@ -162,6 +162,7 @@ export class StorageFormFields {
 
   /**
    * Create item select field (for self-contained)
+   * FIXED: Now filters for single_packed items only
    */
   async createItemSelectField(fieldId, fieldConfig, value) {
     const wrapper = document.createElement('div');
@@ -204,11 +205,22 @@ export class StorageFormFields {
 
   /**
    * Load unpacked items for item select
+   * FIXED: Now filters for single_packed items eligible for self-contained storage
    */
   async loadItemsForSelect(fieldId, searchInput, dropdown, hiddenInput, selectedDisplay) {
     try {
-      // Fetch unpacked items
-      const items = await itemsAPI.getUnpacked(this.season);
+      // Fetch all unpacked items
+      const allItems = await itemsAPI.getUnpacked(this.season);
+      
+      // FIXED: Filter for self-contained eligibility
+      // Items that are single_packed (came in original box) and not yet stored
+      const items = allItems.filter(item => {
+        const isSinglePacked = item.packing_data?.single_packed === true;
+        const isUnpacked = item.packing_data?.packing_status === false;
+        const isNotReceptacle = item.class_type !== 'Receptacle';
+        
+        return isSinglePacked && isUnpacked && isNotReceptacle;
+      });
       
       let filteredItems = items;
       

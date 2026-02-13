@@ -1,6 +1,7 @@
 /**
  * PackingWizard Component
  * Unified wizard for all packing operations: totes, single-packed items, and storage
+ * UPDATED: Fixed item eligibility filtering for all modes
  */
 
 import { getPlaceholderImage } from '../utils/storage-config.js';
@@ -260,44 +261,48 @@ export class PackingWizard {
     }
   }
 
-/**
- * Filter items for tote packing
- */
-filterToteItems() {
-  return this.availableItems.filter(item => {
-    const isPackable = item.packing_data?.packable !== false;
-    const isUnpacked = item.packing_data?.packing_status === false;
-    const isNotSinglePacked = item.packing_data?.single_packed !== true;
-    const isNotReceptacle = item.class_type !== 'Receptacle';
-    
-    return isPackable && isUnpacked && isNotSinglePacked && isNotReceptacle;
-  });
-}
+  /**
+   * Filter items for tote packing
+   * FIXED: Items that can be packed into totes
+   */
+  filterToteItems() {
+    return this.availableItems.filter(item => {
+      const isPackable = item.packing_data?.packable !== false;
+      const isUnpacked = item.packing_data?.packing_status === false;
+      const isNotSinglePacked = item.packing_data?.single_packed !== true;
+      const isNotReceptacle = item.class_type !== 'Receptacle';
+      
+      return isPackable && isUnpacked && isNotSinglePacked && isNotReceptacle;
+    });
+  }
 
-/**
- * Filter items for single packing
- */
-filterSingleItems() {
-  return this.availableItems.filter(item => {
-    const isSinglePacked = item.packing_data?.single_packed === true;
-    const isUnpacked = item.packing_data?.packing_status === false;
-    
-    return isSinglePacked && isUnpacked;
-  });
-}
+  /**
+   * Filter items for single packing
+   * FIXED: Added Receptacle check
+   */
+  filterSingleItems() {
+    return this.availableItems.filter(item => {
+      const isSinglePacked = item.packing_data?.single_packed === true;
+      const isUnpacked = item.packing_data?.packing_status === false;
+      const isNotReceptacle = item.class_type !== 'Receptacle'; // FIXED: Added this check
+      
+      return isSinglePacked && isUnpacked && isNotReceptacle; // FIXED: Added isNotReceptacle
+    });
+  }
 
-/**
- * Filter items for storage
- */
-filterStoreItems() {
-  return this.availableItems.filter(item => {
-    const isNonPackable = item.packing_data?.packable === false;
-    const isUnstored = item.packing_data?.packing_status === false;
-    const isNotReceptacle = item.class_type !== 'Receptacle';
-    
-    return isNonPackable && isUnstored && isNotReceptacle;
-  });
-}
+  /**
+   * Filter items for storage
+   * Already correct - no changes needed
+   */
+  filterStoreItems() {
+    return this.availableItems.filter(item => {
+      const isNonPackable = item.packing_data?.packable === false;
+      const isUnstored = item.packing_data?.packing_status === false;
+      const isNotReceptacle = item.class_type !== 'Receptacle';
+      
+      return isNonPackable && isUnstored && isNotReceptacle;
+    });
+  }
 
   /**
    * Render: Select Tote

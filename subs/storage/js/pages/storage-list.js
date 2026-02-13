@@ -1,22 +1,26 @@
 /**
  * Storage List Page
- * Main storage list view with filters and responsive card grid
+ * Main storage list view with filters, stats drawer, and responsive card grid
+ * UPDATED: Added PageHeader with stats drawer
  */
 
-import { storageAPI } from '../utils/storage-api.js';
+import { storageAPI, itemsAPI } from '../utils/storage-api.js';
 import { formatStorageUnit } from '../utils/storage-config.js';
 import { getFiltersFromUrl, saveFiltersToUrl } from '../utils/state.js';
 import { FilterBar } from '../components/FilterBar.js';
 import { StorageCards } from '../components/StorageCards.js';
+import { PageHeader } from '../components/PageHeader.js';
 import { navigate } from '../utils/router.js';
 import { showSuccess, showError } from '../shared/toast.js';
 
 let allStorage = [];
+let allItems = [];
 let filteredStorage = [];
 let currentFilters = {};
 
 let filterBar;
 let storageCards;
+let pageHeader;
 
 /**
  * Render storage list page
@@ -27,17 +31,7 @@ export async function renderStorageList() {
   // Render page structure
   app.innerHTML = `
     <div class="storage-list-page">
-      <div class="page-header">
-        <h1 class="page-title">Storage Inventory</h1>
-        <div class="page-actions">
-          <button class="btn btn-secondary" id="btn-pack">
-            📦 Pack Items
-          </button>
-          <button class="btn btn-primary" id="btn-create">
-            ➕ Create Storage
-          </button>
-        </div>
-      </div>
+      <div id="page-header-container"></div>
       
       <div id="filter-container"></div>
       
@@ -49,19 +43,47 @@ export async function renderStorageList() {
     </div>
   `;
   
-  // Attach button event listeners
-  document.getElementById('btn-pack').addEventListener('click', () => {
-    navigate('/storage/pack');
-  });
-  
-  document.getElementById('btn-create').addEventListener('click', () => {
-    navigate('/storage/create');
-  });
-  
   // Restore filters from URL
   currentFilters = getFiltersFromUrl();
   
-  // Initialize components
+  // Initialize PageHeader (without stats initially)
+  pageHeader = new PageHeader({
+    title: 'Storage Inventory',
+    icon: '📦',
+    stats: null // Will be populated after data loads
+  });
+  
+  pageHeader.render(document.getElementById('page-header-container'));
+  
+  // Add action buttons to header
+  const actionsContainer = pageHeader.getActionsContainer();
+  if (actionsContainer) {
+    actionsContainer.innerHTML = `
+      <button class="btn btn-secondary" id="btn-stats">
+        📊 Stats
+      </button>
+      <button class="btn btn-secondary" id="btn-pack">
+        📦 Pack Items
+      </button>
+      <button class="btn btn-primary" id="btn-create">
+        ➕ Create Storage
+      </button>
+    `;
+    
+    // Attach button event listeners
+    document.getElementById('btn-stats').addEventListener('click', () => {
+      pageHeader.openDrawer();
+    });
+    
+    document.getElementById('btn-pack').addEventListener('click', () => {
+      navigate('/storage/pack');
+    });
+    
+    document.getElementById('btn-create').addEventListener('click', () => {
+      navigate('/storage/create');
+    });
+  }
+  
   filterBar = new FilterBar({
     filters: currentFilters,
     showFilters: ['season', 'location', 'class_type', 'packed'],
@@ -78,7 +100,7 @@ export async function renderStorageList() {
 }
 
 /**
- * Load storage data from API
+ * Load storage data and items from API
  */
 async function loadData() {
   try {
@@ -93,11 +115,24 @@ async function loadData() {
       `;
     }
     
-    // Fetch all storage units
-    const data = await storageAPI.getAll({});
-    allStorage = data.map(unit => formatStorageUnit(unit));
+    // Fetch storage units and items in parallel
+    const [storageData, itemsData] = await Promise.all([
+      storageAPI.getAll({}),
+      itemsAPI.getAll({})
+    ]);
+    
+    allStorage = storageData.map(unit => formatStorageUnit(unit));
+    allItems = itemsData;
     
     console.log('Loaded storage units:', allStorage.length);
+    console.log('Loaded items:', allItems.length);
+    
+    // Calculate and update stats
+    const stats = calculateStats(allStorage, allItems);
+    pageHeader.updateStats(stats);
+    
+    // Update stats button with badge if there are unpacked items
+    updateStatsButton(stats);
     
     // Render page
     renderPage();
@@ -105,6 +140,59 @@ async function loadData() {
   } catch (error) {
     console.error('Failed to load storage:', error);
     showErrorState('Failed to load storage units. Please try again.');
+  }
+}
+
+/**
+ * Calculate stats for drawer
+ */
+function calculateStats(storage, items) {
+  const stats = {
+    total_storage: storage.length,
+    unpacked_storage: storage.filter(unit => unit.packed === false).length,
+    total_items: items.length,
+    unpacked_items: items.filter(item => item.packing_data?.packing_status === false).length,
+    by_season: {}
+  };
+  
+  // Calculate stats by season
+  const seasons = ['Halloween', 'Christmas', 'Shared'];
+  
+  seasons.forEach(season => {
+    const seasonStorage = storage.filter(unit => unit.season === season);
+    const seasonItems = items.filter(item => item.season === season);
+    const unpackedSeasonItems = seasonItems.filter(item => item.packing_data?.packing_status === false);
+    
+    if (seasonStorage.length > 0 || seasonItems.length > 0) {
+      stats.by_season[season] = {
+        storage: seasonStorage.length,
+        items: seasonItems.length,
+        unpacked_items: unpackedSeasonItems.length
+      };
+    }
+  });
+  
+  return stats;
+}
+
+/**
+ * Update stats button with badge
+ */
+function updateStatsButton(stats) {
+  const statsBtn = document.getElementById('btn-stats');
+  if (!statsBtn) return;
+  
+  const unpackedCount = stats.unpacked_items || 0;
+  
+  if (unpackedCount > 0) {
+    statsBtn.innerHTML = `
+      📊 Stats
+      <span class="btn-badge">${unpackedCount}</span>
+    `;
+    statsBtn.classList.add('has-badge');
+  } else {
+    statsBtn.innerHTML = '📊 Stats';
+    statsBtn.classList.remove('has-badge');
   }
 }
 
