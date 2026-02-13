@@ -10,6 +10,8 @@ import { renderSessionDetail } from './pages/session-detail.js';
 import { renderConnectionDetail } from './pages/connection-detail.js';
 import { renderStagingPage } from './pages/deployment-staging.js';
 import { renderCompletePage } from './pages/deployment-complete.js';
+import { renderTeardownPage } from './pages/deployment-teardown.js';
+
 
 
 // Define routes
@@ -94,6 +96,10 @@ const routes = [
       renderConnectionDetail(params.deploymentId, params.sessionId, params.connectionId);
     }
   },
+
+{ path: '/deployments/builder/:id/teardown', handler: (params) => renderTeardownPage(params.id) },
+
+
   { 
     path: '/deployments/:id', 
     handler: (params) => {

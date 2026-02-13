@@ -58,6 +58,9 @@ export async function renderZonesDashboard(deploymentId) {
     if (!zones || zones.length === 0) {
       throw new Error('No zones found for this deployment');
     }
+
+    const status = deployment.status || 'unknown';
+    const teardownEnabled = ['completed', 'active_teardown', 'archived'].includes(status);
     
     // Render zones dashboard
     const container = document.createElement('div');
@@ -71,7 +74,7 @@ export async function renderZonesDashboard(deploymentId) {
           <p class="deployment-meta">
             <span class="season-badge">${deployment.season || 'Unknown'}</span>
             <span class="year-badge">${deployment.year || 'N/A'}</span>
-            <span class="status-badge status-${deployment.status || 'unknown'}">${(deployment.status || 'unknown').replace(/_/g, ' ')}</span>
+            <span class="status-badge status-${status}">${status.replace(/_/g, ' ')}</span>
           </p>
         </div>
       </div>
@@ -80,7 +83,7 @@ export async function renderZonesDashboard(deploymentId) {
         <h2>Builder Administration</h2>
       </div>
       
-<div class="staging-section">
+      <div class="staging-section">
         <div class="staging-card zone-card" data-nav="/deployments/builder/${deploymentId}/staging">
           <div class="card-header">
             <div class="card-icon">📦</div>
@@ -107,18 +110,32 @@ export async function renderZonesDashboard(deploymentId) {
           </div>
         </div>
 
-        <div class="zone-card zone-card--placeholder">
-          <div class="card-header">
-            <div class="card-icon">🧹</div>
-            <h2>Deployment Teardown</h2>
-          </div>
-          <div class="card-content">
-            <p class="card-description">Begin removing items after the season ends and return them to storage.</p>
-          </div>
-          <div class="card-footer">
-            <span class="card-action card-action--disabled">Coming Soon 🔒</span>
-          </div>
-        </div>
+        ${teardownEnabled
+          ? `<div class="staging-card zone-card" data-nav="/deployments/builder/${deploymentId}/teardown">
+              <div class="card-header">
+                <div class="card-icon">🧹</div>
+                <h2>Deployment Teardown</h2>
+              </div>
+              <div class="card-content">
+                <p class="card-description">Begin removing items after the season ends and return them to storage.</p>
+              </div>
+              <div class="card-footer">
+                <span class="card-action">Start Teardown →</span>
+              </div>
+            </div>`
+          : `<div class="zone-card zone-card--placeholder">
+              <div class="card-header">
+                <div class="card-icon">🧹</div>
+                <h2>Deployment Teardown</h2>
+              </div>
+              <div class="card-content">
+                <p class="card-description">Begin removing items after the season ends and return them to storage.</p>
+              </div>
+              <div class="card-footer">
+                <span class="card-action card-action--disabled">Available after completion 🔒</span>
+              </div>
+            </div>`
+        }
       </div>
       
       <div class="zones-section-header">
@@ -161,15 +178,15 @@ function attachEventHandlers(deploymentId) {
     navigate('/deployments');
   });
   
-// Staging/action card clicks
-document.querySelectorAll('.staging-card').forEach(card => {
-  card.addEventListener('click', (e) => {
-    const navPath = e.currentTarget.dataset.nav;
-    if (navPath) {
-      navigate(navPath);
-    }
+  // Staging/action card clicks
+  document.querySelectorAll('.staging-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      const navPath = e.currentTarget.dataset.nav;
+      if (navPath) {
+        navigate(navPath);
+      }
+    });
   });
-});
   
   // Zone card clicks
   document.querySelectorAll('.zone-card:not(.staging-card)').forEach(card => {

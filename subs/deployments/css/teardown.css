@@ -1,0 +1,492 @@
+/* Deployment Teardown Page Styles */
+
+/* ─── Page Layout ─────────────────────────────────────────── */
+
+.teardown-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem 8rem;
+}
+
+/* ─── Breadcrumb ──────────────────────────────────────────── */
+
+.teardown-breadcrumb {
+  margin-bottom: 1.5rem;
+}
+
+.btn-back {
+  background: none;
+  border: none;
+  color: #6B7280;
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  transition: color 0.2s;
+}
+
+.btn-back:hover {
+  color: #3B82F6;
+}
+
+/* ─── Header ──────────────────────────────────────────────── */
+
+.teardown-header {
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.teardown-header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.teardown-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1F2937;
+  margin: 0 0 0.5rem;
+}
+
+.teardown-header-badges {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.teardown-header-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.meta-label {
+  font-size: 0.75rem;
+  color: #9CA3AF;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.meta-value {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1F2937;
+}
+
+/* ─── Start Banner ────────────────────────────────────────── */
+
+.teardown-start-banner {
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.start-banner-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.teardown-start-banner h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1F2937;
+  margin: 0 0 0.75rem;
+}
+
+.teardown-start-banner p {
+  color: #6B7280;
+  max-width: 480px;
+  margin: 0 auto 2rem;
+  line-height: 1.6;
+  font-size: 0.9rem;
+}
+
+/* ─── Tabs ────────────────────────────────────────────────── */
+
+.teardown-tabs {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 2px solid #E5E7EB;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.teardown-tab {
+  background: none;
+  border: none;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6B7280;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.teardown-tab:hover {
+  color: #1F2937;
+}
+
+.teardown-tab--active {
+  color: #2563EB;
+  border-bottom-color: #2563EB;
+}
+
+.teardown-tab--done {
+  color: #065F46;
+}
+
+.teardown-tab--done.teardown-tab--active {
+  border-bottom-color: #065F46;
+}
+
+.tab-count {
+  font-size: 0.75rem;
+  background: #F3F4F6;
+  color: #6B7280;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.tab-check {
+  color: #065F46;
+  font-weight: 700;
+}
+
+/* ─── Panels ──────────────────────────────────────────────── */
+
+.teardown-panel {
+  display: none;
+}
+
+.teardown-panel--active {
+  display: block;
+}
+
+/* ─── Class Grouping ──────────────────────────────────────── */
+
+.teardown-class-group {
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.teardown-class-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #F3F4F6;
+}
+
+.teardown-class-header h3 {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+/* ─── Table ───────────────────────────────────────────────── */
+
+.teardown-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.teardown-table th {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6B7280;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.teardown-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #F3F4F6;
+  vertical-align: middle;
+}
+
+.teardown-table tr:last-child td {
+  border-bottom: none;
+}
+
+.teardown-row--done td {
+  opacity: 0.5;
+}
+
+.item-id {
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: #6B7280;
+}
+
+.item-name {
+  font-weight: 500;
+  color: #1F2937;
+}
+
+/* ─── Status Pills ────────────────────────────────────────── */
+
+.status-pill {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.status-deployed {
+  background: #DBEAFE;
+  color: #1E40AF;
+}
+
+.status-teardown {
+  background: #FEF9C3;
+  color: #854D0E;
+}
+
+.torn-down-label {
+  font-size: 0.8rem;
+  color: #065F46;
+  font-weight: 500;
+}
+
+/* ─── Zone Done Banner ────────────────────────────────────── */
+
+.zone-done-banner {
+  background: #D1FAE5;
+  border: 1px solid #6EE7B7;
+  color: #065F46;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 1.25rem;
+}
+
+/* ─── Empty State ─────────────────────────────────────────── */
+
+.empty-state {
+  text-align: center;
+  color: #9CA3AF;
+  font-size: 0.875rem;
+  padding: 2rem;
+}
+
+/* ─── Error Banner ────────────────────────────────────────── */
+
+.teardown-error {
+  background: #FEE2E2;
+  border: 1px solid #FCA5A5;
+  color: #991B1B;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  display: none;
+}
+
+/* ─── Sticky Footer ───────────────────────────────────────── */
+
+.teardown-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 2px solid #E5E7EB;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+  z-index: 100;
+  padding: 1rem;
+}
+
+.teardown-footer-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.teardown-disclaimer {
+  font-size: 0.8rem;
+  color: #6B7280;
+  margin: 0;
+  max-width: 320px;
+}
+
+/* ─── Confirmation Modal ──────────────────────────────────── */
+
+.teardown-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.teardown-modal {
+  background: white;
+  border-radius: 8px;
+  padding: 2rem;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.teardown-modal h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1F2937;
+  margin: 0 0 0.75rem;
+}
+
+.teardown-modal p {
+  color: #6B7280;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  margin: 0 0 1.5rem;
+}
+
+.teardown-modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+/* ─── Buttons ─────────────────────────────────────────────── */
+
+.btn {
+  padding: 0.625rem 1.25rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-primary {
+  background: #2563EB;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #1D4ED8;
+}
+
+.btn-secondary {
+  background: #F3F4F6;
+  color: #374151;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #E5E7EB;
+}
+
+.btn-danger {
+  background: #DC2626;
+  color: white;
+  padding: 0.75rem 1.5rem;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #B91C1C;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.btn-sm {
+  padding: 0.3rem 0.75rem;
+  font-size: 0.8rem;
+}
+
+.btn-teardown-item {
+  background: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FDE68A;
+}
+
+.btn-teardown-item:hover:not(:disabled) {
+  background: #FDE68A;
+}
+
+/* ─── Mobile ──────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .teardown-container {
+    padding: 1rem 0.75rem 9rem;
+  }
+
+  .teardown-table th:first-child,
+  .teardown-table td:first-child {
+    display: none;
+  }
+
+  .teardown-tabs {
+    gap: 0.25rem;
+  }
+
+  .teardown-tab {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .teardown-footer-inner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .teardown-disclaimer {
+    max-width: 100%;
+    text-align: center;
+  }
+
+  .btn-danger {
+    width: 100%;
+    text-align: center;
+  }
+
+  .teardown-modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .teardown-modal-actions .btn {
+    width: 100%;
+  }
+}

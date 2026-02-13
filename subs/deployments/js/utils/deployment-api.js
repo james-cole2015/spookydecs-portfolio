@@ -201,3 +201,13 @@ export async function getStagingTotes(deploymentId) {
 export async function stageTote(deploymentId, body) {
   return await apiCall(`/deployments/${deploymentId}/stage`, 'POST', body);
 }
+
+export async function apiTeardownStart(deploymentId) {
+  return await apiCall(`/deployments/${deploymentId}/teardown/start`, 'POST');
+}
+export async function apiTeardownItem(deploymentId, itemId) {
+  return await apiCall(`/deployments/${deploymentId}/teardown/item`, 'POST', { item_id: itemId });
+}
+export async function apiTeardownComplete(deploymentId) {
+  return await apiCall(`/deployments/${deploymentId}/teardown/complete`, 'POST');
+}
