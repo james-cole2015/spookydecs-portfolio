@@ -44,7 +44,6 @@ async function handleResponse(response) {
     
     if (contentType?.includes('application/json')) {
       const errorData = await response.json();
-      // Handle both old and new error formats
       errorMessage = errorData.error || errorData.message || errorMessage;
     }
     
@@ -58,10 +57,9 @@ async function handleResponse(response) {
     // New format: { success: true, data: {...}, timestamp: "..." }
     // Old format: { items: [...] } or direct data
     if (json && typeof json === 'object' && 'success' in json && 'data' in json) {
-      return json.data; // Return unwrapped data
+      return json.data;
     }
     
-    // Return as-is for old format or non-wrapped responses
     return json;
   }
   
@@ -81,6 +79,10 @@ export async function getAllCosts(filters = {}) {
     if (filters.startDate) params.append('start_date', filters.startDate);
     if (filters.endDate) params.append('end_date', filters.endDate);
     if (filters.related_item_id) params.append('related_item_id', filters.related_item_id);
+    // no_receipt: only append when explicitly set (true or false) to avoid filtering on undefined
+    if (filters.no_receipt !== undefined && filters.no_receipt !== null) {
+      params.append('no_receipt', filters.no_receipt);
+    }
 
     const queryString = params.toString();
     const url = `${API_ENDPOINT}/finance/costs${queryString ? '?' + queryString : ''}`;
@@ -250,8 +252,6 @@ export async function getItems(filters = {}) {
 export async function getCostStats(filters = {}) {
   try {
     const response = await getAllCosts(filters);
-    
-    // Handle both array and object response formats
     const costs = Array.isArray(response) ? response : (response.costs || []);
     
     const stats = {
@@ -264,21 +264,18 @@ export async function getCostStats(filters = {}) {
     };
 
     costs.forEach(cost => {
-      // By type
       if (!stats.by_type[cost.cost_type]) {
         stats.by_type[cost.cost_type] = { count: 0, amount: 0 };
       }
       stats.by_type[cost.cost_type].count++;
       stats.by_type[cost.cost_type].amount += parseFloat(cost.total_cost) || 0;
 
-      // By category
       if (!stats.by_category[cost.category]) {
         stats.by_category[cost.category] = { count: 0, amount: 0 };
       }
       stats.by_category[cost.category].count++;
       stats.by_category[cost.category].amount += parseFloat(cost.total_cost) || 0;
 
-      // By vendor
       if (cost.vendor) {
         if (!stats.by_vendor[cost.vendor]) {
           stats.by_vendor[cost.vendor] = { count: 0, amount: 0 };
@@ -287,7 +284,6 @@ export async function getCostStats(filters = {}) {
         stats.by_vendor[cost.vendor].amount += parseFloat(cost.total_cost) || 0;
       }
 
-      // By month
       const date = new Date(cost.cost_date);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       if (!stats.by_month[monthKey]) {
@@ -308,7 +304,6 @@ export async function getCostStats(filters = {}) {
 export async function getVendors() {
   try {
     const response = await getAllCosts();
-    // Handle both array and wrapped object formats
     const costs = Array.isArray(response) ? response : (response.costs || []);
     const vendors = [...new Set(costs.map(cost => cost.vendor).filter(Boolean))];
     return vendors.sort();
@@ -330,15 +325,6 @@ export async function uploadAndProcessReceipt(file, contextData = {}, onProgress
     if (onProgress) onProgress('requesting_presign');
     
     console.log('📤 Requesting presigned URL from:', `${API_ENDPOINT}/admin/images/presign`);
-    console.log('📤 Request body:', {
-      context: 'receipt',
-      photo_type: 'receipt',
-      season: 'shared',
-      files: [{
-        filename: file.name,
-        content_type: file.type
-      }]
-    });
     
     let presignResponse;
     try {
@@ -362,11 +348,8 @@ export async function uploadAndProcessReceipt(file, contextData = {}, onProgress
       throw new Error(`Network error: Unable to reach ${API_ENDPOINT}/admin/images/presign. Check CORS and API Gateway configuration.`);
     }
     
-    console.log('📥 Presign response status:', presignResponse.status);
-    console.log('📥 Presign response ok:', presignResponse.ok);
-    
     const presignData = await handleResponse(presignResponse);
-    const upload = presignData.uploads[0]; // Extract first upload
+    const upload = presignData.uploads[0];
     
     console.log('✅ Presigned URL received:', upload);
     
@@ -444,12 +427,10 @@ export async function updateAuditLog(extractionId, finalData, modifications) {
 }
 
 // Update image record after cost is created
-// costId can be a single string or an array of strings for batch operations
 export async function updateImageAfterCostCreation(imageId, costId) {
   await ensureConfigLoaded();
   
   try {
-    // Support both single and multiple cost IDs
     const costIds = Array.isArray(costId) ? costId : [costId];
     
     const response = await fetch(`${API_ENDPOINT}/finance/images/update`, {
@@ -459,7 +440,7 @@ export async function updateImageAfterCostCreation(imageId, costId) {
       },
       body: JSON.stringify({
         image_id: imageId,
-        cost_ids: costIds  // Changed to cost_ids array
+        cost_ids: costIds
       })
     });
     
