@@ -1,5 +1,4 @@
 // Autocomplete Component
-import { CONFIG, configPromise } from '../utils/images-api.js';
 
 export function Autocomplete(options) {
   const {
@@ -91,22 +90,20 @@ export function Autocomplete(options) {
       // Continue to search API in background
     }
 
-    try {
-      await configPromise;
-      const apiBase = CONFIG.API_ENDPOINT;
-      
-      // Build endpoint based on search type
-      let endpoint;
-      if (searchType === 'item') {
-        endpoint = `${apiBase}/items?search=${encodeURIComponent(query)}&limit=10`;
-      } else if (searchType === 'idea') {
-        endpoint = `${apiBase}/ideas?search=${encodeURIComponent(query)}&limit=10`;
-      } else if (searchType === 'storage') {
-        endpoint = `${apiBase}/storage?search=${encodeURIComponent(query)}&limit=10`;
-      } else {
-        console.error('Unknown searchType:', searchType);
-        return;
-      }
+try {
+  const { API_ENDPOINT } = await window.SpookyConfig.get();
+
+  let endpoint;
+  if (searchType === 'item') {
+    endpoint = `${API_ENDPOINT}/items?search=${encodeURIComponent(query)}&limit=10`;
+  } else if (searchType === 'idea') {
+    endpoint = `${API_ENDPOINT}/ideas?search=${encodeURIComponent(query)}&limit=10`;
+  } else if (searchType === 'storage') {
+    endpoint = `${API_ENDPOINT}/storage?search=${encodeURIComponent(query)}&limit=10`;
+  } else {
+    console.error('Unknown searchType:', searchType);
+    return;
+  }
 
       console.log(`Autocomplete searching ${searchType}:`, endpoint);
 
