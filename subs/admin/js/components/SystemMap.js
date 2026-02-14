@@ -1,5 +1,5 @@
 // System Map Component
-import { calculateSystemHealth, getSubdomainUrls, loadConfig } from '../utils/admin-api.js';
+import { calculateSystemHealth, getSubdomainUrls } from '../utils/admin-api.js';
 
 export class SystemMap {
     constructor() {
@@ -92,15 +92,13 @@ export class SystemMap {
 
     async init() {
         try {
-            // Load health data, URLs, and stats in parallel
             [this.health, this.urls] = await Promise.all([
                 calculateSystemHealth(),
                 getSubdomainUrls()
             ]);
             console.log('🔍 DEBUG - Loaded URLs:', this.urls);
             console.log('🔍 DEBUG - Inspector URL:', this.urls.inspector);
-            
-            // Load stats for subdomains that have them
+
             await this.loadStats();
         } catch (error) {
             console.error('Failed to load system data:', error);
@@ -108,16 +106,14 @@ export class SystemMap {
     }
 
     async loadStats() {
-        // Get API base URL from config
-        const config = await loadConfig();
+        const config = await window.SpookyConfig.get();
         const apiBase = config.API_ENDPOINT;
-        
+
         if (!apiBase) {
             console.warn('API_ENDPOINT not configured, skipping stats load');
             return;
         }
-        
-        // Load stats for each subdomain that has a statsKey
+
         const statsPromises = this.subdomains
             .filter(subdomain => subdomain.statsKey)
             .map(async subdomain => {
@@ -133,30 +129,30 @@ export class SystemMap {
                     console.error(`Failed to load stats for ${subdomain.statsKey}:`, error);
                 }
             });
-        
+
         await Promise.all(statsPromises);
         console.log('📊 Loaded stats:', this.stats);
-        
-        // Update the UI with the loaded stats
+
         this.updateStats();
     }
 
     render() {
         this.container = document.createElement('div');
         this.container.className = 'system-map-container';
-        
+
         this.container.innerHTML = `
             <h2 class="system-map-title">System Map</h2>
             <div class="system-map-grid">
                 ${this.subdomains.map(subdomain => this.renderCard(subdomain)).join('')}
             </div>
         `;
-        
+
         return this.container;
     }
 
     updateStats() {
-        // Re-render cards with stats
+        if (!this.container) return;
+
         const grid = this.container.querySelector('.system-map-grid');
         if (grid) {
             grid.innerHTML = this.subdomains.map(subdomain => this.renderCard(subdomain)).join('');
@@ -167,7 +163,7 @@ export class SystemMap {
         const url = this.urls[subdomain.urlKey] || '';
         const isPlaceholder = subdomain.placeholder || !url;
         const hasStats = subdomain.statsKey && this.stats[subdomain.statsKey];
-        
+
         return `
             <div class="system-card ${isPlaceholder ? 'system-card-placeholder' : ''}">
                 <div class="system-card-header">
@@ -175,7 +171,7 @@ export class SystemMap {
                 </div>
                 <p class="system-card-description">${subdomain.description}</p>
                 ${hasStats ? this.renderStats(subdomain) : ''}
-                ${isPlaceholder 
+                ${isPlaceholder
                     ? `<span class="system-card-placeholder-text">Coming Soon</span>`
                     : `<a href="${url}" target="_blank" rel="noopener noreferrer" class="system-card-action">
                         View ${subdomain.title} →
@@ -188,14 +184,13 @@ export class SystemMap {
     renderStats(subdomain) {
         const statsData = this.stats[subdomain.statsKey];
         if (!statsData) return '';
-        
-        // Format stats based on subdomain type
+
         let statsContent = '';
-        
+
         if (subdomain.id === 'items' && statsData.total_items !== undefined) {
             statsContent = `<div class="stat-item">${statsData.total_items} total items</div>`;
         }
-        
+
         return `
             <details class="system-card-stats">
                 <summary class="stats-toggle">Quick Stats</summary>
@@ -207,7 +202,6 @@ export class SystemMap {
     }
 
     getHealthIcon(healthData) {
-        // Determine health status based on data
         if (healthData.healthy === false) {
             return '⚠️';
         }
