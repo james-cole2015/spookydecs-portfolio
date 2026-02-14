@@ -11,6 +11,7 @@ export class CostRecordsTable {
     this.filteredData = [...data];
     this.pageSize = 20;
     this.currentPage = 0;
+    this.filtersOpen = false;
     
     this.filters = {
       search: '',
@@ -60,6 +61,16 @@ export class CostRecordsTable {
       }
     });
     return Array.from(vendors).sort();
+  }
+
+  getActiveFilterCount() {
+    let count = 0;
+    if (this.filters.cost_type !== 'all') count++;
+    if (this.filters.category !== 'all') count++;
+    if (this.filters.vendor !== 'all') count++;
+    if (this.filters.date_range !== 'all') count++;
+    if (this.filters.no_receipt !== 'all') count++;
+    return count;
   }
 
   calculateDateRange(preset) {
@@ -117,7 +128,6 @@ export class CostRecordsTable {
       filtered = filtered.filter(cost => cost.vendor === this.filters.vendor);
     }
 
-    // no_receipt filter — treat missing field as false
     if (this.filters.no_receipt !== 'all') {
       const wantNoReceipt = this.filters.no_receipt === 'true';
       filtered = filtered.filter(cost => (cost.no_receipt === true) === wantNoReceipt);
@@ -175,6 +185,125 @@ export class CostRecordsTable {
     });
   }
 
+  renderFilters(vendors) {
+    const hasActiveFilters =
+      this.filters.search !== '' ||
+      this.filters.cost_type !== 'all' ||
+      this.filters.category !== 'all' ||
+      this.filters.vendor !== 'all' ||
+      this.filters.date_range !== 'all' ||
+      this.filters.no_receipt !== 'all';
+
+    const activeFilterCount = this.getActiveFilterCount();
+    const filterBadge = activeFilterCount > 0
+      ? `<span class="filter-badge">${activeFilterCount}</span>`
+      : '';
+
+    const customDateInputs = this.filters.date_range === 'custom' ? `
+      <input 
+        type="date" 
+        class="filter-input filter-date-input" 
+        placeholder="Start Date"
+        value="${this.filters.start_date}"
+        id="start-date-input"
+      />
+      <input 
+        type="date" 
+        class="filter-input filter-date-input" 
+        placeholder="End Date"
+        value="${this.filters.end_date}"
+        id="end-date-input"
+      />
+    ` : '';
+
+    const dropdownsHTML = `
+      <select class="filter-select" id="type-filter">
+        <option value="all">All Types</option>
+        <option value="acquisition" ${this.filters.cost_type === 'acquisition' ? 'selected' : ''}>Acquisition</option>
+        <option value="repair" ${this.filters.cost_type === 'repair' ? 'selected' : ''}>Repair</option>
+        <option value="maintenance" ${this.filters.cost_type === 'maintenance' ? 'selected' : ''}>Maintenance</option>
+        <option value="supply_purchase" ${this.filters.cost_type === 'supply_purchase' ? 'selected' : ''}>Supply Purchase</option>
+        <option value="utility" ${this.filters.cost_type === 'utility' ? 'selected' : ''}>Utility</option>
+        <option value="other" ${this.filters.cost_type === 'other' ? 'selected' : ''}>Other</option>
+      </select>
+      <select class="filter-select" id="category-filter">
+        <option value="all">All Categories</option>
+        <option value="materials" ${this.filters.category === 'materials' ? 'selected' : ''}>Materials</option>
+        <option value="labor" ${this.filters.category === 'labor' ? 'selected' : ''}>Labor</option>
+        <option value="parts" ${this.filters.category === 'parts' ? 'selected' : ''}>Parts</option>
+        <option value="supplies" ${this.filters.category === 'supplies' ? 'selected' : ''}>Supplies</option>
+        <option value="decoration" ${this.filters.category === 'decoration' ? 'selected' : ''}>Decoration</option>
+        <option value="light" ${this.filters.category === 'light' ? 'selected' : ''}>Light</option>
+        <option value="accessory" ${this.filters.category === 'accessory' ? 'selected' : ''}>Accessory</option>
+      </select>
+      <select class="filter-select" id="vendor-filter">
+        <option value="all">All Vendors</option>
+        ${vendors.map(vendor => `
+          <option value="${vendor}" ${this.filters.vendor === vendor ? 'selected' : ''}>${vendor}</option>
+        `).join('')}
+      </select>
+      <select class="filter-select" id="date-range-filter">
+        <option value="all">All Time</option>
+        <option value="last_30" ${this.filters.date_range === 'last_30' ? 'selected' : ''}>Last 30 Days</option>
+        <option value="last_90" ${this.filters.date_range === 'last_90' ? 'selected' : ''}>Last 90 Days</option>
+        <option value="this_year" ${this.filters.date_range === 'this_year' ? 'selected' : ''}>This Year</option>
+        <option value="last_year" ${this.filters.date_range === 'last_year' ? 'selected' : ''}>Last Year</option>
+        <option value="custom" ${this.filters.date_range === 'custom' ? 'selected' : ''}>Custom Range</option>
+      </select>
+      <select class="filter-select" id="no-receipt-filter">
+        <option value="all">All Receipts</option>
+        <option value="true" ${this.filters.no_receipt === 'true' ? 'selected' : ''}>No Receipt</option>
+        <option value="false" ${this.filters.no_receipt === 'false' ? 'selected' : ''}>Has Receipt</option>
+      </select>
+      ${customDateInputs}
+      <button 
+        class="btn-clear-filters" 
+        id="btn-clear-filters"
+        ${!hasActiveFilters ? 'disabled' : ''}
+      >
+        Clear Filters
+      </button>
+    `;
+
+    const isCollapsed = window.innerWidth < 769;
+
+    if (isCollapsed) {
+      return `
+        <div class="table-filters-collapsed">
+          <div class="filters-top-row">
+            <input 
+              type="text" 
+              class="filter-input filter-search-input" 
+              placeholder="Search..." 
+              value="${this.filters.search}"
+              id="search-input"
+            />
+            <button class="btn-filters-toggle ${this.filtersOpen ? 'active' : ''}" id="btn-filters-toggle">
+              Filters ${filterBadge}
+              <span class="toggle-chevron">${this.filtersOpen ? '▲' : '▼'}</span>
+            </button>
+          </div>
+          <div class="filters-dropdown-panel ${this.filtersOpen ? 'open' : ''}" id="filters-dropdown-panel">
+            ${dropdownsHTML}
+          </div>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="table-filters">
+        <input 
+          type="text" 
+          class="filter-input" 
+          placeholder="Search..." 
+          value="${this.filters.search}"
+          id="search-input"
+        />
+        ${dropdownsHTML}
+      </div>
+    `;
+  }
+
   render() {
     const isMobile = window.innerWidth < 768;
     const totalPages = Math.ceil(this.filteredData.length / this.pageSize);
@@ -182,14 +311,6 @@ export class CostRecordsTable {
     const endIdx = startIdx + this.pageSize;
     const pageData = this.filteredData.slice(startIdx, endIdx);
     const vendors = this.getUniqueVendors();
-    
-    const hasActiveFilters = 
-      this.filters.search !== '' ||
-      this.filters.cost_type !== 'all' ||
-      this.filters.category !== 'all' ||
-      this.filters.vendor !== 'all' ||
-      this.filters.date_range !== 'all' ||
-      this.filters.no_receipt !== 'all';
 
     this.container.innerHTML = `
       <div class="table-header">
@@ -199,76 +320,7 @@ export class CostRecordsTable {
         </div>
       </div>
 
-      <div class="table-filters">
-        <input 
-          type="text" 
-          class="filter-input" 
-          placeholder="Search..." 
-          value="${this.filters.search}"
-          id="search-input"
-        />
-        <select class="filter-select" id="type-filter">
-          <option value="all">All Types</option>
-          <option value="acquisition" ${this.filters.cost_type === 'acquisition' ? 'selected' : ''}>Acquisition</option>
-          <option value="repair" ${this.filters.cost_type === 'repair' ? 'selected' : ''}>Repair</option>
-          <option value="maintenance" ${this.filters.cost_type === 'maintenance' ? 'selected' : ''}>Maintenance</option>
-          <option value="supply_purchase" ${this.filters.cost_type === 'supply_purchase' ? 'selected' : ''}>Supply Purchase</option>
-          <option value="utility" ${this.filters.cost_type === 'utility' ? 'selected' : ''}>Utility</option>
-          <option value="other" ${this.filters.cost_type === 'other' ? 'selected' : ''}>Other</option>
-        </select>
-        <select class="filter-select" id="category-filter">
-          <option value="all">All Categories</option>
-          <option value="materials" ${this.filters.category === 'materials' ? 'selected' : ''}>Materials</option>
-          <option value="labor" ${this.filters.category === 'labor' ? 'selected' : ''}>Labor</option>
-          <option value="parts" ${this.filters.category === 'parts' ? 'selected' : ''}>Parts</option>
-          <option value="supplies" ${this.filters.category === 'supplies' ? 'selected' : ''}>Supplies</option>
-          <option value="decoration" ${this.filters.category === 'decoration' ? 'selected' : ''}>Decoration</option>
-          <option value="light" ${this.filters.category === 'light' ? 'selected' : ''}>Light</option>
-          <option value="accessory" ${this.filters.category === 'accessory' ? 'selected' : ''}>Accessory</option>
-        </select>
-        <select class="filter-select" id="vendor-filter">
-          <option value="all">All Vendors</option>
-          ${vendors.map(vendor => `
-            <option value="${vendor}" ${this.filters.vendor === vendor ? 'selected' : ''}>${vendor}</option>
-          `).join('')}
-        </select>
-        <select class="filter-select" id="date-range-filter">
-          <option value="all">All Time</option>
-          <option value="last_30" ${this.filters.date_range === 'last_30' ? 'selected' : ''}>Last 30 Days</option>
-          <option value="last_90" ${this.filters.date_range === 'last_90' ? 'selected' : ''}>Last 90 Days</option>
-          <option value="this_year" ${this.filters.date_range === 'this_year' ? 'selected' : ''}>This Year</option>
-          <option value="last_year" ${this.filters.date_range === 'last_year' ? 'selected' : ''}>Last Year</option>
-          <option value="custom" ${this.filters.date_range === 'custom' ? 'selected' : ''}>Custom Range</option>
-        </select>
-        <select class="filter-select" id="no-receipt-filter">
-          <option value="all">All Receipts</option>
-          <option value="true" ${this.filters.no_receipt === 'true' ? 'selected' : ''}>No Receipt</option>
-          <option value="false" ${this.filters.no_receipt === 'false' ? 'selected' : ''}>Has Receipt</option>
-        </select>
-        ${this.filters.date_range === 'custom' ? `
-          <input 
-            type="date" 
-            class="filter-input" 
-            placeholder="Start Date"
-            value="${this.filters.start_date}"
-            id="start-date-input"
-          />
-          <input 
-            type="date" 
-            class="filter-input" 
-            placeholder="End Date"
-            value="${this.filters.end_date}"
-            id="end-date-input"
-          />
-        ` : ''}
-        <button 
-          class="btn-clear-filters" 
-          id="btn-clear-filters"
-          ${!hasActiveFilters ? 'disabled' : ''}
-        >
-          Clear Filters
-        </button>
-      </div>
+      ${this.renderFilters(vendors)}
 
       <div class="table-count">
         ${this.filteredData.length} record${this.filteredData.length !== 1 ? 's' : ''}
@@ -317,7 +369,6 @@ export class CostRecordsTable {
     tableHTML += '</tr></thead><tbody>';
 
     pageData.forEach(cost => {
-      // Treat missing no_receipt as false
       const noReceipt = cost.no_receipt === true;
       const hasReceipt = !!cost.receipt_data?.image_id;
 
@@ -425,6 +476,25 @@ export class CostRecordsTable {
     if (newCostBtn) {
       newCostBtn.addEventListener('click', () => {
         window.location.href = '/new';
+      });
+    }
+
+    // Filter toggle button (collapsed viewports only)
+    const filtersToggleBtn = this.container.querySelector('#btn-filters-toggle');
+    if (filtersToggleBtn) {
+      filtersToggleBtn.addEventListener('click', () => {
+        this.filtersOpen = !this.filtersOpen;
+        const panel = this.container.querySelector('#filters-dropdown-panel');
+        const chevron = filtersToggleBtn.querySelector('.toggle-chevron');
+        if (this.filtersOpen) {
+          panel.classList.add('open');
+          filtersToggleBtn.classList.add('active');
+          chevron.textContent = '▲';
+        } else {
+          panel.classList.remove('open');
+          filtersToggleBtn.classList.remove('active');
+          chevron.textContent = '▼';
+        }
       });
     }
 
