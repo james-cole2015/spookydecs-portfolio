@@ -1,4 +1,3 @@
-import { loadConfig } from './audit_config.js';
 import { renderRecords, renderError } from './audit_renderer.js';
 import { openRecordDetail, closeModal, toggleDetails } from './audit_modal.js';
 
@@ -18,10 +17,9 @@ let filters = {
 
 // Initialize
 async function init() {
-  const config = await loadConfig();
+  const config = await window.SpookyConfig.get();
   API_BASE = config.API_ENDPOINT;
   console.log('=== Audit Dashboard Initialized ===');
-  console.log('API Endpoint:', API_BASE);
   console.log('===================================');
   
   setupEventListeners();
@@ -77,7 +75,6 @@ function switchTab(tab) {
   activeTab = tab;
   currentPage = 1;
 
-  // Update desktop tabs
   document.querySelectorAll('.tab-btn').forEach(btn => {
     if (btn.dataset.tab === tab) {
       btn.classList.add('active');
@@ -86,10 +83,8 @@ function switchTab(tab) {
     }
   });
 
-  // Update mobile select
   document.getElementById('mobile-tab-select').value = tab;
 
-  // Show/hide class type filter for inventory
   const showClassFilter = tab === 'inventory';
   document.getElementById('class-type-filter').style.display = showClassFilter ? 'block' : 'none';
   document.getElementById('mobile-class-type-filter').style.display = showClassFilter ? 'block' : 'none';
@@ -102,7 +97,6 @@ function updateFilter(name, value) {
   filters[name] = name === 'dateRange' ? parseInt(value) : value;
   currentPage = 1;
   
-  // Sync desktop and mobile filters
   const desktopEl = document.getElementById(`filter-${name}`);
   const mobileEl = document.getElementById(`mobile-filter-${name}`);
   if (desktopEl) desktopEl.value = value;
@@ -144,7 +138,7 @@ async function fetchRecords() {
   });
 
   const url = `${API_BASE}${endpoint}?${params}`;
-  console.log('API Request:', url);
+  //console.log('API Request:', url);
 
   try {
     const response = await fetch(url);
@@ -174,9 +168,7 @@ function updatePagination(pagination) {
   }
 }
 
-// Make functions globally available
 window.openRecordDetail = openRecordDetail;
 window.activeTab = () => activeTab;
 
-// Initialize on page load
 init();
