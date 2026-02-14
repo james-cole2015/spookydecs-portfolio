@@ -8,7 +8,7 @@ import {
   getRelatedIdConfig,
   getCategoriesForCostType
 } from '../utils/finance-config.js';
-import { getItems, getApiEndpoint } from '../utils/finance-api.js';
+import { getItems } from '../utils/finance-api.js';
 import { CostFormRenderers } from './CostFormRenderers.js';
 
 export class CostFormFields {
