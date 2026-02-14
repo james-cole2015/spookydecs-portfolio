@@ -3,6 +3,8 @@
  */
 
 import { initRouter } from './utils/router.js';
+import { BackToTop } from './shared/BackToTop.js';
+
 
 /**
  * Initialize application
@@ -30,6 +32,9 @@ export function hideLoading() {
     loading.classList.add('hidden');
   }
 }
+// Initialize back to top button (only once, globally)
+const backToTop = new BackToTop();
+backToTop.init();
 
 /**
  * Error handler
