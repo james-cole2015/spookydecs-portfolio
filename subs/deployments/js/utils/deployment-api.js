@@ -1,42 +1,22 @@
 // Deployment API Client
-// Handles all API calls to the deployments backend
 
-let API_ENDPOINT = '';
-let ITEMS_ADMIN = '';
+const HEADERS = { 'Content-Type': 'application/json' };
 
-async function loadConfig() {
-  if (API_ENDPOINT) return API_ENDPOINT;
-  try {
-    const stage = window.location.hostname.includes('localhost') ||
-                  window.location.hostname.startsWith('dev-') ? 'dev' : 'prod';
-
-    const res = await fetch(`https://miinu7boec.execute-api.us-east-2.amazonaws.com/${stage}/admin/config`);
-    if (!res.ok) throw new Error(`Failed to load config: ${res.status}`);
-    const { data: config } = await res.json();
-    API_ENDPOINT = config.API_ENDPOINT;
-    ITEMS_ADMIN = config.ITEMS_ADMIN || '';
-    return API_ENDPOINT;
-  } catch (error) {
-    console.error('Failed to load config:', error);
-    throw new Error('Failed to load API configuration');
-  }
+async function getConfig() {
+  return await window.SpookyConfig.get();
 }
 
 export async function getItemsAdminUrl() {
-  await loadConfig();
-  return ITEMS_ADMIN;
+  const { ITEMS_ADMIN } = await getConfig();
+  return ITEMS_ADMIN || '';
 }
 
 async function apiCall(endpoint, method = 'GET', body = null) {
-  await loadConfig();
+  const { API_ENDPOINT } = await getConfig();
   const url = `${API_ENDPOINT}${endpoint}`;
-  const options = {
-    method,
-    headers: { 'Content-Type': 'application/json' }
-  };
-  if (body) {
-    options.body = JSON.stringify(body);
-  }
+  const options = { method, headers: HEADERS };
+  if (body) options.body = JSON.stringify(body);
+
   const response = await fetch(url, options);
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
@@ -102,7 +82,6 @@ export async function getHistoricalDeployment(deploymentId) {
 // Items
 
 export async function searchItems(filters = {}) {
-  await loadConfig();
   let endpoint = '/items';
   const params = new URLSearchParams();
   if (filters.season) params.append('season', filters.season);
@@ -158,11 +137,7 @@ export async function removeConnection(deploymentId, connectionId) {
 
 export async function updateConnection(deploymentId, connectionId, updates) {
   console.log('[deployment-api] updateConnection:', { deploymentId, connectionId, updates });
-  return await apiCall(
-    `/deployments/${deploymentId}/connections/${connectionId}`,
-    'PATCH',
-    updates
-  );
+  return await apiCall(`/deployments/${deploymentId}/connections/${connectionId}`, 'PATCH', updates);
 }
 
 export async function updateConnectionPhotos(deploymentId, connectionId, photoIds) {
@@ -185,10 +160,10 @@ export async function getRemovedConnections(deploymentId, sessionId) {
 
 export async function fetchImageById(imageId) {
   try {
-    await loadConfig();
+    const { API_ENDPOINT } = await getConfig();
     const response = await fetch(`${API_ENDPOINT}/admin/images/${imageId}`, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
+      headers: HEADERS
     });
     if (!response.ok) {
       console.warn(`Failed to fetch image ${imageId}: ${response.status}`);
@@ -215,9 +190,11 @@ export async function stageTote(deploymentId, body) {
 export async function apiTeardownStart(deploymentId) {
   return await apiCall(`/deployments/${deploymentId}/teardown/start`, 'POST');
 }
+
 export async function apiTeardownItem(deploymentId, itemId) {
   return await apiCall(`/deployments/${deploymentId}/teardown/item`, 'POST', { item_id: itemId });
 }
+
 export async function apiTeardownComplete(deploymentId) {
   return await apiCall(`/deployments/${deploymentId}/teardown/complete`, 'POST');
 }
