@@ -1,8 +1,6 @@
 // ActionModal Component
 // Post-create modal with Skip, Add Cost, Add Photo options
 
-import { loadConfig } from '../api/items.js';
-
 export class ActionModal {
   constructor() {
     this.modal = null;
@@ -244,25 +242,21 @@ export class ActionModal {
     document.head.appendChild(style);
   }
   
-  async handleAddCost() {
-    try {
-      const config = await loadConfig();
-      const financeUrl = config.FINANCE_URL || 'https://dev-finance.spookydecs.com';
-      
-      // Construct URL with item_id parameter
-      const url = `${financeUrl}/new?item_id=${this.itemData.itemId}`;
-      
-      // Open in new tab
-      window.open(url, '_blank');
-      
-      // Close modal and navigate
-      this.hide();
-      this.navigateToItems();
-    } catch (error) {
-      console.error('Failed to open finance page:', error);
-      alert('Failed to open finance page. Please try again.');
-    }
+async handleAddCost() {
+  try {
+    const { FINANCE_URL } = await window.SpookyConfig.get();
+    const financeUrl = FINANCE_URL
+
+    const url = `${financeUrl}/new?item_id=${this.itemData.itemId}`;
+    window.open(url, '_blank');
+
+    this.hide();
+    this.navigateToItems();
+  } catch (error) {
+    console.error('Failed to open finance page:', error);
+    alert('Failed to open finance page. Please try again.');
   }
+}
   
   handleAddPhoto() {
     // Show photo upload modal
