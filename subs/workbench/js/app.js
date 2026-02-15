@@ -1,6 +1,5 @@
 // Main Application Entry Point
 
-import { initAPI } from './api.js';
 import { initRouter } from './router.js';
 import { toast } from './toast.js';
 import { spinner } from './spinner.js';
@@ -18,9 +17,6 @@ export const appState = {
 async function initApp() {
   try {
     spinner.show('Initializing Workbench...');
-
-    // Initialize API
-    await initAPI();
 
     // Set up spookydecs-header
     const header = document.querySelector('spookydecs-header');
