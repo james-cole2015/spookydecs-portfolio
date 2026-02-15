@@ -277,6 +277,27 @@ export class StatsDetailView {
     const values = entries.map(([, v]) => v);
     const total = values.reduce((a, b) => a + b, 0);
 
+    const centerTextPlugin = {
+      id: 'centerText',
+      beforeDraw(chart) {
+        const { width, height, ctx } = chart;
+        ctx.save();
+        const centerX = width / 2;
+        const centerY = height / 2;
+
+        ctx.font = `700 1.75rem -apple-system, BlinkMacSystemFont, sans-serif`;
+        ctx.fillStyle = '#1F2937';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(total, centerX, centerY - 10);
+
+        ctx.font = `0.65rem -apple-system, BlinkMacSystemFont, sans-serif`;
+        ctx.fillStyle = '#9CA3AF';
+        ctx.fillText('items', centerX, centerY + 12);
+        ctx.restore();
+      }
+    };
+
     const chart = new Chart(canvas, {
       type: 'doughnut',
       data: {
@@ -304,7 +325,8 @@ export class StatsDetailView {
             }
           }
         }
-      }
+      },
+      plugins: [centerTextPlugin]
     });
 
     this._charts.push(chart);
