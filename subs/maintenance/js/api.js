@@ -1,25 +1,10 @@
 // API client for maintenance records and items endpoints
 
-let config = null;
+const HEADERS = { 'Content-Type': 'application/json' };
 
-export async function loadConfig() {
-  if (config) return config;
-  
-  try {
-    const response = await fetch('/config.json');
-    config = await response.json();
-    return config;
-  } catch (error) {
-    console.error('Failed to load config:', error);
-    throw new Error('Configuration not available');
-  }
-}
-
-function getHeaders() {
-  return {
-    'Content-Type': 'application/json',
-    'Origin': window.location.origin
-  };
+async function getApiEndpoint() {
+  const { API_ENDPOINT } = await window.SpookyConfig.get();
+  return API_ENDPOINT;
 }
 
 async function handleResponse(response) {
@@ -34,144 +19,101 @@ async function handleResponse(response) {
 // MAINTENANCE RECORDS API
 // ============================================
 
-/**
- * Fetch all maintenance records
- * @returns {Promise<Object>} Object with records array
- */
 export async function fetchAllRecords() {
-  const cfg = await loadConfig();
-  const response = await fetch(`${cfg.API_ENDPOINT}/admin/maintenance-records`, {
-    headers: getHeaders()
+  const API_ENDPOINT = await getApiEndpoint();
+  const response = await fetch(`${API_ENDPOINT}/admin/maintenance-records`, {
+    headers: HEADERS
   });
-  
+
   const json = await handleResponse(response);
-  
-  // Lambda returns { success: true, data: [...], message: '...', timestamp: '...' }
-  // Return in old format for compatibility with state.js
   return {
     records: json.data || [],
     count: json.data?.length || 0
   };
 }
 
-/**
- * Fetch maintenance records for a specific item
- * @param {string} itemId - Item ID to filter by
- * @returns {Promise<Object>} Object with records array
- */
 export async function fetchRecordsByItem(itemId) {
-  const cfg = await loadConfig();
+  const API_ENDPOINT = await getApiEndpoint();
   const response = await fetch(
-    `${cfg.API_ENDPOINT}/admin/maintenance-records?item_id=${encodeURIComponent(itemId)}`,
-    { headers: getHeaders() }
+    `${API_ENDPOINT}/admin/maintenance-records?item_id=${encodeURIComponent(itemId)}`,
+    { headers: HEADERS }
   );
-  
+
   const json = await handleResponse(response);
-  
-  // Return in old format for compatibility
   return {
     records: json.data || [],
     count: json.data?.length || 0
   };
 }
 
-/**
- * Fetch a single maintenance record by ID
- * @param {string} recordId - Record ID
- * @returns {Promise<Object>} Record object
- */
 export async function fetchRecord(recordId) {
-  const cfg = await loadConfig();
+  const API_ENDPOINT = await getApiEndpoint();
   const response = await fetch(
-    `${cfg.API_ENDPOINT}/admin/maintenance-records/${encodeURIComponent(recordId)}`,
-    { headers: getHeaders() }
+    `${API_ENDPOINT}/admin/maintenance-records/${encodeURIComponent(recordId)}`,
+    { headers: HEADERS }
   );
-  
+
   const json = await handleResponse(response);
   return json.data;
 }
 
-/**
- * Create a new maintenance record
- * @param {Object} recordData - Record data
- * @returns {Promise<Object>} Created record
- */
 export async function createRecord(recordData) {
-  const cfg = await loadConfig();
-  const response = await fetch(`${cfg.API_ENDPOINT}/admin/maintenance-records`, {
+  const API_ENDPOINT = await getApiEndpoint();
+  const response = await fetch(`${API_ENDPOINT}/admin/maintenance-records`, {
     method: 'POST',
-    headers: getHeaders(),
+    headers: HEADERS,
     body: JSON.stringify(recordData)
   });
-  
+
   const json = await handleResponse(response);
   return json.data;
 }
 
-/**
- * Update an existing maintenance record
- * @param {string} recordId - Record ID
- * @param {Object} recordData - Updated record data
- * @returns {Promise<Object>} Updated record
- */
 export async function updateRecord(recordId, recordData) {
-  const cfg = await loadConfig();
+  const API_ENDPOINT = await getApiEndpoint();
   const response = await fetch(
-    `${cfg.API_ENDPOINT}/admin/maintenance-records/${encodeURIComponent(recordId)}`,
+    `${API_ENDPOINT}/admin/maintenance-records/${encodeURIComponent(recordId)}`,
     {
       method: 'PUT',
-      headers: getHeaders(),
+      headers: HEADERS,
       body: JSON.stringify(recordData)
     }
   );
-  
+
   const json = await handleResponse(response);
   return json.data;
 }
 
-/**
- * Delete a maintenance record
- * @param {string} recordId - Record ID
- * @returns {Promise<Object>} Deleted record
- */
 export async function deleteRecord(recordId) {
-  const cfg = await loadConfig();
+  const API_ENDPOINT = await getApiEndpoint();
   const response = await fetch(
-    `${cfg.API_ENDPOINT}/admin/maintenance-records/${encodeURIComponent(recordId)}`,
+    `${API_ENDPOINT}/admin/maintenance-records/${encodeURIComponent(recordId)}`,
     {
       method: 'DELETE',
-      headers: getHeaders()
+      headers: HEADERS
     }
   );
-  
+
   const json = await handleResponse(response);
   return json.data.deleted_record;
 }
+
 // ============================================
-// PERFORM INSPECTION - Updated for new response format
+// PERFORM INSPECTION
 // ============================================
 
-/**
- * Perform an inspection and complete it
- * @param {string} recordId - Record ID
- * @param {Object} inspectionData - Inspection data
- * @returns {Promise<Object>} Response with inspection and generated tasks
- */
 export async function performInspection(recordId, inspectionData) {
-  const cfg = await loadConfig();
+  const API_ENDPOINT = await getApiEndpoint();
   const response = await fetch(
-    `${cfg.API_ENDPOINT}/admin/maintenance-records/${encodeURIComponent(recordId)}/inspect`,
+    `${API_ENDPOINT}/admin/maintenance-records/${encodeURIComponent(recordId)}/inspect`,
     {
       method: 'POST',
-      headers: getHeaders(),
+      headers: HEADERS,
       body: JSON.stringify(inspectionData)
     }
   );
-  
+
   const json = await handleResponse(response);
-  
-  // Lambda returns { success: true, data: { inspection: {...}, generated_tasks: [...] }, message: '...', timestamp: '...' }
-  // Return the data object which contains both inspection and generated_tasks
   return json.data;
 }
 
@@ -179,67 +121,45 @@ export async function performInspection(recordId, inspectionData) {
 // ITEMS API
 // ============================================
 
-/**
- * Fetch a single item by ID
- * @param {string} itemId - Item ID
- * @returns {Promise<Object>} Item object
- */
 export async function fetchItem(itemId) {
-  const cfg = await loadConfig();
+  const API_ENDPOINT = await getApiEndpoint();
   const response = await fetch(
-    `${cfg.API_ENDPOINT}/items/${encodeURIComponent(itemId)}`,
-    { headers: getHeaders() }
+    `${API_ENDPOINT}/items/${encodeURIComponent(itemId)}`,
+    { headers: HEADERS }
   );
-  
+
   const json = await handleResponse(response);
   return json.data;
 }
 
-/**
- * Search for items by query string
- * @param {string} query - Search query
- * @returns {Promise<Object>} Object with items array
- */
 export async function searchItems(query) {
-  const cfg = await loadConfig();
-  
   if (!query || query.length < 2) {
     return { items: [] };
   }
-  
+
+  const API_ENDPOINT = await getApiEndpoint();
   const response = await fetch(
-    `${cfg.API_ENDPOINT}/items?search=${encodeURIComponent(query)}`,
-    { headers: getHeaders() }
+    `${API_ENDPOINT}/items?search=${encodeURIComponent(query)}`,
+    { headers: HEADERS }
   );
-  
+
   const json = await handleResponse(response);
   const items = json.data?.items || [];
-  
-  // Limit to 10 results
-  return {
-    items: items.slice(0, 10)
-  };
+  return { items: items.slice(0, 10) };
 }
 
-/**
- * Fetch all items with optional filters
- * @param {Object} filters - Optional filters { class_type, status, enabled }
- * @returns {Promise<Array>} Array of items
- */
 export async function fetchAllItems(filters = {}) {
-  const cfg = await loadConfig();
-  
+  const API_ENDPOINT = await getApiEndpoint();
+
   const queryParams = new URLSearchParams();
-  
   if (filters.class_type) queryParams.append('class_type', filters.class_type);
   if (filters.status) queryParams.append('status', filters.status);
   if (filters.enabled !== undefined) queryParams.append('enabled', filters.enabled);
-  
+
   const queryString = queryParams.toString();
-  const url = `${cfg.API_ENDPOINT}/items${queryString ? '?' + queryString : ''}`;
-  
-  const response = await fetch(url, { headers: getHeaders() });
-  
+  const url = `${API_ENDPOINT}/items${queryString ? '?' + queryString : ''}`;
+
+  const response = await fetch(url, { headers: HEADERS });
   const json = await handleResponse(response);
   return json.data?.items || [];
 }
@@ -248,23 +168,15 @@ export async function fetchAllItems(filters = {}) {
 // BATCH OPERATIONS
 // ============================================
 
-/**
- * Fetch maintenance records for multiple items
- * @param {string[]} itemIds - Array of item IDs
- * @returns {Promise<Object>} Object with records array and count
- */
 export async function fetchMultipleRecordsByItems(itemIds) {
-  // Fetch records for multiple items in parallel
-  const promises = itemIds.map(id => 
+  const promises = itemIds.map(id =>
     fetchRecordsByItem(id).catch(err => {
       console.warn(`Failed to fetch records for ${id}:`, err);
       return { records: [], count: 0 };
     })
   );
-  
+
   const results = await Promise.all(promises);
-  
-  // Flatten all records
   const allRecords = results.flatMap(result => result.records || []);
   return { records: allRecords, count: allRecords.length };
 }
@@ -273,110 +185,68 @@ export async function fetchMultipleRecordsByItems(itemIds) {
 // UTILITY FUNCTIONS
 // ============================================
 
-/**
- * Get URL for item admin page
- * @param {string} itemId - Item ID
- * @returns {string} URL
- */
-export function getItemUrl(itemId) {
-  if (!config) return '#';
-  return `${config.ITEMS_ADMIN}/items/${itemId}`;
+export async function getItemUrl(itemId) {
+  const { ITEMS_ADMIN } = await window.SpookyConfig.get();
+  return `${ITEMS_ADMIN}/items/${itemId}`;
 }
 
-/**
- * Get URL for costs page
- * @returns {string} URL
- */
-export function getCostsUrl() {
-  if (!config) return '#';
-  return config.COSTS_URL;
+export async function getCostsUrl() {
+  const { COSTS_URL } = await window.SpookyConfig.get();
+  return COSTS_URL;
 }
 
 // ============================================
 // PHOTO UPLOAD API
 // ============================================
 
-/**
- * Get presigned URLs for photo uploads
- * @param {File[]} files - Array of File objects to upload
- * @param {Object} recordData - Record data for context (season, item_id, etc.)
- * @returns {Promise<Object>} Presigned URLs and metadata
- */
 export async function getPresignedUrls(files, recordData) {
-  const cfg = await loadConfig();
-  
-  // Determine photo_type based on record_type
+  const API_ENDPOINT = await getApiEndpoint();
+
   const photoTypeMap = {
     'repair': 'repair',
     'maintenance': 'maintenance',
     'inspection': 'inspection'
   };
-  
-  const photo_type = photoTypeMap[recordData.record_type] || 'maintenance';
-  
-  // Infer season from record data (you may need to adjust this logic)
-  const season = recordData.season || 'shared';
-  
-  // Prepare files metadata
-  const filesMetadata = files.map(file => ({
-    filename: file.name,
-    content_type: file.type
-  }));
-  
+
   const requestBody = {
     context: 'maintenance',
-    photo_type: photo_type,
-    season: season,
-    files: filesMetadata,
+    photo_type: photoTypeMap[recordData.record_type] || 'maintenance',
+    season: recordData.season || 'shared',
+    files: files.map(file => ({
+      filename: file.name,
+      content_type: file.type
+    })),
     item_ids: [recordData.item_id]
   };
-  
-  const response = await fetch(`${cfg.API_ENDPOINT}/admin/images/presign`, {
+
+  const response = await fetch(`${API_ENDPOINT}/admin/images/presign`, {
     method: 'POST',
-    headers: getHeaders(),
+    headers: HEADERS,
     body: JSON.stringify(requestBody)
   });
-  
+
   return handleResponse(response);
 }
 
-/**
- * Upload file to S3 using presigned URL
- * @param {File} file - File to upload
- * @param {string} presignedUrl - Presigned URL from API
- * @returns {Promise<void>}
- */
 export async function uploadToS3(file, presignedUrl) {
   const response = await fetch(presignedUrl, {
     method: 'PUT',
-    headers: {
-      'Content-Type': file.type
-    },
+    headers: { 'Content-Type': file.type },
     body: file
   });
-  
+
   if (!response.ok) {
     throw new Error(`S3 upload failed: ${response.status}`);
   }
 }
 
-/**
- * Confirm photo uploads and create DynamoDB records
- * @param {Array} uploads - Upload metadata from presign response
- * @param {Object} recordData - Record data for context
- * @param {string} photoType - Type of photo (maintenance, repair, inspection)
- * @returns {Promise<Array>} Array of {photo_id, photo_type} objects
- */
 export async function confirmPhotoUpload(uploads, recordData, photoType) {
-  const cfg = await loadConfig();
-  
-  // Determine season
-  const season = recordData.season || 'shared';
-  
+  const API_ENDPOINT = await getApiEndpoint();
+
   const requestBody = {
     context: 'maintenance',
     photo_type: photoType,
-    season: season,
+    season: recordData.season || 'shared',
     year: new Date().getFullYear(),
     item_ids: [recordData.item_id],
     is_public: false,
@@ -392,57 +262,38 @@ export async function confirmPhotoUpload(uploads, recordData, photoType) {
       }
     }))
   };
-  
-  const response = await fetch(`${cfg.API_ENDPOINT}/admin/images/confirm`, {
+
+  const response = await fetch(`${API_ENDPOINT}/admin/images/confirm`, {
     method: 'POST',
-    headers: getHeaders(),
+    headers: HEADERS,
     body: JSON.stringify(requestBody)
   });
-  
+
   const data = await handleResponse(response);
-  
-  // Return array of {photo_id, photo_type} objects
-  return data.photo_ids.map(photo_id => ({
-    photo_id: photo_id,
-    photo_type: photoType
-  }));
+  return data.photo_ids.map(photo_id => ({ photo_id, photo_type: photoType }));
 }
 
-/**
- * Fetch photo metadata by photo_id
- * @param {string} photoId - Photo ID to fetch
- * @returns {Promise<Object>} Photo object with URLs and metadata
- */
 export async function fetchPhoto(photoId) {
-  const cfg = await loadConfig();
-  
+  const API_ENDPOINT = await getApiEndpoint();
   const response = await fetch(
-    `${cfg.API_ENDPOINT}/admin/images/${encodeURIComponent(photoId)}`,
-    { headers: getHeaders() }
+    `${API_ENDPOINT}/admin/images/${encodeURIComponent(photoId)}`,
+    { headers: HEADERS }
   );
-  
+
   return handleResponse(response);
 }
 
-/**
- * Fetch multiple photos by IDs
- * @param {string[]} photoIds - Array of photo IDs
- * @returns {Promise<Array>} Array of photo objects
- */
 export async function fetchMultiplePhotos(photoIds) {
-  if (!photoIds || photoIds.length === 0) {
-    return [];
-  }
-  
-  const promises = photoIds.map(id => 
-    fetchPhoto(id).catch(err => {
-      console.warn(`Failed to fetch photo ${id}:`, err);
-      return null;
-    })
+  if (!photoIds || photoIds.length === 0) return [];
+
+  const results = await Promise.all(
+    photoIds.map(id =>
+      fetchPhoto(id).catch(err => {
+        console.warn(`Failed to fetch photo ${id}:`, err);
+        return null;
+      })
+    )
   );
-  
-  const results = await Promise.all(promises);
-  
-  // Filter out nulls (failed fetches)
+
   return results.filter(photo => photo !== null);
 }
