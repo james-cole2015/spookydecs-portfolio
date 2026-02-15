@@ -12,6 +12,8 @@ import { renderStagingPage } from './pages/deployment-staging.js';
 import { renderCompletePage } from './pages/deployment-complete.js';
 import { renderTeardownPage } from './pages/deployment-teardown.js';
 import { renderHistoricalPage } from './pages/deployment-historical.js';
+import { renderStatsPage } from './pages/deployment-stats.js';
+import { renderStatsDetailPage } from './pages/deployment-stats-detail.js';
 
 
 // Define routes
@@ -43,9 +45,18 @@ const routes = [
     path: '/deployments/graphs', 
     handler: () => renderGraphsPlaceholder()
   },
+
+  // STATS - detail route must come before base route
+  {
+    path: '/deployments/stats/:id',
+    handler: (params) => {
+      console.log('[Router] Stats detail route params:', params);
+      renderStatsDetailPage(params.id);
+    }
+  },
   { 
     path: '/deployments/stats', 
-    handler: () => renderStatsPlaceholder()
+    handler: () => renderStatsPage()
   },
 
   // STAGING - must come BEFORE all :id/zones* routes
@@ -130,17 +141,6 @@ function renderGraphsPlaceholder() {
   app.innerHTML = `
     <div style="padding: 2rem; text-align: center;">
       <h2>Deployment Graphs</h2>
-      <p>Coming soon...</p>
-      <button onclick="window.history.back()">← Back</button>
-    </div>
-  `;
-}
-
-function renderStatsPlaceholder() {
-  const app = document.getElementById('app');
-  app.innerHTML = `
-    <div style="padding: 2rem; text-align: center;">
-      <h2>Deployment Stats</h2>
       <p>Coming soon...</p>
       <button onclick="window.history.back()">← Back</button>
     </div>

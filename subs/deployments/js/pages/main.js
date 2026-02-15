@@ -46,7 +46,7 @@ export function renderMainPage() {
           icon: '📈',
           title: 'Deployment Stats',
           description: 'View comprehensive statistics about your deployments including average times, item counts, and performance metrics across all seasons.',
-          active: false,
+          active: true,
           route: '/deployments/stats'
         })}
       </div>
