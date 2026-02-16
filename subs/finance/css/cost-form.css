@@ -485,3 +485,122 @@
   white-space: nowrap;
   flex-shrink: 0;
 }
+/* ===== Related Selector ===== */
+.related-selector {
+  width: 100%;
+}
+
+.related-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.related-search-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.related-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  max-height: 240px;
+  overflow-y: auto;
+  z-index: 200;
+  display: none;
+}
+
+.related-dropdown.visible {
+  display: block;
+}
+
+.related-option {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 0.1s;
+}
+
+.related-option:last-child {
+  border-bottom: none;
+}
+
+.related-option:hover {
+  background: #f8fafc;
+}
+
+.related-option-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.related-option-id {
+  font-size: 12px;
+  color: #94a3b8;
+  font-family: monospace;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.related-selected {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-left: 3px solid #3b82f6;
+  border-radius: 6px;
+}
+
+.related-selected-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #3b82f6;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  flex-shrink: 0;
+}
+
+.related-selected-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1e40af;
+}
+
+.related-selected-id {
+  font-size: 12px;
+  color: #64748b;
+  font-family: monospace;
+  margin-left: auto;
+}
+
+.related-clear-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0 0 0 8px;
+  line-height: 1;
+  margin-left: 8px;
+  transition: color 0.15s;
+}
+
+.related-clear-btn:hover {
+  color: #1e40af;
+}
