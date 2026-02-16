@@ -219,41 +219,46 @@ export class CostFormRenderers {
     `;
   }
 
-  static renderDynamicRelatedField(formData, errors) {
-    const config = getRelatedIdConfig(formData.cost_type);
-    
-    // If no related field needed for this cost type, return empty
-    if (!config) return '';
-    
-    const fieldName = config.field;
-    const value = formData[fieldName] || '';
-    const isRequired = isRelatedIdRequired(formData.cost_type, formData.category);
-    const error = errors[fieldName];
+static renderDynamicRelatedField(formData, errors) {
+  const config = getRelatedIdConfig(formData.cost_type);
+  
+  if (!config) return '';
+  
+  const fieldName = config.field;
+  const value = formData[fieldName] || '';
+  const displayName = formData[`${fieldName}_name`] || value;
+  const isRequired = isRelatedIdRequired(formData.cost_type, formData.category);
+  const error = errors[fieldName];
 
-    return `
-      <div class="form-section single-column">
-        <div class="form-group related-selector">
-          <label class="form-label ${isRequired ? 'required' : ''}" for="${fieldName}">
-            ${config.label} ${isRequired ? '' : '(Optional)'}
-          </label>
-          <div class="related-input-wrapper">
-            <input
-              type="text"
-              id="related_search"
-              class="form-input related-search-input ${error ? 'error' : ''}"
-              placeholder="Search..."
-              autocomplete="off"
-            />
-            ${value ? `<button type="button" class="clear-related-btn" id="clear-related-btn" title="Clear selection">×</button>` : ''}
-          </div>
+  return `
+    <div class="form-section single-column">
+      <div class="form-group related-selector">
+        <label class="form-label ${isRequired ? 'required' : ''}" for="${fieldName}">
+          ${config.label} ${isRequired ? '' : '(Optional)'}
+        </label>
+        <div class="related-input-wrapper">
+          <input
+            type="text"
+            id="related_search"
+            class="form-input related-search-input ${error ? 'error' : ''}"
+            placeholder="Search..."
+            autocomplete="off"
+          />
           <input type="hidden" id="${fieldName}" name="${fieldName}" value="${value}" />
           <div class="related-dropdown" id="related-dropdown"></div>
-          ${value ? `<span class="form-hint">Selected: ${value}</span>` : ''}
-          ${error ? `<span class="form-error">${error}</span>` : ''}
         </div>
+        ${value ? `
+          <div class="related-selected">
+            <span class="related-selected-value">${displayName}</span>
+            <span class="related-selected-id">${value}</span>
+            <button type="button" class="related-clear-btn" id="clear-related-btn" title="Clear selection">&times;</button>
+          </div>
+        ` : ''}
+        ${error ? `<span class="form-error">${error}</span>` : ''}
       </div>
-    `;
-  }
+    </div>
+  `;
+}
 
   static renderFormActions(isEditing) {
     return `

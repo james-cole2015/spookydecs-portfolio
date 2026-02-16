@@ -19,6 +19,7 @@ export class CostFormFields {
     this.items = [];
     this.records = [];
     this.ideas = [];
+    this.selectedName = '';
     this.onSubmit = null;
     this.onCancel = null;
     
@@ -45,7 +46,7 @@ export class CostFormFields {
     if (!config) return [];
 
     try {
-      const apiEndpoint = await getApiEndpoint();
+      const { API_ENDPOINT: apiEndpoint } = await window.SpookyConfig.get();
       const endpoint = config.endpoint;
       const response = await fetch(`${apiEndpoint}${endpoint}`);
       
@@ -384,24 +385,24 @@ export class CostFormFields {
     }
   }
 
-  handleRelatedSelection(selectedId, relatedData, config, searchInput, hiddenInput) {
-    const selectedItem = relatedData.find(item => {
-      if (config.endpoint.includes('/items')) return item.id === selectedId;
-      if (config.endpoint.includes('/maintenance-records')) return item.record_id === selectedId;
-      if (config.endpoint.includes('/ideas')) return item.id === selectedId;
-    });
-    
-    if (selectedItem) {
-      const { primaryField } = this.getDisplayFields(selectedItem, config);
-      searchInput.value = primaryField;
-      hiddenInput.value = selectedId;
-      this.formData[config.field] = selectedId;
-      if (config.endpoint.includes('/maintenance-records') && selectedItem.item_id) {
-        this.formData.related_item_id = selectedItem.item_id;
-      }
+handleRelatedSelection(selectedId, relatedData, config, searchInput, hiddenInput) {
+  const selectedItem = relatedData.find(item => {
+    if (config.endpoint.includes('/items')) return item.id === selectedId;
+    if (config.endpoint.includes('/maintenance-records')) return item.record_id === selectedId;
+    if (config.endpoint.includes('/ideas')) return item.id === selectedId;
+  });
+  
+  if (selectedItem) {
+    const { primaryField } = this.getDisplayFields(selectedItem, config);
+    searchInput.value = primaryField;
+    hiddenInput.value = selectedId;
+    this.formData[config.field] = selectedId;
+    this.formData[`${config.field}_name`] = primaryField;
+    if (config.endpoint.includes('/maintenance-records') && selectedItem.item_id) {
+      this.formData.related_item_id = selectedItem.item_id;
     }
   }
-
+}
   handleSubmit() {
     const form = this.container.querySelector('#cost-form');
     if (form) {
