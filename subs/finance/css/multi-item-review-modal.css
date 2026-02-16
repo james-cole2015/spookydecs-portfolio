@@ -1,39 +1,105 @@
 /* Multi-Item Review Modal Styles */
 
-.multi-item-review-modal .modal-overlay {
+.multi-item-review-modal {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100vh !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 2000 !important;
   padding: 2rem;
+  opacity: 0;
+  transition: opacity 0.2s;
 }
 
-.multi-item-review-modal .modal-container {
+.multi-item-review-modal.visible {
+  opacity: 1 !important;
+}
+
+.multi-item-review-modal-content {
+  background-color: #ffffff !important;
+  border-radius: 8px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
   max-width: 1000px;
+  width: 95%;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
+  position: relative;
+  transform: scale(0.95);
+  transition: transform 0.2s;
 }
 
-.multi-item-review-modal .modal-container.large {
-  width: 95%;
+.multi-item-review-modal.visible .multi-item-review-modal-content {
+  transform: scale(1);
 }
 
-.multi-item-review-modal .modal-header {
+.multi-item-review-modal-header {
   padding: 1.5rem 2rem;
   border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
+  background-color: #ffffff !important;
 }
 
-.multi-item-review-modal .modal-subtitle {
+.multi-item-review-modal-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.modal-subtitle {
   color: #64748b;
   font-size: 0.875rem;
   margin-top: 0.25rem;
 }
 
-.multi-item-review-modal .modal-body {
+.multi-item-review-modal-body {
   padding: 1.5rem 2rem;
   overflow-y: auto;
+  flex: 1;
+  background-color: #f8fafc !important;
 }
 
-.multi-item-review-modal .modal-footer {
+.multi-item-review-modal-footer {
   padding: 1.5rem 2rem;
   border-top: 1px solid #e2e8f0;
+  flex-shrink: 0;
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  background-color: #ffffff !important;
+}
+
+.close-btn {
+  position: absolute;
+  top: 1.5rem;
+  right: 2rem;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  line-height: 1;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background: #f3f4f6;
+  color: #1f2937;
 }
 
 /* Summary Bar */
@@ -86,19 +152,19 @@
 .item-card {
   border: 2px solid #e2e8f0;
   border-radius: 8px;
-  background: white;
+  background-color: #ffffff !important;
   transition: all 0.2s;
   overflow: hidden;
 }
 
 .item-card.disabled {
   opacity: 0.5;
-  background: #f8fafc;
+  background-color: #f8fafc !important;
 }
 
 .item-card.has-errors {
   border-color: #ef4444;
-  background: #fef2f2;
+  background-color: #fef2f2 !important;
 }
 
 .item-card:not(.disabled):hover {
@@ -344,40 +410,82 @@
   font-size: 0.875rem;
 }
 
-/* Modal Animations */
-.multi-item-review-modal {
-  opacity: 0;
-  transition: opacity 0.2s;
+/* Buttons */
+.btn-secondary {
+  padding: 0.625rem 1.25rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.multi-item-review-modal.visible {
-  opacity: 1;
+.btn-secondary:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
 }
 
-.multi-item-review-modal .modal-container {
-  transform: scale(0.95);
-  transition: transform 0.2s;
+.btn-primary {
+  padding: 0.625rem 1.25rem;
+  border: none;
+  border-radius: 6px;
+  background: #3B82F6;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.multi-item-review-modal.visible .modal-container {
-  transform: scale(1);
+.btn-primary:hover {
+  background: #2563EB;
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Modal-specific button overrides to prevent conflicts with page styles */
+.multi-item-review-modal .btn-primary {
+  background-color: #3B82F6 !important;
+  color: white !important;
+  border: none !important;
+}
+
+.multi-item-review-modal .btn-primary:hover {
+  background-color: #2563EB !important;
+}
+
+.multi-item-review-modal .btn-secondary {
+  background-color: white !important;
+  color: #374151 !important;
+  border: 1px solid #d1d5db !important;
+}
+
+.multi-item-review-modal .btn-secondary:hover {
+  background-color: #f9fafb !important;
+  border-color: #9ca3af !important;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .multi-item-review-modal .modal-overlay {
+  .multi-item-review-modal {
     padding: 0;
   }
 
-  .multi-item-review-modal .modal-container {
+  .multi-item-review-modal-content {
     width: 100%;
     max-height: 100vh;
     border-radius: 0;
   }
 
-  .multi-item-review-modal .modal-header,
-  .multi-item-review-modal .modal-body,
-  .multi-item-review-modal .modal-footer {
+  .multi-item-review-modal-header,
+  .multi-item-review-modal-body,
+  .multi-item-review-modal-footer {
     padding: 1rem;
   }
 
@@ -399,6 +507,14 @@
 
   .item-header {
     padding: 1rem;
+  }
+
+  .multi-item-review-modal-footer {
+    flex-direction: column-reverse;
+  }
+
+  .multi-item-review-modal-footer button {
+    width: 100%;
   }
 }
 

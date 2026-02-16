@@ -388,6 +388,11 @@ async function handleUpload(container, form) {
     for (let i = 0; i < uploads.length; i++) {
       const upload = uploads[i];
       const file = files[i];
+
+            // DEBUG — remove after
+      //console.log('DEBUG presigned_url:', upload.presigned_url);
+      //console.log('DEBUG file.type:', file.type, 'file.size:', file.size);
+      //console.log('DEBUG full upload object:', JSON.stringify(upload, null, 2));
       
       await uploadToS3(upload.presigned_url, file, file.type);
       

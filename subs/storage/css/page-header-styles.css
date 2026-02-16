@@ -1,0 +1,312 @@
+/**
+ * PageHeader Component Styles
+ * Add these to your storage.css file
+ */
+
+/* ============================================
+   PAGE HEADER WITH STATS
+   ============================================ */
+
+.page-header-wrapper {
+  margin-bottom: var(--spacing-lg);
+}
+
+.page-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.page-title-section {
+  flex: 1;
+  min-width: 0;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.page-icon {
+  font-size: 28px;
+}
+
+/* Stats Toggle Button (visible on mobile) */
+.btn-stats-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: 8px 16px;
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-color);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-stats-toggle:hover {
+  background: var(--bg-secondary);
+  border-color: var(--primary-color);
+}
+
+.btn-stats-toggle:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(129, 212, 250, 0.1);
+}
+
+.btn-stats-toggle .stats-label {
+  font-weight: 600;
+}
+
+.btn-stats-toggle .stats-icon {
+  font-size: 12px;
+  transition: transform 0.2s;
+}
+
+.btn-stats-toggle.expanded .stats-icon {
+  transform: rotate(180deg);
+}
+
+/* Page Actions */
+.page-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+/* Stats Container - Collapsible on Mobile */
+.page-stats {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: max-height 0.4s ease, opacity 0.3s ease, transform 0.3s ease;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: 0;
+}
+
+.page-stats.expanded {
+  max-height: 800px;
+  opacity: 1;
+  transform: translateY(0);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+}
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-md);
+}
+
+/* Stat Card */
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: white;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s;
+}
+
+.stat-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.stat-icon {
+  font-size: 32px;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+.stat-card.stat-primary .stat-icon {
+  background: #e1f5fe;
+}
+
+.stat-card.stat-warning .stat-icon {
+  background: #fff3cd;
+}
+
+.stat-card.stat-alert .stat-icon {
+  background: #fee2e2;
+}
+
+.stat-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-color);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Stats Divider */
+.stats-divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: var(--spacing-md) 0;
+}
+
+/* Season Stats */
+.stats-seasons {
+  margin-top: var(--spacing-md);
+}
+
+.season-stats-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--spacing-sm);
+}
+
+.season-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-sm);
+}
+
+.season-stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: white;
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--primary-color);
+}
+
+.season-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.season-icon {
+  font-size: 16px;
+}
+
+.season-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.season-values {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: 13px;
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+}
+
+.season-value {
+  white-space: nowrap;
+}
+
+.season-unpacked {
+  color: var(--warning-color);
+  font-weight: 600;
+}
+
+.season-separator {
+  color: var(--border-color);
+}
+
+/* ============================================
+   RESPONSIVE - TABLET (768px+)
+   ============================================ */
+@media (min-width: 768px) {
+  .page-title {
+    font-size: 32px;
+  }
+  
+  .page-icon {
+    font-size: 36px;
+  }
+  
+  /* Hide stats toggle on tablet/desktop - stats always visible */
+  .btn-stats-toggle {
+    display: none;
+  }
+  
+  /* Stats always expanded on desktop */
+  .page-stats {
+    max-height: none;
+    opacity: 1;
+    transform: translateY(0);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+  }
+  
+  /* Stats grid - 2 columns on tablet */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  /* Season stats - 2 columns */
+  .season-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ============================================
+   RESPONSIVE - DESKTOP (1024px+)
+   ============================================ */
+@media (min-width: 1024px) {
+  /* Stats grid - 4 columns on desktop */
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  /* Season stats - 3 columns */
+  .season-stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ============================================
+   RESPONSIVE - LARGE DESKTOP (1400px+)
+   ============================================ */
+@media (min-width: 1400px) {
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+}

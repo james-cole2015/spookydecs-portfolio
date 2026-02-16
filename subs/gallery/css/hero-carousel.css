@@ -170,10 +170,23 @@
   backdrop-filter: blur(8px);
 }
 
+/* Dark mode: adjust button background */
+[data-theme="dark"] .hero-carousel-btn {
+  background: rgba(30, 41, 59, 0.9);
+}
+
+[data-theme="dark"] .hero-carousel-btn svg {
+  fill: var(--text-primary);
+}
+
 .hero-carousel-btn:hover {
   background: white;
   transform: scale(1.15);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .hero-carousel-btn:hover {
+  background: rgba(30, 41, 59, 1);
 }
 
 .hero-carousel-btn:active {
@@ -203,6 +216,11 @@
   pointer-events: all;
 }
 
+/* Dark mode: adjust speed control background */
+[data-theme="dark"] .hero-carousel-speed-control {
+  background: rgba(30, 41, 59, 0.95);
+}
+
 .hero-carousel-speed-btn {
   width: 32px;
   height: 32px;
@@ -222,6 +240,10 @@
   transform: scale(1.1);
 }
 
+[data-theme="dark"] .hero-carousel-speed-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
 .hero-carousel-speed-btn:active {
   transform: scale(0.9);
 }
@@ -230,6 +252,10 @@
   width: 18px;
   height: 18px;
   fill: var(--gray-700);
+}
+
+[data-theme="dark"] .hero-carousel-speed-btn svg {
+  fill: var(--gray-400);
 }
 
 .hero-carousel-speed-indicator {
@@ -254,9 +280,17 @@
   transition: all 0.2s ease;
 }
 
+[data-theme="dark"] .hero-carousel-speed-dot {
+  background: rgba(255, 255, 255, 0.2);
+}
+
 .hero-carousel-speed-dot.active {
   background: var(--gray-900);
   transform: scale(1.2);
+}
+
+[data-theme="dark"] .hero-carousel-speed-dot.active {
+  background: var(--gray-100);
 }
 
 .hero-carousel-speed-label {
@@ -266,6 +300,10 @@
   letter-spacing: 0.5px;
   color: var(--gray-600);
   white-space: nowrap;
+}
+
+[data-theme="dark"] .hero-carousel-speed-label {
+  color: var(--gray-400);
 }
 
 

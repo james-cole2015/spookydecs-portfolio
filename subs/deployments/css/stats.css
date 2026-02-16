@@ -1,0 +1,671 @@
+/* Deployment Stats — Inter & Intra Pages */
+
+/* ─── Page Shell ─────────────────────────────────────────── */
+
+.stats-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+/* ─── Page Header ────────────────────────────────────────── */
+
+.stats-page-header {
+  margin-bottom: 2rem;
+}
+
+.btn-back {
+  background: none;
+  border: none;
+  color: #6B7280;
+  font-size: 0.875rem;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: color 0.2s;
+}
+
+.btn-back:hover {
+  color: #60A5FA;
+}
+
+.stats-page-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1F2937;
+  margin: 0 0 0.5rem;
+}
+
+.stats-page-header p {
+  color: #6B7280;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* ─── Season Filter Tabs ─────────────────────────────────── */
+
+.season-filter-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid #E5E7EB;
+  padding-bottom: 0;
+}
+
+.season-tab {
+  background: none;
+  border: none;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6B7280;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s;
+  border-radius: 4px 4px 0 0;
+}
+
+.season-tab:hover {
+  color: #60A5FA;
+}
+
+.season-tab.active {
+  color: #60A5FA;
+  border-bottom-color: #60A5FA;
+  font-weight: 600;
+}
+
+/* ─── Summary Stat Cards ─────────────────────────────────── */
+
+.summary-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: box-shadow 0.2s;
+}
+
+.stat-card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.stat-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.stat-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.stat-value {
+  display: block;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #60A5FA;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.stat-label {
+  display: block;
+  font-size: 0.8rem;
+  color: #6B7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ─── Deployments Table ──────────────────────────────────── */
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.section-header h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1F2937;
+  margin: 0;
+}
+
+.record-count {
+  background: #F3F4F6;
+  color: #6B7280;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.deployments-table-wrapper {
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.deployments-table-header {
+  display: grid;
+  grid-template-columns: 1fr 100px 120px 100px 110px 110px 40px;
+  gap: 1rem;
+  padding: 0.875rem 1.5rem;
+  background: #F9FAFB;
+  border-bottom: 1px solid #E5E7EB;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.deployment-row {
+  display: grid;
+  grid-template-columns: 1fr 100px 120px 100px 110px 110px 40px;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  align-items: center;
+  border-bottom: 1px solid #F3F4F6;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.deployment-row:last-child {
+  border-bottom: none;
+}
+
+.deployment-row:hover {
+  background: #F9FAFB;
+}
+
+.deployment-row:hover .row-arrow {
+  color: #60A5FA;
+}
+
+.dep-id {
+  font-family: monospace;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1F2937;
+}
+
+.dep-meta {
+  font-size: 0.75rem;
+  color: #9CA3AF;
+  margin-top: 0.125rem;
+}
+
+.season-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.season-badge.halloween {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+.season-badge.christmas {
+  background: #DCFCE7;
+  color: #166534;
+}
+
+.season-badge.shared {
+  background: #EDE9FE;
+  color: #5B21B6;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.625rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.status-badge.archived       { background: #F3F4F6; color: #6B7280; }
+.status-badge.completed      { background: #DCFCE7; color: #166534; }
+.status-badge.active_setup   { background: #DBEAFE; color: #1E40AF; }
+.status-badge.active_teardown{ background: #FEF3C7; color: #92400E; }
+.status-badge.pre-deployment { background: #F3F4F6; color: #6B7280; }
+
+.dep-number {
+  font-size: 0.95rem;
+  color: #1F2937;
+  font-weight: 500;
+}
+
+.dep-duration {
+  font-size: 0.875rem;
+  color: #1F2937;
+}
+
+.dep-duration.none {
+  color: #9CA3AF;
+  font-style: italic;
+}
+
+.row-arrow {
+  color: #D1D5DB;
+  font-size: 0.875rem;
+  transition: color 0.2s;
+  text-align: right;
+}
+
+/* ─── Empty State ────────────────────────────────────────── */
+
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1F2937;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+  color: #6B7280;
+  font-size: 0.875rem;
+}
+
+/* ─── Intra: Deployment Header ───────────────────────────── */
+
+.deployment-detail-header {
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.deployment-identity {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.deployment-id-block h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1F2937;
+  font-family: monospace;
+  margin: 0 0 0.5rem;
+}
+
+.deployment-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.deployment-timestamps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #F3F4F6;
+}
+
+.timestamp-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.timestamp-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #9CA3AF;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.timestamp-value {
+  font-size: 0.875rem;
+  color: #1F2937;
+  font-weight: 500;
+}
+
+.timestamp-value.none {
+  color: #9CA3AF;
+  font-style: italic;
+}
+
+/* ─── Intra: Time Metrics Strip ──────────────────────────── */
+
+.time-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* ─── Intra: Section Title ───────────────────────────────── */
+
+.stats-section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1F2937;
+  margin: 0 0 1rem;
+}
+
+/* ─── Intra: Zone Cards ──────────────────────────────────── */
+
+.zone-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.zone-stat-card {
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+
+.zone-stat-card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.zone-stat-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #F3F4F6;
+  background: #F9FAFB;
+}
+
+.zone-stat-card-header .zone-icon {
+  font-size: 1.5rem;
+}
+
+.zone-stat-card-header h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1F2937;
+  margin: 0;
+}
+
+.zone-stat-card-header .zone-code {
+  background: #F3F4F6;
+  color: #6B7280;
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-left: auto;
+}
+
+.zone-stat-card-body {
+  padding: 1rem 1.25rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.875rem;
+}
+
+.zone-mini-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.zone-mini-stat .mini-value {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: #60A5FA;
+  line-height: 1;
+}
+
+.zone-mini-stat .mini-label {
+  font-size: 0.7rem;
+  color: #9CA3AF;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ─── Intra: Charts Section ──────────────────────────────── */
+
+.charts-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.chart-card {
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.chart-card h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1F2937;
+  margin: 0 0 1.25rem;
+}
+
+.chart-container {
+  position: relative;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chart-legend {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+}
+
+.legend-dot-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #4B5563;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-count {
+  font-weight: 600;
+  color: #1F2937;
+}
+
+.chart-empty {
+  text-align: center;
+  color: #9CA3AF;
+  font-size: 0.875rem;
+  padding: 2rem;
+}
+
+.callout-fallback-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #9CA3AF;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.375rem;
+  margin-top: 0.25rem;
+}
+
+/* ─── Intra: Efficiency Strip ────────────────────────────── */
+
+.efficiency-section {
+  margin-bottom: 2rem;
+}
+
+.efficiency-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.efficiency-card {
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.efficiency-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #60A5FA;
+  line-height: 1;
+}
+
+.efficiency-label {
+  font-size: 0.8rem;
+  color: #6B7280;
+}
+
+.efficiency-sub {
+  font-size: 0.7rem;
+  color: #9CA3AF;
+}
+
+/* ─── Loading ────────────────────────────────────────────── */
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem;
+  gap: 1rem;
+  color: #6B7280;
+}
+
+.spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid #E5E7EB;
+  border-top-color: #60A5FA;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Mobile ─────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .stats-page {
+    padding: 1rem 0.5rem;
+  }
+
+  .deployments-table-header {
+    display: none;
+  }
+
+  .deployment-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    padding: 1rem;
+  }
+
+  .deployment-row > * {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .row-arrow {
+    display: none;
+  }
+
+  .zone-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .charts-section {
+    grid-template-columns: 1fr;
+  }
+
+  .deployment-timestamps {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .summary-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .summary-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .deployment-timestamps {
+    grid-template-columns: 1fr;
+  }
+
+  .efficiency-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}

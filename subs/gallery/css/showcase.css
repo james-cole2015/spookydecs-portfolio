@@ -12,20 +12,6 @@
   padding: 0 var(--container-padding);
 }
 
-/* Browse All Section */
-.browse-section {
-  max-width: var(--container-max-width);
-  margin: 0 auto var(--spacing-xl);
-  padding: 0 var(--container-padding);
-}
-
-.browse-section-title {
-  font-size: var(--text-2xl);
-  font-weight: var(--font-bold);
-  color: var(--text-primary);
-  margin: 0;
-}
-
 .filter-header {
   display: flex;
   align-items: center;
@@ -193,6 +179,11 @@
   box-shadow: var(--shadow-sm);
   transition: all var(--transition-base);
   cursor: pointer;
+}
+
+/* Dark mode: add subtle border */
+[data-theme="dark"] .photo-card {
+  border: 1px solid var(--border);
 }
 
 .photo-card:hover {

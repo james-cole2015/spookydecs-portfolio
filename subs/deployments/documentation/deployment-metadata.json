@@ -1,0 +1,24 @@
+{
+ "deployment_id": "DEP-HAL-2026",
+ "deployment_item_id": "METADATA",
+ "created_at": "2026-02-04T18:10:35.535840Z",
+ "notes": "",
+ "record_type": "metadata",
+ "season": "Halloween",
+ "setup_completed_at": null,
+ "setup_started_at": null,
+ "statistics": {
+  "by_class": {},
+  "by_class_type": {},
+  "by_zone": {},
+  "total_items": 0,
+  "total_sessions": 0,
+  "total_setup_minutes": 0,
+  "total_zones": 3
+ },
+ "status": "pre-deployment",
+ "teardown_completed_at": null,
+ "teardown_started_at": null,
+ "updated_at": "2026-02-04T18:10:35.535840Z",
+ "year": 2026
+}

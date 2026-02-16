@@ -129,18 +129,19 @@ class ItemEditPage {
     }
   }
   
-  async handleItemUpdate(updatedItem) {
-    // Called when action center updates the item (e.g., photo upload, retire)
+async handleItemUpdate(updatedItem) {
+  if (updatedItem) {
     this.item = updatedItem;
-    
-    // Re-render form with updated data
-    this.editForm.render(updatedItem);
-    
-    // Re-render action center
-    actionCenter.render(updatedItem, (item) => {
-      this.handleItemUpdate(item);
-    });
+  } else {
+    // Re-fetch after photo upload (no updated item passed)
+    this.item = await fetchItemById(this.item.id, true);
   }
+
+  this.editForm.render(this.item);
+  actionCenter.render(this.item, (item) => {
+    this.handleItemUpdate(item);
+  });
+}
   
   escapeHtml(text) {
     const div = document.createElement('div');

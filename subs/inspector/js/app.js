@@ -88,6 +88,3 @@ if (document.readyState === 'loading') {
 } else {
     initializeApp();
 }
-
-// Export for use in other modules
-window.getApiEndpoint = getApiEndpoint;

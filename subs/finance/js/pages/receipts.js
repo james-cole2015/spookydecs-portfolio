@@ -1,7 +1,7 @@
 // Receipts Page Orchestrator
 
 import { ReceiptsGrid } from '../components/ReceiptsGrid.js';
-import { getAllCosts, getApiEndpoint } from '../utils/finance-api.js';
+import { getAllCosts} from '../utils/finance-api.js';
 import { toast } from '../shared/toast.js';
 
 export class ReceiptsPage {

@@ -8,6 +8,7 @@
 import { router } from './utils/router.js';
 import { state } from './utils/state.js';
 import { SectionTabs } from './components/SectionTabs.js';
+import { ThemeToggle } from './components/ThemeToggle.js';
 import { renderShowcase } from './pages/showcase.js';
 import { renderProgress } from './pages/progress.js';
 import { renderCommunity } from './pages/community.js';
@@ -15,6 +16,11 @@ import { renderCommunity } from './pages/community.js';
 // Initialize app
 async function init() {
   console.log('Initializing Gallery App...');
+
+  // Initialize theme toggle (do this first, before any rendering)
+  const themeToggleContainer = document.getElementById('theme-toggle');
+  const themeToggle = new ThemeToggle(themeToggleContainer);
+  themeToggle.init();
 
   // Initialize section tabs
   const tabsContainer = document.getElementById('section-tabs');
@@ -25,31 +31,31 @@ async function init() {
 
   // Setup routes
   router.on('/', () => {
-    //console.log('Route: /');
+    console.log('Route: /');
     sectionTabs.setActiveTab('showcase');
     renderShowcase();
   });
 
   router.on('/showcase', () => {
-    //console.log('Route: /showcase');
+    console.log('Route: /showcase');
     sectionTabs.setActiveTab('showcase');
     renderShowcase();
   });
 
   router.on('/progress', () => {
-    //console.log('Route: /progress');
+    console.log('Route: /progress');
     sectionTabs.setActiveTab('progress');
     renderProgress();
   });
 
   router.on('/community', () => {
-    //console.log('Route: /community');
+    console.log('Route: /community');
     sectionTabs.setActiveTab('community');
     renderCommunity();
   });
 
   router.notFound(() => {
-    //console.log('Route: Not found, redirecting to /');
+    console.log('Route: Not found, redirecting to /');
     router.navigate('/');
   });
 
@@ -71,7 +77,7 @@ function getCurrentSection() {
  * Handle section tab change
  */
 function handleSectionChange(section) {
-  //console.log('Section changed:', section);
+  console.log('Section changed:', section);
   
   // Clear filters when changing sections
   state.clear();

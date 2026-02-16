@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deployments | SpookyDecs</title>
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/session.css">
+  <link rel="stylesheet" href="css/shared.css">
+  <link rel="stylesheet" href="css/connection-builder.css">
+  <link rel="stylesheet" href="css/zone-detail.css">
+  <link rel="stylesheet" href="css/builder.css">
+  <link rel="stylesheet" href="css/historical.css">
+  <link rel="stylesheet" href="css/complete.css">
+  <link rel="stylesheet" href="css/graphs.css">
+  <link rel="stylesheet" href="css/stats.css">
+  <link rel="stylesheet" href="css/breadcrumbs.css">
+  <link rel="stylesheet" href="css/staging.css">
+  <link rel="stylesheet" href="css/session-detail.css">
+  <link rel="stylesheet" href="css/connection-detail.css">
+  <link rel="stylesheet" href="css/zone-detail-items-drawer.css">
+  <link rel="stylesheet" href="css/teardown.css">
+</head>
+<body>
+  <!-- SpookyDecs Header -->
+  <spookydecs-header 
+    page-title="Deployments" 
+    logout-url="/logout">
+  </spookydecs-header>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script> 
+
+  <!-- Main App Container -->
+  <div id="app"></div>
+
+  <!-- Header Component -->
+  <script src="https://assets.spookydecs.com/components/spookydecs-header.js"></script>
+  <script src="https://assets.spookydecs.com/components/api-config.js"></script>
+
+  
+<!-- Photo Upload Components -->
+<script src="https://assets.spookydecs.com/components/photo-upload-service.js"></script>
+<script src="https://assets.spookydecs.com/components/photo-upload-modal.js"></script>
+
+  <!-- Navigo Router (loaded globally) -->
+  <script src="https://cdn.jsdelivr.net/npm/navigo@8.11.1/lib/navigo.min.js"></script>
+  
+  <!-- App Scripts -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

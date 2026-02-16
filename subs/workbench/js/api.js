@@ -1,43 +1,24 @@
 // Workbench API Module
 // All API calls for workbench functionality
 
-let API_ENDPOINT = '';
+const HEADERS = { 'Content-Type': 'application/json' };
 
-// Load config and initialize API_ENDPOINT
-export async function initAPI() {
-  try {
-    const response = await fetch('/config.json');
-    const config = await response.json();
-    API_ENDPOINT = config.API_ENDPOINT;
-    return true;
-  } catch (error) {
-    console.error('Failed to load config:', error);
-    throw new Error('Could not initialize API');
-  }
-}
-
-// Helper function for API calls
 async function apiCall(endpoint, options = {}) {
+  const { API_ENDPOINT } = await window.SpookyConfig.get();
   const url = `${API_ENDPOINT}${endpoint}`;
-  const defaultOptions = {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers
-    }
-  };
 
-  const response = await fetch(url, { ...defaultOptions, ...options });
-  
+  const response = await fetch(url, {
+    ...options,
+    headers: { ...HEADERS, ...options.headers }
+  });
+
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
     throw new Error(error.error || error.message || `API Error: ${response.status}`);
   }
-  
+
   const result = await response.json();
-  
-  // Unwrap the data from the standardized response format
-  // Backend now returns { success, data, timestamp, message }
-  return result.data || result;  // Fallback to result if data doesn't exist (backwards compatibility)
+  return result.data || result;
 }
 
 // ============ SEASON MANAGEMENT ============

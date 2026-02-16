@@ -1,40 +1,23 @@
 /**
  * Storage API Client
  * Handles all HTTP requests to the storage endpoints
- * Updated to handle standardized lambda_utils response format
  */
 
 import STORAGE_CONFIG from './storage-config.js';
 
-let config = null;
+const HEADERS = { 'Content-Type': 'application/json' };
 
-export async function loadConfig() {
-  if (config) return config;
-  
-  try {
-    const response = await fetch('/config.json');
-    config = await response.json();
-    return config;
-  } catch (error) {
-    console.error('Failed to load config:', error);
-    throw new Error('Configuration not available');
-  }
-}
-
-function getHeaders() {
-  return {
-    'Content-Type': 'application/json',
-    'Origin': window.location.origin
-  };
+async function getApiEndpoint() {
+  const { API_ENDPOINT } = await window.SpookyConfig.get();
+  return API_ENDPOINT;
 }
 
 async function handleResponse(response) {
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: 'Unknown error' }));
-    // Handle standardized error format: { success: false, error: "...", details: {...} }
     const errorMessage = error.error || error.message || `HTTP ${response.status}`;
     const errorDetails = error.details || null;
-    
+
     const err = new Error(errorMessage);
     err.details = errorDetails;
     err.statusCode = response.status;
@@ -43,17 +26,11 @@ async function handleResponse(response) {
   return response.json();
 }
 
-/**
- * Storage API methods
- */
 export const storageAPI = {
-  /**
-   * Get all storage units with optional filters
-   */
   async getAll(filters = {}) {
-    const cfg = await loadConfig();
+    const API_ENDPOINT = await getApiEndpoint();
     const params = new URLSearchParams();
-    
+
     Object.keys(filters).forEach(key => {
       if (filters[key] && filters[key] !== 'All') {
         params.append(key, filters[key]);
@@ -61,319 +38,198 @@ export const storageAPI = {
     });
 
     const queryString = params.toString();
-    const url = queryString 
-      ? `${cfg.API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE}?${queryString}` 
-      : `${cfg.API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE}`;
-    
-    const response = await fetch(url, { headers: getHeaders() });
+    const url = queryString
+      ? `${API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE}?${queryString}`
+      : `${API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE}`;
+
+    const response = await fetch(url, { headers: HEADERS });
     const data = await handleResponse(response);
-    
-    // Handle standardized response format: { success: true, data: { storage_units: [...], count: N } }
-    if (data.success && data.data) {
-      return data.data.storage_units || [];
-    }
-    // Fallback for old format
+
+    if (data.success && data.data) return data.data.storage_units || [];
     return data.storage_units || [];
   },
 
-  /**
-   * Get storage unit by ID
-   */
   async getById(id) {
-    const cfg = await loadConfig();
+    const API_ENDPOINT = await getApiEndpoint();
     const response = await fetch(
-      `${cfg.API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_BY_ID(id)}`,
-      { headers: getHeaders() }
+      `${API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_BY_ID(id)}`,
+      { headers: HEADERS }
     );
     const data = await handleResponse(response);
-    
-    // Handle standardized response format: { success: true, data: { storage_unit: {...} } }
-    if (data.success && data.data && data.data.storage_unit) {
-      return data.data.storage_unit;
-    }
-    // Fallback for old format
+
+    if (data.success && data.data && data.data.storage_unit) return data.data.storage_unit;
     return data.storage_unit || null;
   },
 
-  /**
-   * Create new tote
-   */
   async createTote(data) {
-    const cfg = await loadConfig();
-    const response = await fetch(`${cfg.API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_TOTES}`, {
+    const API_ENDPOINT = await getApiEndpoint();
+    const response = await fetch(`${API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_TOTES}`, {
       method: 'POST',
-      headers: getHeaders(),
+      headers: HEADERS,
       body: JSON.stringify(data)
     });
     const result = await handleResponse(response);
-    
-    // Handle standardized response format: { success: true, data: { storage_unit: {...} } }
-    if (result.success && result.data && result.data.storage_unit) {
-      return result.data.storage_unit;
-    }
-    // Fallback for old format
+
+    if (result.success && result.data && result.data.storage_unit) return result.data.storage_unit;
     return result.storage_unit || null;
   },
 
-  /**
-   * Create new self-contained storage unit
-   */
   async createSelf(data) {
-    const cfg = await loadConfig();
-    const response = await fetch(`${cfg.API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_SELF}`, {
+    const API_ENDPOINT = await getApiEndpoint();
+    const response = await fetch(`${API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_SELF}`, {
       method: 'POST',
-      headers: getHeaders(),
+      headers: HEADERS,
       body: JSON.stringify(data)
     });
     const result = await handleResponse(response);
-    
-    // Handle standardized response format: { success: true, data: { storage_unit: {...} } }
-    if (result.success && result.data && result.data.storage_unit) {
-      return result.data.storage_unit;
-    }
-    // Fallback for old format
+
+    if (result.success && result.data && result.data.storage_unit) return result.data.storage_unit;
     return result.storage_unit || null;
   },
 
-  /**
-   * Update storage unit metadata
-   */
   async update(id, data) {
-    const cfg = await loadConfig();
+    const API_ENDPOINT = await getApiEndpoint();
     const response = await fetch(
-      `${cfg.API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_BY_ID(id)}`,
+      `${API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_BY_ID(id)}`,
       {
         method: 'PUT',
-        headers: getHeaders(),
+        headers: HEADERS,
         body: JSON.stringify(data)
       }
     );
     const result = await handleResponse(response);
-    
-    // Handle standardized response format: { success: true, data: { storage_unit: {...} } }
-    if (result.success && result.data && result.data.storage_unit) {
-      return result.data.storage_unit;
-    }
-    // Fallback for old format
+
+    if (result.success && result.data && result.data.storage_unit) return result.data.storage_unit;
     return result.storage_unit || null;
   },
 
-  /**
-   * Delete storage unit (must be empty)
-   */
   async delete(id) {
-    const cfg = await loadConfig();
+    const API_ENDPOINT = await getApiEndpoint();
     const response = await fetch(
-      `${cfg.API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_BY_ID(id)}`,
+      `${API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_BY_ID(id)}`,
       {
         method: 'DELETE',
-        headers: getHeaders()
+        headers: HEADERS
       }
     );
-    const result = await handleResponse(response);
-    
-    // Handle standardized response format: { success: true, data: { id: "..." }, message: "..." }
-    if (result.success) {
-      return result;
-    }
-    // Fallback for old format
-    return result;
+    return handleResponse(response);
   },
 
-  /**
-   * Add items to storage unit
-   */
   async addItems(storageId, itemIds, markPacked = false) {
-    const cfg = await loadConfig();
+    const API_ENDPOINT = await getApiEndpoint();
     const response = await fetch(
-      `${cfg.API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_CONTENTS(storageId)}`,
+      `${API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_CONTENTS(storageId)}`,
       {
         method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({
-          item_ids: itemIds,
-          mark_packed: markPacked
-        })
+        headers: HEADERS,
+        body: JSON.stringify({ item_ids: itemIds, mark_packed: markPacked })
       }
     );
     const result = await handleResponse(response);
-    
-    // Handle standardized response format: { success: true, data: { storage_id, items_added, total_contents, ... } }
-    if (result.success && result.data) {
-      return result.data;
-    }
-    // Fallback for old format (returns the data directly)
+
+    if (result.success && result.data) return result.data;
     return result;
   },
 
-  /**
-   * Remove items from storage unit
-   */
   async removeItems(storageId, itemIds) {
-    const cfg = await loadConfig();
+    const API_ENDPOINT = await getApiEndpoint();
     const response = await fetch(
-      `${cfg.API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_CONTENTS(storageId)}`,
+      `${API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_CONTENTS(storageId)}`,
       {
         method: 'DELETE',
-        headers: getHeaders(),
-        body: JSON.stringify({
-          item_ids: itemIds
-        })
+        headers: HEADERS,
+        body: JSON.stringify({ item_ids: itemIds })
       }
     );
     const result = await handleResponse(response);
-    
-    // Handle standardized response format: { success: true, data: { storage_id, items_removed, remaining_contents } }
-    if (result.success && result.data) {
-      return result.data;
-    }
-    // Fallback for old format
+
+    if (result.success && result.data) return result.data;
     return result;
   },
 
-  /**
-   * Pack single-packed items (creates self-contained storage units)
-   */
   async packSingleItems(itemIds, location) {
-    const cfg = await loadConfig();
-    const response = await fetch(`${cfg.API_ENDPOINT}/storage/pack-single`, {
+    const API_ENDPOINT = await getApiEndpoint();
+    const response = await fetch(`${API_ENDPOINT}/storage/pack-single`, {
       method: 'POST',
-      headers: getHeaders(),
-      body: JSON.stringify({
-        item_ids: itemIds,
-        location: location
-      })
+      headers: HEADERS,
+      body: JSON.stringify({ item_ids: itemIds, location })
     });
     const result = await handleResponse(response);
-    
-    // Handle standardized response format: { success: true, data: { units_created, location, storage_units: [...] } }
-    if (result.success && result.data) {
-      return result.data;
-    }
-    // Fallback for old format
-    return result;
-  },
 
+    if (result.success && result.data) return result.data;
+    return result;
+  }
 };
 
-/**
- * Items API methods (for fetching unpacked items)
- * Updated to handle standardized lambda_utils response format
- */
 export const itemsAPI = {
-  /**
-   * Get all items with optional filters
-   */
   async getAll(filters = {}) {
-    const cfg = await loadConfig();
+    const API_ENDPOINT = await getApiEndpoint();
     const params = new URLSearchParams();
-    
+
     Object.keys(filters).forEach(key => {
-      if (filters[key]) {
-        params.append(key, filters[key]);
-      }
+      if (filters[key]) params.append(key, filters[key]);
     });
 
     const queryString = params.toString();
-    const url = queryString 
-      ? `${cfg.API_ENDPOINT}${STORAGE_CONFIG.API.ITEMS}?${queryString}` 
-      : `${cfg.API_ENDPOINT}${STORAGE_CONFIG.API.ITEMS}`;
-    
-    const response = await fetch(url, { headers: getHeaders() });
+    const url = queryString
+      ? `${API_ENDPOINT}${STORAGE_CONFIG.API.ITEMS}?${queryString}`
+      : `${API_ENDPOINT}${STORAGE_CONFIG.API.ITEMS}`;
+
+    const response = await fetch(url, { headers: HEADERS });
     const data = await handleResponse(response);
-    
-    // Handle standardized response format: { success: true, data: { items: [...] } }
-    if (data.success && data.data && data.data.items) {
-      return data.data.items;
-    }
-    // Fallback for old format
+
+    if (data.success && data.data && data.data.items) return data.data.items;
     return data.items || [];
   },
 
-  /**
-   * Get unpacked items (for packing workflow)
-   */
   async getUnpacked(season = null) {
     const filters = { packing_status: 'false' };
-    if (season) {
-      filters.season = season;
-    }
+    if (season) filters.season = season;
     return this.getAll(filters);
   },
 
-  /**
-   * Get item by ID
-   */
   async getById(id) {
-    const cfg = await loadConfig();
+    const API_ENDPOINT = await getApiEndpoint();
     const response = await fetch(
-      `${cfg.API_ENDPOINT}${STORAGE_CONFIG.API.ITEMS_BY_ID(id)}`,
-      { headers: getHeaders() }
+      `${API_ENDPOINT}${STORAGE_CONFIG.API.ITEMS_BY_ID(id)}`,
+      { headers: HEADERS }
     );
     const data = await handleResponse(response);
-    
-    // Handle standardized response format: { success: true, data: {...item...} }
-    if (data.success && data.data) {
-      return data.data;
-    }
-    // Fallback for old format
-    else if (data.item) {
-      return data.item;
-    } else if (data.id) {
-      return data;
-    }
-    
+
+    if (data.success && data.data) return data.data;
+    if (data.item) return data.item;
+    if (data.id) return data;
     return null;
   },
 
-  /**
-   * Bulk store items in a location
-   */
   async bulkStore(itemIds, location) {
-    const cfg = await loadConfig();
-    const response = await fetch(`${cfg.API_ENDPOINT}/admin/items/bulk`, {
+    const API_ENDPOINT = await getApiEndpoint();
+    const response = await fetch(`${API_ENDPOINT}/admin/items/bulk`, {
       method: 'PATCH',
-      headers: getHeaders(),
-      body: JSON.stringify({
-        item_ids: itemIds,
-        location: location
-      })
+      headers: HEADERS,
+      body: JSON.stringify({ item_ids: itemIds, location })
     });
     const data = await handleResponse(response);
-    
-    // Handle standardized response format: { success: true, data: { items_stored: N, ... } }
-    if (data.success && data.data) {
-      return data.data;
-    }
-    // Fallback for old format
+
+    if (data.success && data.data) return data.data;
     return data;
   }
 };
 
-/**
- * Photos API methods (for fetching photo details)
- */
 export const photosAPI = {
-  /**
-   * Get photo details by ID
-   */
   async getById(photoId) {
     if (!photoId) return null;
-    
-    const cfg = await loadConfig();
-    
+
+    const API_ENDPOINT = await getApiEndpoint();
+
     try {
       const response = await fetch(
-        `${cfg.API_ENDPOINT}/admin/images/${photoId}`,
-        { headers: getHeaders() }
+        `${API_ENDPOINT}/admin/images/${photoId}`,
+        { headers: HEADERS }
       );
       const data = await handleResponse(response);
-      
-      // Handle standardized response format if photos Lambda is updated
-      if (data.success && data.data) {
-        return data.data;
-      }
-      // Fallback for current format
+
+      if (data.success && data.data) return data.data;
       return data;
     } catch (error) {
       console.error(`Failed to fetch photo ${photoId}:`, error);
@@ -381,33 +237,22 @@ export const photosAPI = {
     }
   },
 
-  /**
-   * Batch fetch multiple photos by IDs
-   */
   async getByIds(photoIds) {
-    if (!photoIds || photoIds.length === 0) return [];
-    
-    // Filter out null/undefined IDs
+    if (!photoIds || photoIds.length === 0) return {};
+
     const validIds = photoIds.filter(id => id);
-    
-    // Fetch all photos in parallel
-    const photoPromises = validIds.map(id => 
-      this.getById(id).catch(err => {
+    const photos = await Promise.all(
+      validIds.map(id => this.getById(id).catch(err => {
         console.warn(`Failed to fetch photo ${id}:`, err);
         return null;
-      })
+      }))
     );
-    
-    const photos = await Promise.all(photoPromises);
-    
-    // Return as a map for easy lookup: { photo_id: photo_data }
+
     const photoMap = {};
     photos.forEach((photo, index) => {
-      if (photo) {
-        photoMap[validIds[index]] = photo;
-      }
+      if (photo) photoMap[validIds[index]] = photo;
     });
-    
+
     return photoMap;
   }
 };

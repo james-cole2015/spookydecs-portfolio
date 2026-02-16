@@ -113,7 +113,6 @@ body {
   transition: all 0.15s;
   white-space: nowrap;
   flex-shrink: 0;
-  margin-left: auto;
 }
 
 .btn-clear-filters:hover:not(:disabled) {
@@ -129,13 +128,13 @@ body {
   border-color: #e5e7eb;
 }
 
+/* ===== Desktop Filters (>= 769px) ===== */
 .table-filters {
   display: flex;
   gap: 12px;
   align-items: center;
   flex-wrap: nowrap;
   margin-bottom: 16px;
-  overflow-x: auto;
 }
 
 .table-count {
@@ -160,6 +159,102 @@ body {
   background: white;
   cursor: pointer;
   min-width: 150px;
+}
+
+/* ===== Collapsed Filter Panel (<= 768px) ===== */
+.table-filters-collapsed {
+  margin-bottom: 16px;
+}
+
+.filters-top-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.filter-search-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.btn-filters-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+.btn-filters-toggle:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.btn-filters-toggle.active {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+
+.filter-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  background: #3b82f6;
+  color: white;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.toggle-chevron {
+  font-size: 10px;
+  color: #9ca3af;
+}
+
+.btn-filters-toggle.active .toggle-chevron {
+  color: #3b82f6;
+}
+
+.filters-dropdown-panel {
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+}
+
+.filters-dropdown-panel.open {
+  display: flex;
+}
+
+.filters-dropdown-panel .filter-select,
+.filters-dropdown-panel .filter-input,
+.filters-dropdown-panel .filter-date-input {
+  width: 100%;
+  min-width: unset;
+  box-sizing: border-box;
+}
+
+.filters-dropdown-panel .btn-clear-filters {
+  width: 100%;
+  margin-left: 0;
+  text-align: center;
 }
 
 /* ===== TanStack Table Styles ===== */
@@ -412,19 +507,6 @@ body {
     justify-content: space-between;
   }
 
-  .table-filters {
-    width: 100%;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-  }
-
-  .filter-input,
-  .filter-select {
-    width: 100%;
-    min-width: unset;
-  }
-
   /* Back to Top - Mobile positioning */
   .back-to-top {
     bottom: 1rem;
@@ -437,6 +519,11 @@ body {
 
 @media (min-width: 769px) {
   .cost-cards {
+    display: none;
+  }
+
+  /* Hide collapsed filter UI on desktop */
+  .table-filters-collapsed {
     display: none;
   }
 }

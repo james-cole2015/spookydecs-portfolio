@@ -1,5 +1,12 @@
 /* Item Detail Styles */
 
+/* Page Container - Consistent with Edit */
+.detail-page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
 /* Breadcrumb */
 .breadcrumb {
   display: flex;
@@ -28,7 +35,7 @@
   font-weight: 500;
 }
 
-/* Detail Header */
+/* Detail Header - Matches Edit Header Pattern */
 .detail-header {
   background: white;
   border: 1px solid #E5E7EB;
@@ -41,17 +48,19 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 20px;
+  gap: 20px;
 }
 
 .detail-header-main {
   display: flex;
-  gap: 20px;
+  gap: 16px;
+  align-items: center;
+  flex: 1;
 }
 
 .detail-photo {
-  width: 120px;
-  height: 120px;
+  width: 100px;
+  height: 100px;
   border-radius: 8px;
   object-fit: cover;
   background: #F3F4F6;
@@ -59,56 +68,242 @@
 }
 
 .detail-photo-placeholder {
-  width: 120px;
-  height: 120px;
+  width: 100px;
+  height: 100px;
   border-radius: 8px;
   background: #F3F4F6;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 48px;
+  font-size: 40px;
   color: #9CA3AF;
   flex-shrink: 0;
 }
 
 .detail-info {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .detail-name {
   font-size: 24px;
   font-weight: 600;
   color: #111827;
-  margin-bottom: 4px;
+  margin: 0;
 }
 
 .detail-id {
-  font-size: 12px;
+  font-size: 11px;
   font-family: monospace;
   color: #9CA3AF;
-  margin-bottom: 8px;
+  margin-top: 2px;
 }
 
 .detail-type {
-  font-size: 15px;
+  font-size: 14px;
   color: #6B7280;
-  margin-bottom: 12px;
+  margin-top: 4px;
 }
 
 .detail-badges {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-  margin-bottom: 12px;
+  margin-top: 8px;
+  align-items: center;
+}
+
+/* In-progress link in badges area */
+.in-progress-link {
+  font-size: 13px;
+  color: #F59E0B;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  display: inline-block;
+}
+
+.in-progress-link:hover {
+  color: #D97706;
+  background: #FEF3C7;
+}
+
+/* Status badges container in maintenance tab */
+.status-badges {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* In-progress link in status section */
+.in-progress-link-status {
+  font-size: 14px;
+  color: #F59E0B;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  display: inline-block;
+  border: 1px solid #FCD34D;
+  background: #FFFBEB;
+}
+
+.in-progress-link-status:hover {
+  color: #D97706;
+  background: #FEF3C7;
+  border-color: #FBBF24;
 }
 
 .detail-meta {
   font-size: 13px;
   color: #6B7280;
+  margin-top: 8px;
 }
 
 .detail-meta-row {
-  margin-bottom: 4px;
+  display: inline;
+}
+
+.detail-meta-row:not(:last-child)::after {
+  content: ' • ';
+  margin: 0 4px;
+}
+
+/* Edit Button in Header */
+.detail-header .btn-primary {
+  padding: 10px 20px;
+  background: #3B82F6;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.detail-header .btn-primary:hover {
+  background: #2563EB;
+}
+
+/* Quick Navigation Bar */
+.quick-nav {
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.quick-nav-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.quick-nav-link {
+  font-size: 14px;
+  font-weight: 500;
+  color: #3B82F6;
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.quick-nav-link:hover {
+  background: #EFF6FF;
+  color: #2563EB;
+}
+
+.quick-nav-link:active {
+  background: #DBEAFE;
+}
+
+/* Detail Content Container */
+.detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.detail-section-card {
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 32px;
+}
+
+/* Subsection Titles */
+.subsection-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-top: 24px;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.subsection-title:first-of-type {
+  margin-top: 0;
+}
+
+/* Back to Top Button */
+.back-to-top {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 48px;
+  height: 48px;
+  background: #3B82F6;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  transition: all 0.3s ease;
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0.8);
+  z-index: 100;
+  color: white;
+}
+
+.back-to-top.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1);
+}
+
+.back-to-top:hover {
+  background: #2563EB;
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5);
+  transform: scale(1.05);
+}
+
+.back-to-top:active {
+  transform: scale(0.95);
+}
+
+.back-to-top svg {
+  display: block;
+  flex-shrink: 0;
 }
 
 /* Tab Bar with Scroll */
@@ -249,7 +444,7 @@
   background: white;
   border: 1px solid #E5E7EB;
   border-radius: 8px;
-  padding: 24px;
+  padding: 32px;
 }
 
 .tab-panel {
@@ -260,9 +455,9 @@
   display: block;
 }
 
-/* Section Styles */
+/* Section Styles - Consistent with Edit Page */
 .detail-section {
-  margin-bottom: 32px;
+  margin-bottom: 40px;
 }
 
 .detail-section:last-child {
@@ -273,21 +468,25 @@
   font-size: 16px;
   font-weight: 600;
   color: #111827;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #E5E7EB;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
+/* Detail Grid - Horizontal Layout for Fields */
 .detail-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
+  gap: 20px 32px;
+  margin-bottom: 24px;
 }
 
 .detail-field {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .field-label {
@@ -306,10 +505,26 @@
   font-style: italic;
 }
 
+/* Notes Field - Full Width */
+.detail-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.detail-field.full-width .field-value {
+  line-height: 1.6;
+}
+
 .section-divider {
   height: 1px;
   background: #E5E7EB;
-  margin: 24px 0;
+  margin: 32px 0;
+}
+
+/* Heavy Section Divider */
+.section-divider.heavy {
+  height: 2px;
+  background: #D1D5DB;
+  margin: 40px 0;
 }
 
 /* Deployment History */
@@ -335,6 +550,8 @@
 .deployment-id {
   font-weight: 600;
   color: #111827;
+  font-family: monospace;
+  font-size: 13px;
 }
 
 .deployment-info {
@@ -365,19 +582,31 @@
 .maintenance-date {
   font-size: 13px;
   color: #6B7280;
+  font-weight: 500;
 }
 
 .maintenance-type {
-  font-size: 12px;
+  font-size: 11px;
   padding: 3px 8px;
   border-radius: 4px;
   background: #DBEAFE;
   color: #1E40AF;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.maintenance-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 4px;
 }
 
 .maintenance-notes {
   font-size: 13px;
   color: #4B5563;
+  line-height: 1.5;
 }
 
 /* Upcoming Maintenance */
@@ -388,7 +617,7 @@
 
 .maintenance-item.upcoming .maintenance-date {
   color: #92400E;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .maintenance-item.upcoming .maintenance-type {
@@ -402,28 +631,31 @@
 }
 
 .maintenance-ids {
-  margin-top: 8px;
+  margin-top: 12px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .maintenance-id-row {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   font-size: 11px;
+  align-items: baseline;
 }
 
 .maintenance-id-label {
   color: #92400E;
-  font-weight: 500;
-  min-width: 60px;
+  font-weight: 600;
+  min-width: 70px;
+  flex-shrink: 0;
 }
 
 .maintenance-id-value {
   font-family: monospace;
   color: #78350F;
   word-break: break-all;
+  flex: 1;
 }
 
 /* Applied Templates */
@@ -449,7 +681,7 @@
 
 /* Maintenance CTA Button */
 .maintenance-cta {
-  margin-top: 24px;
+  margin-top: 32px;
 }
 
 .btn-maintenance-link {
@@ -511,8 +743,28 @@
   opacity: 1;
 }
 
-/* Responsive */
+/* Responsive - Tablet */
+@media (max-width: 1024px) {
+  .detail-page-container {
+    padding: 16px;
+  }
+  
+  .tab-content {
+    padding: 24px;
+  }
+  
+  .detail-grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px 24px;
+  }
+}
+
+/* Responsive - Mobile */
 @media (max-width: 768px) {
+  .detail-page-container {
+    padding: 12px;
+  }
+  
   .detail-header {
     padding: 16px;
   }
@@ -524,6 +776,7 @@
   
   .detail-header-main {
     flex-direction: column;
+    align-items: stretch;
   }
   
   .detail-photo,
@@ -532,20 +785,98 @@
     height: 200px;
   }
   
-  .tab-bar {
-    gap: 2px;
+  .detail-info {
+    gap: 6px;
   }
   
-  .tab-item {
+  .detail-name {
+    font-size: 20px;
+  }
+  
+  .detail-type {
     font-size: 13px;
-    padding: 10px 12px;
   }
   
-  .tab-content {
+  .detail-meta {
+    font-size: 12px;
+  }
+  
+  .detail-meta-row {
+    display: block;
+  }
+  
+  .detail-meta-row:not(:last-child)::after {
+    content: '';
+    margin: 0;
+  }
+  
+  /* Quick Nav Mobile */
+  .quick-nav {
+    padding: 12px;
+    gap: 8px;
+  }
+  
+  .quick-nav-label {
+    font-size: 12px;
+    width: 100%;
+  }
+  
+  .quick-nav-link {
+    font-size: 13px;
+    padding: 6px 10px;
+  }
+  
+  /* Content Cards */
+  .detail-section-card {
     padding: 16px;
+  }
+  
+  .detail-section {
+    margin-bottom: 0;
+  }
+  
+  .section-title {
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+  
+  .subsection-title {
+    font-size: 13px;
+    margin-top: 20px;
+    margin-bottom: 10px;
   }
   
   .detail-grid {
     grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .field-label {
+    font-size: 12px;
+  }
+  
+  .field-value {
+    font-size: 13px;
+  }
+  
+  .section-divider {
+    margin: 16px 0;
+  }
+  
+  .section-divider.heavy {
+    margin: 16px 0;
+  }
+  
+  /* Back to Top Mobile */
+  .back-to-top {
+    bottom: 20px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+  }
+  
+  .back-to-top svg {
+    width: 20px;
+    height: 20px;
   }
 }

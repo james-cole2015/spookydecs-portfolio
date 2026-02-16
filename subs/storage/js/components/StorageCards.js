@@ -1,6 +1,7 @@
 /**
  * StorageCards Component
  * Responsive card grid view for storage units (desktop + mobile)
+ * UPDATED: Badge visible on mobile even when image is hidden
  */
 
 import { getPackedLabel } from '../utils/storage-config.js';
@@ -58,6 +59,9 @@ export class StorageCards {
     const packedLabel = unit.packed ? 'Packed' : 'Unpacked';
     
     card.innerHTML = `
+      <!-- Badge positioned on card for mobile visibility -->
+      <span class="card-badge card-badge-${packedStatus}">${packedLabel}</span>
+      
       <div class="card-image-container">
         ${imageUrl ? `
           <img src="${imageUrl}" alt="${unit.short_name}" class="card-image">
@@ -70,7 +74,6 @@ export class StorageCards {
             </svg>
           </div>
         `}
-        <span class="card-badge card-badge-${packedStatus}">${packedLabel}</span>
       </div>
       
       <div class="card-content">

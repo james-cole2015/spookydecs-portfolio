@@ -1,5 +1,5 @@
 // TabBar Component
-// Sticky tab navigation with scroll indicators
+// Sticky tab navigation with scroll indicators and SVG chevron arrows
 
 export class TabBar {
   constructor(containerId, tabs, onTabChange) {
@@ -16,8 +16,10 @@ export class TabBar {
     this.container.innerHTML = `
       <div class="tab-bar-wrapper">
         <div class="tab-bar-container" id="tab-bar-container">
-          <button class="tab-scroll-arrow tab-scroll-left hidden" id="scroll-left">
-            ←
+          <button class="tab-scroll-arrow tab-scroll-left hidden" id="scroll-left" aria-label="Scroll left">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
           </button>
           
           <div class="tab-bar-scroll" id="tab-bar-scroll">
@@ -34,8 +36,10 @@ export class TabBar {
             </div>
           </div>
           
-          <button class="tab-scroll-arrow tab-scroll-right hidden" id="scroll-right">
-            →
+          <button class="tab-scroll-arrow tab-scroll-right hidden" id="scroll-right" aria-label="Scroll right">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M7.5 15L12.5 10L7.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
           </button>
         </div>
       </div>

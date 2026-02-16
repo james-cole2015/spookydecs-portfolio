@@ -8,7 +8,7 @@ import {
   getRelatedIdConfig,
   getCategoriesForCostType
 } from '../utils/finance-config.js';
-import { getItems, getApiEndpoint } from '../utils/finance-api.js';
+import { getItems } from '../utils/finance-api.js';
 import { CostFormRenderers } from './CostFormRenderers.js';
 
 export class CostFormFields {
@@ -54,27 +54,19 @@ export class CostFormFields {
       }
 
       const json = await response.json();
-      
-      // Unwrap success_response if present
       const data = (json && typeof json === 'object' && 'data' in json) ? json.data : json;
       
-      // Handle different response structures
       let items = [];
       if (endpoint.includes('/items')) {
-        // Try multiple possible response structures
         items = data.items || data || [];
         
-        // Ensure items is actually an array
         if (!Array.isArray(items)) {
           console.error('Expected items array but got:', typeof items, items);
           return [];
         }
         
-        // Filter by class if classFilter is specified
         if (config.classFilter && config.classFilter.length > 0) {
-          items = items.filter(item => 
-            config.classFilter.includes(item.class)
-          );
+          items = items.filter(item => config.classFilter.includes(item.class));
         }
         
         return items;
@@ -94,11 +86,9 @@ export class CostFormFields {
   }
 
   handleReceiptData(extractedData, extractionId, imageId) {
-    // Store extraction and image IDs for audit tracking
     this.currentExtractionId = extractionId;
     this.currentImageId = imageId;
     
-    // Populate form with extracted data, preserving existing context
     this.formData = {
       ...this.formData,
       vendor: extractedData.vendor || this.formData.vendor || '',
@@ -112,14 +102,13 @@ export class CostFormFields {
       cost_type: extractedData.cost_type || this.formData.cost_type || '',
       category: extractedData.category || this.formData.category || '',
       subcategory: extractedData.subcategory || this.formData.subcategory || '',
-      is_gift: extractedData.is_gift || this.formData.is_gift || false
+      is_gift: extractedData.is_gift || this.formData.is_gift || false,
+      // Receipt was uploaded so no_receipt should be false; preserve existing if already set
+      no_receipt: false
     };
     
-    // Re-render form with new data
     this.render();
     
-    // Programmatically set dropdown values after DOM is ready
-    // This fixes the issue where selected attributes don't visually update
     setTimeout(() => {
       const costTypeSelect = document.getElementById('cost_type');
       const categorySelect = document.getElementById('category');
@@ -128,7 +117,6 @@ export class CostFormFields {
       
       if (costTypeSelect && this.formData.cost_type) {
         costTypeSelect.value = this.formData.cost_type;
-        // Trigger change event to ensure category dropdown updates
         costTypeSelect.dispatchEvent(new Event('change', { bubbles: true }));
       }
       
@@ -137,14 +125,12 @@ export class CostFormFields {
         isGiftCheckbox.dispatchEvent(new Event('change', { bubbles: true }));
       }
       
-      // Set category after a brief delay to ensure options are rendered
       setTimeout(() => {
         if (categorySelect && this.formData.category) {
           categorySelect.value = this.formData.category;
           categorySelect.dispatchEvent(new Event('change', { bubbles: true }));
         }
         
-        // Set subcategory if present
         setTimeout(() => {
           if (subcategorySelect && this.formData.subcategory) {
             subcategorySelect.value = this.formData.subcategory;
@@ -158,13 +144,16 @@ export class CostFormFields {
       imageId,
       cost_type: this.formData.cost_type,
       category: this.formData.category,
-      is_gift: this.formData.is_gift
+      is_gift: this.formData.is_gift,
+      no_receipt: this.formData.no_receipt
     });
   }
 
   render() {
     const isEditing = !!this.formData.cost_id;
     const isGift = this.formData.is_gift === true || this.formData.is_gift === 'true';
+    // Treat missing no_receipt as false for existing records
+    const noReceipt = this.formData.no_receipt === true || this.formData.no_receipt === 'true';
 
     this.container.innerHTML = `
       <div class="form-header">
@@ -173,6 +162,23 @@ export class CostFormFields {
 
       <form class="cost-form" id="cost-form">
         ${CostFormRenderers.renderManualEntry(this.formData, this.errors, isGift)}
+
+        <div class="form-section">
+          <h3 class="form-section-title">Receipt</h3>
+          <div class="form-field checkbox-field">
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                id="no_receipt"
+                name="no_receipt"
+                ${noReceipt ? 'checked' : ''}
+              />
+              <span>No receipt available</span>
+            </label>
+            <p class="field-hint">Check this if the receipt was lost, never issued, or this was a gift.</p>
+          </div>
+        </div>
+
         ${CostFormRenderers.renderFormActions(isEditing)}
       </form>
     `;
@@ -183,13 +189,11 @@ export class CostFormFields {
   attachListeners() {
     const form = this.container.querySelector('#cost-form');
     
-    // Form submission
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       this.handleSubmit();
     });
 
-    // Cancel button
     const cancelBtn = this.container.querySelector('#cancel-btn');
     if (cancelBtn) {
       cancelBtn.addEventListener('click', () => {
@@ -199,49 +203,50 @@ export class CostFormFields {
       });
     }
 
-    // Gift checkbox change
+    // Gift checkbox
     const isGiftCheckbox = this.container.querySelector('#is_gift');
     if (isGiftCheckbox) {
       isGiftCheckbox.addEventListener('change', (e) => {
         this.formData.is_gift = e.target.checked;
-        console.log('Gift checkbox changed:', this.formData.is_gift);
         this.render();
       });
     }
 
-    // Cost type change (to update categories)
+    // No receipt checkbox
+    const noReceiptCheckbox = this.container.querySelector('#no_receipt');
+    if (noReceiptCheckbox) {
+      noReceiptCheckbox.addEventListener('change', (e) => {
+        this.formData.no_receipt = e.target.checked;
+      });
+    }
+
+    // Cost type change
     const costTypeSelect = this.container.querySelector('#cost_type');
     if (costTypeSelect) {
       costTypeSelect.addEventListener('change', (e) => {
         const oldCostType = this.formData.cost_type;
         this.formData.cost_type = e.target.value;
-        
-        // Only reset category if cost type actually changed
         if (oldCostType !== e.target.value) {
           this.formData.category = '';
         }
-        
         this.render();
       });
     }
 
-    // Category change (to update subcategory)
+    // Category change
     const categorySelect = this.container.querySelector('#category');
     if (categorySelect) {
       categorySelect.addEventListener('change', (e) => {
         const oldCategory = this.formData.category;
         this.formData.category = e.target.value;
-        
-        // Only reset subcategory if category actually changed
         if (oldCategory !== e.target.value) {
           this.formData.subcategory = '';
         }
-        
         this.render();
       });
     }
 
-    // Auto-calculate total cost from unit cost and quantity (for non-gifts)
+    // Auto-calculate total cost
     const quantityInput = this.container.querySelector('#quantity');
     const unitCostInput = this.container.querySelector('#unit_cost');
     const totalCostInput = this.container.querySelector('#total_cost');
@@ -250,43 +255,33 @@ export class CostFormFields {
       const updateTotal = () => {
         const isGift = this.formData.is_gift === true || this.formData.is_gift === 'true';
         if (isGift) return;
-        
         const quantity = quantityInput.value || 1;
         const unitCost = unitCostInput.value || 0;
         totalCostInput.value = calculateTotalCost(unitCost, quantity);
         this.formData.total_cost = totalCostInput.value;
         this.updateValue();
       };
-
       quantityInput.addEventListener('input', updateTotal);
       unitCostInput.addEventListener('input', updateTotal);
     }
 
-    // Auto-calculate value when total cost changes (for non-gifts)
     if (totalCostInput) {
       totalCostInput.addEventListener('input', () => {
         this.formData.total_cost = totalCostInput.value;
         const isGift = this.formData.is_gift === true || this.formData.is_gift === 'true';
-        if (!isGift) {
-          this.updateValue();
-        }
+        if (!isGift) this.updateValue();
       });
     }
 
-    // Update value when tax changes (for non-gifts)
     const taxInput = this.container.querySelector('#tax');
     if (taxInput) {
       taxInput.addEventListener('input', () => {
         this.formData.tax = taxInput.value;
         const isGift = this.formData.is_gift === true || this.formData.is_gift === 'true';
-        if (!isGift) {
-          this.updateValue();
-        }
+        if (!isGift) this.updateValue();
       });
     }
 
-    // For gifts, value is manually entered (not calculated)
-    // For non-gifts, value is auto-calculated
     const valueInput = this.container.querySelector('#value');
     if (valueInput) {
       valueInput.addEventListener('input', () => {
@@ -294,10 +289,8 @@ export class CostFormFields {
       });
     }
 
-    // Related field search
     this.attachRelatedSearch();
 
-    // Track all form changes
     form.addEventListener('input', (e) => {
       if (e.target.name && e.target.type !== 'checkbox') {
         this.formData[e.target.name] = e.target.value;
@@ -309,16 +302,10 @@ export class CostFormFields {
     const valueInput = this.container.querySelector('#value');
     if (!valueInput) return;
 
-    // Only auto-calculate for non-gifts
     const isGift = this.formData.is_gift === true || this.formData.is_gift === 'true';
     if (isGift) return;
 
-    const value = calculateValue(
-      isGift,
-      this.formData.total_cost,
-      this.formData.tax
-    );
-
+    const value = calculateValue(isGift, this.formData.total_cost, this.formData.tax);
     valueInput.value = value.toFixed(2);
     this.formData.value = value;
   }
@@ -336,7 +323,6 @@ export class CostFormFields {
 
     const relatedData = await this.loadRelatedData(this.formData.cost_type);
 
-    // Clear button
     if (clearBtn) {
       clearBtn.addEventListener('click', () => {
         searchInput.value = '';
@@ -346,23 +332,19 @@ export class CostFormFields {
       });
     }
 
-    // Search input
     searchInput.addEventListener('input', (e) => {
       const query = e.target.value.toLowerCase();
       if (!query) {
         dropdown.classList.remove('visible');
         return;
       }
-
       const filtered = relatedData.filter(item => 
         config.searchFields.some(field => item[field]?.toLowerCase().includes(query))
       );
-
       dropdown.innerHTML = this.buildDropdownOptions(filtered, config);
       dropdown.classList.add('visible');
     });
 
-    // Selection
     dropdown.addEventListener('click', (e) => {
       const option = e.target.closest('.related-option');
       if (option?.dataset.id) {
@@ -372,7 +354,6 @@ export class CostFormFields {
       }
     });
 
-    // Close on outside click
     document.addEventListener('click', (e) => {
       if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
         dropdown.classList.remove('visible');
@@ -382,7 +363,6 @@ export class CostFormFields {
 
   buildDropdownOptions(filtered, config) {
     if (filtered.length === 0) return '<div class="related-option">No results found</div>';
-
     return filtered.slice(0, 10).map(item => {
       const { primaryField, secondaryField, idField } = this.getDisplayFields(item, config);
       return `
@@ -416,8 +396,6 @@ export class CostFormFields {
       searchInput.value = primaryField;
       hiddenInput.value = selectedId;
       this.formData[config.field] = selectedId;
-
-      // Extract item_id from maintenance record
       if (config.endpoint.includes('/maintenance-records') && selectedItem.item_id) {
         this.formData.related_item_id = selectedItem.item_id;
       }
@@ -425,26 +403,26 @@ export class CostFormFields {
   }
 
   handleSubmit() {
-    // Collect current form values
     const form = this.container.querySelector('#cost-form');
     if (form) {
       const formData = new FormData(form);
       for (let [key, value] of formData.entries()) {
-        if (key === 'is_gift') {
-          // Checkbox: if present in FormData, it's checked
+        if (key === 'is_gift' || key === 'no_receipt') {
           this.formData[key] = true;
         } else if (value) {
           this.formData[key] = value;
         }
       }
       
-      // If checkbox not in FormData, it's unchecked
+      // Unchecked checkboxes are absent from FormData
       if (!formData.has('is_gift')) {
         this.formData.is_gift = false;
       }
+      if (!formData.has('no_receipt')) {
+        this.formData.no_receipt = false;
+      }
     }
     
-    // Validate form
     const validation = validateCostRecord(this.formData);
     
     if (!validation.isValid) {
@@ -453,10 +431,8 @@ export class CostFormFields {
       return;
     }
 
-    // Clear errors
     this.errors = {};
 
-    // Trigger submit callback with extraction and image IDs
     if (this.onSubmit) {
       this.onSubmit(this.formData, this.currentExtractionId, this.currentImageId);
     }

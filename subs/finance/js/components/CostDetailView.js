@@ -8,36 +8,26 @@ export class CostDetailView {
   constructor(costData) {
     this.costData = costData;
     this.receiptImageData = null;
-    this.detailsExpanded = false; // Default collapsed on mobile
+    this.detailsExpanded = false;
   }
 
   async render(container) {
     console.log('🎨 Rendering CostDetailView');
-    
-    // Load receipt image if available
     await this.loadReceiptImage();
-    
     container.innerHTML = this.getHTML();
     this.attachEventListeners();
   }
 
   async loadReceiptImage() {
     console.log('🔍 loadReceiptImage called');
-    console.log('📦 Full costData:', this.costData);
-    console.log('🧾 receipt_data:', this.costData.receipt_data);
     
-    // Check if receipt_data exists in the cost record
     if (!this.costData.receipt_data) {
       console.log('❌ No receipt_data found in cost record');
       return;
     }
     
-    // Use the receipt_data directly - no API call needed!
     const receiptData = this.costData.receipt_data;
     
-    console.log('✅ Using receipt_data from cost record:', receiptData);
-    
-    // Store it in the same format the component expects
     this.receiptImageData = {
       thumbnail_url: receiptData.thumbnail_url,
       cloudfront_url: receiptData.cloudfront_url,
@@ -58,6 +48,8 @@ export class CostDetailView {
     });
 
     const hasReceipt = cost.receipt_data?.image_id || cost.receipt_data?.image_url;
+    // Treat missing no_receipt as false for existing records
+    const noReceipt = cost.no_receipt === true;
 
     return `
       <div class="cost-detail-page">
@@ -94,7 +86,7 @@ export class CostDetailView {
 
         ${this.renderRelatedLinks(cost)}
         
-        <!-- Description Section (moved to top) -->
+        <!-- Description Section -->
         ${cost.description || cost.notes ? `
           <div class="description-section">
             ${cost.description ? `<div class="description-block"><h3>Description</h3><p>${cost.description}</p></div>` : ''}
@@ -102,7 +94,7 @@ export class CostDetailView {
           </div>
         ` : ''}
 
-        <!-- Cost Details Section (collapsible on mobile) -->
+        <!-- Cost Details Section -->
         <div class="cost-details-section">
           <div class="details-header" data-action="toggle-details">
             <h2>💰 Cost Details</h2>
@@ -125,6 +117,18 @@ export class CostDetailView {
               ${cost.tax > 0 ? `<div class="detail-row"><span class="detail-label">Tax</span><span class="detail-value">$${parseFloat(cost.tax).toFixed(2)}</span></div>` : ''}
               <div class="detail-row highlight"><span class="detail-label">Total Cost</span><span class="detail-value">$${parseFloat(cost.total_cost).toFixed(2)}</span></div>
               <div class="detail-row"><span class="detail-label">Item Value</span><span class="detail-value">$${parseFloat(cost.value || cost.total_cost).toFixed(2)}</span></div>
+              <div class="detail-divider"></div>
+              <div class="detail-row">
+                <span class="detail-label">Receipt</span>
+                <span class="detail-value">
+                  ${noReceipt
+                    ? `<span class="badge badge-warning">No Receipt</span>`
+                    : hasReceipt
+                      ? `<span class="badge badge-success">On File</span>`
+                      : `<span class="badge badge-muted">Not Uploaded</span>`
+                  }
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -152,17 +156,33 @@ export class CostDetailView {
   }
 
   formatCostType(type) {
-    const typeMap = { 'acquisition': 'Purchase', 'repair': 'Repair', 'maintenance': 'Maintenance', 'build': 'Build', 'supply_purchase': 'Supply Purchase', 'gift': 'Gift', 'other': 'Other' };
+    const typeMap = {
+      'acquisition': 'Purchase',
+      'repair': 'Repair',
+      'maintenance': 'Maintenance',
+      'build': 'Build',
+      'supply_purchase': 'Supply Purchase',
+      'gift': 'Gift',
+      'other': 'Other'
+    };
     return typeMap[type] || type;
   }
 
   formatCategory(category) {
-    const categoryMap = { 'materials': 'Materials', 'labor': 'Labor', 'parts': 'Parts', 'consumables': 'Consumables', 'decoration': 'Decoration', 'light': 'Light', 'accessory': 'Accessory', 'other': 'Other' };
+    const categoryMap = {
+      'materials': 'Materials',
+      'labor': 'Labor',
+      'parts': 'Parts',
+      'consumables': 'Consumables',
+      'decoration': 'Decoration',
+      'light': 'Light',
+      'accessory': 'Accessory',
+      'other': 'Other'
+    };
     return categoryMap[category] || category;
   }
 
   attachEventListeners() {
-    // Breadcrumb navigation
     document.querySelectorAll('.breadcrumb-link').forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
@@ -170,7 +190,6 @@ export class CostDetailView {
       });
     });
 
-    // Related links - prevent default and navigate
     document.querySelectorAll('[data-navigate]').forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
@@ -179,7 +198,6 @@ export class CostDetailView {
       });
     });
 
-    // View Receipt button
     document.querySelectorAll('[data-action="view-receipt"]').forEach(btn => {
       btn.addEventListener('click', () => {
         if (this.costData.receipt_data?.cloudfront_url) {
@@ -190,7 +208,6 @@ export class CostDetailView {
       });
     });
 
-    // Edit button
     document.querySelectorAll('[data-action="edit"]').forEach(btn => 
       btn.addEventListener('click', () => {
         console.log('Edit cost clicked');
@@ -198,17 +215,14 @@ export class CostDetailView {
       })
     );
 
-    // Delete button
     document.querySelectorAll('[data-action="delete"]').forEach(btn => 
       btn.addEventListener('click', () => this.handleDelete())
     );
 
-    // Toggle details (mobile collapsible)
     document.querySelectorAll('[data-action="toggle-details"]').forEach(header => {
       header.addEventListener('click', () => {
         const section = header.closest('.cost-details-section');
         this.detailsExpanded = !this.detailsExpanded;
-        
         if (this.detailsExpanded) {
           section.classList.add('expanded');
         } else {
@@ -217,7 +231,6 @@ export class CostDetailView {
       });
     });
 
-    // Check if mobile on load and set default state
     if (window.innerWidth < 768) {
       const section = document.querySelector('.cost-details-section');
       if (section && !this.detailsExpanded) {
