@@ -136,7 +136,7 @@ async handleItemUpdate(updatedItem) {
     // Re-fetch after photo upload (no updated item passed)
     this.item = await fetchItemById(this.item.id, true);
   }
-
+ a
   this.editForm.render(this.item);
   actionCenter.render(this.item, (item) => {
     this.handleItemUpdate(item);
