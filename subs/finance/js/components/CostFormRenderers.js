@@ -236,16 +236,18 @@ export class CostFormRenderers {
           <label class="form-label ${isRequired ? 'required' : ''}" for="${fieldName}">
             ${config.label} ${isRequired ? '' : '(Optional)'}
           </label>
-          <div class="related-input-wrapper">
-            <input
-              type="text"
-              id="related_search"
-              class="form-input related-search-input ${error ? 'error' : ''}"
-              placeholder="Search..."
-              autocomplete="off"
-            />
-            ${value ? `<button type="button" class="clear-related-btn" id="clear-related-btn" title="Clear selection">×</button>` : ''}
-          </div>
+<div class="related-input-wrapper">
+  <input
+    type="text"
+    id="related_search"
+    class="form-input related-search-input ${error ? 'error' : ''}"
+    placeholder="Search..."
+    autocomplete="off"
+  />
+  ${value ? `<button type="button" class="clear-related-btn" id="clear-related-btn" title="Clear selection">×</button>` : ''}
+  <input type="hidden" id="${fieldName}" name="${fieldName}" value="${value}" />
+  <div class="related-dropdown" id="related-dropdown"></div>
+</div>
           <input type="hidden" id="${fieldName}" name="${fieldName}" value="${value}" />
           <div class="related-dropdown" id="related-dropdown"></div>
           ${value ? `<span class="form-hint">Selected: ${value}</span>` : ''}
