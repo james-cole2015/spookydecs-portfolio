@@ -45,7 +45,7 @@ export class CostFormFields {
     if (!config) return [];
 
     try {
-      const apiEndpoint = await getApiEndpoint();
+      const { API_ENDPOINT: apiEndpoint } = await window.SpookyConfig.get();
       const endpoint = config.endpoint;
       const response = await fetch(`${apiEndpoint}${endpoint}`);
       
