@@ -1,16 +1,19 @@
 // Item Detail Page
-// Single-page scrollable layout with quick navigation and back-to-top
+// Single-page with section-based editing and action drawer
 
-import { fetchItemById } from '../api/items.js';
+import { fetchItemById, updateItem } from '../api/items.js';
 import { getMaintenanceRecords, getMaintenancePageUrl } from '../api/maintenance.js';
 import { navigate } from '../utils/router.js';
 import { toast } from '../shared/toast.js';
 import { getStatusColor, getClassIcon, getSeasonIcon } from '../utils/item-config.js';
+import { actionDrawer } from '../components/ActionDrawer.js';
+import { EditableSection } from '../components/EditableSection.js';
 
 class ItemDetailPage {
   constructor() {
     this.item = null;
     this.maintenanceRecords = [];
+    this.editingSection = null; // Currently editing section instance
   }
   
   async render(itemId) {
@@ -20,7 +23,7 @@ class ItemDetailPage {
       // Fetch item data
       this.item = await fetchItemById(itemId, true);
       
-      // Fetch maintenance records (get all, not just 5)
+      // Fetch maintenance records
       try {
         this.maintenanceRecords = await getMaintenanceRecords(itemId, 100);
       } catch (error) {
@@ -31,8 +34,14 @@ class ItemDetailPage {
       // Render page
       this.renderPage();
       
+      // Initialize action drawer
+      actionDrawer.init(this.item, () => this.handleItemUpdate());
+      
       // Initialize scroll behaviors
       this.initScrollBehaviors();
+      
+      // Attach click handlers for editable fields
+      this.attachEditHandlers();
       
       this.hideLoading();
     } catch (error) {
@@ -58,19 +67,18 @@ class ItemDetailPage {
       .sort((a, b) => {
         const dateA = new Date(a.date_performed || a.created_at);
         const dateB = new Date(b.date_performed || b.created_at);
-        return dateB - dateA; // Most recent first
+        return dateB - dateA;
       })
-      .slice(0, 5); // Limit to 5 most recent
+      .slice(0, 5);
   }
   
   /**
-   * Get scheduled maintenance records from generation_history (for Upcoming Maintenance section)
+   * Get scheduled maintenance records from generation_history
    */
   getUpcomingMaintenance() {
     const history = this.item.maintenance?.generation_history || [];
     const now = new Date();
 
-    // Filter for future due dates, sort by date, limit to 2
     const upcoming = history
       .filter(entry => {
         const dueDate = new Date(entry.due_date);
@@ -122,10 +130,6 @@ class ItemDetailPage {
                 </div>
               </div>
             </div>
-            
-            <button class="btn-primary" onclick="itemDetailPage.handleEdit()">
-              Edit
-            </button>
           </div>
         </div>
         
@@ -157,21 +161,21 @@ class ItemDetailPage {
   renderAllSections() {
     return `
       <!-- Overview Section -->
-      <section id="overview" class="detail-section-card">
+      <section id="overview" class="detail-section-card" data-section-type="overview">
         ${this.renderOverviewSection()}
       </section>
       
       <div class="section-divider heavy"></div>
       
       <!-- Storage Section -->
-      <section id="storage" class="detail-section-card">
+      <section id="storage" class="detail-section-card" data-section-type="storage">
         ${this.renderStorageSection()}
       </section>
       
       <div class="section-divider heavy"></div>
       
       <!-- Deployment Section -->
-      <section id="deployment" class="detail-section-card">
+      <section id="deployment" class="detail-section-card" data-section-type="deployment">
         ${this.renderDeploymentSection()}
       </section>
       
@@ -203,13 +207,14 @@ class ItemDetailPage {
       badges.push('<span class="item-badge badge-active">Active</span>');
     } else if (this.item.status === 'Packed') {
       badges.push('<span class="item-badge badge-packed">Packed</span>');
+    } else if (this.item.status === 'Retired') {
+      badges.push('<span class="item-badge badge-retired">Retired</span>');
     }
     
     if (this.item.repair_status?.needs_repair) {
       badges.push('<span class="item-badge badge-repair">Needs Repair</span>');
     }
     
-    // Add in-progress link
     if (inProgressRecords.length > 0) {
       const recordText = inProgressRecords.length === 1 ? 'record' : 'records';
       badges.push(`
@@ -223,40 +228,37 @@ class ItemDetailPage {
   }
   
   renderOverviewSection() {
-    // Collect all fields to display
     const fields = [];
     
-    // Add class-specific fields
-    if (this.item.height_length) fields.push({ label: 'Dimensions', value: `${this.item.height_length} ft` });
-    if (this.item.stakes) fields.push({ label: 'Stakes', value: this.item.stakes });
-    if (this.item.tethers) fields.push({ label: 'Tethers', value: this.item.tethers });
-    if (this.item.color) fields.push({ label: 'Color', value: this.item.color });
-    if (this.item.bulb_type) fields.push({ label: 'Bulb Type', value: this.item.bulb_type });
-    if (this.item.length) fields.push({ label: 'Length', value: `${this.item.length} ft` });
-    if (this.item.male_ends) fields.push({ label: 'Male Ends', value: this.item.male_ends });
-    if (this.item.female_ends) fields.push({ label: 'Female Ends', value: this.item.female_ends });
-    if (this.item.watts) fields.push({ label: 'Watts', value: this.item.watts });
-    if (this.item.amps) fields.push({ label: 'Amps', value: this.item.amps });
+    if (this.item.height_length) fields.push({ label: 'Dimensions', value: `${this.item.height_length} ft`, key: 'height_length' });
+    if (this.item.stakes) fields.push({ label: 'Stakes', value: this.item.stakes, key: 'stakes' });
+    if (this.item.tethers) fields.push({ label: 'Tethers', value: this.item.tethers, key: 'tethers' });
+    if (this.item.color) fields.push({ label: 'Color', value: this.item.color, key: 'color' });
+    if (this.item.bulb_type) fields.push({ label: 'Bulb Type', value: this.item.bulb_type, key: 'bulb_type' });
+    if (this.item.length) fields.push({ label: 'Length', value: `${this.item.length} ft`, key: 'length' });
+    if (this.item.male_ends) fields.push({ label: 'Male Ends', value: this.item.male_ends, key: 'male_ends' });
+    if (this.item.female_ends) fields.push({ label: 'Female Ends', value: this.item.female_ends, key: 'female_ends' });
+    if (this.item.watts) fields.push({ label: 'Watts', value: this.item.watts, key: 'watts' });
+    if (this.item.amps) fields.push({ label: 'Amps', value: this.item.amps, key: 'amps' });
     
-    // Power inlet
-    fields.push({ label: 'Power Required', value: this.item.power_inlet ? 'Yes' : 'No' });
+    fields.push({ label: 'Power Required', value: this.item.power_inlet ? 'Yes' : 'No', key: 'power_inlet' });
     
     return `
       <div class="detail-section">
         <h2 class="section-title">Overview</h2>
         <div class="detail-grid">
           ${fields.map(field => `
-            <div class="detail-field">
+            <div class="detail-field" data-field-key="${field.key}">
               <div class="field-label">${field.label}</div>
-              <div class="field-value">${this.escapeHtml(String(field.value))}</div>
+              <div class="field-value editable-value" data-section="overview">${this.escapeHtml(String(field.value))}</div>
             </div>
           `).join('')}
         </div>
         
         ${this.item.general_notes ? `
-          <div class="detail-field full-width">
+          <div class="detail-field full-width" data-field-key="general_notes">
             <div class="field-label">Notes</div>
-            <div class="field-value">${this.escapeHtml(this.item.general_notes)}</div>
+            <div class="field-value editable-value" data-section="overview">${this.escapeHtml(this.item.general_notes)}</div>
           </div>
         ` : ''}
       </div>
@@ -268,9 +270,9 @@ class ItemDetailPage {
       <div class="detail-section">
         <h2 class="section-title">Storage</h2>
         <div class="detail-grid">
-          ${this.renderField('Status', this.item.packing_data?.packing_status ? 'Packed' : 'Not Packed')}
-          ${this.item.packing_data?.tote_id ? this.renderField('Tote', this.item.packing_data.tote_id) : ''}
-          ${this.item.packing_data?.tote_location ? this.renderField('Location', this.item.packing_data.tote_location) : ''}
+          ${this.renderField('Status', this.item.packing_data?.packing_status ? 'Packed' : 'Not Packed', 'packing_status', 'storage')}
+          ${this.item.packing_data?.tote_id ? this.renderField('Tote', this.item.packing_data.tote_id, 'tote_id', 'storage') : ''}
+          ${this.item.packing_data?.tote_location ? this.renderField('Location', this.item.packing_data.tote_location, 'tote_location', 'storage') : ''}
         </div>
       </div>
     `;
@@ -408,7 +410,6 @@ class ItemDetailPage {
   
   renderMaintenanceRecords(records) {
     return records.map(record => {
-      // Use date_performed if available, otherwise fall back to date_scheduled or created_at
       const displayDate = record.date_performed || record.date_scheduled || record.created_at;
       
       return `
@@ -455,19 +456,162 @@ class ItemDetailPage {
     `;
   }
   
-  renderField(label, value) {
+  renderField(label, value, key = null, section = null) {
     if (value === null || value === undefined || value === '') return '';
     
+    const editableClass = section ? 'editable-value' : '';
+    const dataAttrs = section ? `data-section="${section}"` : '';
+    
     return `
-      <div class="detail-field">
+      <div class="detail-field" ${key ? `data-field-key="${key}"` : ''}>
         <div class="field-label">${label}</div>
-        <div class="field-value">${this.escapeHtml(String(value))}</div>
+        <div class="field-value ${editableClass}" ${dataAttrs}>${this.escapeHtml(String(value))}</div>
       </div>
     `;
   }
   
+  /**
+   * Attach click handlers to editable fields
+   */
+  attachEditHandlers() {
+    document.querySelectorAll('.editable-value').forEach(field => {
+      field.addEventListener('click', (e) => {
+        const sectionType = e.target.dataset.section;
+        if (sectionType && !this.editingSection) {
+          this.handleFieldClick(sectionType);
+        }
+      });
+    });
+  }
+  
+  /**
+   * Handle click on editable field - enter edit mode for section
+   */
+  handleFieldClick(sectionType) {
+    const sectionId = sectionType; // 'overview', 'storage', etc.
+    
+    // Create EditableSection instance
+    this.editingSection = new EditableSection(sectionId, sectionType, this.item);
+    
+    // Enter edit mode
+    this.editingSection.enterEditMode();
+    
+    // Attach save/cancel handlers
+    this.attachStickyFooterHandlers();
+  }
+  
+  /**
+   * Attach handlers to sticky footer buttons
+   */
+  attachStickyFooterHandlers() {
+    const saveBtn = document.getElementById('save-edit-btn');
+    const cancelBtn = document.getElementById('cancel-edit-btn');
+    
+    if (saveBtn) {
+      saveBtn.addEventListener('click', () => this.handleSaveSection());
+    }
+    
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', () => this.handleCancelSection());
+    }
+  }
+  
+  /**
+   * Save section changes
+   */
+  async handleSaveSection() {
+    if (!this.editingSection) return;
+    
+    // Validate
+    if (!this.editingSection.validate()) {
+      toast.error('Validation Failed', 'Please fix the errors in the form');
+      return;
+    }
+    
+    const loadingOverlay = document.getElementById('loading-overlay');
+    
+    try {
+      loadingOverlay?.classList.remove('hidden');
+      
+      // Get form data
+      const updateData = this.editingSection.exitEditMode(true);
+      
+      console.log('Saving section with data:', updateData);
+      
+      // Update item
+      const updatedItem = await updateItem(this.item.id, updateData);
+      
+      toast.success('Saved', 'Changes have been saved successfully');
+      
+      // Update local item
+      this.item = updatedItem;
+      
+      // Clear editing section
+      this.editingSection = null;
+      
+      // Re-render page
+      this.renderPage();
+      
+      // Re-initialize
+      actionDrawer.updateItem(this.item);
+      this.initScrollBehaviors();
+      this.attachEditHandlers();
+      
+      loadingOverlay?.classList.add('hidden');
+      
+    } catch (error) {
+      console.error('Error saving section:', error);
+      loadingOverlay?.classList.add('hidden');
+      toast.error('Save Failed', error.message || 'Could not save changes');
+    }
+  }
+  
+  /**
+   * Cancel section editing
+   */
+  handleCancelSection() {
+    if (!this.editingSection) return;
+    
+    // Exit edit mode without saving
+    this.editingSection.exitEditMode(false);
+    
+    // Clear editing section
+    this.editingSection = null;
+    
+    // Re-render page
+    this.renderPage();
+    
+    // Re-initialize
+    actionDrawer.updateItem(this.item);
+    this.initScrollBehaviors();
+    this.attachEditHandlers();
+    
+    toast.info('Cancelled', 'Changes have been discarded');
+  }
+  
+  /**
+   * Handle item update from action drawer (e.g., photo upload, retire)
+   */
+  async handleItemUpdate() {
+    try {
+      // Re-fetch item
+      this.item = await fetchItemById(this.item.id, true);
+      
+      // Re-render page
+      this.renderPage();
+      
+      // Re-initialize
+      actionDrawer.updateItem(this.item);
+      this.initScrollBehaviors();
+      this.attachEditHandlers();
+      
+    } catch (error) {
+      console.error('Error refreshing item:', error);
+      toast.error('Refresh Failed', 'Could not reload item data');
+    }
+  }
+  
   initScrollBehaviors() {
-    // Show/hide back to top button based on scroll position
     const backToTopBtn = document.getElementById('back-to-top');
     
     const handleScroll = () => {
@@ -479,7 +623,7 @@ class ItemDetailPage {
     };
     
     window.addEventListener('scroll', handleScroll);
-    handleScroll(); // Initial check
+    handleScroll();
   }
   
   scrollToSection(event, sectionId) {
@@ -487,17 +631,12 @@ class ItemDetailPage {
     const section = document.getElementById(sectionId);
     if (section) {
       section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      // Update URL hash without jumping
       history.pushState(null, null, `#${sectionId}`);
     }
   }
   
   scrollToTop() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-  
-  handleEdit() {
-    navigate(`/${this.item.id}/edit`);
   }
   
   async handleViewAllMaintenance() {
@@ -511,7 +650,6 @@ class ItemDetailPage {
   }
   
   getPhotoUrl() {
-    // Return cloudfront_url if resolved
     if (this.item.images?.cloudfront_url) {
       return this.item.images.cloudfront_url;
     }
