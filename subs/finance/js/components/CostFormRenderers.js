@@ -24,7 +24,8 @@ export class CostFormRenderers {
       </div>
 
       <div class="form-section">
-        ${this.renderField('vendor', 'Vendor', 'text', true, formData, errors)}
+        ${this.renderField('vendor', 'Store', 'text', true, formData, errors)}
+        ${formData.cost_type === 'acquisition' ? this.renderField('manufacturer', 'Manufacturer', 'text', true, formData, errors) : ''}
         ${this.renderField('purchase_date', 'Purchase Date', 'date', false, formData, errors)}
       </div>
 

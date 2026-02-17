@@ -146,6 +146,13 @@ export function validateCostRecord(record) {
     }
   });
 
+  // Manufacturer is required for acquisitions
+  if (record.cost_type === 'acquisition') {
+    if (!record.manufacturer || record.manufacturer.toString().trim() === '') {
+      errors.manufacturer = 'Manufacturer is required for acquisitions';
+    }
+  }
+
   // Get is_gift flag (defaults to false)
   const isGift = record.is_gift === true || record.is_gift === 'true';
 
