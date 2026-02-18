@@ -8,7 +8,8 @@ export class TabBar {
     this.tabs = [
       { id: 'records', label: 'Cost Records' },
       { id: 'receipts', label: 'Receipts' },
-      { id: 'stats', label: 'Statistics' }
+      { id: 'stats', label: 'Statistics' },
+      { id: 'items', label: 'Items' }
     ];
     this.activeTab = 'records';
     this.render();

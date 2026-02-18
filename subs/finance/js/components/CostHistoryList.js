@@ -1,5 +1,7 @@
 // Cost History List Component
 
+import { navigateTo } from '../utils/router.js';
+
 export class CostHistoryList {
   constructor(costs, itemId) {
     this.costs = costs || [];
@@ -96,7 +98,7 @@ export class CostHistoryList {
     container.querySelectorAll('.cost-card').forEach(card => {
       card.addEventListener('click', (e) => {
         const costId = card.dataset.costId;
-        window.location.href = `/finance/costs/${costId}`;
+        navigateTo(`/costs/${costId}`);
       });
     });
   }

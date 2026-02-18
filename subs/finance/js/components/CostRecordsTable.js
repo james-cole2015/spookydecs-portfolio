@@ -2,6 +2,7 @@
 
 import { formatCurrency, formatDate } from '../utils/finance-config.js';
 import { stateManager } from '../utils/state.js';
+import { navigateTo } from '../utils/router.js';
 
 export class CostRecordsTable {
   constructor(containerId, data = [], onRowClick) {
@@ -381,7 +382,9 @@ export class CostRecordsTable {
       tableHTML += `
         <tr data-cost-id="${cost.cost_id}">
           <td><span class="cost-id">${cost.cost_id}</span></td>
-          <td><strong>${cost.item_name || 'N/A'}</strong></td>
+          <td>${cost.related_item_id
+            ? `<a class="item-name-link" href="#" data-item-id="${cost.related_item_id}"><strong>${cost.item_name || cost.related_item_id}</strong></a>`
+            : `<strong>${cost.item_name || 'N/A'}</strong>`}</td>
           <td><span class="cost-type-badge cost-type-${cost.cost_type}">${cost.cost_type.replace('_', ' ')}</span></td>
           <td><span class="category-badge">${cost.category}</span></td>
           <td><span class="cost-date">${formatDate(cost.cost_date)}</span></td>
@@ -417,7 +420,9 @@ export class CostRecordsTable {
         <div class="cost-card" data-cost-id="${cost.cost_id}">
           <div class="cost-card-header">
             <div>
-              <div class="cost-card-title">${cost.item_name || 'N/A'}</div>
+              <div class="cost-card-title">${cost.related_item_id
+                ? `<a class="item-name-link" href="#" data-item-id="${cost.related_item_id}">${cost.item_name || cost.related_item_id}</a>`
+                : (cost.item_name || 'N/A')}</div>
               <div class="cost-card-id">${cost.cost_id}</div>
             </div>
             <div class="cost-card-amount">${formatCurrency(cost.total_cost)}</div>
@@ -615,6 +620,14 @@ export class CostRecordsTable {
       row.addEventListener('click', () => {
         const costId = row.dataset.costId;
         if (this.onRowClick) this.onRowClick(costId);
+      });
+    });
+
+    this.container.querySelectorAll('.item-name-link').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        navigateTo(`/${e.currentTarget.dataset.itemId}`);
       });
     });
 

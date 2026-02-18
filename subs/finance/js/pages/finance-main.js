@@ -8,6 +8,7 @@ import { CostReviewModal } from '../components/CostReviewModal.js';
 import { StatsPanel } from '../components/StatsPanel.js';
 import { ReceiptsPage } from '../pages/receipts.js';
 import { getAllCosts, createCost, updateCost } from '../utils/finance-api.js';
+import { ItemsBrowsePage } from '../components/ItemsBrowsePage.js';
 import { toast } from '../shared/toast.js';
 import { stateManager } from '../utils/state.js';
 import { navigateTo } from '../utils/router.js';
@@ -22,6 +23,7 @@ export class FinanceMainPage {
     this.form = null;
     this.statsPanel = null;
     this.receiptsPage = null;
+    this.itemsBrowsePage = null;
     this.isLoading = false;
     this.backToTopBtn = null;
     
@@ -63,6 +65,8 @@ export class FinanceMainPage {
         this.statsPanel.loadStats();
       } else if (state.tab === 'receipts') {
         this.initReceiptsPage();
+      } else if (state.tab === 'items') {
+        this.initItemsPage();
       }
     });
 
@@ -148,6 +152,12 @@ export class FinanceMainPage {
     }
   }
 
+  initItemsPage() {
+    if (!this.itemsBrowsePage) {
+      this.itemsBrowsePage = new ItemsBrowsePage('items-container', this.costs);
+    }
+  }
+
   handleRowClick(costId) {
     // Navigate to the cost detail page using navigateTo
     navigateTo(`/costs/${costId}`);
@@ -190,6 +200,7 @@ export class FinanceMainPage {
       // Reload data
       await this.loadCosts();
       this.table.updateData(this.costs);
+      if (this.itemsBrowsePage) this.itemsBrowsePage.updateData(this.costs);
       this.form.reset();
       
       // Refresh stats if on stats tab
@@ -218,6 +229,7 @@ export class FinanceMainPage {
     // Reload data after delete
     await this.loadCosts();
     this.table.updateData(this.costs);
+    if (this.itemsBrowsePage) this.itemsBrowsePage.updateData(this.costs);
     
     // Refresh stats if on stats tab
     const state = stateManager.getState();

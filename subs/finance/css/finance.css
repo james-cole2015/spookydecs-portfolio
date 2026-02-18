@@ -308,6 +308,17 @@ body {
   font-size: 14px;
 }
 
+.item-name-link {
+  color: #3b82f6;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.item-name-link:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
 .cost-type-badge,
 .category-badge {
   display: inline-block;
