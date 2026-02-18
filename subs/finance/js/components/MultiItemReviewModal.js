@@ -1,8 +1,7 @@
 // Multi-Item Review Modal Component
 // Displays all extracted line items from receipt with inline editing
 
-import { formatCurrency, formatDate, COST_TYPES, getCategoriesForCostType, SUBCATEGORIES } from '../utils/finance-config.js';
-import { getItems } from '../utils/finance-api.js';
+import { formatCurrency, formatDate, COST_TYPES, getCategoriesForCostType, SUBCATEGORIES, getRelatedIdConfig } from '../utils/finance-config.js';
 
 export class MultiItemReviewModal {
   constructor() {
@@ -49,27 +48,25 @@ export class MultiItemReviewModal {
   async loadItemsCache() {
     try {
       console.log('🔄 Loading items cache...');
-      const response = await getItems({ status: 'Active' });
-      console.log('📦 Items API response:', response);
-      
-      // Handle different response formats
-      if (Array.isArray(response)) {
-        this.itemsCache = response;
-      } else if (response && response.data && Array.isArray(response.data)) {
-        this.itemsCache = response.data;
-      } else if (response && response.items && Array.isArray(response.items)) {
-        this.itemsCache = response.items;
-      } else {
-        console.warn('Unexpected response format:', response);
+      const { API_ENDPOINT: apiEndpoint } = await window.SpookyConfig.get();
+      const response = await fetch(`${apiEndpoint}/items`);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch from /items`);
+      }
+
+      const json = await response.json();
+      const data = (json && typeof json === 'object' && 'data' in json) ? json.data : json;
+      const items = data.items || data || [];
+
+      if (!Array.isArray(items)) {
+        console.error('Expected items array but got:', typeof items, items);
         this.itemsCache = [];
+        return;
       }
-      
+
+      this.itemsCache = items;
       console.log(`✅ Loaded ${this.itemsCache.length} items for selection`);
-      
-      // Log first item for debugging
-      if (this.itemsCache.length > 0) {
-        console.log('Sample item:', this.itemsCache[0]);
-      }
     } catch (error) {
       console.error('❌ Failed to load items:', error);
       this.itemsCache = [];
@@ -388,7 +385,8 @@ export class MultiItemReviewModal {
       input.addEventListener('focus', (e) => {
         const index = parseInt(e.target.dataset.index);
         if (e.target.value === '') {
-          this.showRelatedItemDropdown(index, this.itemsCache);
+          const costType = this.items[index].cost_type;
+          this.showRelatedItemDropdown(index, this.getFilteredItemsForCostType(costType));
         }
       });
     });
@@ -445,13 +443,30 @@ export class MultiItemReviewModal {
     this.updateItemCard(index);
   }
 
+  getFilteredItemsForCostType(costType) {
+    if (!this.itemsCache || this.itemsCache.length === 0) return [];
+
+    const config = getRelatedIdConfig(costType);
+    if (!config || !config.endpoint.includes('/items')) return this.itemsCache;
+
+    let items = this.itemsCache;
+    if (config.classFilter && config.classFilter.length > 0) {
+      items = items.filter(item => config.classFilter.includes(item.class));
+    }
+    return items;
+  }
+
   handleRelatedItemSearch(index, query) {
     if (!this.itemsCache || this.itemsCache.length === 0) return;
 
+    const costType = this.items[index].cost_type;
+    const config = getRelatedIdConfig(costType);
+    const searchFields = config?.searchFields || ['short_name', 'id'];
+    const available = this.getFilteredItemsForCostType(costType);
+
     const searchLower = query.toLowerCase();
-    const filtered = this.itemsCache.filter(item => 
-      item.short_name?.toLowerCase().includes(searchLower) ||
-      item.id?.toLowerCase().includes(searchLower)
+    const filtered = available.filter(item =>
+      searchFields.some(field => item[field]?.toLowerCase().includes(searchLower))
     ).slice(0, 10);
 
     this.showRelatedItemDropdown(index, filtered);
