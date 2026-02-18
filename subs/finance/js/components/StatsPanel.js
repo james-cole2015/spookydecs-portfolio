@@ -15,12 +15,8 @@ export class StatsPanel {
 
   async loadStats(filters = {}) {
     try {
-      // Load cost stats
       this.stats = await getCostStats(filters);
-      
-      // Load value stats from items
       await this.loadValueStats();
-      
       this.render();
     } catch (error) {
       console.error('Failed to load stats:', error);
@@ -30,9 +26,11 @@ export class StatsPanel {
 
   async loadValueStats() {
     try {
-      const response = await getItems({ status: 'Active' });
-      const items = Array.isArray(response) ? response : (response.items || []);
-      
+      // Fetch all items with no status filter, exclude Retired client-side
+      const response = await getItems({});
+      const allItems = Array.isArray(response) ? response : (response.items || []);
+      const items = allItems.filter(item => item.status !== 'Retired');
+
       this.valueStats = {
         totalValue: 0,
         bySeason: {},
@@ -44,14 +42,12 @@ export class StatsPanel {
         const value = parseFloat(item.vendor_metadata?.value || 0);
         this.valueStats.totalValue += value;
 
-        // By season
         const season = item.season || 'Unknown';
         if (!this.valueStats.bySeason[season]) {
           this.valueStats.bySeason[season] = 0;
         }
         this.valueStats.bySeason[season] += value;
 
-        // By category (using class_type)
         const category = item.class_type || 'Unknown';
         if (!this.valueStats.byCategory[category]) {
           this.valueStats.byCategory[category] = 0;
@@ -70,7 +66,6 @@ export class StatsPanel {
       return;
     }
 
-    // Check if there's an active category filter from state
     const state = stateManager.getState();
     this.activeFilter = state.categoryFilter || null;
 
@@ -104,7 +99,6 @@ export class StatsPanel {
     const totalRecords = this.stats.total_records || 0;
     const avgCost = totalRecords > 0 ? totalAmount / totalRecords : 0;
 
-    // Calculate this year (rough estimate based on dates)
     const thisYearAmount = Object.entries(this.stats.by_month || {})
       .filter(([month]) => month.startsWith('2026'))
       .reduce((sum, [_, data]) => sum + data.amount, 0);
@@ -146,6 +140,7 @@ export class StatsPanel {
 
     const halloweenValue = this.valueStats.bySeason['Halloween'] || 0;
     const christmasValue = this.valueStats.bySeason['Christmas'] || 0;
+    const sharedValue = this.valueStats.bySeason['Shared'] || 0;
 
     return `
       <div class="stat-section">
@@ -164,8 +159,8 @@ export class StatsPanel {
             <div class="card-value">${formatCurrency(christmasValue)}</div>
           </div>
           <div class="summary-card">
-            <div class="card-label">Active Items</div>
-            <div class="card-value">${this.valueStats.itemCount}</div>
+            <div class="card-label">Shared</div>
+            <div class="card-value">${formatCurrency(sharedValue)}</div>
           </div>
         </div>
       </div>
@@ -199,7 +194,6 @@ export class StatsPanel {
     const vendors = this.stats.by_vendor || {};
     const types = this.stats.by_type || {};
 
-    // Calculate insights
     const mostExpensiveCategory = Object.entries(categories)
       .sort((a, b) => b[1].amount - a[1].amount)[0];
     
@@ -210,7 +204,6 @@ export class StatsPanel {
     const totalSpend = this.stats.total_amount || 0;
     const giftPercentage = totalSpend > 0 ? (giftValue / totalSpend * 100).toFixed(0) : 0;
 
-    // Calculate overhead (categories that aren't item-specific)
     const overheadCategories = ['materials', 'consumables', 'labor', 'other'];
     const overheadCost = Object.entries(categories)
       .filter(([cat]) => overheadCategories.includes(cat))
@@ -353,25 +346,19 @@ export class StatsPanel {
   }
 
   attachEventListeners() {
-    // Clear filter button
     document.querySelectorAll('[data-action="clear-filter"]').forEach(btn => {
       btn.addEventListener('click', () => {
         stateManager.setState({ categoryFilter: null });
         this.activeFilter = null;
         this.render();
-        
-        // Trigger tab switch to records to show unfiltered table
         document.querySelector('[data-tab="records"]')?.click();
       });
     });
 
-    // Category cards - click to filter
     document.querySelectorAll('.category-card').forEach(card => {
       card.addEventListener('click', (e) => {
         const category = e.currentTarget.dataset.category;
-        // Switch to records tab and apply filter
         stateManager.setState({ tab: 'records', categoryFilter: category });
-        // Trigger tab switch (this will be handled by TabBar component)
         document.querySelector('[data-tab="records"]')?.click();
       });
     });
