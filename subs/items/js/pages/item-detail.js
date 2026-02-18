@@ -132,15 +132,16 @@ class ItemDetailPage {
         </div>
         
         <!-- Quick Navigation -->
-        <div class="quick-nav">
-          <span class="quick-nav-label">Jump to:</span>
-          <a href="#overview" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'overview')">Overview</a>
-          <a href="#storage" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'storage')">Storage</a>
-          <a href="#deployment" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'deployment')">Deployment</a>
-          <a href="#finance" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'finance')">Finance</a>
-          <a href="#maintenance" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'maintenance')">Maintenance</a>
-          <a href="#photos" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'photos')">Photos</a>
-        </div>
+<div class="quick-nav">
+  <span class="quick-nav-label">Jump to:</span>
+  <a href="#overview" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'overview')">Overview</a>
+  <a href="#storage" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'storage')">Storage</a>
+  <a href="#deployment" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'deployment')">Deployment</a>
+  <a href="#finance" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'finance')">Finance</a>
+  <a href="#maintenance" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'maintenance')">Maintenance</a>
+  <a href="#photos" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'photos')">Photos</a>
+  <a href="#related-links" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'related-links')">Related Links</a>
+</div>
         
         <!-- All Content -->
         <div class="detail-content">
@@ -184,6 +185,8 @@ class ItemDetailPage {
       <section id="finance" class="detail-section-card">
         ${this.renderFinanceSection()}
       </section>
+
+
       
       <div class="section-divider heavy"></div>
       
@@ -197,6 +200,13 @@ class ItemDetailPage {
       <!-- Photos Section -->
       <section id="photos" class="detail-section-card">
         ${this.renderPhotosSection()}
+      </section>
+      
+      <div class="section-divider heavy"></div>
+
+      <!-- Related Links Section -->
+      <section id="related-links" class="detail-section-card">
+        ${this.renderRelatedLinksSection()}
       </section>
     `;
   }
@@ -328,6 +338,75 @@ class ItemDetailPage {
       </div>
     `;
   }
+
+  renderRelatedLinksSection() {
+  const links = [
+    {
+      type: 'storage',
+      icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 8V21H3V8"/><path d="M23 3H1v5h22V3z"/><path d="M10 12h4"/>
+      </svg>`,
+      label: 'Storage',
+      descriptor: 'Totes, locations & packing status',
+      href: '#'
+    },
+    {
+      type: 'finance',
+      icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+      </svg>`,
+      label: 'Finance',
+      descriptor: 'Cost, value & vendor records',
+      href: '#'
+    },
+    {
+      type: 'maintenance',
+      icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+      </svg>`,
+      label: 'Maintenance',
+      descriptor: 'Service history & schedules',
+      href: '#'
+    },
+    {
+      type: 'photos',
+      icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+      </svg>`,
+      label: 'Photos',
+      descriptor: 'Primary & secondary images',
+      href: '#'
+    }
+  ];
+
+  return `
+    <div class="detail-section">
+      <h2 class="section-title">Related Links</h2>
+      <div class="related-links-strip">
+        ${links.map(link => `
+          <a
+            href="${link.href}"
+            class="related-link-item"
+            data-link-type="${link.type}"
+            aria-label="Go to ${link.label}"
+          >
+            <span class="related-link-icon">${link.icon}</span>
+            <span class="related-link-body">
+              <span class="related-link-label">${link.label}</span>
+              <span class="related-link-descriptor">${link.descriptor}</span>
+            </span>
+            <span class="related-link-arrow">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M7 17L17 7M17 7H7M17 7v10"/>
+              </svg>
+            </span>
+          </a>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
   
   renderDeploymentHistory() {
     const deployments = this.item.deployment_data?.previous_deployments || [];
@@ -397,17 +476,6 @@ class ItemDetailPage {
           <h3 class="subsection-title">Recent Maintenance</h3>
           ${this.renderMaintenanceRecords(completedRecords)}
         ` : ''}
-
-        <div class="maintenance-cta">
-          <button class="btn-maintenance-link" onclick="itemDetailPage.handleViewAllMaintenance()">
-            <span class="btn-maintenance-icon">🔧</span>
-            <span class="btn-maintenance-text">
-              <span class="btn-maintenance-label">View in Maintenance</span>
-              <span class="btn-maintenance-sublabel">Open full maintenance details</span>
-            </span>
-            <span class="btn-maintenance-arrow">→</span>
-          </button>
-        </div>
       </div>
     `;
   }

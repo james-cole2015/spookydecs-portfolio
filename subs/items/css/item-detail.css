@@ -984,73 +984,6 @@
 }
 
 /* ============================================
-   MAINTENANCE CTA
-   ============================================ */
-
-.maintenance-cta {
-  margin-top: 32px;
-}
-
-.btn-maintenance-link {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  width: 100%;
-  padding: 16px 20px;
-  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 6px rgba(59, 130, 246, 0.25);
-}
-
-.btn-maintenance-link:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 12px rgba(59, 130, 246, 0.3);
-}
-
-.btn-maintenance-link:active {
-  transform: translateY(0);
-}
-
-.btn-maintenance-icon {
-  font-size: 24px;
-  flex-shrink: 0;
-}
-
-.btn-maintenance-text {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  flex: 1;
-}
-
-.btn-maintenance-label {
-  font-size: 15px;
-  font-weight: 600;
-  color: white;
-}
-
-.btn-maintenance-sublabel {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.8);
-  margin-top: 2px;
-}
-
-.btn-maintenance-arrow {
-  font-size: 20px;
-  color: white;
-  opacity: 0.8;
-  transition: transform 0.2s ease;
-}
-
-.btn-maintenance-link:hover .btn-maintenance-arrow {
-  transform: translateX(4px);
-  opacity: 1;
-}
-
-/* ============================================
    RESPONSIVE - TABLET
    ============================================ */
 
@@ -1177,5 +1110,133 @@
 
   .editable-section-form .form-fields {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+   RELATED LINKS SECTION
+   Add to the bottom of item-detail.css
+   ============================================================ */
+
+.related-links-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.related-link-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  background: #FAFAFA;
+  border: 1px solid #EBEBEB;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.related-link-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #3B82F6;
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 0 2px 2px 0;
+}
+
+.related-link-item:hover {
+  border-color: #D1D5DB;
+  background: #F5F5F5;
+}
+
+.related-link-item:hover::before {
+  transform: scaleY(1);
+}
+
+.related-link-item:hover .related-link-arrow {
+  opacity: 1;
+  transform: translate(2px, -2px);
+}
+
+.related-link-item:hover .related-link-icon {
+  color: #3B82F6;
+}
+
+.related-link-icon {
+  color: #9CA3AF;
+  flex-shrink: 0;
+  transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.related-link-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.related-link-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  line-height: 1.2;
+}
+
+.related-link-descriptor {
+  font-size: 11px;
+  color: #9CA3AF;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.related-link-arrow {
+  color: #9CA3AF;
+  flex-shrink: 0;
+  opacity: 0.4;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+/* ============================================================
+   RESPONSIVE - TABLET
+   ============================================================ */
+
+@media (max-width: 1024px) {
+  .related-links-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ============================================================
+   RESPONSIVE - MOBILE
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .related-links-strip {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .related-link-item {
+    padding: 14px 16px;
+  }
+
+  .related-link-descriptor {
+    white-space: normal;
   }
 }
