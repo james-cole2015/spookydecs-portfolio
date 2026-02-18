@@ -125,8 +125,6 @@ class ItemDetailPage {
                 </div>
                 <div class="detail-meta">
                   ${this.item.date_acquired ? `<span class="detail-meta-row">Acquired: ${this.item.date_acquired}</span>` : ''}
-                  ${this.item.vendor_metadata?.vendor_store ? `<span class="detail-meta-row">${this.item.vendor_metadata.vendor_store}</span>` : ''}
-                  ${this.item.vendor_metadata?.cost ? `<span class="detail-meta-row">Cost: $${this.item.vendor_metadata.cost}</span>` : ''}
                 </div>
               </div>
             </div>
@@ -139,6 +137,7 @@ class ItemDetailPage {
           <a href="#overview" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'overview')">Overview</a>
           <a href="#storage" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'storage')">Storage</a>
           <a href="#deployment" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'deployment')">Deployment</a>
+          <a href="#finance" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'finance')">Finance</a>
           <a href="#maintenance" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'maintenance')">Maintenance</a>
           <a href="#photos" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'photos')">Photos</a>
         </div>
@@ -177,6 +176,13 @@ class ItemDetailPage {
       <!-- Deployment Section -->
       <section id="deployment" class="detail-section-card" data-section-type="deployment">
         ${this.renderDeploymentSection()}
+      </section>
+      
+      <div class="section-divider heavy"></div>
+      
+      <!-- Finance Section -->
+      <section id="finance" class="detail-section-card">
+        ${this.renderFinanceSection()}
       </section>
       
       <div class="section-divider heavy"></div>
@@ -301,6 +307,24 @@ class ItemDetailPage {
           <h3 class="subsection-title">Previous Deployments</h3>
           ${this.renderDeploymentHistory()}
         ` : ''}
+      </div>
+    `;
+  }
+
+  renderFinanceSection() {
+    const vendor = this.item.vendor_metadata || {};
+    const hasCost = vendor.cost && vendor.cost !== '0';
+    const hasValue = vendor.value && vendor.value !== '0';
+
+    return `
+      <div class="detail-section">
+        <h2 class="section-title">Finance</h2>
+        <div class="detail-grid">
+          ${this.renderField('Cost', hasCost ? `$${vendor.cost}` : '—')}
+          ${this.renderField('Current Value', hasValue ? `$${vendor.value}` : '—')}
+          ${this.renderField('Manufacturer', vendor.manufacturer || '—')}
+          ${this.renderField('Vendor', vendor.vendor_store || '—')}
+        </div>
       </div>
     `;
   }
@@ -488,7 +512,7 @@ class ItemDetailPage {
    * Handle click on editable field - enter edit mode for section
    */
   handleFieldClick(sectionType) {
-    const sectionId = sectionType; // 'overview', 'storage', etc.
+    const sectionId = sectionType;
     
     // Create EditableSection instance
     this.editingSection = new EditableSection(sectionId, sectionType, this.item);

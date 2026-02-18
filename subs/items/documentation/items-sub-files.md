@@ -164,14 +164,3 @@ Maintenance:
 - Error handling displays user-friendly toast notifications
 - Filter state persisted in URL query parameters for shareable links
 ```
-
-
-### STATUS SYNC LAMBDA (status-sync-dev)
-```
-The status-sync-dev Lambda checks nested attributes to update root-level status:
-- if packing_status == TRUE, deployment == False → status = Packed
-- if packing_status == FALSE, deployment == True → status = Deployed
-- if repair_status.needs_repair == TRUE and repair_status == Critical → status = Unavailable
-- if repair_status.needs_repair == TRUE and repair_status != Critical → status unaffected
-- if status == Retired → no other updates can override this
-```
