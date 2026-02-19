@@ -92,13 +92,13 @@
 }
 
 #upload-area:hover {
-  border-color: #ff6b35;
-  background: #fff5f2;
+  border-color: #3b82f6;
+  background: #eff6ff;
 }
 
 #upload-area.dragover {
-  border-color: #ff6b35;
-  background: #fff5f2;
+  border-color: #3b82f6;
+  background: #eff6ff;
   transform: scale(1.02);
 }
 
@@ -115,7 +115,7 @@
 }
 
 .upload-text strong {
-  color: #ff6b35;
+  color: #3b82f6;
 }
 
 .upload-hint {

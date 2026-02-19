@@ -300,12 +300,28 @@ export class MultiItemReviewModal {
           </div>
         ` : ''}
 
-        <!-- Row 4: Description (full width) -->
+        <!-- Row 4: Manufacturer (acquisition only) -->
+        ${item.cost_type === 'acquisition' ? `
+          <div class="form-group full-width">
+            <label class="form-label required">Manufacturer</label>
+            <input
+              type="text"
+              class="form-input"
+              data-field="manufacturer"
+              data-index="${index}"
+              value="${item.manufacturer || ''}"
+              placeholder="e.g. Home Depot, Spirit Halloween"
+            />
+            ${item.errors?.manufacturer ? `<span class="form-error">${item.errors.manufacturer}</span>` : ''}
+          </div>
+        ` : ''}
+
+        <!-- Row 5: Description (full width) -->
         <div class="form-group full-width">
           <label class="form-label">Description</label>
-          <textarea 
-            class="form-textarea" 
-            data-field="description" 
+          <textarea
+            class="form-textarea"
+            data-field="description"
             data-index="${index}"
             rows="2"
           >${item.description || ''}</textarea>
@@ -600,8 +616,15 @@ export class MultiItemReviewModal {
         errors.total_cost = 'Must be greater than 0';
       }
 
+      // Manufacturer required for acquisition
+      if (item.cost_type === 'acquisition') {
+        if (!item.manufacturer || item.manufacturer.toString().trim() === '') {
+          errors.manufacturer = 'Required for acquisitions';
+        }
+      }
+
       // Related item validation
-      const needsRelatedItem = item.cost_type === 'acquisition' && 
+      const needsRelatedItem = item.cost_type === 'acquisition' &&
                                ['decoration', 'light', 'accessory'].includes(item.category);
       if (needsRelatedItem && !item.related_item_id) {
         errors.related_item_id = 'Required for this cost type';
@@ -640,6 +663,8 @@ export class MultiItemReviewModal {
       quantity: parseInt(item.quantity) || 1,
       unit_cost: parseFloat(item.unit_cost) || 0,
       total_cost: parseFloat(item.total_cost),
+      value: parseFloat(item.total_cost),
+      manufacturer: item.manufacturer || '',
       vendor: this.receiptMetadata.vendor,
       purchase_date: this.receiptMetadata.purchase_date,
       cost_date: this.receiptMetadata.purchase_date,
