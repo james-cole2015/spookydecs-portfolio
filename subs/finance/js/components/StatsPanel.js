@@ -3,6 +3,7 @@
 import { formatCurrency } from '../utils/finance-config.js';
 import { getCostStats, getItems } from '../utils/finance-api.js';
 import { stateManager } from '../utils/state.js';
+import { navigateTo } from '../utils/router.js';
 
 export class StatsPanel {
   constructor(containerId) {
@@ -351,15 +352,15 @@ export class StatsPanel {
         stateManager.setState({ categoryFilter: null });
         this.activeFilter = null;
         this.render();
-        document.querySelector('[data-tab="records"]')?.click();
+        navigateTo('/records');
       });
     });
 
     document.querySelectorAll('.category-card').forEach(card => {
       card.addEventListener('click', (e) => {
         const category = e.currentTarget.dataset.category;
-        stateManager.setState({ tab: 'records', categoryFilter: category });
-        document.querySelector('[data-tab="records"]')?.click();
+        stateManager.setState({ categoryFilter: category });
+        navigateTo('/records');
       });
     });
   }

@@ -26,6 +26,7 @@
   <link rel="stylesheet" href="/css/stats-panel.css">
   <link rel="stylesheet" href="/css/receipts.css">
   <link rel="stylesheet" href="/css/items-browse.css">
+  <link rel="stylesheet" href="/css/finance-landing.css">
 
 </head>
 <body>
@@ -42,29 +43,8 @@
     <div class="loading-spinner"></div>
   </div>
 
-  <!-- Main Content Container -->
-  <!-- For main finance page (FinanceMainPage class) -->
-  <div id="app-container" style="display: none;">
-    <div id="tab-bar"></div>
-    <div id="tab-content">
-      <div id="records-tab" class="tab-panel active">
-        <div id="table-container"></div>
-        <div id="form-container"></div>
-      </div>
-      <div id="receipts-tab" class="tab-panel">
-        <!-- Receipts grid will be rendered here -->
-      </div>
-      <div id="stats-tab" class="tab-panel">
-        <div id="stats-container"></div>
-      </div>
-      <div id="items-tab" class="tab-panel">
-        <div id="items-container"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- For router-managed pages (item costs, cost details) -->
-  <div id="main-content" style="display: none;"></div>
+  <!-- Main Content -->
+  <div id="main-content"></div>
 
   <!-- Detail Drawer -->
   <div id="cost-detail-drawer" class="drawer"></div>

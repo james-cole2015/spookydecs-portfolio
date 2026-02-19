@@ -3,47 +3,61 @@ import { showLoading, hideLoading } from './helpers.js';
 
 let router = null;
 
+// Reserved route segments that should not be matched as itemIds
+const RESERVED_ROUTES = new Set(['new', 'costs', 'records', 'receipts', 'statistics', 'items']);
+
 export function initRouter() {
   router = new Navigo('/', { hash: false });
-  
+
   console.log('🔧 Finance router initialized');
-  console.log('📍 Root:', '/');
   console.log('📍 Current location:', window.location.href);
-  console.log('📍 Current pathname:', window.location.pathname);
-  
-  // Define routes - Specific routes first, generic routes last
+
+  // Define routes — specific routes first, generic last
   router
     .on('/', async () => {
-      console.log('✅ Route matched: / (main finance page)');
-      await handleFinanceMain();
+      console.log('✅ Route matched: /');
+      await handleFinanceLanding();
     })
-    .on('/new', async (match) => {
-      console.log('✅ Route matched: /new', match.data);
-      await handleNewCostView(match);
+    .on('/records', async () => {
+      console.log('✅ Route matched: /records');
+      await handleRecordsPage();
+    })
+    .on('/receipts', async () => {
+      console.log('✅ Route matched: /receipts');
+      await handleReceiptsPage();
+    })
+    .on('/statistics', async () => {
+      console.log('✅ Route matched: /statistics');
+      await handleStatisticsPage();
+    })
+    .on('/items', async () => {
+      console.log('✅ Route matched: /items');
+      await handleItemsPage();
+    })
+    .on('/new', async () => {
+      console.log('✅ Route matched: /new');
+      await handleNewCostView();
     })
     .on('/costs/:costId', async (match) => {
       console.log('✅ Route matched: /costs/:costId', match.data);
       await handleCostDetailView(match);
     })
     .on('/:itemId', async ({ data }) => {
-      // Only match if itemId doesn't look like a reserved route
-      if (data.itemId === 'new' || data.itemId === 'costs') {
+      if (RESERVED_ROUTES.has(data.itemId)) {
         console.log('   ⚠️ Skipping reserved route:', data.itemId);
-        return false; // Don't handle, let other routes match
+        return false;
       }
       console.log('✅ Route matched: /:itemId', data);
       await handleItemCostsView({ data });
     })
     .notFound(() => {
-      console.log('❌ Route NOT FOUND');
-      console.log('   Current path:', window.location.pathname);
+      console.log('❌ Route NOT FOUND:', window.location.pathname);
       renderNotFound();
     });
-  
-  // Resolve initial route
+
   console.log('🚀 Resolving initial route...');
   router.resolve();
-  
+
   return router;
 }
 
@@ -61,63 +75,111 @@ export function getRouter() {
 }
 
 // ============================================
+// SHARED HELPERS
+// ============================================
+
+function getMainContent() {
+  return document.getElementById('main-content');
+}
+
+// ============================================
 // ROUTE HANDLERS
 // ============================================
 
-async function handleFinanceMain() {
-  console.log('📄 handleFinanceMain started');
-  
-  // Make sure app-container is visible
-  const appContainer = document.getElementById('app-container');
-  const mainContent = document.getElementById('main-content');
-  
-  if (appContainer) appContainer.style.display = 'block';
-  if (mainContent) mainContent.style.display = 'none';
-  
+async function handleFinanceLanding() {
+  const mainContent = getMainContent();
+  if (!mainContent) return;
+
   try {
     showLoading();
-    
-    // Dynamically import the main finance page
-    const { FinanceMainPage } = await import('../pages/finance-main.js');
-    new FinanceMainPage();
-    
+    const { renderFinanceLanding } = await import('../pages/finance-landing.js');
+    mainContent.innerHTML = '';
+    renderFinanceLanding(mainContent);
     hideLoading();
   } catch (error) {
-    console.error('❌ Error rendering finance main:', error);
+    console.error('❌ Error rendering finance landing:', error);
     hideLoading();
-    if (appContainer) {
-      renderError(appContainer, 'Failed to load finance page');
-    }
+    renderError(mainContent, 'Failed to load finance page');
   }
 }
 
-async function handleNewCostView(match) {
-  console.log('📄 handleNewCostView started');
-  
-  // Make sure main-content is visible
-  const appContainer = document.getElementById('app-container');
-  const mainContent = document.getElementById('main-content');
-  
-  if (appContainer) appContainer.style.display = 'none';
-  if (mainContent) mainContent.style.display = 'block';
-  
-  if (!mainContent) {
-    console.error('❌ main-content container not found!');
-    return;
-  }
-  
+async function handleRecordsPage() {
+  const mainContent = getMainContent();
+  if (!mainContent) return;
+
   try {
     showLoading();
-    
-    console.log('📄 Loading new cost form');
-    
-    // Dynamically import the new cost page function
+    const { renderRecordsPage } = await import('../pages/records-page.js');
+    mainContent.innerHTML = '';
+    await renderRecordsPage(mainContent);
+    hideLoading();
+  } catch (error) {
+    console.error('❌ Error rendering records page:', error);
+    hideLoading();
+    renderError(mainContent, 'Failed to load cost records');
+  }
+}
+
+async function handleReceiptsPage() {
+  const mainContent = getMainContent();
+  if (!mainContent) return;
+
+  try {
+    showLoading();
+    const { renderReceiptsPage } = await import('../pages/receipts-page.js');
+    mainContent.innerHTML = '';
+    renderReceiptsPage(mainContent);
+    hideLoading();
+  } catch (error) {
+    console.error('❌ Error rendering receipts page:', error);
+    hideLoading();
+    renderError(mainContent, 'Failed to load receipts');
+  }
+}
+
+async function handleStatisticsPage() {
+  const mainContent = getMainContent();
+  if (!mainContent) return;
+
+  try {
+    showLoading();
+    const { renderStatisticsPage } = await import('../pages/statistics-page.js');
+    mainContent.innerHTML = '';
+    await renderStatisticsPage(mainContent);
+    hideLoading();
+  } catch (error) {
+    console.error('❌ Error rendering statistics page:', error);
+    hideLoading();
+    renderError(mainContent, 'Failed to load statistics');
+  }
+}
+
+async function handleItemsPage() {
+  const mainContent = getMainContent();
+  if (!mainContent) return;
+
+  try {
+    showLoading();
+    const { renderItemsPage } = await import('../pages/items-page.js');
+    mainContent.innerHTML = '';
+    await renderItemsPage(mainContent);
+    hideLoading();
+  } catch (error) {
+    console.error('❌ Error rendering items page:', error);
+    hideLoading();
+    renderError(mainContent, 'Failed to load items');
+  }
+}
+
+async function handleNewCostView() {
+  const mainContent = getMainContent();
+  if (!mainContent) return;
+
+  try {
+    showLoading();
     const { renderNewCostRecord } = await import('../pages/new-cost-record.js');
-    
-    // Clear container and render
     mainContent.innerHTML = '';
     await renderNewCostRecord(mainContent);
-    
     hideLoading();
   } catch (error) {
     console.error('❌ Error rendering new cost form:', error);
@@ -127,30 +189,15 @@ async function handleNewCostView(match) {
 }
 
 async function handleCostDetailView(match) {
-  console.log('📄 handleCostDetailView started');
-  
-  // Make sure main-content is visible
-  const appContainer = document.getElementById('app-container');
-  const mainContent = document.getElementById('main-content');
-  
-  if (appContainer) appContainer.style.display = 'none';
-  if (mainContent) mainContent.style.display = 'block';
-  
-  if (!mainContent) {
-    console.error('❌ main-content container not found!');
-    return;
-  }
-  
+  const mainContent = getMainContent();
+  if (!mainContent) return;
+
   try {
     showLoading();
-    
     const { costId } = match.data;
-    console.log('📄 Loading cost record:', costId);
-    
-    // Dynamically import the cost detail page
     const { renderCostDetail } = await import('../pages/cost-detail.js');
+    mainContent.innerHTML = '';
     await renderCostDetail(mainContent, costId);
-    
     hideLoading();
   } catch (error) {
     console.error('❌ Error rendering cost detail:', error);
@@ -160,30 +207,15 @@ async function handleCostDetailView(match) {
 }
 
 async function handleItemCostsView(match) {
-  console.log('📄 handleItemCostsView started');
-  
-  // Make sure main-content is visible
-  const appContainer = document.getElementById('app-container');
-  const mainContent = document.getElementById('main-content');
-  
-  if (appContainer) appContainer.style.display = 'none';
-  if (mainContent) mainContent.style.display = 'block';
-  
-  if (!mainContent) {
-    console.error('❌ main-content container not found!');
-    return;
-  }
-  
+  const mainContent = getMainContent();
+  if (!mainContent) return;
+
   try {
     showLoading();
-    
     const { itemId } = match.data;
-    console.log('📄 Loading item/idea/record costs for:', itemId);
-    
-    // Dynamically import the item costs page
     const { renderItemCosts } = await import('../pages/item-costs.js');
+    mainContent.innerHTML = '';
     await renderItemCosts(mainContent, itemId);
-    
     hideLoading();
   } catch (error) {
     console.error('❌ Error rendering item costs view:', error);
@@ -197,18 +229,9 @@ async function handleItemCostsView(match) {
 // ============================================
 
 function renderNotFound() {
-  console.log('📄 Rendering 404 page');
-  const mainContent = document.getElementById('main-content');
-  const appContainer = document.getElementById('app-container');
-  
-  if (appContainer) appContainer.style.display = 'none';
-  if (mainContent) mainContent.style.display = 'block';
-  
-  if (!mainContent) {
-    console.error('❌ main-content container not found!');
-    return;
-  }
-  
+  const mainContent = getMainContent();
+  if (!mainContent) return;
+
   mainContent.innerHTML = `
     <div class="error-container">
       <div class="error-content">
@@ -222,7 +245,7 @@ function renderNotFound() {
 }
 
 function renderError(container, message) {
-  console.log('📄 Rendering error page:', message);
+  console.log('📄 Rendering error:', message);
   container.innerHTML = `
     <div class="error-container">
       <div class="error-content">
