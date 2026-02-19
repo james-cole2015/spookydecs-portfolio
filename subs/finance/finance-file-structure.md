@@ -1,12 +1,17 @@
 finance/
+├── config.json
 ├── css
 │   ├── cost-detail.css
 │   ├── cost-form.css
 │   ├── cost-record-detail.css
 │   ├── finance.css
+│   ├── gift-checkbox-styles.css
 │   ├── item-costs.css
+│   ├── items-browse.css
+│   ├── multi-item-review-modal.css
 │   ├── new-cost-record.css
 │   ├── receipt-upload-modal.css
+│   ├── receipts.css
 │   └── stats-panel.css
 ├── finance-file-structure.md
 ├── index.html
@@ -21,14 +26,18 @@ finance/
     │   ├── CostRecordsTable.js
     │   ├── CostReviewModal.js
     │   ├── ItemCostView.js
+    │   ├── ItemsBrowsePage.js
+    │   ├── MultiItemReviewModal.js
     │   ├── ReceiptUploadModal.js
+    │   ├── ReceiptsGrid.js
     │   ├── StatsPanel.js
     │   └── TabBar.js
     ├── pages
     │   ├── cost-detail.js
     │   ├── finance-main.js
     │   ├── item-costs.js
-    │   └── new-cost-record.js
+    │   ├── new-cost-record.js
+    │   └── receipts.js
     ├── shared
     │   ├── modal.js
     │   └── toast.js
