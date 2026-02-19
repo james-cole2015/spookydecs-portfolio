@@ -396,7 +396,7 @@ export class CostRecordsTable {
     });
 
     tableHTML += '</tbody></table>';
-    return tableHTML;
+    return `<div class="table-scroll-wrapper">${tableHTML}</div>`;
   }
 
   renderMobileCards(pageData) {
