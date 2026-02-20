@@ -32,7 +32,7 @@ class ItemDetailPage {
       }
       
       // Render page
-      this.renderPage();
+      await this.renderPage();
       
       // Initialize action drawer
       actionDrawer.init(this.item, () => this.handleItemUpdate());
@@ -90,7 +90,7 @@ class ItemDetailPage {
     return upcoming;
   }
   
-  renderPage() {
+  async renderPage() {
     const container = document.getElementById('app-container');
     
     const photoUrl = this.getPhotoUrl();
@@ -132,20 +132,20 @@ class ItemDetailPage {
         </div>
         
         <!-- Quick Navigation -->
-<div class="quick-nav">
-  <span class="quick-nav-label">Jump to:</span>
-  <a href="#overview" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'overview')">Overview</a>
-  <a href="#storage" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'storage')">Storage</a>
-  <a href="#deployment" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'deployment')">Deployment</a>
-  <a href="#finance" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'finance')">Finance</a>
-  <a href="#maintenance" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'maintenance')">Maintenance</a>
-  <a href="#photos" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'photos')">Photos</a>
-  <a href="#related-links" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'related-links')">Related Links</a>
-</div>
+        <div class="quick-nav">
+          <span class="quick-nav-label">Jump to:</span>
+          <a href="#overview" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'overview')">Overview</a>
+          <a href="#storage" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'storage')">Storage</a>
+          <a href="#deployment" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'deployment')">Deployment</a>
+          <a href="#finance" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'finance')">Finance</a>
+          <a href="#maintenance" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'maintenance')">Maintenance</a>
+          <a href="#photos" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'photos')">Photos</a>
+          <a href="#related-links" class="quick-nav-link" onclick="itemDetailPage.scrollToSection(event, 'related-links')">Related Links</a>
+        </div>
         
         <!-- All Content -->
         <div class="detail-content">
-          ${this.renderAllSections()}
+          ${await this.renderAllSections()}
         </div>
         
         <!-- Back to Top Button -->
@@ -158,7 +158,7 @@ class ItemDetailPage {
     `;
   }
   
-  renderAllSections() {
+  async renderAllSections() {
     return `
       <!-- Overview Section -->
       <section id="overview" class="detail-section-card" data-section-type="overview">
@@ -186,8 +186,6 @@ class ItemDetailPage {
         ${this.renderFinanceSection()}
       </section>
 
-
-      
       <div class="section-divider heavy"></div>
       
       <!-- Maintenance Section -->
@@ -206,7 +204,7 @@ class ItemDetailPage {
 
       <!-- Related Links Section -->
       <section id="related-links" class="detail-section-card">
-        ${this.renderRelatedLinksSection()}
+        ${await this.renderRelatedLinksSection()}
       </section>
     `;
   }
@@ -339,74 +337,124 @@ class ItemDetailPage {
     `;
   }
 
-  renderRelatedLinksSection() {
-  const links = [
-    {
-      type: 'storage',
-      icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 8V21H3V8"/><path d="M23 3H1v5h22V3z"/><path d="M10 12h4"/>
-      </svg>`,
-      label: 'Storage',
-      descriptor: 'Totes, locations & packing status',
-      href: '#'
-    },
-    {
-      type: 'finance',
-      icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-      </svg>`,
-      label: 'Finance',
-      descriptor: 'Cost, value & vendor records',
-      href: '#'
-    },
-    {
-      type: 'maintenance',
-      icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-      </svg>`,
-      label: 'Maintenance',
-      descriptor: 'Service history & schedules',
-      href: '#'
-    },
-    {
-      type: 'photos',
-      icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
-      </svg>`,
-      label: 'Photos',
-      descriptor: 'Primary & secondary images',
-      href: '#'
+  async renderRelatedLinksSection() {
+    const toteId = this.item.packing_data?.tote_id;
+    const itemId = this.item.id;
+
+    // Resolve base URLs from config — fall back gracefully if any are missing
+    let storageBase = '', financeBase = '', maintenanceBase = '', imagesBase = '';
+    try {
+      const config = await window.SpookyConfig.get();
+      storageBase    = config.STR_ADM_URL   || '';
+      financeBase    = config.finance_url    || '';
+      maintenanceBase = config.MAINT_URL    || '';
+      imagesBase     = config.IMAGES_URL    || '';
+    } catch (err) {
+      console.warn('Could not load SpookyConfig for related links:', err);
     }
-  ];
 
-  return `
-    <div class="detail-section">
-      <h2 class="section-title">Related Links</h2>
-      <div class="related-links-strip">
-        ${links.map(link => `
-          <a
-            href="${link.href}"
-            class="related-link-item"
-            data-link-type="${link.type}"
-            aria-label="Go to ${link.label}"
-          >
-            <span class="related-link-icon">${link.icon}</span>
-            <span class="related-link-body">
-              <span class="related-link-label">${link.label}</span>
-              <span class="related-link-descriptor">${link.descriptor}</span>
-            </span>
-            <span class="related-link-arrow">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M7 17L17 7M17 7H7M17 7v10"/>
-              </svg>
-            </span>
-          </a>
-        `).join('')}
+    // Build each link definition
+    const links = [
+      {
+        type: 'storage',
+        icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 8V21H3V8"/><path d="M23 3H1v5h22V3z"/><path d="M10 12h4"/>
+        </svg>`,
+        label: 'Storage',
+        descriptor: 'Totes, locations & packing status',
+        href: toteId && storageBase ? `${storageBase}/storage/${toteId}` : null,
+        disabled: !toteId,
+        tooltip: !toteId ? 'No Tote Assigned' : null,
+      },
+      {
+        type: 'finance',
+        icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+        </svg>`,
+        label: 'Finance',
+        descriptor: 'Cost, value & vendor records',
+        href: financeBase ? `${financeBase}/${itemId}` : null,
+        disabled: !financeBase,
+        tooltip: null,
+      },
+      {
+        type: 'maintenance',
+        icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+        </svg>`,
+        label: 'Maintenance',
+        descriptor: 'Service history & schedules',
+        href: maintenanceBase ? `${maintenanceBase}/${itemId}` : null,
+        disabled: !maintenanceBase,
+        tooltip: null,
+      },
+      {
+        type: 'photos',
+        icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+        </svg>`,
+        label: 'Photos',
+        descriptor: 'Primary & secondary images',
+        href: imagesBase || null,
+        disabled: !imagesBase,
+        tooltip: null,
+      },
+    ];
+
+    return `
+      <div class="detail-section">
+        <h2 class="section-title">Related Links</h2>
+        <div class="related-links-strip">
+          ${links.map(link => {
+            if (link.disabled) {
+              return `
+                <span
+                  class="related-link-item related-link-item--disabled"
+                  data-link-type="${link.type}"
+                  ${link.tooltip ? `title="${link.tooltip}"` : ''}
+                  aria-disabled="true"
+                  aria-label="${link.label}${link.tooltip ? ` — ${link.tooltip}` : ''}"
+                >
+                  <span class="related-link-icon">${link.icon}</span>
+                  <span class="related-link-body">
+                    <span class="related-link-label">${link.label}</span>
+                    <span class="related-link-descriptor">${link.tooltip || link.descriptor}</span>
+                  </span>
+                  <span class="related-link-arrow">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M7 17L17 7M17 7H7M17 7v10"/>
+                    </svg>
+                  </span>
+                </span>
+              `;
+            }
+
+            return `
+              <a
+                href="${link.href}"
+                class="related-link-item"
+                data-link-type="${link.type}"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Go to ${link.label}"
+              >
+                <span class="related-link-icon">${link.icon}</span>
+                <span class="related-link-body">
+                  <span class="related-link-label">${link.label}</span>
+                  <span class="related-link-descriptor">${link.descriptor}</span>
+                </span>
+                <span class="related-link-arrow">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M7 17L17 7M17 7H7M17 7v10"/>
+                  </svg>
+                </span>
+              </a>
+            `;
+          }).join('')}
+        </div>
       </div>
-    </div>
-  `;
-}
-
+    `;
+  }
   
   renderDeploymentHistory() {
     const deployments = this.item.deployment_data?.previous_deployments || [];
@@ -642,7 +690,7 @@ class ItemDetailPage {
       this.editingSection = null;
       
       // Re-render page
-      this.renderPage();
+      await this.renderPage();
       
       // Re-initialize
       actionDrawer.updateItem(this.item);
@@ -661,7 +709,7 @@ class ItemDetailPage {
   /**
    * Cancel section editing
    */
-  handleCancelSection() {
+  async handleCancelSection() {
     if (!this.editingSection) return;
     
     // Exit edit mode without saving
@@ -671,7 +719,7 @@ class ItemDetailPage {
     this.editingSection = null;
     
     // Re-render page
-    this.renderPage();
+    await this.renderPage();
     
     // Re-initialize
     actionDrawer.updateItem(this.item);
@@ -690,7 +738,7 @@ class ItemDetailPage {
       this.item = await fetchItemById(this.item.id, true);
       
       // Re-render page
-      this.renderPage();
+      await this.renderPage();
       
       // Re-initialize
       actionDrawer.updateItem(this.item);
