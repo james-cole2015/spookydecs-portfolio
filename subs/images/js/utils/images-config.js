@@ -97,7 +97,7 @@ export const IMAGES_CONFIG = {
       { value: 'maintenance', label: 'Maintenance' },
       { value: 'storage', label: 'Storage' },
       { value: 'receipts', label: 'Receipts' },
-      { value: 'deployment', label: 'Deployments' },
+      { value: 'deployments', label: 'Deployments' },
       { value: 'gallery_showcase', label: 'Gallery - Showcase' },
       { value: 'gallery_progress', label: 'Gallery - Progress' },
       { value: 'gallery_community', label: 'Gallery - Community' },

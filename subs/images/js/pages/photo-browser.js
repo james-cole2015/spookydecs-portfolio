@@ -53,7 +53,7 @@ async function loadAndRenderPhotos(filters) {
     // Convert UI filters to API filters
     const apiFilters = {
       season: filters.season,
-      photo_type: filters.category,
+      category: filters.category,
       year: filters.year,
       limit: 500
     };

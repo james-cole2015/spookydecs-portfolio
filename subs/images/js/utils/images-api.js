@@ -14,6 +14,7 @@ export async function fetchImages(filters = {}) {
     const params = new URLSearchParams();
     if (filters.season) params.append('season', filters.season);
     if (filters.photo_type) params.append('photo_type', filters.photo_type);
+    if (filters.category) params.append('category', filters.category);
     if (filters.year) params.append('year', filters.year);
     if (filters.item_id) params.append('item_id', filters.item_id);
     if (filters.class_type) params.append('class_type', filters.class_type);
