@@ -375,48 +375,46 @@ export class MultiItemReviewModal {
       });
     });
 
-    // Form field changes
-    this.modal.querySelectorAll('select[data-field], input[data-field], textarea[data-field]').forEach(input => {
-      input.addEventListener('change', (e) => {
-        const field = e.target.dataset.field;
-        const index = parseInt(e.target.dataset.index);
-        
-        if (field === 'cost_type') {
-          this.handleCostTypeChange(index, e.target.value);
-        } else if (field === 'category') {
-          this.handleCategoryChange(index, e.target.value);
-        } else {
-          this.items[index][field] = e.target.value;
-        }
-      });
+    // Form field changes — delegated so re-rendering item cards doesn't require re-attachment
+    this.modal.addEventListener('change', (e) => {
+      const field = e.target.dataset.field;
+      if (!field) return;
+      const index = parseInt(e.target.dataset.index);
+      if (field === 'cost_type') {
+        this.handleCostTypeChange(index, e.target.value);
+      } else if (field === 'category') {
+        this.handleCategoryChange(index, e.target.value);
+      } else {
+        this.items[index][field] = e.target.value;
+      }
     });
 
-    // Related item search
-    this.modal.querySelectorAll('.related-search-input').forEach(input => {
-      input.addEventListener('input', (e) => {
-        const index = parseInt(e.target.dataset.index);
-        this.handleRelatedItemSearch(index, e.target.value);
-      });
-
-      input.addEventListener('focus', (e) => {
-        const index = parseInt(e.target.dataset.index);
-        if (e.target.value === '') {
-          const costType = this.items[index].cost_type;
-          this.showRelatedItemDropdown(index, this.getFilteredItemsForCostType(costType));
-        }
-      });
+    // Related item search input — delegated
+    this.modal.addEventListener('input', (e) => {
+      if (!e.target.classList.contains('related-search-input')) return;
+      const index = parseInt(e.target.dataset.index);
+      this.handleRelatedItemSearch(index, e.target.value);
     });
 
-    // Clear related item buttons
-    this.modal.querySelectorAll('.clear-related-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const index = parseInt(e.target.dataset.index);
-        this.clearRelatedItem(index);
-      });
+    // Related item search focus — delegated (focusin bubbles; focus does not)
+    this.modal.addEventListener('focusin', (e) => {
+      if (!e.target.classList.contains('related-search-input')) return;
+      const index = parseInt(e.target.dataset.index);
+      if (e.target.value === '') {
+        const costType = this.items[index].cost_type;
+        this.showRelatedItemDropdown(index, this.getFilteredItemsForCostType(costType));
+      }
     });
 
-    // Click outside to close
+    // Click outside to close, and clear related item buttons — delegated
     this.modal.addEventListener('click', (e) => {
+      const clearBtn = e.target.closest('.clear-related-btn');
+      if (clearBtn) {
+        const index = parseInt(clearBtn.dataset.index);
+        this.clearRelatedItem(index);
+        return;
+      }
+
       if (e.target === this.modal) {
         if (this.onCancel) this.onCancel();
         this.close();
@@ -562,8 +560,7 @@ export class MultiItemReviewModal {
       details.classList.add('expanded');
     }
 
-    // Re-attach listeners for this card
-    this.attachListeners();
+    // No re-attachment needed — field listeners are delegated on this.modal
   }
 
   updateUI() {
@@ -601,7 +598,7 @@ export class MultiItemReviewModal {
   validateItems() {
     let isValid = true;
 
-    this.items.forEach((item, index) => {
+    this.items.forEach((item) => {
       if (!item.selected) {
         item.errors = {};
         return;
