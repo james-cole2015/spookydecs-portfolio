@@ -136,7 +136,18 @@ async handleItemUpdate(updatedItem) {
     // Re-fetch after photo upload (no updated item passed)
     this.item = await fetchItemById(this.item.id, true);
   }
- a
+
+  // Update header photo
+  const editPhoto = document.querySelector('.edit-photo');
+  const editPhotoPlaceholder = document.querySelector('.edit-photo-placeholder');
+  if (this.item.images?.cloudfront_url) {
+    if (editPhoto) {
+      editPhoto.src = this.item.images.cloudfront_url;
+    } else if (editPhotoPlaceholder) {
+      editPhotoPlaceholder.outerHTML = `<img src="${this.item.images.cloudfront_url}" alt="${this.escapeHtml(this.item.short_name)}" class="edit-photo">`;
+    }
+  }
+
   this.editForm.render(this.item);
   actionCenter.render(this.item, (item) => {
     this.handleItemUpdate(item);
