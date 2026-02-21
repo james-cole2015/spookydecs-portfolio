@@ -263,6 +263,7 @@ async handleAddCost() {
     const photoModal = document.createElement('photo-upload-modal');
     photoModal.setAttribute('context', 'item');
     photoModal.setAttribute('photo-type', 'catalog');
+    photoModal.setAttribute('category', 'item_catalog');
     photoModal.setAttribute('season', 'shared');
     photoModal.setAttribute('item-id', this.itemData.itemId);
     photoModal.setAttribute('max-photos', '5');

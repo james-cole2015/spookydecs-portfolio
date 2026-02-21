@@ -53,18 +53,15 @@ async function loadAndRenderPhotos(filters) {
     // Convert UI filters to API filters
     const apiFilters = {
       season: filters.season,
-      category: filters.category,
+      photo_type: filters.photo_type,
       year: filters.year,
       limit: 500
     };
-    
+
     let photos = await fetchImages(apiFilters);
-    
+
     // Exclude receipts
-    photos = photos.filter(photo => {
-      const category = photo.category || photo.photo_type || '';
-      return category !== 'receipts' && category !== 'receipt';
-    });
+    photos = photos.filter(photo => photo.photo_type !== 'receipt');
     
     // Apply client-side filtering
     if (filters.isPublic) {

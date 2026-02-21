@@ -69,6 +69,7 @@ export class ActionCenter {
       const uploadModal = document.createElement('photo-upload-modal');
       uploadModal.setAttribute('context', 'item');
       uploadModal.setAttribute('photo-type', 'catalog');
+      uploadModal.setAttribute('category', 'item_catalog');
       uploadModal.setAttribute('season', this.item.season || 'shared');
       uploadModal.setAttribute('item-id', this.item.id);
       uploadModal.setAttribute('max-photos', '5');

@@ -127,6 +127,7 @@ async function _uploadFiles(files, idea) {
   const result = await service.upload(files, {
     context:    'idea',
     photo_type: 'catalog',
+    category:   'inspiration',
     season:     (idea.season || '').toLowerCase(),
     idea_id:    idea.id
   });

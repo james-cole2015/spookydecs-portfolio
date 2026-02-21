@@ -2,7 +2,6 @@
 import { initRouter } from './utils/router.js';
 import { renderImagesList } from './pages/images-list.js';
 import { renderImageDetail } from './pages/image-detail.js';
-import { renderImageUpload } from './pages/image-upload.js';
 import { renderPhotoBrowser } from './pages/photo-browser.js';
 import { renderGalleryManager } from './pages/gallery-manager.js';
 
@@ -14,7 +13,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       '/images': renderImagesList,
       '/images/gallery': renderGalleryManager,
       '/images/browse': renderPhotoBrowser,
-      '/images/upload': renderImageUpload,
       '/images/:photoId': renderImageDetail,
       '/images/:photoId/edit': renderImageDetail
     });

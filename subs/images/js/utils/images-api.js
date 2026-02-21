@@ -14,7 +14,6 @@ export async function fetchImages(filters = {}) {
     const params = new URLSearchParams();
     if (filters.season) params.append('season', filters.season);
     if (filters.photo_type) params.append('photo_type', filters.photo_type);
-    if (filters.category) params.append('category', filters.category);
     if (filters.year) params.append('year', filters.year);
     if (filters.item_id) params.append('item_id', filters.item_id);
     if (filters.class_type) params.append('class_type', filters.class_type);
@@ -116,72 +115,6 @@ export async function deleteImage(photoId) {
     return await response.json();
   } catch (error) {
     console.error('Error deleting image:', error);
-    showToast(error.message, 'error');
-    throw error;
-  }
-}
-
-export async function getPresignedUrls(uploadData) {
-  try {
-    const apiBase = await getApiBase();
-    const response = await fetch(`${apiBase}/presign`, {
-      method: 'POST',
-      headers: HEADERS,
-      body: JSON.stringify(uploadData)
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to get upload URLs');
-    }
-
-    const data = await response.json();
-    return data.uploads;
-  } catch (error) {
-    console.error('Error getting presigned URLs:', error);
-    showToast(error.message, 'error');
-    throw error;
-  }
-}
-
-export async function uploadToS3(presignedUrl, file, contentType) {
-  try {
-    const response = await fetch(presignedUrl, {
-      method: 'PUT',
-      headers: { 'Content-Type': contentType },
-      body: file
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to upload file to S3');
-    }
-
-    return true;
-  } catch (error) {
-    console.error('Error uploading to S3:', error);
-    throw error;
-  }
-}
-
-export async function confirmUpload(confirmData) {
-  try {
-    const apiBase = await getApiBase();
-    const response = await fetch(`${apiBase}/confirm`, {
-      method: 'POST',
-      headers: HEADERS,
-      body: JSON.stringify(confirmData)
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to confirm upload');
-    }
-
-    const data = await response.json();
-    showToast(`Successfully uploaded ${data.photos_added} photo(s)`, 'success');
-    return data;
-  } catch (error) {
-    console.error('Error confirming upload:', error);
     showToast(error.message, 'error');
     throw error;
   }

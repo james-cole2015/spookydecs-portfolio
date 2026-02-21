@@ -34,10 +34,10 @@ export function FilterPanel(currentFilters = {}, onFilterChange) {
         </div>
         
         <div class="filter-group">
-          <label>Category</label>
-          <select name="category" class="filter-select">
-            ${IMAGES_CONFIG.FILTER_OPTIONS.category.map(opt => `
-              <option value="${opt.value}" ${currentFilters.category === opt.value ? 'selected' : ''}>
+          <label>Type</label>
+          <select name="photo_type" class="filter-select">
+            ${IMAGES_CONFIG.FILTER_OPTIONS.photo_type.map(opt => `
+              <option value="${opt.value}" ${currentFilters.photo_type === opt.value ? 'selected' : ''}>
                 ${opt.label}
               </option>
             `).join('')}
