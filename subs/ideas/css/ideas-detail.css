@@ -1,0 +1,219 @@
+/* ============================================================
+   Ideas Sub — Detail Page Styles
+   ============================================================ */
+
+.detail-page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-6);
+}
+
+/* ---- Hero Image ------------------------------------------- */
+.detail-hero {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: var(--space-4);
+  aspect-ratio: 16 / 7;
+}
+
+.detail-hero img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.detail-hero-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-border-strong);
+}
+
+.detail-hero-placeholder svg {
+  width: 56px;
+  height: 56px;
+}
+
+/* ---- Gallery Strip ---------------------------------------- */
+.detail-gallery {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+  padding-bottom: var(--space-1);
+}
+
+.gallery-thumb {
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.12s;
+}
+
+.gallery-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.gallery-thumb.active {
+  border-color: var(--color-primary);
+}
+
+.gallery-thumb:hover:not(.active) {
+  border-color: var(--color-border-strong);
+}
+
+/* ---- Detail Header ---------------------------------------- */
+.detail-header {
+  margin-bottom: var(--space-5);
+}
+
+.detail-badges {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.detail-title {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.25;
+  margin-bottom: var(--space-4);
+}
+
+.detail-actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+/* ---- Detail Body ------------------------------------------ */
+.detail-body {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+@media (max-width: 680px) {
+  .detail-body {
+    grid-template-columns: 1fr;
+  }
+}
+
+.detail-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.detail-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ---- Field Rows ------------------------------------------- */
+.detail-section {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+
+.detail-section-title {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-4);
+}
+
+.detail-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.detail-field:first-of-type { padding-top: 0; }
+.detail-field:last-of-type  { padding-bottom: 0; border-bottom: none; }
+
+.detail-field-label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+}
+
+.detail-field-value {
+  font-size: var(--text-base);
+  color: var(--color-text);
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.detail-field-value.empty {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.detail-field-value a {
+  color: var(--color-primary);
+  word-break: break-all;
+}
+
+.detail-field-value a:hover { text-decoration: underline; }
+
+/* ---- Timestamps ------------------------------------------- */
+.detail-timestamps {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/* ---- Not Found -------------------------------------------- */
+.not-found-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: var(--space-8);
+}
+
+.not-found-content {
+  text-align: center;
+  max-width: 380px;
+}
+
+.not-found-content h2 {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: var(--space-3);
+}
+
+.not-found-content p {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-6);
+}

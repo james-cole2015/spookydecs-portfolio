@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpookyDecs - Ideas</title>
+
+  <!-- External Dependencies -->
+  <script src="https://unpkg.com/navigo@8.11.1/lib/navigo.min.js"></script>
+
+  <!-- SpookyDecs Shared Components -->
+  <script src="https://assets.spookydecs.com/components/spookydecs-header.js"></script>
+  <script src="https://assets.spookydecs.com/components/api-config.js"></script>
+  <script src="https://assets.spookydecs.com/components/photo-upload-service.js"></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/css/ideas.css">
+  <link rel="stylesheet" href="/css/ideas-detail.css">
+</head>
+<body>
+  <!-- Header Component -->
+  <spookydecs-header
+    page-title="Ideas"
+    user-name="Admin"
+    user-role="Administrator"
+    logout-url="/logout">
+  </spookydecs-header>
+
+  <!-- Loading Indicator -->
+  <div id="loading-indicator" style="display: none;">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- Main Content -->
+  <div id="main-content"></div>
+
+  <!-- Shared Containers -->
+  <div id="modal-container"></div>
+  <div id="toast-container"></div>
+
+  <!-- App Entry -->
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
