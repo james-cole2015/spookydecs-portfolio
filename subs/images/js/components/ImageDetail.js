@@ -69,7 +69,7 @@ export function ImageDetail(photo, isEditMode = false) {
   container.className = 'image-detail';
 
   const category = deriveCategory(photo);
-  const categoryConfig = IMAGES_CONFIG.CATEGORIES[category] || IMAGES_CONFIG.CATEGORIES.misc;
+  const categoryConfig = IMAGES_CONFIG.CATEGORIES[category] || { label: 'Unknown', requiredFields: [] };
 
   container.innerHTML = `
     <div class="detail-header">
