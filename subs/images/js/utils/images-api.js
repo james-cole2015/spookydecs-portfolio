@@ -24,7 +24,8 @@ export async function fetchImages(filters = {}) {
     const response = await fetch(`${apiBase}?${params.toString()}`);
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch images: ${response.statusText}`);
+      const body = await response.text().catch(() => '');
+      throw new Error(`Failed to fetch images: HTTP ${response.status} — ${body}`);
     }
 
     const data = await response.json();

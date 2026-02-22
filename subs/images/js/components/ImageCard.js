@@ -6,7 +6,7 @@ export function ImageCard(photo) {
   card.className = 'image-card';
   
   // Determine category badge
-  const category = photo.category || photo.photo_type || 'unknown';
+  const category = photo.photo_type || 'unknown';
   const categoryLabel = category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
   
   // Check if orphaned - FIXED: Added storage_id check
@@ -25,8 +25,9 @@ export function ImageCard(photo) {
     <div class="image-card-body">
       <div class="image-card-id">${photo.photo_id}</div>
       <div class="image-card-meta">
-        <span class="season-indicator season-${photo.season}">${photo.season}</span>
+        <span class="season-indicator season-${(photo.season || '').toLowerCase()}">${photo.season}</span>
         ${photo.is_public ? '<span class="public-indicator">Public</span>' : ''}
+        ${(photo.item_ids || []).map(id => `<span class="item-id-ref">${id}</span>`).join('')}
       </div>
     </div>
     <div class="image-card-footer">

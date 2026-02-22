@@ -3,7 +3,7 @@ export function getStateFromUrl() {
   const params = new URLSearchParams(window.location.search);
   return {
     season: params.get('season') || '',
-    category: params.get('category') || '',
+    photo_type: params.get('photo_type') || '',
     year: params.get('year') || '',
     isPublic: params.get('isPublic') || '',
     hasReferences: params.get('hasReferences') || '',
