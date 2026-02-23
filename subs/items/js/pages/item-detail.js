@@ -8,6 +8,7 @@ import { toast } from '../shared/toast.js';
 import { getStatusColor, getClassIcon, getSeasonIcon } from '../utils/item-config.js';
 import { actionDrawer } from '../components/ActionDrawer.js';
 import { EditableSection } from '../components/EditableSection.js';
+import { PhotoGallery } from '../components/PhotoGallery.js';
 
 class ItemDetailPage {
   constructor() {
@@ -36,13 +37,16 @@ class ItemDetailPage {
       
       // Initialize action drawer
       actionDrawer.init(this.item, () => this.handleItemUpdate());
-      
+
       // Initialize scroll behaviors
       this.initScrollBehaviors();
-      
+
       // Attach click handlers for editable fields
       this.attachEditHandlers();
-      
+
+      // Mount photo gallery into Photos section
+      await this.mountPhotoGallery();
+
       this.hideLoading();
     } catch (error) {
       console.error('Error loading item:', error);
@@ -570,30 +574,26 @@ class ItemDetailPage {
   }
   
   renderPhotosSection() {
-    const primaryPhoto = this.item.images?.primary_photo_id;
-    const secondaryPhotos = this.item.images?.secondary_photo_ids || [];
-    
     return `
       <div class="detail-section">
         <h2 class="section-title">Photos</h2>
-        
-        <h3 class="subsection-title">Primary Photo</h3>
-        ${primaryPhoto ? `
-          <div class="detail-field">
-            <div class="field-value">${primaryPhoto}</div>
-          </div>
-        ` : `
-          <p class="field-value empty">No primary photo</p>
-        `}
-        
-        <h3 class="subsection-title">Additional Photos</h3>
-        ${secondaryPhotos.length > 0 ? `
-          <p class="field-value">${secondaryPhotos.length} photo(s)</p>
-        ` : `
-          <p class="field-value empty">No additional photos</p>
-        `}
+        <div id="photo-gallery-mount"></div>
       </div>
     `;
+  }
+
+  async mountPhotoGallery() {
+    const mountEl = document.getElementById('photo-gallery-mount');
+    if (!mountEl) return;
+
+    const gallery = new PhotoGallery({
+      itemId: this.item.id,
+      season: this.item.season,
+      onAddPhotos: () => actionDrawer.handleUploadPhoto()
+    });
+
+    await gallery.render(mountEl);
+    this.photoGallery = gallery;
   }
   
   renderField(label, value, key = null, section = null) {
@@ -739,12 +739,13 @@ class ItemDetailPage {
       
       // Re-render page
       await this.renderPage();
-      
+
       // Re-initialize
       actionDrawer.updateItem(this.item);
       this.initScrollBehaviors();
       this.attachEditHandlers();
-      
+      await this.mountPhotoGallery();
+
     } catch (error) {
       console.error('Error refreshing item:', error);
       toast.error('Refresh Failed', 'Could not reload item data');

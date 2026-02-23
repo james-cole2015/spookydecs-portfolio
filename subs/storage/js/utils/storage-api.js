@@ -254,6 +254,36 @@ export const photosAPI = {
     });
 
     return photoMap;
+  },
+
+  async listPhotos(storageId, photoType = 'storage') {
+    if (!storageId) return { count: 0, photos: [] };
+
+    const API_ENDPOINT = await getApiEndpoint();
+    const params = new URLSearchParams({ photo_type: photoType, storage_id: storageId });
+
+    try {
+      const response = await fetch(
+        `${API_ENDPOINT}/admin/images?${params.toString()}`,
+        { headers: HEADERS }
+      );
+      const data = await handleResponse(response);
+      return data; // { count, photos }
+    } catch (error) {
+      console.error(`Failed to list photos for storage ${storageId}:`, error);
+      return { count: 0, photos: [] };
+    }
+  },
+
+  async setPrimary(photoId, storageId) {
+    const API_ENDPOINT = await getApiEndpoint();
+    const response = await fetch(`${API_ENDPOINT}/admin/images/set_primary`, {
+      method: 'POST',
+      headers: HEADERS,
+      body: JSON.stringify({ photo_id: photoId, context: 'storage', storage_id: storageId })
+    });
+    const data = await handleResponse(response);
+    return data;
   }
 };
 

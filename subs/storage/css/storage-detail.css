@@ -2,6 +2,124 @@
  * Storage Detail Page Styles
  */
 
+/* ===================== Photo Gallery ===================== */
+
+.storage-photo-gallery-section {
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+}
+
+.storage-photo-gallery-section::before {
+  content: 'Photos';
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 16px;
+}
+
+.photo-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.photo-gallery-loading,
+.photo-gallery-empty {
+  color: #6B7280;
+  font-size: 14px;
+  padding: 4px 0;
+}
+
+.photo-gallery-subtitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 10px 0;
+}
+
+.photo-gallery-primary-slot .photo-card {
+  max-width: 220px;
+}
+
+.photo-gallery-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.photo-card {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #E5E7EB;
+  background: #F9FAFB;
+  width: 130px;
+  flex-shrink: 0;
+}
+
+.photo-card-primary {
+  border-color: #3B82F6;
+}
+
+.photo-card-img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+
+.photo-badge-primary {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: #3B82F6;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.btn-set-primary {
+  display: block;
+  width: 100%;
+  padding: 6px 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #3B82F6;
+  background: white;
+  border: none;
+  border-top: 1px solid #E5E7EB;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn-set-primary:hover:not(:disabled) {
+  background: #EFF6FF;
+}
+
+.btn-set-primary:disabled {
+  color: #9CA3AF;
+  cursor: not-allowed;
+}
+
+.photo-gallery-actions {
+  padding-top: 4px;
+}
+
+.btn-sm {
+  font-size: 13px;
+  padding: 6px 12px;
+}
+
+/* ===================================================== */
+
 /* ============================================
    DETAIL VIEW LAYOUT
    ============================================ */

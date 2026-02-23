@@ -7,6 +7,7 @@
 import { storageAPI, photosAPI } from '../utils/storage-api.js';
 import { formatStorageUnit } from '../utils/storage-config.js';
 import { StorageDetailView } from '../components/StorageDetailView.js';
+import { StoragePhotoGallery } from '../components/StoragePhotoGallery.js';
 import { ContentsPanel } from '../components/ContentsPanel.js';
 import { showDeleteConfirm } from '../shared/modal.js';
 import { showSuccess, showError } from '../shared/toast.js';
@@ -33,6 +34,7 @@ export async function renderStorageDetail(storageId) {
       </div>
       
       <div id="detail-container"></div>
+      <div id="photo-gallery-container" class="storage-photo-gallery-section"></div>
       <div id="contents-container"></div>
     </div>
   `;
@@ -59,18 +61,19 @@ async function loadStorageUnit(storageId) {
     // Normalize data
     currentStorageUnit = formatStorageUnit(data);
     
-    // **FIX: Enrich storage unit itself with photo URL**
-    if (currentStorageUnit.images?.photo_id) {
+    // Enrich storage unit with primary photo URL.
+    // Support new schema (primary_photo_id) and legacy schema (photo_id).
+    const headerPhotoId = currentStorageUnit.images?.primary_photo_id
+      || currentStorageUnit.images?.photo_id;
+    if (headerPhotoId) {
       try {
-        const photoData = await photosAPI.getById(currentStorageUnit.images.photo_id);
+        const photoData = await photosAPI.getById(headerPhotoId);
         if (photoData) {
           currentStorageUnit.images.photo_url = photoData.cloudfront_url;
           currentStorageUnit.images.thumb_cloudfront_url = photoData.thumb_cloudfront_url;
-          console.log('Storage unit photo loaded:', photoData.cloudfront_url);
         }
       } catch (photoError) {
         console.warn('Failed to load storage unit photo:', photoError);
-        // Continue without photo - will show placeholder
       }
     }
     
@@ -84,7 +87,17 @@ async function loadStorageUnit(storageId) {
       onDelete: handleDelete
     });
     detailView.render(document.getElementById('detail-container'));
-    
+
+    // Mount photo gallery
+    const galleryContainer = document.getElementById('photo-gallery-container');
+    if (galleryContainer) {
+      const gallery = new StoragePhotoGallery({
+        storageId: currentStorageUnit.id,
+        season: currentStorageUnit.season || currentStorageUnit.category || 'shared'
+      });
+      await gallery.render(galleryContainer);
+    }
+
     // Initialize contents panel with enriched data
     contentsPanel = new ContentsPanel({
       contents: enrichedContents,

@@ -194,7 +194,6 @@ fab.addEventListener('click', () => this.toggle());
       uploadModal.setAttribute('season', this.item.season || 'shared');
       uploadModal.setAttribute('item-id', this.item.id);
       uploadModal.setAttribute('max-photos', '5');
-      uploadModal.setAttribute('is-primary', 'true');
       
       // Handle upload complete
       uploadModal.addEventListener('upload-complete', (e) => {

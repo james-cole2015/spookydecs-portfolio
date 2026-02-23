@@ -213,6 +213,30 @@ export async function getPhotosForItem(item) {
   return result;
 }
 
+export async function listPhotosForItem(itemId) {
+  const apiEndpoint = await getEndpoint();
+  const response = await fetch(
+    `${apiEndpoint}/admin/images?photo_type=catalog&item_id=${encodeURIComponent(itemId)}`,
+    { method: 'GET', headers: HEADERS }
+  );
+  if (!response.ok) throw new Error(`Failed to list photos: ${response.status}`);
+  return await response.json(); // { count, photos }
+}
+
+export async function setPrimaryPhoto(photoId, itemId) {
+  const apiEndpoint = await getEndpoint();
+  const response = await fetch(`${apiEndpoint}/admin/images/set_primary`, {
+    method: 'POST',
+    headers: HEADERS,
+    body: JSON.stringify({ photo_id: photoId, context: 'item', item_id: itemId })
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || `Failed to set primary: ${response.status}`);
+  }
+  return await response.json();
+}
+
 export function validateFile(file) {
   const MAX_SIZE = 10 * 1024 * 1024;
   const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/heic', 'image/heif'];

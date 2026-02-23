@@ -283,7 +283,7 @@ export class CreateWizard {
     modal.setAttribute('context', 'storage');
     modal.setAttribute('photo-type', 'storage');
     modal.setAttribute('season', this.formData.season.toLowerCase());
-    modal.setAttribute('max-photos', '1');
+    modal.setAttribute('max-photos', '5');
     modal.setAttribute('year', new Date().getFullYear().toString());
     
     // NOTE: We don't set storage-id yet since the storage unit doesn't exist
