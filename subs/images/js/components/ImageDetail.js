@@ -144,6 +144,8 @@ export function ImageDetail(photo, isEditMode = false) {
         <div class="dynamic-fields">
           ${renderDynamicFields(photo, categoryConfig, isEditMode)}
         </div>
+
+        ${!isEditMode ? renderEntityRefs(photo) : ''}
         
         ${isEditMode ? `
           <div class="form-group checkbox-group">
@@ -190,6 +192,15 @@ export function ImageDetail(photo, isEditMode = false) {
     </div>
   `;
   
+  // Entity link navigation (item_ids, storage_id → entity detail page)
+  container.addEventListener('click', (e) => {
+    const link = e.target.closest('.entity-link');
+    if (link) {
+      e.preventDefault();
+      navigate(`/images/entities/${link.dataset.entityId}?type=${link.dataset.entityType}`);
+    }
+  });
+
   // Handle category change in edit mode
   if (isEditMode) {
     const categorySelect = container.querySelector('[name="category"]');
@@ -221,12 +232,42 @@ export function ImageDetail(photo, isEditMode = false) {
   return wrapper;
 }
 
+function renderEntityRefs(photo) {
+  const parts = [];
+
+  const ids = photo.item_ids || [];
+  if (ids.length) {
+    const links = ids.map(id =>
+      `<a class="entity-link breadcrumb-link" data-entity-id="${id}" data-entity-type="item" href="#">${id}</a>`
+    ).join(', ');
+    parts.push(`
+      <div class="form-group">
+        <label>Item IDs</label>
+        <div class="readonly-value">${links}</div>
+      </div>
+    `);
+  }
+
+  if (photo.storage_id) {
+    parts.push(`
+      <div class="form-group">
+        <label>Storage ID</label>
+        <div class="readonly-value">
+          <a class="entity-link breadcrumb-link" data-entity-id="${photo.storage_id}" data-entity-type="storage" href="#">${photo.storage_id}</a>
+        </div>
+      </div>
+    `);
+  }
+
+  return parts.join('');
+}
+
 function renderDynamicFields(photo, categoryConfig, isEditMode) {
   const fields = [];
   
   categoryConfig.requiredFields.forEach(field => {
     let value, label;
-    
+
     if (field === 'item_id') {
       value = (photo.item_ids || []).join(', ');
       label = 'Item IDs';
@@ -246,22 +287,40 @@ function renderDynamicFields(photo, categoryConfig, isEditMode) {
       value = photo[field] || '';
       label = field.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
-    
+
+    let readonlyHtml;
+    if (!isEditMode) {
+      if (field === 'item_id') {
+        const ids = photo.item_ids || [];
+        const links = ids.length
+          ? ids.map(id =>
+              `<a class="entity-link breadcrumb-link" data-entity-id="${id}" data-entity-type="item" href="#">${id}</a>`
+            ).join(', ')
+          : 'Not set';
+        readonlyHtml = `<div class="readonly-value">${links}</div>`;
+      } else if (field === 'storage_id') {
+        const sid = photo.storage_id || '';
+        readonlyHtml = sid
+          ? `<div class="readonly-value"><a class="entity-link breadcrumb-link" data-entity-id="${sid}" data-entity-type="storage" href="#">${sid}</a></div>`
+          : `<div class="readonly-value">Not set</div>`;
+      } else {
+        readonlyHtml = `<div class="readonly-value">${value || 'Not set'}</div>`;
+      }
+    }
+
     fields.push(`
       <div class="form-group">
         <label>${label} ${categoryConfig.requiredFields.includes(field) ? '<span class="required">*</span>' : ''}</label>
         ${isEditMode ? `
-          <input 
-            type="text" 
-            name="${field}" 
-            class="form-control" 
-            value="${value}" 
+          <input
+            type="text"
+            name="${field}"
+            class="form-control"
+            value="${value}"
             ${categoryConfig.requiredFields.includes(field) ? 'required' : ''}
             placeholder="${label}"
           />
-        ` : `
-          <div class="readonly-value">${value || 'Not set'}</div>
-        `}
+        ` : readonlyHtml}
       </div>
     `);
   });
