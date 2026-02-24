@@ -194,7 +194,7 @@ export async function uploadAndProcessReceipt(file, contextData = {}, onProgress
         context: 'receipt',
         photo_type: 'receipt',
         season: 'shared',
-        files: [{ filename: file.name, content_type: file.type }]
+        files: [{ filename: file.name, content_type: file.type, file_size: file.size }]
       })
     });
   } catch (fetchError) {
