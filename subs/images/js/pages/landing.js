@@ -44,10 +44,10 @@ export function renderLandingPage() {
         ${renderCard({
           id: 'items',
           icon: '📦',
-          title: 'Items',
-          description: 'Browse and manage your decoration items. View item details, associated photos, and deployment history.',
+          title: 'Entities',
+          description: 'Browse photos organized by item or storage entity. View all photos for a given decoration or storage unit.',
           active: true,
-          route: '/images/items'
+          route: '/images/entities'
         })}
       </div>
     </div>

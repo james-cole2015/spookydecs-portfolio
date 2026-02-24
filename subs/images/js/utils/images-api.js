@@ -16,6 +16,7 @@ export async function fetchImages(filters = {}) {
     if (filters.photo_type) params.append('photo_type', filters.photo_type);
     if (filters.year) params.append('year', filters.year);
     if (filters.item_id) params.append('item_id', filters.item_id);
+    if (filters.storage_id) params.append('storage_id', filters.storage_id);
     if (filters.class_type) params.append('class_type', filters.class_type);
     if (filters.tags) params.append('tags', filters.tags);
     if (filters.limit) params.append('limit', filters.limit);
@@ -116,6 +117,29 @@ export async function deleteImage(photoId) {
     return await response.json();
   } catch (error) {
     console.error('Error deleting image:', error);
+    showToast(error.message, 'error');
+    throw error;
+  }
+}
+
+export async function setPrimaryPhoto(payload) {
+  try {
+    const apiBase = await getApiBase();
+    const response = await fetch(`${apiBase}/set_primary`, {
+      method: 'POST',
+      headers: HEADERS,
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Failed to set primary: HTTP ${response.status}`);
+    }
+
+    showToast('Primary photo updated', 'success');
+    return await response.json();
+  } catch (error) {
+    console.error('Error setting primary photo:', error);
     showToast(error.message, 'error');
     throw error;
   }

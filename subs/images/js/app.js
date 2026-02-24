@@ -6,6 +6,8 @@ import { renderImageDetail } from './pages/image-detail.js';
 import { renderPhotoBrowser } from './pages/photo-browser.js';
 import { renderGalleryManager } from './pages/gallery-manager.js';
 import { renderItemsPage } from './pages/items.js';
+import { renderEntitiesPage } from './pages/entities.js';
+import { renderEntityDetail } from './pages/entity-detail.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   try {
@@ -17,8 +19,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       { path: '/images/list',         handler: renderImagesList },
       { path: '/images/gallery',      handler: renderGalleryManager },
       { path: '/images/browse',       handler: renderPhotoBrowser },
-      { path: '/images/items',        handler: renderItemsPage },
-      { path: '/images/:photoId/edit',handler: renderImageDetail },
+      { path: '/images/items',            handler: renderItemsPage },
+      { path: '/images/entities',         handler: renderEntitiesPage },
+      { path: '/images/entities/:id',     handler: renderEntityDetail },
+      { path: '/images/:photoId/edit',    handler: renderImageDetail },
       { path: '/images/:photoId',     handler: renderImageDetail }
     ]);
 
