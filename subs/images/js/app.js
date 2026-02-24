@@ -1,21 +1,26 @@
 // Main App Entry Point
 import { initRouter } from './utils/router.js';
+import { renderLandingPage } from './pages/landing.js';
 import { renderImagesList } from './pages/images-list.js';
 import { renderImageDetail } from './pages/image-detail.js';
 import { renderPhotoBrowser } from './pages/photo-browser.js';
 import { renderGalleryManager } from './pages/gallery-manager.js';
+import { renderItemsPage } from './pages/items.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     await window.SpookyConfig.get();
 
-    const router = initRouter({
-      '/images': renderImagesList,
-      '/images/gallery': renderGalleryManager,
-      '/images/browse': renderPhotoBrowser,
-      '/images/:photoId': renderImageDetail,
-      '/images/:photoId/edit': renderImageDetail
-    });
+    // Routes registered in order — specific paths must precede generic /:param routes
+    const router = initRouter([
+      { path: '/images',              handler: renderLandingPage },
+      { path: '/images/list',         handler: renderImagesList },
+      { path: '/images/gallery',      handler: renderGalleryManager },
+      { path: '/images/browse',       handler: renderPhotoBrowser },
+      { path: '/images/items',        handler: renderItemsPage },
+      { path: '/images/:photoId/edit',handler: renderImageDetail },
+      { path: '/images/:photoId',     handler: renderImageDetail }
+    ]);
 
     console.log('Images app initialized');
   } catch (error) {

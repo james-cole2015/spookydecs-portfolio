@@ -4,6 +4,7 @@ import { IMAGES_CONFIG } from '../utils/images-config.js';
 import { navigate } from '../utils/router.js';
 import { showToast } from '../shared/toast.js';
 import { GalleryPhotoCard } from '../components/GalleryPhotoCard.js';
+import { Breadcrumb } from '../components/Breadcrumb.js';
 
 let currentSection = 'showcase';
 let currentFilters = {
@@ -16,12 +17,6 @@ export async function renderGalleryManager() {
 
   app.innerHTML = `
     <div class="gallery-manager">
-      <div class="breadcrumbs">
-        <a href="/images" class="breadcrumb-link">Images</a>
-        <span class="breadcrumb-separator">›</span>
-        <span class="breadcrumb-current">Gallery Management</span>
-      </div>
-
       <div class="page-header">
         <h1>Gallery Management</h1>
         <div class="header-actions">
@@ -88,6 +83,11 @@ export async function renderGalleryManager() {
     </div>
   `;
 
+  app.prepend(Breadcrumb([
+    { label: 'Images', path: '/images' },
+    { label: 'Gallery Manager' }
+  ]));
+
   attachGalleryHandlers();
   await loadGalleryPhotos();
 }
@@ -105,7 +105,7 @@ function attachGalleryHandlers() {
   // Back button
   const backBtn = document.getElementById('back-btn');
   backBtn.addEventListener('click', () => {
-    navigate('/images');
+    navigate('/images/list');
   });
 
   // Tab switching

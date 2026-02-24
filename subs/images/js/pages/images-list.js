@@ -2,6 +2,7 @@
 import { fetchImages } from '../utils/images-api.js';
 import { ImageCard } from '../components/ImageCard.js';
 import { FilterPanel } from '../components/FilterPanel.js';
+import { Breadcrumb } from '../components/Breadcrumb.js';
 import { getStateFromUrl, updateUrlState } from '../utils/state.js';
 import { navigate } from '../utils/router.js';
 import { showToast } from '../shared/toast.js';
@@ -28,6 +29,11 @@ export async function renderImagesList() {
       <div class="loading">Loading images...</div>
     </div>
   `;
+
+  app.prepend(Breadcrumb([
+    { label: 'Images', path: '/images' },
+    { label: 'Image Admin' }
+  ]));
 
   // Setup buttons
   const galleryBtn = document.getElementById('gallery-btn');

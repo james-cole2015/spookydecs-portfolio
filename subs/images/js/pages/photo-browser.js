@@ -2,6 +2,7 @@
 import { fetchImages } from '../utils/images-api.js';
 import { FilterPanel } from '../components/FilterPanel.js';
 import { LightboxGallery } from '../components/LightboxGallery.js';
+import { Breadcrumb } from '../components/Breadcrumb.js';
 import { getStateFromUrl, updateUrlState } from '../utils/state.js';
 import { navigate } from '../utils/router.js';
 import { isOrphaned } from '../utils/images-config.js';
@@ -19,20 +20,25 @@ export async function renderPhotoBrowser() {
         <button class="btn btn-secondary back-to-admin">Back to Admin</button>
       </div>
     </div>
-    
+
     <div id="filter-panel-container"></div>
-    
+
     <div class="photo-browser-container">
       <div class="loading">Loading photos...</div>
     </div>
   `;
-  
+
+  app.prepend(Breadcrumb([
+    { label: 'Images', path: '/images' },
+    { label: 'Photo Browser' }
+  ]));
+
   // Back to admin button
   const backBtn = app.querySelector('.back-to-admin');
   backBtn.addEventListener('click', () => {
-    navigate('/images');
+    navigate('/images/list');
   });
-  
+
   // Render filter panel
   const filterContainer = document.getElementById('filter-panel-container');
   const filterPanel = FilterPanel(filters, async (newFilters) => {

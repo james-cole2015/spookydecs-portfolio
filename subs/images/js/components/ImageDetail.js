@@ -3,7 +3,6 @@ import { IMAGES_CONFIG, validateCategory } from '../utils/images-config.js';
 import { updateImage, deleteImage } from '../utils/images-api.js';
 import { navigate } from '../utils/router.js';
 import { confirmAction } from '../shared/modal.js';
-import { Breadcrumb } from './Breadcrumb.js';
 
 // Derive category from photo data
 function deriveCategory(photo) {
@@ -49,21 +48,6 @@ function deriveCategory(photo) {
 
 export function ImageDetail(photo, isEditMode = false) {
   const wrapper = document.createElement('div');
-
-  // Create breadcrumb navigation
-  const breadcrumbItems = isEditMode
-    ? [
-        { label: 'Images', path: '/images' },
-        { label: 'Image Details', path: `/images/${photo.photo_id}` },
-        { label: 'Edit', path: `/images/${photo.photo_id}/edit` }
-      ]
-    : [
-        { label: 'Images', path: '/images' },
-        { label: 'Image Details', path: `/images/${photo.photo_id}` }
-      ];
-
-  const breadcrumb = Breadcrumb(breadcrumbItems);
-  wrapper.appendChild(breadcrumb);
 
   const container = document.createElement('div');
   container.className = 'image-detail';
@@ -305,7 +289,7 @@ function setupButtonHandlers(container, photo, isEditMode) {
         `Are you sure you want to delete this image? This action cannot be undone.`,
         async () => {
           await deleteImage(photo.photo_id);
-          navigate('/images');
+          navigate('/images/list');
         }
       );
     });

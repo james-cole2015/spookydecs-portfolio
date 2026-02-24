@@ -1,6 +1,7 @@
 // Image Detail Page
 import { fetchImage } from '../utils/images-api.js';
 import { ImageDetail } from '../components/ImageDetail.js';
+import { Breadcrumb } from '../components/Breadcrumb.js';
 import { showToast } from '../shared/toast.js';
 
 export async function renderImageDetail(params) {
@@ -16,6 +17,14 @@ export async function renderImageDetail(params) {
     const photo = await fetchImage(photoId);
 
     app.innerHTML = '';
+    const crumbs = [
+      { label: 'Images', path: '/images' },
+      { label: 'Image Admin', path: '/images/list' },
+      ...(isEditMode
+        ? [{ label: photo.photo_id, path: `/images/${photo.photo_id}` }, { label: 'Edit' }]
+        : [{ label: photo.photo_id }])
+    ];
+    app.appendChild(Breadcrumb(crumbs));
     app.appendChild(ImageDetail(photo, isEditMode));
 
   } catch (error) {
@@ -23,7 +32,7 @@ export async function renderImageDetail(params) {
       <div class="error-state">
         <h2>Image Not Found</h2>
         <p>${error.message}</p>
-        <button class="btn btn-primary" onclick="window.location.href='/images'">
+        <button class="btn btn-primary" onclick="window.location.href='/images/list'">
           Back to Images
         </button>
       </div>
