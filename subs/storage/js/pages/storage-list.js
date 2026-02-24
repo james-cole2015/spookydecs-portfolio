@@ -4,7 +4,7 @@
  * UPDATED: Icon-only buttons, mobile-optimized
  */
 
-import { storageAPI, itemsAPI } from '../utils/storage-api.js';
+import { storageAPI, itemsAPI, photosAPI } from '../utils/storage-api.js';
 import { formatStorageUnit } from '../utils/storage-config.js';
 import { getFiltersFromUrl, saveFiltersToUrl } from '../utils/state.js';
 import { FilterBar } from '../components/FilterBar.js';
@@ -117,7 +117,29 @@ async function loadData() {
     
     allStorage = storageData.map(unit => formatStorageUnit(unit));
     allItems = itemsData;
-    
+
+    // Enrich storage units with primary photo URLs for card thumbnails
+    const photoIds = allStorage
+      .map(unit => unit.images?.primary_photo_id)
+      .filter(id => id);
+
+    if (photoIds.length > 0) {
+      const photoMap = await photosAPI.getByIds(photoIds);
+      allStorage = allStorage.map(unit => {
+        const photoId = unit.images?.primary_photo_id;
+        const photoData = photoId ? photoMap[photoId] : null;
+        if (!photoData) return unit;
+        return {
+          ...unit,
+          images: {
+            ...unit.images,
+            thumb_cloudfront_url: photoData.thumb_cloudfront_url || null,
+            photo_url: photoData.cloudfront_url || null
+          }
+        };
+      });
+    }
+
     console.log('Loaded storage units:', allStorage.length);
     console.log('Loaded items:', allItems.length);
     
