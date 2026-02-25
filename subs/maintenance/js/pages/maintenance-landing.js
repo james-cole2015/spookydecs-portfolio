@@ -29,7 +29,7 @@ export function renderMaintenanceLanding(container) {
           icon: '🏷️',
           title: 'Items',
           description: 'Browse all items with associated maintenance history and record summaries.',
-          route: '/records'
+          route: '/items'
         })}
       </div>
     </div>

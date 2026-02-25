@@ -59,23 +59,18 @@ export function initRouter() {
       console.log('✅ Route matched: /maintenance');
       await handleLandingView();
     })
-    .on('/:itemId', async (match) => {
-      console.log('✅ Route matched: /:itemId', match.data);
-      
-      // Safety guard - prevent literal routes from being caught
-      if (match.data.itemId === 'create' || match.data.itemId === 'schedules' ||
-          match.data.itemId === 'maintenance' || match.data.itemId === 'records') {
-        console.error('❌ BUG: Literal route matched /:itemId pattern!');
-        console.error('   This should never happen - check route order');
-        return;
-      }
-      
-      await handleItemDetailView(match);
-    })
     .on('/create', async (match) => {
       console.log('✅ Route matched: /create');
       console.log('   Query params:', window.location.search);
       await handleCreateView(match);
+    })
+    .on('/records', async () => {
+      console.log('✅ Route matched: /records');
+      await handleMainView();
+    })
+    .on('/items', async () => {
+      console.log('✅ Route matched: /items');
+      await handleItemsView();
     })
     .on('/schedules', async () => {
       console.log('✅ Route matched: /schedules');
@@ -83,24 +78,24 @@ export function initRouter() {
     })
     .on('/schedules/:id', async (match) => {
       console.log('✅ Route matched: /schedules/:id', match.data);
-      
+
       // Prevent /schedules/new and /schedules/apply from matching this - these are not IDs
       if (match.data.id === 'new' || match.data.id === 'apply') {
         console.log('   ⚠️  Skipping - this is a literal route');
         return;
       }
-      
+
       await handleScheduleDetailView(match);
     })
     .on('/schedules/:id/edit', async (match) => {
       console.log('✅ Route matched: /schedules/:id/edit', match.data);
-      
+
       // Prevent /schedules/new/edit from matching (shouldn't happen but safety)
       if (match.data.id === 'new') {
         console.log('   ⚠️  Skipping - invalid route');
         return;
       }
-      
+
       await handleScheduleEditView(match);
     })
     .on('/schedules/apply', async () => {
@@ -115,9 +110,19 @@ export function initRouter() {
       console.log('✅ Route matched: /schedules/new');
       await handleScheduleCreateView();
     })
-    .on('/records', async () => {
-      console.log('✅ Route matched: /records');
-      await handleMainView();
+    .on('/:itemId', async (match) => {
+      console.log('✅ Route matched: /:itemId', match.data);
+
+      // Safety guard - prevent literal routes from being caught
+      if (match.data.itemId === 'create' || match.data.itemId === 'schedules' ||
+          match.data.itemId === 'maintenance' || match.data.itemId === 'records' ||
+          match.data.itemId === 'items') {
+        console.error('❌ BUG: Literal route matched /:itemId pattern!');
+        console.error('   This should never happen - check route order');
+        return;
+      }
+
+      await handleItemDetailView(match);
     })
     .on('/', async () => {
       console.log('✅ Route matched: /');
@@ -152,6 +157,25 @@ export function getRouter() {
 // ============================================
 // ROUTE HANDLERS - MAINTENANCE RECORDS
 // ============================================
+
+async function handleItemsView() {
+  const container = document.getElementById('main-content');
+  if (!container) {
+    console.error('❌ main-content container not found!');
+    return;
+  }
+
+  try {
+    showLoading();
+    const { renderItemsPage } = await import('/js/pages/items-page.js');
+    await renderItemsPage(container);
+    hideLoading();
+  } catch (error) {
+    console.error('❌ Error rendering items view:', error);
+    hideLoading();
+    renderError(container, 'Failed to load items');
+  }
+}
 
 async function handleLandingView() {
   const container = document.getElementById('main-content');
