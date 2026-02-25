@@ -1,7 +1,7 @@
 // Global state management with event emitter
 
 import { groupBy } from './utils/helpers.js';
-import { fetchRecordsByItem, fetchMultipleRecordsByItems, fetchAllRecords } from './api.js';
+import { fetchRecordsByItem, fetchMultipleRecordsByItems, fetchAllRecords, fetchAllItems } from './api.js';
 
 class AppState {
   constructor() {
@@ -15,6 +15,7 @@ class AppState {
         recordType: [],
         status: [],
         criticality: [],
+        classType: [],
         itemId: '',
         dateRange: { start: null, end: null }
       },
@@ -65,6 +66,7 @@ class AppState {
       recordType: [],
       status: [],
       criticality: [],
+      classType: [],
       itemId: '',
       dateRange: { start: null, end: null }
     };
@@ -190,6 +192,20 @@ class AppState {
     }
   }
   
+  async loadAllItems() {
+    try {
+      const items = await fetchAllItems();
+      items.forEach(item => {
+        const key = item.item_id || item.id;
+        if (key) this.state.items[key] = item;
+      });
+      this.applyFilters();
+      this.notify();
+    } catch (error) {
+      console.warn('Failed to load items for filtering:', error);
+    }
+  }
+
   addRecord(record) {
     // Check if record already exists
     const existingIndex = this.state.records.findIndex(r => r.record_id === record.record_id);
@@ -268,10 +284,18 @@ if (activeTab !== 'all' && activeTab !== 'items') {
       });
     }
     
+    // Apply class type filter
+    if (filters.classType.length > 0) {
+      filtered = filtered.filter(r => {
+        const item = this.state.items[r.item_id];
+        return item && filters.classType.includes(item.class_type);
+      });
+    }
+
     // Apply item ID filter
     if (filters.itemId) {
-      filtered = filtered.filter(r => 
-        r.item_id.toLowerCase().includes(filters.itemId.toLowerCase())
+      filtered = filtered.filter(r =>
+        r.item_id?.toLowerCase().includes(filters.itemId.toLowerCase())
       );
     }
     

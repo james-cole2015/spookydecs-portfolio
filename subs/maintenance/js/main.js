@@ -27,6 +27,9 @@ class MaintenanceApp {
       await appState.loadAllRecords();
       console.log('Initial data loaded successfully');
 
+      // Load items in background for class/season filtering
+      appState.loadAllItems();
+
       // Set up global error handler
       window.addEventListener('error', (event) => {
         console.error('Global error:', event.error);

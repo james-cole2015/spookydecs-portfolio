@@ -12,7 +12,8 @@ export class Filters {
     this.filterOptions = {
       season: ['Halloween', 'Christmas', 'Shared'],
       status: ['scheduled', 'in_progress', 'completed', 'cancelled', 'pending'],
-      criticality: ['low', 'medium', 'high', 'none']
+      criticality: ['low', 'medium', 'high', 'none'],
+      classType: ['Decoration', 'Light', 'Accessory']
     };
     
     this.debouncedSearch = debounce(this.performItemSearch.bind(this), 300);
@@ -81,6 +82,23 @@ export class Filters {
             </div>
           </div>
           
+          <!-- Class Type Filter -->
+          <div class="filter-group">
+            <label>Class</label>
+            <div class="filter-dropdown">
+              <button class="filter-dropdown-btn" data-filter="classType">
+                Select Class
+                ${filters.classType.length > 0 ? `<span class="filter-badge">${filters.classType.length}</span>` : ''}
+              </button>
+              <div class="filter-dropdown-menu" data-menu="classType">
+                ${this.renderDropdownOptions('classType', filters.classType)}
+              </div>
+            </div>
+            <div class="filter-pills">
+              ${this.renderPills(filters.classType, 'classType')}
+            </div>
+          </div>
+
           <!-- Item ID Autocomplete -->
           <div class="filter-group">
             <label>Item ID</label>
@@ -159,6 +177,7 @@ export class Filters {
     return filters.season.length > 0 ||
            filters.status.length > 0 ||
            filters.criticality.length > 0 ||
+           filters.classType.length > 0 ||
            filters.itemId !== '' ||
            filters.dateRange.start !== null ||
            filters.dateRange.end !== null;
@@ -223,13 +242,19 @@ export class Filters {
     if (autocompleteInput) {
       autocompleteInput.addEventListener('input', (e) => {
         const query = e.target.value;
+        // Quietly update filter + apply without notify (preserves input focus)
+        appState.getState().filters.itemId = query;
+        appState.applyFilters();
+        if (this.onFilterChange) this.onFilterChange();
+        // Also update autocomplete suggestions
         if (query.length >= 2) {
           this.debouncedSearch(query, container);
         } else {
           this.hideAutocompleteResults(container);
         }
       });
-      
+
+      // On blur: full setFilter + notify to sync filter UI (clear button, badges, etc.)
       autocompleteInput.addEventListener('change', (e) => {
         appState.setFilter('itemId', e.target.value);
         if (this.onFilterChange) this.onFilterChange();
@@ -295,15 +320,17 @@ export class Filters {
     resultsDiv.innerHTML = resultsHtml;
     resultsDiv.classList.add('show');
     
-    // Attach click handlers
+    // Attach mousedown handlers (mousedown fires before blur/change, preventing focus loss)
     const resultItems = resultsDiv.querySelectorAll('.autocomplete-result');
     resultItems.forEach(item => {
-      item.addEventListener('click', () => {
+      item.addEventListener('mousedown', (e) => {
+        e.preventDefault(); // Prevents input from losing focus and change event from firing first
         const itemId = item.getAttribute('data-item-id');
         const input = container.querySelector('[data-autocomplete="itemId"]');
         if (input) {
           input.value = itemId;
-          appState.setFilter('itemId', itemId);
+          appState.getState().filters.itemId = itemId;
+          appState.applyFilters();
           if (this.onFilterChange) this.onFilterChange();
         }
         this.hideAutocompleteResults(container);

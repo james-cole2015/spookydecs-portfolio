@@ -13,7 +13,8 @@ export class MobileFilters {
     this.filterOptions = {
       season: ['Halloween', 'Christmas', 'Shared'],
       status: ['scheduled', 'in_progress', 'completed', 'cancelled', 'pending'],
-      criticality: ['low', 'medium', 'high', 'none']
+      criticality: ['low', 'medium', 'high', 'none'],
+      classType: ['Decoration', 'Light', 'Accessory']
     };
     
     this.debouncedSearch = debounce(this.performItemSearch.bind(this), 300);
@@ -86,6 +87,14 @@ export class MobileFilters {
         </div>
       </div>
       
+      <!-- Class Type Filter -->
+      <div class="filter-group">
+        <label>Class</label>
+        <div class="filter-options">
+          ${this.renderCheckboxOptions('classType', filters.classType)}
+        </div>
+      </div>
+
       <!-- Item ID Autocomplete -->
       <div class="filter-group">
         <label>Item ID</label>
@@ -145,6 +154,7 @@ export class MobileFilters {
     count += filters.season.length;
     count += filters.status.length;
     count += filters.criticality.length;
+    count += filters.classType.length;
     if (filters.itemId) count++;
     if (filters.dateRange.start) count++;
     if (filters.dateRange.end) count++;
@@ -310,15 +320,17 @@ export class MobileFilters {
     resultsDiv.innerHTML = resultsHtml;
     resultsDiv.classList.add('show');
     
-    // Attach click handlers
+    // Attach mousedown handlers (mousedown fires before blur/change, preventing focus loss)
     const resultItems = resultsDiv.querySelectorAll('.autocomplete-result');
     resultItems.forEach(item => {
-      item.addEventListener('click', () => {
+      item.addEventListener('mousedown', (e) => {
+        e.preventDefault();
         const itemId = item.getAttribute('data-item-id');
         const input = container.querySelector('[data-autocomplete="itemId"]');
         if (input) {
           input.value = itemId;
-          appState.setFilter('itemId', itemId);
+          appState.getState().filters.itemId = itemId;
+          appState.applyFilters();
         }
         this.hideAutocompleteResults(container);
       });
