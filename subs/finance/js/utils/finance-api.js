@@ -14,7 +14,7 @@ async function handleResponse(response) {
     let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
     if (contentType?.includes('application/json')) {
       const errorData = await response.json();
-      errorMessage = errorData.error || errorData.message || errorMessage;
+      errorMessage = errorData.message || errorData.error || errorMessage;
     }
     throw new Error(errorMessage);
   }
