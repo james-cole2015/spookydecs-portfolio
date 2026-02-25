@@ -57,14 +57,14 @@ export function initRouter() {
     })
     .on('/maintenance', async () => {
       console.log('✅ Route matched: /maintenance');
-      // Show main table view (same as root /)
-      await handleMainView();
+      await handleLandingView();
     })
     .on('/:itemId', async (match) => {
       console.log('✅ Route matched: /:itemId', match.data);
       
       // Safety guard - prevent literal routes from being caught
-      if (match.data.itemId === 'create' || match.data.itemId === 'schedules' || match.data.itemId === 'maintenance') {
+      if (match.data.itemId === 'create' || match.data.itemId === 'schedules' ||
+          match.data.itemId === 'maintenance' || match.data.itemId === 'records') {
         console.error('❌ BUG: Literal route matched /:itemId pattern!');
         console.error('   This should never happen - check route order');
         return;
@@ -115,9 +115,13 @@ export function initRouter() {
       console.log('✅ Route matched: /schedules/new');
       await handleScheduleCreateView();
     })
+    .on('/records', async () => {
+      console.log('✅ Route matched: /records');
+      await handleMainView();
+    })
     .on('/', async () => {
       console.log('✅ Route matched: /');
-      await handleMainView();
+      await handleLandingView();
     })
     .notFound(() => {
       console.log('❌ Route NOT FOUND');
@@ -148,6 +152,25 @@ export function getRouter() {
 // ============================================
 // ROUTE HANDLERS - MAINTENANCE RECORDS
 // ============================================
+
+async function handleLandingView() {
+  const container = document.getElementById('main-content');
+  if (!container) {
+    console.error('❌ main-content container not found!');
+    return;
+  }
+
+  try {
+    showLoading();
+    const { renderMaintenanceLanding } = await import('/js/pages/maintenance-landing.js');
+    renderMaintenanceLanding(container);
+    hideLoading();
+  } catch (error) {
+    console.error('❌ Error rendering landing view:', error);
+    hideLoading();
+    renderError(container, 'Failed to load maintenance hub');
+  }
+}
 
 async function handleMainView() {
   console.log('📄 handleMainView started');
