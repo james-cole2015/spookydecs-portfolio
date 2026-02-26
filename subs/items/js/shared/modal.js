@@ -42,22 +42,37 @@ class Modal {
   
   /**
    * Show custom modal
+   *
+   * config.onButton(value) — optional callback fired when any button is clicked.
+   *   Use this instead of modal.confirm() when you need to manipulate the modal
+   *   body (e.g. loading state) before the user confirms.
+   *
+   * Button options support:
+   *   btn.id       — sets an id attribute so callers can enable/disable the button
+   *   btn.disabled — renders the button in a disabled state initially
    */
   show(config) {
     this.hide(); // Remove existing modal
-    
+
+    // Allow direct onButton callback as an alternative to using confirm()
+    if (config.onButton && !this.resolveCallback) {
+      this.resolveCallback = config.onButton;
+    }
+
     this.modal = document.createElement('div');
     this.modal.className = 'modal-overlay';
-    
+
     const buttons = config.buttons.map((btn, index) => `
-      <button 
-        class="btn ${btn.class}" 
+      <button
+        class="btn ${btn.class}"
+        ${btn.id ? `id="${btn.id}"` : ''}
+        ${btn.disabled ? 'disabled' : ''}
         onclick="modal.handleButton(${index}, ${JSON.stringify(btn.value).replace(/"/g, '&quot;')})"
       >
         ${btn.text}
       </button>
     `).join('');
-    
+
     this.modal.innerHTML = `
       <div class="modal-dialog">
         <div class="modal-header">
@@ -71,12 +86,21 @@ class Modal {
         </div>
       </div>
     `;
-    
+
     document.body.appendChild(this.modal);
     document.body.style.overflow = 'hidden';
-    
+
     // Show animation
     setTimeout(() => this.modal.classList.add('show'), 10);
+  }
+
+  /**
+   * Replace the modal body content after it has been shown.
+   * Safe to call even if the modal has already been closed.
+   */
+  updateBody(html) {
+    const msg = this.modal?.querySelector('.modal-message');
+    if (msg) msg.innerHTML = html;
   }
   
   hide() {
@@ -170,6 +194,12 @@ style.textContent = `
     gap: 12px;
   }
   
+  .modal-footer .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
   @media (max-width: 768px) {
     .modal-dialog {
       width: 95%;

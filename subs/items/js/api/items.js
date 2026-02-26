@@ -160,6 +160,42 @@ export async function deleteItem(itemId) {
   return await response.json();
 }
 
+export async function cascadePreviewItem(itemId) {
+  const apiEndpoint = await getEndpoint();
+
+  const response = await fetch(`${apiEndpoint}/items/${itemId}/cascade`, {
+    method: 'GET',
+    headers: HEADERS
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    let errorData;
+    try { errorData = JSON.parse(errorText); } catch { errorData = { message: errorText }; }
+    throw new Error(errorData.error || errorData.message || `Failed to load cascade preview: ${response.status}`);
+  }
+
+  return await response.json();
+}
+
+export async function cascadeDeleteItem(itemId) {
+  const apiEndpoint = await getEndpoint();
+
+  const response = await fetch(`${apiEndpoint}/items/${itemId}/cascade`, {
+    method: 'DELETE',
+    headers: HEADERS
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    let errorData;
+    try { errorData = JSON.parse(errorText); } catch { errorData = { message: errorText }; }
+    throw new Error(errorData.error || errorData.message || `Failed to delete item: ${response.status}`);
+  }
+
+  return await response.json();
+}
+
 export async function retireItem(itemId) {
   return await updateItem(itemId, { status: 'Retired' });
 }

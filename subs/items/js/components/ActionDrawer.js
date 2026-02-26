@@ -2,10 +2,74 @@
 // Slide-out drawer for item actions
 // Replaces ActionCenter with modern drawer UI
 
-import { deleteItem, retireItem, getMaintenanceUrl, getFinanceUrl } from '../api/items.js';
+import { cascadePreviewItem, cascadeDeleteItem, retireItem, getMaintenanceUrl, getFinanceUrl } from '../api/items.js';
 import { toast } from '../shared/toast.js';
 import { modal } from '../shared/modal.js';
 import { navigate } from '../utils/router.js';
+
+/**
+ * Build the HTML body for the cascade delete confirmation modal.
+ * Shows a breakdown of maintenance records, cost records, and photos
+ * that will be deleted alongside the item.
+ */
+function buildCascadePreviewHTML(itemName, cascade, isDeployed, escapeHtml) {
+  const deployedWarning = isDeployed
+    ? `<br><br><span style="color: #ef4444; font-weight: 600;">⚠️ Item is currently DEPLOYED</span>`
+    : '';
+
+  if (!cascade) {
+    return `
+      <strong style="color: #ef4444;">⚠️ WARNING: Permanent Deletion</strong>
+      <br><br>
+      Deleting "<strong>${escapeHtml(itemName)}</strong>"${deployedWarning}
+      <br><br>
+      <span style="color: #ef4444; font-weight: 600;">This action cannot be undone.</span>
+    `;
+  }
+
+  const { maintenance_records = [], cost_records = [], cost_total = 0, photo_count = 0 } = cascade;
+  const hasAssociated = maintenance_records.length > 0 || cost_records.length > 0 || photo_count > 0;
+
+  let html = `
+    <strong style="color: #ef4444;">⚠️ WARNING: Permanent Deletion</strong>
+    <br><br>
+    Deleting "<strong>${escapeHtml(itemName)}</strong>" will permanently remove:
+    ${deployedWarning}
+  `;
+
+  if (!hasAssociated) {
+    html += `<br><br>No associated records found. Only the item record will be deleted.`;
+  } else {
+    if (maintenance_records.length > 0) {
+      const shown = maintenance_records.slice(0, 5);
+      html += `<br><br><strong>Maintenance Records (${maintenance_records.length})</strong>
+        <ul style="margin: 4px 0; padding-left: 20px; line-height: 1.8;">
+          ${shown.map(r => `<li>${escapeHtml(r.title)}</li>`).join('')}
+          ${maintenance_records.length > 5 ? `<li style="color: #6b7280;">…and ${maintenance_records.length - 5} more</li>` : ''}
+        </ul>`;
+    }
+
+    if (cost_records.length > 0) {
+      const totalFormatted = cost_total.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+      const shown = cost_records.slice(0, 5);
+      html += `<br><strong>Cost Records (${cost_records.length}) — ${totalFormatted} total</strong>
+        <ul style="margin: 4px 0; padding-left: 20px; line-height: 1.8;">
+          ${shown.map(r => {
+            const amt = r.amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+            return `<li>${escapeHtml(r.description)} (${amt})</li>`;
+          }).join('')}
+          ${cost_records.length > 5 ? `<li style="color: #6b7280;">…and ${cost_records.length - 5} more</li>` : ''}
+        </ul>`;
+    }
+
+    if (photo_count > 0) {
+      html += `<br><strong>Photos (${photo_count} will be deleted)</strong>`;
+    }
+  }
+
+  html += `<br><br><span style="color: #ef4444; font-weight: 600;">This action cannot be undone.</span>`;
+  return html;
+}
 
 export class ActionDrawer {
   constructor() {
@@ -308,54 +372,76 @@ fab.addEventListener('click', () => this.toggle());
   
   /**
    * Delete Item Action
+   *
+   * Opens a modal immediately with a loading state, fires a cascade preview
+   * request to show the user exactly what will be deleted, then executes the
+   * full cascade delete on confirmation.
    */
   async handleDelete() {
+    const itemId = this.item.id;
     const itemName = this.item.short_name || this.item.id;
     const isDeployed = this.item.deployment_data?.deployed === true;
-    
-    let message = `
-      <strong style="color: #ef4444;">⚠️ WARNING: Permanent Deletion</strong>
-      <br><br>
-      Are you sure you want to delete "${this.escapeHtml(itemName)}"?
-      <br><br>
-      <ul style="text-align: left; margin: 0; padding-left: 20px; line-height: 1.8;">
-        <li>This action CANNOT be undone</li>
-        <li>All item data will be permanently removed</li>
-    `;
-    
-    if (isDeployed) {
-      message += `<li style="color: #ef4444; font-weight: 600;">⚠️ Item is currently DEPLOYED</li>`;
+
+    // Wrap modal.show() in a Promise so we can await the user's choice
+    let resolveConfirm;
+    const confirmPromise = new Promise(resolve => { resolveConfirm = resolve; });
+
+    const deployedWarning = isDeployed
+      ? `<br><br><span style="color: #ef4444; font-weight: 600;">⚠️ Item is currently DEPLOYED</span>`
+      : '';
+
+    modal.show({
+      title: 'Delete Item',
+      message: `
+        <strong style="color: #ef4444;">⚠️ WARNING: Permanent Deletion</strong>
+        <br><br>
+        Deleting "<strong>${this.escapeHtml(itemName)}</strong>"${deployedWarning}
+        <br><br>
+        <span style="color: #6b7280; font-style: italic;">Loading associated records...</span>
+      `,
+      buttons: [
+        { text: 'Cancel', class: 'btn-secondary', value: false },
+        { text: 'Loading...', class: 'btn-danger', value: true, id: 'cascade-confirm-btn', disabled: true }
+      ],
+      onButton: resolveConfirm
+    });
+
+    // Fetch the cascade preview concurrently while the modal is open
+    try {
+      const previewData = await cascadePreviewItem(itemId);
+      const cascade = previewData?.data?.cascade || previewData?.cascade;
+      modal.updateBody(buildCascadePreviewHTML(itemName, cascade, isDeployed, this.escapeHtml.bind(this)));
+    } catch (err) {
+      console.error('Failed to load cascade preview:', err);
+      modal.updateBody(`
+        <strong style="color: #ef4444;">⚠️ WARNING: Permanent Deletion</strong>
+        <br><br>
+        Deleting "<strong>${this.escapeHtml(itemName)}</strong>"${deployedWarning}
+        <br><br>
+        Could not load associated records. All linked data will still be cascade deleted.
+      `);
     }
-    
-    message += `</ul>`;
-    
-    const confirmed = await modal.confirm(
-      'Delete Item',
-      message,
-      'Delete Permanently',
-      'Cancel'
-    );
-    
-    if (confirmed) {
-      const loadingOverlay = document.getElementById('loading-overlay');
-      
-      try {
-        loadingOverlay?.classList.remove('hidden');
-        
-        await deleteItem(this.item.id);
-        
-        toast.success('Item Deleted', `${itemName} has been permanently deleted`);
-        
-        // Navigate back to items list
-        setTimeout(() => {
-          navigate('/');
-        }, 1000);
-        
-      } catch (error) {
-        console.error('Failed to delete item:', error);
-        loadingOverlay?.classList.add('hidden');
-        toast.error('Delete Failed', error.message || 'Could not delete item');
-      }
+
+    // Enable the confirm button now that we have data (or the error fallback)
+    const confirmBtn = document.getElementById('cascade-confirm-btn');
+    if (confirmBtn) {
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = 'Delete Permanently';
+    }
+
+    const confirmed = await confirmPromise;
+    if (!confirmed) return;
+
+    const loadingOverlay = document.getElementById('loading-overlay');
+    try {
+      loadingOverlay?.classList.remove('hidden');
+      await cascadeDeleteItem(itemId);
+      toast.success('Item Deleted', `${itemName} has been permanently deleted`);
+      setTimeout(() => navigate('/'), 1000);
+    } catch (error) {
+      console.error('Failed to delete item:', error);
+      loadingOverlay?.classList.add('hidden');
+      toast.error('Delete Failed', error.message || 'Could not delete item');
     }
   }
   
