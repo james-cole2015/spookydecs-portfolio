@@ -11,12 +11,8 @@ export const CLASS_HIERARCHY = {
     icon: '💡'
   },
   'Accessory': {
-    types: ['Cord', 'Plug', 'Receptacle', 'Timer', 'Controller'],
+    types: ['Cord', 'Plug', 'Receptacle'],
     icon: '🔌'
-  },
-  'Storage': {
-    types: ['Tote', 'Box', 'Bin'],
-    icon: '📦'
   }
 };
 

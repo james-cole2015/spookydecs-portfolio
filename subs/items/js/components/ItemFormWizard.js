@@ -1,257 +1,195 @@
 // Item Form Wizard Component
-// Manages wizard state, navigation, and orchestration
+// Vertical progressive wizard for item creation (create-only)
 
 import { ItemFormSteps } from './ItemFormSteps.js';
 import { ItemFormFields } from './ItemFormFields.js';
 import { toast } from '../shared/toast.js';
 
 export class ItemFormWizard {
-  constructor(mode = 'create', originalItem = null) {
-    this.mode = mode;
-    this.currentStep = mode === 'edit' ? 3 : 1;
-    this.originalItem = originalItem;
-    this.formData = this.initializeFormData();
-    this.uploadedPhotoIds = []; // Track uploaded photos
-  }
-  
-  initializeFormData() {
-    if (this.mode === 'edit' && this.originalItem) {
-      return {
-        ...this.originalItem,
-        class: this.originalItem.class,
-        class_type: this.originalItem.class_type
-      };
-    }
-    
-    return {
+  constructor() {
+    this.formData = {
       class: '',
       class_type: '',
       season: '',
-      status: 'Packed'  // Changed from 'Active' to 'Packed'
+      status: 'Packed'
     };
+    this.stepsRevealed = 1;
+    this.steps = new ItemFormSteps(this);
   }
-  
-  // Main render method
+
+  // --- Render entry point ---
+
   render() {
-    this.updatePageTitle();
+    this.steps.renderStep1(document.getElementById('wizard-step-1'));
     this.renderStepIndicator();
-    this.renderStepContent();
-    this.renderStepActions();
   }
-  
-  updatePageTitle() {
-    const titleEl = document.getElementById('form-title');
-    if (titleEl) {
-      if (this.mode === 'create') {
-        titleEl.textContent = 'Create New Item';
-      } else {
-        titleEl.textContent = `Edit Item: ${this.originalItem.short_name}`;
-      }
-    }
-  }
-  
+
+  // --- Step indicator ---
+
   renderStepIndicator() {
     const container = document.getElementById('step-indicator');
     if (!container) return;
-    
-    const steps = this.mode === 'create' 
-      ? [
-          { num: 1, label: 'Class' },
-          { num: 2, label: 'Type' },
-          { num: 3, label: 'Details' },
-          { num: 4, label: 'Preview' }
-        ]
-      : [
-          { num: 3, label: 'Details' },
-          { num: 4, label: 'Preview' }
-        ];
-    
-    container.innerHTML = steps.map(step => `
-      <div class="step ${this.currentStep === step.num ? 'active' : ''} ${this.currentStep > step.num ? 'completed' : ''}">
-        <div class="step-number">${step.num === 4 ? '✓' : step.num}</div>
-        <div class="step-label">${step.label}</div>
-      </div>
-    `).join('<div class="step-connector"></div>');
+
+    const steps = [
+      { num: 1, label: 'Class' },
+      { num: 2, label: 'Type' },
+      { num: 3, label: 'Details' },
+      { num: 4, label: 'Review' }
+    ];
+
+    container.innerHTML = steps.map((step, i) => {
+      const isActive = this.stepsRevealed === step.num;
+      const isCompleted = this.stepsRevealed > step.num;
+      const isUpcoming = this.stepsRevealed < step.num;
+
+      const connector = i < steps.length - 1
+        ? `<div class="step-connector ${isCompleted ? 'step-connector--completed' : ''}"></div>`
+        : '';
+
+      return `
+        <div class="step ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''} ${isUpcoming ? 'upcoming' : ''}">
+          <div class="step-number">${isCompleted ? '✓' : step.num}</div>
+          <div class="step-label">${step.label}</div>
+        </div>
+        ${connector}
+      `;
+    }).join('');
   }
-  
-  renderStepContent() {
-    const container = document.getElementById('step-content');
-    if (!container) return;
-    
-    container.innerHTML = '';
-    
-    const stepRenderer = new ItemFormSteps(this);
-    let stepElement;
-    
-    switch (this.currentStep) {
-      case 1:
-        stepElement = stepRenderer.renderStep1();
-        break;
-      case 2:
-        stepElement = stepRenderer.renderStep2();
-        break;
-      case 3:
-        stepElement = stepRenderer.renderStep3();
-        break;
-      case 4:
-        stepElement = stepRenderer.renderStep4();
-        break;
-    }
-    
-    if (stepElement) {
-      container.appendChild(stepElement);
+
+  // --- Selection handlers (called from onclick) ---
+
+  selectClass(className) {
+    const classChanged = this.formData.class !== className;
+    this.formData.class = className;
+
+    // Update card selection in step 1
+    document.querySelectorAll('#wizard-step-1 .class-card').forEach(card => {
+      card.classList.toggle('selected', card.dataset.className === className);
+    });
+
+    if (this.stepsRevealed >= 2 && classChanged) {
+      // Class changed after step 2 was revealed — reset type and re-render step 2
+      this.formData.class_type = '';
+      this.tearDownFrom(3);
+      this.steps.renderStep2(document.getElementById('wizard-step-2'));
+      this.stepsRevealed = 2;
+      this.renderStepIndicator();
+      this.scrollToStep(2);
+    } else if (this.stepsRevealed < 2) {
+      // First time selecting a class — reveal step 2
+      this.revealStep(2);
     }
   }
-  
-  renderStepActions() {
-    const container = document.getElementById('step-actions');
-    if (!container) return;
-    
-    const canGoBack = this.mode === 'create' ? this.currentStep > 1 : this.currentStep > 3;
-    const canGoNext = this.mode === 'create' ? this.currentStep < 4 : this.currentStep < 4;
-    const isLastStep = this.currentStep === 4;
-    
-    container.innerHTML = `
-      <button 
-        class="btn-secondary" 
-        onclick="itemFormPage.handleCancel()"
-      >
-        Cancel
-      </button>
-      
-      <div class="action-buttons-right">
-        ${canGoBack ? `
-          <button 
-            class="btn-secondary" 
-            onclick="itemFormPage.wizard.previousStep()"
-          >
-            ← Previous
-          </button>
-        ` : ''}
-        
-        ${canGoNext && !isLastStep ? `
-          <button 
-            class="btn-primary" 
-            onclick="itemFormPage.wizard.nextStep()"
-          >
-            Next →
-          </button>
-        ` : ''}
-        
-        ${isLastStep ? `
-          <button 
-            class="btn-primary btn-save" 
-            onclick="itemFormPage.handleSave()"
-          >
-            💾 Save Item
-          </button>
-        ` : ''}
-      </div>
-    `;
-  }
-  
-  // Navigation methods
-  nextStep() {
-    if (!this.validateCurrentStep()) {
-      return;
+
+  selectClassType(classType) {
+    const typeChanged = this.formData.class_type !== classType;
+    this.formData.class_type = classType;
+
+    // Update card selection in step 2
+    document.querySelectorAll('#wizard-step-2 .type-card').forEach(card => {
+      card.classList.toggle('selected', card.dataset.classType === classType);
+    });
+
+    if (this.stepsRevealed >= 3 && typeChanged) {
+      // Type changed after step 3 was revealed — re-render step 3
+      this.tearDownFrom(4);
+      this.steps.renderStep3(document.getElementById('wizard-step-3'));
+      this.stepsRevealed = 3;
+      this.renderStepIndicator();
+      this.scrollToStep(3);
+    } else if (this.stepsRevealed < 3) {
+      // First time selecting a type — reveal step 3
+      this.revealStep(3);
     }
-    
+  }
+
+  // --- Review handler (called from item-form.js) ---
+
+  handleReview() {
+    if (!this.validateStep3()) return;
     this.collectFormData();
-    
-    if (this.mode === 'create') {
-      if (this.currentStep === 1 && !this.formData.class) return;
-      if (this.currentStep === 2 && !this.formData.class_type) return;
-    }
-    
-    this.currentStep++;
-    this.render();
+    this.revealStep(4);
   }
-  
-  previousStep() {
-    this.collectFormData();
-    this.currentStep--;
-    this.render();
+
+  validateStep3() {
+    const containers = ['basic-fields', 'specific-fields', 'vendor-fields', 'storage-fields'];
+    const allValid = containers.every(id => {
+      const fields = new ItemFormFields(id);
+      return fields.validateAll();
+    });
+
+    if (!allValid) {
+      toast.error('Validation Error', 'Please fix the errors in the form');
+    }
+    return allValid;
   }
-  
-  // Validation
-  validateCurrentStep() {
-    if (this.currentStep === 1 && !this.formData.class) {
-      toast.warning('Selection Required', 'Please select an item class');
-      return false;
+
+  // --- Step reveal / teardown ---
+
+  revealStep(stepNum) {
+    const stepEl = document.getElementById(`wizard-step-${stepNum}`);
+    if (!stepEl) return;
+
+    stepEl.classList.remove('wizard-step--hidden');
+    stepEl.classList.add('wizard-step--revealing');
+    stepEl.addEventListener('animationend', () => {
+      stepEl.classList.remove('wizard-step--revealing');
+    }, { once: true });
+
+    switch (stepNum) {
+      case 2: this.steps.renderStep2(stepEl); break;
+      case 3: this.steps.renderStep3(stepEl); break;
+      case 4: this.steps.renderStep4(stepEl); break;
     }
-    
-    if (this.currentStep === 2 && !this.formData.class_type) {
-      toast.warning('Selection Required', 'Please select a class type');
-      return false;
-    }
-    
-    if (this.currentStep === 3) {
-      const basicFields = new ItemFormFields('basic-fields');
-      const specificFields = new ItemFormFields('specific-fields');
-      const vendorFields = new ItemFormFields('vendor-fields');
-      
-      const allValid = basicFields.validateAll() && 
-                       specificFields.validateAll() && 
-                       vendorFields.validateAll();
-      
-      if (!allValid) {
-        toast.error('Validation Error', 'Please fix the errors in the form');
-        return false;
+
+    this.stepsRevealed = Math.max(this.stepsRevealed, stepNum);
+    this.renderStepIndicator();
+    this.scrollToStep(stepNum);
+  }
+
+  tearDownFrom(stepNum) {
+    for (let i = stepNum; i <= 4; i++) {
+      const stepEl = document.getElementById(`wizard-step-${i}`);
+      if (stepEl) {
+        stepEl.classList.add('wizard-step--hidden');
+        stepEl.classList.remove('wizard-step--revealing');
+        stepEl.innerHTML = '';
       }
     }
-    
-    return true;
+    this.stepsRevealed = Math.min(this.stepsRevealed, stepNum - 1);
   }
-  
+
+  scrollToStep(stepNum) {
+    const stepEl = document.getElementById(`wizard-step-${stepNum}`);
+    if (!stepEl) return;
+    requestAnimationFrame(() => {
+      stepEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }
+
+  // --- Data collection / preparation ---
+
   collectFormData() {
-    if (this.currentStep === 3) {
-      const containers = ['basic-fields', 'specific-fields', 'vendor-fields', 'storage-fields'];
-      
-      containers.forEach(containerId => {
-        const fields = new ItemFormFields(containerId);
-        const data = fields.getFormData();
-        this.formData = { ...this.formData, ...data };
-      });
-    }
+    const containers = ['basic-fields', 'specific-fields', 'vendor-fields', 'storage-fields'];
+    containers.forEach(containerId => {
+      const fields = new ItemFormFields(containerId);
+      const data = fields.getFormData();
+      this.formData = { ...this.formData, ...data };
+    });
   }
-  
-  // Selection handlers
-  selectClass(className) {
-    this.formData.class = className;
-    this.formData.class_type = '';
-    this.renderStepContent();
-  }
-  
-  selectClassType(classType) {
-    this.formData.class_type = classType;
-    this.renderStepContent();
-  }
-  
-  // Photo upload methods (NEW)
-  hasPhotos() {
-    return this.uploadedPhotoIds.length > 0;
-  }
-  
-  getPhotoIds() {
-    return this.uploadedPhotoIds;
-  }
-  
-  // Data preparation for API
+
   prepareItemData() {
-    // Transform snake_case form fields to camelCase API fields
     const data = {
-      type: this.formData.class,                    // class → type
-      category: this.formData.class_type,           // class_type → category
-      shortName: this.formData.short_name,          // short_name → shortName
+      type: this.formData.class,
+      category: this.formData.class_type,
+      shortName: this.formData.short_name,
       season: this.formData.season,
-      status: this.mode === 'create' ? 'Packed' : (this.formData.status || 'Active')
+      status: 'Packed'
     };
-    
-    // Optional basic fields
+
     if (this.formData.date_acquired) data.dateAcquired = this.formData.date_acquired;
     if (this.formData.general_notes) data.generalNotes = this.formData.general_notes;
-    
-    // Class-specific fields - transform to camelCase
+
     if (this.formData.height_length) data.heightLength = this.formData.height_length;
     if (this.formData.stakes) data.stakes = this.formData.stakes;
     if (this.formData.tethers) data.tethers = this.formData.tethers;
@@ -264,22 +202,19 @@ export class ItemFormWizard {
     if (this.formData.amps) data.amps = this.formData.amps;
     if (this.formData.adapter) data.adapter = this.formData.adapter;
     if (this.formData.power_inlet !== undefined) data.powerInlet = this.formData.power_inlet;
-    
-    // Vendor metadata - these are already renamed in form (vendor_cost → cost, etc.)
+
     if (this.formData.vendor_cost) data.cost = this.formData.vendor_cost;
     if (this.formData.vendor_value) data.value = this.formData.vendor_value;
     if (this.formData.vendor_manufacturer) data.manufacturer = this.formData.vendor_manufacturer;
     if (this.formData.vendor_store) data.vendorStore = this.formData.vendor_store;
-    
-    // Storage data
+
     if (this.formData.storage_tote_id) data.toteId = this.formData.storage_tote_id;
     if (this.formData.storage_location) data.toteLocation = this.formData.storage_location;
-    
+
     return data;
   }
-  
+
   cleanup() {
-    this.uploadedPhotoIds = [];
     this.formData = {};
   }
 }
