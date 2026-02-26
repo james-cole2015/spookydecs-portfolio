@@ -11,6 +11,7 @@ import { StorageFormFields } from '../components/StorageFormFields.js';
 import { showSuccess, showError, showWarning } from '../shared/toast.js';
 import { navigate } from '../utils/router.js';
 import { showLoading, hideLoading } from '../app.js';
+import { renderBreadcrumb } from '../shared/breadcrumb.js';
 
 let formFields = null;
 let currentStorageUnit = null;
@@ -25,11 +26,7 @@ export async function renderEditForm(storageId) {
   // Create page structure
   app.innerHTML = `
     <div class="storage-edit-page">
-      <div class="page-header">
-        <button class="btn btn-secondary" id="btn-back">
-          ← Back to Detail
-        </button>
-      </div>
+      <div id="breadcrumb"></div>
       
       <div class="wizard-container">
         <div class="wizard-header">
@@ -60,10 +57,13 @@ export async function renderEditForm(storageId) {
   `;
   
   // Back button
-  document.getElementById('btn-back').addEventListener('click', () => {
-    navigate(`/storage/${storageId}`);
-  });
-  
+  renderBreadcrumb(document.getElementById('breadcrumb'), [
+    { label: 'Storage', route: '/' },
+    { label: 'Totes', route: '/storage' },
+    { label: '…', route: `/storage/${storageId}` },
+    { label: 'Edit' }
+  ]);
+
   // Cancel button
   document.getElementById('btn-cancel').addEventListener('click', () => {
     navigate(`/storage/${storageId}`);
@@ -89,6 +89,14 @@ async function loadStorageUnit(storageId) {
     const data = await storageAPI.getById(storageId);
     currentStorageUnit = formatStorageUnit(data);
     
+    // Update breadcrumb with unit name
+    renderBreadcrumb(document.getElementById('breadcrumb'), [
+      { label: 'Storage', route: '/' },
+      { label: 'Totes', route: '/storage' },
+      { label: currentStorageUnit.short_name, route: `/storage/${storageId}` },
+      { label: 'Edit' }
+    ]);
+
     // Update subtitle
     document.getElementById('subtitle').textContent = currentStorageUnit.short_name;
     

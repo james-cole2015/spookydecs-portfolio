@@ -8,6 +8,7 @@ import { formatStorageUnit } from '../utils/storage-config.js';
 import { PackingWizard } from '../components/PackingWizard.js';
 import { showSuccess, showError } from '../shared/toast.js';
 import { navigate } from '../utils/router.js';
+import { renderBreadcrumb } from '../shared/breadcrumb.js';
 
 let packingWizard = null;
 
@@ -35,10 +36,16 @@ export async function renderPackingWizard() {
   // Create page structure
   app.innerHTML = `
     <div class="storage-pack-page">
+      <div id="breadcrumb"></div>
       <div id="wizard-container"></div>
     </div>
   `;
-  
+
+  renderBreadcrumb(document.getElementById('breadcrumb'), [
+    { label: 'Storage', route: '/' },
+    { label: 'Packing Wizard' }
+  ]);
+
   // Load data
   await loadData();
 }

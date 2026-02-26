@@ -8,6 +8,8 @@ import { renderStorageDetail } from '../pages/storage-detail.js';
 import { renderCreateWizard } from '../pages/storage-create.js';
 import { renderPackingWizard } from '../pages/packing-wizard.js';
 import { renderEditForm } from '../pages/storage-edit.js';
+import { renderStorageLanding } from '../pages/storage-landing.js';
+import { renderStorageStatistics } from '../pages/storage-statistics.js';
 
 let router;
 
@@ -17,13 +19,22 @@ let router;
 export function initRouter() {
   // Use global Navigo (loaded via script tag in index.html)
   router = new window.Navigo('/', { hash: false });
-  
+
   router
+    .on('/', () => {
+      renderStorageLanding();
+    })
     .on('/storage', () => {
       renderStorageList();
     })
+    .on('/new', () => {
+      renderCreateWizard();
+    })
     .on('/storage/create', () => {
       renderCreateWizard();
+    })
+    .on('/statistics', () => {
+      renderStorageStatistics();
     })
     .on('/storage/pack', () => {
       renderPackingWizard();
@@ -39,13 +50,13 @@ export function initRouter() {
       renderStorageDetail(data.id);
     })
     .notFound(() => {
-      console.log('Route not found, redirecting to /storage');
-      navigate('/storage');
+      console.log('Route not found, redirecting to /');
+      navigate('/');
     });
-  
+
   // Important: Call resolve() to trigger initial route matching
   router.resolve();
-  
+
   return router;
 }
 

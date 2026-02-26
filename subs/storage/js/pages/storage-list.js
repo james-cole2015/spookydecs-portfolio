@@ -12,6 +12,7 @@ import { StorageCards } from '../components/StorageCards.js';
 import { PageHeader } from '../components/PageHeader.js';
 import { navigate } from '../utils/router.js';
 import { showSuccess, showError } from '../shared/toast.js';
+import { renderBreadcrumb } from '../shared/breadcrumb.js';
 
 let allStorage = [];
 let allItems = [];
@@ -31,6 +32,7 @@ export async function renderStorageList() {
   // Render page structure
   app.innerHTML = `
     <div class="storage-list-page">
+      <div id="breadcrumb"></div>
       <div id="page-header-container"></div>
       
       <div id="filter-container"></div>
@@ -43,6 +45,11 @@ export async function renderStorageList() {
     </div>
   `;
   
+  renderBreadcrumb(document.getElementById('breadcrumb'), [
+    { label: 'Storage', route: '/' },
+    { label: 'Totes' }
+  ]);
+
   // Restore filters from URL
   currentFilters = getFiltersFromUrl();
   

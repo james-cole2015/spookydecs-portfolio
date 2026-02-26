@@ -13,6 +13,7 @@ import { showDeleteConfirm } from '../shared/modal.js';
 import { showSuccess, showError } from '../shared/toast.js';
 import { navigate } from '../utils/router.js';
 import { showLoading, hideLoading } from '../app.js';
+import { renderBreadcrumb } from '../shared/breadcrumb.js';
 
 let detailView = null;
 let contentsPanel = null;
@@ -27,23 +28,19 @@ export async function renderStorageDetail(storageId) {
   // Create page structure
   app.innerHTML = `
     <div class="storage-detail-page">
-      <div class="page-header">
-        <button class="btn btn-secondary" id="btn-back">
-          ← Back to List
-        </button>
-      </div>
-      
+      <div id="breadcrumb"></div>
       <div id="detail-container"></div>
       <div id="photo-gallery-container" class="storage-photo-gallery-section"></div>
       <div id="contents-container"></div>
     </div>
   `;
-  
-  // Back button
-  document.getElementById('btn-back').addEventListener('click', () => {
-    navigate('/storage');
-  });
-  
+
+  renderBreadcrumb(document.getElementById('breadcrumb'), [
+    { label: 'Storage', route: '/' },
+    { label: 'Totes', route: '/storage' },
+    { label: '…' }
+  ]);
+
   // Load storage unit
   await loadStorageUnit(storageId);
 }
@@ -80,6 +77,13 @@ async function loadStorageUnit(storageId) {
     // Enrich contents with photo URLs
     const enrichedContents = await enrichContentsWithPhotos(currentStorageUnit.contents_details || []);
     
+    // Update breadcrumb with unit name
+    renderBreadcrumb(document.getElementById('breadcrumb'), [
+      { label: 'Storage', route: '/' },
+      { label: 'Totes', route: '/storage' },
+      { label: currentStorageUnit.short_name }
+    ]);
+
     // Initialize detail view
     detailView = new StorageDetailView({
       storageUnit: currentStorageUnit,

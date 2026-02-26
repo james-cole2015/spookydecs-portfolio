@@ -9,6 +9,7 @@ import { CreateWizard } from '../components/CreateWizard.js';
 import { showSuccess, showError } from '../shared/toast.js';
 import { navigate } from '../utils/router.js';
 import { showLoading, hideLoading } from '../app.js';
+import { renderBreadcrumb } from '../shared/breadcrumb.js';
 
 let wizard = null;
 
@@ -21,21 +22,17 @@ export async function renderCreateWizard() {
   // Create page structure
   app.innerHTML = `
     <div class="storage-create-page">
-      <div class="page-header">
-        <button class="btn btn-secondary" id="btn-back">
-          ← Back to List
-        </button>
-      </div>
-      
+      <div id="breadcrumb"></div>
       <div id="wizard-container"></div>
     </div>
   `;
-  
-  // Back button
-  document.getElementById('btn-back').addEventListener('click', () => {
-    navigate('/storage');
-  });
-  
+
+  renderBreadcrumb(document.getElementById('breadcrumb'), [
+    { label: 'Storage', route: '/' },
+    { label: 'Totes', route: '/storage' },
+    { label: 'Create Storage' }
+  ]);
+
   // Initialize wizard
   wizard = new CreateWizard({
     onComplete: handleComplete,
