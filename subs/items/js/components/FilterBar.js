@@ -109,7 +109,7 @@ export class FilterBar {
               type="text"
               class="filter-input"
               id="filter-search"
-              placeholder="Search by name..."
+              placeholder="Search by name or ID..."
               value="${this.filters.search}"
             >
           </div>
@@ -140,7 +140,7 @@ export class FilterBar {
             type="text"
             class="filter-input filter-search-input"
             id="filter-search"
-            placeholder="Search by name..."
+            placeholder="Search by name or ID..."
             value="${this.filters.search}"
           >
           <button class="btn-filters-toggle ${this.filtersOpen ? 'active' : ''}" id="btn-filters-toggle">
@@ -316,7 +316,8 @@ export class FilterBar {
       if (this.filters.search) {
         const search = this.filters.search.toLowerCase();
         const name = (item.short_name || '').toLowerCase();
-        if (!name.includes(search)) return false;
+        const id = (item.id || '').toLowerCase();
+        if (!name.includes(search) && !id.includes(search)) return false;
       }
       
       if (this.filters.season && item.season !== this.filters.season) {
