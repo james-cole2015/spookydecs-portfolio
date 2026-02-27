@@ -4,23 +4,6 @@ import { getDeployment, getConnection, getItem, fetchImageById } from '../utils/
 import { ConnectionDetailView } from '../components/builder/ConnectionDetailView.js';
 import { navigate } from '../utils/router.js';
 
-// Load config for ITEMS_ADMIN URL
-let ITEMS_ADMIN_URL = '';
-
-async function loadConfig() {
-  if (ITEMS_ADMIN_URL) return ITEMS_ADMIN_URL;
-  
-  try {
-    const response = await fetch('/config.json');
-    const config = await response.json();
-    ITEMS_ADMIN_URL = config.ITEMS_ADMIN || '';
-    return ITEMS_ADMIN_URL;
-  } catch (error) {
-    console.error('Failed to load config:', error);
-    return '';
-  }
-}
-
 export async function renderConnectionDetail(deploymentId, sessionId, connectionId) {
   const app = document.getElementById('app');
   
@@ -35,8 +18,7 @@ export async function renderConnectionDetail(deploymentId, sessionId, connection
   try {
     console.log('[ConnectionDetail] Fetching data:', { deploymentId, sessionId, connectionId });
     
-    // Load config for items URL
-    const itemsBaseUrl = await loadConfig();
+    const { ITEMS_ADMIN: itemsBaseUrl = '' } = await window.SpookyConfig.get();
     
     // Fetch connection data
     const connectionResponse = await getConnection(deploymentId, sessionId, connectionId);

@@ -41,21 +41,12 @@ export class ZoneItemsDrawer {
     this.isOpen = false;
   }
 
-  async _loadConfig() {
-    if (this.itemsAdminUrl) return;
-    try {
-      const res = await fetch('/config.json');
-      const config = await res.json();
-      this.itemsAdminUrl = config.ITEMS_ADMIN || '';
-    } catch (e) {
-      console.error('[ZoneItemsDrawer] Failed to load config:', e);
-      this.itemsAdminUrl = '';
-    }
-  }
-
   async _fetchItems() {
     if (this.items !== null) return;
-    await this._loadConfig();
+    if (!this.itemsAdminUrl) {
+      const { ITEMS_ADMIN = '' } = await window.SpookyConfig.get();
+      this.itemsAdminUrl = ITEMS_ADMIN;
+    }
 
     try {
       const results = await Promise.all(
