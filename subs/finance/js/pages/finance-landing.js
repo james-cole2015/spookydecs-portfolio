@@ -15,7 +15,7 @@ export function renderFinanceLanding(container) {
           icon: '✨',
           title: 'AI Assisted Cost Record Creation',
           description: 'Upload a receipt photo and let AI pull vendor, date, amount, and category automatically.',
-          route: '/new-record?extract=true'
+          route: '/new?extract=true'
         })}
         ${renderCard({
           id: 'records',
