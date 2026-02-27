@@ -77,6 +77,13 @@ export async function renderNewCostRecord(container) {
     // Attach event listeners
     attachEventListeners(receiptModal, formFields);
     console.log('✅ Event listeners attached');
+
+    // Auto-open AI extraction modal when ?extract=true
+    if (urlParams.get('extract') === 'true') {
+      receiptModal.open({}, (extractedData, extractionId, imageId) => {
+        handleAIExtractedData(extractedData, extractionId, imageId);
+      });
+    }
     
   } catch (error) {
     console.error('❌ Error rendering new cost record page:', error);

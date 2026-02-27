@@ -11,6 +11,13 @@ export function renderFinanceLanding(container) {
       </div>
       <div class="option-cards">
         ${renderCard({
+          id: 'extract',
+          icon: '✨',
+          title: 'AI Assisted Cost Record Creation',
+          description: 'Upload a receipt photo and let AI pull vendor, date, amount, and category automatically.',
+          route: '/new-record?extract=true'
+        })}
+        ${renderCard({
           id: 'records',
           icon: '📋',
           title: 'Cost Records',
