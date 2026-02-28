@@ -78,9 +78,9 @@
 }
 
 .step.active .step-number {
-  background: #f97316;
+  background: #3b82f6;
   color: white;
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
 .step.completed .step-number {
@@ -91,7 +91,7 @@
 /* .step-label already defined below — keep shared */
 
 .step.active .step-label {
-  color: #f97316;
+  color: #3b82f6;
   font-weight: 600;
 }
 
@@ -147,39 +147,26 @@
   animation: fadeSlideIn 0.25s ease-out;
 }
 
-/* Step panel — centers content, left-aligns form panels */
+/* Step panel — centered column with max-width */
 .step-panel {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
 }
 
 .step-panel h2 {
   margin: 0 0 6px 0;
   font-size: 20px;
   color: #1f2937;
-  text-align: center;
 }
 
 .step-description {
   margin: 0 0 24px 0;
   font-size: 14px;
   color: #6b7280;
-  text-align: center;
-}
-
-.step-panel--left {
-  align-items: flex-start;
-  width: 100%;
-  max-width: 640px;
-}
-
-.step-panel--left h2 {
-  text-align: left;
-}
-
-.step-panel--left .step-description {
-  text-align: left;
 }
 
 /* Inline action button wrapper (Review / Create) */
@@ -219,15 +206,15 @@
 }
 
 .type-card:hover {
-  border-color: #f97316;
-  background: #fff7ed;
+  border-color: #3b82f6;
+  background: #eff6ff;
   transform: translateY(-2px);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .type-card.selected {
-  border-color: #f97316;
-  background: #fff7ed;
+  border-color: #3b82f6;
+  background: #eff6ff;
   border-width: 3px;
 }
 
@@ -387,7 +374,7 @@
 }
 
 .progress-step.completed:not(:last-child)::after {
-  background: #f97316;
+  background: #3b82f6;
 }
 
 /* Packing wizard circle — scoped to .wizard-progress to avoid conflict with create wizard's .step-indicator bar */
@@ -407,13 +394,13 @@
 }
 
 .progress-step.active .step-indicator {
-  background: #f97316;
+  background: #3b82f6;
   color: white;
-  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.2);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
 }
 
 .progress-step.completed .step-indicator {
-  background: #f97316;
+  background: #3b82f6;
   color: white;
 }
 
@@ -491,8 +478,8 @@
 }
 
 .mode-card:hover {
-  border-color: #f97316;
-  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.1);
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
   transform: translateY(-2px);
 }
 
@@ -536,15 +523,15 @@
 }
 
 .type-option:hover {
-  border-color: #f97316;
-  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.1);
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
   transform: translateY(-2px);
 }
 
 .type-option.selected {
-  border-color: #f97316;
-  background: #fff7ed;
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
+  border-color: #3b82f6;
+  background: #eff6ff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
 .type-icon {
@@ -583,14 +570,14 @@
 }
 
 .storage-card:hover {
-  border-color: #f97316;
+  border-color: #3b82f6;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .storage-card.selected {
-  border-color: #f97316;
-  background: #fff7ed;
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
+  border-color: #3b82f6;
+  background: #eff6ff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
 .card-photo {
@@ -680,12 +667,12 @@
 }
 
 .content-item:hover {
-  border-color: #f97316;
+  border-color: #3b82f6;
 }
 
 .content-item.selected {
-  border-color: #f97316;
-  background: #fff7ed;
+  border-color: #3b82f6;
+  background: #eff6ff;
 }
 
 .item-checkbox {
@@ -859,6 +846,7 @@
 .form-input,
 .form-textarea {
   width: 100%;
+  box-sizing: border-box;
   padding: 10px 12px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
@@ -872,8 +860,8 @@
 .form-input:focus,
 .form-textarea:focus {
   outline: none;
-  border-color: #f97316;
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .form-help {
@@ -947,8 +935,8 @@
 
 .item-selected {
   padding: 10px 12px;
-  background: #fff7ed;
-  border: 1px solid #f97316;
+  background: #eff6ff;
+  border: 1px solid #3b82f6;
   border-radius: 6px;
   margin-top: 8px;
 }
@@ -1026,12 +1014,12 @@
 }
 
 .btn-primary {
-  background: #f97316;
+  background: #3b82f6;
   color: white;
 }
 
 .btn-primary:hover {
-  background: #ea580c;
+  background: #2563eb;
 }
 
 .btn-primary:disabled {
@@ -1123,7 +1111,7 @@
   width: 1.125rem;
   height: 1.125rem;
   cursor: pointer;
-  accent-color: #f97316;
+  accent-color: #3b82f6;
 }
 
 .checkbox-label span {

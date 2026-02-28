@@ -142,7 +142,7 @@ export class StorageCards {
     if (packBtn && !packBtn.disabled) {
       packBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        navigate(`/storage/${unit.id}/pack`);
+        navigate(`/storage/pack/${unit.id}`);
       });
     }
   }

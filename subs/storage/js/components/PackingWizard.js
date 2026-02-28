@@ -1,11 +1,14 @@
 /**
  * PackingWizard Component
- * Unified wizard for all packing operations: totes, single-packed items, and storage
- * UPDATED: Fixed item eligibility filtering for all modes
+ * Vertical progressive disclosure wizard for packing operations.
+ *
+ * Tote mode:         Step 1 (choose type) → Step 2 (pick tote) → navigates to /storage/pack/:id
+ * Single/Store mode: Step 1 (choose type) → Step 2 (items) → Step 3 (location) → Step 4 (confirm)
  */
 
 import { getPlaceholderImage } from '../utils/storage-config.js';
-import STORAGE_CONFIG from '../utils/storage-config.js';
+import { navigate } from '../utils/router.js';
+import { showError } from '../shared/toast.js';
 
 const PACKING_MODES = {
   TOTE: 'tote',
@@ -15,22 +18,20 @@ const PACKING_MODES = {
 
 export class PackingWizard {
   constructor(options = {}) {
-    this.mode = options.mode || null; // null means show mode selector
-    this.preselectedItems = options.preselectedItems || [];
     this.storageUnits = options.storageUnits || [];
     this.availableItems = options.availableItems || [];
     this.onComplete = options.onComplete || (() => {});
     this.onCancel = options.onCancel || (() => {});
     this.container = null;
-    
+
     // Wizard state
-    this.currentStep = this.mode ? 1 : 0; // Start at 0 if no mode selected
+    this.mode = null;
+    this.stepsRevealed = 1;
     this.selectedStorage = null;
-    this.selectedItems = [...this.preselectedItems];
+    this.selectedItems = [];
     this.location = '';
     this.customLocation = '';
-    this.markAsPacked = false;
-    
+
     // Pagination state
     this.itemsPerPage = 10;
     this.currentItemPage = 1;
@@ -38,615 +39,455 @@ export class PackingWizard {
     this.isLoadingMore = false;
   }
 
-  /**
-   * Render the wizard
-   */
   render(containerElement) {
     this.container = containerElement;
-    
-    const wizard = document.createElement('div');
-    wizard.className = 'wizard-container';
-    
-    wizard.innerHTML = `
-      <div class="wizard-header">
-        <h1 class="wizard-title">Packing Wizard</h1>
-        <p class="wizard-subtitle">${this.getSubtitle()}</p>
+
+    this.container.innerHTML = `
+      <div class="wizard-container--vertical">
+        <div class="view-header view-header--wizard">
+          <button class="btn-back-wizard" id="btn-back-wizard">← Back</button>
+          <h1>Packing Wizard</h1>
+        </div>
+
+        <div id="step-indicator" class="step-indicator"></div>
+
+        <div class="wizard-body" id="wizard-body">
+          <div id="wizard-step-1" class="wizard-step"></div>
+          <div id="wizard-step-2" class="wizard-step wizard-step--hidden"></div>
+          <div id="wizard-step-3" class="wizard-step wizard-step--hidden"></div>
+          <div id="wizard-step-4" class="wizard-step wizard-step--hidden"></div>
+        </div>
       </div>
-      
-      <div class="wizard-progress" id="wizard-progress"></div>
-      
-      <div class="wizard-actions">
-        <button class="btn btn-secondary" id="btn-cancel">Cancel</button>
-        <div style="flex: 1"></div>
-        <button class="btn btn-secondary hidden" id="btn-prev">← Previous</button>
-        <button class="btn btn-primary" id="btn-next">Next →</button>
-      </div>
-      
-      <div class="wizard-body" id="wizard-body"></div>
     `;
-    
-    this.container.innerHTML = '';
-    this.container.appendChild(wizard);
-    
-    // Render initial step
-    this.renderProgress();
-    this.renderStep();
-    
-    // Attach event listeners
-    this.attachEventListeners();
+
+    this.container.querySelector('#btn-back-wizard').addEventListener('click', () => this.onCancel());
+
+    this.renderStep1(this.container.querySelector('#wizard-step-1'));
+    this.renderStepIndicator();
   }
 
-  /**
-   * Get subtitle based on mode
-   */
-  getSubtitle() {
+  // --- Step indicator ---
+
+  getStepLabels() {
     switch (this.mode) {
-      case PACKING_MODES.TOTE:
-        return 'Pack multiple items into a tote';
-      case PACKING_MODES.SINGLE:
-        return 'Pack items in original boxes';
-      case PACKING_MODES.STORE:
-        return 'Store oversized items by location';
-      default:
-        return 'Choose your packing workflow';
+      case PACKING_MODES.TOTE:   return ['Type', 'Tote'];
+      case PACKING_MODES.SINGLE: return ['Type', 'Items', 'Location', 'Confirm'];
+      case PACKING_MODES.STORE:  return ['Type', 'Items', 'Location', 'Confirm'];
+      default:                   return ['Type'];
     }
   }
 
-  /**
-   * Render progress indicator
-   */
-  renderProgress() {
-    const progressContainer = this.container.querySelector('#wizard-progress');
-    const steps = this.getStepsForMode();
-    
-    progressContainer.innerHTML = steps.map((step, index) => {
-      const stepNum = index + (this.mode ? 1 : 0);
-      const isActive = stepNum === this.currentStep;
-      const isCompleted = stepNum < this.currentStep;
-      
+  renderStepIndicator() {
+    const container = this.container.querySelector('#step-indicator');
+    if (!container) return;
+
+    const labels = this.getStepLabels();
+
+    container.innerHTML = labels.map((label, i) => {
+      const stepNum = i + 1;
+      const isActive = this.stepsRevealed === stepNum;
+      const isCompleted = this.stepsRevealed > stepNum;
+
+      const connector = i < labels.length - 1
+        ? `<div class="step-connector ${isCompleted ? 'step-connector--completed' : ''}"></div>`
+        : '';
+
       return `
-        <div class="progress-step ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}">
-          <div class="step-indicator">${isCompleted ? '✓' : (this.mode ? stepNum : (index === 0 ? '?' : stepNum))}</div>
-          <div class="step-label">${step.label}</div>
+        <div class="step ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''} ${!isActive && !isCompleted ? 'upcoming' : ''}">
+          <div class="step-number">${isCompleted ? '✓' : stepNum}</div>
+          <div class="step-label">${label}</div>
         </div>
+        ${connector}
       `;
     }).join('');
   }
 
-  /**
-   * Get steps based on mode
-   */
-  getStepsForMode() {
-    if (!this.mode) {
-      return [{ label: 'Choose Type' }];
+  // --- Step reveal ---
+
+  revealStep(stepNum) {
+    const stepEl = this.container.querySelector(`#wizard-step-${stepNum}`);
+    if (!stepEl) return;
+
+    stepEl.classList.remove('wizard-step--hidden');
+    stepEl.classList.add('wizard-step--revealing');
+    stepEl.addEventListener('animationend', () => {
+      stepEl.classList.remove('wizard-step--revealing');
+    }, { once: true });
+
+    switch (stepNum) {
+      case 2: this.renderStep2(stepEl); break;
+      case 3: this.renderStep3(stepEl); break;
+      case 4: this.renderStep4(stepEl); break;
     }
-    
-    switch (this.mode) {
-      case PACKING_MODES.TOTE:
-        return [
-          { label: 'Select Tote' },
-          { label: 'Select Items' },
-          { label: 'Review' }
-        ];
-      case PACKING_MODES.SINGLE:
-        return [
-          { label: 'Select Items' },
-          { label: 'Choose Location' },
-          { label: 'Review' }
-        ];
-      case PACKING_MODES.STORE:
-        return [
-          { label: 'Select Items' },
-          { label: 'Choose Location' },
-          { label: 'Review' }
-        ];
-    }
+
+    this.stepsRevealed = Math.max(this.stepsRevealed, stepNum);
+    this.renderStepIndicator();
+    this.scrollToStep(stepNum);
   }
 
-  /**
-   * Render current step
-   */
-  renderStep() {
-    const bodyContainer = this.container.querySelector('#wizard-body');
-    
-    if (this.currentStep === 0) {
-      this.renderModeSelector(bodyContainer);
-      return;
-    }
-    
-    switch (this.mode) {
-      case PACKING_MODES.TOTE:
-        this.renderToteFlow(bodyContainer);
-        break;
-      case PACKING_MODES.SINGLE:
-        this.renderSingleFlow(bodyContainer);
-        break;
-      case PACKING_MODES.STORE:
-        this.renderStoreFlow(bodyContainer);
-        break;
-    }
-    
-    this.updateButtons();
+  scrollToStep(stepNum) {
+    const stepEl = this.container.querySelector(`#wizard-step-${stepNum}`);
+    if (!stepEl) return;
+    requestAnimationFrame(() => {
+      stepEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   }
 
-  /**
-   * Step 0: Mode Selector
-   */
-  renderModeSelector(container) {
-    container.innerHTML = `
-      <div class="wizard-step active mode-selector">
-        <h2 class="mode-selector-title">Choose Packing Type</h2>
-        
-        <div class="mode-cards">
-          <div class="mode-card" data-mode="${PACKING_MODES.TOTE}">
-            <div class="mode-icon">📦</div>
-            <h3 class="mode-title">Pack Tote</h3>
-            <p class="mode-description">Pack multiple items into a tote for storage</p>
+  // --- Step 1: Choose Type ---
+
+  renderStep1(el) {
+    el.innerHTML = `
+      <div class="step-panel">
+        <h2>Choose Packing Type</h2>
+        <p class="step-description">Select how you want to pack your items</p>
+
+        <div class="type-selector">
+          <div class="type-card" data-mode="${PACKING_MODES.TOTE}">
+            <div class="type-icon">📦</div>
+            <div class="type-label">Pack Tote</div>
+            <div class="type-sublabel">Pack multiple items into a tote</div>
           </div>
-          
-          <div class="mode-card" data-mode="${PACKING_MODES.SINGLE}">
-            <div class="mode-icon">📦</div>
-            <h3 class="mode-title">Pack Single Item</h3>
-            <p class="mode-description">Pack items in their original boxes</p>
+
+          <div class="type-card" data-mode="${PACKING_MODES.SINGLE}">
+            <div class="type-icon">🎁</div>
+            <div class="type-label">Pack Single</div>
+            <div class="type-sublabel">Items packed in their original box</div>
           </div>
-          
-          <div class="mode-card" data-mode="${PACKING_MODES.STORE}">
-            <div class="mode-icon">📍</div>
-            <h3 class="mode-title">Store Items</h3>
-            <p class="mode-description">Store oversized items by location</p>
+
+          <div class="type-card" data-mode="${PACKING_MODES.STORE}">
+            <div class="type-icon">📍</div>
+            <div class="type-label">Store Items</div>
+            <div class="type-sublabel">Store oversized items by location</div>
           </div>
         </div>
       </div>
     `;
-    
-    // Add click handlers
-    container.querySelectorAll('.mode-card').forEach(card => {
+
+    el.querySelectorAll('.type-card').forEach(card => {
       card.addEventListener('click', () => {
+        el.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
         this.mode = card.dataset.mode;
-        this.currentStep = 1;
-        this.renderProgress();
-        this.renderStep();
+        this.renderStepIndicator();
+        this.revealStep(2);
       });
     });
   }
 
-  /**
-   * Tote Flow
-   */
-  renderToteFlow(container) {
-    switch (this.currentStep) {
-      case 1:
-        this.renderSelectTote(container);
+  // --- Step 2: depends on mode ---
+
+  renderStep2(el) {
+    switch (this.mode) {
+      case PACKING_MODES.TOTE:
+        this.renderPickTote(el);
         break;
-      case 2:
-        this.renderSelectItems(container, this.filterToteItems());
+      case PACKING_MODES.SINGLE:
+        this.renderSelectItems(el, this.filterSingleItems());
         break;
-      case 3:
-        this.renderReviewTote(container);
+      case PACKING_MODES.STORE:
+        this.renderSelectItems(el, this.filterStoreItems());
         break;
     }
   }
 
-  /**
-   * Single Flow
-   */
-  renderSingleFlow(container) {
-    switch (this.currentStep) {
-      case 1:
-        this.renderSelectItems(container, this.filterSingleItems());
-        break;
-      case 2:
-        this.renderChooseLocation(container);
-        break;
-      case 3:
-        this.renderReviewSingle(container);
-        break;
-    }
-  }
+  // --- Step 2 (Tote): Pick a tote, then navigate ---
 
-  /**
-   * Store Flow
-   */
-  renderStoreFlow(container) {
-    switch (this.currentStep) {
-      case 1:
-        this.renderSelectItems(container, this.filterStoreItems());
-        break;
-      case 2:
-        this.renderChooseLocation(container);
-        break;
-      case 3:
-        this.renderReviewStore(container);
-        break;
-    }
-  }
+  renderPickTote(el) {
+    const totes = this.storageUnits.filter(u => u.class_type === 'Tote' && !u.packed);
 
-  /**
-   * Filter items for tote packing
-   * FIXED: Items that can be packed into totes
-   */
-  filterToteItems() {
-    return this.availableItems.filter(item => {
-      const isPackable = item.packing_data?.packable !== false;
-      const isUnpacked = item.packing_data?.packing_status === false;
-      const isNotSinglePacked = item.packing_data?.single_packed !== true;
-      const isNotReceptacle = item.class_type !== 'Receptacle';
-      
-      return isPackable && isUnpacked && isNotSinglePacked && isNotReceptacle;
-    });
-  }
-
-  /**
-   * Filter items for single packing
-   * FIXED: Added Receptacle check
-   */
-  filterSingleItems() {
-    return this.availableItems.filter(item => {
-      const isSinglePacked = item.packing_data?.single_packed === true;
-      const isUnpacked = item.packing_data?.packing_status === false;
-      const isNotReceptacle = item.class_type !== 'Receptacle'; // FIXED: Added this check
-      
-      return isSinglePacked && isUnpacked && isNotReceptacle; // FIXED: Added isNotReceptacle
-    });
-  }
-
-  /**
-   * Filter items for storage
-   * Already correct - no changes needed
-   */
-  filterStoreItems() {
-    return this.availableItems.filter(item => {
-      const isNonPackable = item.packing_data?.packable === false;
-      const isUnstored = item.packing_data?.packing_status === false;
-      const isNotReceptacle = item.class_type !== 'Receptacle';
-      
-      return isNonPackable && isUnstored && isNotReceptacle;
-    });
-  }
-
-  /**
-   * Render: Select Tote
-   */
-  renderSelectTote(container) {
-    const totes = this.storageUnits.filter(unit => unit.class_type === 'Tote');
-    
     if (totes.length === 0) {
-      container.innerHTML = `
-        <div class="wizard-step active">
-          <div class="contents-empty">
+      el.innerHTML = `
+        <div class="step-panel">
+          <h2>Pick a Tote</h2>
+          <div class="contents-empty" style="padding:40px 0;">
             <div class="empty-icon">📦</div>
-            <h3>No Totes Available</h3>
-            <p>Create a tote first before packing items.</p>
-            <button class="btn btn-primary" onclick="window.location.href='/storage/create'">
-              Create Tote
-            </button>
+            <h3>No Unpacked Totes</h3>
+            <p>All totes are already packed. Create a new tote first.</p>
+            <button class="btn btn-primary" id="btn-create-tote">Create Tote</button>
           </div>
         </div>
       `;
+      el.querySelector('#btn-create-tote').addEventListener('click', () => navigate('/storage/create'));
       return;
     }
-    
-    container.innerHTML = `
-      <div class="wizard-step active">        
+
+    el.innerHTML = `
+      <div class="step-panel">
+        <h2>Pick a Tote</h2>
+        <p class="step-description">Select the tote you want to pack</p>
+
         <div class="form-field mb-md">
-          <label class="form-label">Filter by Season</label>
-          <select class="form-select" id="season-filter">
+          <select class="form-select" id="tote-season-filter">
             <option value="">All Seasons</option>
             <option value="Halloween">Halloween</option>
             <option value="Christmas">Christmas</option>
             <option value="Shared">Shared</option>
           </select>
         </div>
-        
-        <div class="storage-cards" id="storage-selection"></div>
+
+        <div class="storage-cards" id="tote-selection"></div>
+
+        <div class="step-action">
+          <button class="btn btn-primary btn-review" id="btn-pack-tote" disabled>Pack This Tote →</button>
+        </div>
       </div>
     `;
-    
-    this.renderStorageOptions(totes);
-    
-    const seasonFilter = container.querySelector('#season-filter');
-    seasonFilter.addEventListener('change', (e) => {
+
+    this.renderToteCards(el, totes);
+
+    el.querySelector('#tote-season-filter').addEventListener('change', (e) => {
       const season = e.target.value;
       const filtered = season ? totes.filter(t => t.season === season) : totes;
-      this.renderStorageOptions(filtered);
+      // Clear selection if filtered tote is gone
+      if (this.selectedStorage && season && this.selectedStorage.season !== season) {
+        this.selectedStorage = null;
+        el.querySelector('#btn-pack-tote').disabled = true;
+      }
+      this.renderToteCards(el, filtered);
+    });
+
+    el.querySelector('#btn-pack-tote').addEventListener('click', () => {
+      if (!this.selectedStorage) {
+        showError('Please select a tote first');
+        return;
+      }
+      navigate(`/storage/pack/${this.selectedStorage.id}`);
     });
   }
 
-  /**
-   * Render storage options
-   */
-  renderStorageOptions(totes) {
-    const storageContainer = this.container.querySelector('#storage-selection');
-    
-    if (!storageContainer) return;
-    
-    storageContainer.innerHTML = totes.map(unit => {
-      const photoUrl = unit.images?.photo_url || getPlaceholderImage();
-      const isSelected = this.selectedStorage?.id === unit.id;
-      const shortName = unit.short_name || 'Unnamed Tote';
-      const season = unit.season || 'Unknown';
-      const location = unit.location || 'Unknown';
-      const size = unit.size || 'Unknown';
-      const contentsCount = unit.contents_count || unit.contents?.length || 0;
-      
+  renderToteCards(el, totes) {
+    const container = el.querySelector('#tote-selection');
+    if (!container) return;
+
+    if (totes.length === 0) {
+      container.innerHTML = `<p style="color:#6b7280;padding:16px 0;">No totes match this season filter.</p>`;
+      return;
+    }
+
+    container.innerHTML = totes.map(tote => {
+      const photoUrl = tote.images?.thumb_cloudfront_url || tote.images?.photo_url || getPlaceholderImage();
+      const isSelected = this.selectedStorage?.id === tote.id;
+      const contentsCount = tote.contents_count || tote.contents?.length || 0;
+
       return `
-        <div class="storage-card ${isSelected ? 'selected' : ''}" data-id="${unit.id}">
+        <div class="storage-card ${isSelected ? 'selected' : ''}" data-id="${tote.id}">
           <div class="card-photo">
-            <img src="${photoUrl}" alt="${shortName}">
+            <img src="${photoUrl}" alt="${tote.short_name}">
           </div>
-          
           <div class="card-body">
             <div class="card-header">
-              <h3 class="card-title">${shortName}</h3>
-              <code class="card-id">${unit.id}</code>
+              <h3 class="card-title">${tote.short_name || 'Unnamed Tote'}</h3>
+              <code class="card-id">${tote.id}</code>
             </div>
-            
             <div class="card-meta">
               <div class="card-meta-item">
                 <span class="meta-label">Season</span>
-                <span class="badge badge-${season.toLowerCase()}">${season}</span>
+                <span class="badge badge-${(tote.season || '').toLowerCase()}">${tote.season || '—'}</span>
               </div>
-              
               <div class="card-meta-item">
                 <span class="meta-label">Location</span>
-                <span class="meta-value">${location}</span>
+                <span class="meta-value">${tote.location || '—'}</span>
               </div>
-              
               <div class="card-meta-item">
                 <span class="meta-label">Size</span>
-                <span class="meta-value">${size}</span>
+                <span class="meta-value">${tote.size || '—'}</span>
               </div>
-              
               <div class="card-meta-item">
-                <span class="meta-label">Contents</span>
-                <span class="meta-value">${contentsCount} items</span>
+                <span class="meta-label">Items</span>
+                <span class="meta-value">${contentsCount}</span>
               </div>
             </div>
           </div>
         </div>
       `;
     }).join('');
-    
-    storageContainer.querySelectorAll('.storage-card').forEach(card => {
+
+    container.querySelectorAll('.storage-card').forEach(card => {
       card.addEventListener('click', () => {
-        const storageId = card.dataset.id;
-        this.selectedStorage = totes.find(t => t.id === storageId);
-        
-        storageContainer.querySelectorAll('.storage-card').forEach(c => c.classList.remove('selected'));
+        const toteId = card.dataset.id;
+        this.selectedStorage = totes.find(t => t.id === toteId);
+        container.querySelectorAll('.storage-card').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
+        const packBtn = el.querySelector('#btn-pack-tote');
+        if (packBtn) packBtn.disabled = false;
       });
     });
   }
 
-  /**
-   * Render: Select Items (reusable for all flows)
-   */
-  renderSelectItems(container, availableItems) {
-    if (availableItems.length === 0) {
-      container.innerHTML = `
-        <div class="wizard-step active">
-          <div class="contents-empty">
+  // --- Item filters (Single / Store) ---
+
+  filterSingleItems() {
+    return this.availableItems.filter(item => {
+      const isSinglePacked = item.packing_data?.single_packed === true;
+      const isUnpacked = item.packing_data?.packing_status === false;
+      const isNotReceptacle = item.class_type !== 'Receptacle';
+      return isSinglePacked && isUnpacked && isNotReceptacle;
+    });
+  }
+
+  filterStoreItems() {
+    return this.availableItems.filter(item => {
+      const isNonPackable = item.packing_data?.packable === false;
+      const isUnstored = item.packing_data?.packing_status === false;
+      const isNotReceptacle = item.class_type !== 'Receptacle';
+      return isNonPackable && isUnstored && isNotReceptacle;
+    });
+  }
+
+  // --- Step 2 (Single/Store): Select items ---
+
+  renderSelectItems(el, items) {
+    const modeLabel = this.mode === PACKING_MODES.SINGLE ? 'single-packed' : 'oversized';
+
+    if (items.length === 0) {
+      el.innerHTML = `
+        <div class="step-panel">
+          <h2>Select Items</h2>
+          <div class="contents-empty" style="padding:40px 0;">
             <div class="empty-icon">📦</div>
             <h3>No Items Available</h3>
-            <p>All items matching this criteria are already packed or deployed.</p>
+            <p>No ${modeLabel} items are available to pack.</p>
           </div>
         </div>
       `;
       return;
     }
-    
-    this.filteredItems = availableItems;
-    this.currentItemPage = 1;
-    
-    container.innerHTML = `
-      <div class="wizard-step active">
-        ${this.mode === PACKING_MODES.TOTE ? `
-          <p class="form-help mb-md">Packing into: <strong>${this.selectedStorage?.short_name || 'Select tote'}</strong></p>
-        ` : ''}
-        
+
+    this.filteredItems = [...items];
+
+    el.innerHTML = `
+      <div class="step-panel">
+        <h2>Select Items</h2>
+        <p class="step-description">${this.mode === PACKING_MODES.SINGLE ? 'Select items to pack in their original boxes' : 'Select oversized items to store by location'}</p>
+
         <div class="form-field mb-md">
-          <input 
-            type="text" 
-            class="form-input" 
-            placeholder="🔍 Search items..."
-            id="item-search"
-          >
+          <input type="text" class="form-input" placeholder="🔍 Search items..." id="item-search-step2">
         </div>
-        
-        <div class="form-field mb-md">
-          <label class="form-label">Filter by Class</label>
-          <select class="form-select" id="class-filter">
-            <option value="">All Classes</option>
-            <option value="Decoration">Decoration</option>
-            <option value="Light">Light</option>
-            <option value="Accessory">Accessory</option>
-          </select>
-        </div>
-        
+
         <div class="mb-md">
-          <strong>Selected: <span id="selected-count">${this.selectedItems.length}</span> items</strong>
+          <strong>Selected: <span id="selected-count-step2">0</span> items</strong>
         </div>
-        
-        <div class="contents-list" id="items-selection"></div>
-        <div class="loading-indicator hidden" id="loading-more">
-          <p>Loading more items...</p>
+
+        <div class="contents-list" id="items-list-step2"></div>
+        <div class="loading-indicator hidden" id="loading-more-step2">Loading more...</div>
+
+        <div class="step-action">
+          <button class="btn btn-primary btn-review" id="btn-continue-step2">Continue →</button>
         </div>
       </div>
     `;
-    
-    this.renderItemOptions(this.filteredItems, true);
-    this.setupInfiniteScroll();
-    
-    const searchInput = container.querySelector('#item-search');
-    searchInput.addEventListener('input', (e) => {
+
+    this.renderStep2ItemPage(el, items, true);
+    this.setupStep2Scroll(el, items);
+
+    el.querySelector('#item-search-step2').addEventListener('input', (e) => {
       const term = e.target.value.toLowerCase();
-      const filtered = availableItems.filter(item => 
-        item.id.toLowerCase().includes(term) || 
+      this.filteredItems = items.filter(item =>
+        item.id.toLowerCase().includes(term) ||
         item.short_name.toLowerCase().includes(term)
       );
-      this.filteredItems = filtered;
       this.currentItemPage = 1;
-      this.renderItemOptions(filtered, true);
+      this.renderStep2ItemPage(el, this.filteredItems, true);
     });
-    
-    const classFilter = container.querySelector('#class-filter');
-    classFilter.addEventListener('change', (e) => {
-      const itemClass = e.target.value;
-      const filtered = itemClass ? availableItems.filter(i => i.class === itemClass) : availableItems;
-      this.filteredItems = filtered;
-      this.currentItemPage = 1;
-      this.renderItemOptions(filtered, true);
-    });
-  }
 
-  /**
-   * Setup infinite scroll
-   */
-  setupInfiniteScroll() {
-    const itemsContainer = this.container.querySelector('#items-selection');
-    
-    if (!itemsContainer) return;
-    
-    itemsContainer.addEventListener('scroll', () => {
-      const scrollTop = itemsContainer.scrollTop;
-      const scrollHeight = itemsContainer.scrollHeight;
-      const clientHeight = itemsContainer.clientHeight;
-      
-      const scrolledToBottom = scrollTop + clientHeight >= scrollHeight - 100;
-      
-      if (scrolledToBottom && !this.isLoadingMore) {
-        this.loadMoreItems();
+    el.querySelector('#btn-continue-step2').addEventListener('click', () => {
+      if (this.selectedItems.length === 0) {
+        showError('Please select at least one item');
+        return;
       }
+      this.revealStep(3);
     });
   }
 
-  /**
-   * Load more items
-   */
-  loadMoreItems() {
-    const totalItems = this.filteredItems.length;
-    const itemsShown = this.currentItemPage * this.itemsPerPage;
-    
-    if (itemsShown >= totalItems) return;
-    
-    this.isLoadingMore = true;
-    
-    const loadingIndicator = this.container.querySelector('#loading-more');
-    if (loadingIndicator) loadingIndicator.classList.remove('hidden');
-    
-    setTimeout(() => {
-      this.currentItemPage++;
-      this.renderItemOptions(this.filteredItems, false);
-      
-      this.isLoadingMore = false;
-      if (loadingIndicator) loadingIndicator.classList.add('hidden');
-    }, 300);
-  }
+  renderStep2ItemPage(el, items, reset) {
+    const listEl = el.querySelector('#items-list-step2');
+    if (!listEl) return;
 
-  /**
-   * Render item options with pagination
-   */
-  renderItemOptions(items, resetPage = false) {
-    const itemsContainer = this.container.querySelector('#items-selection');
-    
-    if (!itemsContainer) return;
-    
-    const itemsToShow = resetPage 
-      ? items.slice(0, this.itemsPerPage)
-      : items.slice(0, this.currentItemPage * this.itemsPerPage);
-    
-    if (resetPage) itemsContainer.innerHTML = '';
-    
-    const itemsHTML = itemsToShow.map(item => {
-      const photoUrl = item.images?.photo_url || getPlaceholderImage();
+    if (reset) {
+      this.currentItemPage = 1;
+      listEl.innerHTML = '';
+    }
+
+    const pageItems = items.slice(0, this.currentItemPage * this.itemsPerPage);
+    const html = pageItems.map(item => {
+      const photoUrl = item.images?.thumb_cloudfront_url || item.images?.photo_url || getPlaceholderImage();
       const isSelected = this.selectedItems.includes(item.id);
-      
       return `
         <div class="content-item ${isSelected ? 'selected' : ''}" data-id="${item.id}">
-          <input 
-            type="checkbox" 
-            class="item-checkbox" 
-            ${isSelected ? 'checked' : ''}
-            data-id="${item.id}"
-          >
-          
+          <input type="checkbox" class="item-checkbox" ${isSelected ? 'checked' : ''} data-id="${item.id}">
           <div class="content-photo">
             <img src="${photoUrl}" alt="${item.short_name}">
           </div>
-          
           <div class="content-info">
             <div class="content-id-name">
               <code class="content-id">${item.id}</code>
               <span class="content-name">${item.short_name}</span>
             </div>
-            
-            <div class="content-meta">
-              <span class="content-class">${item.class || ''}</span>
-              ${item.class_type ? `
-                <span class="content-separator">•</span>
-                <span class="content-type">${item.class_type}</span>
-              ` : ''}
-            </div>
+            ${item.class || item.class_type ? `
+              <div class="content-meta">
+                <span class="content-class">${item.class || ''}</span>
+                ${item.class_type ? `<span class="content-separator">•</span><span class="content-type">${item.class_type}</span>` : ''}
+              </div>
+            ` : ''}
           </div>
         </div>
       `;
     }).join('');
-    
-    if (resetPage) {
-      itemsContainer.innerHTML = itemsHTML;
-    } else {
-      itemsContainer.insertAdjacentHTML('beforeend', itemsHTML);
-    }
-    
-    itemsContainer.querySelectorAll('.item-checkbox').forEach(checkbox => {
-      checkbox.addEventListener('change', (e) => {
+
+    listEl.innerHTML = html;
+
+    listEl.querySelectorAll('.item-checkbox').forEach(cb => {
+      cb.addEventListener('change', (e) => {
         const itemId = e.target.dataset.id;
-        
         if (e.target.checked) {
-          if (!this.selectedItems.includes(itemId)) {
-            this.selectedItems.push(itemId);
-          }
+          if (!this.selectedItems.includes(itemId)) this.selectedItems.push(itemId);
         } else {
           this.selectedItems = this.selectedItems.filter(id => id !== itemId);
         }
-        
-        const card = e.target.closest('.content-item');
-        card.classList.toggle('selected', e.target.checked);
-        
-        this.updateSelectedCount();
+        cb.closest('.content-item').classList.toggle('selected', e.target.checked);
+        const countEl = el.querySelector('#selected-count-step2');
+        if (countEl) countEl.textContent = this.selectedItems.length;
       });
-    });
-    
-    itemsContainer.querySelectorAll('.content-item').forEach(item => {
-      item.addEventListener('click', (e) => {
+
+      cb.closest('.content-item').addEventListener('click', (e) => {
         if (e.target.tagName !== 'INPUT') {
-          const checkbox = item.querySelector('.item-checkbox');
-          checkbox.click();
+          cb.checked = !cb.checked;
+          cb.dispatchEvent(new Event('change'));
         }
       });
     });
-    
-    this.updateSelectedCount();
   }
 
-  /**
-   * Update selected item count
-   */
-  updateSelectedCount() {
-    const countElement = this.container.querySelector('#selected-count');
-    if (countElement) {
-      countElement.textContent = this.selectedItems.length;
-    }
+  setupStep2Scroll(el, items) {
+    const listEl = el.querySelector('#items-list-step2');
+    if (!listEl) return;
+
+    listEl.addEventListener('scroll', () => {
+      const nearBottom = listEl.scrollTop + listEl.clientHeight >= listEl.scrollHeight - 100;
+      if (!nearBottom || this.isLoadingMore) return;
+      if (this.currentItemPage * this.itemsPerPage >= this.filteredItems.length) return;
+
+      this.isLoadingMore = true;
+      const loadingEl = el.querySelector('#loading-more-step2');
+      if (loadingEl) loadingEl.classList.remove('hidden');
+
+      setTimeout(() => {
+        this.currentItemPage++;
+        this.renderStep2ItemPage(el, this.filteredItems, false);
+        this.isLoadingMore = false;
+        if (loadingEl) loadingEl.classList.add('hidden');
+      }, 300);
+    });
   }
 
-  /**
-   * Render: Choose Location (for single and store flows)
-   */
-  renderChooseLocation(container) {
-    container.innerHTML = `
-      <div class="wizard-step active">
-        <p class="form-help mb-md">Select where these items will be stored</p>
-        
+  // --- Step 3 (Single/Store): Choose location ---
+
+  renderStep3(el) {
+    el.innerHTML = `
+      <div class="step-panel">
+        <h2>Choose Location</h2>
+        <p class="step-description">Where will these items be stored?</p>
+
         <div class="form-field mb-md">
           <label class="form-label">Storage Location</label>
           <select class="form-select" id="location-select">
@@ -657,33 +498,29 @@ export class PackingWizard {
             <option value="Custom">Custom</option>
           </select>
         </div>
-        
+
         <div class="form-field mb-md hidden" id="custom-location-field">
-          <label class="form-label">Custom Location (Max 20 characters)</label>
-          <input 
-            type="text" 
-            class="form-input" 
-            id="custom-location-input"
-            placeholder="Enter custom location..."
-            maxlength="20"
-            value="${this.customLocation}"
-          >
-          <span class="form-help" id="char-count">0 / 20 characters</span>
+          <label class="form-label">Custom Location</label>
+          <input type="text" class="form-input" id="custom-location-input" placeholder="Enter location..." maxlength="20" value="${this.customLocation}">
+          <span class="form-help" id="char-count">${this.customLocation.length} / 20 characters</span>
+        </div>
+
+        <div class="step-action">
+          <button class="btn btn-primary btn-review" id="btn-continue-step3">Continue →</button>
         </div>
       </div>
     `;
-    
-    const locationSelect = container.querySelector('#location-select');
-    const customField = container.querySelector('#custom-location-field');
-    const customInput = container.querySelector('#custom-location-input');
-    const charCount = container.querySelector('#char-count');
-    
+
+    const locationSelect = el.querySelector('#location-select');
+    const customField = el.querySelector('#custom-location-field');
+    const customInput = el.querySelector('#custom-location-input');
+    const charCount = el.querySelector('#char-count');
+
     locationSelect.value = this.location;
     if (this.location === 'Custom') customField.classList.remove('hidden');
-    
+
     locationSelect.addEventListener('change', (e) => {
       this.location = e.target.value;
-      
       if (this.location === 'Custom') {
         customField.classList.remove('hidden');
       } else {
@@ -691,289 +528,79 @@ export class PackingWizard {
         this.customLocation = '';
       }
     });
-    
-    if (customInput) {
-      customInput.addEventListener('input', (e) => {
-        this.customLocation = e.target.value;
-        charCount.textContent = `${this.customLocation.length} / 20 characters`;
-      });
-      
-      charCount.textContent = `${this.customLocation.length} / 20 characters`;
-    }
-  }
 
-  /**
-   * Render: Review Tote
-   */
-  renderReviewTote(container) {
-    const currentContents = this.selectedStorage?.contents_count || 0;
-    const newTotal = currentContents + this.selectedItems.length;
-    
-    container.innerHTML = `
-      <div class="wizard-step active">        
-        <div class="review-section">
-          <h3 class="review-title">Storage Unit</h3>
-          <div class="review-grid">
-            <div class="review-item">
-              <span class="review-label">ID</span>
-              <span class="review-value"><code>${this.selectedStorage?.id}</code></span>
-            </div>
-            
-            <div class="review-item">
-              <span class="review-label">Name</span>
-              <span class="review-value">${this.selectedStorage?.short_name}</span>
-            </div>
-            
-            <div class="review-item">
-              <span class="review-label">Current Items</span>
-              <span class="review-value">${currentContents} items</span>
-            </div>
-            
-            <div class="review-item">
-              <span class="review-label">New Total</span>
-              <span class="review-value"><strong>${newTotal} items</strong></span>
-            </div>
-          </div>
-        </div>
-        
-        <div class="review-section">
-          <h3 class="review-title">Adding ${this.selectedItems.length} Items</h3>
-          <div class="review-grid">
-            ${this.selectedItems.map(itemId => {
-              const item = this.filteredItems.find(i => i.id === itemId);
-              return `
-                <div class="review-item">
-                  <span class="review-label"><code>${item?.id}</code></span>
-                  <span class="review-value">${item?.short_name}</span>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        </div>
-        
-        <div class="review-section">
-          <div class="form-field">
-            <label class="form-label">
-              <input 
-                type="checkbox" 
-                id="mark-packed" 
-                ${this.markAsPacked ? 'checked' : ''}
-              >
-              Mark tote as packed (tote is full/ready for storage)
-            </label>
-            <span class="form-help">Check this if the tote is now completely full and ready for long-term storage.</span>
-          </div>
-        </div>
-      </div>
-    `;
-    
-    const markedPackedCheckbox = container.querySelector('#mark-packed');
-    markedPackedCheckbox.addEventListener('change', (e) => {
-      this.markAsPacked = e.target.checked;
+    customInput.addEventListener('input', (e) => {
+      this.customLocation = e.target.value;
+      charCount.textContent = `${this.customLocation.length} / 20 characters`;
+    });
+
+    el.querySelector('#btn-continue-step3').addEventListener('click', () => {
+      if (!this.location) {
+        showError('Please select a storage location');
+        return;
+      }
+      if (this.location === 'Custom' && !this.customLocation.trim()) {
+        showError('Please enter a custom location');
+        return;
+      }
+      this.revealStep(4);
     });
   }
 
-  /**
-   * Render: Review Single
-   */
-  renderReviewSingle(container) {
+  // --- Step 4 (Single/Store): Confirm & complete ---
+
+  renderStep4(el) {
     const finalLocation = this.location === 'Custom' ? this.customLocation : this.location;
-    
-    container.innerHTML = `
-      <div class="wizard-step active">
+    const selectedItemsData = this.availableItems.filter(item => this.selectedItems.includes(item.id));
+    const actionLabel = this.mode === PACKING_MODES.SINGLE ? 'Pack Items' : 'Store Items';
+
+    el.innerHTML = `
+      <div class="step-panel">
+        <h2>Confirm &amp; ${actionLabel}</h2>
+        <p class="step-description">Review before completing</p>
+
         <div class="review-section">
-          <h3 class="review-title">Storage Summary</h3>
+          <h3 class="review-title">Summary</h3>
           <div class="review-grid">
             <div class="review-item">
-              <span class="review-label">Items to Pack</span>
-              <span class="review-value"><strong>${this.selectedItems.length} items</strong></span>
+              <span class="review-label">Items</span>
+              <span class="review-value"><strong>${this.selectedItems.length}</strong></span>
             </div>
-            
             <div class="review-item">
               <span class="review-label">Location</span>
               <span class="review-value"><strong>${finalLocation}</strong></span>
             </div>
           </div>
         </div>
-        
+
         <div class="review-section">
           <h3 class="review-title">Items</h3>
           <div class="review-grid">
-            ${this.selectedItems.map(itemId => {
-              const item = this.filteredItems.find(i => i.id === itemId);
-              return `
-                <div class="review-item">
-                  <span class="review-label"><code>${item?.id}</code></span>
-                  <span class="review-value">${item?.short_name}</span>
-                </div>
-              `;
-            }).join('')}
+            ${selectedItemsData.map(item => `
+              <div class="review-item">
+                <span class="review-label"><code>${item.id}</code></span>
+                <span class="review-value">${item.short_name}</span>
+              </div>
+            `).join('')}
           </div>
+        </div>
+
+        <div class="step-action">
+          <button class="btn btn-primary btn-create-storage" id="btn-complete">
+            ✓ ${actionLabel}
+          </button>
         </div>
       </div>
     `;
-  }
 
-  /**
-   * Render: Review Store
-   */
-  renderReviewStore(container) {
-    const finalLocation = this.location === 'Custom' ? this.customLocation : this.location;
-    
-    container.innerHTML = `
-      <div class="wizard-step active">
-        <div class="review-section">
-          <h3 class="review-title">Storage Summary</h3>
-          <div class="review-grid">
-            <div class="review-item">
-              <span class="review-label">Items to Store</span>
-              <span class="review-value"><strong>${this.selectedItems.length} items</strong></span>
-            </div>
-            
-            <div class="review-item">
-              <span class="review-label">Location</span>
-              <span class="review-value"><strong>${finalLocation}</strong></span>
-            </div>
-          </div>
-        </div>
-        
-        <div class="review-section">
-          <h3 class="review-title">Items</h3>
-          <div class="review-grid">
-            ${this.selectedItems.map(itemId => {
-              const item = this.filteredItems.find(i => i.id === itemId);
-              return `
-                <div class="review-item">
-                  <span class="review-label"><code>${item?.id}</code></span>
-                  <span class="review-value">${item?.short_name}</span>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  /**
-   * Update button states
-   */
-  updateButtons() {
-    const prevBtn = this.container.querySelector('#btn-prev');
-    const nextBtn = this.container.querySelector('#btn-next');
-    
-    // Previous button
-    if (this.currentStep === 0 || this.currentStep === 1) {
-      prevBtn.classList.add('hidden');
-    } else {
-      prevBtn.classList.remove('hidden');
-    }
-    
-    // Next button
-    const maxStep = this.getStepsForMode().length - (this.mode ? 0 : 1);
-    if (this.currentStep === maxStep) {
-      nextBtn.textContent = this.mode === PACKING_MODES.TOTE ? 'Pack Items' : 'Store Items';
-      nextBtn.className = 'btn btn-primary';
-    } else {
-      nextBtn.textContent = 'Next →';
-      nextBtn.className = 'btn btn-primary';
-    }
-  }
-
-  /**
-   * Attach event listeners
-   */
-  attachEventListeners() {
-    const cancelBtn = this.container.querySelector('#btn-cancel');
-    const prevBtn = this.container.querySelector('#btn-prev');
-    const nextBtn = this.container.querySelector('#btn-next');
-    
-    cancelBtn.addEventListener('click', () => this.onCancel());
-    prevBtn.addEventListener('click', () => this.previousStep());
-    nextBtn.addEventListener('click', () => this.nextStep());
-  }
-
-  /**
-   * Next step
-   */
-  nextStep() {
-    if (!this.validateStep()) return;
-    
-    const maxStep = this.getStepsForMode().length - (this.mode ? 0 : 1);
-    
-    if (this.currentStep === maxStep) {
-      this.complete();
-    } else {
-      this.currentStep++;
-      this.renderProgress();
-      this.renderStep();
-    }
-  }
-
-  /**
-   * Previous step
-   */
-  previousStep() {
-    if (this.currentStep > (this.mode ? 1 : 0)) {
-      this.currentStep--;
-      this.renderProgress();
-      this.renderStep();
-    }
-  }
-
-  /**
-   * Validate current step
-   */
-  validateStep() {
-    if (this.currentStep === 0) return true; // Mode selector
-    
-    switch (this.mode) {
-      case PACKING_MODES.TOTE:
-        if (this.currentStep === 1 && !this.selectedStorage) {
-          alert('Please select a storage unit');
-          return false;
-        }
-        if (this.currentStep === 2 && this.selectedItems.length === 0) {
-          alert('Please select at least one item to pack');
-          return false;
-        }
-        return true;
-      
-      case PACKING_MODES.SINGLE:
-      case PACKING_MODES.STORE:
-        if (this.currentStep === 1 && this.selectedItems.length === 0) {
-          alert('Please select at least one item');
-          return false;
-        }
-        if (this.currentStep === 2) {
-          if (!this.location) {
-            alert('Please select a storage location');
-            return false;
-          }
-          if (this.location === 'Custom' && !this.customLocation.trim()) {
-            alert('Please enter a custom location');
-            return false;
-          }
-        }
-        return true;
-      
-      default:
-        return true;
-    }
-  }
-
-  /**
-   * Complete wizard
-   */
-  complete() {
-    const finalLocation = this.location === 'Custom' ? this.customLocation : this.location;
-    
-    this.onComplete({
-      mode: this.mode,
-      storageId: this.selectedStorage?.id,
-      itemIds: this.selectedItems,
-      location: finalLocation,
-      markAsPacked: this.markAsPacked
+    el.querySelector('#btn-complete').addEventListener('click', () => {
+      this.onComplete({
+        mode: this.mode,
+        storageId: null,
+        itemIds: this.selectedItems,
+        location: finalLocation,
+        markAsPacked: false
+      });
     });
   }
 }

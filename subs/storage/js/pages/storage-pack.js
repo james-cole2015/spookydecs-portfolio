@@ -1,9 +1,9 @@
 /**
  * Storage Pack Page
- * Entry point for the per-tote pack flow (/storage/:id/pack)
+ * Entry point for the per-tote pack flow (/storage/pack/:id)
  */
 
-import { storageAPI } from '../utils/storage-api.js';
+import { storageAPI, itemsAPI } from '../utils/storage-api.js';
 import { formatStorageUnit } from '../utils/storage-config.js';
 import { TotePackFlow } from '../components/TotePackFlow.js';
 import { showSuccess, showError, showInfo } from '../shared/toast.js';
@@ -28,12 +28,15 @@ export async function renderTotePackPage(id) {
 
   try {
     showLoading();
-    const raw = await storageAPI.getById(id);
+    const [raw, allItemsData] = await Promise.all([
+      storageAPI.getById(id),
+      itemsAPI.getAll({})
+    ]);
     hideLoading();
 
     if (!raw) {
       showError('Storage unit not found');
-      navigate('/storage');
+      navigate('/storage/pack');
       return;
     }
 
@@ -53,17 +56,28 @@ export async function renderTotePackPage(id) {
       return;
     }
 
+    // Filter items eligible for tote packing
+    const availableItems = allItemsData.filter(item => {
+      if (item.class === 'Deployment' || item.class === 'Storage') return false;
+      const isPackable = item.packing_data?.packable !== false;
+      const isUnpacked = item.packing_data?.packing_status === false;
+      const isNotSinglePacked = item.packing_data?.single_packed !== true;
+      const isNotReceptacle = item.class_type !== 'Receptacle';
+      return isPackable && isUnpacked && isNotSinglePacked && isNotReceptacle;
+    });
+
     renderBreadcrumb(document.getElementById('breadcrumb'), [
       { label: 'Storage', route: '/' },
       { label: 'Totes', route: '/storage' },
-      { label: tote.short_name || tote.id, route: `/storage/${id}` },
-      { label: 'Pack' }
+      { label: 'Pack', route: '/storage/pack' },
+      { label: tote.short_name || tote.id }
     ]);
 
     packFlow = new TotePackFlow({
       toteData: tote,
+      availableItems,
       onComplete: (data) => handleComplete(id, data),
-      onCancel: () => navigate(`/storage/${id}`)
+      onCancel: () => navigate('/storage/pack')
     });
 
     packFlow.render(document.getElementById('pack-flow-container'));
@@ -72,28 +86,36 @@ export async function renderTotePackPage(id) {
     hideLoading();
     console.error('Error loading tote for packing:', error);
     showError('Failed to load tote data');
-    setTimeout(() => navigate('/storage'), 1500);
+    setTimeout(() => navigate('/storage/pack'), 1500);
   }
 }
 
 /**
- * Handle pack flow completion — mark tote as packed
+ * Handle pack flow completion — add items and optionally mark tote as packed
  */
-async function handleComplete(id, { confirmedItemIds, photoUploaded }) {
+async function handleComplete(id, { newItemIds, photoUploaded, markPacked }) {
   try {
     showLoading();
-    await storageAPI.update(id, { packed: true });
+
+    if (newItemIds.length > 0) {
+      await storageAPI.addItems(id, newItemIds, markPacked);
+    } else if (markPacked) {
+      await storageAPI.update(id, { packed: true });
+    }
+
     hideLoading();
 
-    const itemCount = confirmedItemIds.length;
+    const itemCount = newItemIds.length;
     const itemLabel = itemCount === 1 ? 'item' : 'items';
+    const itemNote = itemCount > 0 ? ` ${itemCount} ${itemLabel} added.` : '';
     const photoNote = photoUploaded ? ' Photo added.' : '';
-    showSuccess(`Tote packed! ${itemCount} ${itemLabel} confirmed.${photoNote}`);
+    const statusNote = markPacked ? ' Tote marked as packed.' : '';
+    showSuccess(`Done!${itemNote}${photoNote}${statusNote}`);
 
     navigate(`/storage/${id}`);
   } catch (error) {
     hideLoading();
-    console.error('Error marking tote as packed:', error);
-    showError(error.message || 'Failed to mark tote as packed');
+    console.error('Error completing tote pack flow:', error);
+    showError(error.message || 'Failed to save tote changes');
   }
 }

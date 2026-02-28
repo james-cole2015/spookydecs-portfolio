@@ -40,7 +40,7 @@ export function initRouter() {
     .on('/storage/pack', () => {
       renderPackingWizard();
     })
-    .on('/storage/:id/pack', ({ data }) => {
+    .on('/storage/pack/:id', ({ data }) => {
       renderTotePackPage(data.id);
     })
     .on('/storage/:id/edit', ({ data }) => {
