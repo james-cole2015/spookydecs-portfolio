@@ -93,7 +93,7 @@ export class StorageCards {
         <button class="card-footer-btn btn-edit" data-action="edit" data-id="${unit.id}">
           Edit
         </button>
-        <button class="card-footer-btn btn-pack" data-action="pack" data-id="${unit.id}" disabled>
+        <button class="card-footer-btn btn-pack" data-action="pack" data-id="${unit.id}" ${unit.class_type === 'Tote' && !unit.packed ? '' : 'disabled'}>
           Pack
         </button>
       </div>
@@ -139,11 +139,10 @@ export class StorageCards {
       });
     }
     
-    if (packBtn) {
+    if (packBtn && !packBtn.disabled) {
       packBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        // Pack functionality disabled for now
-        console.log('Pack button clicked (disabled)');
+        navigate(`/storage/${unit.id}/pack`);
       });
     }
   }

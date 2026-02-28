@@ -1,3 +1,336 @@
+/* Wizard Styles - CreateWizard (vertical progressive) + PackingWizard (paged) */
+
+/* ============================================================
+   CREATE WIZARD — Vertical Progressive Disclosure
+   (matches item-form.css pattern)
+   ============================================================ */
+
+/* Page header with back button + centered title */
+.view-header--wizard {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 16px 0 8px;
+  margin-bottom: 4px;
+}
+
+.view-header--wizard h1 {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  pointer-events: none;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.btn-back-wizard {
+  background: none;
+  border: none;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 6px 0;
+  transition: color 0.15s;
+}
+
+.btn-back-wizard:hover {
+  color: #1f2937;
+}
+
+/* Sticky step indicator */
+.step-indicator {
+  position: sticky;
+  top: 56px;
+  z-index: 100;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  margin: 0 -24px 0;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.step-number {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 600;
+  transition: background 0.2s, color 0.2s;
+}
+
+.step.active .step-number {
+  background: #f97316;
+  color: white;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
+}
+
+.step.completed .step-number {
+  background: #10b981;
+  color: white;
+}
+
+/* .step-label already defined below — keep shared */
+
+.step.active .step-label {
+  color: #f97316;
+  font-weight: 600;
+}
+
+.step.completed .step-label {
+  color: #10b981;
+}
+
+.step-connector {
+  width: 32px;
+  height: 2px;
+  background: #e5e7eb;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.step-connector--completed {
+  background: #10b981;
+}
+
+/* Vertical wizard body — steps stacked */
+.wizard-container--vertical .wizard-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.wizard-container--vertical .wizard-step {
+  display: block;
+  padding: 32px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.wizard-container--vertical .wizard-step:last-child {
+  border-bottom: none;
+}
+
+.wizard-step--hidden {
+  display: none !important;
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.wizard-step--revealing {
+  animation: fadeSlideIn 0.25s ease-out;
+}
+
+/* Step panel — centers content, left-aligns form panels */
+.step-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.step-panel h2 {
+  margin: 0 0 6px 0;
+  font-size: 20px;
+  color: #1f2937;
+  text-align: center;
+}
+
+.step-description {
+  margin: 0 0 24px 0;
+  font-size: 14px;
+  color: #6b7280;
+  text-align: center;
+}
+
+.step-panel--left {
+  align-items: flex-start;
+  width: 100%;
+  max-width: 640px;
+}
+
+.step-panel--left h2 {
+  text-align: left;
+}
+
+.step-panel--left .step-description {
+  text-align: left;
+}
+
+/* Inline action button wrapper (Review / Create) */
+.step-action {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+  width: 100%;
+}
+
+.btn-review,
+.btn-create-storage {
+  padding: 12px 32px;
+  font-size: 15px;
+}
+
+/* Type selector (step 1) — matches items .type-selector */
+.type-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  width: 100%;
+}
+
+.type-card {
+  padding: 24px 20px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.15s, box-shadow 0.15s;
+  min-width: 140px;
+  max-width: 220px;
+  flex: 1 1 140px;
+  background: white;
+}
+
+.type-card:hover {
+  border-color: #f97316;
+  background: #fff7ed;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.type-card.selected {
+  border-color: #f97316;
+  background: #fff7ed;
+  border-width: 3px;
+}
+
+.type-card .type-icon {
+  font-size: 36px;
+  margin-bottom: 10px;
+}
+
+.type-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.type-sublabel {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* Upload success indicator */
+.upload-description {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0 0 12px 0;
+}
+
+.upload-success {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #10b981;
+  font-weight: 500;
+}
+
+/* Mobile adjustments for create wizard */
+@media (max-width: 600px) {
+  .view-header--wizard {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .view-header--wizard h1 {
+    position: static;
+    transform: none;
+    font-size: 20px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .step-indicator {
+    gap: 4px;
+    padding: 10px 12px;
+    margin: 0 -16px 0;
+  }
+
+  .step-number {
+    width: 30px;
+    height: 30px;
+    font-size: 13px;
+  }
+
+  .step-connector {
+    width: 20px;
+  }
+
+  .type-card {
+    flex: 1 1 100px;
+    max-width: 150px;
+    padding: 18px 12px;
+  }
+
+  .step-action {
+    justify-content: stretch;
+  }
+
+  .btn-review,
+  .btn-create-storage {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* Pack flow — select all bar */
+.pack-select-all {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding: 8px 0;
+}
+
+.pack-confirmed-count {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* ============================================================
+   PACKING WIZARD — Original styles below (unchanged)
+   ============================================================ */
+
 /* Wizard Styles - Updated for Packing Wizard */
 
 .wizard-container {
@@ -57,7 +390,8 @@
   background: #f97316;
 }
 
-.step-indicator {
+/* Packing wizard circle — scoped to .wizard-progress to avoid conflict with create wizard's .step-indicator bar */
+.wizard-progress .step-indicator {
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -121,19 +455,9 @@
   border: 1px solid #e5e7eb;
 }
 
-/* Wizard Body */
-.wizard-body {
-  min-height: 400px;
-  margin-bottom: 24px;
-}
-
-.wizard-step {
-  display: none;
-}
-
-.wizard-step.active {
-  display: block;
-}
+/* Wizard Body — packing wizard retains min-height for its body area */
+/* .wizard-body and .wizard-step now defined in the create wizard section above */
+/* PackingWizard renders .wizard-step.active which is no longer needed (its body swaps innerHTML directly) */
 
 /* Mode Selector (Step 0) */
 .mode-selector {

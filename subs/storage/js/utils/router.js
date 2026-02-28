@@ -7,6 +7,7 @@ import { renderStorageList } from '../pages/storage-list.js';
 import { renderStorageDetail } from '../pages/storage-detail.js';
 import { renderCreateWizard } from '../pages/storage-create.js';
 import { renderPackingWizard } from '../pages/packing-wizard.js';
+import { renderTotePackPage } from '../pages/storage-pack.js';
 import { renderEditForm } from '../pages/storage-edit.js';
 import { renderStorageLanding } from '../pages/storage-landing.js';
 import { renderStorageStatistics } from '../pages/storage-statistics.js';
@@ -38,6 +39,9 @@ export function initRouter() {
     })
     .on('/storage/pack', () => {
       renderPackingWizard();
+    })
+    .on('/storage/:id/pack', ({ data }) => {
+      renderTotePackPage(data.id);
     })
     .on('/storage/:id/edit', ({ data }) => {
       renderEditForm(data.id);

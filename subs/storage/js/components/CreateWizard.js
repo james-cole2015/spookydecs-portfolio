@@ -1,245 +1,286 @@
 /**
  * CreateWizard Component
- * 3-step wizard for creating storage units (Tote or Self-contained)
- * UPDATED: Uses CDN photo-upload-modal web component
+ * 3-step vertical progressive disclosure wizard for creating storage units
+ * Matches the item creation wizard pattern
  */
 
 import { StorageFormFields } from './StorageFormFields.js';
 import STORAGE_CONFIG from '../utils/storage-config.js';
+import { showError } from '../shared/toast.js';
 
 export class CreateWizard {
   constructor(options = {}) {
     this.onComplete = options.onComplete || (() => {});
     this.onCancel = options.onCancel || (() => {});
     this.container = null;
-    
+
     // Wizard state
-    this.currentStep = 1;
+    this.stepsRevealed = 1;
     this.selectedType = null; // 'Tote' or 'Self'
     this.formData = {};
-    this.uploadedPhotoIds = []; // Store photo IDs from upload
-    
+    this.uploadedPhotoIds = [];
+
     // Components
     this.formFields = null;
   }
 
-  /**
-   * Render the wizard
-   */
+  // --- Render entry point ---
+
   render(containerElement) {
     this.container = containerElement;
-    
-    const wizard = document.createElement('div');
-    wizard.className = 'wizard-container';
-    
-    wizard.innerHTML = `
-      <div class="wizard-header">
-        <h1 class="wizard-title">Create Storage Unit</h1>
-        <p class="wizard-subtitle">Follow the steps to create a new storage unit</p>
-      </div>
-      
-      <div class="wizard-progress" id="wizard-progress"></div>
-      
-      <div class="wizard-body" id="wizard-body"></div>
-      
-      <div class="wizard-footer">
-        <button class="btn btn-secondary" id="btn-cancel">Cancel</button>
-        <div style="flex: 1"></div>
-        <button class="btn btn-secondary hidden" id="btn-prev">← Previous</button>
-        <button class="btn btn-primary" id="btn-next">Next →</button>
+
+    this.container.innerHTML = `
+      <div class="wizard-container--vertical">
+        <div class="view-header view-header--wizard">
+          <button class="btn-back-wizard" id="btn-back-wizard">← Back</button>
+          <h1>Create Storage Unit</h1>
+        </div>
+
+        <div id="step-indicator" class="step-indicator"></div>
+
+        <div class="wizard-body" id="wizard-body">
+          <div id="wizard-step-1" class="wizard-step"></div>
+          <div id="wizard-step-2" class="wizard-step wizard-step--hidden"></div>
+          <div id="wizard-step-3" class="wizard-step wizard-step--hidden"></div>
+        </div>
       </div>
     `;
-    
-    this.container.innerHTML = '';
-    this.container.appendChild(wizard);
-    
-    // Render initial step
-    this.renderProgress();
-    this.renderStep();
-    
-    // Attach event listeners
-    this.attachEventListeners();
+
+    document.getElementById('btn-back-wizard').addEventListener('click', () => this.onCancel());
+
+    this.renderStep1(document.getElementById('wizard-step-1'));
+    this.renderStepIndicator();
   }
 
-  /**
-   * Render progress indicator
-   */
-  renderProgress() {
-    const progressContainer = this.container.querySelector('#wizard-progress');
-    const steps = STORAGE_CONFIG.WIZARD_STEPS.create;
-    
-    progressContainer.innerHTML = steps.map((step, index) => {
-      const stepNum = index + 1;
-      const isActive = stepNum === this.currentStep;
-      const isCompleted = stepNum < this.currentStep;
-      
+  // --- Step indicator ---
+
+  renderStepIndicator() {
+    const container = document.getElementById('step-indicator');
+    if (!container) return;
+
+    const steps = [
+      { num: 1, label: 'Type' },
+      { num: 2, label: 'Details' },
+      { num: 3, label: 'Review' }
+    ];
+
+    container.innerHTML = steps.map((step, i) => {
+      const isActive = this.stepsRevealed === step.num;
+      const isCompleted = this.stepsRevealed > step.num;
+      const isUpcoming = this.stepsRevealed < step.num;
+
+      const connector = i < steps.length - 1
+        ? `<div class="step-connector ${isCompleted ? 'step-connector--completed' : ''}"></div>`
+        : '';
+
       return `
-        <div class="progress-step ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}">
-          <div class="step-indicator">${isCompleted ? '✓' : stepNum}</div>
+        <div class="step ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''} ${isUpcoming ? 'upcoming' : ''}">
+          <div class="step-number">${isCompleted ? '✓' : step.num}</div>
           <div class="step-label">${step.label}</div>
         </div>
+        ${connector}
       `;
     }).join('');
   }
 
-  /**
-   * Render current step
-   */
-  renderStep() {
-    const bodyContainer = this.container.querySelector('#wizard-body');
-    
-    switch (this.currentStep) {
-      case 1:
-        this.renderStep1(bodyContainer);
-        break;
-      case 2:
-        this.renderStep2(bodyContainer);
-        break;
-      case 3:
-        this.renderStep3(bodyContainer);
-        break;
+  // --- Step reveal / teardown ---
+
+  revealStep(stepNum) {
+    const stepEl = document.getElementById(`wizard-step-${stepNum}`);
+    if (!stepEl) return;
+
+    stepEl.classList.remove('wizard-step--hidden');
+    stepEl.classList.add('wizard-step--revealing');
+    stepEl.addEventListener('animationend', () => {
+      stepEl.classList.remove('wizard-step--revealing');
+    }, { once: true });
+
+    switch (stepNum) {
+      case 2: this.renderStep2(stepEl); break;
+      case 3: this.renderStep3(stepEl); break;
     }
-    
-    this.updateButtons();
+
+    this.stepsRevealed = Math.max(this.stepsRevealed, stepNum);
+    this.renderStepIndicator();
+    this.scrollToStep(stepNum);
   }
 
-  /**
-   * Step 1: Choose Type
-   */
-  renderStep1(container) {
-    container.innerHTML = `
-      <div class="wizard-step active">
-        
-        <div class="type-selection">
-          <div class="type-option ${this.selectedType === 'Tote' ? 'selected' : ''}" data-type="Tote">
+  tearDownFrom(stepNum) {
+    for (let i = stepNum; i <= 3; i++) {
+      const stepEl = document.getElementById(`wizard-step-${i}`);
+      if (stepEl) {
+        stepEl.classList.add('wizard-step--hidden');
+        stepEl.classList.remove('wizard-step--revealing');
+        stepEl.innerHTML = '';
+      }
+    }
+    this.stepsRevealed = Math.min(this.stepsRevealed, stepNum - 1);
+  }
+
+  scrollToStep(stepNum) {
+    const stepEl = document.getElementById(`wizard-step-${stepNum}`);
+    if (!stepEl) return;
+    requestAnimationFrame(() => {
+      stepEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
+  // --- Step 1: Type Selection ---
+
+  renderStep1(el) {
+    el.innerHTML = `
+      <div class="step-panel">
+        <h2>Choose a storage type</h2>
+        <p class="step-description">Select the type of storage unit you want to create</p>
+
+        <div class="type-selector">
+          <div class="type-card ${this.selectedType === 'Tote' ? 'selected' : ''}" data-type="Tote">
             <div class="type-icon">📦</div>
-            <h3 class="type-title">Tote</h3>
-            <p class="type-description">Standardized storage container for multiple items</p>
+            <div class="type-label">Tote</div>
+            <div class="type-sublabel">Standardized container for multiple items</div>
           </div>
-          
-          <div class="type-option ${this.selectedType === 'Self' ? 'selected' : ''}" data-type="Self">
+          <div class="type-card ${this.selectedType === 'Self' ? 'selected' : ''}" data-type="Self">
             <div class="type-icon">📄</div>
-            <h3 class="type-title">Self-Contained</h3>
-            <p class="type-description">Item stored in its original box or packaging</p>
+            <div class="type-label">Self-Contained</div>
+            <div class="type-sublabel">Item stored in its original box</div>
           </div>
         </div>
       </div>
     `;
-    
-    // Type selection click handlers
-    const typeOptions = container.querySelectorAll('.type-option');
-    typeOptions.forEach(option => {
-      option.addEventListener('click', () => {
-        this.selectedType = option.dataset.type;
-        
-        // Update UI
-        typeOptions.forEach(opt => opt.classList.remove('selected'));
-        option.classList.add('selected');
-      });
+
+    el.querySelectorAll('.type-card').forEach(card => {
+      card.addEventListener('click', () => this.selectType(card.dataset.type));
     });
   }
 
-  /**
-   * Step 2: Basic Info
-   */
-  async renderStep2(container) {
+  selectType(type) {
+    const typeChanged = this.selectedType !== type;
+    this.selectedType = type;
+
+    // Update card selection
+    document.querySelectorAll('#wizard-step-1 .type-card').forEach(card => {
+      card.classList.toggle('selected', card.dataset.type === type);
+    });
+
+    if (this.stepsRevealed >= 2 && typeChanged) {
+      // Type changed after step 2 was revealed — reset form and re-render step 2
+      this.formData = {};
+      this.formFields = null;
+      this.tearDownFrom(2);
+      this.revealStep(2);
+    } else if (this.stepsRevealed < 2) {
+      this.revealStep(2);
+    }
+  }
+
+  // --- Step 2: Details Form ---
+
+  async renderStep2(el) {
     const typeName = this.selectedType === 'Tote' ? 'Tote' : 'Self-Contained Unit';
-    
-    container.innerHTML = `
-      <div class="wizard-step active">
-        <h2 class="mb-lg">Basic Information - ${typeName}</h2>
+
+    el.innerHTML = `
+      <div class="step-panel">
+        <h2>${typeName} Details</h2>
+        <p class="step-description">Fill in the details for your storage unit</p>
         <div id="form-fields-container"></div>
+        <div class="step-action">
+          <button class="btn btn-primary btn-review" id="btn-review">Review →</button>
+        </div>
       </div>
     `;
-    
-    // Initialize form fields
+
     this.formFields = new StorageFormFields({
       classType: this.selectedType,
       data: this.formData,
       season: this.formData.season,
       onChange: (data) => {
         this.formData = { ...this.formData, ...data };
-        
-        // Update season for item filtering in self-contained
         if (data.season && this.selectedType === 'Self') {
           this.formFields.setSeason(data.season);
         }
       }
     });
-    
-    await this.formFields.render(container.querySelector('#form-fields-container'));
+
+    await this.formFields.render(el.querySelector('#form-fields-container'));
+
+    el.querySelector('#btn-review').addEventListener('click', () => this.handleReview());
   }
 
-  /**
-   * Step 3: Photo & Review
-   */
-  renderStep3(container) {
+  handleReview() {
+    if (!this.formFields) return;
+
+    this.formData = { ...this.formData, ...this.formFields.getData() };
+
+    if (!this.formFields.validate()) {
+      showError('Please fix the errors before continuing');
+      return;
+    }
+
+    if (this.stepsRevealed >= 3) {
+      // Re-render step 3 with fresh data
+      this.tearDownFrom(3);
+    }
+    this.revealStep(3);
+  }
+
+  // --- Step 3: Photo & Review ---
+
+  renderStep3(el) {
     const typeName = this.selectedType === 'Tote' ? 'Tote' : 'Self-Contained Unit';
-    
-    // Generate ID preview
     const idPreview = this.generateIdPreview();
-    
-    // Check if photo was uploaded
     const hasPhoto = this.uploadedPhotoIds.length > 0;
-    
-    container.innerHTML = `
-      <div class="wizard-step active">
-        <h2 class="mb-lg">Review & Photo</h2>
-        
+
+    el.innerHTML = `
+      <div class="step-panel step-panel--left">
+        <h2>Review & Photo</h2>
+        <p class="step-description">Confirm your details and optionally add a photo</p>
+
         <div class="photo-upload-section">
-          <h3 class="review-title">Photo (Optional)</h3>
+          <h3 class="review-title">Photo <span style="font-weight:400;color:#6b7280">(Optional)</span></h3>
           <p class="upload-description">Add a photo to help identify this storage unit</p>
-          <button type="button" class="btn-upload-storage-photo" id="btn-trigger-upload">
+          <button type="button" class="btn btn-secondary" id="btn-trigger-upload">
             📷 ${hasPhoto ? 'Change Photo' : 'Upload Photo'}
           </button>
           <div class="upload-success ${hasPhoto ? '' : 'hidden'}" id="upload-success">
             ✓ Photo uploaded successfully
           </div>
         </div>
-        
+
         <div class="review-section">
           <h3 class="review-title">Review Details</h3>
-          
           <div class="review-grid">
             <div class="review-item">
               <span class="review-label">Generated ID</span>
               <span class="review-value"><code>${idPreview}</code></span>
             </div>
-            
             <div class="review-item">
               <span class="review-label">Type</span>
               <span class="review-value">${typeName}</span>
             </div>
-            
             <div class="review-item">
               <span class="review-label">Season</span>
-              <span class="review-value">${this.formData.season || '-'}</span>
+              <span class="review-value">${this.formData.season || '—'}</span>
             </div>
-            
             <div class="review-item">
               <span class="review-label">Location</span>
-              <span class="review-value">${this.formData.location || '-'}</span>
+              <span class="review-value">${this.formData.location || '—'}</span>
             </div>
-            
             <div class="review-item">
               <span class="review-label">Short Name</span>
-              <span class="review-value">${this.formData.short_name || '-'}</span>
+              <span class="review-value">${this.formData.short_name || '—'}</span>
             </div>
-            
             ${this.formData.size ? `
               <div class="review-item">
                 <span class="review-label">Size</span>
                 <span class="review-value">${this.formData.size}</span>
               </div>
             ` : ''}
-            
             ${this.formData.item_id ? `
               <div class="review-item">
                 <span class="review-label">Item</span>
                 <span class="review-value"><code>${this.formData.item_id}</code></span>
               </div>
             ` : ''}
-            
             ${this.formData.general_notes ? `
               <div class="review-item" style="grid-column: 1 / -1;">
                 <span class="review-label">Notes</span>
@@ -248,188 +289,62 @@ export class CreateWizard {
             ` : ''}
           </div>
         </div>
+
+        <div class="step-action">
+          <button class="btn btn-primary btn-create-storage" id="btn-create">
+            💾 Create Storage Unit
+          </button>
+        </div>
       </div>
     `;
-    
-    // Attach photo upload button handler
-    const uploadBtn = container.querySelector('#btn-trigger-upload');
-    if (uploadBtn) {
-      uploadBtn.addEventListener('click', () => this.openPhotoUploadModal());
-    }
+
+    el.querySelector('#btn-trigger-upload').addEventListener('click', () => this.openPhotoUploadModal());
+    el.querySelector('#btn-create').addEventListener('click', () => this.complete());
   }
 
-  /**
-   * Generate ID preview
-   */
+  // --- ID preview ---
+
   generateIdPreview() {
-    if (!this.formData.season) {
-      return 'STOR-XXXX-XXX-001';
-    }
-    
+    if (!this.formData.season) return 'STOR-XXXX-XXX-001';
     const typeCode = STORAGE_CONFIG.CLASS_TYPE_CODES[this.selectedType];
     const seasonCode = STORAGE_CONFIG.SEASON_CODES[this.formData.season];
-    
     return `STOR-${typeCode}-${seasonCode}-001`;
   }
 
-  /**
-   * Open photo upload modal (CDN component)
-   */
+  // --- Photo upload ---
+
   openPhotoUploadModal() {
-    // Create modal element
     const modal = document.createElement('photo-upload-modal');
-    
-    // Configure modal attributes
     modal.setAttribute('context', 'storage');
     modal.setAttribute('photo-type', 'storage');
-    modal.setAttribute('season', this.formData.season.toLowerCase());
+    modal.setAttribute('season', (this.formData.season || '').toLowerCase());
     modal.setAttribute('max-photos', '5');
     modal.setAttribute('year', new Date().getFullYear().toString());
-    
-    // NOTE: We don't set storage-id yet since the storage unit doesn't exist
-    // The photo will be uploaded without storage_id, then we'll link it after creation
-    
-    // Listen for upload complete
+
     modal.addEventListener('upload-complete', (e) => {
       this.handlePhotoUploadComplete(e.detail);
     });
-    
-    // Listen for cancel
-    modal.addEventListener('upload-cancel', () => {
-      console.log('Photo upload cancelled');
-    });
-    
-    // Append to body
+
+    modal.addEventListener('upload-cancel', () => {});
+
     document.body.appendChild(modal);
   }
 
-  /**
-   * Handle photo upload completion
-   */
   handlePhotoUploadComplete(detail) {
-    console.log('Photo upload complete:', detail);
-    
-    // Store photo IDs
     if (detail.photo_ids && detail.photo_ids.length > 0) {
       this.uploadedPhotoIds = detail.photo_ids;
-      
-      // Update UI to show success
+
       const successEl = document.getElementById('upload-success');
-      if (successEl) {
-        successEl.classList.remove('hidden');
-      }
-      
-      // Update button text
+      if (successEl) successEl.classList.remove('hidden');
+
       const uploadBtn = document.getElementById('btn-trigger-upload');
-      if (uploadBtn) {
-        uploadBtn.textContent = '📷 Change Photo';
-      }
+      if (uploadBtn) uploadBtn.textContent = '📷 Change Photo';
     }
   }
 
-  /**
-   * Update button states
-   */
-  updateButtons() {
-    const prevBtn = this.container.querySelector('#btn-prev');
-    const nextBtn = this.container.querySelector('#btn-next');
-    
-    // Previous button
-    if (this.currentStep === 1) {
-      prevBtn.classList.add('hidden');
-    } else {
-      prevBtn.classList.remove('hidden');
-    }
-    
-    // Next button
-    if (this.currentStep === 3) {
-      nextBtn.textContent = 'Create Storage Unit';
-      nextBtn.className = 'btn btn-primary';
-    } else {
-      nextBtn.textContent = 'Next →';
-      nextBtn.className = 'btn btn-primary';
-    }
-  }
+  // --- Complete ---
 
-  /**
-   * Attach event listeners
-   */
-  attachEventListeners() {
-    const cancelBtn = this.container.querySelector('#btn-cancel');
-    const prevBtn = this.container.querySelector('#btn-prev');
-    const nextBtn = this.container.querySelector('#btn-next');
-    
-    cancelBtn.addEventListener('click', () => this.onCancel());
-    prevBtn.addEventListener('click', () => this.previousStep());
-    nextBtn.addEventListener('click', () => this.nextStep());
-  }
-
-  /**
-   * Next step
-   */
-  nextStep() {
-    // Validate current step
-    if (!this.validateStep()) {
-      return;
-    }
-    
-    if (this.currentStep === 3) {
-      // Final step - create storage unit
-      this.complete();
-    } else {
-      this.currentStep++;
-      this.renderProgress();
-      this.renderStep();
-    }
-  }
-
-  /**
-   * Previous step
-   */
-  previousStep() {
-    if (this.currentStep > 1) {
-      this.currentStep--;
-      this.renderProgress();
-      this.renderStep();
-    }
-  }
-
-  /**
-   * Validate current step
-   */
-  validateStep() {
-    switch (this.currentStep) {
-      case 1:
-        if (!this.selectedType) {
-          alert('Please select a storage type');
-          return false;
-        }
-        return true;
-      
-      case 2:
-        if (!this.formFields) {
-          return false;
-        }
-        
-        // Get form data
-        this.formData = { ...this.formData, ...this.formFields.getData() };
-        
-        // Validate
-        return this.formFields.validate();
-      
-      case 3:
-        return true;
-      
-      default:
-        return true;
-    }
-  }
-
-  /**
-   * Complete wizard
-   */
   complete() {
-    // Pass form data and uploaded photo IDs to parent
     this.onComplete(this.selectedType, this.formData, this.uploadedPhotoIds);
   }
 }
