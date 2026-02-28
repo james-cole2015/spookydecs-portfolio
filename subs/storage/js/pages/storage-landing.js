@@ -40,6 +40,13 @@ export function renderStorageLanding() {
           description: 'Step through the packing workflow to assign items to storage units efficiently.',
           route: '/storage/pack'
         })}
+        ${renderCard({
+          id: 'non-packable',
+          icon: '📐',
+          title: 'Large & Oversized',
+          description: 'Track oversized items stored directly by location — not packed in totes or boxes.',
+          route: '/storage/non-packable'
+        })}
       </div>
     </div>
   `;

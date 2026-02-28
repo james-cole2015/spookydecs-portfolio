@@ -1193,3 +1193,27 @@
     right: 32px;
   }
 }
+
+/* =============================================
+   Large & Oversized Page — detail panel
+   ============================================= */
+
+.np-card-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.np-detail-panel {
+  background: #f9fafb;
+  border: 1px solid var(--border-color);
+  border-top: none;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  padding: var(--spacing-md);
+  margin-top: -1px;
+}
+
+.np-detail-actions {
+  margin-top: var(--spacing-md);
+  display: flex;
+  gap: var(--spacing-sm);
+}

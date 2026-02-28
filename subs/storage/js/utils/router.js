@@ -11,6 +11,7 @@ import { renderTotePackPage } from '../pages/storage-pack.js';
 import { renderEditForm } from '../pages/storage-edit.js';
 import { renderStorageLanding } from '../pages/storage-landing.js';
 import { renderStorageStatistics } from '../pages/storage-statistics.js';
+import { renderNonPackablePage } from '../pages/storage-non-packable.js';
 
 let router;
 
@@ -37,6 +38,9 @@ export function initRouter() {
     .on('/statistics', () => {
       renderStorageStatistics();
     })
+    .on('/storage/non-packable', () => {
+      renderNonPackablePage();
+    })
     .on('/storage/pack', () => {
       renderPackingWizard();
     })
@@ -48,7 +52,7 @@ export function initRouter() {
     })
     .on('/storage/:id', ({ data }) => {
       // Only match if id doesn't look like a reserved route
-      if (data.id === 'create' || data.id === 'pack') {
+      if (data.id === 'create' || data.id === 'pack' || data.id === 'non-packable') {
         return false; // Don't handle, let other routes match
       }
       renderStorageDetail(data.id);
