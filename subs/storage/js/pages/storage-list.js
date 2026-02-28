@@ -12,6 +12,7 @@ import { StorageCards } from '../components/StorageCards.js';
 import { PageHeader } from '../components/PageHeader.js';
 import { navigate } from '../utils/router.js';
 import { showSuccess, showError } from '../shared/toast.js';
+import { showModal } from '../shared/modal.js';
 import { renderBreadcrumb } from '../shared/breadcrumb.js';
 
 let allStorage = [];
@@ -93,7 +94,8 @@ export async function renderStorageList() {
   
   storageCards = new StorageCards({
     data: [],
-    onDelete: handleDelete
+    onDelete: handleDelete,
+    onSelfPack: handleSelfPack
   });
   
   // Load data
@@ -289,6 +291,43 @@ function applyFilters(storage, filters) {
 function handleFilterChange(newFilters) {
   currentFilters = newFilters;
   renderPage();
+}
+
+/**
+ * Handle pack for Self storage units — show confirmation modal
+ */
+function handleSelfPack(unit) {
+  const rawId = Array.isArray(unit.contents) && unit.contents.length > 0 ? unit.contents[0] : null;
+  const itemId = rawId && typeof rawId === 'object' ? rawId.id : rawId;
+  const item = itemId ? allItems.find(i => i.id === itemId) : null;
+  const itemDisplay = item ? item.short_name : (itemId || 'Unknown item');
+
+  showModal({
+    title: 'Confirm Pack',
+    content: `
+      <p>Pack <strong>${unit.short_name}</strong>?</p>
+      <p>Item: <strong>${itemDisplay}</strong></p>
+      <p>This will mark the storage unit and item as packed.</p>
+    `,
+    actions: [
+      { action: 'cancel', label: 'Cancel', className: 'btn-secondary' },
+      {
+        action: 'confirm',
+        label: 'Mark as Packed',
+        className: 'btn-primary',
+        handler: async () => {
+          try {
+            await storageAPI.update(unit.id, { packed: true });
+            showSuccess(`${unit.short_name} marked as packed`);
+            await loadData();
+          } catch (error) {
+            showError(error.message || 'Failed to pack storage unit');
+            return false;
+          }
+        }
+      }
+    ]
+  });
 }
 
 /**

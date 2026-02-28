@@ -10,6 +10,7 @@ export class StorageDetailView {
     this.storageUnit = options.storageUnit || {};
     this.onEdit = options.onEdit || (() => {});
     this.onDelete = options.onDelete || (() => {});
+    this.onPack = options.onPack || null;
     this.container = null;
   }
 
@@ -51,6 +52,11 @@ export class StorageDetailView {
             <button class="btn btn-primary" id="btn-edit">
               Edit Metadata
             </button>
+            ${unit.class_type === 'Self' && !unit.packed && (unit.contents_count || 0) > 0 ? `
+              <button class="btn btn-primary" id="btn-pack">
+                Pack
+              </button>
+            ` : ''}
             <button class="btn btn-danger" id="btn-delete">
               Delete
             </button>
@@ -134,7 +140,12 @@ export class StorageDetailView {
     if (editBtn) {
       editBtn.addEventListener('click', () => this.onEdit(this.storageUnit));
     }
-    
+
+    const packBtn = this.container.querySelector('#btn-pack');
+    if (packBtn && this.onPack) {
+      packBtn.addEventListener('click', () => this.onPack(this.storageUnit));
+    }
+
     if (deleteBtn) {
       deleteBtn.addEventListener('click', () => this.onDelete(this.storageUnit));
     }

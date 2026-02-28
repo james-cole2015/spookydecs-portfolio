@@ -9,7 +9,7 @@ import { formatStorageUnit } from '../utils/storage-config.js';
 import { StorageDetailView } from '../components/StorageDetailView.js';
 import { StoragePhotoGallery } from '../components/StoragePhotoGallery.js';
 import { ContentsPanel } from '../components/ContentsPanel.js';
-import { showDeleteConfirm } from '../shared/modal.js';
+import { showModal, showDeleteConfirm } from '../shared/modal.js';
 import { showSuccess, showError } from '../shared/toast.js';
 import { navigate } from '../utils/router.js';
 import { showLoading, hideLoading } from '../app.js';
@@ -88,7 +88,8 @@ async function loadStorageUnit(storageId) {
     detailView = new StorageDetailView({
       storageUnit: currentStorageUnit,
       onEdit: handleEdit,
-      onDelete: handleDelete
+      onDelete: handleDelete,
+      onPack: handlePack
     });
     detailView.render(document.getElementById('detail-container'));
 
@@ -170,6 +171,48 @@ async function enrichContentsWithPhotos(contents) {
  */
 function handleEdit(unit) {
   navigate(`/storage/${unit.id}/edit`);
+}
+
+/**
+ * Handle pack button click for Self storage units
+ */
+function handlePack(unit) {
+  const item = unit.contents_details && unit.contents_details.length > 0
+    ? unit.contents_details[0]
+    : null;
+  const rawId = item ? item.id : (Array.isArray(unit.contents) ? unit.contents[0] : null);
+  const itemId = rawId && typeof rawId === 'object' ? rawId.id : rawId;
+  const itemDisplay = item ? item.short_name : (itemId || 'Unknown item');
+
+  showModal({
+    title: 'Confirm Pack',
+    content: `
+      <p>Pack <strong>${unit.short_name}</strong>?</p>
+      <p>Item: <strong>${itemDisplay}</strong></p>
+      <p>This will mark the storage unit and item as packed.</p>
+    `,
+    actions: [
+      { action: 'cancel', label: 'Cancel', className: 'btn-secondary' },
+      {
+        action: 'confirm',
+        label: 'Mark as Packed',
+        className: 'btn-primary',
+        handler: async () => {
+          try {
+            showLoading();
+            await storageAPI.update(unit.id, { packed: true });
+            hideLoading();
+            showSuccess(`${unit.short_name} marked as packed`);
+            await loadStorageUnit(unit.id);
+          } catch (error) {
+            hideLoading();
+            showError(error.message || 'Failed to pack storage unit');
+            return false;
+          }
+        }
+      }
+    ]
+  });
 }
 
 /**

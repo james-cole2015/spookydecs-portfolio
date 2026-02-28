@@ -11,6 +11,7 @@ export class StorageCards {
   constructor(options = {}) {
     this.data = options.data || [];
     this.onDelete = options.onDelete || (() => {});
+    this.onSelfPack = options.onSelfPack || null;
     this.container = null;
   }
 
@@ -93,7 +94,7 @@ export class StorageCards {
         <button class="card-footer-btn btn-edit" data-action="edit" data-id="${unit.id}">
           Edit
         </button>
-        <button class="card-footer-btn btn-pack" data-action="pack" data-id="${unit.id}" ${unit.class_type === 'Tote' && !unit.packed ? '' : 'disabled'}>
+        <button class="card-footer-btn btn-pack" data-action="pack" data-id="${unit.id}" ${this.isPackable(unit) ? '' : 'disabled'}>
           Pack
         </button>
       </div>
@@ -142,9 +143,23 @@ export class StorageCards {
     if (packBtn && !packBtn.disabled) {
       packBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        navigate(`/storage/pack/${unit.id}`);
+        if (unit.class_type === 'Self' && this.onSelfPack) {
+          this.onSelfPack(unit);
+        } else {
+          navigate(`/storage/pack/${unit.id}`);
+        }
       });
     }
+  }
+
+  /**
+   * Whether a storage unit can be packed from the card
+   */
+  isPackable(unit) {
+    if (unit.packed) return false;
+    if (unit.class_type === 'Tote') return true;
+    if (unit.class_type === 'Self') return (unit.contents_count || 0) > 0;
+    return false;
   }
 
   /**
