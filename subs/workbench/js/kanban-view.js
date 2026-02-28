@@ -24,6 +24,7 @@ let currentFilters = {
   recordType: 'all',
   sourceType: 'all'
 };
+let filterPanelOpen = false;
 
 export async function renderKanban(seasonId) {
   const container = document.getElementById('app-container');
@@ -116,55 +117,70 @@ function renderHeader(season, seasons) {
 }
 
 function renderFilters() {
-  const hasActiveFilters = currentFilters.status !== 'all' || 
-                          currentFilters.priority !== 'all' || 
-                          currentFilters.recordType !== 'all' || 
+  const hasActiveFilters = currentFilters.status !== 'all' ||
+                          currentFilters.priority !== 'all' ||
+                          currentFilters.recordType !== 'all' ||
                           currentFilters.sourceType !== 'all';
-  
+
+  const activeCount = [
+    currentFilters.status !== 'all',
+    currentFilters.priority !== 'all',
+    currentFilters.recordType !== 'all',
+    currentFilters.sourceType !== 'all'
+  ].filter(Boolean).length;
+
   return `
     <div class="kanban-filters">
-      <div class="filter-group">
-        <label>Status:</label>
-        <select id="filter-status" class="filter-select">
-          <option value="all">All Statuses</option>
-          <option value="todo" ${currentFilters.status === 'todo' ? 'selected' : ''}>To Do</option>
-          <option value="in_progress" ${currentFilters.status === 'in_progress' ? 'selected' : ''}>In Progress</option>
-          <option value="completed" ${currentFilters.status === 'completed' ? 'selected' : ''}>Completed</option>
-        </select>
-      </div>
-      
-      <div class="filter-group">
-        <label>Priority:</label>
-        <select id="filter-priority" class="filter-select">
-          <option value="all">All Priorities</option>
-          <option value="high" ${currentFilters.priority === 'high' ? 'selected' : ''}>High</option>
-          <option value="medium" ${currentFilters.priority === 'medium' ? 'selected' : ''}>Medium</option>
-          <option value="low" ${currentFilters.priority === 'low' ? 'selected' : ''}>Low</option>
-        </select>
-      </div>
-      
-      <div class="filter-group">
-        <label>Type:</label>
-        <select id="filter-record-type" class="filter-select">
-          <option value="all">All Types</option>
-          <option value="repair" ${currentFilters.recordType === 'repair' ? 'selected' : ''}>Repair</option>
-          <option value="maintenance" ${currentFilters.recordType === 'maintenance' ? 'selected' : ''}>Maintenance</option>
-          <option value="idea_build" ${currentFilters.recordType === 'idea_build' ? 'selected' : ''}>Build</option>
-        </select>
-      </div>
-      
-      <div class="filter-group">
-        <label>Source:</label>
-        <select id="filter-source-type" class="filter-select">
-          <option value="all">All Sources</option>
-          <option value="maintenance" ${currentFilters.sourceType === 'maintenance' ? 'selected' : ''}>Maintenance Table</option>
-          <option value="idea" ${currentFilters.sourceType === 'idea' ? 'selected' : ''}>Ideas Table</option>
-        </select>
-      </div>
-      
-      <button id="clear-filters-btn" class="clear-filters-btn" ${!hasActiveFilters ? 'disabled' : ''}>
-        Clear Filters
+      <button class="filter-toggle-btn${filterPanelOpen ? ' open' : ''}" id="filter-toggle-btn">
+        <span class="toggle-label">
+          Filters${activeCount > 0 ? `<span class="filter-active-badge">${activeCount}</span>` : ''}
+        </span>
+        <span class="toggle-arrow">▼</span>
       </button>
+      <div class="filter-groups-container${filterPanelOpen ? ' open' : ''}" id="filter-groups-container">
+        <div class="filter-group">
+          <label>Status:</label>
+          <select id="filter-status" class="filter-select">
+            <option value="all">All Statuses</option>
+            <option value="todo" ${currentFilters.status === 'todo' ? 'selected' : ''}>To Do</option>
+            <option value="in_progress" ${currentFilters.status === 'in_progress' ? 'selected' : ''}>In Progress</option>
+            <option value="completed" ${currentFilters.status === 'completed' ? 'selected' : ''}>Completed</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>Priority:</label>
+          <select id="filter-priority" class="filter-select">
+            <option value="all">All Priorities</option>
+            <option value="high" ${currentFilters.priority === 'high' ? 'selected' : ''}>High</option>
+            <option value="medium" ${currentFilters.priority === 'medium' ? 'selected' : ''}>Medium</option>
+            <option value="low" ${currentFilters.priority === 'low' ? 'selected' : ''}>Low</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>Type:</label>
+          <select id="filter-record-type" class="filter-select">
+            <option value="all">All Types</option>
+            <option value="repair" ${currentFilters.recordType === 'repair' ? 'selected' : ''}>Repair</option>
+            <option value="maintenance" ${currentFilters.recordType === 'maintenance' ? 'selected' : ''}>Maintenance</option>
+            <option value="idea_build" ${currentFilters.recordType === 'idea_build' ? 'selected' : ''}>Build</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>Source:</label>
+          <select id="filter-source-type" class="filter-select">
+            <option value="all">All Sources</option>
+            <option value="maintenance" ${currentFilters.sourceType === 'maintenance' ? 'selected' : ''}>Maintenance Table</option>
+            <option value="idea" ${currentFilters.sourceType === 'idea' ? 'selected' : ''}>Ideas Table</option>
+          </select>
+        </div>
+
+        <button id="clear-filters-btn" class="clear-filters-btn" ${!hasActiveFilters ? 'disabled' : ''}>
+          Clear Filters
+        </button>
+      </div>
     </div>
   `;
 }
@@ -256,30 +272,20 @@ function filterItems(items) {
   });
 }
 
-function attachEventListeners() {
-  // Season selector
-  document.getElementById('season-select')?.addEventListener('change', (e) => {
-    navigateTo(`/season/${e.target.value}`);
+function attachFilterListeners() {
+  document.getElementById('filter-toggle-btn')?.addEventListener('click', () => {
+    filterPanelOpen = !filterPanelOpen;
+    document.getElementById('filter-toggle-btn')?.classList.toggle('open', filterPanelOpen);
+    document.getElementById('filter-groups-container')?.classList.toggle('open', filterPanelOpen);
   });
 
-  // Create season button
-  document.getElementById('create-season-btn')?.addEventListener('click', () => {
-    navigateTo('/create-season');
-  });
-
-  // Import items button
-  document.getElementById('import-items-btn')?.addEventListener('click', showImportModal);
-
-  // Clear filters button
   document.getElementById('clear-filters-btn')?.addEventListener('click', clearFilters);
 
-  // Status filter
   document.getElementById('filter-status')?.addEventListener('change', (e) => {
     currentFilters.status = e.target.value;
     refreshKanbanBoard();
   });
 
-  // Filter dropdowns
   document.getElementById('filter-priority')?.addEventListener('change', (e) => {
     currentFilters.priority = e.target.value;
     refreshKanbanBoard();
@@ -294,6 +300,24 @@ function attachEventListeners() {
     currentFilters.sourceType = e.target.value;
     refreshKanbanBoard();
   });
+}
+
+function attachEventListeners() {
+  // Season selector
+  document.getElementById('season-select')?.addEventListener('change', (e) => {
+    navigateTo(`/season/${e.target.value}`);
+  });
+
+  // Create season button
+  document.getElementById('create-season-btn')?.addEventListener('click', () => {
+    navigateTo('/create-season');
+  });
+
+  // Import items button
+  document.getElementById('import-items-btn')?.addEventListener('click', showImportModal);
+
+  // Filter listeners
+  attachFilterListeners();
 
   // Collapse buttons
   document.querySelectorAll('.collapse-btn').forEach(btn => {
@@ -340,25 +364,7 @@ function clearFilters() {
   const filtersContainer = document.querySelector('.kanban-filters');
   if (filtersContainer) {
     filtersContainer.outerHTML = renderFilters();
-    
-    // Re-attach filter event listeners
-    document.getElementById('clear-filters-btn')?.addEventListener('click', clearFilters);
-    document.getElementById('filter-status')?.addEventListener('change', (e) => {
-      currentFilters.status = e.target.value;
-      refreshKanbanBoard();
-    });
-    document.getElementById('filter-priority')?.addEventListener('change', (e) => {
-      currentFilters.priority = e.target.value;
-      refreshKanbanBoard();
-    });
-    document.getElementById('filter-record-type')?.addEventListener('change', (e) => {
-      currentFilters.recordType = e.target.value;
-      refreshKanbanBoard();
-    });
-    document.getElementById('filter-source-type')?.addEventListener('change', (e) => {
-      currentFilters.sourceType = e.target.value;
-      refreshKanbanBoard();
-    });
+    attachFilterListeners();
   }
   
   // Refresh the kanban board
@@ -489,24 +495,6 @@ function refreshKanbanBoard() {
   const filtersContainer = document.querySelector('.kanban-filters');
   if (filtersContainer) {
     filtersContainer.outerHTML = renderFilters();
-    
-    // Re-attach filter event listeners
-    document.getElementById('clear-filters-btn')?.addEventListener('click', clearFilters);
-    document.getElementById('filter-status')?.addEventListener('change', (e) => {
-      currentFilters.status = e.target.value;
-      refreshKanbanBoard();
-    });
-    document.getElementById('filter-priority')?.addEventListener('change', (e) => {
-      currentFilters.priority = e.target.value;
-      refreshKanbanBoard();
-    });
-    document.getElementById('filter-record-type')?.addEventListener('change', (e) => {
-      currentFilters.recordType = e.target.value;
-      refreshKanbanBoard();
-    });
-    document.getElementById('filter-source-type')?.addEventListener('change', (e) => {
-      currentFilters.sourceType = e.target.value;
-      refreshKanbanBoard();
-    });
+    attachFilterListeners();
   }
 }
