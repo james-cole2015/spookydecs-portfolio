@@ -225,33 +225,44 @@ export class ReceiptUploadModal {
           // Load PDF document
           const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
 
-          // Get first page
-          const page = await pdf.getPage(1);
-
-          // Set scale for good quality (2x for high DPI)
+          // Process up to 2 pages (see issue #57 to raise this limit)
+          const pageCount = Math.min(pdf.numPages, 2);
           const scale = 2.0;
-          const viewport = page.getViewport({ scale });
 
-          // Create canvas
-          const canvas = document.createElement('canvas');
-          const context = canvas.getContext('2d');
-          canvas.width = viewport.width;
-          canvas.height = viewport.height;
+          // Render each page to its own canvas
+          const canvases = [];
+          for (let i = 1; i <= pageCount; i++) {
+            const page = await pdf.getPage(i);
+            const viewport = page.getViewport({ scale });
 
-          // Render PDF page to canvas
-          await page.render({
-            canvasContext: context,
-            viewport: viewport
-          }).promise;
+            const canvas = document.createElement('canvas');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
 
-          // Convert canvas to blob (JPEG, 0.92 quality)
-          canvas.toBlob((blob) => {
+            await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+            canvases.push(canvas);
+          }
+
+          // Stitch pages into a single tall canvas
+          const totalWidth = canvases[0].width;
+          const totalHeight = canvases.reduce((sum, c) => sum + c.height, 0);
+          const stitched = document.createElement('canvas');
+          stitched.width = totalWidth;
+          stitched.height = totalHeight;
+          const ctx = stitched.getContext('2d');
+          let y = 0;
+          for (const c of canvases) {
+            ctx.drawImage(c, 0, y);
+            y += c.height;
+          }
+
+          // Convert stitched canvas to blob (JPEG, 0.92 quality)
+          stitched.toBlob((blob) => {
             if (!blob) {
               reject(new Error('Failed to convert PDF to image'));
               return;
             }
 
-            // Create File object from blob
             const imageFile = new File(
               [blob],
               pdfFile.name.replace(/\.pdf$/i, '.jpg'),
