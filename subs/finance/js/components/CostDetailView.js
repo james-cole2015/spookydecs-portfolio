@@ -57,7 +57,9 @@ export class CostDetailView {
         <nav class="breadcrumbs">
           <a href="/" class="breadcrumb-link">Finance</a>
           <span class="breadcrumb-separator">›</span>
-          <span class="breadcrumb-current">Cost Record</span>
+          <a href="/records" class="breadcrumb-link">Cost Records</a>
+          <span class="breadcrumb-separator">›</span>
+          <span class="breadcrumb-current">Cost Record Detail</span>
         </nav>
 
         <!-- Page Header with Title and Actions -->
@@ -186,7 +188,7 @@ export class CostDetailView {
     document.querySelectorAll('.breadcrumb-link').forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
-        window.location.href = '/';
+        window.location.href = link.getAttribute('href');
       });
     });
 
