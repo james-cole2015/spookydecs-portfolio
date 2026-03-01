@@ -51,6 +51,14 @@ export async function renderIdeasLanding(container) {
       route: null,
       href: _getWorkbenchUrl()
     })}
+    ${_actionCard({
+      id: 'inspirations',
+      label: 'Inspo',
+      title: 'Inspirations',
+      desc: 'Browse saved inspiration images and references.',
+      route: null,
+      href: '#'
+    })}
   `;
 
   // Attach click handlers
@@ -79,7 +87,7 @@ function _seasonCard(season, count, route) {
   `;
 }
 
-function _actionCard({ id, label, title, desc, route, href, accent = false }) {
+function _actionCard({ label, title, desc, route, href, accent = false }) {
   const dataAttr = route
     ? `data-route="${route}"`
     : `data-href="${href || '#'}"`;
@@ -93,7 +101,7 @@ function _actionCard({ id, label, title, desc, route, href, accent = false }) {
 }
 
 function _skeletonCards() {
-  return Array(5).fill(0).map(() => `
+  return Array(6).fill(0).map(() => `
     <div class="option-card" style="pointer-events:none">
       <div style="height:12px;width:60px;background:var(--color-border);border-radius:4px;margin-bottom:12px"></div>
       <div style="height:20px;width:120px;background:var(--color-border);border-radius:4px;margin-bottom:8px"></div>

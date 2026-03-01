@@ -587,6 +587,9 @@ input, select, textarea { font-family: inherit; }
   height: 36px;
 }
 
+.idea-card-placeholder--halloween { background: #fff7ed; }
+.idea-card-placeholder--christmas { background: #f0fdf4; }
+
 .idea-card-body {
   padding: var(--space-4);
   display: flex;

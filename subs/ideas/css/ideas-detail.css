@@ -39,6 +39,9 @@
   height: 56px;
 }
 
+.detail-hero-placeholder--halloween { background: #fff7ed; }
+.detail-hero-placeholder--christmas { background: #f0fdf4; }
+
 /* ---- Gallery Strip ---------------------------------------- */
 .detail-gallery {
   display: flex;
