@@ -10,7 +10,14 @@
   
   <!-- SpookyDecs Header Component -->
   <script src="https://assets.spookydecs.com/components/spookydecs-header.js"></script>
-    <script src="https://assets.spookydecs.com/components/api-config.js"></script>
+  <script src="https://assets.spookydecs.com/components/api-config.js"></script>
+  <script src="https://assets.spookydecs.com/components/photo-upload-service.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    if (window.pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  </script>
 
   
   <!-- Styles -->
@@ -27,6 +34,7 @@
   <link rel="stylesheet" href="/css/receipts.css">
   <link rel="stylesheet" href="/css/items-browse.css">
   <link rel="stylesheet" href="/css/finance-landing.css">
+  <link rel="stylesheet" href="/css/pack-form.css">
 
 </head>
 <body>

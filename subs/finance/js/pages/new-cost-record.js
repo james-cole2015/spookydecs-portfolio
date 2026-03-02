@@ -4,6 +4,7 @@ import { CostFormFields } from '../components/CostFormFields.js';
 import { CostReviewModal } from '../components/CostReviewModal.js';
 import { MultiItemReviewModal } from '../components/MultiItemReviewModal.js';
 import { ReceiptUploadModal } from '../components/ReceiptUploadModal.js';
+import { PackPurchaseForm } from '../components/PackPurchaseForm.js';
 import { createCost, updateImageAfterCostCreation } from '../utils/finance-api.js';
 import { toast } from '../shared/toast.js';
 
@@ -16,6 +17,9 @@ export async function renderNewCostRecord(container) {
     const itemId = urlParams.get('item_id');
     const recordId = urlParams.get('record_id');
     
+    // Read initial mode from URL (?mode=pack)
+    const initialMode = urlParams.get('mode') === 'pack' ? 'pack' : 'single';
+
     // Render the page structure
     container.innerHTML = `
       <div class="new-cost-record-page">
@@ -27,7 +31,7 @@ export async function renderNewCostRecord(container) {
           <span class="breadcrumb-separator">/</span>
           <span class="breadcrumb-current">New Record</span>
         </nav>
-        
+
         <!-- Page Header -->
         <div class="page-header">
           <div class="header-left">
@@ -35,7 +39,7 @@ export async function renderNewCostRecord(container) {
             <p class="page-subtitle">Track expenses for maintenance, repairs, and equipment</p>
           </div>
           <div class="header-actions">
-            <button class="btn-primary" id="btn-extract-ai" title="Upload receipt to extract cost data">
+            <button class="btn-primary" id="btn-extract-ai" title="Upload receipt to extract cost data" style="${initialMode === 'pack' ? 'display:none;' : ''}">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="17 8 12 3 7 8"></polyline>
@@ -45,7 +49,13 @@ export async function renderNewCostRecord(container) {
             </button>
           </div>
         </div>
-        
+
+        <!-- Mode Toggle -->
+        <div class="pack-mode-toggle">
+          <button class="pack-mode-btn ${initialMode === 'single' ? 'active' : ''}" data-mode="single">Single Item</button>
+          <button class="pack-mode-btn ${initialMode === 'pack' ? 'active' : ''}" data-mode="pack">Pack Purchase</button>
+        </div>
+
         <!-- Form Container -->
         <div class="form-card">
           <div id="cost-form-container">
@@ -54,32 +64,61 @@ export async function renderNewCostRecord(container) {
         </div>
       </div>
     `;
-    
+
     console.log('✅ Page structure rendered');
-    
+
     // Initialize receipt modal
     const receiptModal = new ReceiptUploadModal();
-    
-    // Render form fields
-    const formFields = new CostFormFields('cost-form-container', {
-      itemId: itemId,
-      recordId: recordId
+
+    // Track current mode
+    let currentMode = initialMode;
+    let formFields = null;
+
+    async function renderMode(mode) {
+      currentMode = mode;
+      const extractBtn = document.getElementById('btn-extract-ai');
+
+      // Update toggle button states
+      document.querySelectorAll('.pack-mode-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === mode);
+      });
+
+      if (mode === 'pack') {
+        if (extractBtn) extractBtn.style.display = 'none';
+        const packForm = new PackPurchaseForm('cost-form-container');
+        await packForm.render();
+      } else {
+        if (extractBtn) extractBtn.style.display = '';
+        formFields = new CostFormFields('cost-form-container', {
+          itemId: itemId,
+          recordId: recordId
+        });
+        formFields.onSubmit = (formData, extractionId, imageId) => {
+          handleManualFormSubmit(formData, extractionId, imageId);
+        };
+        formFields.render();
+      }
+    }
+
+    // Render initial mode
+    await renderMode(initialMode);
+    console.log('✅ Form rendered');
+
+    // Mode toggle listeners
+    document.querySelectorAll('.pack-mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.dataset.mode !== currentMode) {
+          renderMode(btn.dataset.mode);
+        }
+      });
     });
-    
-    // Set up form submit callback (for manual entry)
-    formFields.onSubmit = (formData, extractionId, imageId) => {
-      handleManualFormSubmit(formData, extractionId, imageId);
-    };
-    
-    formFields.render();
-    console.log('✅ Form fields rendered');
-    
+
     // Attach event listeners
-    attachEventListeners(receiptModal, formFields);
+    attachEventListeners(receiptModal, () => formFields);
     console.log('✅ Event listeners attached');
 
     // Auto-open AI extraction modal when ?extract=true
-    if (urlParams.get('extract') === 'true') {
+    if (urlParams.get('extract') === 'true' && initialMode === 'single') {
       receiptModal.open({}, (extractedData, extractionId, imageId) => {
         handleAIExtractedData(extractedData, extractionId, imageId);
       });
@@ -101,20 +140,21 @@ export async function renderNewCostRecord(container) {
   }
 }
 
-function attachEventListeners(receiptModal, formFields) {
+function attachEventListeners(receiptModal, getFormFields) {
   // Extract with AI button
   const extractBtn = document.getElementById('btn-extract-ai');
   if (extractBtn) {
     extractBtn.addEventListener('click', () => {
+      const formFields = typeof getFormFields === 'function' ? getFormFields() : getFormFields;
       // Get context from URL params
       const urlParams = new URLSearchParams(window.location.search);
       const contextData = {
-        item_id: urlParams.get('item_id') || formFields.formData.related_item_id || null,
-        record_id: urlParams.get('record_id') || formFields.formData.related_record_id || null,
-        cost_type: urlParams.get('cost_type') || formFields.formData.cost_type || null,
-        category: urlParams.get('category') || formFields.formData.category || null
+        item_id: urlParams.get('item_id') || formFields?.formData?.related_item_id || null,
+        record_id: urlParams.get('record_id') || formFields?.formData?.related_record_id || null,
+        cost_type: urlParams.get('cost_type') || formFields?.formData?.cost_type || null,
+        category: urlParams.get('category') || formFields?.formData?.category || null
       };
-      
+
       // Open modal with context and callback for MULTI-ITEM extraction
       receiptModal.open(contextData, (extractedData, extractionId, imageId) => {
         handleAIExtractedData(extractedData, extractionId, imageId);

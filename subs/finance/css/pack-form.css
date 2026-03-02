@@ -1,0 +1,428 @@
+/* Pack Purchase Form Styles */
+
+/* Mode toggle between Single Item and Pack Purchase */
+.pack-mode-toggle {
+  display: flex;
+  gap: 0;
+  margin-bottom: 16px;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  overflow: hidden;
+  width: fit-content;
+}
+
+.pack-mode-btn {
+  padding: 8px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  background: #F9FAFB;
+  border: none;
+  color: #6B7280;
+  transition: background 0.15s, color 0.15s;
+}
+
+.pack-mode-btn:not(:last-child) {
+  border-right: 1px solid #D1D5DB;
+}
+
+.pack-mode-btn.active {
+  background: #1F2937;
+  color: #fff;
+}
+
+.pack-mode-btn:hover:not(.active) {
+  background: #E5E7EB;
+  color: #374151;
+}
+
+/* Pack form sections */
+.pack-purchase-form .pack-form-section {
+  margin-bottom: 28px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid #F3F4F6;
+}
+
+.pack-purchase-form .pack-form-section:last-of-type {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.pack-form-section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1F2937;
+  margin: 0 0 16px 0;
+}
+
+.pack-form-hint {
+  font-size: 13px;
+  color: #6B7280;
+  margin: -8px 0 14px 0;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.form-label .required {
+  color: #EF4444;
+  margin-left: 2px;
+}
+
+.pack-purchase-form .form-input {
+  padding: 8px 12px;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #1F2937;
+  background: #fff;
+  transition: border-color 0.15s;
+}
+
+.pack-purchase-form .form-input:focus {
+  outline: none;
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+textarea.form-input {
+  resize: vertical;
+  min-height: 60px;
+}
+
+/* Item picker */
+.item-picker {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.item-picker-search-wrap {
+  position: relative;
+}
+
+.item-picker-search {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.item-picker-results {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.item-picker-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background 0.1s;
+  border-bottom: 1px solid #F3F4F6;
+}
+
+.item-picker-result:last-child {
+  border-bottom: none;
+}
+
+.item-picker-result:hover {
+  background: #F0F9FF;
+}
+
+.item-picker-result-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1F2937;
+}
+
+.item-picker-result-meta {
+  font-size: 12px;
+  color: #9CA3AF;
+}
+
+.item-picker-no-results {
+  padding: 12px 14px;
+  font-size: 14px;
+  color: #6B7280;
+}
+
+/* Selected item chips */
+.selected-items-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 36px;
+  padding: 4px 0;
+}
+
+.no-items-hint {
+  font-size: 13px;
+  color: #9CA3AF;
+  align-self: center;
+}
+
+.item-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 12px;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: 20px;
+  font-size: 13px;
+}
+
+.item-chip-name {
+  font-weight: 500;
+  color: #1D4ED8;
+}
+
+.item-chip-id {
+  color: #60A5FA;
+  font-size: 11px;
+}
+
+.item-chip-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #93C5FD;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+
+.item-chip-remove:hover {
+  color: #1D4ED8;
+}
+
+/* Derived fields summary */
+.pack-derived-fields {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+}
+
+.pack-derived-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.pack-derived-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pack-derived-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748B;
+}
+
+.pack-derived-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1F2937;
+}
+
+.pack-derived-item.highlight .pack-derived-value {
+  color: #10B981;
+}
+
+/* Form actions */
+.pack-form-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.pack-form-actions .btn-secondary {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  background-color: #F3F4F6;
+  color: #374151;
+  border: 1px solid #D1D5DB;
+  transition: background 0.2s;
+}
+
+.pack-form-actions .btn-secondary:hover {
+  background-color: #E5E7EB;
+}
+
+/* Pack loading state */
+.pack-form-loading {
+  padding: 24px;
+  color: #6B7280;
+  font-size: 14px;
+}
+
+/* Receipt attach zone */
+.receipt-attach-zone {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+#receipt-attach-idle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.receipt-attach-hint {
+  font-size: 12px;
+  color: #9CA3AF;
+}
+
+.btn-sm {
+  padding: 6px 14px;
+  font-size: 13px;
+}
+
+.receipt-attach-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 6px;
+}
+
+.receipt-file-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.receipt-preview-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #15803D;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.receipt-remove-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  color: #6B7280;
+  padding: 0 2px;
+  transition: color 0.15s;
+}
+
+.receipt-remove-btn:hover {
+  color: #EF4444;
+}
+
+/* PACK badge (used in table and drawer) */
+.badge-pack {
+  display: inline-block;
+  padding: 2px 7px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-radius: 4px;
+  background: #7C3AED;
+  color: #fff;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+
+/* Pack contents in drawer */
+.pack-items-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.pack-item-chip {
+  background: #F5F3FF;
+  border: 1px solid #DDD6FE;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 13px;
+}
+
+.pack-item-chip a {
+  color: #5B21B6;
+  text-decoration: none;
+}
+
+.pack-item-chip a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pack-derived-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .pack-mode-toggle {
+    width: 100%;
+  }
+
+  .pack-mode-btn {
+    flex: 1;
+  }
+
+  .pack-form-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pack-form-actions .btn-secondary {
+    justify-content: center;
+  }
+}

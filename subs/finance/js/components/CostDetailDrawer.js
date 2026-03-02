@@ -84,13 +84,16 @@ export class CostDetailDrawer {
   }
 
   renderBasicInfo(cost) {
+    const packBadge = cost.class_type === 'pack'
+      ? `<span class="badge badge-pack">PACK</span>`
+      : '';
     return `
       <div class="detail-section">
         <h3 class="detail-section-title">Basic Information</h3>
         <div class="drawer-detail-list">
           <div class="drawer-detail-item">
             <span class="detail-label">Cost ID</span>
-            <span class="detail-value">${cost.cost_id}</span>
+            <span class="detail-value">${cost.cost_id} ${packBadge}</span>
           </div>
           <div class="drawer-detail-item">
             <span class="detail-label">Date</span>
@@ -172,6 +175,11 @@ export class CostDetailDrawer {
   }
 
   renderRelatedInfo(cost) {
+    // Pack records: show pack contents and derived fields instead of a single item link
+    if (cost.class_type === 'pack') {
+      return this.renderPackInfo(cost);
+    }
+
     if (!cost.related_item_id && !cost.related_record_id && !cost.related_idea_id) {
       return '';
     }
@@ -215,8 +223,49 @@ export class CostDetailDrawer {
     `;
   }
 
+  renderPackInfo(cost) {
+    const packItems = Array.isArray(cost.pack_item_ids) ? cost.pack_item_ids : [];
+    const itemsHTML = packItems.length > 0
+      ? packItems.map(id => `
+          <div class="pack-item-chip">
+            <a href="#" class="related-item-link" data-navigate="/${id}">${id} →</a>
+          </div>
+        `).join('')
+      : '<span style="color:#64748b;font-size:14px;">No items listed</span>';
+
+    const costPerItem = typeof cost.cost_per_item === 'number' ? cost.cost_per_item : parseFloat(cost.cost_per_item) || 0;
+    const valuePerItem = typeof cost.value_per_item === 'number' ? cost.value_per_item : parseFloat(cost.value_per_item) || 0;
+
+    return `
+      <div class="detail-section">
+        <h3 class="detail-section-title">Pack Contents</h3>
+        <div class="pack-items-list">${itemsHTML}</div>
+      </div>
+      <div class="detail-section">
+        <h3 class="detail-section-title">Pack Summary</h3>
+        <div class="drawer-detail-list">
+          <div class="drawer-detail-item">
+            <span class="detail-label">Items in Pack</span>
+            <span class="detail-value">${cost.item_count || packItems.length}</span>
+          </div>
+          <div class="drawer-detail-item highlight">
+            <span class="detail-label">Cost Per Item</span>
+            <span class="detail-value amount">${formatCurrency(costPerItem)}</span>
+          </div>
+          <div class="drawer-detail-item highlight">
+            <span class="detail-label">Value Per Item</span>
+            <span class="detail-value amount">${formatCurrency(valuePerItem)}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   renderReceiptSection(cost) {
-    if (!cost.receipt_data || !cost.receipt_data.receipt_id) {
+    const receipt = cost.receipt_data;
+    const hasReceipt = receipt && (receipt.cloudfront_url || receipt.receipt_id);
+
+    if (!hasReceipt) {
       return `
         <div class="detail-section">
           <h3 class="detail-section-title">Receipt</h3>
@@ -225,14 +274,14 @@ export class CostDetailDrawer {
       `;
     }
 
-    const receipt = cost.receipt_data;
+    const displayName = receipt.file_name || receipt.receipt_id || receipt.extraction_id || 'Receipt';
     return `
       <div class="detail-section">
         <h3 class="detail-section-title">Receipt</h3>
         <div class="receipt-preview">
           <div class="receipt-icon">📄</div>
           <div class="receipt-info">
-            <div class="receipt-name">${receipt.receipt_id}</div>
+            <div class="receipt-name">${displayName}</div>
             <div class="receipt-meta">
               ${receipt.file_type || 'Image'} ${receipt.file_size ? `• ${(receipt.file_size / 1024).toFixed(1)} KB` : ''}
             </div>
@@ -320,9 +369,11 @@ export class CostDetailDrawer {
     const receiptBtn = this.drawer.querySelector('.receipt-view-btn');
     if (receiptBtn) {
       receiptBtn.addEventListener('click', () => {
-        // Open receipt in new tab or modal
-        if (this.currentCost.receipt_data?.s3_key) {
-          window.open(`/receipts/${this.currentCost.receipt_data.receipt_id}`, '_blank');
+        const receipt = this.currentCost.receipt_data;
+        if (receipt?.cloudfront_url) {
+          window.open(receipt.cloudfront_url, '_blank');
+        } else if (receipt?.receipt_id) {
+          window.open(`/receipts/${receipt.receipt_id}`, '_blank');
         }
       });
     }

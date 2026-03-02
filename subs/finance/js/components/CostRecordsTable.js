@@ -22,7 +22,8 @@ export class CostRecordsTable {
       date_range: 'all',
       start_date: '',
       end_date: '',
-      no_receipt: 'all'
+      no_receipt: 'all',
+      class_type: 'all'
     };
 
     this.sorting = {
@@ -71,6 +72,7 @@ export class CostRecordsTable {
     if (this.filters.vendor !== 'all') count++;
     if (this.filters.date_range !== 'all') count++;
     if (this.filters.no_receipt !== 'all') count++;
+    if (this.filters.class_type !== 'all') count++;
     return count;
   }
 
@@ -134,6 +136,10 @@ export class CostRecordsTable {
       filtered = filtered.filter(cost => (cost.no_receipt === true) === wantNoReceipt);
     }
 
+    if (this.filters.class_type !== 'all') {
+      filtered = filtered.filter(cost => (cost.class_type || 'item') === this.filters.class_type);
+    }
+
     if (this.filters.date_range !== 'all' && this.filters.date_range !== 'custom') {
       const range = this.calculateDateRange(this.filters.date_range);
       this.filters.start_date = range.start;
@@ -193,7 +199,8 @@ export class CostRecordsTable {
       this.filters.category !== 'all' ||
       this.filters.vendor !== 'all' ||
       this.filters.date_range !== 'all' ||
-      this.filters.no_receipt !== 'all';
+      this.filters.no_receipt !== 'all' ||
+      this.filters.class_type !== 'all';
 
     const activeFilterCount = this.getActiveFilterCount();
     const filterBadge = activeFilterCount > 0
@@ -255,6 +262,11 @@ export class CostRecordsTable {
         <option value="all">All Receipts</option>
         <option value="true" ${this.filters.no_receipt === 'true' ? 'selected' : ''}>No Receipt</option>
         <option value="false" ${this.filters.no_receipt === 'false' ? 'selected' : ''}>Has Receipt</option>
+      </select>
+      <select class="filter-select" id="class-type-filter">
+        <option value="all">All Types</option>
+        <option value="item" ${this.filters.class_type === 'item' ? 'selected' : ''}>Items</option>
+        <option value="pack" ${this.filters.class_type === 'pack' ? 'selected' : ''}>Packs</option>
       </select>
       ${customDateInputs}
       <button 
@@ -379,12 +391,17 @@ export class CostRecordsTable {
           ? `<span class="badge badge-success">✓</span>`
           : `<span class="badge badge-muted">—</span>`;
 
+      const isPack = cost.class_type === 'pack';
+      const itemNameCell = isPack
+        ? `<strong>${cost.item_name || 'Pack Purchase'}</strong> <span class="badge badge-pack">PACK</span>`
+        : (cost.related_item_id
+            ? `<a class="item-name-link" href="#" data-item-id="${cost.related_item_id}"><strong>${cost.item_name || cost.related_item_id}</strong></a>`
+            : `<strong>${cost.item_name || 'N/A'}</strong>`);
+
       tableHTML += `
         <tr data-cost-id="${cost.cost_id}">
           <td><span class="cost-id">${cost.cost_id}</span></td>
-          <td>${cost.related_item_id
-            ? `<a class="item-name-link" href="#" data-item-id="${cost.related_item_id}"><strong>${cost.item_name || cost.related_item_id}</strong></a>`
-            : `<strong>${cost.item_name || 'N/A'}</strong>`}</td>
+          <td>${itemNameCell}</td>
           <td><span class="cost-type-badge cost-type-${cost.cost_type}">${cost.cost_type.replace('_', ' ')}</span></td>
           <td><span class="category-badge">${cost.category}</span></td>
           <td><span class="cost-date">${formatDate(cost.cost_date)}</span></td>
@@ -416,13 +433,18 @@ export class CostRecordsTable {
           ? `<span class="badge badge-success">Receipt</span>`
           : '';
 
+      const isPack = cost.class_type === 'pack';
+      const cardTitle = isPack
+        ? `${cost.item_name || 'Pack Purchase'} <span class="badge badge-pack">PACK</span>`
+        : (cost.related_item_id
+            ? `<a class="item-name-link" href="#" data-item-id="${cost.related_item_id}">${cost.item_name || cost.related_item_id}</a>`
+            : (cost.item_name || 'N/A'));
+
       cardsHTML += `
         <div class="cost-card" data-cost-id="${cost.cost_id}">
           <div class="cost-card-header">
             <div>
-              <div class="cost-card-title">${cost.related_item_id
-                ? `<a class="item-name-link" href="#" data-item-id="${cost.related_item_id}">${cost.item_name || cost.related_item_id}</a>`
-                : (cost.item_name || 'N/A')}</div>
+              <div class="cost-card-title">${cardTitle}</div>
               <div class="cost-card-id">${cost.cost_id}</div>
             </div>
             <div class="cost-card-amount">${formatCurrency(cost.total_cost)}</div>
@@ -514,7 +536,8 @@ export class CostRecordsTable {
           date_range: 'all',
           start_date: '',
           end_date: '',
-          no_receipt: 'all'
+          no_receipt: 'all',
+          class_type: 'all'
         };
         this.currentPage = 0;
         this.applyFilters();
@@ -588,6 +611,16 @@ export class CostRecordsTable {
     if (noReceiptFilter) {
       noReceiptFilter.addEventListener('change', (e) => {
         this.filters.no_receipt = e.target.value;
+        this.currentPage = 0;
+        this.applyFilters();
+        this.render();
+      });
+    }
+
+    const classTypeFilter = this.container.querySelector('#class-type-filter');
+    if (classTypeFilter) {
+      classTypeFilter.addEventListener('change', (e) => {
+        this.filters.class_type = e.target.value;
         this.currentPage = 0;
         this.applyFilters();
         this.render();
