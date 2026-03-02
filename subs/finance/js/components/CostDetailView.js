@@ -65,7 +65,7 @@ export class CostDetailView {
         <!-- Page Header with Title and Actions -->
         <div class="page-header-section">
           <div class="header-left">
-            <h1>Cost Record</h1>
+            <h1>Cost Record ${cost.class_type === 'pack' ? '<span class="badge badge-pack">PACK</span>' : ''}</h1>
             <p class="detail-subtitle">${cost.cost_id}</p>
           </div>
           <div class="header-actions">
@@ -87,7 +87,9 @@ export class CostDetailView {
         </div>
 
         ${this.renderRelatedLinks(cost)}
-        
+
+        ${cost.class_type === 'pack' ? this.renderPackContents(cost) : ''}
+
         <!-- Description Section -->
         ${cost.description || cost.notes ? `
           <div class="description-section">
@@ -110,15 +112,22 @@ export class CostDetailView {
               <div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">${this.formatCostType(cost.cost_type)}</span></div>
               <div class="detail-row"><span class="detail-label">Category</span><span class="detail-value">${this.formatCategory(cost.category)}</span></div>
               ${cost.subcategory ? `<div class="detail-row"><span class="detail-label">Subcategory</span><span class="detail-value">${cost.subcategory}</span></div>` : ''}
-              <div class="detail-row"><span class="detail-label">Item Name</span><span class="detail-value">${cost.item_name || 'N/A'}</span></div>
+              <div class="detail-row"><span class="detail-label">${cost.class_type === 'pack' ? 'Pack Name' : 'Item Name'}</span><span class="detail-value">${cost.item_name || 'N/A'}</span></div>
               <div class="detail-row"><span class="detail-label">Vendor</span><span class="detail-value">${cost.vendor}</span></div>
               <div class="detail-row"><span class="detail-label">Payment Method</span><span class="detail-value">${cost.payment_method || 'Not specified'}</span></div>
               <div class="detail-divider"></div>
-              <div class="detail-row"><span class="detail-label">Quantity</span><span class="detail-value">${cost.quantity || 1}</span></div>
-              <div class="detail-row"><span class="detail-label">Unit Cost</span><span class="detail-value">$${parseFloat(cost.unit_cost || cost.total_cost).toFixed(2)}</span></div>
-              ${cost.tax > 0 ? `<div class="detail-row"><span class="detail-label">Tax</span><span class="detail-value">$${parseFloat(cost.tax).toFixed(2)}</span></div>` : ''}
-              <div class="detail-row highlight"><span class="detail-label">Total Cost</span><span class="detail-value">$${parseFloat(cost.total_cost).toFixed(2)}</span></div>
-              <div class="detail-row"><span class="detail-label">Item Value</span><span class="detail-value">$${parseFloat(cost.value || cost.total_cost).toFixed(2)}</span></div>
+              ${cost.class_type === 'pack' ? `
+                <div class="detail-row"><span class="detail-label">Items in Pack</span><span class="detail-value">${cost.item_count || (Array.isArray(cost.pack_item_ids) ? cost.pack_item_ids.length : 0)}</span></div>
+                <div class="detail-row highlight"><span class="detail-label">Total Cost</span><span class="detail-value">$${parseFloat(cost.total_cost).toFixed(2)}</span></div>
+                <div class="detail-row"><span class="detail-label">Cost Per Item</span><span class="detail-value">$${parseFloat(cost.cost_per_item || 0).toFixed(2)}</span></div>
+                <div class="detail-row"><span class="detail-label">Value Per Item</span><span class="detail-value">$${parseFloat(cost.value_per_item || 0).toFixed(2)}</span></div>
+              ` : `
+                <div class="detail-row"><span class="detail-label">Quantity</span><span class="detail-value">${cost.quantity || 1}</span></div>
+                <div class="detail-row"><span class="detail-label">Unit Cost</span><span class="detail-value">$${parseFloat(cost.unit_cost || cost.total_cost).toFixed(2)}</span></div>
+                ${cost.tax > 0 ? `<div class="detail-row"><span class="detail-label">Tax</span><span class="detail-value">$${parseFloat(cost.tax).toFixed(2)}</span></div>` : ''}
+                <div class="detail-row highlight"><span class="detail-label">Total Cost</span><span class="detail-value">$${parseFloat(cost.total_cost).toFixed(2)}</span></div>
+                <div class="detail-row"><span class="detail-label">Item Value</span><span class="detail-value">$${parseFloat(cost.value || cost.total_cost).toFixed(2)}</span></div>
+              `}
               <div class="detail-divider"></div>
               <div class="detail-row">
                 <span class="detail-label">Receipt</span>
@@ -143,7 +152,26 @@ export class CostDetailView {
     `;
   }
 
+  renderPackContents(cost) {
+    const packIds = Array.isArray(cost.pack_item_ids) ? cost.pack_item_ids : [];
+    const packNames = Array.isArray(cost.pack_item_names) ? cost.pack_item_names : [];
+    const itemsHTML = packIds.length > 0
+      ? packIds.map((id, i) => {
+          const name = packNames[i] || id;
+          return `<a href="/${id}" class="related-link pack-item-link" data-navigate="/${id}">${name} →</a>`;
+        }).join('')
+      : '<span class="muted-text">No items listed</span>';
+    return `
+      <div class="pack-contents-section">
+        <h2>📦 Pack Contents</h2>
+        <div class="pack-item-links">${itemsHTML}</div>
+      </div>
+    `;
+  }
+
   renderRelatedLinks(cost) {
+    // Pack records list their items via renderPackContents instead
+    if (cost.class_type === 'pack') return '';
     const links = [];
     if (cost.related_item_id) links.push({ label: 'Item', id: cost.related_item_id, url: `/${cost.related_item_id}` });
     if (cost.related_idea_id) links.push({ label: 'Idea', id: cost.related_idea_id, url: `/${cost.related_idea_id}` });

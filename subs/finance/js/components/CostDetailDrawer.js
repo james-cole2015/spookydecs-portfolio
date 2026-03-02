@@ -225,12 +225,16 @@ export class CostDetailDrawer {
 
   renderPackInfo(cost) {
     const packItems = Array.isArray(cost.pack_item_ids) ? cost.pack_item_ids : [];
+    const packNames = Array.isArray(cost.pack_item_names) ? cost.pack_item_names : [];
     const itemsHTML = packItems.length > 0
-      ? packItems.map(id => `
-          <div class="pack-item-chip">
-            <a href="#" class="related-item-link" data-navigate="/${id}">${id} →</a>
-          </div>
-        `).join('')
+      ? packItems.map((id, i) => {
+          const name = packNames[i] || id;
+          return `
+            <div class="pack-item-chip">
+              <a href="#" class="related-item-link" data-navigate="/${id}">${name} →</a>
+            </div>
+          `;
+        }).join('')
       : '<span style="color:#64748b;font-size:14px;">No items listed</span>';
 
     const costPerItem = typeof cost.cost_per_item === 'number' ? cost.cost_per_item : parseFloat(cost.cost_per_item) || 0;

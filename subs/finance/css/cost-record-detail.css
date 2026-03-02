@@ -436,6 +436,10 @@
     gap: 0.75rem;
   }
 
+  .pack-contents-section {
+    padding: 1rem;
+  }
+
   .receipt-thumbnail {
     max-width: 100%;
   }

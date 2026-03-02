@@ -29,32 +29,39 @@ export class CostHistoryList {
 
   renderCostCard(cost) {
     const date = new Date(cost.cost_date);
-    const formattedDate = date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
+    const formattedDate = date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
     });
 
     const hasReceipt = cost.receipt_data?.image_id || cost.receipt_data?.image_url;
+    const isPack = cost.class_type === 'pack';
+    // For pack records show only this item's share, not the full pack total
+    const displayAmount = isPack
+      ? parseFloat(cost.cost_per_item || 0).toFixed(2)
+      : parseFloat(cost.total_cost || 0).toFixed(2);
 
-    // Desktop view: Full card with details
     const desktopCard = `
       <div class="cost-card" data-cost-id="${cost.cost_id}">
         <div class="cost-card-header">
           <div class="cost-date">${formattedDate}</div>
-          ${hasReceipt ? '<span class="receipt-badge">📄</span>' : ''}
+          <div class="cost-card-badges">
+            ${isPack ? '<span class="badge badge-pack">PACK</span>' : ''}
+            ${hasReceipt ? '<span class="receipt-badge">📄</span>' : ''}
+          </div>
         </div>
-        
+
         <div class="cost-card-body">
           <div class="cost-info">
             <div class="cost-type">${this.formatCostType(cost.cost_type)}</div>
-            <div class="cost-amount">$${parseFloat(cost.total_cost).toFixed(2)}</div>
+            <div class="cost-amount">$${displayAmount}</div>
           </div>
-          
+
           ${cost.description ? `
             <div class="cost-description">${cost.description}</div>
           ` : ''}
-          
+
           <div class="cost-meta">
             <span class="cost-vendor">${cost.vendor}</span>
             ${cost.category ? `<span class="cost-category">• ${this.formatCategory(cost.category)}</span>` : ''}

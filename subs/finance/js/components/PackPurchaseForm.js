@@ -432,6 +432,7 @@ export class PackPurchaseForm {
       vendor: this.formData.vendor.trim(),
       total_cost: total,
       pack_item_ids: this.selectedItems.map(i => i.id),
+      pack_item_names: this.selectedItems.map(i => i.short_name || i.shortName || i.id),
       no_receipt: receiptData === null,
       quantity: this.selectedItems.length,
       unit_cost: perItem,
