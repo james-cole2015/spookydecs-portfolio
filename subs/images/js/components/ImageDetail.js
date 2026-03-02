@@ -46,7 +46,7 @@ function deriveCategory(photo) {
   return 'misc';
 }
 
-export function ImageDetail(photo, isEditMode = false, financeUrl = '') {
+export function ImageDetail(photo, isEditMode = false, financeUrl = '', maintUrl = '') {
   const wrapper = document.createElement('div');
 
   const container = document.createElement('div');
@@ -145,7 +145,7 @@ export function ImageDetail(photo, isEditMode = false, financeUrl = '') {
           ${renderDynamicFields(photo, categoryConfig, isEditMode)}
         </div>
 
-        ${!isEditMode ? renderEntityRefs(photo, financeUrl) : ''}
+        ${!isEditMode ? renderEntityRefs(photo, financeUrl, maintUrl, category) : ''}
         
         ${isEditMode ? `
           <div class="form-group checkbox-group">
@@ -233,7 +233,7 @@ export function ImageDetail(photo, isEditMode = false, financeUrl = '') {
   return wrapper;
 }
 
-function renderEntityRefs(photo, financeUrl = '') {
+function renderEntityRefs(photo, financeUrl = '', maintUrl = '', category = '') {
   const parts = [];
 
   const ids = photo.item_ids || [];
@@ -245,6 +245,18 @@ function renderEntityRefs(photo, financeUrl = '') {
       <div class="form-group">
         <label>Item IDs</label>
         <div class="readonly-value">${links}</div>
+      </div>
+    `);
+  }
+
+  if (category === 'maintenance' && photo.record_id && maintUrl) {
+    const itemId = (photo.item_ids || [])[0] || '';
+    parts.push(`
+      <div class="form-group">
+        <label>Repair Record</label>
+        <div class="readonly-value">
+          <a class="breadcrumb-link" href="${maintUrl}/${itemId}/${photo.record_id}" target="_blank" rel="noopener noreferrer">${photo.record_id}</a>
+        </div>
       </div>
     `);
   }
