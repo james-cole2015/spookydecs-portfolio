@@ -399,7 +399,7 @@ class ItemDetailPage {
         </svg>`,
         label: 'Photos',
         descriptor: 'Primary & secondary images',
-        href: imagesBase || null,
+        href: imagesBase && itemId ? `${imagesBase}/images/entities/${itemId}` : null,
         disabled: !imagesBase,
         tooltip: null,
       },
