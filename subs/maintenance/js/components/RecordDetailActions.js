@@ -1,10 +1,11 @@
 // Record detail view - event handlers and actions
 
-import { deleteRecord, fetchMultiplePhotos } from '../api.js';
+import { deleteRecord, fetchMultiplePhotos, updateRecord } from '../api.js';
 import { appState } from '../state.js';
 import { navigateTo } from '../router.js';
 import { isMobile } from '../utils/responsive.js';
 import { PhotoSwipeGallery } from './PhotoSwipeGallery.js';
+import { RecordDetailTabs } from './RecordDetailTabs.js';
 
 export class RecordDetailActions {
   constructor(view) {
@@ -17,17 +18,18 @@ export class RecordDetailActions {
   attachEventListeners(container) {
     this.attachTabListeners(container);
     this.attachDeleteListener(container);
-    
+
     // Collapsible section listeners (mobile)
     if (isMobile() && this.view.activeTab === 'details') {
       this.attachCollapsibleListeners(container);
     }
-    
+
     // Initialize photos if starting on photos tab
     if (this.view.activeTab === 'photos') {
       const contentDiv = container.querySelector('.detail-content');
       if (contentDiv) {
         this.loadPhotosForTab(contentDiv);
+        this.attachAddPhotosListener(container);
       }
     }
   }
@@ -50,16 +52,17 @@ export class RecordDetailActions {
         const contentDiv = container.querySelector('.detail-content');
         
         if (contentDiv) {
-          contentDiv.innerHTML = this.view.tabs.renderTabContent();
-          
+          contentDiv.innerHTML = this.view.renderTabContent();
+
           // Re-attach collapsible listeners if on details tab
           if (this.view.activeTab === 'details' && isMobile()) {
             this.attachCollapsibleListeners(contentDiv);
           }
-          
-          // Load photos if on photos tab
+
+          // Load photos and upload listener if on photos tab
           if (this.view.activeTab === 'photos') {
             await this.loadPhotosForTab(contentDiv);
+            this.attachAddPhotosListener(container);
           }
         }
         
@@ -217,6 +220,83 @@ export class RecordDetailActions {
     `;
   }
   
+  /**
+   * Attach the "Add Photos" button listener inside the photos tab
+   */
+  attachAddPhotosListener(container) {
+    const contentDiv = container.querySelector('.detail-content');
+    if (!contentDiv) return;
+
+    const addBtn = contentDiv.querySelector('[data-action="add-photos"]');
+    if (!addBtn) return;
+
+    addBtn.addEventListener('click', () => {
+      this.handleAddPhotos(container);
+    });
+  }
+
+  /**
+   * Open the CDN photo-upload-modal, then patch the record's attachments on success
+   */
+  async handleAddPhotos(container) {
+    const contentDiv = container.querySelector('.detail-content');
+    const category = contentDiv?.querySelector('#photo-category-select')?.value || 'documentation';
+
+    const record = this.view.record;
+
+    const modal = document.createElement('photo-upload-modal');
+    modal.setAttribute('context', 'maintenance');
+    modal.setAttribute('photo-type', record.record_type || 'maintenance');
+    modal.setAttribute('season', record.season || 'shared');
+    modal.setAttribute('record-id', record.record_id);
+    modal.setAttribute('item-id', record.item_id);
+    modal.setAttribute('max-photos', '5');
+
+    const modalContainer = document.getElementById('modal-container') || document.body;
+    modalContainer.appendChild(modal);
+
+    modal.addEventListener('upload-complete', async (e) => {
+      modal.remove();
+
+      const { photo_ids } = e.detail;
+      if (!photo_ids || photo_ids.length === 0) return;
+
+      try {
+        const currentAttachments = record.attachments || {};
+        const updatedAttachments = {
+          ...currentAttachments,
+          [category]: [
+            ...(currentAttachments[category] || []),
+            ...photo_ids.map(photo_id => ({ photo_id, photo_type: category }))
+          ]
+        };
+
+        const updatedRecord = await updateRecord(record.record_id, { attachments: updatedAttachments });
+        this.view.record = updatedRecord;
+        this.view.tabs = new RecordDetailTabs(updatedRecord, this.view.itemId, this.view.expandedSections);
+
+        if (contentDiv) {
+          contentDiv.innerHTML = this.view.renderTabContent();
+          await this.loadPhotosForTab(contentDiv);
+          this.attachAddPhotosListener(container);
+        }
+
+        if (window.toast) {
+          window.toast.success('Success', 'Photos added successfully');
+        }
+      } catch (error) {
+        console.error('Failed to update record with photos:', error);
+        if (window.toast) {
+          window.toast.error('Error', 'Failed to save photos: ' + error.message);
+        }
+      }
+    });
+
+    modal.addEventListener('upload-cancel', () => {
+      modal.remove();
+    });
+  }
+
   /**
    * Initialize PhotoSwipeGallery with loaded photos
    */
