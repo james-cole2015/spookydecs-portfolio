@@ -46,7 +46,7 @@ function deriveCategory(photo) {
   return 'misc';
 }
 
-export function ImageDetail(photo, isEditMode = false) {
+export function ImageDetail(photo, isEditMode = false, financeUrl = '') {
   const wrapper = document.createElement('div');
 
   const container = document.createElement('div');
@@ -145,7 +145,7 @@ export function ImageDetail(photo, isEditMode = false) {
           ${renderDynamicFields(photo, categoryConfig, isEditMode)}
         </div>
 
-        ${!isEditMode ? renderEntityRefs(photo) : ''}
+        ${!isEditMode ? renderEntityRefs(photo, financeUrl) : ''}
         
         ${isEditMode ? `
           <div class="form-group checkbox-group">
@@ -198,6 +198,7 @@ export function ImageDetail(photo, isEditMode = false) {
     if (link) {
       e.preventDefault();
       navigate(`/images/entities/${link.dataset.entityId}?type=${link.dataset.entityType}`);
+      return;
     }
   });
 
@@ -232,7 +233,7 @@ export function ImageDetail(photo, isEditMode = false) {
   return wrapper;
 }
 
-function renderEntityRefs(photo) {
+function renderEntityRefs(photo, financeUrl = '') {
   const parts = [];
 
   const ids = photo.item_ids || [];
@@ -254,6 +255,18 @@ function renderEntityRefs(photo) {
         <label>Storage ID</label>
         <div class="readonly-value">
           <a class="entity-link breadcrumb-link" data-entity-id="${photo.storage_id}" data-entity-type="storage" href="#">${photo.storage_id}</a>
+        </div>
+      </div>
+    `);
+  }
+
+  const costId = (photo.cost_ids || [])[0];
+  if (costId) {
+    parts.push(`
+      <div class="form-group">
+        <label>Cost Record</label>
+        <div class="readonly-value">
+          <a class="breadcrumb-link" href="${financeUrl}/costs/${costId}" target="_blank" rel="noopener noreferrer">${costId}</a>
         </div>
       </div>
     `);

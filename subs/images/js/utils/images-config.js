@@ -132,7 +132,7 @@ export function isOrphaned(photo) {
   const hasIdeaId = !!photo.idea_id;
   const hasDeploymentId = !!photo.deployment_id;
   const hasStorageId = !!photo.storage_id;
-  const hasCostRecordId = !!photo.cost_record_id;
+  const hasCostIds = photo.cost_ids && photo.cost_ids.length > 0;
 
-  return !hasItemIds && !hasIdeaId && !hasDeploymentId && !hasStorageId && !hasCostRecordId;
+  return !hasItemIds && !hasIdeaId && !hasDeploymentId && !hasStorageId && !hasCostIds;
 }

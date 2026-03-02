@@ -14,7 +14,8 @@ export async function renderImageDetail(params) {
   app.innerHTML = '<div class="loading">Loading image...</div>';
 
   try {
-    const photo = await fetchImage(photoId);
+    const [photo, config] = await Promise.all([fetchImage(photoId), window.SpookyConfig.get()]);
+    const financeUrl = config.finance_url || '';
 
     app.innerHTML = '';
     const crumbs = [
@@ -25,7 +26,7 @@ export async function renderImageDetail(params) {
         : [{ label: photo.photo_id }])
     ];
     app.appendChild(Breadcrumb(crumbs));
-    app.appendChild(ImageDetail(photo, isEditMode));
+    app.appendChild(ImageDetail(photo, isEditMode, financeUrl));
 
   } catch (error) {
     app.innerHTML = `

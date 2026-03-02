@@ -10,7 +10,7 @@ export function ImageCard(photo) {
   const categoryLabel = category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
   
   // Check if orphaned - FIXED: Added storage_id check
-  const isOrphaned = !photo.item_ids?.length && !photo.idea_id && !photo.deployment_id && !photo.storage_id;
+  const isOrphaned = !photo.item_ids?.length && !photo.idea_id && !photo.deployment_id && !photo.storage_id && !photo.cost_ids?.length;
   
   card.innerHTML = `
     <div class="image-card-preview">
