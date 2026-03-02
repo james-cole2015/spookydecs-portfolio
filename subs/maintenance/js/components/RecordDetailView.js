@@ -1,6 +1,6 @@
 // Record detail view component - main controller
 
-import { fetchRecord } from '../api.js';
+import { fetchRecord, fetchItem } from '../api.js';
 import { appState } from '../state.js';
 import { StatsCards } from './StatsCards.js';
 import { isMobile } from '../utils/responsive.js';
@@ -38,7 +38,7 @@ export class RecordDetailView {
     try {
       // Fetch record data
       this.record = await fetchRecord(this.recordId);
-      this.item = appState.getItem(this.itemId);
+      this.item = appState.getItem(this.itemId) || await fetchItem(this.itemId).catch(() => null);
       
       // Initialize helper classes now that we have the record
       this.renderer = new RecordDetailRenderer(this.record, this.itemId, this.expandedSections);

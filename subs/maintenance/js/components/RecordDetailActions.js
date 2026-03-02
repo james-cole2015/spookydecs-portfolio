@@ -247,7 +247,7 @@ export class RecordDetailActions {
     const modal = document.createElement('photo-upload-modal');
     modal.setAttribute('context', 'maintenance');
     modal.setAttribute('photo-type', record.record_type || 'maintenance');
-    modal.setAttribute('season', record.season || 'shared');
+    modal.setAttribute('season', this.view.item?.season || 'shared');
     modal.setAttribute('record-id', record.record_id);
     modal.setAttribute('item-id', record.item_id);
     modal.setAttribute('max-photos', '5');
