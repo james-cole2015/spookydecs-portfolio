@@ -2,9 +2,6 @@
 .py
 .json
 merge.py
-config.json
-/subs/*/config.json
-
 # Vite/Node
 node_modules/
 dist/
@@ -18,7 +15,6 @@ yarn.lock
 pnpm-lock.yaml
 
 # Optional: if you want to keep dev config out of repo
-public/config.json
 /public
 package.json 
 vite.config.js
