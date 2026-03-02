@@ -1,6 +1,6 @@
 // Cost Detail View Component
 
-import { deleteCost, getReceiptImage } from '../utils/finance-api.js';
+import { deleteCost, getReceiptImage, updateImageAfterCostCreation } from '../utils/finance-api.js';
 import { toast } from '../shared/toast.js';
 import { modal } from '../shared/modal.js';
 
@@ -73,6 +73,11 @@ export class CostDetailView {
               <button class="btn-action btn-receipt" data-action="view-receipt" title="View Receipt">
                 <span class="btn-icon">📄</span>
                 <span class="btn-text">View Receipt</span>
+              </button>
+            ` : !noReceipt ? `
+              <button class="btn-action btn-add-receipt" data-action="add-receipt" title="Add Receipt">
+                <span class="btn-icon">📎</span>
+                <span class="btn-text">Add Receipt</span>
               </button>
             ` : ''}
             <button class="btn-action btn-edit" data-action="edit" title="Edit">
@@ -238,7 +243,11 @@ export class CostDetailView {
       });
     });
 
-    document.querySelectorAll('[data-action="edit"]').forEach(btn => 
+    document.querySelectorAll('[data-action="add-receipt"]').forEach(btn => {
+      btn.addEventListener('click', () => this.handleAddReceipt());
+    });
+
+    document.querySelectorAll('[data-action="edit"]').forEach(btn =>
       btn.addEventListener('click', () => {
         console.log('Edit cost clicked');
         toast.info('Edit functionality coming soon');
@@ -267,6 +276,30 @@ export class CostDetailView {
         section.classList.remove('expanded');
       }
     }
+  }
+
+  handleAddReceipt() {
+    const uploadModal = document.createElement('photo-upload-modal');
+    uploadModal.setAttribute('context', 'receipt');
+    uploadModal.setAttribute('photo-type', 'receipt');
+    uploadModal.setAttribute('season', 'shared');
+
+    uploadModal.addEventListener('upload-complete', async (e) => {
+      const { photo_ids } = e.detail;
+      const photoId = photo_ids?.[0];
+      if (!photoId) return;
+
+      try {
+        await updateImageAfterCostCreation(photoId, this.costData.cost_id);
+        toast.success('Receipt added successfully');
+        setTimeout(() => window.location.reload(), 800);
+      } catch (err) {
+        console.error('Failed to finalize receipt:', err);
+        toast.error('Receipt uploaded but failed to link: ' + err.message);
+      }
+    });
+
+    document.body.appendChild(uploadModal);
   }
 
   async handleDelete() {

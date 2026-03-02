@@ -1,7 +1,15 @@
 // Multi-Item Review Modal Component
 // Displays all extracted line items from receipt with inline editing
 
-import { formatCurrency, formatDate, COST_TYPES, getCategoriesForCostType, SUBCATEGORIES, getRelatedIdConfig } from '../utils/finance-config.js';
+import {
+  formatCurrency,
+  formatDate,
+  COST_TYPES,
+  getCategoriesForCostType,
+  SUBCATEGORIES,
+  getRelatedIdConfig,
+  isRelatedIdRequired
+} from '../utils/finance-config.js';
 
 export class MultiItemReviewModal {
   constructor() {
@@ -10,67 +18,158 @@ export class MultiItemReviewModal {
     this.receiptMetadata = {};
     this.extractionId = null;
     this.imageId = null;
+    this.contextData = {};
     this.onConfirm = null;
     this.onCancel = null;
-    this.itemsCache = null; // Cache for item lookup
+    this.itemsCache = null;
+    this.recordsCache = null;
+    this.ideasCache = null;
   }
 
   async show(data, callbacks = {}) {
     console.log('🎬 MultiItemReviewModal.show() called with data:', data);
-    
+
     this.items = data.items || [];
     this.receiptMetadata = data.receipt_metadata || {};
     this.extractionId = data.extraction_id;
     this.imageId = data.image_id;
+    this.contextData = data.context || {};
     this.onConfirm = callbacks.onConfirm;
     this.onCancel = callbacks.onCancel;
 
     console.log(`📋 Items to review: ${this.items.length}`);
     console.log('🧾 Receipt metadata:', this.receiptMetadata);
 
-    // Auto-select all items by default
+    // Load all related entity caches before mapping items
+    await this.loadAllRelatedCaches();
+
+    const contextRecordId = this.contextData.record_id;
+
+    // Auto-select all items and pre-fill related fields from context/Lambda response
     this.items = this.items.map((item, index) => {
       console.log(`  Item ${index + 1}:`, item);
-      return {
-        ...item,
-        selected: true,
-        errors: {}
-      };
-    });
+      const mapped = { ...item, selected: true, errors: {} };
 
-    // Fetch items for related_item_id selector
-    await this.loadItemsCache();
+      // Lambda already injects related_record_id for repair/maintenance when record_id is in context.
+      // As a belt-and-suspenders fallback, also apply from contextData on the frontend.
+      if (contextRecordId && ['repair', 'maintenance'].includes(item.cost_type) && !mapped.related_record_id) {
+        const record = (this.recordsCache || []).find(r => r.record_id === contextRecordId);
+        mapped.related_record_id = contextRecordId;
+        mapped.related_record_id_display = record
+          ? (record.short_description || record.record_id)
+          : contextRecordId;
+        // Also carry through item_id from the record or context
+        if (record?.item_id) {
+          mapped.related_item_id = record.item_id;
+        } else if (this.contextData.item_id) {
+          mapped.related_item_id = this.contextData.item_id;
+        }
+      }
+
+      // Populate display name for any related_record_id already set (e.g. from Lambda)
+      if (mapped.related_record_id && !mapped.related_record_id_display) {
+        const record = (this.recordsCache || []).find(r => r.record_id === mapped.related_record_id);
+        mapped.related_record_id_display = record
+          ? (record.short_description || record.record_id)
+          : mapped.related_record_id;
+      }
+
+      return mapped;
+    });
 
     this.render();
     this.attachListeners();
   }
 
-  async loadItemsCache() {
+  async loadAllRelatedCaches() {
     try {
-      console.log('🔄 Loading items cache...');
       const { API_ENDPOINT: apiEndpoint } = await window.SpookyConfig.get();
-      const response = await fetch(`${apiEndpoint}/items`);
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch from /items`);
-      }
+      const [itemsResult, recordsResult, ideasResult] = await Promise.allSettled([
+        fetch(`${apiEndpoint}/items`),
+        fetch(`${apiEndpoint}/admin/maintenance-records`),
+        fetch(`${apiEndpoint}/ideas`)
+      ]);
 
-      const json = await response.json();
-      const data = (json && typeof json === 'object' && 'data' in json) ? json.data : json;
-      const items = data.items || data || [];
-
-      if (!Array.isArray(items)) {
-        console.error('Expected items array but got:', typeof items, items);
+      // Items
+      if (itemsResult.status === 'fulfilled' && itemsResult.value.ok) {
+        const json = await itemsResult.value.json();
+        const data = (json && typeof json === 'object' && 'data' in json) ? json.data : json;
+        const raw = data.items || data;
+        this.itemsCache = Array.isArray(raw) ? raw : [];
+      } else {
         this.itemsCache = [];
-        return;
       }
 
-      this.itemsCache = items;
-      console.log(`✅ Loaded ${this.itemsCache.length} items for selection`);
+      // Maintenance records
+      if (recordsResult.status === 'fulfilled' && recordsResult.value.ok) {
+        const json = await recordsResult.value.json();
+        const data = (json && typeof json === 'object' && 'data' in json) ? json.data : json;
+        const raw = data.records || data;
+        this.recordsCache = Array.isArray(raw) ? raw : [];
+      } else {
+        this.recordsCache = [];
+      }
+
+      // Ideas
+      if (ideasResult.status === 'fulfilled' && ideasResult.value.ok) {
+        const json = await ideasResult.value.json();
+        const data = (json && typeof json === 'object' && 'data' in json) ? json.data : json;
+        const raw = data.ideas || data;
+        this.ideasCache = Array.isArray(raw) ? raw : [];
+      } else {
+        this.ideasCache = [];
+      }
+
+      console.log(`✅ Loaded: ${this.itemsCache.length} items, ${this.recordsCache.length} records, ${this.ideasCache.length} ideas`);
     } catch (error) {
-      console.error('❌ Failed to load items:', error);
+      console.error('❌ Failed to load related caches:', error);
       this.itemsCache = [];
+      this.recordsCache = [];
+      this.ideasCache = [];
     }
+  }
+
+  getRelatedCacheForCostType(costType) {
+    const config = getRelatedIdConfig(costType);
+    if (!config) return [];
+
+    if (config.endpoint.includes('/items')) {
+      let items = this.itemsCache || [];
+      if (config.classFilter && config.classFilter.length > 0) {
+        items = items.filter(item => config.classFilter.includes(item.class));
+      }
+      return items;
+    } else if (config.endpoint.includes('/maintenance-records')) {
+      return this.recordsCache || [];
+    } else if (config.endpoint.includes('/ideas')) {
+      return this.ideasCache || [];
+    }
+
+    return [];
+  }
+
+  getEntityDisplayFields(entity, costType) {
+    const config = getRelatedIdConfig(costType);
+    if (!config) return { primary: entity.id || '', secondary: '', id: entity.id || '' };
+
+    if (config.endpoint.includes('/items')) {
+      return { primary: entity.short_name || entity.id, secondary: entity.id, id: entity.id };
+    } else if (config.endpoint.includes('/maintenance-records')) {
+      return {
+        primary: entity.record_id,
+        secondary: entity.short_description || entity.item_id || '',
+        id: entity.record_id
+      };
+    } else if (config.endpoint.includes('/ideas')) {
+      return {
+        primary: entity.idea_name || entity.name || entity.id,
+        secondary: entity.id,
+        id: entity.id
+      };
+    }
+
+    return { primary: entity.id || '', secondary: '', id: entity.id || '' };
   }
 
   render() {
@@ -95,7 +194,7 @@ export class MultiItemReviewModal {
             </div>
             <button class="close-btn" id="close-modal-btn">&times;</button>
           </div>
-          
+
           <div class="multi-item-review-modal-body">
             ${this.renderSummaryBar(selectedCount, selectedTotal)}
             ${this.renderItemsList()}
@@ -160,9 +259,9 @@ export class MultiItemReviewModal {
       <div class="item-card ${!item.selected ? 'disabled' : ''} ${hasErrors ? 'has-errors' : ''}" data-index="${index}">
         <div class="item-header">
           <label class="item-checkbox-wrapper">
-            <input 
-              type="checkbox" 
-              class="item-checkbox" 
+            <input
+              type="checkbox"
+              class="item-checkbox"
               data-index="${index}"
               ${item.selected ? 'checked' : ''}
             />
@@ -188,19 +287,25 @@ export class MultiItemReviewModal {
   renderItemFields(item, index) {
     const categories = getCategoriesForCostType(item.cost_type);
     const subcategories = item.category && SUBCATEGORIES[item.category] ? SUBCATEGORIES[item.category] : [];
-    
-    // Determine if related_item_id is applicable
-    const needsRelatedItem = item.cost_type === 'acquisition' && 
-                             ['decoration', 'light', 'accessory'].includes(item.category);
-    const showRelatedItem = item.cost_type !== 'supply_purchase';
+
+    // Related field is fully config-driven by cost type
+    const relatedConfig = getRelatedIdConfig(item.cost_type);
+    const showRelatedField = !!relatedConfig;
+    const relatedFieldName = relatedConfig?.field;
+    const relatedLabel = relatedConfig?.label || 'Related';
+    const isRelatedReq = relatedConfig ? isRelatedIdRequired(item.cost_type, item.category) : false;
+    const currentRelatedId = relatedFieldName ? (item[relatedFieldName] || '') : '';
+    const currentRelatedDisplay = relatedFieldName
+      ? (item[`${relatedFieldName}_display`] || currentRelatedId)
+      : '';
 
     return `
       <div class="item-form-grid">
-        <!-- Row 1: Cost Type & Category -->
+        <!-- Cost Type & Category -->
         <div class="form-group">
           <label class="form-label">Cost Type</label>
           <select class="form-select" data-field="cost_type" data-index="${index}">
-            ${COST_TYPES.map(type => 
+            ${COST_TYPES.map(type =>
               `<option value="${type.value}" ${item.cost_type === type.value ? 'selected' : ''}>${type.label}</option>`
             ).join('')}
           </select>
@@ -210,7 +315,7 @@ export class MultiItemReviewModal {
         <div class="form-group">
           <label class="form-label">Category</label>
           <select class="form-select" data-field="category" data-index="${index}">
-            ${categories.map(cat => 
+            ${categories.map(cat =>
               `<option value="${cat.value}" ${item.category === cat.value ? 'selected' : ''}>${cat.label}</option>`
             ).join('')}
           </select>
@@ -222,20 +327,20 @@ export class MultiItemReviewModal {
             <label class="form-label">Subcategory</label>
             <select class="form-select" data-field="subcategory" data-index="${index}">
               <option value="">Select...</option>
-              ${subcategories.map(sub => 
+              ${subcategories.map(sub =>
                 `<option value="${sub}" ${item.subcategory === sub ? 'selected' : ''}>${sub}</option>`
               ).join('')}
             </select>
           </div>
         ` : ''}
 
-        <!-- Row 2: Quantity & Costs -->
+        <!-- Quantity & Costs -->
         <div class="form-group">
           <label class="form-label">Quantity</label>
-          <input 
-            type="number" 
-            class="form-input" 
-            data-field="quantity" 
+          <input
+            type="number"
+            class="form-input"
+            data-field="quantity"
             data-index="${index}"
             value="${item.quantity || 1}"
             min="1"
@@ -245,10 +350,10 @@ export class MultiItemReviewModal {
 
         <div class="form-group">
           <label class="form-label">Unit Cost</label>
-          <input 
-            type="number" 
-            class="form-input" 
-            data-field="unit_cost" 
+          <input
+            type="number"
+            class="form-input"
+            data-field="unit_cost"
             data-index="${index}"
             value="${item.unit_cost || 0}"
             min="0"
@@ -258,10 +363,10 @@ export class MultiItemReviewModal {
 
         <div class="form-group">
           <label class="form-label">Total Cost</label>
-          <input 
-            type="number" 
-            class="form-input" 
-            data-field="total_cost" 
+          <input
+            type="number"
+            class="form-input"
+            data-field="total_cost"
             data-index="${index}"
             value="${item.total_cost || 0}"
             min="0"
@@ -270,37 +375,33 @@ export class MultiItemReviewModal {
           ${item.errors?.total_cost ? `<span class="form-error">${item.errors.total_cost}</span>` : ''}
         </div>
 
-        <!-- Row 3: Related Item (if applicable) -->
-        ${showRelatedItem ? `
+        <!-- Related field: driven by cost_type via getRelatedIdConfig -->
+        ${showRelatedField ? `
           <div class="form-group full-width">
-            <label class="form-label ${needsRelatedItem ? 'required' : ''}">
-              Related Item ${needsRelatedItem ? '' : '(Optional)'}
+            <label class="form-label ${isRelatedReq ? 'required' : ''}">
+              ${relatedLabel} ${isRelatedReq ? '' : '(Optional)'}
             </label>
             <div class="related-item-selector">
-              <input 
-                type="text" 
-                class="form-input related-search-input" 
-                data-field="related_item_search" 
+              <input
+                type="text"
+                class="form-input related-search-input"
+                data-field="related_search"
                 data-index="${index}"
-                placeholder="Search items..."
-                value="${item.related_item_id || ''}"
+                placeholder="Search ${relatedLabel.toLowerCase()}s..."
+                value="${currentRelatedDisplay}"
                 autocomplete="off"
-                ${item.cost_type === 'supply_purchase' ? 'disabled' : ''}
               />
-              <input type="hidden" data-field="related_item_id" data-index="${index}" value="${item.related_item_id || ''}" />
+              <input type="hidden" data-field="${relatedFieldName}" data-index="${index}" value="${currentRelatedId}" />
               <div class="related-dropdown" data-index="${index}"></div>
-              ${item.related_item_id ? `
+              ${currentRelatedId ? `
                 <button type="button" class="clear-related-btn" data-index="${index}">×</button>
               ` : ''}
             </div>
-            ${item.errors?.related_item_id ? `<span class="form-error">${item.errors.related_item_id}</span>` : ''}
-            ${item.cost_type === 'supply_purchase' ? `
-              <span class="form-hint">Related items not applicable for supplies</span>
-            ` : ''}
+            ${item.errors?.[relatedFieldName] ? `<span class="form-error">${item.errors[relatedFieldName]}</span>` : ''}
           </div>
         ` : ''}
 
-        <!-- Row 4: Manufacturer (acquisition only) -->
+        <!-- Manufacturer (acquisition only) -->
         ${item.cost_type === 'acquisition' ? `
           <div class="form-group full-width">
             <label class="form-label required">Manufacturer</label>
@@ -316,7 +417,7 @@ export class MultiItemReviewModal {
           </div>
         ` : ''}
 
-        <!-- Row 5: Description (full width) -->
+        <!-- Description (full width) -->
         <div class="form-group full-width">
           <label class="form-label">Description</label>
           <textarea
@@ -369,13 +470,13 @@ export class MultiItemReviewModal {
         const index = parseInt(e.target.closest('.toggle-expand-btn').dataset.index);
         const details = this.modal.querySelector(`.item-details[data-index="${index}"]`);
         const svg = e.target.closest('.toggle-expand-btn').querySelector('svg');
-        
+
         details.classList.toggle('expanded');
         svg.classList.toggle('expanded');
       });
     });
 
-    // Form field changes — delegated so re-rendering item cards doesn't require re-attachment
+    // Form field changes — delegated
     this.modal.addEventListener('change', (e) => {
       const field = e.target.dataset.field;
       if (!field) return;
@@ -389,29 +490,30 @@ export class MultiItemReviewModal {
       }
     });
 
-    // Related item search input — delegated
+    // Related search input — delegated
     this.modal.addEventListener('input', (e) => {
       if (!e.target.classList.contains('related-search-input')) return;
       const index = parseInt(e.target.dataset.index);
-      this.handleRelatedItemSearch(index, e.target.value);
+      this.handleRelatedSearch(index, e.target.value);
     });
 
-    // Related item search focus — delegated (focusin bubbles; focus does not)
+    // Related search focus — show options on empty focus
     this.modal.addEventListener('focusin', (e) => {
       if (!e.target.classList.contains('related-search-input')) return;
       const index = parseInt(e.target.dataset.index);
       if (e.target.value === '') {
         const costType = this.items[index].cost_type;
-        this.showRelatedItemDropdown(index, this.getFilteredItemsForCostType(costType));
+        const available = this.getRelatedCacheForCostType(costType).slice(0, 10);
+        this.showRelatedDropdown(index, available, costType);
       }
     });
 
-    // Click outside to close, and clear related item buttons — delegated
+    // Click outside + clear buttons — delegated
     this.modal.addEventListener('click', (e) => {
       const clearBtn = e.target.closest('.clear-related-btn');
       if (clearBtn) {
         const index = parseInt(clearBtn.dataset.index);
-        this.clearRelatedItem(index);
+        this.clearRelatedEntity(index);
         return;
       }
 
@@ -433,113 +535,133 @@ export class MultiItemReviewModal {
   }
 
   handleCostTypeChange(index, newCostType) {
+    const oldConfig = getRelatedIdConfig(this.items[index].cost_type);
+    const newConfig = getRelatedIdConfig(newCostType);
+
+    // Clear old related field when switching to a different field name
+    if (oldConfig && oldConfig.field !== newConfig?.field) {
+      this.items[index][oldConfig.field] = '';
+      this.items[index][`${oldConfig.field}_display`] = '';
+    }
+
     this.items[index].cost_type = newCostType;
-    
-    // Update category to match cost type
+
+    // Reset category if it's not valid for the new cost type
     const validCategories = getCategoriesForCostType(newCostType);
     if (!validCategories.find(cat => cat.value === this.items[index].category)) {
       this.items[index].category = validCategories[0]?.value || 'other';
     }
 
-    // Re-render this item card
     this.updateItemCard(index);
   }
 
   handleCategoryChange(index, newCategory) {
     this.items[index].category = newCategory;
-    
-    // Clear subcategory if not applicable
+
     if (!SUBCATEGORIES[newCategory]) {
       this.items[index].subcategory = '';
     }
 
-    // Re-render this item card
     this.updateItemCard(index);
   }
 
-  getFilteredItemsForCostType(costType) {
-    if (!this.itemsCache || this.itemsCache.length === 0) return [];
-
-    const config = getRelatedIdConfig(costType);
-    if (!config || !config.endpoint.includes('/items')) return this.itemsCache;
-
-    let items = this.itemsCache;
-    if (config.classFilter && config.classFilter.length > 0) {
-      items = items.filter(item => config.classFilter.includes(item.class));
-    }
-    return items;
-  }
-
-  handleRelatedItemSearch(index, query) {
-    if (!this.itemsCache || this.itemsCache.length === 0) return;
-
+  handleRelatedSearch(index, query) {
     const costType = this.items[index].cost_type;
     const config = getRelatedIdConfig(costType);
-    const searchFields = config?.searchFields || ['short_name', 'id'];
-    const available = this.getFilteredItemsForCostType(costType);
+    if (!config) return;
 
-    const searchLower = query.toLowerCase();
-    const filtered = available.filter(item =>
-      searchFields.some(field => item[field]?.toLowerCase().includes(searchLower))
-    ).slice(0, 10);
+    const searchFields = config.searchFields || ['id'];
+    const available = this.getRelatedCacheForCostType(costType);
 
-    this.showRelatedItemDropdown(index, filtered);
+    const filtered = query
+      ? available.filter(entity =>
+          searchFields.some(field => entity[field]?.toLowerCase().includes(query.toLowerCase()))
+        ).slice(0, 10)
+      : available.slice(0, 10);
+
+    this.showRelatedDropdown(index, filtered, costType);
   }
 
-  showRelatedItemDropdown(index, items) {
+  showRelatedDropdown(index, entities, costType) {
     const dropdown = this.modal.querySelector(`.related-dropdown[data-index="${index}"]`);
     if (!dropdown) return;
 
-    if (items.length === 0) {
-      dropdown.innerHTML = '<div class="dropdown-empty">No items found</div>';
+    if (entities.length === 0) {
+      dropdown.innerHTML = '<div class="dropdown-empty">No results found</div>';
       dropdown.classList.add('visible');
       return;
     }
 
-    dropdown.innerHTML = items.map(item => `
-      <div class="dropdown-item" data-index="${index}" data-item-id="${item.id}">
-        <span class="dropdown-item-name">${item.short_name || item.id}</span>
-        <span class="dropdown-item-id">${item.id}</span>
-      </div>
-    `).join('');
+    dropdown.innerHTML = entities.map(entity => {
+      const { primary, secondary, id } = this.getEntityDisplayFields(entity, costType);
+      return `
+        <div class="dropdown-item" data-index="${index}" data-entity-id="${id}">
+          <span class="dropdown-item-name">${primary}</span>
+          <span class="dropdown-item-id">${secondary}</span>
+        </div>
+      `;
+    }).join('');
 
-    // Attach click handlers
     dropdown.querySelectorAll('.dropdown-item').forEach(el => {
       el.addEventListener('click', (e) => {
         const itemIndex = parseInt(e.currentTarget.dataset.index);
-        const itemId = e.currentTarget.dataset.itemId;
-        this.selectRelatedItem(itemIndex, itemId);
+        const entityId = e.currentTarget.dataset.entityId;
+        this.selectRelatedEntity(itemIndex, entityId);
       });
     });
 
     dropdown.classList.add('visible');
   }
 
-  selectRelatedItem(index, itemId) {
-    const item = this.itemsCache.find(i => i.id === itemId);
-    if (!item) return;
+  selectRelatedEntity(index, entityId) {
+    const costType = this.items[index].cost_type;
+    const config = getRelatedIdConfig(costType);
+    if (!config) return;
 
-    this.items[index].related_item_id = itemId;
+    const cache = this.getRelatedCacheForCostType(costType);
+    const entity = cache.find(e => {
+      const { id } = this.getEntityDisplayFields(e, costType);
+      return id === entityId;
+    });
+    if (!entity) return;
 
-    // Update UI
+    const { primary } = this.getEntityDisplayFields(entity, costType);
+    const fieldName = config.field;
+
+    this.items[index][fieldName] = entityId;
+    this.items[index][`${fieldName}_display`] = primary;
+    // For maintenance records, also carry through the associated item_id
+    if (config.endpoint.includes('/maintenance-records') && entity.item_id) {
+      this.items[index].related_item_id = entity.item_id;
+    }
+
     const searchInput = this.modal.querySelector(`.related-search-input[data-index="${index}"]`);
-    const hiddenInput = this.modal.querySelector(`input[type="hidden"][data-field="related_item_id"][data-index="${index}"]`);
+    const hiddenInput = this.modal.querySelector(`input[type="hidden"][data-field="${fieldName}"][data-index="${index}"]`);
     const dropdown = this.modal.querySelector(`.related-dropdown[data-index="${index}"]`);
 
-    if (searchInput) searchInput.value = item.short_name || itemId;
-    if (hiddenInput) hiddenInput.value = itemId;
+    if (searchInput) searchInput.value = primary;
+    if (hiddenInput) hiddenInput.value = entityId;
     if (dropdown) dropdown.classList.remove('visible');
 
-    // Add clear button if not present
     this.updateItemCard(index);
   }
 
-  clearRelatedItem(index) {
-    this.items[index].related_item_id = '';
-    
+  clearRelatedEntity(index) {
+    const costType = this.items[index].cost_type;
+    const config = getRelatedIdConfig(costType);
+    const fieldName = config?.field;
+    if (!fieldName) return;
+
+    this.items[index][fieldName] = '';
+    this.items[index][`${fieldName}_display`] = '';
+    // For maintenance records, also clear the derived related_item_id
+    if (config.endpoint.includes('/maintenance-records')) {
+      this.items[index].related_item_id = '';
+    }
+
     const searchInput = this.modal.querySelector(`.related-search-input[data-index="${index}"]`);
-    const hiddenInput = this.modal.querySelector(`input[type="hidden"][data-field="related_item_id"][data-index="${index}"]`);
-    
+    const hiddenInput = this.modal.querySelector(`input[type="hidden"][data-field="${fieldName}"][data-index="${index}"]`);
+
     if (searchInput) searchInput.value = '';
     if (hiddenInput) hiddenInput.value = '';
 
@@ -555,7 +677,7 @@ export class MultiItemReviewModal {
     const wasExpanded = details.classList.contains('expanded');
 
     details.innerHTML = this.renderItemFields(item, index);
-    
+
     if (wasExpanded) {
       details.classList.add('expanded');
     }
@@ -564,7 +686,6 @@ export class MultiItemReviewModal {
   }
 
   updateUI() {
-    // Update summary bar
     const selectedCount = this.items.filter(item => item.selected).length;
     const selectedTotal = this.items
       .filter(item => item.selected)
@@ -575,22 +696,16 @@ export class MultiItemReviewModal {
       summaryBar.innerHTML = this.renderSummaryBar(selectedCount, selectedTotal).replace(/<div class="summary-bar">|<\/div>$/g, '');
     }
 
-    // Update confirm button
     const confirmBtn = this.modal.querySelector('#confirm-btn');
     if (confirmBtn) {
       confirmBtn.disabled = selectedCount === 0;
       confirmBtn.textContent = `Create ${selectedCount} Cost ${selectedCount === 1 ? 'Record' : 'Records'}`;
     }
 
-    // Update item cards disabled state
     this.items.forEach((item, index) => {
       const card = this.modal.querySelector(`.item-card[data-index="${index}"]`);
       if (card) {
-        if (item.selected) {
-          card.classList.remove('disabled');
-        } else {
-          card.classList.add('disabled');
-        }
+        card.classList.toggle('disabled', !item.selected);
       }
     });
   }
@@ -606,7 +721,6 @@ export class MultiItemReviewModal {
 
       const errors = {};
 
-      // Required fields
       if (!item.cost_type) errors.cost_type = 'Required';
       if (!item.category) errors.category = 'Required';
       if (!item.total_cost || parseFloat(item.total_cost) <= 0) {
@@ -620,11 +734,12 @@ export class MultiItemReviewModal {
         }
       }
 
-      // Related item validation
-      const needsRelatedItem = item.cost_type === 'acquisition' &&
-                               ['decoration', 'light', 'accessory'].includes(item.category);
-      if (needsRelatedItem && !item.related_item_id) {
-        errors.related_item_id = 'Required for this cost type';
+      // Related field validation via config
+      const relatedConfig = getRelatedIdConfig(item.cost_type);
+      if (relatedConfig && isRelatedIdRequired(item.cost_type, item.category)) {
+        if (!item[relatedConfig.field]) {
+          errors[relatedConfig.field] = `${relatedConfig.label} is required`;
+        }
       }
 
       item.errors = errors;
@@ -637,20 +752,16 @@ export class MultiItemReviewModal {
   }
 
   handleConfirm() {
-    // Validate all selected items
     const isValid = this.validateItems();
 
     if (!isValid) {
-      // Re-render to show errors
       this.render();
       this.attachListeners();
       return;
     }
 
-    // Get selected items
     const selectedItems = this.items.filter(item => item.selected);
 
-    // Build cost records with shared metadata
     const costRecords = selectedItems.map(item => ({
       item_name: item.item_name,
       description: item.description || '',
@@ -666,6 +777,8 @@ export class MultiItemReviewModal {
       purchase_date: this.receiptMetadata.purchase_date,
       cost_date: this.receiptMetadata.purchase_date,
       related_item_id: item.related_item_id || '',
+      related_record_id: item.related_record_id || '',
+      related_idea_id: item.related_idea_id || '',
       extraction_id: this.extractionId,
       image_id: this.imageId,
       currency: 'USD'

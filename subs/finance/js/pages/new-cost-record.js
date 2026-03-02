@@ -157,14 +157,14 @@ function attachEventListeners(receiptModal, getFormFields) {
 
       // Open modal with context and callback for MULTI-ITEM extraction
       receiptModal.open(contextData, (extractedData, extractionId, imageId) => {
-        handleAIExtractedData(extractedData, extractionId, imageId);
+        handleAIExtractedData(extractedData, extractionId, imageId, contextData);
       });
     });
   }
 }
 
 // NEW: Handle AI-extracted multi-item data
-async function handleAIExtractedData(extractedData, extractionId, imageId) {
+async function handleAIExtractedData(extractedData, extractionId, imageId, contextData = {}) {
   console.log('📦 AI extracted data received:', extractedData);
   
   // Check if we have multiple items or single item
@@ -186,7 +186,8 @@ async function handleAIExtractedData(extractedData, extractionId, imageId) {
       receipt_metadata: receiptMetadata,
       extraction_id: extractionId,
       image_id: imageId,
-      line_items_detected: lineItemsDetected
+      line_items_detected: lineItemsDetected,
+      context: contextData
     },
     {
       onConfirm: (costRecords) => {
