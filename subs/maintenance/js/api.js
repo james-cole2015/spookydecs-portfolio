@@ -191,8 +191,8 @@ export async function getItemUrl(itemId) {
 }
 
 export async function getCostsUrl() {
-  const { COSTS_URL } = await window.SpookyConfig.get();
-  return COSTS_URL;
+  const { finance_url } = await window.SpookyConfig.get();
+  return finance_url;
 }
 
 export async function fetchItemCosts(itemId) {
