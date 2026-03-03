@@ -289,13 +289,110 @@
   color: #6B7280;
 }
 
-/* Cost Summary */
+/* Costs tab — side-by-side layout */
+.costs-panel {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+/* Cost Summary — fixed-width left column */
 .cost-summary {
+  flex: 0 0 200px;
   background: white;
   border: 1px solid #E5E7EB;
   border-radius: 8px;
   padding: 20px;
-  margin-bottom: 24px;
+}
+
+/* Cost Records List — grows to fill remaining space */
+.cost-records-section {
+  flex: 1;
+  min-width: 0;
+  margin-top: 0;
+}
+
+@media (max-width: 640px) {
+  .costs-panel {
+    flex-direction: column;
+  }
+  .cost-summary {
+    flex: unset;
+    width: 100%;
+  }
+}
+
+.cost-records-section h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 12px;
+}
+
+.cost-records-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cost-record-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  font-size: 0.875rem;
+}
+
+.cost-record-id {
+  color: #6B7280;
+  font-family: monospace;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cost-record-id a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.cost-record-id a:hover {
+  color: #111827;
+}
+
+.cost-record-name {
+  color: #111827;
+}
+
+.cost-record-total {
+  font-weight: 600;
+  color: #059669;
+  white-space: nowrap;
+}
+
+.costs-more-hint {
+  font-size: 0.8rem;
+  color: #6B7280;
+  margin-top: 0.5rem;
+  text-align: right;
+}
+
+.loading-message {
+  padding: 2rem;
+  text-align: center;
+  color: #6B7280;
+}
+
+.no-costs {
+  padding: 1.5rem;
+  text-align: center;
+  color: #6B7280;
 }
 
 /* Records List (in Item Detail) */

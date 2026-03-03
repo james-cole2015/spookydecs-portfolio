@@ -195,6 +195,16 @@ export async function getCostsUrl() {
   return COSTS_URL;
 }
 
+export async function fetchItemCosts(itemId) {
+  const API_ENDPOINT = await getApiEndpoint();
+  const response = await fetch(
+    `${API_ENDPOINT}/finance/costs/item/${encodeURIComponent(itemId)}`,
+    { headers: HEADERS }
+  );
+  const json = await handleResponse(response);
+  return json; // { costs: [...], summary: {...}, count: N }
+}
+
 // ============================================
 // PHOTO UPLOAD API
 // ============================================

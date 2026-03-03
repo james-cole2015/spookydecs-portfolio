@@ -96,42 +96,64 @@ export class RecordDetailTabs {
   }
   
   /**
-   * Render costs tab content
+   * Render costs tab content (loading skeleton — hydrated async by RecordDetailActions.loadCostsForTab)
    */
   renderCostsTab() {
-    const costRecordIds = this.record.cost_record_ids || [];
-    const totalCost = this.record.total_cost || 0;
-    
     return `
       <div class="costs-tab">
-        <div class="placeholder-section">
-          <div class="placeholder-icon">🚧</div>
-          <h3>Cost Records Under Development</h3>
-          <p>Detailed cost tracking and analysis will be available soon.</p>
+        <div class="costs-loading" id="costs-loading">
+          <div class="loading-message">Loading cost records…</div>
         </div>
-        
+        <div class="costs-content" id="costs-content" style="display:none"></div>
+      </div>
+    `;
+  }
+
+  /**
+   * Render costs tab content once data is loaded.
+   * Called statically by RecordDetailActions.loadCostsForTab.
+   * @param {Array} costs - maintenance cost records, sorted newest first
+   * @param {number} total - sum of total_cost for all maintenance costs
+   */
+  static renderCostsContent(costs, total, costsUrl = '') {
+    const LIMIT = 10;
+    const recent = costs.slice(0, LIMIT);
+    return `
+      <div class="costs-panel">
         <div class="cost-summary">
-          <h3>Current Summary</h3>
+          <h3>Summary</h3>
           <div class="detail-row">
-            <span class="detail-label">Total Cost</span>
-            <span class="detail-value cost-value">${formatCurrency(totalCost)}</span>
+            <span class="detail-label">Total</span>
+            <span class="detail-value cost-value">${formatCurrency(total)}</span>
           </div>
-          ${costRecordIds.length > 0 ? `
-            <div class="detail-row">
-              <span class="detail-label">Cost Record IDs</span>
-              <span class="detail-value">
-                <ul class="cost-ids-list">
-                  ${costRecordIds.map(id => `<li><code>${id}</code></li>`).join('')}
-                </ul>
-              </span>
-            </div>
-          ` : ''}
+          <div class="detail-row">
+            <span class="detail-label">Records</span>
+            <span class="detail-value">${costs.length}</span>
+          </div>
         </div>
-        
-        <div class="link-buttons">
-          <a href="${getCostsUrl()}" class="btn-link disabled" target="_blank">
-            View in Finance Subdomain (Coming Soon) →
-          </a>
+
+        <div class="cost-records-section">
+          <h3>Recent Maintenance Costs</h3>
+          ${recent.length > 0 ? `
+            <div class="cost-records-list">
+              ${recent.map(c => `
+                <div class="cost-record-row">
+                  <span class="cost-record-id">
+                    ${costsUrl
+                      ? `<a href="${costsUrl}/costs/${c.cost_id}" target="_blank" rel="noopener">${c.cost_id}</a>`
+                      : c.cost_id}
+                  </span>
+                  <span class="cost-record-name">${c.item_name || '—'}</span>
+                  <span class="cost-record-total">${formatCurrency(c.total_cost || 0)}</span>
+                </div>
+              `).join('')}
+            </div>
+            ${costs.length > LIMIT ? `<p class="costs-more-hint">${costs.length - LIMIT} more — view all in Finance</p>` : ''}
+          ` : `
+            <div class="no-costs">
+              <p>No maintenance costs recorded for this item.</p>
+            </div>
+          `}
         </div>
       </div>
     `;

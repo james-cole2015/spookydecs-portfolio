@@ -1,6 +1,6 @@
 // Record detail view - event handlers and actions
 
-import { deleteRecord, fetchMultiplePhotos, updateRecord } from '../api.js';
+import { deleteRecord, fetchMultiplePhotos, updateRecord, fetchItemCosts, getCostsUrl } from '../api.js';
 import { appState } from '../state.js';
 import { navigateTo } from '../router.js';
 import { isMobile } from '../utils/responsive.js';
@@ -31,6 +31,12 @@ export class RecordDetailActions {
         this.loadPhotosForTab(contentDiv);
         this.attachAddPhotosListener(container);
       }
+    }
+
+    // Initialize costs if starting on costs tab
+    if (this.view.activeTab === 'costs') {
+      const contentDiv = container.querySelector('.detail-content');
+      if (contentDiv) this.loadCostsForTab(contentDiv);
     }
   }
   
@@ -63,6 +69,11 @@ export class RecordDetailActions {
           if (this.view.activeTab === 'photos') {
             await this.loadPhotosForTab(contentDiv);
             this.attachAddPhotosListener(container);
+          }
+
+          // Load costs if on costs tab
+          if (this.view.activeTab === 'costs') {
+            await this.loadCostsForTab(contentDiv);
           }
         }
         
@@ -198,6 +209,37 @@ export class RecordDetailActions {
     }
   }
   
+  /**
+   * Fetch and render maintenance costs for the costs tab
+   */
+  async loadCostsForTab(container) {
+    const loadingEl = container.querySelector('#costs-loading');
+    const contentEl = container.querySelector('#costs-content');
+    if (!contentEl) return;
+
+    try {
+      const [data, costsUrl] = await Promise.all([
+        fetchItemCosts(this.view.itemId),
+        getCostsUrl().catch(() => '')
+      ]);
+      const maintenanceCosts = (data.costs || [])
+        .filter(c => c.cost_type === 'maintenance')
+        .sort((a, b) => (b.cost_date || '').localeCompare(a.cost_date || ''));
+
+      const total = maintenanceCosts.reduce(
+        (sum, c) => sum + (c.total_cost || 0), 0
+      );
+
+      contentEl.innerHTML = RecordDetailTabs.renderCostsContent(maintenanceCosts, total, costsUrl);
+      if (loadingEl) loadingEl.style.display = 'none';
+      contentEl.style.display = 'block';
+
+    } catch (error) {
+      console.error('Failed to load costs:', error);
+      if (loadingEl) loadingEl.innerHTML = '<p class="error-message">Failed to load cost records.</p>';
+    }
+  }
+
   /**
    * Render a photo grid item
    */
