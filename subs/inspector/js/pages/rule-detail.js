@@ -81,6 +81,9 @@ function renderRuleDetailContent() {
                 <button class="btn btn-secondary" id="edit-description-btn">
                     ✏️ Edit Description
                 </button>
+                <button class="btn btn-export" id="export-violations-btn">
+                    📄 Export CSV
+                </button>
                 <button class="btn btn-primary" id="run-rule-btn">
                     ▶ Run Rule
                 </button>
@@ -300,6 +303,12 @@ function attachRuleDetailListeners() {
     const editBtn = document.getElementById('edit-description-btn');
     if (editBtn) {
         editBtn.addEventListener('click', openEditDescriptionModal);
+    }
+
+    // Export violations CSV
+    const exportBtn = document.getElementById('export-violations-btn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', exportCurrentTabViolations);
     }
 
     // Run rule button
@@ -572,6 +581,39 @@ async function deactivateRule() {
             }
         }
     );
+}
+
+/**
+ * Export violations for the currently active tab as CSV
+ */
+function exportCurrentTabViolations() {
+    const violations = filterViolationsByStatus(currentRuleViolations, activeViolationsTab);
+    if (violations.length === 0) {
+        showErrorToast(`No ${activeViolationsTab} violations to export`);
+        return;
+    }
+
+    const headers = ['violation_id', 'entity_id', 'item_name', 'severity', 'status', 'detected_at', 'resolved_at', 'message'];
+
+    const rows = violations.map(v => [
+        v.violation_id,
+        v.entity_id,
+        v.violation_details?.item_short_name || '',
+        v.severity,
+        v.status,
+        v.detected_at || '',
+        v.resolved_at || '',
+        v.violation_details?.message || ''
+    ].map(cell => `"${String(cell).replace(/"/g, '""')}"`));
+
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `violations-${currentRule.rule_id.toLowerCase()}-${activeViolationsTab}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
 }
 
 /**

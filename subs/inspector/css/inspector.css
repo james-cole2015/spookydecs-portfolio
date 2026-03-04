@@ -369,6 +369,16 @@ body {
     background: #B91C1C;
 }
 
+.btn-export {
+    background: #D1FAE5;
+    color: #065F46;
+    border: 1px solid #6EE7B7;
+}
+
+.btn-export:hover:not(:disabled) {
+    background: #A7F3D0;
+}
+
 .btn-sm {
     padding: 0.25rem 0.75rem;
     font-size: 0.75rem;

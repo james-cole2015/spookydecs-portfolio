@@ -268,20 +268,27 @@ class RulesList {
                             <p class="rule-description">${sanitizeHtml(rule.description)}</p>
                             
                             <div class="rule-actions">
-                                <button class="btn btn-secondary view-rule-btn" 
+                                <button class="btn btn-secondary view-rule-btn"
                                         data-rule-id="${rule.rule_id}">
                                     View Details
                                 </button>
-                                <button class="btn btn-danger delete-rule-btn" 
+                                <button class="btn btn-danger delete-rule-btn"
                                         data-rule-id="${rule.rule_id}"
                                         data-rule-name="${sanitizeHtml(rule.rule_name)}">
                                     Deactivate
                                 </button>
-                                <button class="btn btn-primary run-rule-btn" 
+                                <button class="btn btn-primary run-rule-btn"
                                         data-run-rule-id="${rule.rule_id}"
                                         data-rule-name="${sanitizeHtml(rule.rule_name)}">
                                     ▶ Run Rule
                                 </button>
+                                ${allViolations.length > 0 ? `
+                                <button class="btn btn-export export-rule-btn"
+                                        data-rule-id="${rule.rule_id}"
+                                        data-rule-name="${sanitizeHtml(rule.rule_name)}">
+                                    📄 Export CSV
+                                </button>
+                                ` : ''}
                             </div>
                             
                             ${violations.length > 0 ? `
@@ -303,6 +310,36 @@ class RulesList {
                 </div>
             `;
         }).join('');
+    }
+
+    /**
+     * Export all violations for a rule as CSV download
+     */
+    exportRuleViolations(ruleId, ruleName) {
+        const violations = (this.violationsByRule[ruleId] || []).filter(v => !v.status || v.status === 'open');
+        if (violations.length === 0) return;
+
+        const headers = ['violation_id', 'entity_id', 'item_name', 'severity', 'status', 'detected_at', 'resolved_at', 'message'];
+
+        const rows = violations.map(v => [
+            v.violation_id,
+            v.entity_id,
+            v.violation_details?.item_short_name || '',
+            v.severity,
+            v.status,
+            v.detected_at || '',
+            v.resolved_at || '',
+            v.violation_details?.message || ''
+        ].map(cell => `"${String(cell).replace(/"/g, '""')}"`));
+
+        const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `violations-${ruleName.replace(/\s+/g, '-').toLowerCase()}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
     }
 
     /**
@@ -396,6 +433,16 @@ class RulesList {
                 e.stopPropagation();
                 const ruleId = btn.dataset.ruleId;
                 this.viewRuleDetail(ruleId);
+            });
+        });
+
+        // Export violations CSV
+        this.container.querySelectorAll('.export-rule-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const ruleId = btn.dataset.ruleId;
+                const ruleName = btn.dataset.ruleName;
+                this.exportRuleViolations(ruleId, ruleName);
             });
         });
     }
