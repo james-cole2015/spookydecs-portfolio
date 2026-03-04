@@ -5,6 +5,7 @@ export class IrisPanel {
     constructor() {
         this.isExpanded = false;
         this.messages = [];
+        this.isLoading = false;
     }
 
     render() {
@@ -122,26 +123,46 @@ export class IrisPanel {
     attachFormListener() {
         const form = document.getElementById('iris-form');
         const input = document.getElementById('iris-input');
-        
+
         if (form && input) {
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                await this.handleSubmit(input.value);
+                const value = input.value.trim();
+                if (!value || this.isLoading) return;
                 input.value = '';
+                await this.handleSubmit(value);
             });
         }
     }
 
     async handleSubmit(query) {
-        if (!query.trim()) return;
-        
-        // Add user message
+        if (!query.trim() || this.isLoading) return;
+
         this.addMessage('user', query);
-        
-        // Show "not yet implemented" response
-        setTimeout(() => {
-            this.addMessage('assistant', 'Not yet implemented - Iris will be available soon!');
-        }, 500);
+
+        this.isLoading = true;
+        this.updateMessages();
+        this.setInputDisabled(true);
+
+        try {
+            const payload = this.messages.map(m => ({ role: m.role, content: m.content }));
+            const result = await submitIrisQuery(payload);
+            this.addMessage('assistant', result.response);
+        } catch (error) {
+            console.error('Iris error:', error);
+            this.addMessage('assistant', 'Sorry, something went wrong. Please try again.');
+        } finally {
+            this.isLoading = false;
+            this.setInputDisabled(false);
+            this.updateMessages();
+        }
+    }
+
+    setInputDisabled(disabled) {
+        const input = document.getElementById('iris-input');
+        const submit = document.querySelector('.iris-submit');
+        if (input) input.disabled = disabled;
+        if (submit) submit.disabled = disabled;
     }
 
     addMessage(role, content) {
@@ -157,13 +178,19 @@ export class IrisPanel {
 
     updateMessages() {
         const messagesContainer = document.getElementById('iris-messages');
-        if (messagesContainer) {
-            messagesContainer.innerHTML = this.messages.map(msg => 
-                this.renderMessage(msg)
-            ).join('');
-            
-            // Scroll to bottom
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        if (!messagesContainer) return;
+
+        let html = this.messages.map(msg => this.renderMessage(msg)).join('');
+
+        if (this.isLoading) {
+            html += `
+                <div class="iris-message assistant">
+                    <div class="iris-message-bubble iris-thinking">Iris is thinking...</div>
+                </div>
+            `;
         }
+
+        messagesContainer.innerHTML = html;
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 }

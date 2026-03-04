@@ -86,11 +86,32 @@ export async function calculateSystemHealth() {
 }
 
 /**
- * Submit query to Iris (placeholder)
+ * Submit conversation to Iris
+ * @param {Array<{role: string, content: string}>} messages - Full conversation history
+ * @returns {Promise<{response: string, tool_calls_made: Array}>}
+ *
+ * TODO: Verify SpookyConfig key for Iris endpoint. Currently uses API_ENDPOINT + /iris/chat.
+ *       If a dedicated key is added (e.g. config.IRIS_URL), update accordingly.
  */
-export async function submitIrisQuery(query) {
-  return {
-    response: 'Not yet implemented',
-    timestamp: new Date().toISOString()
-  };
+export async function submitIrisQuery(messages) {
+  const config = await window.SpookyConfig.get();
+
+  const response = await fetch(`${config.API_ENDPOINT}/iris/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages }),
+    credentials: 'include'
+  });
+
+  if (!response.ok) {
+    throw new Error(`Iris request failed: ${response.status}`);
+  }
+
+  const result = await response.json();
+
+  if (!result.success) {
+    throw new Error(result.error || 'Iris returned an error');
+  }
+
+  return result.data;
 }
