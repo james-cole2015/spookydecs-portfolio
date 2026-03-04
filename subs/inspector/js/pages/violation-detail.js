@@ -4,19 +4,33 @@
  */
 
 let currentViolation = null;
+let navContext = null;
 
 /**
  * Render Violation Detail Page
  */
 async function renderViolationDetail(violationId) {
+    // Load nav context from sessionStorage
+    navContext = null;
+    try {
+        const raw = sessionStorage.getItem('inspectorViolationNavContext');
+        if (raw) {
+            const ctx = JSON.parse(raw);
+            if (ctx.violationIds && ctx.violationIds.includes(violationId)) {
+                navContext = ctx;
+            }
+        }
+    } catch (e) { /* ignore parse errors */ }
+
     const container = document.getElementById('app-container');
-    
+
     container.innerHTML = `
         <div class="violation-detail-page">
-            <div class="breadcrumb">
+            <div class="breadcrumb violation-breadcrumb-row">
                 <a href="#" onclick="history.back(); return false;">← Back</a>
+                <div id="violation-nav"></div>
             </div>
-            
+
             <div id="violation-content">
                 <div class="loading-container">
                     <div class="loading-spinner"></div>
@@ -32,6 +46,7 @@ async function renderViolationDetail(violationId) {
         currentViolation = violationData.violation;
 
         renderViolationContent();
+        renderViolationNav(violationId);
 
     } catch (error) {
         console.error('Error loading violation:', error);
@@ -42,6 +57,37 @@ async function renderViolationDetail(violationId) {
                 <button class="btn btn-primary" onclick="history.back()">Go Back</button>
             </div>
         `;
+    }
+}
+
+/**
+ * Render Prev/Next navigation bar
+ */
+function renderViolationNav(violationId) {
+    const nav = document.getElementById('violation-nav');
+    if (!nav || !navContext) return;
+
+    const ids = navContext.violationIds;
+    const idx = ids.indexOf(violationId);
+    const total = ids.length;
+
+    nav.innerHTML = `
+        <button class="btn btn-sm btn-secondary" id="prev-violation-btn"
+                ${idx <= 0 ? 'disabled' : ''}>← Prev</button>
+        <span class="violation-nav-counter">${idx + 1} of ${total} ${navContext.tab}</span>
+        <button class="btn btn-sm btn-secondary" id="next-violation-btn"
+                ${idx >= total - 1 ? 'disabled' : ''}>Next →</button>
+    `;
+
+    if (idx > 0) {
+        document.getElementById('prev-violation-btn').addEventListener('click', () =>
+            navigateTo(`/inspector/violations/${ids[idx - 1]}`)
+        );
+    }
+    if (idx < total - 1) {
+        document.getElementById('next-violation-btn').addEventListener('click', () =>
+            navigateTo(`/inspector/violations/${ids[idx + 1]}`)
+        );
     }
 }
 
@@ -290,9 +336,15 @@ async function deleteViolation() {
             try {
                 await InspectorAPI.deleteViolation(currentViolation.violation_id);
                 showSuccessToast('Violation deleted successfully');
-                
-                // Navigate back after brief delay
+
+                // Navigate to adjacent violation or back
                 setTimeout(() => {
+                    const ids = navContext?.violationIds;
+                    const idx = ids?.indexOf(currentViolation.violation_id) ?? -1;
+                    if (ids && idx !== -1) {
+                        const nextId = ids[idx + 1] || ids[idx - 1];
+                        if (nextId) { navigateTo(`/inspector/violations/${nextId}`); return; }
+                    }
                     history.back();
                 }, 1000);
                 

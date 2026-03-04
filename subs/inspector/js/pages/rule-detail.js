@@ -620,5 +620,11 @@ function exportCurrentTabViolations() {
  * Open violation detail page
  */
 function openViolationDetail(violationId) {
+    const filtered = filterViolationsByStatus(currentRuleViolations, activeViolationsTab);
+    sessionStorage.setItem('inspectorViolationNavContext', JSON.stringify({
+        violationIds: filtered.map(v => v.violation_id),
+        tab: activeViolationsTab,
+        ruleId: currentRule.rule_id
+    }));
     navigateTo(`/inspector/violations/${violationId}`);
 }

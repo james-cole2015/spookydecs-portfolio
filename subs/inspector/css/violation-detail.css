@@ -8,6 +8,24 @@
     padding: 2rem;
 }
 
+.violation-breadcrumb-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#violation-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.violation-nav-counter {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+}
+
 .violation-page-header {
     background: white;
     border: 1px solid var(--color-border);

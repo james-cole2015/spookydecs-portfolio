@@ -32,6 +32,11 @@ const InspectorAPI = {
       const response = await fetch(url, config);
       const result = await response.json();
 
+      if (!response.ok) {
+        const errorMsg = result.error || result.message || `Request failed (HTTP ${response.status})`;
+        throw new Error(errorMsg);
+      }
+
       if (result.hasOwnProperty('success') && !result.success) {
         const errorMsg = result.error || 'Request failed';
         const errorDetails = result.details ? ` - ${JSON.stringify(result.details)}` : '';
