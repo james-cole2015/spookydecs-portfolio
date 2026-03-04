@@ -22,12 +22,16 @@ async function renderViolationDetail(violationId) {
         }
     } catch (e) { /* ignore parse errors */ }
 
+    const backOnclick = navContext
+        ? `navigateTo('/inspector/rules/${navContext.ruleId}'); return false;`
+        : `history.back(); return false;`;
+
     const container = document.getElementById('app-container');
 
     container.innerHTML = `
         <div class="violation-detail-page">
             <div class="breadcrumb violation-breadcrumb-row">
-                <a href="#" onclick="history.back(); return false;">← Back</a>
+                <a href="#" onclick="${backOnclick}">← Back</a>
                 <div id="violation-nav"></div>
             </div>
 
