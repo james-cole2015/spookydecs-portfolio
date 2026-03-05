@@ -45,13 +45,18 @@ export class StoragePhotoGallery {
   renderGallery() {
     if (!this.container) return;
 
-    const hasPhotos = this.primaryPhoto || this.secondaryPhotos.length > 0;
+    const totalPhotos = (this.primaryPhoto ? 1 : 0) + this.secondaryPhotos.length;
+    const hasPhotos = totalPhotos > 0;
+    const atLimit = totalPhotos >= 2;
 
     this.container.innerHTML = `
       <div class="photo-gallery">
         ${hasPhotos ? this.renderPhotos() : this.renderEmpty()}
         <div class="photo-gallery-actions">
-          <button class="btn btn-secondary btn-sm" id="spg-add-photos">+ Add Photos</button>
+          ${atLimit
+            ? '<span class="photo-limit-notice">Photo limit reached (2 max)</span>'
+            : '<button class="btn btn-secondary btn-sm" id="spg-add-photos">+ Add Photos</button>'
+          }
         </div>
       </div>
     `;
@@ -117,12 +122,16 @@ export class StoragePhotoGallery {
   }
 
   openUploadModal() {
+    const totalPhotos = (this.primaryPhoto ? 1 : 0) + this.secondaryPhotos.length;
+    const remainingSlots = Math.max(0, 2 - totalPhotos);
+    if (remainingSlots === 0) return;
+
     const modal = document.createElement('photo-upload-modal');
     modal.setAttribute('context', 'storage');
     modal.setAttribute('photo-type', 'storage');
     modal.setAttribute('season', this.season);
     modal.setAttribute('storage-id', this.storageId);
-    modal.setAttribute('max-photos', '5');
+    modal.setAttribute('max-photos', String(remainingSlots));
 
     modal.addEventListener('upload-complete', async () => {
       await this.refresh();

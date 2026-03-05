@@ -107,7 +107,8 @@ async function loadStorageUnit(storageId) {
     contentsPanel = new ContentsPanel({
       contents: enrichedContents,
       storageUnit: currentStorageUnit,
-      showManageButton: true
+      showManageButton: true,
+      onRemoveItems: handleRemoveItems
     });
     contentsPanel.render(document.getElementById('contents-container'));
     
@@ -207,6 +208,46 @@ function handlePack(unit) {
           } catch (error) {
             hideLoading();
             showError(error.message || 'Failed to pack storage unit');
+            return false;
+          }
+        }
+      }
+    ]
+  });
+}
+
+/**
+ * Handle remove items from tote
+ */
+async function handleRemoveItems(itemIds) {
+  const count = itemIds.length;
+  const unitName = currentStorageUnit.short_name;
+
+  showModal({
+    title: 'Remove Items',
+    content: `
+      <p>Remove <strong>${count} ${count === 1 ? 'item' : 'items'}</strong> from <strong>${unitName}</strong>?</p>
+      <p>Their packing status will be reset to unpacked.</p>
+    `,
+    actions: [
+      { action: 'cancel', label: 'Cancel', className: 'btn-secondary' },
+      {
+        action: 'confirm',
+        label: 'Remove',
+        className: 'btn-danger',
+        handler: async () => {
+          try {
+            showLoading();
+            await storageAPI.removeItems(currentStorageUnit.id, itemIds);
+            if (currentStorageUnit.packed) {
+              await storageAPI.update(currentStorageUnit.id, { packed: false });
+            }
+            hideLoading();
+            showSuccess(`${count} ${count === 1 ? 'item' : 'items'} removed from ${unitName}`);
+            await loadStorageUnit(currentStorageUnit.id);
+          } catch (error) {
+            hideLoading();
+            showError(error.message || 'Failed to remove items');
             return false;
           }
         }
