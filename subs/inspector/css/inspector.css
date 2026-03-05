@@ -231,7 +231,20 @@ body {
 /* Rule Body (Expanded) */
 .rule-body {
     padding: 0 1.5rem 1.5rem;
-    border-top: 1px solid var(--color-border);
+    border-top: 1px solid #C7D7F5;
+    background: #F8FAFF;
+}
+
+.rule-card.expanded {
+    border-bottom: 2px solid #C7D7F5;
+}
+
+.rule-card.expanded .rule-header {
+    background: #EEF4FF;
+}
+
+.rule-card.expanded .rule-header:hover {
+    background: #E3ECFF;
 }
 
 .rule-description {
@@ -473,5 +486,74 @@ body {
         flex-direction: column;
         align-items: flex-start;
         gap: 0.5rem;
+    }
+
+    /* Hide last-executed text to declutter rule header */
+    .last-executed-badge {
+        display: none;
+    }
+
+    /* Tighten rule body padding */
+    .rule-body {
+        padding: 0 1rem 1rem;
+    }
+
+    /* Tab bar: scroll horizontally on small screens */
+    .tab-bar {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .tab-btn {
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    /* Action buttons: wrap and show icon-only */
+    .rule-actions {
+        flex-wrap: wrap;
+    }
+
+    .view-rule-btn,
+    .delete-rule-btn,
+    .run-rule-btn,
+    .export-rule-btn {
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        text-indent: -9999px;
+        overflow: hidden;
+        white-space: nowrap;
+        position: relative;
+        flex-shrink: 0;
+    }
+
+    .view-rule-btn::before,
+    .delete-rule-btn::before,
+    .run-rule-btn::before,
+    .export-rule-btn::before {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        text-indent: 0;
+        font-size: 1rem;
+        line-height: 1;
+    }
+
+    .view-rule-btn::before   { content: '👁'; }
+    .delete-rule-btn::before { content: '🗑️'; }
+    .run-rule-btn::before    { content: '▶'; }
+    .export-rule-btn::before { content: '📄'; }
+
+    /* Mini violations table: hide Issue and Actions columns */
+    .violations-table-mini .col-issue,
+    .violations-table-mini .col-actions {
+        display: none;
+    }
+
+    /* Rows tappable since Actions column is hidden */
+    .violations-table-mini tbody tr {
+        cursor: pointer;
     }
 }

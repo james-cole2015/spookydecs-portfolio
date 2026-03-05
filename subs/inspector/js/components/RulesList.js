@@ -351,21 +351,21 @@ class RulesList {
                 <thead>
                     <tr>
                         <th>Item</th>
-                        <th>Issue</th>
+                        <th class="col-issue">Issue</th>
                         <th>Detected</th>
                         <th>Last Executed</th>
-                        <th>Actions</th>
+                        <th class="col-actions">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     ${violations.map(v => `
-                        <tr>
+                        <tr data-violation-id="${v.violation_id}">
                             <td>${sanitizeHtml(v.violation_details?.item_short_name || v.entity_id)}</td>
-                            <td>${sanitizeHtml(truncateText(v.violation_details?.message || 'N/A', 60))}</td>
+                            <td class="col-issue">${sanitizeHtml(truncateText(v.violation_details?.message || 'N/A', 60))}</td>
                             <td>${formatRelativeTime(v.detected_at)}</td>
                             <td>${formatDateTime(lastExecutedAt)}</td>
-                            <td>
-                                <button class="btn btn-sm btn-secondary view-violation-link" 
+                            <td class="col-actions">
+                                <button class="btn btn-sm btn-secondary view-violation-link"
                                         data-violation-id="${v.violation_id}">
                                     View
                                 </button>
@@ -424,6 +424,15 @@ class RulesList {
                 e.stopPropagation();
                 const violationId = btn.dataset.violationId;
                 navigateTo(`/inspector/violations/${violationId}`);
+            });
+        });
+
+        // Row click on mini table — allows navigation when Actions column is hidden (mobile)
+        this.container.querySelectorAll('.violations-table-mini tbody tr').forEach(row => {
+            row.addEventListener('click', (e) => {
+                if (e.target.closest('.view-violation-link')) return;
+                const violationId = row.dataset.violationId;
+                if (violationId) navigateTo(`/inspector/violations/${violationId}`);
             });
         });
 
