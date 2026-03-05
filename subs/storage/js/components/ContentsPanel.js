@@ -77,7 +77,7 @@ export class ContentsPanel {
         <div class="empty-icon">📦</div>
         <p>This storage unit is empty</p>
         ${this.storageUnit.class_type !== 'Self' ? `
-          <button class="btn btn-primary btn-sm" onclick="window.location.href='/storage/pack'">
+          <button class="btn btn-primary btn-sm" onclick="window.location.href='/storage/pack/${this.storageUnit.id}'">
             Pack Items
           </button>
         ` : ''}
@@ -123,7 +123,7 @@ export class ContentsPanel {
   async attachEventListeners() {
     const manageBtn = this.container.querySelector('#btn-manage-contents');
     if (manageBtn) {
-      manageBtn.addEventListener('click', () => navigate('/storage/pack'));
+      manageBtn.addEventListener('click', () => navigate(`/storage/pack/${this.storageUnit.id}`));
     }
 
     const removeModeBtn = this.container.querySelector('#btn-remove-mode');
