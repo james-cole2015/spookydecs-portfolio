@@ -78,11 +78,12 @@ export class StoragePhotoGallery {
   renderPrimarySlot() {
     const p = this.primaryPhoto;
     const src = p.thumb_cloudfront_url || p.cloudfront_url;
+    const fullSrc = p.cloudfront_url || src;
     return `
       <div class="photo-gallery-primary-slot">
         <h3 class="photo-gallery-subtitle">Primary Photo</h3>
         <div class="photo-card photo-card-primary">
-          <img src="${src}" alt="Primary photo" class="photo-card-img" loading="lazy">
+          <img src="${src}" alt="Primary photo" class="photo-card-img photo-card-clickable" loading="lazy" data-full-src="${fullSrc}">
           <span class="photo-badge-primary">Primary</span>
         </div>
       </div>
@@ -92,9 +93,10 @@ export class StoragePhotoGallery {
   renderSecondaryGrid() {
     const cards = this.secondaryPhotos.map(p => {
       const src = p.thumb_cloudfront_url || p.cloudfront_url;
+      const fullSrc = p.cloudfront_url || src;
       return `
         <div class="photo-card" data-photo-id="${p.photo_id}">
-          <img src="${src}" alt="Photo" class="photo-card-img" loading="lazy">
+          <img src="${src}" alt="Photo" class="photo-card-img photo-card-clickable" loading="lazy" data-full-src="${fullSrc}">
           <button class="btn-set-primary" data-photo-id="${p.photo_id}">Set as Primary</button>
         </div>
       `;
@@ -119,6 +121,29 @@ export class StoragePhotoGallery {
         await this.handleSetPrimary(e.currentTarget.dataset.photoId);
       });
     });
+
+    this.container.querySelectorAll('.photo-card-clickable').forEach(img => {
+      img.addEventListener('click', () => this.openLightbox(img.dataset.fullSrc));
+    });
+  }
+
+  openLightbox(src) {
+    const overlay = document.createElement('div');
+    overlay.className = 'spg-lightbox-overlay';
+    overlay.innerHTML = `
+      <div class="spg-lightbox-backdrop"></div>
+      <img class="spg-lightbox-img" src="${src}" alt="Full size photo">
+      <button class="spg-lightbox-close" aria-label="Close">&times;</button>
+    `;
+
+    const close = () => overlay.remove();
+    overlay.querySelector('.spg-lightbox-backdrop').addEventListener('click', close);
+    overlay.querySelector('.spg-lightbox-close').addEventListener('click', close);
+    document.addEventListener('keydown', function handler(e) {
+      if (e.key === 'Escape') { close(); document.removeEventListener('keydown', handler); }
+    });
+
+    document.body.appendChild(overlay);
   }
 
   openUploadModal() {

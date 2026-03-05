@@ -282,6 +282,9 @@ function applyFilters(storage, filters) {
     );
   }
   
+  // Sort by short_name alphabetically
+  filtered.sort((a, b) => (a.short_name || '').localeCompare(b.short_name || ''));
+
   return filtered;
 }
 

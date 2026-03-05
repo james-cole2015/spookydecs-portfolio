@@ -74,6 +74,52 @@
   object-fit: cover;
 }
 
+.photo-card-clickable {
+  cursor: zoom-in;
+}
+
+/* Lightbox */
+.spg-lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spg-lightbox-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+}
+
+.spg-lightbox-img {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 6px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.spg-lightbox-close {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 36px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.spg-lightbox-close:hover {
+  opacity: 1;
+}
+
 .photo-badge-primary {
   position: absolute;
   top: 6px;
