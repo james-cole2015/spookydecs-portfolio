@@ -67,19 +67,21 @@ export class StatsCards {
     return this.render(stats);
   }
   
-  static renderItemStats(records) {
+  static renderItemStats(records, options = {}) {
     const totalRecords = records.length;
-    const activeRepairs = records.filter(r => 
+    const activeRepairs = records.filter(r =>
       r.record_type === 'repair' && r.status !== 'completed' && r.status !== 'cancelled'
     ).length;
-    
-    const totalCost = records.reduce((sum, r) => sum + (r.total_cost || 0), 0);
+
+    const totalCost = options.totalCost !== undefined
+      ? options.totalCost
+      : records.reduce((sum, r) => sum + (r.total_cost || 0), 0);
     
     const sortedRecords = [...records].sort((a, b) => 
       new Date(b.date_performed || b.created_at) - new Date(a.date_performed || a.created_at)
     );
     
-    const lastMaintenance = sortedRecords.find(r => r.record_type === 'maintenance');
+    const lastMaintenance = sortedRecords.find(r => r.status === 'completed');
     
     const stats = [
       {

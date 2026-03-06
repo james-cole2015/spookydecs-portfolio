@@ -1,6 +1,7 @@
 // Item detail view component with mobile enhancements
 
-import { fetchItem, fetchRecordsByItem, getItemUrl, getCostsUrl } from '../api.js';
+import { fetchItem, fetchRecordsByItem, getItemUrl, getCostsUrl, fetchItemCosts } from '../api.js';
+import { RecordDetailTabs } from './RecordDetailTabs.js';
 import { appState } from '../state.js';
 import { navigateTo } from '../router.js';
 import { formatDate, formatCurrency, formatStatus, formatRecordTypePill, formatSeverity } from '../utils/formatters.js';import { StatsCards } from './StatsCards.js';
@@ -11,18 +12,23 @@ export class ItemDetailView {
     this.itemId = itemId;
     this.item = null;
     this.records = [];
+    this.costsData = null;
     this.activeTab = 'current';
   }
-  
+
   async render(container) {
     try {
-      // Fetch item and records
+      // Fetch item, records, and costs in parallel
       this.item = await fetchItem(this.itemId);
       appState.cacheItem(this.itemId, this.item);
-      
-      const recordsData = await fetchRecordsByItem(this.itemId);
+
+      const [recordsData, costsResult] = await Promise.all([
+        fetchRecordsByItem(this.itemId),
+        fetchItemCosts(this.itemId).catch(() => null)
+      ]);
       this.records = recordsData.records || [];
-      
+      this.costsData = costsResult;
+
       container.innerHTML = this.renderView();
       this.attachEventListeners(container);
       
@@ -77,7 +83,7 @@ export class ItemDetailView {
           </a>
         </div>
         
-        ${mobile ? '' : StatsCards.renderItemStats(this.records)}
+        ${mobile ? '' : StatsCards.renderItemStats(this.records, { totalCost: this._getFinanceCostTotal() })}
         
         ${this.renderTabs()}
         
@@ -284,49 +290,47 @@ renderMobileCards(records) {
     `;
   }
   
+  _getFinanceCostTotal() {
+    if (!this.costsData) return undefined;
+    const costs = (this.costsData.costs || []).filter(c => c.cost_type === 'maintenance');
+    return costs.reduce((sum, c) => sum + (c.total_cost || 0), 0);
+  }
+
   renderCostsTab() {
-    const totalCost = this.records.reduce((sum, r) => sum + (r.total_cost || 0), 0);
-    const allCostIds = this.records.flatMap(r => r.cost_record_ids || []);
-    const uniqueCostIds = [...new Set(allCostIds)];
-    
     return `
       <div class="costs-tab">
-        <div class="placeholder-section">
-          <div class="placeholder-icon">🚧</div>
-          <h3>Cost Records Under Development</h3>
-          <p>Detailed cost tracking and analysis will be available soon.</p>
+        <div class="costs-loading" id="costs-loading">
+          <div class="loading-message">Loading cost records…</div>
         </div>
-        
-        <div class="cost-summary">
-          <h3>Current Summary</h3>
-          <div class="detail-row">
-            <span class="detail-label">Total Cost (All Records)</span>
-            <span class="detail-value cost-value">${formatCurrency(totalCost)}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Number of Records</span>
-            <span class="detail-value">${this.records.length}</span>
-          </div>
-          ${uniqueCostIds.length > 0 ? `
-            <div class="detail-row">
-              <span class="detail-label">Associated Cost Record IDs</span>
-              <span class="detail-value">
-                <ul class="cost-ids-list">
-                  ${uniqueCostIds.slice(0, 10).map(id => `<li><code>${id}</code></li>`).join('')}
-                  ${uniqueCostIds.length > 10 ? `<li>... and ${uniqueCostIds.length - 10} more</li>` : ''}
-                </ul>
-              </span>
-            </div>
-          ` : ''}
-        </div>
-        
-        <div class="link-buttons">
-          <a href="${getCostsUrl()}" class="btn-link disabled" target="_blank">
-            View in Finance Subdomain (Coming Soon) →
-          </a>
-        </div>
+        <div class="costs-content" id="costs-content" style="display:none"></div>
       </div>
     `;
+  }
+
+  async loadCostsForTab(container) {
+    const loadingEl = container.querySelector('#costs-loading');
+    const contentEl = container.querySelector('#costs-content');
+    if (!contentEl) return;
+
+    try {
+      const [data, costsUrl] = await Promise.all([
+        this.costsData ? Promise.resolve(this.costsData) : fetchItemCosts(this.itemId),
+        getCostsUrl().catch(() => '')
+      ]);
+      this.costsData = data;
+      const maintenanceCosts = (data.costs || [])
+        .filter(c => c.cost_type === 'maintenance')
+        .sort((a, b) => (b.cost_date || '').localeCompare(a.cost_date || ''));
+
+      const total = maintenanceCosts.reduce((sum, c) => sum + (c.total_cost || 0), 0);
+
+      contentEl.innerHTML = RecordDetailTabs.renderCostsContent(maintenanceCosts, total, costsUrl);
+      if (loadingEl) loadingEl.style.display = 'none';
+      contentEl.style.display = 'block';
+    } catch (error) {
+      console.error('Failed to load costs:', error);
+      if (loadingEl) loadingEl.innerHTML = '<p class="error-message">Failed to load cost records.</p>';
+    }
   }
   
   renderError() {
@@ -346,12 +350,13 @@ renderMobileCards(records) {
       // Mobile dropdown listener
       const select = container.querySelector('#item-tabs-select');
       if (select) {
-        select.addEventListener('change', (e) => {
+        select.addEventListener('change', async (e) => {
           this.activeTab = e.target.value;
           const contentDiv = container.querySelector('.detail-content');
           if (contentDiv) {
             contentDiv.innerHTML = this.renderTabContent();
             this.attachTableListeners(contentDiv);
+            if (this.activeTab === 'costs') await this.loadCostsForTab(contentDiv);
           }
         });
       }
@@ -359,14 +364,15 @@ renderMobileCards(records) {
       // Desktop tab buttons
       const tabBtns = container.querySelectorAll('.tab-btn');
       tabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', async () => {
           this.activeTab = btn.getAttribute('data-tab');
           const contentDiv = container.querySelector('.detail-content');
           if (contentDiv) {
             contentDiv.innerHTML = this.renderTabContent();
             this.attachTableListeners(contentDiv);
+            if (this.activeTab === 'costs') await this.loadCostsForTab(contentDiv);
           }
-          
+
           // Update active tab button
           tabBtns.forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
@@ -376,6 +382,11 @@ renderMobileCards(records) {
     
     // Initial table listeners
     this.attachTableListeners(container);
+
+    if (this.activeTab === 'costs') {
+      const contentDiv = container.querySelector('.detail-content');
+      if (contentDiv) this.loadCostsForTab(contentDiv);
+    }
   }
   
   attachTableListeners(container) {
