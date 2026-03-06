@@ -174,7 +174,7 @@ export class TemplateApplicationView {
                         ${template.is_default ? '<span class="badge-default">Default</span>' : ''}
                       </div>
                       <div class="template-meta">
-                        ${formatTaskType(template.task_type)} • 
+                        ${formatTaskType(template.task_type || template.record_type)} •
                         ${formatScheduleFrequency(template.frequency, template.season)}
                       </div>
                     </div>
@@ -458,7 +458,7 @@ export class TemplateApplicationView {
           <h3>Template</h3>
           <div class="review-item">
             <strong>${this.selectedTemplate.title}</strong><br>
-            ${formatTaskType(this.selectedTemplate.task_type)} • 
+            ${formatTaskType(this.selectedTemplate.task_type || this.selectedTemplate.record_type)} •
             ${formatScheduleFrequency(this.selectedTemplate.frequency, this.selectedTemplate.season)}
           </div>
         </div>
@@ -491,7 +491,7 @@ export class TemplateApplicationView {
           <div class="items-review">
             ${itemDetails.map((item, index) => `
               <div class="review-item">
-                ${index + 1}. <code>${item.id}</code> - ${item.name || 'Unnamed'}
+                ${index + 1}. <code>${item.id}</code> - ${item.short_name || item.name || 'Unnamed'}
               </div>
             `).join('')}
           </div>
