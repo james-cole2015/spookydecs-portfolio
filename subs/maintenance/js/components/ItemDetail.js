@@ -22,12 +22,14 @@ export class ItemDetailView {
       this.item = await fetchItem(this.itemId);
       appState.cacheItem(this.itemId, this.item);
 
-      const [recordsData, costsResult] = await Promise.all([
+      const [recordsData, costsResult, itemUrl] = await Promise.all([
         fetchRecordsByItem(this.itemId),
-        fetchItemCosts(this.itemId).catch(() => null)
+        fetchItemCosts(this.itemId).catch(() => null),
+        getItemUrl(this.itemId).catch(() => '#')
       ]);
       this.records = recordsData.records || [];
       this.costsData = costsResult;
+      this.itemUrl = itemUrl;
 
       container.innerHTML = this.renderView();
       this.attachEventListeners(container);
@@ -78,7 +80,7 @@ export class ItemDetailView {
         </div>
         
         <div class="item-links">
-          <a href="${getItemUrl(this.itemId)}" class="btn-link" target="_blank">
+          <a href="${this.itemUrl}" class="btn-link" target="_blank">
             View in Items Subdomain →
           </a>
         </div>

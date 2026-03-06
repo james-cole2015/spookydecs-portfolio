@@ -208,7 +208,7 @@ export class RecordDetailRenderer {
           <a href="/${encodeURIComponent(this.itemId)}" class="btn-link">
             View Item in Maintenance →
           </a>
-          <a href="${getItemUrl(this.itemId)}" class="btn-link" target="_blank">
+          <a href="${this.itemUrl || '#'}" class="btn-link" target="_blank">
             View Item in Items Subdomain →
           </a>
         </div>

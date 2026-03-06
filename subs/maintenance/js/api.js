@@ -187,7 +187,7 @@ export async function fetchMultipleRecordsByItems(itemIds) {
 
 export async function getItemUrl(itemId) {
   const { ITEMS_ADMIN } = await window.SpookyConfig.get();
-  return `${ITEMS_ADMIN}/items/${itemId}`;
+  return `${ITEMS_ADMIN}/${itemId}`;
 }
 
 export async function getCostsUrl() {
