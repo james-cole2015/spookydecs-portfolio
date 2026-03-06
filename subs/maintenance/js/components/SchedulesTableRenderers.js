@@ -172,9 +172,19 @@ export class SchedulesTableRenderers {
         <label>Record Type</label>
         <select id="filter-task-type" class="filter-select">
           <option value="all" ${filters.task_type === 'all' ? 'selected' : ''}>All Types</option>
-          ${getRecordTypeOptions().map(opt => 
+          ${getRecordTypeOptions().map(opt =>
             `<option value="${opt.value}" ${filters.task_type === opt.value ? 'selected' : ''}>${opt.label}</option>`
           ).join('')}
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Season</label>
+        <select id="filter-season" class="filter-select">
+          <option value="all" ${filters.season === 'all' ? 'selected' : ''}>All Seasons</option>
+          <option value="Halloween" ${filters.season === 'Halloween' ? 'selected' : ''}>Halloween</option>
+          <option value="Christmas" ${filters.season === 'Christmas' ? 'selected' : ''}>Christmas</option>
+          <option value="Shared" ${filters.season === 'Shared' ? 'selected' : ''}>Shared</option>
         </select>
       </div>
     `;

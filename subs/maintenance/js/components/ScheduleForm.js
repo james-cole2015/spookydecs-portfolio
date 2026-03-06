@@ -10,7 +10,8 @@ import {
   getFrequencyOptions,
   getSeasonOptions,
   validateScheduleData,
-  calculateNextDueDate
+  calculateNextDueDate,
+  generateSeasonBuckets
 } from '../utils/scheduleHelpers.js';
 
 // Class type options
@@ -214,10 +215,14 @@ export class ScheduleFormView {
         </div>
         
         <div class="form-group">
-          <label for="start_date">Start Date (Optional)</label>
-          <input type="date" id="start_date" name="start_date" class="form-input"
-                 value="${schedule.start_date || ''}">
-          <small class="form-help">When should this schedule start? Leave blank to start immediately when applied to items.</small>
+          <label for="start_date">Start Season (Optional)</label>
+          <select id="start_date" name="start_date" class="form-input">
+            <option value="">Start immediately when applied</option>
+            ${generateSeasonBuckets([]).map(b =>
+              `<option value="${b}" ${schedule.start_date === b ? 'selected' : ''}>${b}</option>`
+            ).join('')}
+          </select>
+          <small class="form-help">Which season should this schedule start? Leave blank to start when applied to items.</small>
         </div>
         
         <div class="form-note">
@@ -396,10 +401,10 @@ export class ScheduleFormView {
       
       previewSection.style.display = '';
       previewContent.innerHTML = `
-        <p><strong>Next scheduled task:</strong> ${nextDue.toLocaleDateString('en-US', { 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric' 
+        <p><strong>Next scheduled task:</strong> ${nextDue.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
         })}</p>
         <p><small>When applied to items, maintenance records will be generated based on this schedule.</small></p>
       `;

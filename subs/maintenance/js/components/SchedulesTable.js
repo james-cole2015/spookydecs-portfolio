@@ -118,10 +118,11 @@ export class SchedulesTableView {
   
   hasActiveFilters() {
     const filters = appState.getState().scheduleFilters;
-    return filters.item_id !== 'all' || 
-           filters.task_type !== 'all' || 
-           filters.status !== 'all' || 
-           filters.enabled !== 'all';
+    return filters.item_id !== 'all' ||
+           filters.task_type !== 'all' ||
+           filters.status !== 'all' ||
+           filters.enabled !== 'all' ||
+           filters.season !== 'all';
   }
   
   renderFilters(container) {

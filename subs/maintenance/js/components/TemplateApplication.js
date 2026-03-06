@@ -6,6 +6,7 @@ import { applyTemplateToItems } from '../scheduleApi.js';
 import { navigateTo } from '../router.js';
 import { Toast } from '../utils/toast.js';
 import { formatTaskType } from '../utils/formatters.js';
+import { generateSeasonBuckets } from '../utils/scheduleHelpers.js';
 
 // Get formatScheduleFrequency from scheduleHelpers or create inline
 function formatScheduleFrequency(frequency, season) {
@@ -465,9 +466,14 @@ export class TemplateApplicationView {
         <div class="review-section">
           <h3>Configuration</h3>
           <div class="form-group">
-            <label for="start-date">Start Date (optional)</label>
-            <input type="date" id="start-date" class="form-input">
-            <small class="form-help">Leave blank to start immediately</small>
+            <label for="start-date">Start Season (optional)</label>
+            <select id="start-date" class="form-input">
+              <option value="">Start immediately</option>
+              ${generateSeasonBuckets([]).map(b =>
+                `<option value="${b}">${b}</option>`
+              ).join('')}
+            </select>
+            <small class="form-help">Leave blank to start records immediately</small>
           </div>
         </div>
         

@@ -32,7 +32,8 @@ class AppState {
         status: 'all',
         task_type: 'all',
         item_id: 'all',
-        enabled: 'all'
+        enabled: 'all',
+        season: 'all'
       }
     };
     
@@ -472,7 +473,12 @@ class AppState {
       const enabledValue = this.state.scheduleFilters.enabled === 'true';
       filtered = filtered.filter(s => s.enabled === enabledValue);
     }
-    
+
+    // Apply season filter
+    if (this.state.scheduleFilters.season !== 'all') {
+      filtered = filtered.filter(s => s.season === this.state.scheduleFilters.season);
+    }
+
     return filtered;
   }
   

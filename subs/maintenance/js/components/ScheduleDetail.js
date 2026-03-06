@@ -5,10 +5,8 @@ import { fetchAllItems } from '../api.js';
 import { appState } from '../state.js';
 import { navigateTo } from '../router.js';
 import { Toast } from '../utils/toast.js';
-import { formatDate, formatStatus, formatCurrency } from '../utils/formatters.js';
+import { formatDate, formatScheduledDate, formatStatus, formatCurrency } from '../utils/formatters.js';
 import {
-  formatScheduleStatus,
-  formatNextDueDate,
   formatTaskType,
   formatScheduleFrequency
 } from '../utils/formatters.js';
@@ -383,9 +381,11 @@ export class ScheduleDetailView {
   
   renderRecordsTable(records) {
     // Sort by date
-    const sorted = [...records].sort((a, b) => 
-      new Date(a.date_performed) - new Date(b.date_performed)
-    );
+    const sorted = [...records].sort((a, b) => {
+      const aDate = a.date_performed || a.date_scheduled || a.created_at;
+      const bDate = b.date_performed || b.date_scheduled || b.created_at;
+      return new Date(aDate) - new Date(bDate);
+    });
     
     return `
       <table class="data-table compact">
@@ -393,7 +393,7 @@ export class ScheduleDetailView {
           <tr>
             <th>Occurrence</th>
             <th>Item ID</th>
-            <th>Due Date</th>
+            <th>Season / Date</th>
             <th>Status</th>
             <th>Performed By</th>
             <th>Actions</th>
@@ -411,7 +411,7 @@ export class ScheduleDetailView {
       <tr class="table-row clickable" data-record-id="${record.record_id}">
         <td>#${record.occurrence_number || '-'}</td>
         <td><code>${record.item_id || 'N/A'}</code></td>
-        <td>${formatDate(record.date_performed)}</td>
+        <td>${record.date_scheduled ? formatScheduledDate(record.date_scheduled) : formatDate(record.date_performed || record.created_at)}</td>
         <td>${formatStatus(record.status)}</td>
         <td>${record.performed_by || '-'}</td>
         <td>

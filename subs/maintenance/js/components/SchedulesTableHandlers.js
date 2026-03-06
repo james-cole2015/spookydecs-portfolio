@@ -27,30 +27,36 @@ export class SchedulesTableHandlers {
     const taskTypeFilter = filtersContainer.querySelector('#filter-task-type');
     const defaultFilter = filtersContainer.querySelector('#filter-default');
     const enabledFilter = filtersContainer.querySelector('#filter-enabled');
+    const seasonFilter = filtersContainer.querySelector('#filter-season');
     const clearBtn = filtersContainer.querySelector('#btn-clear-filters');
-    
+
     classTypeFilter?.addEventListener('change', (e) => {
       appState.updateScheduleFilters({ item_id: e.target.value });
     });
-    
+
     taskTypeFilter?.addEventListener('change', (e) => {
       appState.updateScheduleFilters({ task_type: e.target.value });
     });
-    
+
     defaultFilter?.addEventListener('change', (e) => {
       appState.updateScheduleFilters({ status: e.target.value });
     });
-    
+
     enabledFilter?.addEventListener('change', (e) => {
       appState.updateScheduleFilters({ enabled: e.target.value });
     });
-    
+
+    seasonFilter?.addEventListener('change', (e) => {
+      appState.updateScheduleFilters({ season: e.target.value });
+    });
+
     clearBtn?.addEventListener('click', () => {
-      appState.updateScheduleFilters({ 
+      appState.updateScheduleFilters({
         item_id: 'all',
-        status: 'all', 
-        task_type: 'all', 
-        enabled: 'all' 
+        status: 'all',
+        task_type: 'all',
+        enabled: 'all',
+        season: 'all'
       });
       renderCallback();
     });
@@ -86,13 +92,15 @@ export class SchedulesTableHandlers {
       const taskType = drawer.querySelector('#filter-task-type')?.value || 'all';
       const defaultTemplates = drawer.querySelector('#filter-default')?.value || 'all';
       const enabled = drawer.querySelector('#filter-enabled')?.value || 'all';
-      
+      const season = drawer.querySelector('#filter-season')?.value || 'all';
+
       // Update filters
       appState.updateScheduleFilters({
         item_id: classType,
         task_type: taskType,
         status: defaultTemplates,
-        enabled: enabled
+        enabled: enabled,
+        season: season
       });
       
       closeDrawer();
@@ -105,18 +113,21 @@ export class SchedulesTableHandlers {
       const taskTypeFilter = drawer.querySelector('#filter-task-type');
       const defaultFilter = drawer.querySelector('#filter-default');
       const enabledFilter = drawer.querySelector('#filter-enabled');
-      
+      const seasonFilter = drawer.querySelector('#filter-season');
+
       if (classTypeFilter) classTypeFilter.value = 'all';
       if (taskTypeFilter) taskTypeFilter.value = 'all';
       if (defaultFilter) defaultFilter.value = 'all';
       if (enabledFilter) enabledFilter.value = 'all';
-      
+      if (seasonFilter) seasonFilter.value = 'all';
+
       // Update state
-      appState.updateScheduleFilters({ 
+      appState.updateScheduleFilters({
         item_id: 'all',
-        status: 'all', 
-        task_type: 'all', 
-        enabled: 'all' 
+        status: 'all',
+        task_type: 'all',
+        enabled: 'all',
+        season: 'all'
       });
       
       closeDrawer();

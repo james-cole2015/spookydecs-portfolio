@@ -165,8 +165,7 @@ export async function applyTemplateToItems(scheduleId, data) {
       }
     );
 
-    const json = await handleResponse(response);
-    return json.data;
+    return await handleResponse(response);
   } catch (error) {
     console.error('Error applying template to items:', error);
     throw error;
