@@ -191,13 +191,7 @@ export class MainTableView {
     console.log('  Total records in state:', state.records.length);
     console.log('  Filtered records in state:', state.filteredRecords.length);
     
-    if (activeTab === 'items') {
-      console.log('  Delegating to itemsRenderer');
-      this.itemsRenderer.render(tableContainer);
-    } else {
-      console.log('  Delegating to recordsRenderer');
-      this.recordsRenderer.render(tableContainer);
-    }
+    this.recordsRenderer.render(tableContainer);
   }
   
   async handleDelete(recordId) {

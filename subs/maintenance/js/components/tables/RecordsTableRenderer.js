@@ -25,13 +25,6 @@ export class RecordsTableRenderer {
     console.log('  Filtered records:', state.filteredRecords.length);
     console.log('  Active tab:', state.activeTab);
     
-    // Apply tab filter
-    if (state.activeTab !== 'all' && state.activeTab !== 'items') {
-      const recordType = state.activeTab.endsWith('s') ? state.activeTab.slice(0, -1) : state.activeTab;
-      data = data.filter(r => r.record_type === recordType);
-      console.log('  After tab filter:', data.length);
-    }
-    
     if (data.length === 0) {
       console.log('  Rendering empty state');
       container.innerHTML = this.renderEmptyState();

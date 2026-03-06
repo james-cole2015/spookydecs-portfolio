@@ -20,7 +20,7 @@ class AppState {
         dateRange: { start: null, end: null },
         scheduledBucket: []
       },
-      activeTab: 'all',
+      activeTab: 'current-tasks',
       loading: false,
       error: null,
       
@@ -252,11 +252,14 @@ class AppState {
     const { filters, activeTab } = this.state;
     
     // Apply tab filter
-if (activeTab !== 'all' && activeTab !== 'items') {
-  // Remove trailing 's' to match record_type values
-  const recordType = activeTab.endsWith('s') ? activeTab.slice(0, -1) : activeTab;
-  filtered = filtered.filter(r => r.record_type === recordType);
-}
+    if (activeTab === 'current-tasks') {
+      filtered = filtered.filter(r => r.status === 'in_progress');
+    } else if (activeTab === 'upcoming-tasks') {
+      filtered = filtered.filter(r => r.status === 'scheduled');
+    } else if (activeTab === 'completed-work') {
+      filtered = filtered.filter(r => r.status === 'completed');
+    }
+    // 'costs' tab: no tab-level filter (show all records)
     
     // Apply season filter
     if (filters.season.length > 0) {

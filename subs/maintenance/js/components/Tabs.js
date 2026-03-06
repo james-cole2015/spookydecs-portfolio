@@ -7,11 +7,9 @@ export class Tabs {
   constructor(onTabChange) {
     this.onTabChange = onTabChange;
     this.tabs = [
-      { id: 'all', label: 'All', icon: '📋' },
-      { id: 'repairs', label: 'Repairs', icon: '🔧' },
-      { id: 'maintenance', label: 'Maintenance', icon: '🔨' },
-      { id: 'inspections', label: 'Inspections', icon: '🔍' },
-      { id: 'items', label: 'Items', icon: '📦' }
+      { id: 'current-tasks', label: 'Current Tasks', icon: '🔄' },
+      { id: 'upcoming-tasks', label: 'Upcoming Tasks', icon: '📅' },
+      { id: 'completed-work', label: 'Completed Work', icon: '✅' }
     ];
   }
   
@@ -75,21 +73,14 @@ export class Tabs {
     let count = 0;
     
     switch (tabId) {
-      case 'all':
-        count = state.filteredRecords.length;
+      case 'current-tasks':
+        count = state.records.filter(r => r.status === 'in_progress').length;
         break;
-      case 'repairs':
-        count = state.filteredRecords.filter(r => r.record_type === 'repair').length;
+      case 'upcoming-tasks':
+        count = state.records.filter(r => r.status === 'scheduled').length;
         break;
-      case 'maintenance':
-        count = state.filteredRecords.filter(r => r.record_type === 'maintenance').length;
-        break;
-      case 'inspections':
-        count = state.filteredRecords.filter(r => r.record_type === 'inspection').length;
-        break;
-      case 'items':
-        const itemIds = new Set(state.filteredRecords.map(r => r.item_id));
-        count = itemIds.size;
+      case 'completed-work':
+        count = state.records.filter(r => r.status === 'completed').length;
         break;
     }
     

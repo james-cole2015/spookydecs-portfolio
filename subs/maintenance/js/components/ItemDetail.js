@@ -11,7 +11,7 @@ export class ItemDetailView {
     this.itemId = itemId;
     this.item = null;
     this.records = [];
-    this.activeTab = 'upcoming';
+    this.activeTab = 'current';
   }
   
   async render(container) {
@@ -96,39 +96,40 @@ export class ItemDetailView {
         <div class="view-selector-label">View Selector</div>
         <div class="detail-tabs">
           <select class="tabs-mobile-select" id="item-tabs-select">
+            <option value="current" ${this.activeTab === 'current' ? 'selected' : ''}>
+              🔄 Current Tasks (${this.getCurrentCount()})
+            </option>
             <option value="upcoming" ${this.activeTab === 'upcoming' ? 'selected' : ''}>
               📅 Upcoming Tasks (${this.getUpcomingCount()})
             </option>
-            <option value="history" ${this.activeTab === 'history' ? 'selected' : ''}>
-              📋 Historical Records (${this.getHistoricalCount()})
+            <option value="completed" ${this.activeTab === 'completed' ? 'selected' : ''}>
+              ✅ Completed Work (${this.getCompletedCount()})
             </option>
             <option value="costs" ${this.activeTab === 'costs' ? 'selected' : ''}>
               💰 Costs
-            </option>
-            <option value="recurring" ${this.activeTab === 'recurring' ? 'selected' : ''}>
-              🔄 Recurring Maintenance
             </option>
           </select>
         </div>
       `;
     }
-    
+
     // Desktop tabs
     return `
       <div class="detail-tabs">
+        <button class="tab-btn ${this.activeTab === 'current' ? 'active' : ''}" data-tab="current">
+          Current Tasks
+          <span class="tab-count">${this.getCurrentCount()}</span>
+        </button>
         <button class="tab-btn ${this.activeTab === 'upcoming' ? 'active' : ''}" data-tab="upcoming">
           Upcoming Tasks
           <span class="tab-count">${this.getUpcomingCount()}</span>
         </button>
-        <button class="tab-btn ${this.activeTab === 'history' ? 'active' : ''}" data-tab="history">
-          Historical Records
-          <span class="tab-count">${this.getHistoricalCount()}</span>
+        <button class="tab-btn ${this.activeTab === 'completed' ? 'active' : ''}" data-tab="completed">
+          Completed Work
+          <span class="tab-count">${this.getCompletedCount()}</span>
         </button>
         <button class="tab-btn ${this.activeTab === 'costs' ? 'active' : ''}" data-tab="costs">
           Costs
-        </button>
-        <button class="tab-btn ${this.activeTab === 'recurring' ? 'active' : ''}" data-tab="recurring">
-          Recurring Maintenance
         </button>
       </div>
     `;
@@ -136,71 +137,90 @@ export class ItemDetailView {
   
   renderTabContent() {
     switch (this.activeTab) {
+      case 'current':
+        return this.renderCurrentTab();
       case 'upcoming':
         return this.renderUpcomingTab();
-      case 'history':
-        return this.renderHistoryTab();
+      case 'completed':
+        return this.renderCompletedTab();
       case 'costs':
         return this.renderCostsTab();
-      case 'recurring':
-        return this.renderRecurringTab();
       default:
         return '';
     }
   }
-  
+
+  getCurrentCount() {
+    return this.records.filter(r => r.status === 'in_progress').length;
+  }
+
   getUpcomingCount() {
-    return this.records.filter(r => 
-      r.status === 'scheduled' || r.status === 'in_progress'
-    ).length;
+    return this.records.filter(r => r.status === 'scheduled').length;
   }
-  
-  getHistoricalCount() {
-    return this.records.filter(r => 
-      r.status === 'completed' || r.status === 'cancelled'
-    ).length;
+
+  getCompletedCount() {
+    return this.records.filter(r => r.status === 'completed').length;
   }
-  
+
+  renderCurrentTab() {
+    const current = this.records.filter(r => r.status === 'in_progress')
+      .sort((a, b) => new Date(a.date_performed) - new Date(b.date_performed));
+
+    if (current.length === 0) {
+      return `
+        <div class="empty-state">
+          <div class="empty-icon">🔄</div>
+          <h3>No tasks in progress</h3>
+          <p>No maintenance or repairs are currently in progress</p>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="records-list">
+        ${this.renderRecordsTable(current)}
+      </div>
+    `;
+  }
+
   renderUpcomingTab() {
-    const upcoming = this.records.filter(r => 
-      r.status === 'scheduled' || r.status === 'in_progress'
-    ).sort((a, b) => new Date(a.date_performed) - new Date(b.date_performed));
-    
+    const upcoming = this.records.filter(r => r.status === 'scheduled')
+      .sort((a, b) => new Date(a.date_performed) - new Date(b.date_performed));
+
     if (upcoming.length === 0) {
       return `
         <div class="empty-state">
           <div class="empty-icon">📅</div>
           <h3>No upcoming tasks</h3>
-          <p>All maintenance and repairs are up to date</p>
+          <p>No maintenance or repairs are currently scheduled</p>
         </div>
       `;
     }
-    
+
     return `
       <div class="records-list">
         ${this.renderRecordsTable(upcoming)}
       </div>
     `;
   }
-  
-  renderHistoryTab() {
-    const history = this.records.filter(r => 
-      r.status === 'completed' || r.status === 'cancelled'
-    ).sort((a, b) => new Date(b.date_performed) - new Date(a.date_performed));
-    
-    if (history.length === 0) {
+
+  renderCompletedTab() {
+    const completed = this.records.filter(r => r.status === 'completed')
+      .sort((a, b) => new Date(b.date_performed) - new Date(a.date_performed));
+
+    if (completed.length === 0) {
       return `
         <div class="empty-state">
-          <div class="empty-icon">📋</div>
-          <h3>No historical records</h3>
-          <p>No completed or cancelled records for this item</p>
+          <div class="empty-icon">✅</div>
+          <h3>No completed work</h3>
+          <p>No completed records for this item</p>
         </div>
       `;
     }
-    
+
     return `
       <div class="records-list">
-        ${this.renderRecordsTable(history)}
+        ${this.renderRecordsTable(completed)}
       </div>
     `;
   }
@@ -304,22 +324,6 @@ renderMobileCards(records) {
           <a href="${getCostsUrl()}" class="btn-link disabled" target="_blank">
             View in Finance Subdomain (Coming Soon) →
           </a>
-        </div>
-      </div>
-    `;
-  }
-  
-  renderRecurringTab() {
-    return `
-      <div class="recurring-tab">
-        <div class="placeholder-section">
-          <div class="placeholder-icon">🔄</div>
-          <h3>Recurring Maintenance - Coming Soon</h3>
-          <p style="color: #6B7280;">
-            Schedule and track recurring maintenance tasks for your items. 
-            This feature will allow you to set up automated reminders and 
-            maintenance schedules.
-          </p>
         </div>
       </div>
     `;
