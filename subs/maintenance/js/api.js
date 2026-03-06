@@ -118,6 +118,25 @@ export async function performInspection(recordId, inspectionData) {
 }
 
 // ============================================
+// PERFORM REPAIR
+// ============================================
+
+export async function performRepair(recordId, repairData) {
+  const API_ENDPOINT = await getApiEndpoint();
+  const response = await fetch(
+    `${API_ENDPOINT}/admin/maintenance-records/${encodeURIComponent(recordId)}/repair`,
+    {
+      method: 'POST',
+      headers: HEADERS,
+      body: JSON.stringify(repairData)
+    }
+  );
+
+  const json = await handleResponse(response);
+  return json.data;
+}
+
+// ============================================
 // ITEMS API
 // ============================================
 

@@ -10,6 +10,7 @@ import { ScheduleFormView } from './components/ScheduleForm.js';
 import { ScheduleDetailView } from './components/ScheduleDetail.js';
 import { TemplateApplicationView } from './components/TemplateApplication.js';
 import { PerformInspectionForm } from './components/PerformInspectionForm.js';
+import { PerformRepairForm } from './components/PerformRepairForm.js';
 import { showLoading, hideLoading, parseQueryString } from './utils/helpers.js';
 
 let router = null;
@@ -29,6 +30,10 @@ export function initRouter() {
   
   // Define routes - Navigo matches in order, so put SPECIFIC routes first, GENERIC routes last
   router
+    .on('/:itemId/:recordId/perform-repair', async (match) => {
+      console.log('✅ Route matched: /:itemId/:recordId/perform-repair', match.data);
+      await handlePerformRepairView(match);
+    })
     .on('/:itemId/:recordId/perform-inspection', async (match) => {
       console.log('✅ Route matched: /:itemId/:recordId/perform-inspection', match.data);
       await handlePerformInspectionView(match);
@@ -317,6 +322,30 @@ async function handleItemDetailView(match) {
     console.error('❌ Error rendering item detail:', error);
     hideLoading();
     renderError(container, 'Failed to load item details');
+  }
+}
+
+async function handlePerformRepairView(match) {
+  console.log('📄 handlePerformRepairView started');
+  const container = document.getElementById('main-content');
+  if (!container) {
+    console.error('❌ main-content container not found!');
+    return;
+  }
+
+  try {
+    showLoading();
+
+    const { itemId, recordId } = match.data;
+    console.log('🔄 Creating PerformRepairForm:', { itemId, recordId });
+    const repairForm = new PerformRepairForm(recordId, itemId);
+    await repairForm.render(container);
+
+    hideLoading();
+  } catch (error) {
+    console.error('❌ Error rendering perform repair view:', error);
+    hideLoading();
+    renderError(container, 'Failed to load repair form');
   }
 }
 

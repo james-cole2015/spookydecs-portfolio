@@ -47,6 +47,23 @@ export class RecordDetailRenderer {
   }
   
   /**
+   * Render "Perform Repair" button for active repair records
+   */
+  renderPerformRepairButton() {
+    const isActiveRepair =
+      this.record.record_type === 'repair' &&
+      !['completed', 'cancelled'].includes(this.record.status);
+
+    if (!isActiveRepair) return '';
+
+    return `
+      <a href="/${this.itemId}/${this.record.record_id}/perform-repair" class="btn-primary">
+        Perform Repair
+      </a>
+    `;
+  }
+
+  /**
    * Render "Perform Inspection" button for pending inspections
    */
   renderPerformInspectionButton() {
@@ -69,6 +86,7 @@ export class RecordDetailRenderer {
   renderHeaderActions() {
     return `
       <div class="header-actions">
+        ${this.renderPerformRepairButton()}
         ${this.renderPerformInspectionButton()}
         <a href="/${this.itemId}/${this.record.record_id}/edit" class="btn-secondary">Edit Record</a>
         <button class="btn-danger" data-action="delete">Delete Record</button>
