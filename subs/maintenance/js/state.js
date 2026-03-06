@@ -13,8 +13,6 @@ class AppState {
       filters: {
         season: [],
         recordType: [],
-        status: [],
-        criticality: [],
         classType: [],
         itemId: '',
         dateRange: { start: null, end: null },
@@ -66,8 +64,6 @@ class AppState {
     this.state.filters = {
       season: [],
       recordType: [],
-      status: [],
-      criticality: [],
       classType: [],
       itemId: '',
       dateRange: { start: null, end: null },
@@ -273,21 +269,6 @@ class AppState {
     // Apply record type filter
     if (filters.recordType.length > 0) {
       filtered = filtered.filter(r => filters.recordType.includes(r.record_type));
-    }
-    
-    // Apply status filter
-    if (filters.status.length > 0) {
-      filtered = filtered.filter(r => filters.status.includes(r.status));
-    }
-    
-    // Apply criticality filter
-    if (filters.criticality.length > 0) {
-      filtered = filtered.filter(r => {
-        if (filters.criticality.includes('none')) {
-          return !r.criticality || r.criticality === 'null' || filters.criticality.includes(r.criticality);
-        }
-        return filters.criticality.includes(r.criticality);
-      });
     }
     
     // Apply class type filter

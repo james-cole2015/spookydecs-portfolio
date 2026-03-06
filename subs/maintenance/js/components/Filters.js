@@ -12,8 +12,6 @@ export class Filters {
     
     this.filterOptions = {
       season: ['Halloween', 'Christmas', 'Shared'],
-      status: ['scheduled', 'in_progress', 'completed', 'cancelled', 'pending'],
-      criticality: ['low', 'medium', 'high', 'none'],
       classType: ['Decoration', 'Light', 'Accessory']
     };
     
@@ -46,40 +44,6 @@ export class Filters {
             </div>
             <div class="filter-pills">
               ${this.renderPills(filters.season, 'season')}
-            </div>
-          </div>
-          
-          <!-- Status Filter -->
-          <div class="filter-group">
-            <label>Status</label>
-            <div class="filter-dropdown">
-              <button class="filter-dropdown-btn" data-filter="status">
-                Select Status
-                ${filters.status.length > 0 ? `<span class="filter-badge">${filters.status.length}</span>` : ''}
-              </button>
-              <div class="filter-dropdown-menu" data-menu="status">
-                ${this.renderDropdownOptions('status', filters.status)}
-              </div>
-            </div>
-            <div class="filter-pills">
-              ${this.renderPills(filters.status, 'status')}
-            </div>
-          </div>
-          
-          <!-- Criticality Filter -->
-          <div class="filter-group">
-            <label>Criticality</label>
-            <div class="filter-dropdown">
-              <button class="filter-dropdown-btn" data-filter="criticality">
-                Select Criticality
-                ${filters.criticality.length > 0 ? `<span class="filter-badge">${filters.criticality.length}</span>` : ''}
-              </button>
-              <div class="filter-dropdown-menu" data-menu="criticality">
-                ${this.renderDropdownOptions('criticality', filters.criticality)}
-              </div>
-            </div>
-            <div class="filter-pills">
-              ${this.renderPills(filters.criticality, 'criticality')}
             </div>
           </div>
           
@@ -203,8 +167,6 @@ export class Filters {
   hasActiveFilters() {
     const filters = appState.getState().filters;
     return filters.season.length > 0 ||
-           filters.status.length > 0 ||
-           filters.criticality.length > 0 ||
            filters.classType.length > 0 ||
            filters.scheduledBucket.length > 0 ||
            filters.itemId !== '' ||

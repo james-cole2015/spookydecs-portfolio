@@ -13,8 +13,6 @@ export class MobileFilters {
     
     this.filterOptions = {
       season: ['Halloween', 'Christmas', 'Shared'],
-      status: ['scheduled', 'in_progress', 'completed', 'cancelled', 'pending'],
-      criticality: ['low', 'medium', 'high', 'none'],
       classType: ['Decoration', 'Light', 'Accessory']
     };
     
@@ -69,22 +67,6 @@ export class MobileFilters {
         <label>Season</label>
         <div class="filter-options">
           ${this.renderCheckboxOptions('season', filters.season)}
-        </div>
-      </div>
-      
-      <!-- Status Filter -->
-      <div class="filter-group">
-        <label>Status</label>
-        <div class="filter-options">
-          ${this.renderCheckboxOptions('status', filters.status)}
-        </div>
-      </div>
-      
-      <!-- Criticality Filter -->
-      <div class="filter-group">
-        <label>Criticality</label>
-        <div class="filter-options">
-          ${this.renderCheckboxOptions('criticality', filters.criticality)}
         </div>
       </div>
       
@@ -171,8 +153,6 @@ export class MobileFilters {
     let count = 0;
     
     count += filters.season.length;
-    count += filters.status.length;
-    count += filters.criticality.length;
     count += filters.classType.length;
     count += filters.scheduledBucket.length;
     if (filters.itemId) count++;
