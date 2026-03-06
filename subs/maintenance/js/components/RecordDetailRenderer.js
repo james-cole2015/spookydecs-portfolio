@@ -1,6 +1,6 @@
 // Record detail view - UI rendering components
 
-import { formatDate, formatDateTime, formatStatus, formatCriticality, formatRecordTypePill } from '../utils/formatters.js';
+import { formatDate, formatDateTime, formatStatus, formatCriticality, formatRecordTypePill, formatScheduledDate } from '../utils/formatters.js';
 import { getItemUrl, getCostsUrl } from '../api.js';
 import { isMobile } from '../utils/responsive.js';
 
@@ -103,8 +103,8 @@ export class RecordDetailRenderer {
       <div class="horizontal-detail-row">
         ${this.record.date_scheduled ? `
           <div class="detail-item">
-            <span class="detail-label">Scheduled Date</span>
-            <span class="detail-value">${formatDate(this.record.date_scheduled)}</span>
+            <span class="detail-label">Season Bucket</span>
+            <span class="detail-value">${formatScheduledDate(this.record.date_scheduled)}</span>
           </div>
         ` : ''}
         ${this.record.date_performed ? `

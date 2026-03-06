@@ -8,7 +8,7 @@ import { ItemSelector } from './form/ItemSelector.js';
 import { MaterialsList } from './form/MaterialsList.js';
 import { ExistingPhotos } from './form/ExistingPhotos.js';
 import { Toast } from '../utils/toast.js';
-import { getRecordTypeOptions, getCategoryOptions } from '../utils/scheduleHelpers.js';
+import { getRecordTypeOptions, getCategoryOptions, generateSeasonBuckets, getDefaultBucket } from '../utils/scheduleHelpers.js';
 
 export class RecordFormView {
   constructor(recordId = null, itemId = null) {
@@ -197,15 +197,23 @@ export class RecordFormView {
   }
   
   renderScheduling(record) {
+    const existingBuckets = [...new Set(
+      appState.getState().records.map(r => r.date_scheduled).filter(Boolean)
+    )];
+    const buckets = generateSeasonBuckets(existingBuckets);
+    const currentBucket = record.date_scheduled || (!this.isEditMode && this.item?.season ? getDefaultBucket(this.item.season) : '');
+
     return `
       <div class="form-section">
         <h3>Scheduling</h3>
         <div class="form-row">
           <div class="form-group">
-            <label for="date_scheduled">Scheduled Date</label>
-            <input type="date" id="date_scheduled" name="date_scheduled" class="form-input" 
-                   value="${record.date_scheduled ? record.date_scheduled.split('T')[0] : ''}">
-            <small class="form-help">When is this work scheduled to happen?</small>
+            <label for="date_scheduled">Season Bucket</label>
+            <select id="date_scheduled" name="date_scheduled" class="form-input">
+              <option value="">Not scheduled</option>
+              ${buckets.map(b => `<option value="${b}" ${currentBucket === b ? 'selected' : ''}>${b}</option>`).join('')}
+            </select>
+            <small class="form-help">Which season is this work scheduled for?</small>
           </div>
           <div class="form-group">
             <label for="date_performed">Date Performed <span class="required" id="date-performed-required" style="display: none;">*</span></label>
@@ -426,12 +434,7 @@ export class RecordFormView {
       
       // Only add optional fields if they have values (to avoid DynamoDB null issues)
       const dateScheduled = formData.get('date_scheduled');
-      if (dateScheduled) {
-        data.date_scheduled = new Date(dateScheduled).toISOString();
-      } else {
-        // Explicitly set to null to remove from DynamoDB if empty
-        data.date_scheduled = null;
-      }
+      data.date_scheduled = dateScheduled || null;
       
       const datePerformed = formData.get('date_performed');
       if (datePerformed) {

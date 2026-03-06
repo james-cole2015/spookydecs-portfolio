@@ -428,6 +428,51 @@ export function formatDueDate(dueDate, status) {
 }
 
 /**
+ * Generate the ordered list of season bucket options for dropdowns/filters.
+ * Returns historical buckets (from existing records) followed by the standard
+ * window of current year through current year + 2.
+ * @param {string[]} existingBuckets - Current date_scheduled values from loaded records
+ * @returns {string[]} Ordered list of bucket strings
+ */
+export function generateSeasonBuckets(existingBuckets = []) {
+  const currentYear = new Date().getFullYear();
+  const typeOrder = { 'Off-Season': 0, 'Halloween': 1, 'Christmas': 2 };
+  const standardBuckets = [];
+
+  for (let year = currentYear; year <= currentYear + 2; year++) {
+    standardBuckets.push(`${year} Off-Season`);
+    standardBuckets.push(`${year} Halloween`);
+    standardBuckets.push(`${year} Christmas`);
+  }
+
+  const standardSet = new Set(standardBuckets);
+  const historical = [...new Set(existingBuckets.filter(b => b && !standardSet.has(b)))];
+
+  historical.sort((a, b) => {
+    const [aYear, ...aTypeParts] = a.split(' ');
+    const [bYear, ...bTypeParts] = b.split(' ');
+    const aType = aTypeParts.join(' ');
+    const bType = bTypeParts.join(' ');
+    if (aYear !== bYear) return parseInt(aYear) - parseInt(bYear);
+    return (typeOrder[aType] ?? 99) - (typeOrder[bType] ?? 99);
+  });
+
+  return [...historical, ...standardBuckets];
+}
+
+/**
+ * Suggest a default season bucket for a new record based on the item's season attribute.
+ * @param {string} itemSeason - 'Halloween', 'Christmas', or 'Shared'
+ * @returns {string} Suggested bucket string for the current year
+ */
+export function getDefaultBucket(itemSeason) {
+  const year = new Date().getFullYear();
+  if (itemSeason === 'Halloween') return `${year} Halloween`;
+  if (itemSeason === 'Christmas') return `${year} Christmas`;
+  return `${year} Off-Season`;
+}
+
+/**
  * Get schedule status badge class
  * @param {string} status - Status value
  * @returns {string} CSS class name

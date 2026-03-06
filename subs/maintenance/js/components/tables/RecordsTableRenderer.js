@@ -2,7 +2,7 @@
 
 import { appState } from '../../state.js';
 import { navigateTo } from '../../router.js';
-import { formatDate, formatStatus, formatCriticality, formatRecordTypePill } from '../../utils/formatters.js';
+import { formatDate, formatScheduledDate, formatStatus, formatCriticality, formatRecordTypePill } from '../../utils/formatters.js';
 import { isMobile } from '../../utils/responsive.js';
 
 export class RecordsTableRenderer {
@@ -122,8 +122,6 @@ export class RecordsTableRenderer {
       ? `<span class="schedule-badge" title="Scheduled task">📅</span>` 
       : '';
     
-    const displayDate = record.date_scheduled || record.date_performed || record.created_at;
-    
     return `
       <tr class="table-row ${isExpanded ? 'expanded' : ''}" data-record-id="${record.record_id}" data-item-id="${itemId}">
         <td><code>${recordId}</code></td>
@@ -132,12 +130,18 @@ export class RecordsTableRenderer {
         <td>${formatRecordTypePill(record.record_type)}</td>
         <td><code>${itemId}</code></td>
         <td>${formatCriticality(record.criticality)}</td>
-        <td>${formatDate(displayDate)}</td>
+        <td>${this.formatDisplayDate(record)}</td>
       </tr>
       ${isExpanded ? this.renderExpansionDrawer(record) : ''}
     `;
   }
   
+  formatDisplayDate(record) {
+    if (record.date_scheduled) return formatScheduledDate(record.date_scheduled);
+    if (record.date_performed) return formatDate(record.date_performed);
+    return formatDate(record.created_at);
+  }
+
   renderExpansionDrawer(record) {
     const itemId = record.item_id || 'N/A';
     const isInspection = record.record_type === 'inspection' && 

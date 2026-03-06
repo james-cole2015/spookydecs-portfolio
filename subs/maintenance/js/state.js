@@ -17,7 +17,8 @@ class AppState {
         criticality: [],
         classType: [],
         itemId: '',
-        dateRange: { start: null, end: null }
+        dateRange: { start: null, end: null },
+        scheduledBucket: []
       },
       activeTab: 'all',
       loading: false,
@@ -68,7 +69,8 @@ class AppState {
       criticality: [],
       classType: [],
       itemId: '',
-      dateRange: { start: null, end: null }
+      dateRange: { start: null, end: null },
+      scheduledBucket: []
     };
     this.applyFilters();
     this.notify();
@@ -304,12 +306,17 @@ if (activeTab !== 'all' && activeTab !== 'items') {
       const startDate = new Date(filters.dateRange.start);
       filtered = filtered.filter(r => new Date(r.created_at) >= startDate);
     }
-    
+
     if (filters.dateRange.end) {
       const endDate = new Date(filters.dateRange.end);
       filtered = filtered.filter(r => new Date(r.created_at) <= endDate);
     }
-    
+
+    // Apply scheduled bucket filter
+    if (filters.scheduledBucket.length > 0) {
+      filtered = filtered.filter(r => r.date_scheduled && filters.scheduledBucket.includes(r.date_scheduled));
+    }
+
     this.state.filteredRecords = filtered;
   }
   

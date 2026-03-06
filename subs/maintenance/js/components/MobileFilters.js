@@ -3,6 +3,7 @@
 import { appState } from '../state.js';
 import { searchItems } from '../api.js';
 import { debounce } from '../utils/helpers.js';
+import { generateSeasonBuckets } from '../utils/scheduleHelpers.js';
 
 export class MobileFilters {
   constructor(onFilterChange) {
@@ -95,6 +96,24 @@ export class MobileFilters {
         </div>
       </div>
 
+      <!-- Season Bucket Filter -->
+      <div class="filter-group">
+        <label>Season Bucket</label>
+        <div class="filter-options">
+          ${(() => {
+            const existingBuckets = [...new Set(appState.getState().records.map(r => r.date_scheduled).filter(Boolean))];
+            const buckets = generateSeasonBuckets(existingBuckets);
+            return buckets.map(b => {
+              const isSelected = filters.scheduledBucket.includes(b);
+              return `<div class="filter-option ${isSelected ? 'selected' : ''}" data-filter-type="scheduledBucket" data-value="${b}">
+                <input type="checkbox" ${isSelected ? 'checked' : ''} id="filter-scheduledBucket-${b.replace(/\s/g, '-')}">
+                <label for="filter-scheduledBucket-${b.replace(/\s/g, '-')}">${b}</label>
+              </div>`;
+            }).join('');
+          })()}
+        </div>
+      </div>
+
       <!-- Item ID Autocomplete -->
       <div class="filter-group">
         <label>Item ID</label>
@@ -155,6 +174,7 @@ export class MobileFilters {
     count += filters.status.length;
     count += filters.criticality.length;
     count += filters.classType.length;
+    count += filters.scheduledBucket.length;
     if (filters.itemId) count++;
     if (filters.dateRange.start) count++;
     if (filters.dateRange.end) count++;

@@ -2,17 +2,28 @@
 
 export function formatDate(isoString) {
   if (!isoString) return 'N/A';
-  
+
   try {
     const date = new Date(isoString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
     });
   } catch (e) {
     return 'Invalid Date';
   }
+}
+
+/**
+ * Format a date_scheduled value, which may be a season bucket string
+ * ("2026 Halloween") or a legacy ISO date string.
+ */
+export function formatScheduledDate(value) {
+  if (!value) return 'Not scheduled';
+  const parsed = new Date(value);
+  if (isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
 export function formatSeverity(criticality) {

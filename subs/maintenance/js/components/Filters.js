@@ -3,6 +3,7 @@
 import { appState } from '../state.js';
 import { searchItems } from '../api.js';
 import { debounce } from '../utils/helpers.js';
+import { generateSeasonBuckets } from '../utils/scheduleHelpers.js';
 
 export class Filters {
   constructor(onFilterChange) {
@@ -99,6 +100,33 @@ export class Filters {
             </div>
           </div>
 
+          <!-- Season Bucket Filter -->
+          <div class="filter-group">
+            <label>Season Bucket</label>
+            <div class="filter-dropdown">
+              <button class="filter-dropdown-btn" data-filter="scheduledBucket">
+                Select Bucket
+                ${filters.scheduledBucket.length > 0 ? `<span class="filter-badge">${filters.scheduledBucket.length}</span>` : ''}
+              </button>
+              <div class="filter-dropdown-menu" data-menu="scheduledBucket">
+                ${(() => {
+                  const existingBuckets = [...new Set(appState.getState().records.map(r => r.date_scheduled).filter(Boolean))];
+                  const buckets = generateSeasonBuckets(existingBuckets);
+                  return buckets.map(b => {
+                    const isSelected = filters.scheduledBucket.includes(b);
+                    return `<div class="filter-option ${isSelected ? 'selected' : ''}" data-filter-type="scheduledBucket" data-value="${b}">
+                      <input type="checkbox" ${isSelected ? 'checked' : ''}>
+                      <span>${b}</span>
+                    </div>`;
+                  }).join('');
+                })()}
+              </div>
+            </div>
+            <div class="filter-pills">
+              ${this.renderPills(filters.scheduledBucket, 'scheduledBucket')}
+            </div>
+          </div>
+
           <!-- Item ID Autocomplete -->
           <div class="filter-group">
             <label>Item ID</label>
@@ -178,6 +206,7 @@ export class Filters {
            filters.status.length > 0 ||
            filters.criticality.length > 0 ||
            filters.classType.length > 0 ||
+           filters.scheduledBucket.length > 0 ||
            filters.itemId !== '' ||
            filters.dateRange.start !== null ||
            filters.dateRange.end !== null;
