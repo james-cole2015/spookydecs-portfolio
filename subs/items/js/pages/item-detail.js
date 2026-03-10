@@ -229,7 +229,7 @@ class ItemDetailPage {
       badges.push('<span class="item-badge badge-retired">Retired</span>');
     }
     
-    if (this.item.repair_status?.needs_repair) {
+    if (this.item.maintenance?.repair_data?.needs_repair) {
       badges.push('<span class="item-badge badge-repair">Needs Repair</span>');
     }
     
@@ -477,9 +477,11 @@ class ItemDetailPage {
   }
   
   renderMaintenanceSection() {
-    const hasRepair = this.item.repair_status?.needs_repair;
-    const status = this.item.repair_status?.status;
-    const appliedTemplates = this.item.maintenance?.applied_templates || [];
+    const hasRepair = this.item.maintenance?.repair_data?.needs_repair;
+    const appliedTemplates = [
+      ...(this.item.maintenance?.maintenance_data?.applied_templates || []),
+      ...(this.item.maintenance?.inspection_data?.applied_templates || [])
+    ];
     const upcomingMaintenance = this.getUpcomingMaintenance();
     const completedRecords = this.getCompletedRecords();
     const inProgressRecords = this.getInProgressRecords();
@@ -496,7 +498,7 @@ class ItemDetailPage {
             </div>
           ` : `
             <div class="item-badge badge-operational">
-              ${status || 'Operational'}
+              Operational
             </div>
           `}
           ${inProgressRecords.length > 0 ? `
@@ -525,7 +527,7 @@ class ItemDetailPage {
         ` : ''}
 
         ${completedRecords.length > 0 ? `
-          <h3 class="subsection-title">Recent Maintenance</h3>
+          <h3 class="subsection-title">Recently Completed Maintenance</h3>
           ${this.renderMaintenanceRecords(completedRecords)}
         ` : ''}
       </div>

@@ -99,9 +99,9 @@ export class ItemsCards {
     }
     
     // Repair status
-    if (item.repair_status?.needs_repair) {
+    if (item.maintenance?.repair_data?.needs_repair) {
       badges.push(`<span class="item-badge badge-repair">Needs Repair</span>`);
-    } else if (item.repair_status?.status === 'Operational') {
+    } else if (item.maintenance?.repair_data && !item.maintenance.repair_data.needs_repair) {
       badges.push(`<span class="item-badge badge-operational">Operational</span>`);
     }
     
