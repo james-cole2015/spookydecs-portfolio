@@ -216,7 +216,7 @@ export async function getPhotosForItem(item) {
 export async function listPhotosForItem(itemId) {
   const apiEndpoint = await getEndpoint();
   const response = await fetch(
-    `${apiEndpoint}/admin/images?photo_type=catalog&item_id=${encodeURIComponent(itemId)}`,
+    `${apiEndpoint}/admin/images?item_id=${encodeURIComponent(itemId)}`,
     { method: 'GET', headers: HEADERS }
   );
   if (!response.ok) throw new Error(`Failed to list photos: ${response.status}`);
