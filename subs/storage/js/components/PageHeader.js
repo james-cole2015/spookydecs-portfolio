@@ -82,54 +82,43 @@ export class PageHeader {
    */
   renderStatsContent() {
     if (!this.stats) return '<p>No statistics available</p>';
-    
+
+    const unpackedStorage = this.stats.unpacked_storage || 0;
+    const unpackedItems = this.stats.unpacked_items || 0;
+    const totalStorage = this.stats.total_storage || 0;
+    const totalItems = this.stats.total_items || 0;
+
     return `
       <div class="stats-section">
         <h3 class="stats-section-title">Overview</h3>
         <div class="stats-grid">
-          <div class="stat-card">
+          <div class="stat-card${unpackedStorage > 0 ? ' stat-warning' : ''}">
             <div class="stat-icon">📦</div>
             <div class="stat-content">
-              <div class="stat-value">${this.stats.total_storage || 0}</div>
+              <div class="stat-value">${totalStorage.toLocaleString()}</div>
               <div class="stat-label">Storage Units</div>
+              <div class="stat-sublabel">${unpackedStorage > 0 ? `${unpackedStorage} unpacked` : 'All packed'}</div>
             </div>
           </div>
-          
-          ${this.stats.unpacked_storage > 0 ? `
-            <div class="stat-card stat-warning">
-              <div class="stat-icon">⚪</div>
-              <div class="stat-content">
-                <div class="stat-value">${this.stats.unpacked_storage}</div>
-                <div class="stat-label">Unpacked Storage</div>
-              </div>
-            </div>
-          ` : ''}
-          
-          <div class="stat-card">
-            <div class="stat-icon">🎃</div>
+          <div class="stat-card${unpackedItems > 0 ? ' stat-alert' : ''}">
+            <div class="stat-icon">🏷️</div>
             <div class="stat-content">
-              <div class="stat-value">${this.stats.total_items || 0}</div>
-              <div class="stat-label">Total Items</div>
+              <div class="stat-value">${totalItems.toLocaleString()}</div>
+              <div class="stat-label">Items</div>
+              <div class="stat-sublabel">${unpackedItems > 0 ? `${unpackedItems} need packing` : 'All packed'}</div>
             </div>
           </div>
-          
-          ${this.stats.unpacked_items > 0 ? `
-            <div class="stat-card stat-alert">
-              <div class="stat-icon">📋</div>
-              <div class="stat-content">
-                <div class="stat-value">${this.stats.unpacked_items}</div>
-                <div class="stat-label">Need Packing</div>
-              </div>
-            </div>
-          ` : ''}
         </div>
       </div>
-      
+
       ${this.stats.by_season && Object.keys(this.stats.by_season).length > 0 ? `
         <div class="stats-section">
           <h3 class="stats-section-title">By Season</h3>
           <div class="season-stats-list">
-            ${Object.entries(this.stats.by_season).map(([season, data]) => `
+            ${Object.entries(this.stats.by_season).map(([season, data]) => {
+              const unpackedSeason = data.unpacked_items || 0;
+              const packedSeason = (data.items || 0) - unpackedSeason;
+              return `
               <div class="season-stat-item">
                 <div class="season-stat-header">
                   <span class="season-icon">${this.getSeasonIcon(season)}</span>
@@ -141,18 +130,18 @@ export class PageHeader {
                     <span class="season-stat-label">storage</span>
                   </div>
                   <div class="season-stat-value">
-                    <span class="season-stat-number">${data.items || 0}</span>
-                    <span class="season-stat-label">items</span>
+                    <span class="season-stat-number">${packedSeason} / ${data.items || 0}</span>
+                    <span class="season-stat-label">items packed</span>
                   </div>
-                  ${data.unpacked_items > 0 ? `
+                  ${unpackedSeason > 0 ? `
                     <div class="season-stat-value season-stat-warning">
-                      <span class="season-stat-number">${data.unpacked_items}</span>
+                      <span class="season-stat-number">${unpackedSeason}</span>
                       <span class="season-stat-label">unpacked</span>
                     </div>
                   ` : ''}
                 </div>
-              </div>
-            `).join('')}
+              </div>`;
+            }).join('')}
           </div>
         </div>
       ` : ''}

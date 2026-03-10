@@ -2,7 +2,6 @@
 
 import { storageAPI, itemsAPI } from '../utils/storage-api.js';
 import { formatStorageUnit } from '../utils/storage-config.js';
-import { navigate } from '../utils/router.js';
 import { showError } from '../shared/toast.js';
 import { renderBreadcrumb } from '../shared/breadcrumb.js';
 
@@ -48,24 +47,27 @@ export async function renderStorageStatistics() {
 }
 
 function calculateStats(storage, items) {
+  const packedItems = items.filter(item => item.packing_data?.packing_status !== false);
+  const packedStorage = storage.filter(unit => unit.packed !== false);
+
   const stats = {
     total_storage: storage.length,
-    unpacked_storage: storage.filter(unit => unit.packed === false).length,
+    packed_storage: packedStorage.length,
     total_items: items.length,
-    unpacked_items: items.filter(item => item.packing_data?.packing_status === false).length,
+    packed_items: packedItems.length,
     by_season: {}
   };
 
   ['Halloween', 'Christmas', 'Shared'].forEach(season => {
     const seasonStorage = storage.filter(unit => unit.season === season);
     const seasonItems = items.filter(item => item.season === season);
-    const unpackedSeasonItems = seasonItems.filter(item => item.packing_data?.packing_status === false);
+    const packedSeasonItems = seasonItems.filter(item => item.packing_data?.packing_status !== false);
 
     if (seasonStorage.length > 0 || seasonItems.length > 0) {
       stats.by_season[season] = {
         storage: seasonStorage.length,
         items: seasonItems.length,
-        unpacked_items: unpackedSeasonItems.length
+        packed_items: packedSeasonItems.length
       };
     }
   });
@@ -79,45 +81,29 @@ function getSeasonIcon(season) {
 }
 
 function renderStatsContent(stats) {
+  const unpackedStorage = stats.total_storage - stats.packed_storage;
+  const unpackedItems = stats.total_items - stats.packed_items;
+
   return `
     <div class="stats-section">
       <h3 class="stats-section-title">Overview</h3>
       <div class="stats-grid">
-        <div class="stat-card">
+        <div class="stat-card${unpackedStorage > 0 ? ' stat-warning' : ''}">
           <div class="stat-icon">📦</div>
           <div class="stat-content">
-            <div class="stat-value">${stats.total_storage}</div>
+            <div class="stat-value">${stats.total_storage.toLocaleString()}</div>
             <div class="stat-label">Storage Units</div>
+            <div class="stat-sublabel">${unpackedStorage > 0 ? `${unpackedStorage} unpacked` : 'All packed'}</div>
           </div>
         </div>
-
-        ${stats.unpacked_storage > 0 ? `
-          <div class="stat-card stat-warning">
-            <div class="stat-icon">⚪</div>
-            <div class="stat-content">
-              <div class="stat-value">${stats.unpacked_storage}</div>
-              <div class="stat-label">Unpacked Storage</div>
-            </div>
-          </div>
-        ` : ''}
-
-        <div class="stat-card">
-          <div class="stat-icon">🎃</div>
+        <div class="stat-card${unpackedItems > 0 ? ' stat-alert' : ''}">
+          <div class="stat-icon">🏷️</div>
           <div class="stat-content">
-            <div class="stat-value">${stats.total_items}</div>
-            <div class="stat-label">Total Items</div>
+            <div class="stat-value">${stats.total_items.toLocaleString()}</div>
+            <div class="stat-label">Items</div>
+            <div class="stat-sublabel">${unpackedItems > 0 ? `${unpackedItems} need packing` : 'All packed'}</div>
           </div>
         </div>
-
-        ${stats.unpacked_items > 0 ? `
-          <div class="stat-card stat-alert">
-            <div class="stat-icon">📋</div>
-            <div class="stat-content">
-              <div class="stat-value">${stats.unpacked_items}</div>
-              <div class="stat-label">Need Packing</div>
-            </div>
-          </div>
-        ` : ''}
       </div>
     </div>
 
@@ -125,7 +111,9 @@ function renderStatsContent(stats) {
       <div class="stats-section">
         <h3 class="stats-section-title">By Season</h3>
         <div class="season-stats-list">
-          ${Object.entries(stats.by_season).map(([season, data]) => `
+          ${Object.entries(stats.by_season).map(([season, data]) => {
+            const unpackedSeason = data.items - data.packed_items;
+            return `
             <div class="season-stat-item">
               <div class="season-stat-header">
                 <span class="season-icon">${getSeasonIcon(season)}</span>
@@ -137,18 +125,18 @@ function renderStatsContent(stats) {
                   <span class="season-stat-label">storage</span>
                 </div>
                 <div class="season-stat-value">
-                  <span class="season-stat-number">${data.items || 0}</span>
-                  <span class="season-stat-label">items</span>
+                  <span class="season-stat-number">${data.packed_items} / ${data.items}</span>
+                  <span class="season-stat-label">items packed</span>
                 </div>
-                ${data.unpacked_items > 0 ? `
+                ${unpackedSeason > 0 ? `
                   <div class="season-stat-value season-stat-warning">
-                    <span class="season-stat-number">${data.unpacked_items}</span>
+                    <span class="season-stat-number">${unpackedSeason}</span>
                     <span class="season-stat-label">unpacked</span>
                   </div>
                 ` : ''}
               </div>
-            </div>
-          `).join('')}
+            </div>`;
+          }).join('')}
         </div>
       </div>
     ` : ''}

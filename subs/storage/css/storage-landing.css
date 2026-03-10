@@ -143,7 +143,15 @@
 
 /* Statistics page layout */
 .statistics-page {
-  padding: 2rem 0;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+@media (min-width: 768px) {
+  .statistics-page {
+    padding: 1.5rem;
+  }
 }
 
 .stats-page-header h1 {
@@ -151,6 +159,35 @@
   font-weight: 700;
   color: #0f172a;
   margin: 0 0 1.5rem 0;
+}
+
+/* Stats overview: 2-up on tablet+ */
+.statistics-page .stats-grid {
+  grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 480px) {
+  .statistics-page .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Season stats: horizontal row on the full statistics page */
+.statistics-page .season-stats-list {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.statistics-page .season-stat-item {
+  flex: 1;
+  min-width: 200px;
+}
+
+/* Sublabel under stat value */
+.stat-sublabel {
+  font-size: 11px;
+  color: var(--text-secondary, #6b7280);
+  margin-top: 2px;
 }
 
 /* Responsive */
