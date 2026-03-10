@@ -59,14 +59,13 @@ export class ScheduleDetailView {
       const allItems = await fetchAllItems({});
       
       // Filter to items that have this template in their applied_templates array
+      // Check both inspection_data and maintenance_data per new maintenance map schema
       const itemsWithTemplate = allItems.filter(item => {
-        // Check if item has maintenance object and applied_templates array
-        if (!item.maintenance || !Array.isArray(item.maintenance.applied_templates)) {
-          return false;
-        }
-        
-        // Check if this template ID is in the applied_templates array
-        return item.maintenance.applied_templates.includes(this.scheduleId);
+        const applied = [
+          ...(item.maintenance?.inspection_data?.applied_templates || []),
+          ...(item.maintenance?.maintenance_data?.applied_templates || [])
+        ];
+        return applied.includes(this.scheduleId);
       });
       
       console.log(`Found ${itemsWithTemplate.length} items using template ${this.scheduleId}`);
