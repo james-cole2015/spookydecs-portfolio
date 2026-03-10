@@ -19,7 +19,8 @@ export class FilterBar {
       season: params.season || '',
       class: params.class || '',
       class_type: params.class_type || '',
-      status: params.status || ''
+      status: params.status || '',
+      maintenance: params.maintenance || ''
     };
   }
 
@@ -29,6 +30,7 @@ export class FilterBar {
     if (this.filters.class) count++;
     if (this.filters.class_type) count++;
     if (this.filters.status) count++;
+    if (this.filters.maintenance) count++;
     return count;
   }
   
@@ -98,6 +100,15 @@ export class FilterBar {
                   ${type}
                 </option>
               `).join('')}
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label">Maintenance</label>
+            <select class="filter-select" id="filter-maintenance">
+              <option value="">All Items</option>
+              <option value="needs_repair" ${this.filters.maintenance === 'needs_repair' ? 'selected' : ''}>Needs Repair</option>
+              <option value="non_operational" ${this.filters.maintenance === 'non_operational' ? 'selected' : ''}>Non-Operational</option>
             </select>
           </div>
         </div>
@@ -198,6 +209,15 @@ export class FilterBar {
             </select>
           </div>
 
+          <div class="filter-group">
+            <label class="filter-label">Maintenance</label>
+            <select class="filter-select" id="filter-maintenance">
+              <option value="">All Items</option>
+              <option value="needs_repair" ${this.filters.maintenance === 'needs_repair' ? 'selected' : ''}>Needs Repair</option>
+              <option value="non_operational" ${this.filters.maintenance === 'non_operational' ? 'selected' : ''}>Non-Operational</option>
+            </select>
+          </div>
+
           <div class="filter-actions filter-actions-collapsed">
             <button class="btn-clear-filters" id="btn-clear-filters">
               Clear Filters
@@ -278,7 +298,16 @@ export class FilterBar {
         this.updateFilters();
       });
     }
-    
+
+    // Maintenance select
+    const maintenanceSelect = document.getElementById('filter-maintenance');
+    if (maintenanceSelect) {
+      maintenanceSelect.addEventListener('change', (e) => {
+        this.filters.maintenance = e.target.value;
+        this.updateFilters();
+      });
+    }
+
     // Clear filters button
     const clearBtn = document.getElementById('btn-clear-filters');
     if (clearBtn) {
@@ -301,7 +330,8 @@ export class FilterBar {
       season: '',
       class: '',
       class_type: '',
-      status: ''
+      status: '',
+      maintenance: ''
     };
     this.render();
     this.updateFilters();
@@ -335,7 +365,13 @@ export class FilterBar {
       if (this.filters.status && item.status !== this.filters.status) {
         return false;
       }
-      
+
+      if (this.filters.maintenance === 'needs_repair') {
+        if (!item.maintenance?.repair_data?.needs_repair) return false;
+      } else if (this.filters.maintenance === 'non_operational') {
+        if (item.operational_status !== false) return false;
+      }
+
       return true;
     });
   }
