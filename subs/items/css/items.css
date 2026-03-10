@@ -327,13 +327,27 @@
 }
 
 .item-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 16px;
   font-weight: 600;
   color: #111827;
   margin-bottom: 4px;
+  min-width: 0;
+}
+
+.item-name-text {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.repair-indicator {
+  flex-shrink: 0;
+  font-size: 13px;
+  cursor: default;
 }
 
 .item-type {
@@ -373,13 +387,18 @@
 }
 
 .badge-repair {
-  background: #FEE2E2;
-  color: #991B1B;
+  background: #FEF3C7;
+  color: #92400E;
 }
 
 .badge-operational {
   background: #D1FAE5;
   color: #065F46;
+}
+
+.badge-non-operational {
+  background: #FEE2E2;
+  color: #991B1B;
 }
 
 .item-details {

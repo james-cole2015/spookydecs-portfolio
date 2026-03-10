@@ -477,6 +477,7 @@ class ItemDetailPage {
   }
   
   renderMaintenanceSection() {
+    const isOperational = this.item.operational_status !== false;
     const hasRepair = this.item.maintenance?.repair_data?.needs_repair;
     const appliedTemplates = [
       ...(this.item.maintenance?.maintenance_data?.applied_templates || []),
@@ -492,15 +493,14 @@ class ItemDetailPage {
         
         <h3 class="subsection-title">Current Status</h3>
         <div class="status-badges">
-          ${hasRepair ? `
-            <div class="item-badge badge-repair">
-              Needs Repair
-            </div>
+          ${isOperational ? `
+            <div class="item-badge badge-operational">Operational</div>
           ` : `
-            <div class="item-badge badge-operational">
-              Operational
-            </div>
+            <div class="item-badge badge-non-operational">Non-Operational</div>
           `}
+          ${hasRepair ? `
+            <div class="item-badge badge-repair">Needs Repair</div>
+          ` : ''}
           ${inProgressRecords.length > 0 ? `
             <a href="#" class="in-progress-link-status" onclick="event.preventDefault(); itemDetailPage.handleViewAllMaintenance();">
               ${inProgressRecords.length} ${inProgressRecords.length === 1 ? 'record' : 'records'} in progress →

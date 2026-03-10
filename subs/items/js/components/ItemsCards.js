@@ -55,7 +55,10 @@ export class ItemsCards {
           `}
           
           <div class="item-card-info">
-            <div class="item-name">${this.escapeHtml(item.short_name)}</div>
+            <div class="item-name">
+              <span class="item-name-text">${this.escapeHtml(item.short_name)}</span>
+              ${item.operational_status !== false && item.maintenance?.repair_data?.needs_repair ? `<span class="repair-indicator" title="Needs repair" aria-label="Needs repair">🔧</span>` : ''}
+            </div>
             <div class="item-type">${item.class_type} • ${seasonIcon} ${item.season}</div>
             <div class="item-badges">
               ${badges}
@@ -95,11 +98,9 @@ export class ItemsCards {
       badges.push(`<span class="item-badge badge-packed">Packed</span>`);
     }
     
-    // Repair status
-    if (item.maintenance?.repair_data?.needs_repair) {
-      badges.push(`<span class="item-badge badge-repair">Needs Repair</span>`);
-    } else if (item.maintenance?.repair_data && !item.maintenance.repair_data.needs_repair) {
-      badges.push(`<span class="item-badge badge-operational">Operational</span>`);
+    // Non-operational only shown when item is blocked by a critical repair
+    if (item.operational_status === false) {
+      badges.push(`<span class="item-badge badge-non-operational">Non-Operational</span>`);
     }
     
     return badges.join('');

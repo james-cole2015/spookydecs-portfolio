@@ -20,9 +20,25 @@
   "secondary_photo_ids": [
   ]
  },
+ "operational_status": true,
  "maintenance": {
-  "applied_templates": [
-  ],
+  "inspection_data": {
+   "applied_templates": [],
+   "next_inspection_date": null,
+   "last_synced_at": null
+  },
+  "maintenance_data": {
+   "applied_templates": [],
+   "next_maintenance_date": null,
+   "last_synced_at": null
+  },
+  "repair_data": {
+   "needs_repair": false,
+   "is_critical": false,
+   "critical_record_id": null,
+   "operational_blocker_record_id": null,
+   "last_synced_at": null
+  },
   "generation_history": [
    {
     "due_date": "2026-01-06T05:30:22.643016Z",
@@ -38,8 +54,7 @@
    "total_maintenance": 0,
    "total_repairs": 1
   },
-  "template_history": [
-  ]
+  "template_history": []
  },
  "packing_data": {
   "packable": true,
@@ -53,11 +68,6 @@
   "watts": ""
  },
  "power_inlet": true,
- "repair_status": {
-  "criticality": "high",
-  "highest_priority_record_id": "6221e84b-693a-4ee9-87ff-5491c3c6bfe4",
-  "needs_repair": true
- },
  "season": "Christmas",
  "short_name": "Big Fella",
  "stakes": "10",

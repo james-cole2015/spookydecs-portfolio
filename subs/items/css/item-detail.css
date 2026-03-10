@@ -248,6 +248,11 @@
 }
 
 .badge-repair {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+.badge-non-operational {
   background: #FEE2E2;
   color: #991B1B;
 }
