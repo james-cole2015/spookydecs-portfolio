@@ -74,9 +74,6 @@ export class ItemsCards {
         <button class="btn-view" onclick="event.stopPropagation(); itemsPage.handleView('${item.id}')">
           View Details
         </button>
-        <button class="btn-edit" onclick="event.stopPropagation(); itemsPage.handleEdit('${item.id}')">
-          Edit
-        </button>
       </div>
     `;
     

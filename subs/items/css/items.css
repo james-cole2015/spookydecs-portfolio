@@ -432,22 +432,6 @@
   color: #3B82F6;
 }
 
-.btn-edit {
-  flex: 1;
-  padding: 8px 12px;
-  background: #3B82F6;
-  border: none;
-  border-radius: 6px;
-  color: white;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-edit:hover {
-  background: #2563EB;
-}
 
 /* Empty State */
 .items-empty {
@@ -493,9 +477,8 @@
     flex-wrap: wrap;
   }
   
-  .btn-view,
-  .btn-edit {
-    flex: 1 1 calc(50% - 4px);
+  .btn-view {
+    flex: 1 1 100%;
   }
 }
 
