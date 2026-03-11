@@ -23,6 +23,9 @@ function initRouter() {
         .on('/inspector/violations/:violationId', (params) => {
             renderViolationDetail(params.data.violationId);
         })
+        .on('/inspector/items/:itemId', (params) => {
+            renderItemDetail(params.data.itemId);
+        })
         .notFound(() => {
             // Redirect to dashboard if route not found
             router.navigate('/inspector');

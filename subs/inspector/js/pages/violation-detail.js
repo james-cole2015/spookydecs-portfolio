@@ -5,6 +5,7 @@
 
 let currentViolation = null;
 let navContext = null;
+let violationItemsAdminUrl = null;
 
 /**
  * Render Violation Detail Page
@@ -45,9 +46,13 @@ async function renderViolationDetail(violationId) {
     `;
 
     try {
-        // Load violation
-        const violationData = await InspectorAPI.getViolation(violationId);
+        // Load violation and config in parallel
+        const [violationData, config] = await Promise.all([
+            InspectorAPI.getViolation(violationId),
+            window.SpookyConfig.get()
+        ]);
         currentViolation = violationData.violation;
+        violationItemsAdminUrl = config.ITEMS_ADMIN || null;
 
         renderViolationContent();
         renderViolationNav(violationId);
@@ -111,13 +116,47 @@ function renderViolationContent() {
 
     // Determine item display based on violation type
     const isDuplicate = currentViolation.rule_id === 'DUPLICATE_LIGHTS' || currentViolation.rule_id === 'DUPLICATE_ITEMS';
-    const itemDisplay = isDuplicate 
+    const itemDisplay = isDuplicate
         ? `${sanitizeHtml(details.item1_short_name || 'Unknown')} & ${sanitizeHtml(details.item2_short_name || 'Unknown')}`
         : sanitizeHtml(details.item_short_name || currentViolation.entity_id);
-    
+
     const itemClass = isDuplicate
         ? sanitizeHtml(details.item1_class || 'Unknown')
         : sanitizeHtml(details.item_class || 'Unknown');
+
+    // Build Quick Links HTML (only for Item entity type)
+    let quickLinksHtml = '';
+    if (currentViolation.entity_type === 'Item') {
+        if (!isDuplicate) {
+            const itemId = sanitizeHtml(currentViolation.entity_id);
+            const itemsSubHref = violationItemsAdminUrl ? `${violationItemsAdminUrl}/${itemId}` : '#';
+            quickLinksHtml = `
+                <dt>Quick Links:</dt>
+                <dd class="violation-item-links">
+                    <a href="/inspector/items/${itemId}"
+                       target="_blank" rel="noopener"
+                       class="item-link">Inspector Detail ↗</a>
+                    <a href="${itemsSubHref}"
+                       target="_blank" rel="noopener"
+                       class="item-link">View in Items ↗</a>
+                </dd>
+            `;
+        } else {
+            const id1 = sanitizeHtml(details.item1_id || '');
+            const id2 = sanitizeHtml(details.item2_id || '');
+            const sub1 = violationItemsAdminUrl && id1 ? `${violationItemsAdminUrl}/${id1}` : '#';
+            const sub2 = violationItemsAdminUrl && id2 ? `${violationItemsAdminUrl}/${id2}` : '#';
+            quickLinksHtml = `
+                <dt>Quick Links:</dt>
+                <dd class="violation-item-links">
+                    ${id1 ? `<a href="/inspector/items/${id1}" target="_blank" rel="noopener" class="item-link">Item 1 Detail ↗</a>
+                    <a href="${sub1}" target="_blank" rel="noopener" class="item-link">Item 1 ↗</a>` : ''}
+                    ${id2 ? `<a href="/inspector/items/${id2}" target="_blank" rel="noopener" class="item-link">Item 2 Detail ↗</a>
+                    <a href="${sub2}" target="_blank" rel="noopener" class="item-link">Item 2 ↗</a>` : ''}
+                </dd>
+            `;
+        }
+    }
 
     content.innerHTML = `
         <div class="violation-page-header">
@@ -158,7 +197,9 @@ function renderViolationContent() {
                     
                     <dt>Entity ID:</dt>
                     <dd>${sanitizeHtml(currentViolation.entity_id)}</dd>
-                    
+
+                    ${quickLinksHtml}
+
                     ${isDuplicate ? `
                         <dt>Item 1 ID:</dt>
                         <dd>${sanitizeHtml(details.item1_id || 'N/A')}</dd>

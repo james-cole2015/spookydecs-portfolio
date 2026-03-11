@@ -156,5 +156,10 @@ const InspectorAPI = {
     }
 
     return allViolations;
+  },
+
+  async getViolationsForItem(itemId) {
+    const all = await this.getAllViolations();
+    return all.filter(v => v.entity_id === itemId);
   }
 };

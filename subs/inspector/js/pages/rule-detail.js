@@ -6,6 +6,7 @@
 let currentRule = null;
 let currentRuleViolations = [];
 let activeViolationsTab = 'open';
+let itemsAdminUrl = null;
 
 /**
  * Render Rule Detail Page
@@ -32,11 +33,13 @@ async function renderRuleDetail(ruleId) {
     `;
 
     try {
-        // Load rule and its violations
-        const [ruleData, violationsData] = await Promise.all([
+        // Load rule, violations, and config in parallel
+        const [ruleData, violationsData, config] = await Promise.all([
             InspectorAPI.getRule(ruleId),
-            InspectorAPI.getViolationsForRule(ruleId)
+            InspectorAPI.getViolationsForRule(ruleId),
+            window.SpookyConfig.get()
         ]);
+        itemsAdminUrl = config.ITEMS_ADMIN || null;
 
         currentRule = ruleData.rule;
         currentRuleViolations = violationsData;
@@ -166,6 +169,17 @@ function filterViolationsByStatus(violations, status) {
 }
 
 /**
+ * Render the item name cell with optional inspector + items sub links
+ */
+function renderItemCell(v) {
+    const name = sanitizeHtml(v.violation_details?.item_short_name || v.entity_id);
+    if (v.entity_type !== 'Item') return name;
+    const itemId = sanitizeHtml(v.entity_id);
+    const subHref = itemsAdminUrl ? `${itemsAdminUrl}/${itemId}` : '#';
+    return `<a href="/inspector/items/${itemId}" target="_blank" rel="noopener" class="item-link">${name}</a> <a href="${subHref}" target="_blank" rel="noopener" class="item-link-ext" title="View in Items sub">↗</a>`;
+}
+
+/**
  * Render violations table for this rule
  */
 function renderRuleViolations() {
@@ -236,7 +250,7 @@ function renderRuleViolations() {
                     const statusConfig = getStatusConfig(v.status);
                     return `
                         <tr>
-                            <td>${sanitizeHtml(v.violation_details?.item_short_name || v.entity_id)}</td>
+                            <td class="item-cell">${renderItemCell(v)}</td>
                             <td>${sanitizeHtml(truncateText(v.violation_details?.message || 'N/A', 60))}</td>
                             <td>
                                 <span class="badge ${statusConfig.badge}">
@@ -265,7 +279,7 @@ function renderRuleViolations() {
                 return `
                     <div class="violation-card" data-violation-id="${v.violation_id}">
                         <div class="violation-card-item">
-                            ${sanitizeHtml(v.violation_details?.item_short_name || v.entity_id)}
+                            ${renderItemCell(v)}
                         </div>
                         <div class="violation-card-status">
                             <span class="badge ${statusConfig.badge}">

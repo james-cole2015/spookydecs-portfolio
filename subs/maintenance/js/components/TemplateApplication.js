@@ -253,15 +253,18 @@ export class TemplateApplicationView {
       this.allItems = allItems;
       
       // Filter to items that don't have this template
-      // Lazy migration: if maintenance structure doesn't exist, treat as "doesn't have template"
+      // Check both inspection_data and maintenance_data applied_templates per new schema
+      const getAppliedTemplates = (item) => [
+        ...(item.maintenance?.inspection_data?.applied_templates || []),
+        ...(item.maintenance?.maintenance_data?.applied_templates || [])
+      ];
+
       const itemsWithoutTemplate = this.allItems.filter(item => {
-        const appliedTemplates = item.maintenance?.applied_templates || [];
-        return !appliedTemplates.includes(this.selectedTemplate.schedule_id);
+        return !getAppliedTemplates(item).includes(this.selectedTemplate.schedule_id);
       });
-      
+
       const itemsWithTemplate = this.allItems.filter(item => {
-        const appliedTemplates = item.maintenance?.applied_templates || [];
-        return appliedTemplates.includes(this.selectedTemplate.schedule_id);
+        return getAppliedTemplates(item).includes(this.selectedTemplate.schedule_id);
       });
       
       // Get unique class_type values for filter
@@ -346,7 +349,10 @@ export class TemplateApplicationView {
   }
   
   renderItemCheckbox(item) {
-    const appliedTemplates = item.maintenance?.applied_templates || [];
+    const appliedTemplates = [
+      ...(item.maintenance?.inspection_data?.applied_templates || []),
+      ...(item.maintenance?.maintenance_data?.applied_templates || [])
+    ];
     const hasOtherTemplates = appliedTemplates.length > 0;
     
     return `
