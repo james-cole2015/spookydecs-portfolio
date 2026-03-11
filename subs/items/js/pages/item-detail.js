@@ -232,7 +232,11 @@ class ItemDetailPage {
     if (this.item.maintenance?.repair_data?.needs_repair) {
       badges.push('<span class="item-badge badge-repair">Needs Repair</span>');
     }
-    
+
+    if (this.item.operational_status === false) {
+      badges.push('<span class="item-badge badge-non-operational">Non-Operational</span>');
+    }
+
     if (inProgressRecords.length > 0) {
       const recordText = inProgressRecords.length === 1 ? 'record' : 'records';
       badges.push(`
