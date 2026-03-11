@@ -3,9 +3,8 @@
 
 import { fetchItemById, updateItem } from '../api/items.js';
 import { getMaintenanceRecords, getMaintenancePageUrl } from '../api/maintenance.js';
-import { navigate } from '../utils/router.js';
 import { toast } from '../shared/toast.js';
-import { getStatusColor, getClassIcon, getSeasonIcon } from '../utils/item-config.js';
+import { getClassIcon, getSeasonIcon } from '../utils/item-config.js';
 import { actionDrawer } from '../components/ActionDrawer.js';
 import { EditableSection } from '../components/EditableSection.js';
 import { PhotoGallery } from '../components/PhotoGallery.js';
@@ -31,6 +30,13 @@ class ItemDetailPage {
         console.warn('Failed to load maintenance records:', error);
         this.maintenanceRecords = [];
       }
+
+      // Resolve maintenance page URL for links
+      try {
+        this.maintenancePageUrl = await getMaintenancePageUrl(itemId);
+      } catch (error) {
+        this.maintenancePageUrl = null;
+      }
       
       // Render page
       await this.renderPage();
@@ -55,6 +61,19 @@ class ItemDetailPage {
     }
   }
   
+  /**
+   * Format a maintenance record's date. date_scheduled may be a season bucket
+   * string (e.g. "2026 Halloween") rather than an ISO date, so fall back to
+   * returning it as-is when it can't be parsed.
+   */
+  formatRecordDate(record) {
+    const raw = record.date_performed || record.date_scheduled || record.created_at;
+    if (!raw) return 'No date';
+    const parsed = new Date(raw);
+    if (isNaN(parsed.getTime())) return raw;
+    return parsed.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
   /**
    * Get in-progress maintenance records
    */
@@ -481,59 +500,181 @@ class ItemDetailPage {
   }
   
   renderMaintenanceSection() {
-    const isOperational = this.item.operational_status !== false;
-    const hasRepair = this.item.maintenance?.repair_data?.needs_repair;
-    const appliedTemplates = [
-      ...(this.item.maintenance?.maintenance_data?.applied_templates || []),
-      ...(this.item.maintenance?.inspection_data?.applied_templates || [])
-    ];
-    const upcomingMaintenance = this.getUpcomingMaintenance();
     const completedRecords = this.getCompletedRecords();
-    const inProgressRecords = this.getInProgressRecords();
 
     return `
       <div class="detail-section">
         <h2 class="section-title">Maintenance</h2>
-        
-        <h3 class="subsection-title">Current Status</h3>
-        <div class="status-badges">
-          ${isOperational ? `
-            <div class="item-badge badge-operational">Operational</div>
-          ` : `
-            <div class="item-badge badge-non-operational">Non-Operational</div>
-          `}
-          ${hasRepair ? `
-            <div class="item-badge badge-repair">Needs Repair</div>
-          ` : ''}
-          ${inProgressRecords.length > 0 ? `
-            <a href="#" class="in-progress-link-status" onclick="event.preventDefault(); itemDetailPage.handleViewAllMaintenance();">
-              ${inProgressRecords.length} ${inProgressRecords.length === 1 ? 'record' : 'records'} in progress →
-            </a>
-          ` : ''}
-        </div>
 
-        <h3 class="subsection-title">Applied Templates</h3>
-        ${appliedTemplates.length > 0 ? `
-          <div class="template-list">
-            ${appliedTemplates.map(templateId => `
-              <div class="template-item">
-                <span class="template-id">${this.escapeHtml(String(templateId))}</span>
-              </div>
-            `).join('')}
-          </div>
-        ` : `
-          <p class="field-value empty">No templates applied</p>
-        `}
-
-        ${upcomingMaintenance.length > 0 ? `
-          <h3 class="subsection-title">Upcoming Maintenance</h3>
-          ${this.renderUpcomingMaintenance(upcomingMaintenance)}
-        ` : ''}
+        ${this.renderRepairSubsection()}
+        ${this.renderInspectionSubsection()}
+        ${this.renderRecurringSubsection()}
 
         ${completedRecords.length > 0 ? `
-          <h3 class="subsection-title">Recently Completed Maintenance</h3>
+          <h3 class="subsection-title">Recently Completed</h3>
           ${this.renderMaintenanceRecords(completedRecords)}
         ` : ''}
+      </div>
+    `;
+  }
+
+  renderRepairSubsection() {
+    const repairData = this.item.maintenance?.repair_data || {};
+    const isOperational = this.item.operational_status !== false;
+    const blockerRecordId = repairData.operational_blocker_record_id;
+    const activeRepairs = this.maintenanceRecords.filter(
+      r => r.record_type === 'repair' && r.status !== 'completed' && r.status !== 'cancelled'
+    );
+
+    // Most critical record: blocker first, then first active repair
+    const blockerRecord = blockerRecordId
+      ? this.maintenanceRecords.find(r => r.id === blockerRecordId)
+      : null;
+    const featuredRecord = blockerRecord || activeRepairs[0] || null;
+    const remainingCount = activeRepairs.length - (featuredRecord ? 1 : 0);
+
+    return `
+      <h3 class="subsection-title">Repair Records</h3>
+      <div class="maintenance-subsection">
+        <div class="status-badges">
+          ${isOperational
+            ? `<div class="item-badge badge-operational">Operational</div>`
+            : `<div class="item-badge badge-non-operational">Non-Operational</div>`}
+          ${repairData.needs_repair ? `<div class="item-badge badge-repair">Needs Repair</div>` : ''}
+        </div>
+        ${featuredRecord ? `
+          <div class="maintenance-item repair-featured">
+            <div class="maintenance-header">
+              <div class="maintenance-date">${this.formatRecordDate(featuredRecord)}</div>
+              <div class="maintenance-type">${this.escapeHtml(featuredRecord.record_type || 'Repair')}</div>
+            </div>
+            ${featuredRecord.title ? `<div class="maintenance-title">${this.escapeHtml(featuredRecord.title)}</div>` : ''}
+            ${featuredRecord.description ? `<div class="maintenance-notes">${this.escapeHtml(featuredRecord.description)}</div>` : ''}
+          </div>
+          ${remainingCount > 0 && this.maintenancePageUrl ? `
+            <a href="${this.maintenancePageUrl}" class="see-more-link" target="_blank" rel="noopener noreferrer">
+              See ${remainingCount} more ${remainingCount === 1 ? 'record' : 'records'} →
+            </a>
+          ` : ''}
+        ` : `
+          <p class="field-value empty">No active repair records</p>
+        `}
+      </div>
+    `;
+  }
+
+  renderInspectionSubsection() {
+    const inspData = this.item.maintenance?.inspection_data || {};
+    const templates = inspData.applied_templates || [];
+    const nextDate = inspData.next_inspection_date;
+    const lastSynced = inspData.last_synced_at;
+    const activeInspections = this.maintenanceRecords.filter(
+      r => r.record_type === 'inspection' && r.status !== 'completed' && r.status !== 'cancelled'
+    );
+    const featuredInspection = activeInspections[0] || null;
+    const remainingInspCount = activeInspections.length - (featuredInspection ? 1 : 0);
+
+    return `
+      <h3 class="subsection-title">Inspection Records</h3>
+      <div class="maintenance-subsection">
+        ${nextDate ? `
+          <div class="maintenance-field-row">
+            <span class="maintenance-field-label">Next Inspection</span>
+            <span class="maintenance-field-value">${new Date(nextDate).toLocaleDateString()}</span>
+          </div>
+        ` : ''}
+        ${lastSynced ? `
+          <div class="maintenance-field-row">
+            <span class="maintenance-field-label">Last Synced</span>
+            <span class="maintenance-field-value">${new Date(lastSynced).toLocaleDateString()}</span>
+          </div>
+        ` : ''}
+        ${templates.length > 0 ? `
+          <div class="maintenance-field-row maintenance-field-row--top">
+            <span class="maintenance-field-label">Templates</span>
+            <div class="template-list template-list--inline">
+              ${templates.map(t => `<span class="template-id">${this.escapeHtml(String(t))}</span>`).join('')}
+            </div>
+          </div>
+        ` : ''}
+        ${featuredInspection ? `
+          <div class="maintenance-item repair-featured">
+            <div class="maintenance-header">
+              <div class="maintenance-date">${this.formatRecordDate(featuredInspection)}</div>
+              <div class="maintenance-type">${this.escapeHtml(featuredInspection.record_type || 'Inspection')}</div>
+            </div>
+            ${featuredInspection.title ? `<div class="maintenance-title">${this.escapeHtml(featuredInspection.title)}</div>` : ''}
+            ${featuredInspection.description ? `<div class="maintenance-notes">${this.escapeHtml(featuredInspection.description)}</div>` : ''}
+          </div>
+          ${remainingInspCount > 0 && this.maintenancePageUrl ? `
+            <a href="${this.maintenancePageUrl}" class="see-more-link" target="_blank" rel="noopener noreferrer">
+              See ${remainingInspCount} more ${remainingInspCount === 1 ? 'record' : 'records'} →
+            </a>
+          ` : ''}
+        ` : ''}
+        ${!nextDate && !lastSynced && templates.length === 0 && !featuredInspection
+          ? `<p class="field-value empty">No inspection data</p>`
+          : ''}
+      </div>
+    `;
+  }
+
+  renderRecurringSubsection() {
+    const maintData = this.item.maintenance?.maintenance_data || {};
+    const templates = maintData.applied_templates || [];
+    const nextDate = maintData.next_maintenance_date;
+    const lastSynced = maintData.last_synced_at;
+    const upcomingMaintenance = this.getUpcomingMaintenance();
+    const activeRecurring = this.maintenanceRecords.filter(
+      r => r.record_type === 'maintenance' && r.status !== 'completed' && r.status !== 'cancelled'
+    );
+    const featuredRecurring = activeRecurring[0] || null;
+    const remainingRecurringCount = activeRecurring.length - (featuredRecurring ? 1 : 0);
+
+    return `
+      <h3 class="subsection-title">Recurring Maintenance</h3>
+      <div class="maintenance-subsection">
+        ${nextDate ? `
+          <div class="maintenance-field-row">
+            <span class="maintenance-field-label">Next Due</span>
+            <span class="maintenance-field-value">${new Date(nextDate).toLocaleDateString()}</span>
+          </div>
+        ` : ''}
+        ${lastSynced ? `
+          <div class="maintenance-field-row">
+            <span class="maintenance-field-label">Last Synced</span>
+            <span class="maintenance-field-value">${new Date(lastSynced).toLocaleDateString()}</span>
+          </div>
+        ` : ''}
+        ${templates.length > 0 ? `
+          <div class="maintenance-field-row maintenance-field-row--top">
+            <span class="maintenance-field-label">Templates</span>
+            <div class="template-list template-list--inline">
+              ${templates.map(t => `<span class="template-id">${this.escapeHtml(String(t))}</span>`).join('')}
+            </div>
+          </div>
+        ` : ''}
+        ${upcomingMaintenance.length > 0 ? `
+          <div style="margin-top:16px">${this.renderUpcomingMaintenance(upcomingMaintenance)}</div>
+        ` : ''}
+        ${featuredRecurring ? `
+          <div class="maintenance-item repair-featured">
+            <div class="maintenance-header">
+              <div class="maintenance-date">${this.formatRecordDate(featuredRecurring)}</div>
+              <div class="maintenance-type">${this.escapeHtml(featuredRecurring.record_type || 'Maintenance')}</div>
+            </div>
+            ${featuredRecurring.title ? `<div class="maintenance-title">${this.escapeHtml(featuredRecurring.title)}</div>` : ''}
+            ${featuredRecurring.description ? `<div class="maintenance-notes">${this.escapeHtml(featuredRecurring.description)}</div>` : ''}
+          </div>
+          ${remainingRecurringCount > 0 && this.maintenancePageUrl ? `
+            <a href="${this.maintenancePageUrl}" class="see-more-link" target="_blank" rel="noopener noreferrer">
+              See ${remainingRecurringCount} more ${remainingRecurringCount === 1 ? 'record' : 'records'} →
+            </a>
+          ` : ''}
+        ` : ''}
+        ${!nextDate && !lastSynced && templates.length === 0 && upcomingMaintenance.length === 0 && !featuredRecurring
+          ? `<p class="field-value empty">No recurring maintenance scheduled</p>`
+          : ''}
       </div>
     `;
   }
@@ -560,12 +701,10 @@ class ItemDetailPage {
   
   renderMaintenanceRecords(records) {
     return records.map(record => {
-      const displayDate = record.date_performed || record.date_scheduled || record.created_at;
-      
       return `
         <div class="maintenance-item">
           <div class="maintenance-header">
-            <div class="maintenance-date">${new Date(displayDate).toLocaleDateString()}</div>
+            <div class="maintenance-date">${this.formatRecordDate(record)}</div>
             <div class="maintenance-type">${record.record_type || 'Maintenance'}</div>
           </div>
           ${record.title ? `
