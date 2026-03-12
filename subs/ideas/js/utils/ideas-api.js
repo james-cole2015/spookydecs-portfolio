@@ -66,6 +66,52 @@ export async function updateIdea(body) {
   return await handleResponse(response);
 }
 
+// GET all photos linked to an idea (via images table GSI)
+export async function getIdeaPhotos(ideaId, photoType = null) {
+  const { API_ENDPOINT } = await window.SpookyConfig.get();
+  const params = new URLSearchParams({ idea_id: ideaId });
+  if (photoType) params.set('photo_type', photoType);
+  const response = await fetch(
+    `${API_ENDPOINT}/admin/images?${params}`,
+    { method: 'GET', headers: HEADERS }
+  );
+  const data = await handleResponse(response);
+  return Array.isArray(data) ? data : (data?.photos || []);
+}
+
+// GET all finance cost records linked to an idea
+export async function getIdeaCosts(ideaId) {
+  const { API_ENDPOINT } = await window.SpookyConfig.get();
+  const response = await fetch(
+    `${API_ENDPOINT}/finance/costs?related_idea_id=${encodeURIComponent(ideaId)}`,
+    { method: 'GET', headers: HEADERS }
+  );
+  const data = await handleResponse(response);
+  return Array.isArray(data) ? data : (data?.costs || []);
+}
+
+// POST create a new finance cost record linked to an idea
+export async function createIdeaCost(ideaId, body) {
+  const { API_ENDPOINT } = await window.SpookyConfig.get();
+  const response = await fetch(`${API_ENDPOINT}/finance/costs`, {
+    method: 'POST',
+    headers: HEADERS,
+    body: JSON.stringify({ ...body, related_idea_id: ideaId })
+  });
+  return await handleResponse(response);
+}
+
+// POST create an item record in the items table
+export async function createItem(body) {
+  const { API_ENDPOINT } = await window.SpookyConfig.get();
+  const response = await fetch(`${API_ENDPOINT}/items`, {
+    method: 'POST',
+    headers: HEADERS,
+    body: JSON.stringify(body)
+  });
+  return await handleResponse(response);
+}
+
 // DELETE idea by id
 export async function deleteIdea(id) {
   const endpoint = await getEndpoint();

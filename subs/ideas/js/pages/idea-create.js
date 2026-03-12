@@ -59,14 +59,20 @@ async function _handleSubmit(data, existingIdea, isEdit) {
 
   try {
     const body = {
-      title:       data.title,
-      season:      data.season,
-      status:      data.status,
-      description: data.description,
-      link:        data.link,
-      notes:       data.notes,
-      tags:        data.tags,
-      images:      data.images
+      title:           data.title,
+      season:          data.season,
+      status:          data.status,
+      description:     data.description,
+      link:            data.link,
+      notes:           data.notes,
+      tags:            data.tags,
+      images:          data.images,
+      estimated_cost:  data.estimated_cost,
+      materials:       data.materials,
+      prep_start:      data.prep_start,
+      build_start:     data.build_start,
+      build_complete:  data.build_complete,
+      item_id:         data.item_id,
     };
 
     let resultIdea;

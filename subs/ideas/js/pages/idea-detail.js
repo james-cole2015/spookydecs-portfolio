@@ -1,9 +1,10 @@
 // Idea Detail Page
 
-import { getIdea, deleteIdea } from '../utils/ideas-api.js';
+import { getIdea, updateIdea, deleteIdea, getIdeaCosts, createIdeaCost, getIdeaPhotos } from '../utils/ideas-api.js';
 import { navigateTo } from '../utils/router.js';
 import { showToast } from '../shared/toast.js';
 import { showConfirmModal } from '../shared/modal.js';
+import { ITEMS_BASE_URL } from '../utils/ideas-config.js';
 
 const PLACEHOLDERS = {
   halloween: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
@@ -26,6 +27,9 @@ const PLACEHOLDERS = {
     <path d="m21 15-5-5L5 21"/>
   </svg>`,
 };
+
+const COST_TYPES = ['build', 'supply_purchase', 'other'];
+const COST_CATEGORIES = ['materials', 'labor', 'parts', 'consumables', 'decoration', 'light', 'accessory', 'other'];
 
 function _getYoutubeId(url) {
   if (!url) return null;
@@ -75,10 +79,15 @@ export async function renderIdeaDetail(container, id) {
     return;
   }
 
+  if (idea.status === 'Workbench') {
+    navigateTo(`/workbench/${idea.id}`);
+    return;
+  }
+
   _renderDetail(container, idea);
 }
 
-function _renderDetail(container, idea) {
+async function _renderDetail(container, idea) {
   const seasonKey = (idea.season || '').toLowerCase();
   const statusKey = (idea.status || '').toLowerCase();
   const images = idea.images || [];
@@ -117,6 +126,36 @@ function _renderDetail(container, idea) {
     ? `<a href="${_escAttr(idea.link)}" target="_blank" rel="noopener noreferrer">${_escHtml(idea.link)}</a>`
     : '<span class="detail-field-value empty">—</span>';
 
+  const materialsHtml = (idea.materials || []).length
+    ? `<ul class="materials-list">${idea.materials.map(m => {
+        const mat = typeof m === 'string' ? { name: m, done: false } : m;
+        return `<li${mat.done ? ' class="done"' : ''}>${_escHtml(mat.name)}</li>`;
+      }).join('')}</ul>`
+    : '<span class="detail-field-value empty">None listed</span>';
+
+  const buildFields = [
+    { label: 'Prep Start',     value: idea.prep_start },
+    { label: 'Build Start',    value: idea.build_start },
+    { label: 'Build Complete', value: idea.build_complete },
+  ].map(f => `
+    <div class="detail-field">
+      <div class="detail-field-label">${f.label}</div>
+      <div class="detail-field-value${!f.value ? ' empty' : ''}">${f.value ? _formatDate(f.value) : '—'}</div>
+    </div>
+  `).join('');
+
+  // Status transition buttons — dynamic by current status
+  let statusBtnsHtml = '';
+  if (idea.status === 'Considering') {
+    statusBtnsHtml = `<button class="btn btn-workbench" id="status-forward-btn">Move to Planning →</button>`;
+  } else if (idea.status === 'Planning') {
+    statusBtnsHtml = `
+      <button class="btn btn-secondary" id="status-back-btn">← Back to Considering</button>
+      <button class="btn btn-workbench" id="status-forward-btn">Move to Workbench →</button>`;
+  }
+
+  const todayIso = new Date().toISOString().slice(0, 10);
+
   container.innerHTML = `
     <div class="detail-page">
       <div class="breadcrumb">
@@ -133,9 +172,15 @@ function _renderDetail(container, idea) {
           <span class="badge badge-season-${seasonKey}">${idea.season}</span>
           <span class="badge badge-status-${statusKey}">${idea.status}</span>
         </div>
+        ${idea.status === 'Built' && idea.item_id ? `
+        <div class="idea-complete-banner">
+          ✓ Build complete — this idea is locked.
+          <a href="${ITEMS_BASE_URL}/items/${_escAttr(idea.item_id)}" target="_blank">View Item →</a>
+        </div>` : ''}
         <h1 class="detail-title">${_escHtml(idea.title)}</h1>
         <div class="detail-actions">
           <button class="btn btn-secondary" id="edit-btn">Edit</button>
+          ${statusBtnsHtml}
           <button class="btn btn-danger btn-sm" id="delete-btn">Delete</button>
         </div>
       </div>
@@ -145,9 +190,7 @@ function _renderDetail(container, idea) {
 
           <div class="detail-section">
             <div class="detail-section-title">Description</div>
-            <div class="detail-field-value${!idea.description ? ' empty' : ''}">
-              ${idea.description ? _escHtml(idea.description) : 'No description provided.'}
-            </div>
+            <div class="detail-field-value${!idea.description ? ' empty' : ''}">${idea.description ? _escHtml(idea.description) : 'No description provided.'}</div>
           </div>
 
           ${idea.notes ? `
@@ -155,6 +198,49 @@ function _renderDetail(container, idea) {
             <div class="detail-section-title">Notes</div>
             <div class="detail-field-value">${_escHtml(idea.notes)}</div>
           </div>` : ''}
+
+          <div class="detail-section">
+            <div class="detail-section-title">Planning</div>
+            <div class="detail-field" style="border-bottom:none">
+              <div class="detail-field-label">Materials</div>
+              <div class="detail-field-value">${materialsHtml}</div>
+            </div>
+          </div>
+
+          ${idea.status !== 'Considering' ? `
+          <div class="detail-section">
+            <div class="detail-section-title">Build</div>
+            ${buildFields}
+            <div class="detail-field" style="border-bottom:none">
+              <div class="detail-field-label">Item ID</div>
+              <div class="detail-field-value${!idea.item_id ? ' empty' : ''}">
+                ${idea.item_id
+                  ? `<a href="${ITEMS_BASE_URL}/items/${_escAttr(idea.item_id)}" target="_blank">${_escHtml(idea.item_id)}</a>`
+                  : '—'}
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-section" id="costs-panel">
+            <div class="detail-section-title-row">
+              <span class="detail-section-title" style="margin-bottom:0">Costs</span>
+              <button class="btn btn-sm btn-primary" id="log-cost-btn">+ Log Cost</button>
+            </div>
+            <div id="costs-content" style="margin-top:var(--space-4)">
+              <div class="loading-spinner" style="margin:8px auto;width:20px;height:20px;border-width:2px"></div>
+            </div>
+          </div>
+          ` : ''}
+
+          <div class="detail-section" id="id-photos-section">
+            <div class="detail-section-title-row">
+              <span class="detail-section-title" style="margin-bottom:0">Photos</span>
+              ${idea.status !== 'Built' ? `<button type="button" class="btn btn-sm btn-secondary" id="id-add-photo-btn">+ Add Photo</button>` : ''}
+            </div>
+            <input id="id-photo-file-input" type="file" multiple accept="image/*" style="display:none">
+            <span id="id-photo-status" style="display:none;font-size:0.85rem;color:var(--color-text-muted);margin-top:var(--space-2)"></span>
+            <div id="id-photos-grid" class="bd-photos-grid" style="margin-top:var(--space-3)"></div>
+          </div>
 
         </div>
 
@@ -164,16 +250,12 @@ function _renderDetail(container, idea) {
 
             <div class="detail-field">
               <div class="detail-field-label">Season</div>
-              <div class="detail-field-value">
-                <span class="badge badge-season-${seasonKey}">${idea.season}</span>
-              </div>
+              <div class="detail-field-value">${_escHtml(idea.season)}</div>
             </div>
 
             <div class="detail-field">
               <div class="detail-field-label">Status</div>
-              <div class="detail-field-value">
-                <span class="badge badge-status-${statusKey}">${idea.status}</span>
-              </div>
+              <div class="detail-field-value">${_escHtml(idea.status)}</div>
             </div>
 
             <div class="detail-field">
@@ -199,6 +281,74 @@ function _renderDetail(container, idea) {
         </div>
       </div>
     </div>
+
+    <!-- Log Cost Modal -->
+    <div class="log-cost-backdrop" id="log-cost-modal" style="display:none" role="dialog" aria-modal="true" aria-label="Log Cost">
+      <div class="log-cost-modal">
+        <div class="log-cost-modal-header">
+          <h2>Log Cost</h2>
+          <button class="log-cost-close" id="log-cost-close" aria-label="Close">&times;</button>
+        </div>
+        <form id="log-cost-form" novalidate>
+          <div class="form-group">
+            <label class="form-label" for="lc-item-name">Item / Description <span class="required">*</span></label>
+            <input class="form-input" id="lc-item-name" type="text" placeholder="e.g. 3/4 inch PVC pipe" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="lc-cost-type">Cost Type <span class="required">*</span></label>
+              <select class="form-select" id="lc-cost-type" required>
+                ${COST_TYPES.map(t => `<option value="${t}"${t === 'build' ? ' selected' : ''}>${t}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="lc-category">Category <span class="required">*</span></label>
+              <select class="form-select" id="lc-category" required>
+                ${COST_CATEGORIES.map(c => `<option value="${c}"${c === 'materials' ? ' selected' : ''}>${c}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="lc-total-cost">Total Cost ($) <span class="required">*</span></label>
+              <input class="form-input" id="lc-total-cost" type="number" min="0.01" step="0.01" placeholder="0.00" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="lc-cost-date">Date <span class="required">*</span></label>
+              <input class="form-input" id="lc-cost-date" type="date" value="${todayIso}" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="lc-store">Store <span class="required">*</span></label>
+              <input class="form-input" id="lc-store" type="text" placeholder="e.g. Home Depot" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="lc-manufacturer">Brand / Manufacturer</label>
+              <input class="form-input" id="lc-manufacturer" type="text" placeholder="e.g. Spirit Halloween">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Receipt (optional)</label>
+            <div class="lc-receipt-row">
+              <input id="lc-receipt-file" type="file" accept="image/*,application/pdf" style="display:none">
+              <button type="button" class="btn btn-secondary btn-sm" id="lc-receipt-btn">Attach Receipt</button>
+              <span class="lc-receipt-name" id="lc-receipt-name" style="display:none"></span>
+              <button type="button" class="btn-link lc-receipt-remove" id="lc-receipt-remove" style="display:none" aria-label="Remove receipt">✕</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="lc-notes">Notes</label>
+            <input class="form-input" id="lc-notes" type="text" placeholder="Optional">
+          </div>
+          <div class="form-error" id="lc-error" style="display:none"></div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" id="lc-cancel">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="lc-submit">Save Cost</button>
+          </div>
+        </form>
+      </div>
+    </div>
   `;
 
   // Back
@@ -207,10 +357,70 @@ function _renderDetail(container, idea) {
     navigateTo('/list');
   });
 
-  // Edit
+  // Edit / Delete — hidden for completed ideas
+  if (idea.status === 'Built' && idea.item_id) {
+    container.querySelector('#edit-btn').style.display = 'none';
+    container.querySelector('#delete-btn').style.display = 'none';
+  }
+
   container.querySelector('#edit-btn').addEventListener('click', () => {
     navigateTo(`/${idea.id}/edit`);
   });
+
+  // Status transitions — forward
+  const forwardBtn = container.querySelector('#status-forward-btn');
+  if (forwardBtn) {
+    const transitions = {
+      Considering: { newStatus: 'Planning',   title: 'Move to Planning',   msg: `Move "${idea.title}" to Planning?`,   dest: `/${idea.id}` },
+      Planning:    { newStatus: 'Workbench',  title: 'Move to Workbench',  msg: `Move "${idea.title}" to the Workbench? It will be tracked as an active build.`, dest: '/workbench' },
+    };
+    const t = transitions[idea.status];
+    if (t) {
+      forwardBtn.addEventListener('click', () => {
+        showConfirmModal({
+          title: t.title,
+          message: t.msg,
+          confirmLabel: t.title,
+          onConfirm: async () => {
+            try {
+              await updateIdea({ ...idea, status: t.newStatus });
+              showToast(`Moved to ${t.newStatus}`, 'success');
+              window.location.reload();
+            } catch (err) {
+              showToast('Failed: ' + err.message, 'error');
+            }
+          }
+        });
+      });
+    }
+  }
+
+  // Status transitions — back
+  const backBtn = container.querySelector('#status-back-btn');
+  if (backBtn) {
+    const backTransitions = {
+      Planning: { newStatus: 'Considering', title: 'Back to Considering', msg: `Move "${idea.title}" back to Considering?` },
+    };
+    const t = backTransitions[idea.status];
+    if (t) {
+      backBtn.addEventListener('click', () => {
+        showConfirmModal({
+          title: t.title,
+          message: t.msg,
+          confirmLabel: t.title,
+          onConfirm: async () => {
+            try {
+              await updateIdea({ ...idea, status: t.newStatus });
+              showToast(`Moved to ${t.newStatus}`, 'success');
+              window.location.reload();
+            } catch (err) {
+              showToast('Failed: ' + err.message, 'error');
+            }
+          }
+        });
+      });
+    }
+  }
 
   // Delete
   container.querySelector('#delete-btn').addEventListener('click', () => {
@@ -231,7 +441,7 @@ function _renderDetail(container, idea) {
     });
   });
 
-  // Gallery thumb clicks
+  // Gallery
   if (images.length > 1) {
     container.querySelectorAll('.gallery-thumb').forEach(thumb => {
       thumb.addEventListener('click', () => {
@@ -241,6 +451,241 @@ function _renderDetail(container, idea) {
         if (heroImg) heroImg.src = thumb.dataset.url;
       });
     });
+  }
+
+  if (idea.status !== 'Considering') {
+  // Log Cost modal
+  const modal = container.querySelector('#log-cost-modal');
+  const _closeModal = () => {
+    modal.style.display = 'none';
+    const rf = container.querySelector('#lc-receipt-file');
+    if (rf) rf.value = '';
+    const rn = container.querySelector('#lc-receipt-name');
+    if (rn) { rn.textContent = ''; rn.style.display = 'none'; }
+    const rr = container.querySelector('#lc-receipt-remove');
+    if (rr) rr.style.display = 'none';
+  };
+
+  container.querySelector('#log-cost-btn').addEventListener('click', () => {
+    modal.style.display = 'flex';
+    container.querySelector('#lc-item-name').focus();
+  });
+  container.querySelector('#log-cost-close').addEventListener('click', _closeModal);
+  container.querySelector('#lc-cancel').addEventListener('click', _closeModal);
+  modal.addEventListener('click', e => { if (e.target === modal) _closeModal(); });
+
+  // Receipt picker
+  const receiptFile = container.querySelector('#lc-receipt-file');
+  const receiptName = container.querySelector('#lc-receipt-name');
+  const receiptRemove = container.querySelector('#lc-receipt-remove');
+  container.querySelector('#lc-receipt-btn').addEventListener('click', () => receiptFile.click());
+  receiptFile.addEventListener('change', () => {
+    const f = receiptFile.files[0];
+    if (f) {
+      receiptName.textContent = f.name;
+      receiptName.style.display = 'inline';
+      receiptRemove.style.display = 'inline';
+    }
+  });
+  receiptRemove.addEventListener('click', () => {
+    receiptFile.value = '';
+    receiptName.textContent = '';
+    receiptName.style.display = 'none';
+    receiptRemove.style.display = 'none';
+  });
+
+  container.querySelector('#log-cost-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    await _handleLogCost(container, idea, () => _loadCosts(container, idea.id));
+  });
+
+  // Load linked costs
+  _loadCosts(container, idea.id);
+  } // end status !== 'Considering'
+
+  // Photos — load from images table, then wire upload
+  _loadPhotos(container, idea.id);
+  _attachPhotoUpload(container, idea);
+}
+
+async function _loadPhotos(container, ideaId) {
+  const grid = container.querySelector('#id-photos-grid');
+  if (!grid) return;
+  try {
+    const photos = await getIdeaPhotos(ideaId);
+    if (!photos.length) return;
+    grid.innerHTML = photos.map(p => `
+      <a href="${_escAttr(p.cloudfront_url)}" target="_blank" rel="noopener" class="bd-photo-thumb">
+        <img src="${_escAttr(p.thumb_cloudfront_url || p.cloudfront_url)}" loading="lazy">
+      </a>`).join('');
+  } catch {
+    // silently fail — photos section just stays empty
+  }
+}
+
+function _attachPhotoUpload(container, idea) {
+  const fileInput = container.querySelector('#id-photo-file-input');
+  const addBtn    = container.querySelector('#id-add-photo-btn');
+  const statusEl  = container.querySelector('#id-photo-status');
+  if (!fileInput || !addBtn) return;
+
+  addBtn.addEventListener('click', () => fileInput.click());
+
+  fileInput.addEventListener('change', async () => {
+    const files = Array.from(fileInput.files);
+    if (!files.length) return;
+
+    addBtn.disabled = true;
+    statusEl.textContent = 'Uploading…';
+    statusEl.style.display = 'inline';
+
+    try {
+      const service = document.createElement('photo-upload-service');
+      const result = await service.upload(files, {
+        context:    'idea',
+        photo_type: 'inspiration',
+        season:     (idea.season || 'Shared').toLowerCase(),
+        idea_id:    idea.id,
+      });
+      const newPhotos = result?.photos || [];
+      if (!newPhotos.length) throw new Error('Upload failed');
+      await _loadPhotos(container, idea.id);
+
+      statusEl.textContent = `${newPhotos.length} photo${newPhotos.length > 1 ? 's' : ''} added`;
+      showToast('Photos saved', 'success');
+    } catch (err) {
+      statusEl.textContent = 'Upload failed';
+      showToast('Photo upload failed: ' + err.message, 'error');
+    } finally {
+      addBtn.disabled = false;
+      fileInput.value = '';
+      setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+    }
+  });
+}
+
+async function _loadCosts(container, ideaId) {
+  const costsContent = container.querySelector('#costs-content');
+  if (!costsContent) return;
+
+  let costs;
+  try {
+    costs = await getIdeaCosts(ideaId);
+  } catch (err) {
+    costsContent.innerHTML = `<span class="detail-field-value empty">Failed to load costs: ${_escHtml(err.message)}</span>`;
+    return;
+  }
+
+  const total = costs.reduce((sum, c) => sum + (parseFloat(c.total_cost) || 0), 0);
+
+  const summaryHtml = `
+    <div class="costs-summary">
+      <div class="costs-summary-item">
+        <span class="costs-summary-label">Actual</span>
+        <span class="costs-summary-value">$${total.toFixed(2)}</span>
+      </div>
+    </div>
+  `;
+
+  if (!costs.length) {
+    costsContent.innerHTML = summaryHtml +
+      `<div class="detail-field-value empty" style="margin-top:var(--space-3)">No cost records yet.</div>`;
+    return;
+  }
+
+  const rowsHtml = costs.map(c => `
+    <div class="cost-row">
+      <div class="cost-row-main">
+        <span class="cost-row-name">${_escHtml(c.item_name)}</span>
+        <span class="cost-row-amount">$${parseFloat(c.total_cost).toFixed(2)}</span>
+      </div>
+      <div class="cost-row-meta">${_escHtml(c.vendor)} · ${_escHtml(c.cost_date)} · ${_escHtml(c.category)}</div>
+    </div>
+  `).join('');
+
+  costsContent.innerHTML = summaryHtml + `<div class="cost-rows">${rowsHtml}</div>`;
+}
+
+async function _handleLogCost(container, idea, onSuccess) {
+  const errorEl = container.querySelector('#lc-error');
+  errorEl.style.display = 'none';
+  errorEl.textContent = '';
+
+  const itemName  = container.querySelector('#lc-item-name').value.trim();
+  const costType  = container.querySelector('#lc-cost-type').value;
+  const category  = container.querySelector('#lc-category').value;
+  const totalCost = container.querySelector('#lc-total-cost').value.trim();
+  const costDate  = container.querySelector('#lc-cost-date').value;
+  const store     = container.querySelector('#lc-store').value.trim();
+  const mfr       = container.querySelector('#lc-manufacturer').value.trim();
+  const notes     = container.querySelector('#lc-notes').value.trim();
+  const receiptFile = container.querySelector('#lc-receipt-file');
+  const file = receiptFile?.files[0] || null;
+
+  if (!itemName || !costType || !category || !totalCost || !costDate || !store) {
+    errorEl.textContent = 'All required fields must be filled.';
+    errorEl.style.display = 'block';
+    return;
+  }
+
+  const submitBtn = container.querySelector('#lc-submit');
+  submitBtn.disabled = true;
+
+  let receiptPayload = { no_receipt: true };
+
+  if (file) {
+    submitBtn.textContent = 'Uploading receipt…';
+    try {
+      const service = document.createElement('photo-upload-service');
+      const result = await service.upload([file], {
+        context: 'receipt',
+        photo_type: 'receipt',
+        season: (idea.season || 'Shared').toLowerCase(),
+        idea_id: idea.id,
+      });
+      if (!result?.success) throw new Error('Upload failed');
+      const url = result.photos[0]?.cloudfront_url;
+      receiptPayload = { no_receipt: false, receipt_data: { url } };
+    } catch (err) {
+      errorEl.textContent = 'Receipt upload failed: ' + err.message;
+      errorEl.style.display = 'block';
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Save Cost';
+      return;
+    }
+  }
+
+  submitBtn.textContent = 'Saving…';
+
+  try {
+    await createIdeaCost(idea.id, {
+      item_name: itemName,
+      cost_type: costType,
+      category,
+      total_cost: totalCost,
+      cost_date: costDate,
+      vendor: store,
+      ...(mfr && { manufacturer: mfr }),
+      ...(notes && { notes }),
+      class_type: 'item',
+      ...receiptPayload,
+    });
+    showToast('Cost record saved', 'success');
+    container.querySelector('#log-cost-modal').style.display = 'none';
+    container.querySelector('#log-cost-form').reset();
+    container.querySelector('#lc-cost-date').value = new Date().toISOString().slice(0, 10);
+    if (receiptFile) receiptFile.value = '';
+    const rn = container.querySelector('#lc-receipt-name');
+    if (rn) { rn.textContent = ''; rn.style.display = 'none'; }
+    const rr = container.querySelector('#lc-receipt-remove');
+    if (rr) rr.style.display = 'none';
+    await onSuccess();
+  } catch (err) {
+    errorEl.textContent = err.message;
+    errorEl.style.display = 'block';
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Save Cost';
   }
 }
 
@@ -282,10 +727,10 @@ function _renderNotFound(container, id) {
 }
 
 function _formatDate(iso) {
+  if (!iso) return '';
   try {
-    return new Date(iso).toLocaleDateString('en-US', {
-      year: 'numeric', month: 'short', day: 'numeric',
-      hour: '2-digit', minute: '2-digit'
+    return new Date(iso + (iso.length === 10 ? 'T00:00:00' : '')).toLocaleDateString('en-US', {
+      year: 'numeric', month: 'short', day: 'numeric'
     });
   } catch { return iso; }
 }

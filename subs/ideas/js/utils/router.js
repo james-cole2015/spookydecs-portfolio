@@ -3,7 +3,7 @@
 let _router = null;
 
 // These path segments are not valid idea IDs
-const RESERVED = new Set(['list', 'create']);
+const RESERVED = new Set(['list', 'create', 'workbench']);
 
 export function initRouter() {
   _router = new Navigo('/', { hash: false });
@@ -23,6 +23,12 @@ export function initRouter() {
       await _render(container => renderIdeasList(container, season));
     })
 
+    // Workbench — active builds view
+    .on('/workbench', async () => {
+      const { renderIdeasWorkbench } = await import('../pages/ideas-workbench.js');
+      await _render(container => renderIdeasWorkbench(container));
+    })
+
     // Create
     .on('/create', async () => {
       const { renderIdeaCreate } = await import('../pages/idea-create.js');
@@ -33,6 +39,12 @@ export function initRouter() {
     .on('/:id/edit', async ({ data }) => {
       const { renderIdeaCreate } = await import('../pages/idea-create.js');
       await _render(container => renderIdeaCreate(container, data.id));
+    })
+
+    // Build detail — interactive workspace for Workbench ideas
+    .on('/workbench/:id', async ({ data }) => {
+      const { renderBuildDetail } = await import('../pages/build-detail.js');
+      await _render(container => renderBuildDetail(container, data.id));
     })
 
     // Detail — only if id is not a reserved segment
