@@ -367,15 +367,17 @@ class ItemDetailPage {
   async renderRelatedLinksSection() {
     const toteId = this.item.packing_data?.tote_id;
     const itemId = this.item.id;
+    const sourceIdeaId = this.item.source_idea_id || null;
 
     // Resolve base URLs from config — fall back gracefully if any are missing
-    let storageBase = '', financeBase = '', maintenanceBase = '', imagesBase = '';
+    let storageBase = '', financeBase = '', maintenanceBase = '', imagesBase = '', ideasBase = '';
     try {
       const config = await window.SpookyConfig.get();
       storageBase    = config.STR_ADM_URL   || '';
       financeBase    = config.finance_url    || '';
       maintenanceBase = config.MAINT_URL    || '';
       imagesBase     = config.IMAGES_URL    || '';
+      ideasBase      = config.IDEAS_ADMIN_URL || '';
     } catch (err) {
       console.warn('Could not load SpookyConfig for related links:', err);
     }
@@ -425,6 +427,17 @@ class ItemDetailPage {
         href: imagesBase && itemId ? `${imagesBase}/images/entities/${itemId}` : null,
         disabled: !imagesBase,
         tooltip: null,
+      },
+      {
+        type: 'idea',
+        icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/>
+        </svg>`,
+        label: 'Origin Idea',
+        descriptor: 'The idea this item was built from',
+        href: sourceIdeaId && ideasBase ? `${ideasBase}/workbench/${sourceIdeaId}` : null,
+        disabled: !sourceIdeaId,
+        tooltip: !sourceIdeaId ? 'Not built from an idea' : null,
       },
     ];
 
