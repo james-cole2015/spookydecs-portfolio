@@ -4,7 +4,7 @@ import { updateImage, deleteImage } from '../utils/images-api.js';
 import { navigate } from '../utils/router.js';
 import { confirmAction } from '../shared/modal.js';
 
-export function renderEntityRefs(photo, financeUrl = '', maintUrl = '', category = '') {
+export function renderEntityRefs(photo, financeUrl = '', maintUrl = '', category = '', ideasUrl = '') {
   const parts = [];
 
   const ids = photo.item_ids || [];
@@ -50,6 +50,17 @@ export function renderEntityRefs(photo, financeUrl = '', maintUrl = '', category
         <label>Cost Record</label>
         <div class="readonly-value">
           <a class="breadcrumb-link" href="${financeUrl}/costs/${costId}" target="_blank" rel="noopener noreferrer">${costId}</a>
+        </div>
+      </div>
+    `);
+  }
+
+  if (photo.idea_id && ideasUrl) {
+    parts.push(`
+      <div class="form-group">
+        <label>Idea</label>
+        <div class="readonly-value">
+          <a class="breadcrumb-link" href="${ideasUrl}/${photo.idea_id}" target="_blank" rel="noopener noreferrer">${photo.idea_id}</a>
         </div>
       </div>
     `);

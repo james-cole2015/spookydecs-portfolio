@@ -45,7 +45,7 @@ function deriveCategory(photo) {
   return 'misc';
 }
 
-export function ImageDetail(photo, isEditMode = false, financeUrl = '', maintUrl = '') {
+export function ImageDetail(photo, isEditMode = false, financeUrl = '', maintUrl = '', ideasUrl = '') {
   const wrapper = document.createElement('div');
 
   const container = document.createElement('div');
@@ -144,7 +144,7 @@ export function ImageDetail(photo, isEditMode = false, financeUrl = '', maintUrl
           ${renderDynamicFields(photo, categoryConfig, isEditMode)}
         </div>
 
-        ${!isEditMode ? renderEntityRefs(photo, financeUrl, maintUrl, category) : ''}
+        ${!isEditMode ? renderEntityRefs(photo, financeUrl, maintUrl, category, ideasUrl) : ''}
 
         ${isEditMode ? `
           <div class="form-group checkbox-group">
