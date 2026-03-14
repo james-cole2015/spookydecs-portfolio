@@ -1,5 +1,5 @@
 // Entity Detail Page — all photos for a single item or storage entity
-import { fetchImages, setPrimaryPhoto } from '../utils/images-api.js';
+import { fetchImages, setPrimaryPhoto, fetchIdeas } from '../utils/images-api.js';
 import { Breadcrumb } from '../components/Breadcrumb.js';
 import { LightboxGallery } from '../components/LightboxGallery.js';
 import { navigate } from '../utils/router.js';
@@ -36,10 +36,14 @@ export async function renderEntityDetail(params) {
 
   let photos = await loadPhotos(entityId, entityType);
 
-  // If no results with default type, try the other type
+  // If no results with default type, try other types
   if (photos.length === 0 && entityType === 'item') {
     photos = await loadPhotos(entityId, 'storage');
     if (photos.length > 0) entityType = 'storage';
+  }
+  if (photos.length === 0 && entityType !== 'idea') {
+    photos = await loadPhotos(entityId, 'idea');
+    if (photos.length > 0) entityType = 'idea';
   }
 
   if (photos.length === 0) {
@@ -53,19 +57,31 @@ export async function renderEntityDetail(params) {
     return;
   }
 
-  renderDetailPage(app, entityId, entityType, photos);
+  let entityTitle = null;
+  if (entityType === 'idea') {
+    try {
+      const ideas = await fetchIdeas();
+      const idea = ideas.find(i => i.id === entityId);
+      if (idea?.title) entityTitle = idea.title;
+    } catch { /* fall back to ID */ }
+  }
+
+  renderDetailPage(app, entityId, entityType, photos, entityTitle);
 }
 
 async function loadPhotos(entityId, type) {
   try {
-    const filter = type === 'storage' ? { storage_id: entityId } : { item_id: entityId };
+    let filter;
+    if (type === 'storage') filter = { storage_id: entityId };
+    else if (type === 'idea') filter = { idea_id: entityId };
+    else filter = { item_id: entityId };
     return await fetchImages(filter);
   } catch {
     return [];
   }
 }
 
-function renderDetailPage(app, entityId, entityType, photos) {
+function renderDetailPage(app, entityId, entityType, photos, entityTitle = null) {
   // Derive metadata from photo records
   const primaryPhoto = photos.find(p => p.is_primary) || photos[0];
   const seasons = [...new Set(photos.map(p => p.season?.toLowerCase()).filter(Boolean))];
@@ -92,9 +108,10 @@ function renderDetailPage(app, entityId, entityType, photos) {
   page.innerHTML = `
     <div class="entity-detail-header">
       <div class="entity-detail-title">
-        <h1>${entityId}</h1>
+        <h1>${entityTitle || entityId}</h1>
+        ${entityTitle ? `<div class="entity-detail-subtitle">${entityId}</div>` : ''}
         <div class="entity-detail-badges">
-          <span class="entity-type-label">${entityType === 'storage' ? 'Storage' : 'Item'}</span>
+          <span class="entity-type-label">${entityType === 'storage' ? 'Storage' : entityType === 'idea' ? 'Idea' : 'Item'}</span>
           ${classBadge}
           ${seasonBadges}
         </div>
@@ -230,7 +247,11 @@ function createPhotoCard(photo, index, allPhotos, entityId, entityType) {
         const payload = {
           photo_id: photo.photo_id,
           context: entityType,
-          ...(entityType === 'storage' ? { storage_id: entityId } : { item_id: entityId })
+          ...(entityType === 'storage'
+            ? { storage_id: entityId }
+            : entityType === 'idea'
+              ? { idea_id: entityId }
+              : { item_id: entityId })
         };
         await setPrimaryPhoto(payload);
         // Re-render with fresh data

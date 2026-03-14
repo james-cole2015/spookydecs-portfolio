@@ -55,12 +55,12 @@ export function renderEntityRefs(photo, financeUrl = '', maintUrl = '', category
     `);
   }
 
-  if (photo.idea_id && ideasUrl) {
+  if (photo.idea_id) {
     parts.push(`
       <div class="form-group">
         <label>Idea</label>
         <div class="readonly-value">
-          <a class="breadcrumb-link" href="${ideasUrl}/${photo.idea_id}" target="_blank" rel="noopener noreferrer">${photo.idea_id}</a>
+          <a class="entity-link breadcrumb-link" data-entity-id="${photo.idea_id}" data-entity-type="idea" href="#">${photo.idea_id}</a>
         </div>
       </div>
     `);

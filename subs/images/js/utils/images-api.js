@@ -17,6 +17,7 @@ export async function fetchImages(filters = {}) {
     if (filters.year) params.append('year', filters.year);
     if (filters.item_id) params.append('item_id', filters.item_id);
     if (filters.storage_id) params.append('storage_id', filters.storage_id);
+    if (filters.idea_id) params.append('idea_id', filters.idea_id);
     if (filters.class_type) params.append('class_type', filters.class_type);
     if (filters.tags) params.append('tags', filters.tags);
     if (filters.limit) params.append('limit', filters.limit);
@@ -142,6 +143,18 @@ export async function setPrimaryPhoto(payload) {
     console.error('Error setting primary photo:', error);
     showToast(error.message, 'error');
     throw error;
+  }
+}
+
+export async function fetchIdeas() {
+  try {
+    const { API_ENDPOINT } = await window.SpookyConfig.get();
+    const response = await fetch(`${API_ENDPOINT}/ideas`);
+    if (!response.ok) return [];
+    const data = await response.json();
+    return Array.isArray(data) ? data : (data?.data ?? data?.ideas ?? []);
+  } catch {
+    return [];
   }
 }
 
