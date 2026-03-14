@@ -214,6 +214,12 @@ async function _renderDetail(container, idea) {
               <div class="detail-field-value">${escHtml(idea.season)}</div>
             </div>
 
+            ${idea.bucket ? `
+            <div class="detail-field">
+              <div class="detail-field-label">Build Season</div>
+              <div class="detail-field-value">${escHtml(idea.bucket)}</div>
+            </div>` : ''}
+
             <div class="detail-field">
               <div class="detail-field-label">Status</div>
               <div class="detail-field-value">${escHtml(idea.status)}</div>

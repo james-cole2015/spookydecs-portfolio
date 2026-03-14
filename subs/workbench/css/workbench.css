@@ -1,4 +1,4 @@
-/* Workbench Global Styles */
+/* Workbench — Seasonal Monitor Styles */
 
 * {
   box-sizing: border-box;
@@ -17,639 +17,348 @@ body {
   margin: 0 auto;
 }
 
-/* Buttons */
-.btn-primary,
-.btn-secondary,
-.btn-danger {
-  padding: 10px 20px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  border: none;
-  transition: all 0.15s;
-}
+/* ── Year selector ───────────────────────────────────────────────────────────── */
 
-.btn-primary {
-  background: #3b82f6;
-  color: white;
-}
-
-.btn-primary:hover {
-  background: #2563eb;
-}
-
-.btn-secondary {
-  background: white;
-  color: #0f172a;
-  border: 1px solid #e2e8f0;
-}
-
-.btn-secondary:hover {
-  background: #f8fafc;
-}
-
-.btn-danger {
-  background: #ef4444;
-  color: white;
-}
-
-.btn-danger:hover {
-  background: #dc2626;
-}
-
-/* Back Button */
-.back-btn {
-  background: none;
-  border: none;
-  color: #64748b;
-  font-size: 14px;
-  cursor: pointer;
-  padding: 8px 0;
-  margin-bottom: 16px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.back-btn:hover {
-  color: #0f172a;
-}
-
-/* Badges */
-.badge {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 600;
-  color: white;
-}
-
-.priority-badge {
-  /* Color set inline */
-}
-
-.type-badge {
-  background: #64748b;
-}
-
-.source-badge {
-  background: #8b5cf6;
-}
-
-/* ==================== KANBAN STYLES ==================== */
-
-.workbench-kanban {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-/* Header */
-.kanban-header {
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.header-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.season-selector {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.season-selector label {
-  font-weight: 600;
-  color: #64748b;
-}
-
-.season-dropdown {
-  padding: 8px 12px;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  font-size: 14px;
-  background: white;
-  cursor: pointer;
-}
-
-.header-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 24px;
-}
-
-.header-actions button {
-  width: 100%;
-}
-
-.header-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 16px;
-}
-
-.stat-card {
-  text-align: center;
-  padding: 16px;
-  background: #f8fafc;
-  border-radius: 8px;
-}
-
-.stat-value {
-  font-size: 32px;
-  font-weight: 700;
-  color: #0f172a;
-  margin-bottom: 4px;
-}
-
-.stat-label {
-  font-size: 12px;
-  color: #64748b;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-/* Filters */
-.kanban-filters {
-  background: white;
-  border-radius: 12px;
-  padding: 16px 24px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  display: flex;
-  gap: 24px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-/* Mobile filter toggle — hidden on desktop */
-.filter-toggle-btn {
-  display: none;
-}
-
-.filter-active-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  background: #3b82f6;
-  color: white;
-  border-radius: 50%;
-  font-size: 11px;
-  font-weight: 700;
-  margin-left: 6px;
-  vertical-align: middle;
-}
-
-/* On desktop, filter groups lay out in a flex row */
-.filter-groups-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 24px;
-  align-items: center;
-  flex: 1;
-}
-
-.filter-group {
+.year-selector {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-bottom: 16px;
 }
 
-.filter-group label {
-  font-size: 14px;
+.year-selector__label {
+  font-size: 13px;
   font-weight: 600;
   color: #64748b;
 }
 
-.filter-select {
-  padding: 6px 10px;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  font-size: 14px;
-  background: white;
-  cursor: pointer;
-}
-
-/* Clear Filters Button */
-.clear-filters-btn {
-  margin-left: auto;
-  padding: 8px 16px;
-  background: #ef4444;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.clear-filters-btn:hover:not([disabled]) {
-  background: #dc2626;
-}
-
-.clear-filters-btn[disabled] {
-  background: #e2e8f0;
-  color: #94a3b8;
-  cursor: not-allowed;
-}
-
-/* Kanban Board */
-.kanban-board {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-  grid-auto-columns: 1fr; /* Force any auto-generated columns to match */
-}
-
-
-.kanban-column {
+.year-pill {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
   background: #f1f5f9;
-  border-radius: 12px;
-  padding: 16px;
-  min-height: 400px;
-  max-width: 100%; /* Prevent overflow */
-  overflow: hidden; /* Prevent content from breaking layout */
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  padding: 4px 14px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.year-pill:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.year-pill--active {
+  background: #6366f1;
+  color: #fff;
+  border-color: #6366f1;
+}
+
+.year-pill--active:hover {
+  background: #4f46e5;
+  border-color: #4f46e5;
+  color: #fff;
+}
+
+.year-pill--clear {
+  background: transparent;
+  color: #94a3b8;
+  border-color: transparent;
+}
+
+.year-pill--clear:hover {
+  color: #ef4444;
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.year-pill.hidden {
+  display: none;
+}
+
+/* ── Monitor layout ─────────────────────────────────────────────────────────── */
+
+.seasonal-monitor {
+  padding: 8px 0;
+}
+
+.monitor-columns {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+/* ── Season columns ──────────────────────────────────────────────────────────── */
+
+.season-column {
+  flex: 1 1 0;
+  min-width: 0;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
 }
 
 .column-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 2px solid #cbd5e1;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 2px solid;
 }
 
-.column-header h3 {
+.season-column--off-season .column-header { border-color: #6366f1; background: #eef2ff; }
+.season-column--halloween  .column-header { border-color: #f97316; background: #fff7ed; }
+.season-column--christmas  .column-header { border-color: #22c55e; background: #f0fdf4; }
+
+.column-title {
   margin: 0;
   font-size: 16px;
   font-weight: 700;
-  color: #0f172a;
 }
 
-.item-count {
-  background: #cbd5e1;
-  color: #0f172a;
-  padding: 2px 8px;
-  border-radius: 12px;
+.column-count {
+  background: #e2e8f0;
+  color: #475569;
   font-size: 12px;
   font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
 }
 
-.column-content {
+.column-empty {
+  padding: 24px 16px;
+  color: #94a3b8;
+  font-size: 14px;
+  text-align: center;
+  margin: 0;
+}
+
+/* ── Sections ────────────────────────────────────────────────────────────────── */
+
+.season-section {
+  padding: 12px 16px 4px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.season-section:last-child {
+  border-bottom: none;
+}
+
+.section-label {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+}
+
+.section-cards {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px;
+  margin-bottom: 8px;
 }
 
-/* Kanban Cards */
-.kanban-card {
-  background: white;
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  transition: transform 0.15s, box-shadow 0.15s;
+.empty-state {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: #cbd5e1;
 }
 
-.kanban-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+/* ── Cards ───────────────────────────────────────────────────────────────────── */
+
+.seasonal-card {
+  display: block;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  color: inherit;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.seasonal-card:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
 }
 
 .card-header {
   display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
   gap: 8px;
-  margin-bottom: 12px;
-}
-
-.priority-badge {
-  font-size: 10px;
-  padding: 3px 8px;
-}
-
-.record-type-badge {
-  background: #e2e8f0;
-  color: #475569;
-  padding: 3px 8px;
-  border-radius: 10px;
-  font-size: 10px;
-  font-weight: 600;
 }
 
 .card-title {
-  margin: 0 0 12px 0;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  color: #0f172a;
+  color: #1e293b;
+  line-height: 1.4;
+}
+
+.card-description {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.4;
 }
 
 .card-meta {
   display: flex;
-  gap: 12px;
-  margin-bottom: 12px;
-  font-size: 12px;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.card-meta-item {
+  font-size: 11px;
   color: #64748b;
 }
 
-.meta-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
+/* ── Badges ──────────────────────────────────────────────────────────────────── */
 
-.card-footer {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.status-dropdown {
-  flex: 1;
-  padding: 6px 8px;
-  border: 1px solid #e2e8f0;
-  border-radius: 4px;
-  font-size: 12px;
-  background: white;
-  cursor: pointer;
-}
-
-.view-details-btn {
-  padding: 6px 12px;
-  background: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.view-details-btn:hover {
-  background: #2563eb;
-}
-
-/* ==================== CREATE SEASON STYLES ==================== */
-
-.create-season-view {
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.create-season-header {
-  margin-bottom: 32px;
-}
-
-.create-season-header h1 {
-  margin: 8px 0 0 0;
-  font-size: 32px;
-  font-weight: 700;
-}
-
-.create-season-form {
-  background: white;
-  border-radius: 12px;
-  padding: 32px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  margin-bottom: 24px;
-}
-
-.form-section h2 {
-  margin: 0 0 24px 0;
-  font-size: 18px;
+.badge-status,
+.badge-criticality {
+  display: inline-block;
+  flex-shrink: 0;
+  font-size: 11px;
   font-weight: 600;
-  color: #0f172a;
+  padding: 2px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
 }
 
-.form-field {
-  margin-bottom: 20px;
+/* Idea statuses */
+.badge-status--workbench  { background: #dbeafe; color: #1d4ed8; }
+.badge-status--planning   { background: #fef9c3; color: #854d0e; }
+
+/* Maintenance statuses */
+.badge-status--scheduled  { background: #f0fdf4; color: #166534; border: 1px solid #86efac; }
+.badge-status--in-progress { background: #fff7ed; color: #9a3412; border: 1px solid #fdba74; }
+
+/* Terminal idea statuses */
+.badge-status--built     { background: #f0fdf4; color: #166534; }
+.badge-status--abandoned { background: #f1f5f9; color: #64748b; }
+.badge-status--considering { background: #f1f5f9; color: #64748b; }
+
+/* Terminal maintenance statuses */
+.badge-status--completed { background: #f0fdf4; color: #166534; }
+.badge-status--cancelled { background: #f1f5f9; color: #64748b; }
+
+/* Criticality */
+.badge-criticality--low      { background: #f0fdf4; color: #166534; }
+.badge-criticality--medium   { background: #fef9c3; color: #854d0e; }
+.badge-criticality--high     { background: #fff7ed; color: #9a3412; }
+.badge-criticality--critical { background: #fef2f2; color: #991b1b; }
+
+/* ── Completed disclosure ────────────────────────────────────────────────────── */
+
+.completed-disclosure {
+  margin-top: 16px;
+  border-top: 1px dashed #e2e8f0;
+  padding: 10px 16px 12px;
 }
 
-.form-field label {
-  display: block;
-  margin-bottom: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.form-field small {
-  display: block;
-  margin-top: 4px;
-  font-size: 12px;
-  color: #64748b;
-}
-
-.form-input {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  font-size: 14px;
-  font-family: inherit;
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 32px;
-  padding-top: 24px;
-  border-top: 1px solid #e2e8f0;
-}
-
-.create-season-info {
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  border-radius: 12px;
-  padding: 24px;
-}
-
-.create-season-info h3 {
-  margin: 0 0 16px 0;
-  font-size: 16px;
-  color: #1e40af;
-}
-
-.create-season-info ul {
-  margin: 0;
-  padding-left: 20px;
-  color: #1e3a8a;
-}
-
-.create-season-info li {
-  margin-bottom: 8px;
-  line-height: 1.5;
-}
-
-/* Import Modal Styles */
-.import-modal-content {
-  padding: 8px;
-}
-
-.import-options {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.checkbox-label {
+.completed-disclosure__toggle {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.checkbox-label:hover {
-  background: #f8fafc;
-}
-
-.checkbox-label input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-}
-
-/* Responsive */
-@media (max-width: 1024px) {
-  .kanban-board {
-    grid-template-columns: 1fr;
-  }
-
-  .form-row {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 768px) {
-  body {
-    padding: 12px;
-  }
-
-  .kanban-filters {
-    flex-direction: column;
-    gap: 0;
-    align-items: stretch;
-  }
-
-  .filter-toggle-btn {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    padding: 10px 16px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    color: #0f172a;
-    cursor: pointer;
-  }
-
-  .toggle-label {
-    display: flex;
-    align-items: center;
-  }
-
-  .toggle-arrow {
-    font-size: 12px;
-    transition: transform 0.2s;
-  }
-
-  .filter-toggle-btn.open .toggle-arrow {
-    transform: rotate(180deg);
-  }
-
-  .filter-groups-container {
-    display: none;
-    flex-direction: column;
-    gap: 12px;
-    padding-top: 12px;
-  }
-
-  .filter-groups-container.open {
-    display: flex;
-  }
-
-  .filter-group {
-    width: 100%;
-  }
-
-  .filter-group label {
-    display: none;
-  }
-
-  .filter-select {
-    width: 100%;
-  }
-
-  .clear-filters-btn {
-    margin-left: 0;
-    width: 100%;
-  }
-}
-/* Column header with collapse */
-.column-title-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-}
-
-.collapse-btn {
+  gap: 6px;
   background: none;
   border: none;
-  padding: 4px;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #64748b;
-  transition: color 0.15s;
-}
-
-.collapse-btn:hover {
-  color: #0f172a;
-}
-
-.collapse-icon {
   font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  padding: 4px 0 4px;
+  width: 100%;
+  text-align: left;
+}
+
+.completed-disclosure__toggle:hover { color: #334155; }
+
+.completed-disclosure__chevron {
+  font-size: 10px;
   transition: transform 0.15s;
 }
 
-.column-content.collapsed {
+.completed-disclosure__content {
+  display: none;
+  margin-top: 8px;
+}
+
+.completed-disclosure__content.is-open { display: block; }
+
+/* ── Error state ─────────────────────────────────────────────────────────────── */
+
+.error-state {
+  padding: 32px;
+  text-align: center;
+  color: #ef4444;
+  font-size: 14px;
+}
+
+/* ── Season tabs (mobile only) ───────────────────────────────────────────────── */
+
+.season-tabs {
   display: none;
 }
 
-.column-header h3 {
+.season-tab {
   flex: 1;
+  padding: 10px 4px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  border-bottom: 3px solid transparent;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  color: #64748b;
+}
+
+.season-tab--off-season.season-tab--active { border-color: #6366f1; color: #6366f1; }
+.season-tab--halloween.season-tab--active  { border-color: #f97316; color: #f97316; }
+.season-tab--christmas.season-tab--active  { border-color: #22c55e; color: #22c55e; }
+
+/* ── Responsive ──────────────────────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  body {
+    padding: 8px;
+  }
+
+  .year-selector {
+    flex-wrap: wrap;
+  }
+
+  .season-tabs {
+    display: flex;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #fff;
+    border-bottom: 1px solid #e2e8f0;
+    border-radius: 8px 8px 0 0;
+    margin-bottom: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+  }
+
+  .monitor-columns {
+    flex-direction: column;
+  }
+
+  .season-column {
+    display: none;
+    width: 100%;
+    flex: none;
+  }
+
+  .season-column.tab-active {
+    display: block;
+  }
 }

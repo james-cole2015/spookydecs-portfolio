@@ -75,12 +75,12 @@ export class Modal {
         <div class="modal-body" style="
           padding: 24px;
         ">
-          <p style="
+          <div style="
             margin: 0;
             font-size: 14px;
             line-height: 1.6;
             color: #475569;
-          ">${message}</p>
+          ">${message}</div>
         </div>
         <div class="modal-footer" style="
           padding: 16px 24px;
