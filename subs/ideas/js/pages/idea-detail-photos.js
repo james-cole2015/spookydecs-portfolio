@@ -1,6 +1,6 @@
 // Idea Detail — Photo section helpers
 
-import { getIdeaPhotos } from '../utils/ideas-api.js';
+import { getIdeaPhotos, updateIdea } from '../utils/ideas-api.js';
 import { showToast } from '../shared/toast.js';
 
 export async function loadPhotos(container, ideaId) {
@@ -44,7 +44,26 @@ export function attachPhotoUpload(container, idea) {
       });
       const newPhotos = result?.photos || [];
       if (!newPhotos.length) throw new Error('Upload failed');
+
+      const newUrls = newPhotos.map(p => p.cloudfront_url).filter(Boolean);
+      const mergedImages = [...(idea.images || []), ...newUrls];
+      await updateIdea({ ...idea, images: mergedImages });
+      idea.images = mergedImages;
+
       await loadPhotos(container, idea.id);
+
+      // Update hero in-place
+      if (newUrls.length) {
+        const heroImg = container.querySelector('#hero-img');
+        if (heroImg) {
+          heroImg.src = idea.images[0];
+        } else {
+          const heroDiv = container.querySelector('.detail-hero');
+          if (heroDiv) {
+            heroDiv.innerHTML = `<img id="hero-img" src="${_escAttr(idea.images[0])}" alt="" loading="lazy">`;
+          }
+        }
+      }
 
       statusEl.textContent = `${newPhotos.length} photo${newPhotos.length > 1 ? 's' : ''} added`;
       showToast('Photos saved', 'success');
