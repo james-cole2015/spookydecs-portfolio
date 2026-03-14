@@ -548,7 +548,7 @@ function _attachBuildPhotoUpload(container, idea) {
       const result = await service.upload(files, {
         context: 'idea',
         photo_type: 'build',
-        season: (idea.season || '').toLowerCase(),
+        season: idea.season || '',
         idea_id: idea.id,
       });
       const newPhotos = result?.photos || [];
@@ -923,7 +923,7 @@ async function _handleLogCost(container, idea, onSuccess) {
       const service = document.createElement('photo-upload-service');
       const result = await service.upload([file], {
         context: 'receipt', photo_type: 'receipt',
-        season: (idea.season || '').toLowerCase(), idea_id: idea.id
+        season: idea.season || '', idea_id: idea.id
       });
       if (!result?.success) throw new Error('Upload failed');
       receiptPayload = { no_receipt: false, receipt_data: { url: result.photos[0]?.cloudfront_url } };

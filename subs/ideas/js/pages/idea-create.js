@@ -101,7 +101,7 @@ async function _handleSubmit(data, existingIdea, isEdit) {
         try {
           const newUrls = await _uploadFiles(data.selectedFiles, { id: createdId, season: data.season });
           if (newUrls.length > 0) {
-            await updateIdea({ id: createdId, images: newUrls });
+            await updateIdea({ ...body, id: createdId, images: newUrls });
           }
         } catch (uploadErr) {
           // Non-fatal — idea exists, photos just didn't attach
@@ -134,7 +134,7 @@ async function _uploadFiles(files, idea) {
     context:    'idea',
     photo_type: 'catalog',
     category:   'inspiration',
-    season:     (idea.season || '').toLowerCase(),
+    season:     idea.season || '',
     idea_id:    idea.id
   });
 
