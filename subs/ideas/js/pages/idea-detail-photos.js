@@ -39,7 +39,7 @@ export function attachPhotoUpload(container, idea) {
       const result = await service.upload(files, {
         context:    'idea',
         photo_type: 'inspiration',
-        season:     (idea.season || 'Shared').toLowerCase(),
+        season:     idea.season || 'Shared',
         idea_id:    idea.id,
       });
       const newPhotos = result?.photos || [];

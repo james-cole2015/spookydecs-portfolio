@@ -212,7 +212,7 @@ export async function handleLogCost(container, idea, onSuccess) {
       const result = await service.upload([file], {
         context: 'receipt',
         photo_type: 'receipt',
-        season: (idea.season || 'Shared').toLowerCase(),
+        season: idea.season || 'Shared',
         idea_id: idea.id,
       });
       if (!result?.success) throw new Error('Upload failed');

@@ -134,7 +134,7 @@ async function _uploadFiles(files, idea) {
     context:    'idea',
     photo_type: 'catalog',
     category:   'inspiration',
-    season:     (idea.season || '').toLowerCase(),
+    season:     idea.season || '',
     idea_id:    idea.id
   });
 
