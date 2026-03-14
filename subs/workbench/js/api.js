@@ -19,9 +19,9 @@ async function apiCall(endpoint, options = {}) {
 }
 
 /**
- * Returns the seasonal summary grouped by season key.
- * Shape: { halloween: { ideas, inspections, repairs, maintenance_tasks }, christmas: {...}, shared: {...} }
+ * Returns the seasonal summary grouped by work bucket for the given year.
+ * Shape: { off_season: { ideas, inspections, repairs, maintenance_tasks }, halloween: {...}, christmas: {...} }
  */
-export async function getSeasonalSummary() {
-  return apiCall('/workbench/summary');
+export async function getSeasonalSummary(year) {
+  return apiCall(`/workbench/summary?year=${year}`);
 }

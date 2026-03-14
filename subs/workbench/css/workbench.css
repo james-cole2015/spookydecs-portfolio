@@ -17,6 +17,66 @@ body {
   margin: 0 auto;
 }
 
+/* ── Year selector ───────────────────────────────────────────────────────────── */
+
+.year-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.year-selector__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.year-pill {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  padding: 4px 14px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.year-pill:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.year-pill--active {
+  background: #6366f1;
+  color: #fff;
+  border-color: #6366f1;
+}
+
+.year-pill--active:hover {
+  background: #4f46e5;
+  border-color: #4f46e5;
+  color: #fff;
+}
+
+.year-pill--clear {
+  background: transparent;
+  color: #94a3b8;
+  border-color: transparent;
+}
+
+.year-pill--clear:hover {
+  color: #ef4444;
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.year-pill.hidden {
+  display: none;
+}
+
 /* ── Monitor layout ─────────────────────────────────────────────────────────── */
 
 .seasonal-monitor {
@@ -48,9 +108,9 @@ body {
   border-bottom: 2px solid;
 }
 
-.season-column--halloween .column-header { border-color: #f97316; background: #fff7ed; }
+.season-column--off-season .column-header { border-color: #6366f1; background: #eef2ff; }
+.season-column--halloween  .column-header { border-color: #f97316; background: #fff7ed; }
 .season-column--christmas  .column-header { border-color: #22c55e; background: #f0fdf4; }
-.season-column--shared     .column-header { border-color: #6366f1; background: #eef2ff; }
 
 .column-title {
   margin: 0;
@@ -116,8 +176,8 @@ body {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
-  text-decoration: none;
   color: inherit;
+  cursor: pointer;
   transition: background 0.12s, border-color 0.12s;
 }
 
@@ -180,11 +240,57 @@ body {
 .badge-status--scheduled  { background: #f0fdf4; color: #166534; border: 1px solid #86efac; }
 .badge-status--in-progress { background: #fff7ed; color: #9a3412; border: 1px solid #fdba74; }
 
+/* Terminal idea statuses */
+.badge-status--built     { background: #f0fdf4; color: #166534; }
+.badge-status--abandoned { background: #f1f5f9; color: #64748b; }
+.badge-status--considering { background: #f1f5f9; color: #64748b; }
+
+/* Terminal maintenance statuses */
+.badge-status--completed { background: #f0fdf4; color: #166534; }
+.badge-status--cancelled { background: #f1f5f9; color: #64748b; }
+
 /* Criticality */
 .badge-criticality--low      { background: #f0fdf4; color: #166534; }
 .badge-criticality--medium   { background: #fef9c3; color: #854d0e; }
 .badge-criticality--high     { background: #fff7ed; color: #9a3412; }
 .badge-criticality--critical { background: #fef2f2; color: #991b1b; }
+
+/* ── Completed disclosure ────────────────────────────────────────────────────── */
+
+.completed-disclosure {
+  margin-top: 16px;
+  border-top: 1px dashed #e2e8f0;
+  padding: 10px 16px 12px;
+}
+
+.completed-disclosure__toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  padding: 4px 0 4px;
+  width: 100%;
+  text-align: left;
+}
+
+.completed-disclosure__toggle:hover { color: #334155; }
+
+.completed-disclosure__chevron {
+  font-size: 10px;
+  transition: transform 0.15s;
+}
+
+.completed-disclosure__content {
+  display: none;
+  margin-top: 8px;
+}
+
+.completed-disclosure__content.is-open { display: block; }
 
 /* ── Error state ─────────────────────────────────────────────────────────────── */
 
@@ -195,14 +301,64 @@ body {
   font-size: 14px;
 }
 
+/* ── Season tabs (mobile only) ───────────────────────────────────────────────── */
+
+.season-tabs {
+  display: none;
+}
+
+.season-tab {
+  flex: 1;
+  padding: 10px 4px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  border-bottom: 3px solid transparent;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  color: #64748b;
+}
+
+.season-tab--off-season.season-tab--active { border-color: #6366f1; color: #6366f1; }
+.season-tab--halloween.season-tab--active  { border-color: #f97316; color: #f97316; }
+.season-tab--christmas.season-tab--active  { border-color: #22c55e; color: #22c55e; }
+
 /* ── Responsive ──────────────────────────────────────────────────────────────── */
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
+  body {
+    padding: 8px;
+  }
+
+  .year-selector {
+    flex-wrap: wrap;
+  }
+
+  .season-tabs {
+    display: flex;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #fff;
+    border-bottom: 1px solid #e2e8f0;
+    border-radius: 8px 8px 0 0;
+    margin-bottom: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+  }
+
   .monitor-columns {
     flex-direction: column;
   }
 
   .season-column {
+    display: none;
     width: 100%;
+    flex: none;
+  }
+
+  .season-column.tab-active {
+    display: block;
   }
 }
