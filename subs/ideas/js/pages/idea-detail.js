@@ -1,49 +1,14 @@
 // Idea Detail Page
 
-import { getIdea, deleteIdea } from '../utils/ideas-api.js';
+import { getIdea, updateIdea, deleteIdea } from '../utils/ideas-api.js';
 import { navigateTo } from '../utils/router.js';
 import { showToast } from '../shared/toast.js';
 import { showConfirmModal } from '../shared/modal.js';
+import { ITEMS_BASE_URL, SEASON_PLACEHOLDERS } from '../utils/ideas-config.js';
+import { getCostModalHtml, wireCostModal } from './idea-detail-costs.js';
+import { loadPhotos, attachPhotoUpload } from './idea-detail-photos.js';
+import { renderError, renderNotFound, getYoutubeId, formatDate, escHtml, escAttr } from './idea-detail-utils.js';
 
-const PLACEHOLDERS = {
-  halloween: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
-    <path d="M24 6 C24 6 28 2 31 4 C29 7 27 9 24 12" fill="#4ade80"/>
-    <ellipse cx="18" cy="30" rx="10" ry="13" fill="#f97316"/>
-    <ellipse cx="24" cy="28" rx="9" ry="15" fill="#fb923c"/>
-    <ellipse cx="30" cy="30" rx="10" ry="13" fill="#f97316"/>
-    <polygon points="17,24 14,30 20,30" fill="#7c2d12"/>
-    <polygon points="31,24 28,30 34,30" fill="#7c2d12"/>
-    <path d="M17 36 Q20 40 24 39 Q28 40 31 36" stroke="#7c2d12" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-  </svg>`,
-  christmas: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
-    <polygon points="24,3 25.5,8 31,8 26.5,11.5 28,17 24,14 20,17 21.5,11.5 17,8 22.5,8" fill="#fbbf24"/>
-    <polygon points="24,10 13,26 35,26" fill="#16a34a"/>
-    <polygon points="24,18 10,38 38,38" fill="#15803d"/>
-    <rect x="21" y="38" width="6" height="7" rx="1" fill="#92400e"/>
-  </svg>`,
-  shared: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-    <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
-    <path d="m21 15-5-5L5 21"/>
-  </svg>`,
-};
-
-function _getYoutubeId(url) {
-  if (!url) return null;
-  try {
-    const u = new URL(url);
-    let id = null;
-    if (u.hostname === 'youtu.be') {
-      id = u.pathname.slice(1).split('?')[0];
-    } else if (u.hostname.endsWith('youtube.com')) {
-      if (u.pathname.startsWith('/shorts/')) id = u.pathname.split('/shorts/')[1].split('?')[0];
-      else if (u.pathname.startsWith('/embed/')) id = u.pathname.split('/embed/')[1].split('?')[0];
-      else id = u.searchParams.get('v');
-    }
-    return id && /^[\w-]{5,15}$/.test(id) ? id : null;
-  } catch {
-    return null;
-  }
-}
 
 export async function renderIdeaDetail(container, id) {
   container.innerHTML = `
@@ -66,19 +31,24 @@ export async function renderIdeaDetail(container, id) {
   try {
     idea = await getIdea(id);
   } catch (err) {
-    _renderError(container, err.message);
+    renderError(container, err.message);
     return;
   }
 
   if (!idea) {
-    _renderNotFound(container, id);
+    renderNotFound(container, id);
+    return;
+  }
+
+  if (idea.status === 'Workbench') {
+    navigateTo(`/workbench/${idea.id}`);
     return;
   }
 
   _renderDetail(container, idea);
 }
 
-function _renderDetail(container, idea) {
+async function _renderDetail(container, idea) {
   const seasonKey = (idea.season || '').toLowerCase();
   const statusKey = (idea.status || '').toLowerCase();
   const images = idea.images || [];
@@ -86,13 +56,13 @@ function _renderDetail(container, idea) {
 
   let heroHtml;
   if (images.length) {
-    heroHtml = `<div class="detail-hero"><img id="hero-img" src="${images[0]}" alt="${_escAttr(idea.title)}" loading="lazy"></div>`;
+    heroHtml = `<div class="detail-hero"><img id="hero-img" src="${images[0]}" alt="${escAttr(idea.title)}" loading="lazy"></div>`;
   } else {
-    const ytId = _getYoutubeId(idea.link);
+    const ytId = getYoutubeId(idea.link);
     if (ytId) {
-      heroHtml = `<div class="detail-hero"><img id="hero-img" src="https://img.youtube.com/vi/${ytId}/hqdefault.jpg" alt="${_escAttr(idea.title)}" loading="lazy"></div>`;
+      heroHtml = `<div class="detail-hero"><img id="hero-img" src="https://img.youtube.com/vi/${ytId}/hqdefault.jpg" alt="${escAttr(idea.title)}" loading="lazy"></div>`;
     } else {
-      const placeholder = PLACEHOLDERS[seasonKey] || PLACEHOLDERS.shared;
+      const placeholder = SEASON_PLACEHOLDERS[seasonKey] || SEASON_PLACEHOLDERS.shared;
       heroHtml = `<div class="detail-hero">
         <div class="detail-hero-placeholder detail-hero-placeholder--${seasonKey}">${placeholder}</div>
       </div>`;
@@ -102,7 +72,7 @@ function _renderDetail(container, idea) {
   const galleryHtml = images.length > 1
     ? `<div class="detail-gallery">
         ${images.map((url, i) => `
-          <div class="gallery-thumb${i === 0 ? ' active' : ''}" data-url="${_escAttr(url)}" data-idx="${i}">
+          <div class="gallery-thumb${i === 0 ? ' active' : ''}" data-url="${escAttr(url)}" data-idx="${i}">
             <img src="${url}" alt="image ${i + 1}" loading="lazy">
           </div>
         `).join('')}
@@ -110,19 +80,49 @@ function _renderDetail(container, idea) {
     : '';
 
   const tagsHtml = tags.length
-    ? `<div class="tags-row">${tags.map(t => `<span class="tag-chip">${_escHtml(t)}</span>`).join('')}</div>`
+    ? `<div class="tags-row">${tags.map(t => `<span class="tag-chip">${escHtml(t)}</span>`).join('')}</div>`
     : '<span class="detail-field-value empty">None</span>';
 
   const linkHtml = idea.link
-    ? `<a href="${_escAttr(idea.link)}" target="_blank" rel="noopener noreferrer">${_escHtml(idea.link)}</a>`
+    ? `<a href="${escAttr(idea.link)}" target="_blank" rel="noopener noreferrer">${escHtml(idea.link)}</a>`
     : '<span class="detail-field-value empty">—</span>';
+
+  const materialsHtml = (idea.materials || []).length
+    ? `<ul class="materials-list">${idea.materials.map(m => {
+        const mat = typeof m === 'string' ? { name: m, done: false } : m;
+        return `<li${mat.done ? ' class="done"' : ''}>${escHtml(mat.name)}</li>`;
+      }).join('')}</ul>`
+    : '<span class="detail-field-value empty">None listed</span>';
+
+  const buildFields = [
+    { label: 'Prep Start',     value: idea.prep_start },
+    { label: 'Build Start',    value: idea.build_start },
+    { label: 'Build Complete', value: idea.build_complete },
+  ].map(f => `
+    <div class="detail-field">
+      <div class="detail-field-label">${f.label}</div>
+      <div class="detail-field-value${!f.value ? ' empty' : ''}">${f.value ? formatDate(f.value) : '—'}</div>
+    </div>
+  `).join('');
+
+  // Status transition buttons — dynamic by current status
+  let statusBtnsHtml = '';
+  if (idea.status === 'Considering') {
+    statusBtnsHtml = `<button class="btn btn-workbench" id="status-forward-btn">Move to Planning →</button>`;
+  } else if (idea.status === 'Planning') {
+    statusBtnsHtml = `
+      <button class="btn btn-secondary" id="status-back-btn">← Back to Considering</button>
+      <button class="btn btn-workbench" id="status-forward-btn">Move to Workbench →</button>`;
+  }
+
+  const todayIso = new Date().toISOString().slice(0, 10);
 
   container.innerHTML = `
     <div class="detail-page">
       <div class="breadcrumb">
         <a href="#" id="back-link">← Ideas</a>
         <span class="breadcrumb-sep">/</span>
-        <span>${_escHtml(idea.title)}</span>
+        <span>${escHtml(idea.title)}</span>
       </div>
 
       ${heroHtml}
@@ -133,9 +133,15 @@ function _renderDetail(container, idea) {
           <span class="badge badge-season-${seasonKey}">${idea.season}</span>
           <span class="badge badge-status-${statusKey}">${idea.status}</span>
         </div>
-        <h1 class="detail-title">${_escHtml(idea.title)}</h1>
+        ${idea.status === 'Built' && idea.item_id ? `
+        <div class="idea-complete-banner">
+          ✓ Build complete — this idea is locked.
+          <a href="${ITEMS_BASE_URL}/items/${escAttr(idea.item_id)}" target="_blank">View Item →</a>
+        </div>` : ''}
+        <h1 class="detail-title">${escHtml(idea.title)}</h1>
         <div class="detail-actions">
           <button class="btn btn-secondary" id="edit-btn">Edit</button>
+          ${statusBtnsHtml}
           <button class="btn btn-danger btn-sm" id="delete-btn">Delete</button>
         </div>
       </div>
@@ -145,16 +151,57 @@ function _renderDetail(container, idea) {
 
           <div class="detail-section">
             <div class="detail-section-title">Description</div>
-            <div class="detail-field-value${!idea.description ? ' empty' : ''}">
-              ${idea.description ? _escHtml(idea.description) : 'No description provided.'}
-            </div>
+            <div class="detail-field-value${!idea.description ? ' empty' : ''}">${idea.description ? escHtml(idea.description) : 'No description provided.'}</div>
           </div>
 
           ${idea.notes ? `
           <div class="detail-section">
             <div class="detail-section-title">Notes</div>
-            <div class="detail-field-value">${_escHtml(idea.notes)}</div>
+            <div class="detail-field-value">${escHtml(idea.notes)}</div>
           </div>` : ''}
+
+          <div class="detail-section">
+            <div class="detail-section-title">Planning</div>
+            <div class="detail-field" style="border-bottom:none">
+              <div class="detail-field-label">Materials</div>
+              <div class="detail-field-value">${materialsHtml}</div>
+            </div>
+          </div>
+
+          ${idea.status !== 'Considering' ? `
+          <div class="detail-section">
+            <div class="detail-section-title">Build</div>
+            ${buildFields}
+            <div class="detail-field" style="border-bottom:none">
+              <div class="detail-field-label">Item ID</div>
+              <div class="detail-field-value${!idea.item_id ? ' empty' : ''}">
+                ${idea.item_id
+                  ? `<a href="${ITEMS_BASE_URL}/items/${escAttr(idea.item_id)}" target="_blank">${escHtml(idea.item_id)}</a>`
+                  : '—'}
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-section" id="costs-panel">
+            <div class="detail-section-title-row">
+              <span class="detail-section-title" style="margin-bottom:0">Costs</span>
+              <button class="btn btn-sm btn-primary" id="log-cost-btn">+ Log Cost</button>
+            </div>
+            <div id="costs-content" style="margin-top:var(--space-4)">
+              <div class="loading-spinner" style="margin:8px auto;width:20px;height:20px;border-width:2px"></div>
+            </div>
+          </div>
+          ` : ''}
+
+          <div class="detail-section" id="id-photos-section">
+            <div class="detail-section-title-row">
+              <span class="detail-section-title" style="margin-bottom:0">Photos</span>
+              ${idea.status !== 'Built' ? `<button type="button" class="btn btn-sm btn-secondary" id="id-add-photo-btn">+ Add Photo</button>` : ''}
+            </div>
+            <input id="id-photo-file-input" type="file" multiple accept="image/*" style="display:none">
+            <span id="id-photo-status" style="display:none;font-size:0.85rem;color:var(--color-text-muted);margin-top:var(--space-2)"></span>
+            <div id="id-photos-grid" class="bd-photos-grid" style="margin-top:var(--space-3)"></div>
+          </div>
 
         </div>
 
@@ -164,16 +211,12 @@ function _renderDetail(container, idea) {
 
             <div class="detail-field">
               <div class="detail-field-label">Season</div>
-              <div class="detail-field-value">
-                <span class="badge badge-season-${seasonKey}">${idea.season}</span>
-              </div>
+              <div class="detail-field-value">${escHtml(idea.season)}</div>
             </div>
 
             <div class="detail-field">
               <div class="detail-field-label">Status</div>
-              <div class="detail-field-value">
-                <span class="badge badge-status-${statusKey}">${idea.status}</span>
-              </div>
+              <div class="detail-field-value">${escHtml(idea.status)}</div>
             </div>
 
             <div class="detail-field">
@@ -193,12 +236,14 @@ function _renderDetail(container, idea) {
           </div>
 
           <div class="detail-timestamps">
-            ${idea.createdAt ? `<div>Created: ${_formatDate(idea.createdAt)}</div>` : ''}
-            ${idea.updatedAt ? `<div>Updated: ${_formatDate(idea.updatedAt)}</div>` : ''}
+            ${idea.createdAt ? `<div>Created: ${formatDate(idea.createdAt)}</div>` : ''}
+            ${idea.updatedAt ? `<div>Updated: ${formatDate(idea.updatedAt)}</div>` : ''}
           </div>
         </div>
       </div>
     </div>
+
+    ${getCostModalHtml(todayIso)}
   `;
 
   // Back
@@ -207,10 +252,70 @@ function _renderDetail(container, idea) {
     navigateTo('/list');
   });
 
-  // Edit
+  // Edit / Delete — hidden for completed ideas
+  if (idea.status === 'Built' && idea.item_id) {
+    container.querySelector('#edit-btn').style.display = 'none';
+    container.querySelector('#delete-btn').style.display = 'none';
+  }
+
   container.querySelector('#edit-btn').addEventListener('click', () => {
     navigateTo(`/${idea.id}/edit`);
   });
+
+  // Status transitions — forward
+  const forwardBtn = container.querySelector('#status-forward-btn');
+  if (forwardBtn) {
+    const transitions = {
+      Considering: { newStatus: 'Planning',   title: 'Move to Planning',   msg: `Move "${idea.title}" to Planning?`,   dest: `/${idea.id}` },
+      Planning:    { newStatus: 'Workbench',  title: 'Move to Workbench',  msg: `Move "${idea.title}" to the Workbench? It will be tracked as an active build.`, dest: '/workbench' },
+    };
+    const t = transitions[idea.status];
+    if (t) {
+      forwardBtn.addEventListener('click', () => {
+        showConfirmModal({
+          title: t.title,
+          message: t.msg,
+          confirmLabel: t.title,
+          onConfirm: async () => {
+            try {
+              await updateIdea({ ...idea, status: t.newStatus });
+              showToast(`Moved to ${t.newStatus}`, 'success');
+              window.location.reload();
+            } catch (err) {
+              showToast('Failed: ' + err.message, 'error');
+            }
+          }
+        });
+      });
+    }
+  }
+
+  // Status transitions — back
+  const backBtn = container.querySelector('#status-back-btn');
+  if (backBtn) {
+    const backTransitions = {
+      Planning: { newStatus: 'Considering', title: 'Back to Considering', msg: `Move "${idea.title}" back to Considering?` },
+    };
+    const t = backTransitions[idea.status];
+    if (t) {
+      backBtn.addEventListener('click', () => {
+        showConfirmModal({
+          title: t.title,
+          message: t.msg,
+          confirmLabel: t.title,
+          onConfirm: async () => {
+            try {
+              await updateIdea({ ...idea, status: t.newStatus });
+              showToast(`Moved to ${t.newStatus}`, 'success');
+              window.location.reload();
+            } catch (err) {
+              showToast('Failed: ' + err.message, 'error');
+            }
+          }
+        });
+      });
+    }
+  }
 
   // Delete
   container.querySelector('#delete-btn').addEventListener('click', () => {
@@ -231,7 +336,7 @@ function _renderDetail(container, idea) {
     });
   });
 
-  // Gallery thumb clicks
+  // Gallery
   if (images.length > 1) {
     container.querySelectorAll('.gallery-thumb').forEach(thumb => {
       thumb.addEventListener('click', () => {
@@ -242,58 +347,13 @@ function _renderDetail(container, idea) {
       });
     });
   }
+
+  if (idea.status !== 'Considering') {
+    wireCostModal(container, idea);
+  } // end status !== 'Considering'
+
+  // Photos — load from images table, then wire upload
+  loadPhotos(container, idea.id);
+  attachPhotoUpload(container, idea);
 }
 
-function _renderError(container, message) {
-  container.innerHTML = `
-    <div class="detail-page">
-      <div class="breadcrumb"><a href="#" id="back-link">← Ideas</a></div>
-      <div class="error-container">
-        <div class="error-content">
-          <h2>Failed to Load</h2>
-          <p>${_escHtml(message)}</p>
-          <button class="btn btn-secondary" onclick="window.location.reload()">Retry</button>
-        </div>
-      </div>
-    </div>
-  `;
-  container.querySelector('#back-link')?.addEventListener('click', e => {
-    e.preventDefault(); navigateTo('/list');
-  });
-}
-
-function _renderNotFound(container, id) {
-  container.innerHTML = `
-    <div class="detail-page">
-      <div class="breadcrumb"><a href="#" id="back-link">← Ideas</a></div>
-      <div class="not-found-page">
-        <div class="not-found-content">
-          <h2>Idea Not Found</h2>
-          <p>No idea with ID <code>${_escHtml(id)}</code> could be found.</p>
-          <button class="btn btn-primary" id="back-btn">Back to Ideas</button>
-        </div>
-      </div>
-    </div>
-  `;
-  container.querySelector('#back-link')?.addEventListener('click', e => {
-    e.preventDefault(); navigateTo('/list');
-  });
-  container.querySelector('#back-btn')?.addEventListener('click', () => navigateTo('/list'));
-}
-
-function _formatDate(iso) {
-  try {
-    return new Date(iso).toLocaleDateString('en-US', {
-      year: 'numeric', month: 'short', day: 'numeric',
-      hour: '2-digit', minute: '2-digit'
-    });
-  } catch { return iso; }
-}
-
-function _escHtml(str) {
-  return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-function _escAttr(str) {
-  return (str || '').replace(/"/g, '&quot;');
-}

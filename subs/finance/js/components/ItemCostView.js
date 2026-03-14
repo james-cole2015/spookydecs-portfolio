@@ -25,9 +25,11 @@ export class ItemCostView {
   }
 
   calculateSummary(providedSummary) {
+    const isRetired = this.itemDetails?.status === 'Retired';
+
     // If summary is provided and has valid data, use it
     if (providedSummary && providedSummary.total_cost > 0) {
-      return providedSummary;
+      return { ...providedSummary, current_value: isRetired ? 0 : providedSummary.current_value };
     }
 
     // Otherwise, calculate from costs array
@@ -42,7 +44,7 @@ export class ItemCostView {
       const value = parseFloat(cost.value) || totalCost;
 
       summary.total_cost += totalCost;
-      summary.current_value += value;
+      if (!isRetired) summary.current_value += value;
 
       // Build breakdown by cost_type
       const costType = cost.cost_type || 'other';
@@ -76,7 +78,8 @@ export class ItemCostView {
     const itemName = this.itemDetails?.short_name || this.itemId;
     const itemClass = this.itemDetails?.class || '';
     const itemClassType = this.itemDetails?.class_type || '';
-    
+    const isRetired = this.itemDetails?.status === 'Retired';
+
     return `
       <div class="item-costs-page">
         <!-- Breadcrumbs -->
@@ -89,7 +92,7 @@ export class ItemCostView {
         <!-- Header -->
         <div class="page-header-section">
           <div class="header-left">
-            <h1>${itemName}</h1>
+            <h1>${itemName}${isRetired ? ' <span class="badge badge-muted">Retired</span>' : ''}</h1>
             <p class="item-subtitle">${this.itemId}${itemClassType ? ` • ${itemClassType}` : ''}</p>
           </div>
           

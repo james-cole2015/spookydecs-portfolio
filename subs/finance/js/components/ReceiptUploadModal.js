@@ -225,9 +225,14 @@ export class ReceiptUploadModal {
           // Load PDF document
           const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
 
-          // Process up to 2 pages (see issue #57 to raise this limit)
-          const pageCount = Math.min(pdf.numPages, 2);
+          // Process up to 4 pages
+          const MAX_PAGES = 4;
+          const pageCount = Math.min(pdf.numPages, MAX_PAGES);
           const scale = 2.0;
+
+          if (pdf.numPages > MAX_PAGES) {
+            toast.warning(`PDF has ${pdf.numPages} pages — only the first ${MAX_PAGES} were processed.`);
+          }
 
           // Render each page to its own canvas
           const canvases = [];

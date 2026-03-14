@@ -1,10 +1,11 @@
 // Entities List Page — groups photos by item_id / storage_id
-import { fetchImages } from '../utils/images-api.js';
+import { fetchImages, fetchIdeas } from '../utils/images-api.js';
 import { Breadcrumb } from '../components/Breadcrumb.js';
 import { navigate } from '../utils/router.js';
 
 const TYPE_ITEM = 'item';
 const TYPE_STORAGE = 'storage';
+const TYPE_IDEA = 'idea';
 
 export async function renderEntitiesPage() {
   const app = document.getElementById('app');
@@ -20,6 +21,7 @@ export async function renderEntitiesPage() {
         <div class="entity-filter-buttons">
           <button class="entity-filter-btn ${activeTypes.has(TYPE_ITEM) ? 'active' : ''}" data-type="${TYPE_ITEM}">Items</button>
           <button class="entity-filter-btn ${activeTypes.has(TYPE_STORAGE) ? 'active' : ''}" data-type="${TYPE_STORAGE}">Storage</button>
+          <button class="entity-filter-btn ${activeTypes.has(TYPE_IDEA) ? 'active' : ''}" data-type="${TYPE_IDEA}">Ideas</button>
         </div>
       </div>
       <div id="entities-grid-container">
@@ -58,32 +60,39 @@ export async function renderEntitiesPage() {
     return;
   }
 
-  const { itemsMap, storageMap } = groupByEntity(allPhotos);
-  renderGrid(itemsMap, storageMap, activeTypes);
+  const { itemsMap, storageMap, ideasMap } = groupByEntity(allPhotos);
+
+  const ideaTitles = new Map();
+  if (ideasMap.size > 0) {
+    try {
+      const ideas = await fetchIdeas();
+      ideas.forEach(idea => { if (idea.id && idea.title) ideaTitles.set(idea.id, idea.title); });
+    } catch { /* fall back to IDs */ }
+  }
+
+  renderGrid(itemsMap, storageMap, ideasMap, activeTypes, ideaTitles);
 
   function updateTypeFilter(types) {
     const params = new URLSearchParams();
     types.forEach(t => params.append('type', t));
     const search = params.toString();
     history.pushState({}, '', search ? `?${search}` : window.location.pathname);
-    renderGrid(itemsMap, storageMap, types);
+    renderGrid(itemsMap, storageMap, ideasMap, types, ideaTitles);
   }
 }
 
 function groupByEntity(photos) {
   const itemsMap = new Map();
   const storageMap = new Map();
+  const ideasMap = new Map();
 
   photos.forEach(photo => {
-    if (photo.item_id) {
-      addToMap(itemsMap, photo.item_id, TYPE_ITEM, photo);
-    }
-    if (photo.storage_id) {
-      addToMap(storageMap, photo.storage_id, TYPE_STORAGE, photo);
-    }
+    if (photo.item_id) addToMap(itemsMap, photo.item_id, TYPE_ITEM, photo);
+    if (photo.storage_id) addToMap(storageMap, photo.storage_id, TYPE_STORAGE, photo);
+    if (photo.idea_id) addToMap(ideasMap, photo.idea_id, TYPE_IDEA, photo);
   });
 
-  return { itemsMap, storageMap };
+  return { itemsMap, storageMap, ideasMap };
 }
 
 function addToMap(map, entityId, type, photo) {
@@ -108,16 +117,18 @@ function addToMap(map, entityId, type, photo) {
   if (!entry.primaryPhoto && entry.photos.length === 1) entry.primaryPhoto = photo;
 }
 
-function renderGrid(itemsMap, storageMap, activeTypes) {
+function renderGrid(itemsMap, storageMap, ideasMap, activeTypes, ideaTitles = new Map()) {
   const container = document.getElementById('entities-grid-container');
 
-  // Determine which maps to show
-  const showItems = activeTypes.size === 0 || activeTypes.size === 2 || activeTypes.has(TYPE_ITEM);
-  const showStorage = activeTypes.size === 0 || activeTypes.size === 2 || activeTypes.has(TYPE_STORAGE);
+  // Determine which maps to show (size 0 = no filter = show all)
+  const showItems = activeTypes.size === 0 || activeTypes.has(TYPE_ITEM);
+  const showStorage = activeTypes.size === 0 || activeTypes.has(TYPE_STORAGE);
+  const showIdeas = activeTypes.size === 0 || activeTypes.has(TYPE_IDEA);
 
   const entities = [];
   if (showItems) entities.push(...itemsMap.values());
   if (showStorage) entities.push(...storageMap.values());
+  if (showIdeas) entities.push(...ideasMap.values());
 
   // Sort by entity ID
   entities.sort((a, b) => a.id.localeCompare(b.id));
@@ -138,11 +149,11 @@ function renderGrid(itemsMap, storageMap, activeTypes) {
 
   const grid = container.querySelector('.entities-grid');
   entities.forEach(entity => {
-    grid.appendChild(createEntityCard(entity));
+    grid.appendChild(createEntityCard(entity, ideaTitles));
   });
 }
 
-function createEntityCard(entity) {
+function createEntityCard(entity, ideaTitles = new Map()) {
   const card = document.createElement('div');
   card.className = 'entity-card';
 
@@ -159,12 +170,15 @@ function createEntityCard(entity) {
     ? `<span class="entity-class-badge">${entity.itemClass}</span>`
     : '';
 
-  const typeLabel = entity.type === TYPE_STORAGE ? 'Storage' : 'Item';
+  const typeLabel = entity.type === TYPE_STORAGE ? 'Storage' : entity.type === TYPE_IDEA ? 'Idea' : 'Item';
+  const displayName = entity.type === TYPE_IDEA
+    ? (ideaTitles.get(entity.id) || entity.id)
+    : entity.id;
 
   card.innerHTML = `
     <div class="entity-card-photo">${photoImg}</div>
     <div class="entity-card-body">
-      <div class="entity-card-id">${entity.id}</div>
+      <div class="entity-card-id">${displayName}</div>
       <div class="entity-card-meta">
         <span class="entity-type-label">${typeLabel}</span>
         ${classBadge}

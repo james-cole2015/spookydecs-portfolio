@@ -17,13 +17,20 @@ export async function renderIdeasLanding(container) {
     </div>
   `;
 
-  // Fetch counts
+  // Fetch counts — season counts include only Considering + Planning ideas
   let counts = { Halloween: '—', Christmas: '—', Shared: '—' };
+  let workbenchCounts = { Halloween: 0, Christmas: 0, Shared: 0, total: 0 };
   try {
     const ideas = await listIdeas();
-    counts.Halloween = ideas.filter(i => i.season === 'Halloween').length;
-    counts.Christmas = ideas.filter(i => i.season === 'Christmas').length;
-    counts.Shared    = ideas.filter(i => i.season === 'Shared').length;
+    const active = ideas.filter(i => i.status === 'Considering' || i.status === 'Planning');
+    counts.Halloween = active.filter(i => i.season === 'Halloween').length;
+    counts.Christmas = active.filter(i => i.season === 'Christmas').length;
+    counts.Shared    = active.filter(i => i.season === 'Shared').length;
+    const wb = ideas.filter(i => i.status === 'Workbench');
+    workbenchCounts.Halloween = wb.filter(i => i.season === 'Halloween').length;
+    workbenchCounts.Christmas = wb.filter(i => i.season === 'Christmas').length;
+    workbenchCounts.Shared    = wb.filter(i => i.season === 'Shared').length;
+    workbenchCounts.total     = wb.length;
   } catch {
     // counts stay as dashes — cards still render and are navigable
   }
@@ -31,12 +38,15 @@ export async function renderIdeasLanding(container) {
   const cardsContainer = container.querySelector('#landing-cards');
   if (!cardsContainer) return;
 
+  const wbDesc = workbenchCounts.total > 0
+    ? `${workbenchCounts.total} active build${workbenchCounts.total !== 1 ? 's' : ''} in progress.`
+    : 'No active builds right now.';
+
   cardsContainer.innerHTML = `
-    ${_seasonCard('Halloween', counts.Halloween, '/list?season=Halloween')}
-    ${_seasonCard('Christmas', counts.Christmas, '/list?season=Christmas')}
-    ${_seasonCard('Shared',    counts.Shared,    '/list?season=Shared')}
+    ${_seasonCard('Halloween', counts.Halloween, '/list?season=Halloween', workbenchCounts.Halloween)}
+    ${_seasonCard('Christmas', counts.Christmas, '/list?season=Christmas', workbenchCounts.Christmas)}
+    ${_seasonCard('Shared',    counts.Shared,    '/list?season=Shared',    workbenchCounts.Shared)}
     ${_actionCard({
-      id: 'create',
       label: 'New',
       title: 'Add Idea',
       desc: 'Capture a new decoration idea and start planning.',
@@ -44,19 +54,16 @@ export async function renderIdeasLanding(container) {
       accent: true
     })}
     ${_actionCard({
-      id: 'workbench',
-      label: 'Tool',
-      title: 'Workbench',
-      desc: 'View items currently in the build pipeline.',
-      route: null,
-      href: _getWorkbenchUrl()
+      label: 'Build',
+      title: 'Active Builds',
+      desc: wbDesc,
+      route: '/workbench',
+      badge: workbenchCounts.total > 0 ? workbenchCounts.total : null
     })}
     ${_actionCard({
-      id: 'inspirations',
       label: 'Inspo',
       title: 'Inspirations',
       desc: 'Browse saved inspiration images and references.',
-      route: null,
       href: '#'
     })}
   `;
@@ -73,27 +80,36 @@ export async function renderIdeasLanding(container) {
   });
 }
 
-function _seasonCard(season, count, route) {
+function _seasonCard(season, count, route, wbCount) {
   const seasonKey = season.toLowerCase();
   const countLabel = typeof count === 'number'
     ? `${count} idea${count !== 1 ? 's' : ''}`
     : '— ideas';
+  const wbBadge = wbCount > 0
+    ? `<span class="card-wb-badge">${wbCount} in builds</span>`
+    : '';
   return `
     <div class="option-card" data-route="${route}" tabindex="0" role="button">
       <div class="card-label badge badge-season-${seasonKey}" style="width:fit-content">${season}</div>
       <div class="card-title">${season} Ideas</div>
-      <div class="card-count">${countLabel}</div>
+      <div class="card-count">${countLabel}${wbBadge}</div>
     </div>
   `;
 }
 
-function _actionCard({ label, title, desc, route, href, accent = false }) {
+function _actionCard({ label, title, desc, route, href, accent = false, badge = null }) {
   const dataAttr = route
     ? `data-route="${route}"`
     : `data-href="${href || '#'}"`;
+  const badgeHtml = badge != null
+    ? `<span class="card-count-badge">${badge}</span>`
+    : '';
   return `
     <div class="option-card${accent ? ' card-accent' : ''}" ${dataAttr} tabindex="0" role="button">
-      <div class="card-label">${label}</div>
+      <div class="card-label-row">
+        <span class="card-label">${label}</span>
+        ${badgeHtml}
+      </div>
       <div class="card-title">${title}</div>
       <div class="card-desc">${desc}</div>
     </div>
@@ -108,9 +124,4 @@ function _skeletonCards() {
       <div style="height:14px;width:60px;background:var(--color-bg);border-radius:4px"></div>
     </div>
   `).join('');
-}
-
-function _getWorkbenchUrl() {
-  // Update this to the workbench subdomain URL once known
-  return '/workbench';
 }

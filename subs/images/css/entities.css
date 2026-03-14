@@ -176,6 +176,12 @@
   margin-bottom: 0.5rem;
 }
 
+.entity-detail-subtitle {
+  font-size: 0.75rem;
+  color: var(--gray-500, #888);
+  margin-top: 0.125rem;
+}
+
 .entity-detail-title h1 {
   font-size: 1.75rem;
   font-weight: 700;

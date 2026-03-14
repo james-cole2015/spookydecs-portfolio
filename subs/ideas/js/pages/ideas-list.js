@@ -78,8 +78,11 @@ function _renderAll(container) {
   renderIdeaCards(grid, sorted);
 }
 
+const _HIDDEN_FROM_LIST = new Set(['Workbench', 'Built', 'Abandoned']);
+
 function _filter(ideas, state) {
   return ideas.filter(idea => {
+    if (_HIDDEN_FROM_LIST.has(idea.status)) return false;
     if (idea.season !== state.season) return false;
     if (state.status !== 'all' && idea.status !== state.status) return false;
     if (state.search) {

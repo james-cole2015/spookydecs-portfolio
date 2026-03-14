@@ -91,6 +91,58 @@ export function renderIdeaForm(container, idea, onSubmit, onCancel) {
         </div>
       </div>
 
+      <!-- Planning -->
+      <div class="form-section">
+        <div class="form-section-title">Planning</div>
+
+        <div class="form-group">
+          <label class="form-label" for="f-estimated-cost">Estimated Cost ($)</label>
+          <input class="form-input" id="f-estimated-cost" type="number" min="0" step="0.01"
+            value="${escapeAttr(idea?.estimated_cost != null ? idea.estimated_cost : '')}"
+            placeholder="0.00">
+          <div class="form-hint">Your ballpark budget for this idea.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="f-prep-start">Prep Start Date</label>
+          <input class="form-input" id="f-prep-start" type="date"
+            value="${escapeAttr(idea?.prep_start || '')}">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Materials</label>
+          <div id="materials-list" class="materials-input-list"></div>
+          <button type="button" class="btn btn-sm btn-secondary" id="add-material-btn" style="margin-top:var(--space-2)">+ Add Material</button>
+          <div class="form-hint">List materials or supplies needed for this idea.</div>
+        </div>
+      </div>
+
+      <!-- Build -->
+      <div class="form-section">
+        <div class="form-section-title">Build</div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="f-build-start">Build Start Date</label>
+            <input class="form-input" id="f-build-start" type="date"
+              value="${escapeAttr(idea?.build_start || '')}">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="f-build-complete">Build Complete Date</label>
+            <input class="form-input" id="f-build-complete" type="date"
+              value="${escapeAttr(idea?.build_complete || '')}">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="f-item-id">Item ID</label>
+          <input class="form-input" id="f-item-id" type="text"
+            value="${escapeAttr(idea?.item_id || '')}"
+            placeholder="e.g. ITEM-hal-20261001-abc1">
+          <div class="form-hint">Link to the items record once the build is complete.</div>
+        </div>
+      </div>
+
       <!-- Images -->
       <div class="form-section">
         <div class="form-section-title">Images</div>
@@ -117,6 +169,12 @@ export function renderIdeaForm(container, idea, onSubmit, onCancel) {
 
     </form>
   `;
+
+  // Render materials list
+  _renderMaterialsList(container.querySelector('#materials-list'), idea?.materials || []);
+  container.querySelector('#add-material-btn').addEventListener('click', () => {
+    _addMaterialRow(container.querySelector('#materials-list'), '');
+  });
 
   // Render existing image thumbnails
   _renderImageGrid(container.querySelector('#images-grid'), existingImages);
@@ -189,6 +247,17 @@ function _handleSubmit(container, existingImages, onSubmit) {
   const tagsRaw = container.querySelector('#f-tags').value;
   const tags = tagsRaw.split(',').map(t => t.trim()).filter(Boolean);
 
+  // Planning + Build fields
+  const estimatedCostRaw = container.querySelector('#f-estimated-cost').value.trim();
+  const estimated_cost = estimatedCostRaw !== '' ? parseFloat(estimatedCostRaw) : null;
+  const prep_start    = container.querySelector('#f-prep-start').value || '';
+  const build_start   = container.querySelector('#f-build-start').value || '';
+  const build_complete = container.querySelector('#f-build-complete').value || '';
+  const item_id       = container.querySelector('#f-item-id').value.trim();
+  const materials     = Array.from(
+    container.querySelectorAll('.material-input')
+  ).map(el => el.value.trim()).filter(Boolean).map(name => ({ name, done: false }));
+
   // Kept existing images
   const images = existingImages.filter(url => !_removedImages.includes(url));
 
@@ -228,6 +297,12 @@ function _handleSubmit(container, existingImages, onSubmit) {
     notes,
     tags,
     images,
+    estimated_cost,
+    prep_start,
+    build_start,
+    build_complete,
+    item_id,
+    materials,
     selectedFiles: [..._selectedFiles]
   });
 }
@@ -237,6 +312,26 @@ function _showError(container, fieldId, errorId, message) {
   const error = container.querySelector(`#${errorId}`);
   if (field) field.classList.add('error');
   if (error) { error.textContent = message; error.style.display = 'block'; }
+}
+
+function _renderMaterialsList(listEl, materials) {
+  listEl.innerHTML = '';
+  materials.forEach(m => {
+    const name = typeof m === 'string' ? m : (m.name || '');
+    _addMaterialRow(listEl, name);
+  });
+}
+
+function _addMaterialRow(listEl, value) {
+  const row = document.createElement('div');
+  row.className = 'material-row';
+  row.innerHTML = `
+    <input class="form-input material-input" type="text" value="${escapeAttr(value)}" placeholder="e.g. 3/4 inch PVC pipe">
+    <button type="button" class="material-remove" aria-label="Remove">&times;</button>
+  `;
+  row.querySelector('.material-remove').addEventListener('click', () => row.remove());
+  listEl.appendChild(row);
+  row.querySelector('.material-input').focus();
 }
 
 function escapeHtml(str) {
