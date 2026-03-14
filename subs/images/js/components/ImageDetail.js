@@ -1,8 +1,7 @@
 // Image Detail Component
-import { IMAGES_CONFIG, validateCategory } from '../utils/images-config.js';
-import { updateImage, deleteImage } from '../utils/images-api.js';
+import { IMAGES_CONFIG } from '../utils/images-config.js';
 import { navigate } from '../utils/router.js';
-import { confirmAction } from '../shared/modal.js';
+import { renderEntityRefs, renderDynamicFields, setupButtonHandlers } from './image-detail-helpers.js';
 
 // Derive category from photo data
 function deriveCategory(photo) {
@@ -10,38 +9,38 @@ function deriveCategory(photo) {
   if (photo.category && IMAGES_CONFIG.CATEGORIES[photo.category]) {
     return photo.category;
   }
-  
+
   // Derive category from photo_type and context
   const photoType = photo.photo_type;
-  
+
   // Check item context
   if (photo.item_ids && photo.item_ids.length > 0) {
     if (photoType === 'catalog') return 'item_catalog';
     if (photoType === 'repair') return 'maintenance';
     if (photoType === 'deployment') return 'deployments';
   }
-  
+
   // Check storage context
   if (photo.storage_id) {
     return 'storage';
   }
-  
+
   // Check deployment context
   if (photo.deployment_id) {
     return 'deployments';
   }
-  
+
   // Check idea context
   if (photo.idea_id) {
     if (photoType === 'build') return 'builds';
     if (photoType === 'inspiration') return 'ideas';
     return 'ideas'; // Default for idea context
   }
-  
+
   // Check photo_type directly
   if (photoType === 'receipt') return 'receipts';
   if (photoType === 'gallery') return 'gallery';
-  
+
   // Fallback to misc
   return 'misc';
 }
@@ -76,13 +75,13 @@ export function ImageDetail(photo, isEditMode = false, financeUrl = '', maintUrl
           <img src="${photo.cloudfront_url}" alt="${photo.caption || 'Image'}" />
         </a>
       </div>
-      
+
       <div class="detail-info">
         <div class="form-group">
           <label>Photo ID</label>
           <div class="readonly-value">${photo.photo_id}</div>
         </div>
-        
+
         <div class="form-group">
           <label>Category</label>
           ${isEditMode ? `
@@ -98,7 +97,7 @@ export function ImageDetail(photo, isEditMode = false, financeUrl = '', maintUrl
             <div class="readonly-value">${categoryConfig.label}</div>
           `}
         </div>
-        
+
         <div class="form-group">
           <label>Season</label>
           ${isEditMode ? `
@@ -113,7 +112,7 @@ export function ImageDetail(photo, isEditMode = false, financeUrl = '', maintUrl
             <div class="readonly-value">${photo.season}</div>
           `}
         </div>
-        
+
         <div class="form-group">
           <label>Year</label>
           ${isEditMode ? `
@@ -122,7 +121,7 @@ export function ImageDetail(photo, isEditMode = false, financeUrl = '', maintUrl
             <div class="readonly-value">${photo.year || 'N/A'}</div>
           `}
         </div>
-        
+
         <div class="form-group">
           <label>Caption</label>
           ${isEditMode ? `
@@ -131,7 +130,7 @@ export function ImageDetail(photo, isEditMode = false, financeUrl = '', maintUrl
             <div class="readonly-value">${photo.caption || 'No caption'}</div>
           `}
         </div>
-        
+
         <div class="form-group">
           <label>Tags</label>
           ${isEditMode ? `
@@ -140,13 +139,13 @@ export function ImageDetail(photo, isEditMode = false, financeUrl = '', maintUrl
             <div class="readonly-value">${(photo.tags || []).join(', ') || 'No tags'}</div>
           `}
         </div>
-        
+
         <div class="dynamic-fields">
           ${renderDynamicFields(photo, categoryConfig, isEditMode)}
         </div>
 
         ${!isEditMode ? renderEntityRefs(photo, financeUrl, maintUrl, category) : ''}
-        
+
         ${isEditMode ? `
           <div class="form-group checkbox-group">
             <label>
@@ -154,14 +153,14 @@ export function ImageDetail(photo, isEditMode = false, financeUrl = '', maintUrl
               Public
             </label>
           </div>
-          
+
           <div class="form-group checkbox-group">
             <label>
               <input type="checkbox" name="is_visible" ${photo.is_visible ? 'checked' : ''} />
               Visible
             </label>
           </div>
-          
+
           <div class="form-group checkbox-group">
             <label>
               <input type="checkbox" name="is_primary" ${photo.is_primary ? 'checked' : ''} />
@@ -172,18 +171,18 @@ export function ImageDetail(photo, isEditMode = false, financeUrl = '', maintUrl
           <div class="form-group">
             <label>Visibility</label>
             <div class="readonly-value">
-              ${photo.is_public ? 'Public' : 'Private'} • 
-              ${photo.is_visible ? 'Visible' : 'Hidden'} • 
+              ${photo.is_public ? 'Public' : 'Private'} •
+              ${photo.is_visible ? 'Visible' : 'Hidden'} •
               ${photo.is_primary ? 'Primary' : 'Secondary'}
             </div>
           </div>
         `}
-        
+
         <div class="form-group">
           <label>Upload Date</label>
           <div class="readonly-value">${new Date(photo.upload_date).toLocaleString()}</div>
         </div>
-        
+
         <div class="form-group">
           <label>S3 Path</label>
           <div class="readonly-value code">${photo.s3_key}</div>
@@ -191,7 +190,7 @@ export function ImageDetail(photo, isEditMode = false, financeUrl = '', maintUrl
       </div>
     </div>
   `;
-  
+
   // Entity link navigation (item_ids, storage_id → entity detail page)
   container.addEventListener('click', (e) => {
     const link = e.target.closest('.entity-link');
@@ -212,7 +211,6 @@ export function ImageDetail(photo, isEditMode = false, financeUrl = '', maintUrl
       const newCategory = e.target.value;
       const config = IMAGES_CONFIG.CATEGORIES[newCategory];
 
-      // Update required fields notice
       if (config.requiredFields.length > 0) {
         requiredNotice.textContent = `Required: ${config.requiredFields.join(', ')}`;
         requiredNotice.className = 'required-fields-notice active';
@@ -221,207 +219,12 @@ export function ImageDetail(photo, isEditMode = false, financeUrl = '', maintUrl
         requiredNotice.className = 'required-fields-notice';
       }
 
-      // Re-render dynamic fields
       dynamicFieldsContainer.innerHTML = renderDynamicFields(photo, config, true);
     });
   }
 
-  // Button handlers
   setupButtonHandlers(container, photo, isEditMode);
 
   wrapper.appendChild(container);
   return wrapper;
-}
-
-function renderEntityRefs(photo, financeUrl = '', maintUrl = '', category = '') {
-  const parts = [];
-
-  const ids = photo.item_ids || [];
-  if (ids.length) {
-    const links = ids.map(id =>
-      `<a class="entity-link breadcrumb-link" data-entity-id="${id}" data-entity-type="item" href="#">${id}</a>`
-    ).join(', ');
-    parts.push(`
-      <div class="form-group">
-        <label>Item IDs</label>
-        <div class="readonly-value">${links}</div>
-      </div>
-    `);
-  }
-
-  if (category === 'maintenance' && photo.record_id && maintUrl) {
-    const itemId = (photo.item_ids || [])[0] || '';
-    parts.push(`
-      <div class="form-group">
-        <label>Repair Record</label>
-        <div class="readonly-value">
-          <a class="breadcrumb-link" href="${maintUrl}/${itemId}/${photo.record_id}" target="_blank" rel="noopener noreferrer">${photo.record_id}</a>
-        </div>
-      </div>
-    `);
-  }
-
-  if (photo.storage_id) {
-    parts.push(`
-      <div class="form-group">
-        <label>Storage ID</label>
-        <div class="readonly-value">
-          <a class="entity-link breadcrumb-link" data-entity-id="${photo.storage_id}" data-entity-type="storage" href="#">${photo.storage_id}</a>
-        </div>
-      </div>
-    `);
-  }
-
-  const costId = (photo.cost_ids || [])[0];
-  if (costId) {
-    parts.push(`
-      <div class="form-group">
-        <label>Cost Record</label>
-        <div class="readonly-value">
-          <a class="breadcrumb-link" href="${financeUrl}/costs/${costId}" target="_blank" rel="noopener noreferrer">${costId}</a>
-        </div>
-      </div>
-    `);
-  }
-
-  return parts.join('');
-}
-
-function renderDynamicFields(photo, categoryConfig, isEditMode) {
-  const fields = [];
-  
-  categoryConfig.requiredFields.forEach(field => {
-    let value, label;
-
-    if (field === 'item_id') {
-      value = (photo.item_ids || []).join(', ');
-      label = 'Item IDs';
-    } else if (field === 'storage_id') {
-      value = photo.storage_id || '';
-      label = 'Storage ID';
-    } else if (field === 'idea_id') {
-      value = photo.idea_id || '';
-      label = 'Idea ID';
-    } else if (field === 'deployment_id') {
-      value = photo.deployment_id || '';
-      label = 'Deployment ID';
-    } else if (field === 'cost_record_id') {
-      value = photo.cost_record_id || '';
-      label = 'Cost Record ID';
-    } else {
-      value = photo[field] || '';
-      label = field.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
-    }
-
-    let readonlyHtml;
-    if (!isEditMode) {
-      if (field === 'item_id') {
-        const ids = photo.item_ids || [];
-        const links = ids.length
-          ? ids.map(id =>
-              `<a class="entity-link breadcrumb-link" data-entity-id="${id}" data-entity-type="item" href="#">${id}</a>`
-            ).join(', ')
-          : 'Not set';
-        readonlyHtml = `<div class="readonly-value">${links}</div>`;
-      } else if (field === 'storage_id') {
-        const sid = photo.storage_id || '';
-        readonlyHtml = sid
-          ? `<div class="readonly-value"><a class="entity-link breadcrumb-link" data-entity-id="${sid}" data-entity-type="storage" href="#">${sid}</a></div>`
-          : `<div class="readonly-value">Not set</div>`;
-      } else {
-        readonlyHtml = `<div class="readonly-value">${value || 'Not set'}</div>`;
-      }
-    }
-
-    fields.push(`
-      <div class="form-group">
-        <label>${label} ${categoryConfig.requiredFields.includes(field) ? '<span class="required">*</span>' : ''}</label>
-        ${isEditMode ? `
-          <input
-            type="text"
-            name="${field}"
-            class="form-control"
-            value="${value}"
-            ${categoryConfig.requiredFields.includes(field) ? 'required' : ''}
-            placeholder="${label}"
-          />
-        ` : readonlyHtml}
-      </div>
-    `);
-  });
-  
-  return fields.join('');
-}
-
-function setupButtonHandlers(container, photo, isEditMode) {
-  if (!isEditMode) {
-    // View mode buttons
-    const viewFullBtn = container.querySelector('[data-action="view-full"]');
-    const editBtn = container.querySelector('[data-action="edit"]');
-    const deleteBtn = container.querySelector('[data-action="delete"]');
-
-    viewFullBtn.addEventListener('click', () => {
-      window.open(photo.cloudfront_url, '_blank', 'noopener,noreferrer');
-    });
-
-    editBtn.addEventListener('click', () => {
-      navigate(`/images/${photo.photo_id}/edit`);
-    });
-
-    deleteBtn.addEventListener('click', () => {
-      confirmAction(
-        `Are you sure you want to delete this image? This action cannot be undone.`,
-        async () => {
-          await deleteImage(photo.photo_id);
-          navigate('/images/list');
-        }
-      );
-    });
-  } else {
-    // Edit mode buttons
-    const cancelBtn = container.querySelector('[data-action="cancel"]');
-    const saveBtn = container.querySelector('[data-action="save"]');
-    
-    cancelBtn.addEventListener('click', () => {
-      navigate(`/images/${photo.photo_id}`);
-    });
-    
-    saveBtn.addEventListener('click', async () => {
-      const updates = collectFormData(container);
-      
-      // Validate
-      const validation = validateCategory(updates.category, updates);
-      if (!validation.valid) {
-        alert('Validation errors:\n' + validation.errors.join('\n'));
-        return;
-      }
-      
-      try {
-        await updateImage(photo.photo_id, updates);
-        navigate(`/images/${photo.photo_id}`);
-      } catch (error) {
-        console.error('Error saving:', error);
-      }
-    });
-  }
-}
-
-function collectFormData(container) {
-  const data = {};
-  
-  container.querySelectorAll('.form-control, input[type="checkbox"]').forEach(input => {
-    if (input.type === 'checkbox') {
-      data[input.name] = input.checked;
-    } else if (input.name === 'tags') {
-      data.tags = input.value.split(',').map(t => t.trim()).filter(Boolean);
-    } else if (input.name === 'item_id') {
-      data.item_ids = input.value.split(',').map(t => t.trim()).filter(Boolean);
-    } else if (input.name === 'year') {
-      data.year = parseInt(input.value);
-    } else {
-      data[input.name] = input.value;
-    }
-  });
-  
-  return data;
 }
