@@ -18,7 +18,7 @@ export function initRouter(routes) {
       router.on(path, (match) => {
         // Extract params from match object
         // Navigo with ONE strategy passes params directly in match.data or match.params
-        const params = match?.data?.params || match?.params || match?.data || {};
+        const params = match?.data || match?.params || {};
         console.log(`[Router] Matched route: ${path}`, params);
         handler(params);
       });
@@ -26,26 +26,28 @@ export function initRouter(routes) {
   } else {
     Object.entries(routes).forEach(([path, handler]) => {
       router.on(path, (match) => {
-        const params = match?.data?.params || match?.params || match?.data || {};
+        const params = match?.data || match?.params || {};
         console.log(`[Router] Matched route: ${path}`, params);
         handler(params);
       });
     });
   }
 
-  // Handle not found - updated to prevent flash during navigation
+  // Handle not found
   router.notFound(() => {
     const currentPath = window.location.pathname;
     console.warn('Route not found:', currentPath);
-    
-    // Only redirect if we're truly on an unknown route
-    // Don't redirect if already on a /deployments route (prevents flash during navigation)
-    if (!currentPath.startsWith('/deployments')) {
+
+    // On hard load (refresh/direct nav), always redirect so the screen isn't blank.
+    // On client-side pushState navigation, don't redirect (prevents flash).
+    const navType = performance.getEntriesByType('navigation')[0]?.type;
+    const isHardLoad = navType === 'navigate' || navType === 'reload';
+
+    if (!currentPath.startsWith('/deployments') || isHardLoad) {
       console.log('Redirecting to /deployments from:', currentPath);
       router.navigate('/deployments');
     } else {
-      console.log('Route not matched but staying on deployments path:', currentPath);
-      // Don't redirect - let the route settle
+      console.log('Route not matched during client navigation, staying:', currentPath);
     }
   });
 

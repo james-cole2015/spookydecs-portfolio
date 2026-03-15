@@ -30,6 +30,12 @@ function isMobile() {
 // ─── Entry Point ──────────────────────────────────────────────────────────
 
 export async function renderHistoricalPage(deploymentId = null) {
+  // Fallback: parse ID from URL if router didn't pass it (e.g. hard refresh edge cases)
+  if (!deploymentId) {
+    const m = window.location.pathname.match(/\/deployments\/historical\/([^/]+)/);
+    if (m) deploymentId = decodeURIComponent(m[1]);
+  }
+
   const app = document.getElementById('app');
   _isMobile = isMobile();
 
