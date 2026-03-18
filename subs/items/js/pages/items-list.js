@@ -5,6 +5,7 @@ import { fetchAllItems } from '../api/items.js';
 import { ItemsCards } from '../components/ItemsCards.js';
 import { FilterBar } from '../components/FilterBar.js';
 import { navigate } from '../utils/router.js';
+import { renderBreadcrumb } from '../shared/breadcrumb.js';
 import { toast } from '../shared/toast.js';
 import { modal } from '../shared/modal.js';
 
@@ -19,19 +20,30 @@ class ItemsListPage {
   async render() {
     this.showLoading();
     
+    const classParam = new URLSearchParams(window.location.search).get('class');
+    const classLabels = { Decoration: 'Decorations', Light: 'Lights', Accessory: 'Accessories' };
+    const classLabel = classLabels[classParam] || 'All Items';
+
     const container = document.getElementById('app-container');
     container.innerHTML = `
+      <div id="breadcrumb"></div>
+
       <div class="view-header">
         <h1>Inventory Management</h1>
         <button class="btn-primary" onclick="itemsPage.handleCreate()">
           + Create Item
         </button>
       </div>
-      
+
       <div id="filter-bar-container"></div>
-      
+
       <div id="items-container"></div>
     `;
+
+    renderBreadcrumb(document.getElementById('breadcrumb'), [
+      { label: 'Items', route: '/' },
+      { label: classLabel }
+    ]);
     
     try {
       // Fetch items
