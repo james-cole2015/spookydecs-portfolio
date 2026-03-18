@@ -10,6 +10,7 @@
   
   <!-- Styles -->
   <link rel="stylesheet" href="/css/items.css">
+  <link rel="stylesheet" href="/css/items-landing.css">
   <link rel="stylesheet" href="/css/item-detail.css">
   <link rel="stylesheet" href="/css/item-form.css">
   <link rel="stylesheet" href="/css/item-edit.css">
@@ -31,8 +32,76 @@
     </spookydecs-header>
   <!-- Loading Overlay -->
   <div id="loading-overlay" class="loading-overlay hidden">
-    <div class="spinner"></div>
-    <p>Loading...</p>
+    <div class="loading-animation">
+      <div class="anim-stage">
+
+        <!-- Pumpkin 1 (bottom of stack) -->
+        <div class="pumpkin-piece pk-bottom">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 76 88" width="76" height="88">
+            <rect x="35" y="4" width="7" height="13" rx="3.5" fill="#4a8a3a"/>
+            <path d="M38 4 Q45 1 45 8" stroke="#3a6a2a" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            <ellipse cx="38" cy="54" rx="35" ry="30" fill="#c86000"/>
+            <ellipse cx="38" cy="54" rx="22" ry="30" fill="#e27a0a"/>
+            <ellipse cx="38" cy="54" rx="10" ry="30" fill="#f09820"/>
+            <polygon points="19,50 27,38 35,50" fill="#1e0a00"/>
+            <polygon points="41,50 49,38 57,50" fill="#1e0a00"/>
+            <polygon points="38,55 41,58 38,61 35,58" fill="#1e0a00"/>
+            <path d="M17,64 L22,70 L27,62 L32,70 L38,62 L44,70 L49,62 L54,70 L59,64" stroke="#1e0a00" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+
+        <!-- Pumpkin 2 (middle of stack) -->
+        <div class="pumpkin-piece pk-mid">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 76 88" width="76" height="88">
+            <rect x="35" y="4" width="7" height="13" rx="3.5" fill="#4a8a3a"/>
+            <path d="M38 4 Q45 1 45 8" stroke="#3a6a2a" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            <ellipse cx="38" cy="54" rx="35" ry="30" fill="#c86000"/>
+            <ellipse cx="38" cy="54" rx="22" ry="30" fill="#e27a0a"/>
+            <ellipse cx="38" cy="54" rx="10" ry="30" fill="#f09820"/>
+            <polygon points="19,50 27,38 35,50" fill="#1e0a00"/>
+            <polygon points="41,50 49,38 57,50" fill="#1e0a00"/>
+            <polygon points="38,55 41,58 38,61 35,58" fill="#1e0a00"/>
+            <path d="M17,64 L22,70 L27,62 L32,70 L38,62 L44,70 L49,62 L54,70 L59,64" stroke="#1e0a00" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+
+        <!-- Pumpkin 3 (top of stack) -->
+        <div class="pumpkin-piece pk-top">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 76 88" width="76" height="88">
+            <rect x="35" y="4" width="7" height="13" rx="3.5" fill="#4a8a3a"/>
+            <path d="M38 4 Q45 1 45 8" stroke="#3a6a2a" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            <ellipse cx="38" cy="54" rx="35" ry="30" fill="#c86000"/>
+            <ellipse cx="38" cy="54" rx="22" ry="30" fill="#e27a0a"/>
+            <ellipse cx="38" cy="54" rx="10" ry="30" fill="#f09820"/>
+            <polygon points="19,50 27,38 35,50" fill="#1e0a00"/>
+            <polygon points="41,50 49,38 57,50" fill="#1e0a00"/>
+            <polygon points="38,55 41,58 38,61 35,58" fill="#1e0a00"/>
+            <path d="M17,64 L22,70 L27,62 L32,70 L38,62 L44,70 L49,62 L54,70 L59,64" stroke="#1e0a00" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+
+        <!-- Pumpkin ground shadow -->
+        <div class="ground-shadow pumpkin-shadow"></div>
+
+        <!-- Snowball bottom -->
+        <div class="snowball-piece sn-bottom"></div>
+
+        <!-- Snowball middle -->
+        <div class="snowball-piece sn-mid"></div>
+
+        <!-- Snowball head (with face) -->
+        <div class="snowball-piece sn-head">
+          <div class="sn-eye sn-eye-l"></div>
+          <div class="sn-eye sn-eye-r"></div>
+          <div class="sn-nose"></div>
+        </div>
+
+        <!-- Snowman ground shadow -->
+        <div class="ground-shadow snowman-shadow"></div>
+
+      </div>
+      <p class="loading-label">Loading...</p>
+    </div>
   </div>
   
   <!-- Main App Container -->

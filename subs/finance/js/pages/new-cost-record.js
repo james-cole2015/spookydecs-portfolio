@@ -166,7 +166,7 @@ function attachEventListeners(receiptModal, getFormFields) {
 // NEW: Handle AI-extracted multi-item data
 async function handleAIExtractedData(extractedData, extractionId, imageId, contextData = {}) {
   console.log('📦 AI extracted data received:', extractedData);
-  
+
   // Check if we have multiple items or single item
   const items = extractedData.items || [];
   const receiptMetadata = extractedData.receipt_metadata || {};
@@ -179,7 +179,7 @@ async function handleAIExtractedData(extractedData, extractionId, imageId, conte
 
   // Show multi-item review modal
   const multiItemModal = new MultiItemReviewModal();
-  
+
   await multiItemModal.show(
     {
       items: items,

@@ -265,3 +265,27 @@
     width: 100%;
   }
 }
+
+/* Graceful error state (e.g. Claude API overloaded) */
+.receipt-upload-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.receipt-upload-error-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #111);
+  margin: 0;
+}
+
+.receipt-upload-error-message {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #666);
+  margin: 0;
+}

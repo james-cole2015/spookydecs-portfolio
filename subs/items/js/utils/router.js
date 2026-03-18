@@ -23,15 +23,19 @@ export function initRouter(routes) {
       console.log('✅ Route matched: /create');
       routes['/create']();
     })
+    .on('/items', () => {
+      console.log('✅ Route matched: /items');
+      routes['/items']();
+    })
     .on('/:id/edit', ({ data }) => {
       console.log('✅ Route matched: /:id/edit', data);
       routes['/:id/edit']({ data });
     })
     .on('/:id', ({ data }) => {
       // Guard against reserved routes
-      if (data.id === 'create') {
+      if (data.id === 'create' || data.id === 'items') {
         console.log('   ⚠️ Skipping reserved route:', data.id);
-        return false; // Don't handle, let /create route match instead
+        return false; // Don't handle, let explicit routes match instead
       }
       console.log('✅ Route matched: /:id', data);
       routes['/:id']({ data });

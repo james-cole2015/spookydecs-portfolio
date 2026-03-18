@@ -202,10 +202,19 @@ export class ReceiptUploadModal {
 
     } catch (error) {
       console.error('❌ Error processing receipt:', error);
-      toast.error(`Failed to process receipt: ${error.message}`);
-      
-      // Reset to upload state
-      this.showUploadArea();
+
+      const isOverloaded = error.message?.toLowerCase().includes('overloaded') ||
+                           error.message?.toLowerCase().includes('temporarily unavailable');
+
+      if (isOverloaded) {
+        this.showError(
+          'Receipt AI is temporarily unavailable.',
+          'Please try again in a few minutes, or close this and enter the cost details manually.'
+        );
+      } else {
+        toast.error(`Failed to process receipt: ${error.message}`);
+        this.showUploadArea();
+      }
     }
   }
 
@@ -363,6 +372,45 @@ export class ReceiptUploadModal {
     previewImage.onload = () => {
       URL.revokeObjectURL(previewUrl);
     };
+  }
+
+  showError(title, message) {
+    if (!this.modal) return;
+
+    const body = this.modal.querySelector('.receipt-upload-modal-body');
+    if (!body) return;
+
+    body.innerHTML = `
+      <div class="receipt-upload-error">
+        <p class="receipt-upload-error-title">${title}</p>
+        <p class="receipt-upload-error-message">${message}</p>
+        <button class="btn-secondary" id="try-again-btn">Try Again</button>
+      </div>
+    `;
+    body.querySelector('#try-again-btn').addEventListener('click', () => {
+      body.innerHTML = `
+        <div class="upload-area" id="upload-area">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          <p class="upload-text"><strong>Click to upload</strong> or drag and drop</p>
+          <p class="upload-hint">PDF or Image files (JPEG, PNG, GIF, WebP)</p>
+        </div>
+        <input type="file" id="receipt-file-input" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,application/pdf" style="display: none;">
+        <div class="processing-area" id="processing-area" style="display: none;">
+          <div class="processing-spinner"></div>
+          <p class="processing-text" id="processing-text">Processing...</p>
+          <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+        </div>
+        <div class="preview-area" id="preview-area" style="display: none;">
+          <img id="preview-image" src="" alt="Receipt preview">
+          <p class="preview-filename" id="preview-filename"></p>
+        </div>
+      `;
+      this.attachListeners();
+    });
   }
 
   showUploadArea() {

@@ -20,23 +20,215 @@
   z-index: 1000;
 }
 
-.loading-overlay .spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid #E5E7EB;
-  border-top-color: #3B82F6;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+/* Loading Animation */
+.loading-animation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
 }
 
-.loading-overlay p {
-  margin-top: 16px;
+.anim-stage {
+  position: relative;
+  width: 160px;
+  height: 260px;
+}
+
+/* Pumpkin pieces */
+.pumpkin-piece {
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  width: 76px;
+  height: 88px;
+  transform-origin: bottom center;
+  opacity: 0;
+}
+
+.pk-bottom { bottom: 0;    animation: pk-bottom 10s linear infinite; }
+.pk-mid    { bottom: 75px; animation: pk-mid    10s linear infinite; }
+.pk-top    { bottom: 150px; animation: pk-top   10s linear infinite; }
+
+/* Snowball pieces */
+.snowball-piece {
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 32%, #fff 0%, #dde8f2 55%, #b8cce0 100%);
+  box-shadow: 2px 3px 10px rgba(0,0,0,0.18), inset -2px -3px 7px rgba(130,155,185,0.3);
+  transform-origin: bottom center;
+  opacity: 0;
+}
+
+.sn-bottom { width: 66px; height: 66px; bottom: 0;     animation: sn-bottom 10s linear infinite; }
+.sn-mid    { width: 50px; height: 50px; bottom: 58px;  animation: sn-mid    10s linear infinite; }
+.sn-head   { width: 38px; height: 38px; bottom: 100px; animation: sn-head   10s linear infinite; }
+
+/* Snowman face */
+.sn-eye {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  background: #2a3540;
+  border-radius: 50%;
+  top: 28%;
+}
+.sn-eye-l { left: 23%; }
+.sn-eye-r { right: 23%; }
+
+.sn-nose {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-top: 2px solid transparent;
+  border-bottom: 2px solid transparent;
+  border-left: 7px solid #d55a10;
+  top: 48%;
+  left: 50%;
+  transform: translateY(-50%);
+}
+
+/* Ground shadows */
+.ground-shadow {
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  width: 100px;
+  height: 14px;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,0.25) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.pumpkin-shadow { animation: pumpkin-shadow 10s linear infinite; }
+.snowman-shadow  { animation: snowman-shadow  10s linear infinite; }
+
+.loading-label {
   color: #6B7280;
   font-size: 14px;
+  margin: 0;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+/* ── Keyframes ── */
+
+/* pk-bottom: drops 0→8%, settles 15%, visible through 47%, resets 50% */
+@keyframes pk-bottom {
+  0%    { transform: translateY(-320px); opacity: 0; }
+  3%    { transform: translateY(-200px); opacity: 0.9; }
+  7.5%  { transform: translateY(-20px); }
+  8%    { transform: translateY(0) scaleX(1.3) scaleY(0.75); opacity: 1; }
+  10.2% { transform: translateY(-24px) scaleX(0.88) scaleY(1.12); }
+  12.4% { transform: translateY(0) scaleX(1.1) scaleY(0.92); }
+  13.5% { transform: translateY(-9px); }
+  15%   { transform: translateY(0); opacity: 1; }
+  47%   { transform: translateY(0); opacity: 1; }
+  50%   { transform: translateY(-320px); opacity: 0; }
+  100%  { transform: translateY(-320px); opacity: 0; }
+}
+
+/* pk-mid: drops 15→23%, settles 30%, visible through 47%, resets 50% */
+@keyframes pk-mid {
+  0%    { transform: translateY(-320px); opacity: 0; }
+  15%   { transform: translateY(-320px); opacity: 0; }
+  18%   { transform: translateY(-200px); opacity: 0.9; }
+  22.5% { transform: translateY(-20px); }
+  23%   { transform: translateY(0) scaleX(1.3) scaleY(0.75); opacity: 1; }
+  25.2% { transform: translateY(-24px) scaleX(0.88) scaleY(1.12); }
+  27.4% { transform: translateY(0) scaleX(1.1) scaleY(0.92); }
+  28.5% { transform: translateY(-9px); }
+  30%   { transform: translateY(0); opacity: 1; }
+  47%   { transform: translateY(0); opacity: 1; }
+  50%   { transform: translateY(-320px); opacity: 0; }
+  100%  { transform: translateY(-320px); opacity: 0; }
+}
+
+/* pk-top: drops 30→38%, settles 45%, visible through 47%, resets 50% */
+@keyframes pk-top {
+  0%    { transform: translateY(-320px); opacity: 0; }
+  30%   { transform: translateY(-320px); opacity: 0; }
+  33%   { transform: translateY(-200px); opacity: 0.9; }
+  37.5% { transform: translateY(-20px); }
+  38%   { transform: translateY(0) scaleX(1.3) scaleY(0.75); opacity: 1; }
+  40.2% { transform: translateY(-24px) scaleX(0.88) scaleY(1.12); }
+  42.4% { transform: translateY(0) scaleX(1.1) scaleY(0.92); }
+  43.5% { transform: translateY(-9px); }
+  45%   { transform: translateY(0); opacity: 1; }
+  47%   { transform: translateY(0); opacity: 1; }
+  50%   { transform: translateY(-320px); opacity: 0; }
+  100%  { transform: translateY(-320px); opacity: 0; }
+}
+
+/* sn-bottom: drops 50→58%, settles 65%, visible through 97%, resets 100% */
+@keyframes sn-bottom {
+  0%    { transform: translateY(-320px); opacity: 0; }
+  50%   { transform: translateY(-320px); opacity: 0; }
+  53%   { transform: translateY(-200px); opacity: 0.9; }
+  57.5% { transform: translateY(-20px); }
+  58%   { transform: translateY(0) scaleX(1.35) scaleY(0.7); opacity: 1; }
+  60.2% { transform: translateY(-24px) scaleX(0.85) scaleY(1.15); }
+  62.4% { transform: translateY(0) scaleX(1.12) scaleY(0.9); }
+  63.5% { transform: translateY(-9px); }
+  65%   { transform: translateY(0); opacity: 1; }
+  97%   { transform: translateY(0); opacity: 1; }
+  100%  { transform: translateY(-320px); opacity: 0; }
+}
+
+/* sn-mid: drops 65→73%, settles 80%, visible through 97%, resets 100% */
+@keyframes sn-mid {
+  0%    { transform: translateY(-320px); opacity: 0; }
+  65%   { transform: translateY(-320px); opacity: 0; }
+  68%   { transform: translateY(-200px); opacity: 0.9; }
+  72.5% { transform: translateY(-20px); }
+  73%   { transform: translateY(0) scaleX(1.3) scaleY(0.75); opacity: 1; }
+  75.2% { transform: translateY(-22px) scaleX(0.88) scaleY(1.12); }
+  77.4% { transform: translateY(0) scaleX(1.1) scaleY(0.92); }
+  78.5% { transform: translateY(-8px); }
+  80%   { transform: translateY(0); opacity: 1; }
+  97%   { transform: translateY(0); opacity: 1; }
+  100%  { transform: translateY(-320px); opacity: 0; }
+}
+
+/* sn-head: drops 80→88%, settles 95%, visible through 97%, resets 100% */
+@keyframes sn-head {
+  0%    { transform: translateY(-320px); opacity: 0; }
+  80%   { transform: translateY(-320px); opacity: 0; }
+  83%   { transform: translateY(-200px); opacity: 0.9; }
+  87.5% { transform: translateY(-20px); }
+  88%   { transform: translateY(0) scaleX(1.25) scaleY(0.8); opacity: 1; }
+  90.2% { transform: translateY(-20px) scaleX(0.9) scaleY(1.1); }
+  92.4% { transform: translateY(0) scaleX(1.08) scaleY(0.94); }
+  93.5% { transform: translateY(-7px); }
+  95%   { transform: translateY(0); opacity: 1; }
+  97%   { transform: translateY(0); opacity: 1; }
+  100%  { transform: translateY(-320px); opacity: 0; }
+}
+
+/* Pumpkin shadow: grows as each pumpkin lands, fades at 50% */
+@keyframes pumpkin-shadow {
+  0%    { transform: scaleX(0);   opacity: 0; }
+  3%    { transform: scaleX(0.1); opacity: 0.35; }
+  8%    { transform: scaleX(0.4); opacity: 0.45; }
+  23%   { transform: scaleX(0.7); opacity: 0.45; }
+  38%   { transform: scaleX(1);   opacity: 0.45; }
+  47%   { transform: scaleX(1);   opacity: 0.45; }
+  50%   { transform: scaleX(0);   opacity: 0; }
+  100%  { transform: scaleX(0);   opacity: 0; }
+}
+
+/* Snowman shadow: grows as each snowball lands, fades at 100% */
+@keyframes snowman-shadow {
+  0%    { transform: scaleX(0);   opacity: 0; }
+  50%   { transform: scaleX(0);   opacity: 0; }
+  53%   { transform: scaleX(0.1); opacity: 0.35; }
+  58%   { transform: scaleX(0.4); opacity: 0.45; }
+  73%   { transform: scaleX(0.7); opacity: 0.45; }
+  88%   { transform: scaleX(1);   opacity: 0.45; }
+  97%   { transform: scaleX(1);   opacity: 0.45; }
+  100%  { transform: scaleX(0);   opacity: 0; }
 }
 
 /* Page Header */
