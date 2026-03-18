@@ -31,7 +31,7 @@ export async function fetchImages(filters = {}) {
     }
 
     const data = await response.json();
-    return data.photos || [];
+    return (data.data || data).photos || [];
   } catch (error) {
     console.error('Error fetching images:', error);
     showToast('Failed to load images', 'error');
@@ -48,7 +48,8 @@ export async function fetchImage(photoId) {
       throw new Error(response.status === 404 ? 'Image not found' : `Failed to fetch image: ${response.statusText}`);
     }
 
-    return await response.json();
+    const d = await response.json();
+    return d.data ?? d;
   } catch (error) {
     console.error('Error fetching image:', error);
     showToast(error.message, 'error');
@@ -72,7 +73,7 @@ export async function updateImage(photoId, updates) {
 
     const data = await response.json();
     showToast('Image updated successfully', 'success');
-    return data.photo;
+    return (data.data || data).photo;
   } catch (error) {
     console.error('Error updating image:', error);
     showToast(error.message, 'error');
@@ -96,7 +97,7 @@ export async function patchImage(photoId, updates) {
 
     const data = await response.json();
     showToast('Image updated successfully', 'success');
-    return data.photo;
+    return (data.data || data).photo;
   } catch (error) {
     console.error('Error patching image:', error);
     showToast(error.message, 'error');
@@ -171,7 +172,8 @@ export async function getStats(photoType = null) {
       throw new Error('Failed to fetch statistics');
     }
 
-    return await response.json();
+    const d = await response.json();
+    return d.data ?? d;
   } catch (error) {
     console.error('Error fetching stats:', error);
     throw error;
