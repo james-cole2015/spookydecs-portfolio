@@ -13,8 +13,7 @@ export async function renderImageDetail(params) {
 
   app.innerHTML = '<div class="loading">Loading image...</div>';
 
-  const searchParams = new URLSearchParams(window.location.search);
-  const from = searchParams.get('from');
+  const from = params.params?.from || new URLSearchParams(window.location.search).get('from');
   const PARENT_CRUMBS = {
     gallery: { label: 'Gallery Manager', path: '/images/gallery' },
     entity:  { label: 'Entities',        path: '/images/entities' },
@@ -36,7 +35,7 @@ export async function renderImageDetail(params) {
         : [{ label: photo.photo_id }])
     ];
     app.appendChild(Breadcrumb(crumbs));
-    app.appendChild(ImageDetail(photo, isEditMode, financeUrl, maintUrl, ideasUrl));
+    app.appendChild(ImageDetail(photo, isEditMode, financeUrl, maintUrl, ideasUrl, from));
 
   } catch (error) {
     app.innerHTML = `

@@ -45,7 +45,7 @@ function deriveCategory(photo) {
   return 'misc';
 }
 
-export function ImageDetail(photo, isEditMode = false, financeUrl = '', maintUrl = '', ideasUrl = '') {
+export function ImageDetail(photo, isEditMode = false, financeUrl = '', maintUrl = '', ideasUrl = '', from = '') {
   const wrapper = document.createElement('div');
 
   const container = document.createElement('div');
@@ -53,6 +53,7 @@ export function ImageDetail(photo, isEditMode = false, financeUrl = '', maintUrl
 
   const category = deriveCategory(photo);
   const categoryConfig = IMAGES_CONFIG.CATEGORIES[category] || { label: 'Unknown', requiredFields: [] };
+  const galleryData = photo.gallery_data || {};
 
   container.innerHTML = `
     <div class="detail-header">
@@ -131,6 +132,31 @@ export function ImageDetail(photo, isEditMode = false, financeUrl = '', maintUrl
           `}
         </div>
 
+        ${category.startsWith('gallery') ? `
+          <div class="form-group">
+            <label>Display Name</label>
+            ${isEditMode ? `
+              <input type="text" name="gallery_display_name" class="form-control" value="${galleryData.display_name || ''}" placeholder="e.g., Front Yard 2025" />
+            ` : `
+              <div class="readonly-value">${galleryData.display_name || 'Untitled'}</div>
+            `}
+          </div>
+
+          <div class="form-group">
+            <label>Location</label>
+            ${isEditMode ? `
+              <select name="gallery_location" class="form-control">
+                <option value="">— Select location —</option>
+                <option value="Front Yard" ${galleryData.location === 'Front Yard' ? 'selected' : ''}>Front Yard</option>
+                <option value="Side Yard" ${galleryData.location === 'Side Yard' ? 'selected' : ''}>Side Yard</option>
+                <option value="Back Yard" ${galleryData.location === 'Back Yard' ? 'selected' : ''}>Back Yard</option>
+              </select>
+            ` : `
+              <div class="readonly-value">${galleryData.location || '—'}</div>
+            `}
+          </div>
+        ` : ''}
+
         <div class="form-group">
           <label>Tags</label>
           ${isEditMode ? `
@@ -201,6 +227,29 @@ export function ImageDetail(photo, isEditMode = false, financeUrl = '', maintUrl
     }
   });
 
+  // Auto-fill display_name from year/location changes for gallery photos
+  if (isEditMode) {
+    const yearInput = container.querySelector('[name="year"]');
+    const locationSelect = container.querySelector('[name="gallery_location"]');
+    const displayNameInput = container.querySelector('[name="gallery_display_name"]');
+
+    if (displayNameInput && (yearInput || locationSelect)) {
+      const autoFill = () => {
+        const loc = locationSelect?.value || '';
+        const yr = yearInput?.value || '';
+        const generated = [loc, yr].filter(Boolean).join(' ');
+        const currentVal = displayNameInput.value;
+        const isManual = currentVal && currentVal !== displayNameInput.dataset.autoValue;
+        if (!isManual) {
+          displayNameInput.value = generated;
+          displayNameInput.dataset.autoValue = generated;
+        }
+      };
+      yearInput?.addEventListener('input', autoFill);
+      locationSelect?.addEventListener('change', autoFill);
+    }
+  }
+
   // Handle category change in edit mode
   if (isEditMode) {
     const categorySelect = container.querySelector('[name="category"]');
@@ -223,7 +272,7 @@ export function ImageDetail(photo, isEditMode = false, financeUrl = '', maintUrl
     });
   }
 
-  setupButtonHandlers(container, photo, isEditMode);
+  setupButtonHandlers(container, photo, isEditMode, from);
 
   wrapper.appendChild(container);
   return wrapper;

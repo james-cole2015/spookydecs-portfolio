@@ -1,5 +1,5 @@
 // Gallery Manager Page
-import { fetchImages, patchImage, deleteImage } from '../utils/images-api.js';
+import { fetchImages, fetchImage, updateImage, patchImage, deleteImage } from '../utils/images-api.js';
 import { IMAGES_CONFIG } from '../utils/images-config.js';
 import { navigate } from '../utils/router.js';
 import { showToast } from '../shared/toast.js';
@@ -95,11 +95,12 @@ export async function renderGalleryManager() {
   await loadGalleryPhotos();
 }
 
-function getYearOptions() {
+function getYearOptions(selectedYear) {
   const currentYear = new Date().getFullYear();
+  const selected = Number(selectedYear) || currentYear;
   const years = [];
   for (let year = currentYear; year >= 2020; year--) {
-    years.push(`<option value="${year}">${year}</option>`);
+    years.push(`<option value="${year}" ${year === selected ? 'selected' : ''}>${year}</option>`);
   }
   return years.join('');
 }
@@ -151,6 +152,9 @@ function attachGalleryHandlers() {
 
 async function handleUploadPhoto() {
   try {
+    const { season, year } = await promptUploadMetadata();
+    if (!season || !year) return;
+
     await loadPhotoUploadComponents();
 
     const sectionConfig = IMAGES_CONFIG.CATEGORIES[`gallery_${currentSection}`];
@@ -158,12 +162,14 @@ async function handleUploadPhoto() {
     uploadModal.setAttribute('context', 'gallery');
     uploadModal.setAttribute('photo-type', sectionConfig.photoType);
     uploadModal.setAttribute('category', `gallery_${currentSection}`);
-    uploadModal.setAttribute('season', currentFilters.season || 'shared');
+    uploadModal.setAttribute('season', season);
+    uploadModal.setAttribute('year', String(year));
 
     uploadModal.addEventListener('upload-complete', async (e) => {
       const { photo_ids } = e.detail;
       if (photo_ids && photo_ids.length > 0) {
         showToast(`${photo_ids.length} photo(s) uploaded`, 'success');
+        await promptPostUploadMetadata(photo_ids);
         await loadGalleryPhotos();
       }
     });
@@ -173,6 +179,151 @@ async function handleUploadPhoto() {
     console.error('Failed to load photo upload:', error);
     showToast('Could not load photo upload component', 'error');
   }
+}
+
+function promptUploadMetadata() {
+  return new Promise((resolve) => {
+    const defaultYear = currentFilters.year || new Date().getFullYear();
+    const defaultSeason = currentFilters.season || '';
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal" style="max-width:400px">
+        <div class="modal-header">
+          <h2>Upload Photo</h2>
+          <button class="modal-close" id="upload-meta-cancel">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="filter-group" style="max-width:none;margin-bottom:1rem">
+            <label>Season</label>
+            <select class="form-control" id="upload-meta-season">
+              <option value="" disabled ${!defaultSeason ? 'selected' : ''}>Select season</option>
+              ${IMAGES_CONFIG.SEASONS.map(s =>
+                `<option value="${s.value}" ${s.value === defaultSeason ? 'selected' : ''}>${s.label}</option>`
+              ).join('')}
+            </select>
+          </div>
+          <div class="filter-group" style="max-width:none">
+            <label>Year</label>
+            <select class="form-control" id="upload-meta-year">
+              ${getYearOptions(defaultYear)}
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer" style="display:flex;justify-content:flex-end;gap:0.75rem">
+          <button class="btn btn-secondary" id="upload-meta-cancel-btn">Cancel</button>
+          <button class="btn btn-primary" id="upload-meta-continue">Continue to Upload</button>
+        </div>
+      </div>
+    `;
+
+    const close = (result) => {
+      overlay.remove();
+      resolve(result);
+    };
+
+    overlay.querySelector('#upload-meta-cancel').addEventListener('click', () => close({}));
+    overlay.querySelector('#upload-meta-cancel-btn').addEventListener('click', () => close({}));
+    overlay.querySelector('#upload-meta-continue').addEventListener('click', () => {
+      const season = overlay.querySelector('#upload-meta-season').value;
+      const year = overlay.querySelector('#upload-meta-year').value;
+      if (!season) {
+        overlay.querySelector('#upload-meta-season').focus();
+        return;
+      }
+      close({ season, year });
+    });
+
+    document.body.appendChild(overlay);
+  });
+}
+
+async function promptPostUploadMetadata(photo_ids) {
+  const photos = await Promise.all(photo_ids.map(id => fetchImage(id).catch(() => null)));
+  const validPhotos = photos.filter(Boolean);
+  if (validPhotos.length === 0) return;
+
+  const LOCATION_OPTIONS = ['Front Yard', 'Side Yard', 'Back Yard'];
+
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal" style="max-width:560px">
+        <div class="modal-header">
+          <h2>Set Photo Details</h2>
+          <button class="modal-close" id="post-upload-skip">&times;</button>
+        </div>
+        <div class="modal-body" style="max-height:420px;overflow-y:auto">
+          <p style="margin:0 0 1rem;color:var(--text-muted,#888);font-size:0.875rem">
+            Optionally set a display name and location for each uploaded photo.
+          </p>
+          <div class="post-upload-rows">
+            ${validPhotos.map(photo => `
+              <div class="post-upload-row" data-photo-id="${photo.photo_id}" style="display:flex;gap:0.75rem;align-items:center;margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid var(--border-color,#333)">
+                <img src="${photo.thumb_cloudfront_url || photo.cloudfront_url}" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:4px;flex-shrink:0" />
+                <div style="flex:1;display:flex;flex-direction:column;gap:0.5rem">
+                  <input
+                    type="text"
+                    class="form-control post-upload-name"
+                    placeholder="Display name (e.g. Front Yard 2025)"
+                    value="${photo.gallery_data?.display_name || ''}"
+                    style="width:100%"
+                  />
+                  <select class="form-control post-upload-location" style="width:100%">
+                    <option value="">— Select location —</option>
+                    ${LOCATION_OPTIONS.map(loc => `
+                      <option value="${loc}" ${photo.gallery_data?.location === loc ? 'selected' : ''}>${loc}</option>
+                    `).join('')}
+                  </select>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        <div class="modal-footer" style="display:flex;justify-content:flex-end;gap:0.75rem">
+          <button class="btn btn-secondary" id="post-upload-skip-btn">Skip</button>
+          <button class="btn btn-primary" id="post-upload-save-btn">Save</button>
+        </div>
+      </div>
+    `;
+
+    const close = () => { overlay.remove(); resolve(); };
+
+    overlay.querySelector('#post-upload-skip').addEventListener('click', close);
+    overlay.querySelector('#post-upload-skip-btn').addEventListener('click', close);
+
+    overlay.querySelector('#post-upload-save-btn').addEventListener('click', async () => {
+      const rows = overlay.querySelectorAll('.post-upload-row');
+      const updates = [];
+
+      rows.forEach(row => {
+        const photoId = row.dataset.photoId;
+        const photo = validPhotos.find(p => p.photo_id === photoId);
+        const displayName = row.querySelector('.post-upload-name').value.trim();
+        const location = row.querySelector('.post-upload-location').value;
+
+        if (displayName || location) {
+          updates.push(updateImage(photoId, {
+            gallery_data: {
+              ...(photo.gallery_data || {}),
+              display_name: displayName,
+              location,
+            }
+          }));
+        }
+      });
+
+      if (updates.length > 0) {
+        await Promise.all(updates);
+      }
+
+      close();
+    });
+
+    document.body.appendChild(overlay);
+  });
 }
 
 async function loadPhotoUploadComponents() {
