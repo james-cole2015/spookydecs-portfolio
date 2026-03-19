@@ -17,6 +17,7 @@ export class GalleryAPI {
 
     if (filters.season) params.append('season', filters.season);
     if (filters.year) params.append('year', filters.year);
+    if (filters.tags) params.append('tags', filters.tags);
 
     const url = `${baseUrl}/gallery/images?${params.toString()}`;
 

@@ -33,10 +33,10 @@ export class FilterTags {
    * Render filter tags
    */
   render() {
-    const { season, year } = this.filters;
-    
-    // Check if any filters are active
-    const hasFilters = season || year;
+    const { season, year, tags } = this.filters;
+    const activeTags = tags ? tags.split(',').filter(Boolean) : [];
+
+    const hasFilters = season || year || activeTags.length > 0;
 
     if (!hasFilters) {
       this.container.innerHTML = `
@@ -47,13 +47,13 @@ export class FilterTags {
       return;
     }
 
-    const tags = [];
+    const pills = [];
 
-    // Season tag
+    // Season pill
     if (season) {
       const seasonEmoji = this.getSeasonEmoji(season);
       const seasonLabel = this.getSeasonLabel(season);
-      tags.push(`
+      pills.push(`
         <button class="filter-tag" data-filter="season" data-value="${season}">
           <span class="filter-tag-icon">${seasonEmoji}</span>
           <span>${seasonLabel}</span>
@@ -62,9 +62,9 @@ export class FilterTags {
       `);
     }
 
-    // Year tag
+    // Year pill
     if (year) {
-      tags.push(`
+      pills.push(`
         <button class="filter-tag" data-filter="year" data-value="${year}">
           <span class="filter-tag-icon">📅</span>
           <span>${year}</span>
@@ -73,9 +73,20 @@ export class FilterTags {
       `);
     }
 
+    // One pill per active tag
+    activeTags.forEach(tag => {
+      pills.push(`
+        <button class="filter-tag" data-filter="tag" data-value="${tag}">
+          <span class="filter-tag-icon">🏷️</span>
+          <span>${tag}</span>
+          <span class="filter-tag-remove">×</span>
+        </button>
+      `);
+    });
+
     this.container.innerHTML = `
       <div class="filter-tags">
-        ${tags.join('')}
+        ${pills.join('')}
         <a href="#" class="browse-all-link">Browse all</a>
       </div>
     `;
@@ -93,8 +104,9 @@ export class FilterTags {
       tag.addEventListener('click', (e) => {
         e.preventDefault();
         const filter = tag.dataset.filter;
+        const value = tag.dataset.value;
         if (this.onFilterRemove) {
-          this.onFilterRemove(filter);
+          this.onFilterRemove(filter, value);
         }
       });
     });
@@ -142,6 +154,7 @@ export class FilterTags {
     let count = 0;
     if (this.filters.season) count++;
     if (this.filters.year) count++;
+    if (this.filters.tags) count += this.filters.tags.split(',').filter(Boolean).length;
     return count;
   }
 

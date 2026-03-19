@@ -12,8 +12,17 @@ class State {
     const params = new URLSearchParams(window.location.search);
     return {
       season: params.get('season') || null,
-      year: params.get('year') || null
+      year: params.get('year') || null,
+      tags: params.get('tags') || null,
     };
+  }
+
+  /**
+   * Get tags as an array (empty array if no tags set)
+   */
+  getTags() {
+    const tags = this.getValue('tags');
+    return tags ? tags.split(',').filter(Boolean) : [];
   }
 
   /**
@@ -29,9 +38,13 @@ class State {
     if (updatedState.season) {
       params.set('season', updatedState.season);
     }
-    
+
     if (updatedState.year) {
       params.set('year', updatedState.year);
+    }
+
+    if (updatedState.tags) {
+      params.set('tags', updatedState.tags);
     }
 
     // Update URL without reload
