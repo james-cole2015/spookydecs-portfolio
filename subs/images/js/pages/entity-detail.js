@@ -233,7 +233,7 @@ function createPhotoCard(photo, index, allPhotos, entityId, entityType) {
   // View Record — navigate to image detail page
   card.querySelector('[data-action="view-record"]').addEventListener('click', (e) => {
     e.stopPropagation();
-    navigate(`/images/${photo.photo_id}`);
+    navigate(`/images/${photo.photo_id}?from=entity`);
   });
 
   // Set Primary

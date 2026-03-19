@@ -68,7 +68,7 @@ export function GalleryPhotoCard(photo, onUpdate, onDelete) {
   const sortInput = card.querySelector('[data-action="update-sort"]');
   
   editBtn.addEventListener('click', () => {
-    navigate(`/images/${photo.photo_id}/edit`);
+    navigate(`/images/${photo.photo_id}/edit?from=gallery`);
   });
   
   featuredBtn.addEventListener('click', async () => {
