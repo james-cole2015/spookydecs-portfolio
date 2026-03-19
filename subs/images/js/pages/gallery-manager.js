@@ -20,6 +20,9 @@ export async function renderGalleryManager() {
       <div class="page-header">
         <h1>Gallery Management</h1>
         <div class="header-actions">
+          <button class="btn btn-primary" id="upload-photo-btn">
+            Upload Photo
+          </button>
           <button class="btn btn-secondary" id="back-btn">
             ← Back to Admin
           </button>
@@ -102,6 +105,9 @@ function getYearOptions() {
 }
 
 function attachGalleryHandlers() {
+  // Upload button
+  document.getElementById('upload-photo-btn').addEventListener('click', handleUploadPhoto);
+
   // Back button
   const backBtn = document.getElementById('back-btn');
   backBtn.addEventListener('click', () => {
@@ -140,6 +146,52 @@ function attachGalleryHandlers() {
     document.querySelector('[data-filter="season"]').value = '';
     document.querySelector('[data-filter="year"]').value = '';
     await loadGalleryPhotos();
+  });
+}
+
+async function handleUploadPhoto() {
+  try {
+    await loadPhotoUploadComponents();
+
+    const sectionConfig = IMAGES_CONFIG.CATEGORIES[`gallery_${currentSection}`];
+    const uploadModal = document.createElement('photo-upload-modal');
+    uploadModal.setAttribute('context', 'gallery');
+    uploadModal.setAttribute('photo-type', sectionConfig.photoType);
+    uploadModal.setAttribute('category', `gallery_${currentSection}`);
+    uploadModal.setAttribute('season', currentFilters.season || 'shared');
+
+    uploadModal.addEventListener('upload-complete', async (e) => {
+      const { photo_ids } = e.detail;
+      if (photo_ids && photo_ids.length > 0) {
+        showToast(`${photo_ids.length} photo(s) uploaded`, 'success');
+        await loadGalleryPhotos();
+      }
+    });
+
+    document.body.appendChild(uploadModal);
+  } catch (error) {
+    console.error('Failed to load photo upload:', error);
+    showToast('Could not load photo upload component', 'error');
+  }
+}
+
+async function loadPhotoUploadComponents() {
+  if (!customElements.get('photo-upload-service')) {
+    await loadScript('https://assets.spookydecs.com/components/photo-upload-service.js');
+  }
+  if (!customElements.get('photo-upload-modal')) {
+    await loadScript('https://assets.spookydecs.com/components/photo-upload-modal.js');
+  }
+}
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
   });
 }
 

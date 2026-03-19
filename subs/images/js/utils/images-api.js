@@ -68,6 +68,7 @@ export async function updateImage(photoId, updates) {
 
     if (!response.ok) {
       const errorData = await response.json();
+      console.error('Update error details:', errorData.details?.message);
       throw new Error(errorData.error || 'Failed to update image');
     }
 
@@ -92,6 +93,7 @@ export async function patchImage(photoId, updates) {
 
     if (!response.ok) {
       const errorData = await response.json();
+      console.error('Patch error details:', errorData.details?.message);
       throw new Error(errorData.error || 'Failed to update image');
     }
 
