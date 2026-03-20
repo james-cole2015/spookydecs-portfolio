@@ -167,11 +167,15 @@ export function ImageDetail(photo, isEditMode = false, financeUrl = '', maintUrl
                 <input type="text" class="tag-text-input form-control" placeholder="Add tag, then press , or Enter" autocomplete="off" />
                 ${category.startsWith('gallery') ? `<button type="button" class="btn btn-secondary btn-sm suggest-tags-btn">Suggest Tags</button>` : ''}
               </div>
+              ${category.startsWith('gallery') ? `<div class="ai-tag-suggestions" style="display:none;"></div>` : ''}
               <input type="hidden" name="tags" value="${(photo.tags || []).join(',')}" />
             </div>
             ${category.startsWith('gallery') ? `
               <div class="ai-matched-items" style="display:none;">
-                <div class="ai-matched-items-header">AI Matched Items</div>
+                <div class="ai-matched-items-header">
+                  AI Matched Items
+                  <button type="button" class="btn btn-xs btn-secondary ai-add-all-btn">Add All</button>
+                </div>
                 <div class="ai-matched-items-list"></div>
               </div>
             ` : ''}
@@ -291,6 +295,89 @@ export function ImageDetail(photo, isEditMode = false, financeUrl = '', maintUrl
         const suggestBtn = container.querySelector('.suggest-tags-btn');
         const aiSection = container.querySelector('.ai-matched-items');
         const aiList = container.querySelector('.ai-matched-items-list');
+        const aiAddAllBtn = container.querySelector('.ai-add-all-btn');
+        const aiTagSuggestions = container.querySelector('.ai-tag-suggestions');
+
+        const renderAiTagChips = (tags) => {
+          if (!aiTagSuggestions || tags.length === 0) return;
+          aiTagSuggestions.innerHTML = `<span class="ai-suggestions-label">Suggested:</span>` +
+            tags.map(tag => `<button type="button" class="ai-tag-chip" data-tag="${tag}">${tag} <span class="ai-chip-x">×</span></button>`).join('');
+          aiTagSuggestions.style.display = '';
+          aiTagSuggestions.querySelectorAll('.ai-tag-chip').forEach(chip => {
+            chip.addEventListener('click', (e) => {
+              const tag = chip.dataset.tag;
+              // Left-click on the × span = dismiss; anywhere else = add
+              if (e.target.classList.contains('ai-chip-x')) {
+                chip.remove();
+              } else {
+                if (!currentTags.includes(tag)) {
+                  currentTags.push(tag);
+                  renderPills();
+                  syncHidden();
+                }
+                chip.remove();
+              }
+              if (!aiTagSuggestions.querySelector('.ai-tag-chip')) {
+                aiTagSuggestions.style.display = 'none';
+              }
+            });
+          });
+        };
+
+        const renderMatchedItems = (matchedItems) => {
+          if (!aiSection || !aiList || matchedItems.length === 0) return;
+          aiList.innerHTML = matchedItems.map(item =>
+            `<div class="ai-matched-item" data-item-id="${item.item_id}">
+              <span class="ai-matched-item-name">${item.short_name}</span>
+              <span class="ai-matched-item-score">${Math.round(item.similarity * 100)}% match</span>
+              <div class="ai-matched-item-actions">
+                <button type="button" class="btn btn-xs btn-primary ai-add-item-btn">Add</button>
+                <button type="button" class="btn-ghost ai-dismiss-item-btn">×</button>
+              </div>
+            </div>`
+          ).join('');
+          aiSection.style.display = '';
+
+          const hideIfEmpty = () => {
+            if (!aiList.querySelector('.ai-matched-item')) aiSection.style.display = 'none';
+          };
+
+          aiList.querySelectorAll('.ai-add-item-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const row = btn.closest('.ai-matched-item');
+              const itemId = row.dataset.itemId;
+              if (!currentTags.includes(itemId)) {
+                currentTags.push(itemId);
+                renderPills();
+                syncHidden();
+              }
+              row.remove();
+              hideIfEmpty();
+            });
+          });
+
+          aiList.querySelectorAll('.ai-dismiss-item-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+              btn.closest('.ai-matched-item').remove();
+              hideIfEmpty();
+            });
+          });
+        };
+
+        if (aiAddAllBtn) {
+          aiAddAllBtn.addEventListener('click', () => {
+            aiList.querySelectorAll('.ai-matched-item').forEach(row => {
+              const itemId = row.dataset.itemId;
+              if (!currentTags.includes(itemId)) {
+                currentTags.push(itemId);
+              }
+            });
+            renderPills();
+            syncHidden();
+            aiList.innerHTML = '';
+            aiSection.style.display = 'none';
+          });
+        }
 
         if (suggestBtn) {
           suggestBtn.addEventListener('click', async () => {
@@ -299,48 +386,11 @@ export function ImageDetail(photo, isEditMode = false, financeUrl = '', maintUrl
 
             try {
               const result = await suggestTags(photo.photo_id);
-              const newTags = result.suggested_tags || [];
+              const suggestedTags = (result.suggested_tags || []).filter(t => t && !currentTags.includes(t));
               const matchedItems = result.matched_items || [];
 
-              // Add AI-suggested tags as pills (skip duplicates)
-              const addedTags = [];
-              newTags.forEach(tag => {
-                if (tag && !currentTags.includes(tag)) {
-                  currentTags.push(tag);
-                  addedTags.push(tag);
-                }
-              });
-
-              // Re-render; mark newly added tags with ai-suggested class
-              pillsDisplay.innerHTML = currentTags.map(tag => {
-                const isAi = addedTags.includes(tag);
-                return `
-                  <span class="tag-pill${isAi ? ' ai-suggested' : ''}" data-tag="${tag}">
-                    ${tag}
-                    <button type="button" class="tag-pill-remove" data-remove-tag="${tag}" aria-label="Remove ${tag}">×</button>
-                  </span>
-                `;
-              }).join('');
-
-              pillsDisplay.querySelectorAll('.tag-pill-remove').forEach(btn => {
-                btn.addEventListener('click', () => {
-                  currentTags = currentTags.filter(t => t !== btn.dataset.removeTag);
-                  renderPills();
-                  syncHidden();
-                });
-              });
-              syncHidden();
-
-              // Show matched items inline below the tag field
-              if (aiSection && aiList && matchedItems.length > 0) {
-                aiList.innerHTML = matchedItems.map(item =>
-                  `<div class="ai-matched-item">
-                    <span class="ai-matched-item-name">${item.short_name}</span>
-                    <span class="ai-matched-item-score">${Math.round(item.similarity * 100)}% match</span>
-                  </div>`
-                ).join('');
-                aiSection.style.display = '';
-              }
+              renderAiTagChips(suggestedTags);
+              renderMatchedItems(matchedItems);
             } catch {
               // error already surfaced via toast in suggestTags()
             } finally {
