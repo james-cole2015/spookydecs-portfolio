@@ -115,6 +115,7 @@
   color: #374151;
 }
 
+
 /* Stats */
 .gallery-stats {
   display: grid;
@@ -375,19 +376,21 @@
     flex-direction: column;
   }
 }
+/* Match clear-filters button height to form-control inputs */
+.gallery-filters > .btn {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  font-size: 1rem;
+}
+
 /* Tag filter widget */
 .filter-group--tags {
   flex: 1;
   min-width: 180px;
 }
 
-.tag-filter-widget {
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-}
-
 .tag-filter-chips {
+  margin-top: 0.5rem;
   display: flex;
   flex-wrap: wrap;
   gap: 0.375rem;

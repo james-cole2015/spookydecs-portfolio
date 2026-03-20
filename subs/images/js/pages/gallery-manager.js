@@ -63,16 +63,14 @@ export async function renderGalleryManager() {
 
         <div class="filter-group filter-group--tags">
           <label>Tags</label>
-          <div class="tag-filter-widget">
-            <input type="text" class="form-control" id="tag-filter-input" placeholder="Type tag + Enter" autocomplete="off" />
-            <div class="tag-filter-chips" id="tag-filter-chips"></div>
-          </div>
+          <input type="text" class="form-control" id="tag-filter-input" placeholder="Type tag + Enter" autocomplete="off" />
         </div>
 
         <button class="btn btn-secondary" data-action="clear-filters">
           Clear Filters
         </button>
       </div>
+      <div class="tag-filter-chips" id="tag-filter-chips"></div>
 
       <div class="gallery-stats">
         <div class="stat-card">
