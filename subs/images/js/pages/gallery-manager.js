@@ -9,7 +9,8 @@ import { Breadcrumb } from '../components/Breadcrumb.js';
 let currentSection = 'showcase';
 let currentFilters = {
   season: '',
-  year: ''
+  year: '',
+  tags: []
 };
 
 export async function renderGalleryManager() {
@@ -60,6 +61,14 @@ export async function renderGalleryManager() {
           </select>
         </div>
 
+        <div class="filter-group filter-group--tags">
+          <label>Tags</label>
+          <div class="tag-filter-widget">
+            <input type="text" class="form-control" id="tag-filter-input" placeholder="Type tag + Enter" autocomplete="off" />
+            <div class="tag-filter-chips" id="tag-filter-chips"></div>
+          </div>
+        </div>
+
         <button class="btn btn-secondary" data-action="clear-filters">
           Clear Filters
         </button>
@@ -105,6 +114,26 @@ function getYearOptions(selectedYear) {
   return years.join('');
 }
 
+function renderTagFilterChips() {
+  const container = document.getElementById('tag-filter-chips');
+  if (!container) return;
+
+  container.innerHTML = currentFilters.tags.map(tag => `
+    <span class="tag-filter-chip" data-tag="${tag}">
+      ${tag}
+      <button type="button" class="tag-filter-chip-remove" data-remove-tag="${tag}" aria-label="Remove ${tag}">×</button>
+    </span>
+  `).join('');
+
+  container.querySelectorAll('.tag-filter-chip-remove').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      currentFilters.tags = currentFilters.tags.filter(t => t !== btn.dataset.removeTag);
+      renderTagFilterChips();
+      await loadGalleryPhotos();
+    });
+  });
+}
+
 function attachGalleryHandlers() {
   // Upload button
   document.getElementById('upload-photo-btn').addEventListener('click', handleUploadPhoto);
@@ -140,12 +169,28 @@ function attachGalleryHandlers() {
     });
   });
 
+  // Tag filter input
+  const tagFilterInput = document.getElementById('tag-filter-input');
+  tagFilterInput.addEventListener('keydown', async (e) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      const value = tagFilterInput.value.trim().replace(/,$/, '').trim().toLowerCase();
+      if (value && !currentFilters.tags.includes(value)) {
+        currentFilters.tags.push(value);
+        renderTagFilterChips();
+        await loadGalleryPhotos();
+      }
+      tagFilterInput.value = '';
+    }
+  });
+
   // Clear filters
   const clearBtn = document.querySelector('[data-action="clear-filters"]');
   clearBtn.addEventListener('click', async () => {
-    currentFilters = { season: '', year: '' };
+    currentFilters = { season: '', year: '', tags: [] };
     document.querySelector('[data-filter="season"]').value = '';
     document.querySelector('[data-filter="year"]').value = '';
+    renderTagFilterChips();
     await loadGalleryPhotos();
   });
 }
@@ -367,6 +412,10 @@ async function loadGalleryPhotos() {
 
     if (currentFilters.year) {
       filters.year = parseInt(currentFilters.year);
+    }
+
+    if (currentFilters.tags.length) {
+      filters.tags = currentFilters.tags.join(',');
     }
 
     const photos = await fetchImages(filters);

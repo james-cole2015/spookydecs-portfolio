@@ -201,11 +201,17 @@ export function setupButtonHandlers(container, photo, isEditMode, from = '') {
 export function collectFormData(container) {
   const data = {};
 
+  // Tags are stored in a hidden input (pill UI) — read it directly
+  const tagsHidden = container.querySelector('input[name="tags"]');
+  if (tagsHidden) {
+    data.tags = tagsHidden.value.split(',').map(t => t.trim()).filter(Boolean);
+  }
+
   container.querySelectorAll('.form-control, input[type="checkbox"]').forEach(input => {
     if (input.type === 'checkbox') {
       data[input.name] = input.checked;
     } else if (input.name === 'tags') {
-      data.tags = input.value.split(',').map(t => t.trim()).filter(Boolean);
+      // Handled above via hidden input — skip
     } else if (input.name === 'item_id') {
       data.item_ids = input.value.split(',').map(t => t.trim()).filter(Boolean);
     } else if (input.name === 'year') {

@@ -160,7 +160,11 @@ export function ImageDetail(photo, isEditMode = false, financeUrl = '', maintUrl
         <div class="form-group">
           <label>Tags</label>
           ${isEditMode ? `
-            <input type="text" name="tags" class="form-control" value="${(photo.tags || []).join(', ')}" placeholder="Comma-separated tags" />
+            <div class="tag-pill-field">
+              <div class="tag-pills-display"></div>
+              <input type="text" class="tag-text-input form-control" placeholder="Add tag, then press , or Enter" autocomplete="off" />
+              <input type="hidden" name="tags" value="${(photo.tags || []).join(',')}" />
+            </div>
           ` : `
             <div class="readonly-value">${(photo.tags || []).join(', ') || 'No tags'}</div>
           `}
@@ -226,6 +230,53 @@ export function ImageDetail(photo, isEditMode = false, financeUrl = '', maintUrl
       return;
     }
   });
+
+  // Tag pill UX
+  if (isEditMode) {
+    const pillsDisplay = container.querySelector('.tag-pills-display');
+    const tagTextInput = container.querySelector('.tag-text-input');
+    const tagsHidden = container.querySelector('input[name="tags"]');
+
+    if (pillsDisplay && tagTextInput && tagsHidden) {
+      let currentTags = (photo.tags || []).filter(Boolean);
+
+      const syncHidden = () => {
+        tagsHidden.value = currentTags.join(',');
+      };
+
+      const renderPills = () => {
+        pillsDisplay.innerHTML = currentTags.map(tag => `
+          <span class="tag-pill" data-tag="${tag}">
+            ${tag}
+            <button type="button" class="tag-pill-remove" data-remove-tag="${tag}" aria-label="Remove ${tag}">×</button>
+          </span>
+        `).join('');
+
+        pillsDisplay.querySelectorAll('.tag-pill-remove').forEach(btn => {
+          btn.addEventListener('click', () => {
+            currentTags = currentTags.filter(t => t !== btn.dataset.removeTag);
+            renderPills();
+            syncHidden();
+          });
+        });
+      };
+
+      renderPills();
+
+      tagTextInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ',') {
+          e.preventDefault();
+          const value = tagTextInput.value.trim().replace(/,$/, '').trim().toLowerCase();
+          if (value && !currentTags.includes(value)) {
+            currentTags.push(value);
+            renderPills();
+            syncHidden();
+          }
+          tagTextInput.value = '';
+        }
+      });
+    }
+  }
 
   // Auto-fill display_name from year/location changes for gallery photos
   if (isEditMode) {
