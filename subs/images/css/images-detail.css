@@ -264,3 +264,60 @@
 .tag-pill-remove:hover {
   opacity: 1;
 }
+
+.tag-pill.ai-suggested {
+  border: 1.5px dashed rgba(255, 255, 255, 0.8);
+}
+
+/* Tag input row — text input + Suggest Tags button side-by-side */
+.tag-input-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.tag-input-row .tag-text-input {
+  flex: 1;
+}
+
+.suggest-tags-btn {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* AI Matched Items — inline read-only section below tag pills */
+.ai-matched-items {
+  margin-top: 0.5rem;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+.ai-matched-items-header {
+  padding: 0.4rem 0.75rem;
+  background: var(--gray-100);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--gray-600);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ai-matched-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+  border-top: 1px solid var(--gray-100);
+}
+
+.ai-matched-item-name {
+  color: var(--gray-800);
+  font-weight: 500;
+}
+
+.ai-matched-item-score {
+  color: var(--gray-500);
+  font-size: 0.75rem;
+}

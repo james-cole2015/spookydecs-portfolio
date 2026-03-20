@@ -2,6 +2,7 @@
 import { IMAGES_CONFIG } from '../utils/images-config.js';
 import { navigate } from '../utils/router.js';
 import { renderEntityRefs, renderDynamicFields, setupButtonHandlers } from './image-detail-helpers.js';
+import { suggestTags } from '../utils/images-api.js';
 
 // Derive category from photo data
 function deriveCategory(photo) {
@@ -162,9 +163,18 @@ export function ImageDetail(photo, isEditMode = false, financeUrl = '', maintUrl
           ${isEditMode ? `
             <div class="tag-pill-field">
               <div class="tag-pills-display"></div>
-              <input type="text" class="tag-text-input form-control" placeholder="Add tag, then press , or Enter" autocomplete="off" />
+              <div class="tag-input-row">
+                <input type="text" class="tag-text-input form-control" placeholder="Add tag, then press , or Enter" autocomplete="off" />
+                ${category.startsWith('gallery') ? `<button type="button" class="btn btn-secondary btn-sm suggest-tags-btn">Suggest Tags</button>` : ''}
+              </div>
               <input type="hidden" name="tags" value="${(photo.tags || []).join(',')}" />
             </div>
+            ${category.startsWith('gallery') ? `
+              <div class="ai-matched-items" style="display:none;">
+                <div class="ai-matched-items-header">AI Matched Items</div>
+                <div class="ai-matched-items-list"></div>
+              </div>
+            ` : ''}
           ` : `
             <div class="readonly-value">${(photo.tags || []).join(', ') || 'No tags'}</div>
           `}
@@ -275,6 +285,71 @@ export function ImageDetail(photo, isEditMode = false, financeUrl = '', maintUrl
           tagTextInput.value = '';
         }
       });
+
+      // Suggest Tags button (gallery photos only) — inside this block for closure access
+      if (category.startsWith('gallery')) {
+        const suggestBtn = container.querySelector('.suggest-tags-btn');
+        const aiSection = container.querySelector('.ai-matched-items');
+        const aiList = container.querySelector('.ai-matched-items-list');
+
+        if (suggestBtn) {
+          suggestBtn.addEventListener('click', async () => {
+            suggestBtn.disabled = true;
+            suggestBtn.textContent = 'Analyzing…';
+
+            try {
+              const result = await suggestTags(photo.photo_id);
+              const newTags = result.suggested_tags || [];
+              const matchedItems = result.matched_items || [];
+
+              // Add AI-suggested tags as pills (skip duplicates)
+              const addedTags = [];
+              newTags.forEach(tag => {
+                if (tag && !currentTags.includes(tag)) {
+                  currentTags.push(tag);
+                  addedTags.push(tag);
+                }
+              });
+
+              // Re-render; mark newly added tags with ai-suggested class
+              pillsDisplay.innerHTML = currentTags.map(tag => {
+                const isAi = addedTags.includes(tag);
+                return `
+                  <span class="tag-pill${isAi ? ' ai-suggested' : ''}" data-tag="${tag}">
+                    ${tag}
+                    <button type="button" class="tag-pill-remove" data-remove-tag="${tag}" aria-label="Remove ${tag}">×</button>
+                  </span>
+                `;
+              }).join('');
+
+              pillsDisplay.querySelectorAll('.tag-pill-remove').forEach(btn => {
+                btn.addEventListener('click', () => {
+                  currentTags = currentTags.filter(t => t !== btn.dataset.removeTag);
+                  renderPills();
+                  syncHidden();
+                });
+              });
+              syncHidden();
+
+              // Show matched items inline below the tag field
+              if (aiSection && aiList && matchedItems.length > 0) {
+                aiList.innerHTML = matchedItems.map(item =>
+                  `<div class="ai-matched-item">
+                    <span class="ai-matched-item-name">${item.short_name}</span>
+                    <span class="ai-matched-item-score">${Math.round(item.similarity * 100)}% match</span>
+                  </div>`
+                ).join('');
+                aiSection.style.display = '';
+              }
+            } catch {
+              // error already surfaced via toast in suggestTags()
+            } finally {
+              suggestBtn.disabled = false;
+              suggestBtn.textContent = 'Suggest Tags';
+            }
+          });
+        }
+      }
     }
   }
 

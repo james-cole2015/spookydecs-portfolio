@@ -161,6 +161,28 @@ export async function fetchIdeas() {
   }
 }
 
+export async function suggestTags(photoId) {
+  try {
+    const { API_ENDPOINT } = await window.SpookyConfig.get();
+    const response = await fetch(`${API_ENDPOINT}/admin/images/${photoId}/suggest-tags`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Failed to suggest tags: HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.data ?? data;
+  } catch (error) {
+    console.error('Error suggesting tags:', error);
+    showToast(error.message, 'error');
+    throw error;
+  }
+}
+
 export async function getStats(photoType = null) {
   try {
     const apiBase = await getApiBase();
