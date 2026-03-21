@@ -326,16 +326,21 @@ export function ImageDetail(photo, isEditMode = false, financeUrl = '', maintUrl
 
         const renderMatchedItems = (matchedItems) => {
           if (!aiSection || !aiList || matchedItems.length === 0) return;
-          aiList.innerHTML = matchedItems.map(item =>
-            `<div class="ai-matched-item" data-item-id="${item.item_id}">
-              <span class="ai-matched-item-name">${item.short_name}</span>
-              <span class="ai-matched-item-score">${Math.round(item.similarity * 100)}% match</span>
-              <div class="ai-matched-item-actions">
-                <button type="button" class="btn btn-xs btn-primary ai-add-item-btn">Add</button>
-                <button type="button" class="btn-ghost ai-dismiss-item-btn">×</button>
-              </div>
-            </div>`
-          ).join('');
+          const high = matchedItems.filter(i => i.confidence === 'high');
+          const low = matchedItems.filter(i => i.confidence !== 'high');
+          const renderGroup = (label, items) => items.length === 0 ? '' : `
+            <div class="ai-confidence-group-label">${label}</div>
+            ${items.map(item =>
+              `<div class="ai-matched-item" data-item-id="${item.item_id}">
+                <span class="ai-matched-item-name">${item.short_name}</span>
+                <span class="ai-matched-item-score">${Math.round(item.similarity * 100)}% match</span>
+                <div class="ai-matched-item-actions">
+                  <button type="button" class="btn btn-xs btn-primary ai-add-item-btn">Add</button>
+                  <button type="button" class="btn-ghost ai-dismiss-item-btn">×</button>
+                </div>
+              </div>`
+            ).join('')}`;
+          aiList.innerHTML = renderGroup('High Confidence', high) + renderGroup('Low Confidence', low);
           aiSection.style.display = '';
 
           const hideIfEmpty = () => {

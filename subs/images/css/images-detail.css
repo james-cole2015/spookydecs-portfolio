@@ -306,6 +306,17 @@
   letter-spacing: 0.04em;
 }
 
+.ai-confidence-group-label {
+  padding: 0.2rem 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--gray-400);
+  background: var(--gray-50);
+  border-top: 1px solid var(--gray-100);
+}
+
 .ai-matched-item {
   display: flex;
   justify-content: space-between;
