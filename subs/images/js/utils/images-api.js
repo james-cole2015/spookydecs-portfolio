@@ -31,7 +31,7 @@ export async function fetchImages(filters = {}) {
     }
 
     const data = await response.json();
-    return data.photos || [];
+    return (data.data || data).photos || [];
   } catch (error) {
     console.error('Error fetching images:', error);
     showToast('Failed to load images', 'error');
@@ -48,7 +48,8 @@ export async function fetchImage(photoId) {
       throw new Error(response.status === 404 ? 'Image not found' : `Failed to fetch image: ${response.statusText}`);
     }
 
-    return await response.json();
+    const d = await response.json();
+    return d.data ?? d;
   } catch (error) {
     console.error('Error fetching image:', error);
     showToast(error.message, 'error');
@@ -67,12 +68,13 @@ export async function updateImage(photoId, updates) {
 
     if (!response.ok) {
       const errorData = await response.json();
+      console.error('Update error details:', errorData.details?.message);
       throw new Error(errorData.error || 'Failed to update image');
     }
 
     const data = await response.json();
     showToast('Image updated successfully', 'success');
-    return data.photo;
+    return (data.data || data).photo;
   } catch (error) {
     console.error('Error updating image:', error);
     showToast(error.message, 'error');
@@ -91,12 +93,13 @@ export async function patchImage(photoId, updates) {
 
     if (!response.ok) {
       const errorData = await response.json();
+      console.error('Patch error details:', errorData.details?.message);
       throw new Error(errorData.error || 'Failed to update image');
     }
 
     const data = await response.json();
     showToast('Image updated successfully', 'success');
-    return data.photo;
+    return (data.data || data).photo;
   } catch (error) {
     console.error('Error patching image:', error);
     showToast(error.message, 'error');
@@ -158,6 +161,28 @@ export async function fetchIdeas() {
   }
 }
 
+export async function suggestTags(photoId) {
+  try {
+    const { API_ENDPOINT } = await window.SpookyConfig.get();
+    const response = await fetch(`${API_ENDPOINT}/admin/images/${photoId}/suggest-tags`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Failed to suggest tags: HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.data ?? data;
+  } catch (error) {
+    console.error('Error suggesting tags:', error);
+    showToast(error.message, 'error');
+    throw error;
+  }
+}
+
 export async function getStats(photoType = null) {
   try {
     const apiBase = await getApiBase();
@@ -171,7 +196,8 @@ export async function getStats(photoType = null) {
       throw new Error('Failed to fetch statistics');
     }
 
-    return await response.json();
+    const d = await response.json();
+    return d.data ?? d;
   } catch (error) {
     console.error('Error fetching stats:', error);
     throw error;

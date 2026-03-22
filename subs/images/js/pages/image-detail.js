@@ -13,6 +13,13 @@ export async function renderImageDetail(params) {
 
   app.innerHTML = '<div class="loading">Loading image...</div>';
 
+  const from = params.params?.from || new URLSearchParams(window.location.search).get('from');
+  const PARENT_CRUMBS = {
+    gallery: { label: 'Gallery Manager', path: '/images/gallery' },
+    entity:  { label: 'Entities',        path: '/images/entities' },
+  };
+  const parent = PARENT_CRUMBS[from] ?? { label: 'Image Admin', path: '/images/list' };
+
   try {
     const [photo, config] = await Promise.all([fetchImage(photoId), window.SpookyConfig.get()]);
     const financeUrl = config.finance_url || '';
@@ -22,20 +29,20 @@ export async function renderImageDetail(params) {
     app.innerHTML = '';
     const crumbs = [
       { label: 'Images', path: '/images' },
-      { label: 'Image Admin', path: '/images/list' },
+      parent,
       ...(isEditMode
-        ? [{ label: photo.photo_id, path: `/images/${photo.photo_id}` }, { label: 'Edit' }]
+        ? [{ label: photo.photo_id, path: `/images/${photo.photo_id}${from ? `?from=${from}` : ''}` }, { label: 'Edit' }]
         : [{ label: photo.photo_id }])
     ];
     app.appendChild(Breadcrumb(crumbs));
-    app.appendChild(ImageDetail(photo, isEditMode, financeUrl, maintUrl, ideasUrl));
+    app.appendChild(ImageDetail(photo, isEditMode, financeUrl, maintUrl, ideasUrl, from));
 
   } catch (error) {
     app.innerHTML = `
       <div class="error-state">
         <h2>Image Not Found</h2>
         <p>${error.message}</p>
-        <button class="btn btn-primary" onclick="window.location.href='/images/list'">
+        <button class="btn btn-primary" onclick="window.location.href='${parent.path}'">
           Back to Images
         </button>
       </div>

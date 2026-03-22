@@ -13,6 +13,7 @@ export class FilterPopover {
     this.filters = {};
     this.onApplyFilters = null;
     this.popover = null;
+    this.selectedTags = [];
   }
 
   /**
@@ -102,6 +103,29 @@ export class FilterPopover {
           </select>
         </div>
 
+        <div class="filter-group" style="margin-bottom: var(--spacing-lg);">
+          <label style="display: block; font-size: var(--text-sm); font-weight: var(--font-medium); margin-bottom: var(--spacing-xs); color: var(--text-primary);">
+            Tags
+          </label>
+          <div style="display: flex; gap: var(--spacing-xs); margin-bottom: var(--spacing-xs);">
+            <input
+              class="filter-tag-input"
+              type="text"
+              placeholder="Type a tag + Enter"
+              style="
+                flex: 1;
+                padding: var(--spacing-sm) var(--spacing-md);
+                border: 1px solid var(--border);
+                border-radius: var(--radius-md);
+                font-size: var(--text-sm);
+                background: var(--surface);
+                color: var(--text-primary);
+              "
+            />
+          </div>
+          <div class="filter-tag-chips" style="display: flex; flex-wrap: wrap; gap: var(--spacing-xs); min-height: 24px;"></div>
+        </div>
+
         <div class="filter-popover-actions" style="display: flex; gap: var(--spacing-sm);">
           <button 
             class="btn-clear-filters"
@@ -149,6 +173,46 @@ export class FilterPopover {
     const yearSelect = popover.querySelector('.filter-select-year');
     if (this.filters.season) seasonSelect.value = this.filters.season;
     if (this.filters.year) yearSelect.value = this.filters.year;
+
+    // Initialize tag chips from current filters
+    this.selectedTags = this.filters.tags
+      ? this.filters.tags.split(',').filter(Boolean)
+      : [];
+    this.renderTagChips();
+  }
+
+  /**
+   * Render tag chips inside the popover
+   */
+  renderTagChips() {
+    const chipsContainer = this.popover.querySelector('.filter-tag-chips');
+    if (!chipsContainer) return;
+
+    chipsContainer.innerHTML = this.selectedTags.map(tag => `
+      <span class="popover-tag-chip" data-tag="${tag}" style="
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 2px var(--spacing-sm);
+        background: var(--primary-orange);
+        color: white;
+        border-radius: var(--radius-sm);
+        font-size: var(--text-xs);
+        cursor: default;
+      ">
+        ${tag}
+        <button data-remove-tag="${tag}" style="
+          background: none; border: none; color: white; cursor: pointer;
+          padding: 0; font-size: var(--text-sm); line-height: 1;
+        ">×</button>
+      </span>
+    `).join('');
+
+    chipsContainer.querySelectorAll('[data-remove-tag]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tag = btn.dataset.removeTag;
+        this.selectedTags = this.selectedTags.filter(t => t !== tag);
+        this.renderTagChips();
+      });
+    });
   }
 
   /**
@@ -211,6 +275,20 @@ export class FilterPopover {
       }
     });
 
+    // Tag chip input
+    const tagInput = this.popover.querySelector('.filter-tag-input');
+    tagInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const value = tagInput.value.trim().toLowerCase();
+        if (value && !this.selectedTags.includes(value)) {
+          this.selectedTags.push(value);
+          this.renderTagChips();
+        }
+        tagInput.value = '';
+      }
+    });
+
     // Hover styles
     applyBtn.addEventListener('mouseenter', () => {
       applyBtn.style.background = 'var(--primary-orange-hover)';
@@ -269,7 +347,8 @@ export class FilterPopover {
 
     const filters = {
       season: seasonSelect.value || null,
-      year: yearSelect.value || null
+      year: yearSelect.value || null,
+      tags: this.selectedTags.length ? this.selectedTags.join(',') : null,
     };
 
     if (this.onApplyFilters) {
@@ -288,9 +367,11 @@ export class FilterPopover {
 
     seasonSelect.value = '';
     yearSelect.value = '';
+    this.selectedTags = [];
+    this.renderTagChips();
 
     if (this.onApplyFilters) {
-      this.onApplyFilters({ season: null, year: null });
+      this.onApplyFilters({ season: null, year: null, tags: null });
     }
 
     this.close();
@@ -305,6 +386,8 @@ export class FilterPopover {
     const yearSelect = this.popover.querySelector('.filter-select-year');
     if (seasonSelect) seasonSelect.value = filters.season || '';
     if (yearSelect) yearSelect.value = filters.year || '';
+    this.selectedTags = filters.tags ? filters.tags.split(',').filter(Boolean) : [];
+    this.renderTagChips();
   }
 
   /**

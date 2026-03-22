@@ -18,7 +18,7 @@ pnpm-lock.yaml
 /public
 package.json 
 vite.config.js
-app_docs/*
+app_docs/
 
 
 CLAUDE.md

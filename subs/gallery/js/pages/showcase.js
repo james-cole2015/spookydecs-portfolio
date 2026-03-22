@@ -111,18 +111,16 @@ export async function renderShowcase() {
   /**
    * Handle filter removal
    */
-  function handleFilterRemove(filterKey) {
-    const currentFilters = state.get();
-
+  function handleFilterRemove(filterKey, filterValue) {
     if (filterKey === 'all') {
-      // Clear all filters
-      state.update({ season: null, year: null });
+      state.update({ season: null, year: null, tags: null });
+    } else if (filterKey === 'tag') {
+      const remaining = state.getTags().filter(t => t !== filterValue);
+      state.update({ tags: remaining.length ? remaining.join(',') : null });
     } else {
-      // Clear specific filter
       state.update({ [filterKey]: null });
     }
 
-    // Reload page with new filters
     renderShowcase();
   }
 

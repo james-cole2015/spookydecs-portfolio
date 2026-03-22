@@ -135,7 +135,9 @@ export function renderDynamicFields(photo, categoryConfig, isEditMode) {
   return fields.join('');
 }
 
-export function setupButtonHandlers(container, photo, isEditMode) {
+export function setupButtonHandlers(container, photo, isEditMode, from = '') {
+  const fromSuffix = from ? `?from=${from}` : '';
+
   if (!isEditMode) {
     const viewFullBtn = container.querySelector('[data-action="view-full"]');
     const editBtn = container.querySelector('[data-action="edit"]');
@@ -146,7 +148,7 @@ export function setupButtonHandlers(container, photo, isEditMode) {
     });
 
     editBtn.addEventListener('click', () => {
-      navigate(`/images/${photo.photo_id}/edit`);
+      navigate(`/images/${photo.photo_id}/edit${fromSuffix}`);
     });
 
     deleteBtn.addEventListener('click', () => {
@@ -163,11 +165,22 @@ export function setupButtonHandlers(container, photo, isEditMode) {
     const saveBtn = container.querySelector('[data-action="save"]');
 
     cancelBtn.addEventListener('click', () => {
-      navigate(`/images/${photo.photo_id}`);
+      navigate(`/images/${photo.photo_id}${fromSuffix}`);
     });
 
     saveBtn.addEventListener('click', async () => {
       const updates = collectFormData(container);
+
+      if ('gallery_display_name' in updates || 'gallery_location' in updates) {
+        const existingGalleryData = photo.gallery_data || {};
+        updates.gallery_data = {
+          ...existingGalleryData,
+          display_name: updates.gallery_display_name ?? existingGalleryData.display_name,
+          location: updates.gallery_location ?? existingGalleryData.location,
+        };
+        delete updates.gallery_display_name;
+        delete updates.gallery_location;
+      }
 
       const validation = validateCategory(updates.category, updates);
       if (!validation.valid) {
@@ -177,7 +190,7 @@ export function setupButtonHandlers(container, photo, isEditMode) {
 
       try {
         await updateImage(photo.photo_id, updates);
-        navigate(`/images/${photo.photo_id}`);
+        navigate(`/images/${photo.photo_id}${fromSuffix}`);
       } catch (error) {
         console.error('Error saving:', error);
       }
@@ -188,11 +201,17 @@ export function setupButtonHandlers(container, photo, isEditMode) {
 export function collectFormData(container) {
   const data = {};
 
+  // Tags are stored in a hidden input (pill UI) — read it directly
+  const tagsHidden = container.querySelector('input[name="tags"]');
+  if (tagsHidden) {
+    data.tags = tagsHidden.value.split(',').map(t => t.trim()).filter(Boolean);
+  }
+
   container.querySelectorAll('.form-control, input[type="checkbox"]').forEach(input => {
     if (input.type === 'checkbox') {
       data[input.name] = input.checked;
     } else if (input.name === 'tags') {
-      data.tags = input.value.split(',').map(t => t.trim()).filter(Boolean);
+      // Handled above via hidden input — skip
     } else if (input.name === 'item_id') {
       data.item_ids = input.value.split(',').map(t => t.trim()).filter(Boolean);
     } else if (input.name === 'year') {
