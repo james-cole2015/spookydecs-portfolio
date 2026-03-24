@@ -3,6 +3,28 @@
  * Handles all API calls to inspector endpoints
  */
 
+// --- Auth helpers ---
+
+function getAuthToken() {
+  const match = document.cookie.match(/(?:^|;\s*)spookydecs_auth=([^;]+)/);
+  return match ? match[1] : null;
+}
+
+async function redirectToLogin() {
+  const { AUTH_URL } = await window.SpookyConfig.get();
+  console.warn('[inspector-api] 401 received — redirecting to login');
+  window.location.href = `${AUTH_URL}?redirect=${encodeURIComponent(window.location.href)}`;
+}
+
+function buildHeaders(extra = {}) {
+  const token = getAuthToken();
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { Authorization: `Bearer ${token}` }),
+    ...extra
+  };
+}
+
 const InspectorAPI = {
 
   async getBaseUrl() {
@@ -17,10 +39,7 @@ const InspectorAPI = {
     try {
       const config = {
         method: options.method || 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers
-        }
+        headers: buildHeaders(options.headers)
       };
 
       if (options.body) {
@@ -30,6 +49,12 @@ const InspectorAPI = {
       }
 
       const response = await fetch(url, config);
+
+      if (response.status === 401) {
+        await redirectToLogin();
+        return null;
+      }
+
       const result = await response.json();
 
       if (!response.ok) {
