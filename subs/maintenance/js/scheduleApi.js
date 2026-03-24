@@ -1,6 +1,26 @@
 // API client for maintenance schedule templates
 
-const HEADERS = { 'Content-Type': 'application/json' };
+// --- Auth helpers ---
+
+function getAuthToken() {
+  const match = document.cookie.match(/(?:^|;\s*)spookydecs_auth=([^;]+)/);
+  return match ? match[1] : null;
+}
+
+async function redirectToLogin() {
+  const { AUTH_URL } = await window.SpookyConfig.get();
+  console.warn('[maintenance-api] 401 received — redirecting to login');
+  window.location.href = `${AUTH_URL}?redirect=${encodeURIComponent(window.location.href)}`;
+}
+
+function buildHeaders(extra = {}) {
+  const token = getAuthToken();
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { Authorization: `Bearer ${token}` }),
+    ...extra
+  };
+}
 
 async function getApiEndpoint() {
   const { API_ENDPOINT } = await window.SpookyConfig.get();
@@ -8,6 +28,10 @@ async function getApiEndpoint() {
 }
 
 async function handleResponse(response) {
+  if (response.status === 401) {
+    await redirectToLogin();
+    return null;
+  }
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: 'Unknown error' }));
     throw new Error(error.error || `HTTP ${response.status}`);
@@ -33,7 +57,7 @@ export async function fetchSchedules(filters = {}) {
     const queryString = queryParams.toString();
     const url = `${API_ENDPOINT}/admin/maintenance-schedules${queryString ? '?' + queryString : ''}`;
 
-    const response = await fetch(url, { headers: HEADERS });
+    const response = await fetch(url, { headers: buildHeaders() });
     const json = await handleResponse(response);
     return json.data || [];
   } catch (error) {
@@ -47,7 +71,7 @@ export async function fetchSchedule(scheduleId) {
     const API_ENDPOINT = await getApiEndpoint();
     const response = await fetch(
       `${API_ENDPOINT}/admin/maintenance-schedules/${scheduleId}`,
-      { headers: HEADERS }
+      { headers: buildHeaders() }
     );
 
     const json = await handleResponse(response);
@@ -65,7 +89,7 @@ export async function createSchedule(scheduleData) {
       `${API_ENDPOINT}/admin/maintenance-schedules`,
       {
         method: 'POST',
-        headers: HEADERS,
+        headers: buildHeaders(),
         body: JSON.stringify(scheduleData)
       }
     );
@@ -85,7 +109,7 @@ export async function updateSchedule(scheduleId, scheduleData) {
       `${API_ENDPOINT}/admin/maintenance-schedules/${scheduleId}`,
       {
         method: 'PUT',
-        headers: HEADERS,
+        headers: buildHeaders(),
         body: JSON.stringify(scheduleData)
       }
     );
@@ -105,7 +129,7 @@ export async function deleteSchedule(scheduleId) {
       `${API_ENDPOINT}/admin/maintenance-schedules/${scheduleId}`,
       {
         method: 'DELETE',
-        headers: HEADERS
+        headers: buildHeaders()
       }
     );
 
@@ -122,7 +146,7 @@ export async function fetchScheduleRecords(scheduleId) {
     const API_ENDPOINT = await getApiEndpoint();
     const response = await fetch(
       `${API_ENDPOINT}/admin/maintenance-schedules/${scheduleId}/records`,
-      { headers: HEADERS }
+      { headers: buildHeaders() }
     );
 
     const json = await handleResponse(response);
@@ -140,7 +164,7 @@ export async function generateScheduleRecords(scheduleId, count = 2) {
       `${API_ENDPOINT}/admin/maintenance-schedules/${scheduleId}/generate`,
       {
         method: 'POST',
-        headers: HEADERS,
+        headers: buildHeaders(),
         body: JSON.stringify({ count })
       }
     );
@@ -160,7 +184,7 @@ export async function applyTemplateToItems(scheduleId, data) {
       `${API_ENDPOINT}/admin/maintenance-schedules/${scheduleId}/apply`,
       {
         method: 'POST',
-        headers: HEADERS,
+        headers: buildHeaders(),
         body: JSON.stringify(data)
       }
     );
