@@ -1,6 +1,25 @@
 // Finance API Client
 
-const HEADERS = { 'Content-Type': 'application/json' };
+function getAuthToken() {
+  const match = document.cookie.match(/(?:^|;\s*)spookydecs_auth=([^;]+)/);
+  return match ? match[1] : null;
+}
+
+async function redirectToLogin() {
+  const { AUTH_URL } = await window.SpookyConfig.get();
+  console.warn('[finance-api] 401 received — redirecting to login');
+  window.location.href = `${AUTH_URL}?redirect=${encodeURIComponent(window.location.href)}`;
+}
+
+function buildHeaders(extra = {}) {
+  const token = getAuthToken();
+  console.debug('[finance-api] request, token present:', !!token);
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { Authorization: `Bearer ${token}` }),
+    ...extra
+  };
+}
 
 async function getEndpoint() {
   const { API_ENDPOINT } = await window.SpookyConfig.get();
@@ -9,6 +28,11 @@ async function getEndpoint() {
 
 async function handleResponse(response) {
   const contentType = response.headers.get('content-type');
+
+  if (response.status === 401) {
+    await redirectToLogin();
+    return null;
+  }
 
   if (!response.ok) {
     let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
@@ -47,21 +71,21 @@ export async function getAllCosts(filters = {}) {
 
   const queryString = params.toString();
   const url = `${API_ENDPOINT}/finance/costs${queryString ? '?' + queryString : ''}`;
-  const response = await fetch(url, { method: 'GET', headers: HEADERS });
+  const response = await fetch(url, { method: 'GET', headers: buildHeaders() });
   return await handleResponse(response);
 }
 
 // GET single cost record by ID
 export async function getCostById(costId) {
   const API_ENDPOINT = await getEndpoint();
-  const response = await fetch(`${API_ENDPOINT}/finance/costs/${costId}`, { method: 'GET', headers: HEADERS });
+  const response = await fetch(`${API_ENDPOINT}/finance/costs/${costId}`, { method: 'GET', headers: buildHeaders() });
   return await handleResponse(response);
 }
 
 // GET all costs for a specific item
 export async function getItemCosts(itemId) {
   const API_ENDPOINT = await getEndpoint();
-  const response = await fetch(`${API_ENDPOINT}/finance/costs/item/${itemId}`, { method: 'GET', headers: HEADERS });
+  const response = await fetch(`${API_ENDPOINT}/finance/costs/item/${itemId}`, { method: 'GET', headers: buildHeaders() });
   return await handleResponse(response);
 }
 
@@ -69,7 +93,7 @@ export async function getItemCosts(itemId) {
 export async function getReceiptImage(photoId) {
   const API_ENDPOINT = await getEndpoint();
   console.log('📸 Fetching receipt image from API:', photoId);
-  const response = await fetch(`${API_ENDPOINT}/images/${photoId}`, { method: 'GET', headers: HEADERS });
+  const response = await fetch(`${API_ENDPOINT}/images/${photoId}`, { method: 'GET', headers: buildHeaders() });
   const data = await handleResponse(response);
   console.log('✅ Receipt image data received:', data);
   return data;
@@ -80,7 +104,7 @@ export async function createCost(costData) {
   const API_ENDPOINT = await getEndpoint();
   const response = await fetch(`${API_ENDPOINT}/finance/costs`, {
     method: 'POST',
-    headers: HEADERS,
+    headers: buildHeaders(),
     body: JSON.stringify(costData)
   });
   return await handleResponse(response);
@@ -91,7 +115,7 @@ export async function updateCost(costId, costData) {
   const API_ENDPOINT = await getEndpoint();
   const response = await fetch(`${API_ENDPOINT}/finance/costs/${costId}`, {
     method: 'PUT',
-    headers: HEADERS,
+    headers: buildHeaders(),
     body: JSON.stringify(costData)
   });
   return await handleResponse(response);
@@ -102,7 +126,7 @@ export async function deleteCost(costId) {
   const API_ENDPOINT = await getEndpoint();
   const response = await fetch(`${API_ENDPOINT}/finance/costs/${costId}/delete`, {
     method: 'DELETE',
-    headers: HEADERS
+    headers: buildHeaders()
   });
   return await handleResponse(response);
 }
@@ -118,7 +142,7 @@ export async function getItems(filters = {}) {
 
   const queryString = params.toString();
   const url = `${API_ENDPOINT}/items${queryString ? '?' + queryString : ''}`;
-  const response = await fetch(url, { method: 'GET', headers: HEADERS });
+  const response = await fetch(url, { method: 'GET', headers: buildHeaders() });
   return await handleResponse(response);
 }
 
@@ -189,7 +213,7 @@ export async function uploadAndProcessReceipt(file, contextData = {}, onProgress
   try {
     presignResponse = await fetch(`${API_ENDPOINT}/admin/images/presign`, {
       method: 'POST',
-      headers: HEADERS,
+      headers: buildHeaders(),
       body: JSON.stringify({
         context: 'receipt',
         photo_type: 'receipt',
@@ -225,7 +249,7 @@ export async function uploadAndProcessReceipt(file, contextData = {}, onProgress
 
   const processResponse = await fetch(`${API_ENDPOINT}/finance/costs/ai-extract`, {
     method: 'POST',
-    headers: HEADERS,
+    headers: buildHeaders(),
     body: JSON.stringify({
       s3_key: upload.s3_key,
       extraction_id: upload.extraction_id,
@@ -250,7 +274,7 @@ export async function updateAuditLog(extractionId, finalData, modifications) {
   try {
     const response = await fetch(`${API_ENDPOINT}/audit/ai-audit/finance/${extractionId}`, {
       method: 'PUT',
-      headers: HEADERS,
+      headers: buildHeaders(),
       body: JSON.stringify({
         final_data: finalData,
         modifications: modifications,
@@ -272,7 +296,7 @@ export async function updateImageAfterCostCreation(imageId, costId) {
     const costIds = Array.isArray(costId) ? costId : [costId];
     const response = await fetch(`${API_ENDPOINT}/finance/images/update`, {
       method: 'POST',
-      headers: HEADERS,
+      headers: buildHeaders(),
       body: JSON.stringify({ image_id: imageId, cost_ids: costIds })
     });
     return await handleResponse(response);

@@ -1,4 +1,4 @@
-Issue #82 — Auth Rollout: storage
+Issue #82 — Auth Rollout: deployments
 
 Already done:
 

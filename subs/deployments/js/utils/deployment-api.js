@@ -1,6 +1,27 @@
 // Deployment API Client
 
-const HEADERS = { 'Content-Type': 'application/json' };
+// --- Auth helpers ---
+
+function getAuthToken() {
+  const match = document.cookie.match(/(?:^|;\s*)spookydecs_auth=([^;]+)/);
+  return match ? match[1] : null;
+}
+
+async function redirectToLogin() {
+  const { AUTH_URL } = await window.SpookyConfig.get();
+  console.warn('[deployment-api] 401 received — redirecting to login');
+  window.location.href = `${AUTH_URL}?redirect=${encodeURIComponent(window.location.href)}`;
+}
+
+function buildHeaders(extra = {}) {
+  const token = getAuthToken();
+  console.debug('[deployment-api] request, token present:', !!token);
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { Authorization: `Bearer ${token}` }),
+    ...extra
+  };
+}
 
 async function getConfig() {
   return await window.SpookyConfig.get();
@@ -14,10 +35,11 @@ export async function getItemsAdminUrl() {
 async function apiCall(endpoint, method = 'GET', body = null) {
   const { API_ENDPOINT } = await getConfig();
   const url = `${API_ENDPOINT}${endpoint}`;
-  const options = { method, headers: HEADERS };
+  const options = { method, headers: buildHeaders() };
   if (body) options.body = JSON.stringify(body);
 
   const response = await fetch(url, options);
+  if (response.status === 401) { await redirectToLogin(); return null; }
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.error || `API error: ${response.status}`);
@@ -163,8 +185,9 @@ export async function fetchImageById(imageId) {
     const { API_ENDPOINT } = await getConfig();
     const response = await fetch(`${API_ENDPOINT}/admin/images/${imageId}`, {
       method: 'GET',
-      headers: HEADERS
+      headers: buildHeaders()
     });
+    if (response.status === 401) { await redirectToLogin(); return null; }
     if (!response.ok) {
       console.warn(`Failed to fetch image ${imageId}: ${response.status}`);
       return null;
