@@ -1,4 +1,4 @@
-Issue #82 — Auth Rollout: deployments
+Issue #82 — Auth Rollout: admin
 
 Already done:
 

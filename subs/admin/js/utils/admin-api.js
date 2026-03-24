@@ -1,5 +1,28 @@
 // Admin API utilities
 
+// --- Auth helpers ---
+
+function getAuthToken() {
+  const match = document.cookie.match(/(?:^|;\s*)spookydecs_auth=([^;]+)/);
+  return match ? match[1] : null;
+}
+
+async function redirectToLogin() {
+  const { AUTH_URL } = await window.SpookyConfig.get();
+  console.warn('[admin-api] 401 received — redirecting to login');
+  window.location.href = `${AUTH_URL}?redirect=${encodeURIComponent(window.location.href)}`;
+}
+
+function buildHeaders(extra = {}) {
+  const token = getAuthToken();
+  console.debug('[admin-api] request, token present:', !!token);
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { Authorization: `Bearer ${token}` }),
+    ...extra
+  };
+}
+
 /**
  * Get all subdomain URLs from config
  * @returns {Promise<Object>} Object containing all subdomain URLs
@@ -29,7 +52,11 @@ export async function getSubdomainUrls() {
 export async function fetchInspectorStats() {
   const config = await window.SpookyConfig.get();
 
-  const response = await fetch(`${config.API_ENDPOINT}/admin/inspector/violations/stats`);
+  const response = await fetch(`${config.API_ENDPOINT}/admin/inspector/violations/stats`, {
+    headers: buildHeaders()
+  });
+
+  if (response.status === 401) { await redirectToLogin(); return null; }
 
   if (!response.ok) {
     throw new Error(`Failed to fetch inspector stats: ${response.status}`);
@@ -52,7 +79,11 @@ export async function fetchWorkbenchStats() {
   const config = await window.SpookyConfig.get();
 
   try {
-    const response = await fetch(`${config.API_ENDPOINT}/stats/workbench`);
+    const response = await fetch(`${config.API_ENDPOINT}/stats/workbench`, {
+      headers: buildHeaders()
+    });
+
+    if (response.status === 401) { await redirectToLogin(); return null; }
 
     if (!response.ok) {
       throw new Error(`Failed to fetch workbench stats: ${response.status}`);
@@ -98,10 +129,11 @@ export async function submitIrisQuery(messages) {
 
   const response = await fetch(`${config.API_ENDPOINT}/iris/chat`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messages }),
-    credentials: 'include'
+    headers: buildHeaders(),
+    body: JSON.stringify({ messages })
   });
+
+  if (response.status === 401) { await redirectToLogin(); return null; }
 
   if (!response.ok) {
     throw new Error(`Iris request failed: ${response.status}`);
