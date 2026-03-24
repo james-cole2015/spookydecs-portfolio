@@ -1,4 +1,4 @@
-Issue #82 — Auth Rollout: admin
+Issue #82 — Auth Rollout: workbench
 
 Already done:
 
