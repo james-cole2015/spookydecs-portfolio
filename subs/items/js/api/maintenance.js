@@ -1,5 +1,27 @@
 // API Helper: maintenance.js
 
+// --- Auth helpers ---
+
+function getAuthToken() {
+  const match = document.cookie.match(/(?:^|;\s*)spookydecs_auth=([^;]+)/);
+  return match ? match[1] : null;
+}
+
+async function redirectToLogin() {
+  const { AUTH_URL } = await window.SpookyConfig.get();
+  console.warn('[items-api] 401 received — redirecting to login');
+  window.location.href = `${AUTH_URL}?redirect=${encodeURIComponent(window.location.href)}`;
+}
+
+function buildHeaders(extra = {}) {
+  const token = getAuthToken();
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { Authorization: `Bearer ${token}` }),
+    ...extra
+  };
+}
+
 async function getMaintenanceUrl() {
   const { MAINT_URL } = await window.SpookyConfig.get();
   if (!MAINT_URL) throw new Error('Maintenance URL not configured');
@@ -19,9 +41,10 @@ export async function getMaintenanceRecords(itemId, limit = 5) {
 
   const response = await fetch(url, {
     method: 'GET',
-    headers: { 'Content-Type': 'application/json' }
+    headers: buildHeaders()
   });
 
+  if (response.status === 401) { await redirectToLogin(); return null; }
   if (!response.ok) {
     if (response.status === 404) {
       console.log(`No maintenance records found for item: ${itemId}`);
