@@ -1,26 +1,6 @@
 // API Helper: maintenance.js
 
-// --- Auth helpers ---
-
-function getAuthToken() {
-  const match = document.cookie.match(/(?:^|;\s*)spookydecs_auth=([^;]+)/);
-  return match ? match[1] : null;
-}
-
-async function redirectToLogin() {
-  const { AUTH_URL } = await window.SpookyConfig.get();
-  console.warn('[items-api] 401 received — redirecting to login');
-  window.location.href = `${AUTH_URL}?redirect=${encodeURIComponent(window.location.href)}`;
-}
-
-function buildHeaders(extra = {}) {
-  const token = getAuthToken();
-  return {
-    'Content-Type': 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` }),
-    ...extra
-  };
-}
+const { getAuthToken, buildHeaders, redirectToLogin } = window.SpookyAuth;
 
 async function getMaintenanceUrl() {
   const { MAINT_URL } = await window.SpookyConfig.get();
