@@ -194,10 +194,13 @@ export async function updateItemSearchText(itemId, searchText) {
  * Trigger a full Iris vector index rebuild
  * @returns {Promise<{indexed_count, image_embedded_count, text_embedded_count}>}
  */
-export async function triggerReindex() {
+export async function triggerReindex(mode = 'all') {
   const config = await window.SpookyConfig.get();
+  const url = mode === 'all'
+    ? `${config.API_ENDPOINT}/iris/index`
+    : `${config.API_ENDPOINT}/iris/index?mode=${encodeURIComponent(mode)}`;
 
-  const response = await fetch(`${config.API_ENDPOINT}/iris/index`, {
+  const response = await fetch(url, {
     method: 'POST',
     headers: buildHeaders()
   });

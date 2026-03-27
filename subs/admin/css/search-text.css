@@ -29,6 +29,59 @@
     font-size: 0.95rem;
 }
 
+/* Index management panel */
+.st-index-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.st-index-card {
+    background: var(--white);
+    border: 1px solid var(--border-gray);
+    border-radius: 8px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.st-index-card-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+    margin-bottom: 0.35rem;
+}
+
+.st-index-card-desc {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0;
+}
+
+.st-index-card-desc code {
+    font-family: monospace;
+    font-size: 0.8rem;
+    background: var(--neutral-gray);
+    border: 1px solid var(--border-gray);
+    border-radius: 3px;
+    padding: 0.05em 0.3em;
+}
+
+.st-index-card-body {
+    flex: 1;
+}
+
+.st-index-card-footer {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
 /* Two-column layout */
 .st-layout {
     display: grid;
@@ -279,6 +332,10 @@
 }
 
 @media (max-width: 768px) {
+    .st-index-panel {
+        grid-template-columns: 1fr;
+    }
+
     .st-layout {
         grid-template-columns: 1fr;
     }

@@ -15,7 +15,30 @@ export async function renderSearchText(config) {
             <div class="st-header">
                 <button class="st-back-btn" id="st-back">← Back to Dashboard</button>
                 <h1 class="page-title">Iris Search Text</h1>
-                <p class="st-subtitle">Edit an item's search text to improve Iris vector search results, then reindex.</p>
+                <p class="st-subtitle">Manage vector indexes for Iris semantic search and gallery AI tagging. Edit an item's search text to tune how Iris finds and understands it.</p>
+            </div>
+
+            <div class="st-index-panel">
+                <div class="st-index-card">
+                    <div class="st-index-card-body">
+                        <div class="st-index-card-label">Iris</div>
+                        <p class="st-index-card-desc">Generates text embeddings from <code>search_text</code> for Iris semantic search. Fast.</p>
+                    </div>
+                    <div class="st-index-card-footer">
+                        <button class="st-btn st-btn--primary" id="st-reindex-iris-btn">Rebuild</button>
+                        <div id="st-iris-status" class="st-status"></div>
+                    </div>
+                </div>
+                <div class="st-index-card">
+                    <div class="st-index-card-body">
+                        <div class="st-index-card-label">Gallery</div>
+                        <p class="st-index-card-desc">Generates image embeddings from catalog photos for AI tag suggestions. May take a minute.</p>
+                    </div>
+                    <div class="st-index-card-footer">
+                        <button class="st-btn st-btn--primary" id="st-reindex-gallery-btn">Rebuild</button>
+                        <div id="st-gallery-status" class="st-status"></div>
+                    </div>
+                </div>
             </div>
 
             <div class="st-layout">
@@ -42,6 +65,8 @@ export async function renderSearchText(config) {
     `;
 
     document.getElementById('st-back').addEventListener('click', () => navigate('/'));
+    document.getElementById('st-reindex-iris-btn').addEventListener('click', () => _reindex('text'));
+    document.getElementById('st-reindex-gallery-btn').addEventListener('click', () => _reindex('images'));
 
     const searchInput = document.getElementById('st-search-input');
     searchInput.addEventListener('input', () => {
@@ -116,7 +141,6 @@ function _renderItemEditor(item, itemsBaseUrl) {
             <div class="st-actions">
                 <div class="st-action-buttons">
                     <button class="st-btn st-btn--primary" id="st-save-btn">Save</button>
-                    <button class="st-btn st-btn--secondary" id="st-reindex-btn">Reindex</button>
                 </div>
                 <div id="st-status" class="st-status"></div>
             </div>
@@ -124,7 +148,6 @@ function _renderItemEditor(item, itemsBaseUrl) {
     `;
 
     document.getElementById('st-save-btn').addEventListener('click', () => _save(item.item_id));
-    document.getElementById('st-reindex-btn').addEventListener('click', _reindex);
 }
 
 async function _save(itemId) {
@@ -145,24 +168,24 @@ async function _save(itemId) {
     }
 }
 
-async function _reindex() {
-    const statusEl = document.getElementById('st-status');
-    const reindexBtn = document.getElementById('st-reindex-btn');
+async function _reindex(mode) {
+    const isIris = mode === 'text';
+    const statusEl = document.getElementById(isIris ? 'st-iris-status' : 'st-gallery-status');
+    const btn = document.getElementById(isIris ? 'st-reindex-iris-btn' : 'st-reindex-gallery-btn');
 
-    reindexBtn.disabled = true;
-    _setStatus(statusEl, 'loading', 'Reindexing...');
+    btn.disabled = true;
+    _setStatus(statusEl, 'loading', 'Rebuilding...');
 
     try {
-        const result = await triggerReindex();
-        _setStatus(
-            statusEl,
-            'success',
-            `Indexed ${result.indexed_count} items (${result.image_embedded_count} image, ${result.text_embedded_count} text).`
-        );
+        const result = await triggerReindex(mode);
+        const msg = isIris
+            ? `${result.iris_text_indexed_count} items indexed.`
+            : `${result.gallery_indexed_count} items indexed (${result.image_embedded_count} image, ${result.text_embedded_count} text).`;
+        _setStatus(statusEl, 'success', msg);
     } catch (err) {
-        _setStatus(statusEl, 'error', `Reindex failed: ${err.message}`);
+        _setStatus(statusEl, 'error', `Failed: ${err.message}`);
     } finally {
-        reindexBtn.disabled = false;
+        btn.disabled = false;
     }
 }
 
