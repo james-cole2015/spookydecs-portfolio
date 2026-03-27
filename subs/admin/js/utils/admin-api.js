@@ -132,23 +132,29 @@ export async function getItemSearchText(itemId) {
   const config = await window.SpookyConfig.get();
 
   const response = await fetch(
-    `${config.API_ENDPOINT}/iris/items/${encodeURIComponent(itemId)}/search-text`,
+    `${config.API_ENDPOINT}/items/${encodeURIComponent(itemId)}`,
     { headers: buildHeaders() }
   );
 
   if (response.status === 401) { await redirectToLogin(); return null; }
 
   if (!response.ok) {
-    throw new Error(`Failed to get search text: ${response.status}`);
+    throw new Error(`Failed to get item: ${response.status}`);
   }
 
   const result = await response.json();
 
   if (!result.success) {
-    throw new Error(result.error || 'Failed to get search text');
+    throw new Error(result.error || 'Failed to get item');
   }
 
-  return result.data;
+  const item = result.data;
+  return {
+    item_id: item.id,
+    short_name: item.short_name || '',
+    season: item.season || '',
+    search_text: item.search_text || '',
+  };
 }
 
 /**
