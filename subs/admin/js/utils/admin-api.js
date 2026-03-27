@@ -1,5 +1,7 @@
 // Admin API utilities
 
+const { getAuthToken, buildHeaders, redirectToLogin } = window.SpookyAuth;
+
 /**
  * Get all subdomain URLs from config
  * @returns {Promise<Object>} Object containing all subdomain URLs
@@ -29,7 +31,11 @@ export async function getSubdomainUrls() {
 export async function fetchInspectorStats() {
   const config = await window.SpookyConfig.get();
 
-  const response = await fetch(`${config.API_ENDPOINT}/admin/inspector/violations/stats`);
+  const response = await fetch(`${config.API_ENDPOINT}/admin/inspector/violations/stats`, {
+    headers: buildHeaders()
+  });
+
+  if (response.status === 401) { await redirectToLogin(); return null; }
 
   if (!response.ok) {
     throw new Error(`Failed to fetch inspector stats: ${response.status}`);
@@ -52,7 +58,11 @@ export async function fetchWorkbenchStats() {
   const config = await window.SpookyConfig.get();
 
   try {
-    const response = await fetch(`${config.API_ENDPOINT}/stats/workbench`);
+    const response = await fetch(`${config.API_ENDPOINT}/stats/workbench`, {
+      headers: buildHeaders()
+    });
+
+    if (response.status === 401) { await redirectToLogin(); return null; }
 
     if (!response.ok) {
       throw new Error(`Failed to fetch workbench stats: ${response.status}`);
@@ -86,6 +96,131 @@ export async function calculateSystemHealth() {
 }
 
 /**
+ * Search items by query string
+ * @param {string} query - Search term
+ * @returns {Promise<Array>} Array of matching items
+ */
+export async function searchItems(query) {
+  const config = await window.SpookyConfig.get();
+  const params = new URLSearchParams({ search: query });
+
+  const response = await fetch(`${config.API_ENDPOINT}/items?${params}`, {
+    headers: buildHeaders()
+  });
+
+  if (response.status === 401) { await redirectToLogin(); return null; }
+
+  if (!response.ok) {
+    throw new Error(`Item search failed: ${response.status}`);
+  }
+
+  const result = await response.json();
+
+  if (!result.success) {
+    throw new Error(result.error || 'Item search failed');
+  }
+
+  return result.data?.items || [];
+}
+
+/**
+ * Get current search_text for an item
+ * @param {string} itemId - Item ID
+ * @returns {Promise<{item_id, short_name, season, search_text}>}
+ */
+export async function getItemSearchText(itemId) {
+  const config = await window.SpookyConfig.get();
+
+  const response = await fetch(
+    `${config.API_ENDPOINT}/items/${encodeURIComponent(itemId)}`,
+    { headers: buildHeaders() }
+  );
+
+  if (response.status === 401) { await redirectToLogin(); return null; }
+
+  if (!response.ok) {
+    throw new Error(`Failed to get item: ${response.status}`);
+  }
+
+  const result = await response.json();
+
+  if (!result.success) {
+    throw new Error(result.error || 'Failed to get item');
+  }
+
+  const item = result.data;
+  return {
+    item_id: item.id,
+    short_name: item.short_name || '',
+    season: item.season || '',
+    search_text: item.search_text || '',
+  };
+}
+
+/**
+ * Update search_text for an item
+ * @param {string} itemId - Item ID
+ * @param {string} searchText - New search text value
+ * @returns {Promise<{item_id, short_name, search_text}>}
+ */
+export async function updateItemSearchText(itemId, searchText) {
+  const config = await window.SpookyConfig.get();
+
+  const response = await fetch(
+    `${config.API_ENDPOINT}/items/${encodeURIComponent(itemId)}`,
+    {
+      method: 'PATCH',
+      headers: buildHeaders(),
+      body: JSON.stringify({ search_text: searchText })
+    }
+  );
+
+  if (response.status === 401) { await redirectToLogin(); return null; }
+
+  if (!response.ok) {
+    throw new Error(`Failed to update search text: ${response.status}`);
+  }
+
+  const result = await response.json();
+
+  if (!result.success) {
+    throw new Error(result.error || 'Failed to update search text');
+  }
+
+  return result.data;
+}
+
+/**
+ * Trigger a full Iris vector index rebuild
+ * @returns {Promise<{indexed_count, image_embedded_count, text_embedded_count}>}
+ */
+export async function triggerReindex(mode = 'all') {
+  const config = await window.SpookyConfig.get();
+  const url = mode === 'all'
+    ? `${config.API_ENDPOINT}/iris/index`
+    : `${config.API_ENDPOINT}/iris/index?mode=${encodeURIComponent(mode)}`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: buildHeaders()
+  });
+
+  if (response.status === 401) { await redirectToLogin(); return null; }
+
+  if (!response.ok) {
+    throw new Error(`Reindex failed: ${response.status}`);
+  }
+
+  const result = await response.json();
+
+  if (!result.success) {
+    throw new Error(result.error || 'Reindex failed');
+  }
+
+  return result.data;
+}
+
+/**
  * Submit conversation to Iris
  * @param {Array<{role: string, content: string}>} messages - Full conversation history
  * @returns {Promise<{response: string, tool_calls_made: Array}>}
@@ -98,10 +233,11 @@ export async function submitIrisQuery(messages) {
 
   const response = await fetch(`${config.API_ENDPOINT}/iris/chat`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messages }),
-    credentials: 'include'
+    headers: buildHeaders(),
+    body: JSON.stringify({ messages })
   });
+
+  if (response.status === 401) { await redirectToLogin(); return null; }
 
   if (!response.ok) {
     throw new Error(`Iris request failed: ${response.status}`);

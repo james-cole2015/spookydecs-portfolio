@@ -3,6 +3,8 @@
  * Handles all API calls to inspector endpoints
  */
 
+const { getAuthToken, buildHeaders, redirectToLogin } = window.SpookyAuth;
+
 const InspectorAPI = {
 
   async getBaseUrl() {
@@ -17,10 +19,7 @@ const InspectorAPI = {
     try {
       const config = {
         method: options.method || 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers
-        }
+        headers: buildHeaders(options.headers)
       };
 
       if (options.body) {
@@ -30,6 +29,12 @@ const InspectorAPI = {
       }
 
       const response = await fetch(url, config);
+
+      if (response.status === 401) {
+        await redirectToLogin();
+        return null;
+      }
+
       const result = await response.json();
 
       if (!response.ok) {

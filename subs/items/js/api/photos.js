@@ -1,6 +1,6 @@
 // Photos API Client
 
-const HEADERS = { 'Content-Type': 'application/json' };
+const { getAuthToken, buildHeaders, redirectToLogin } = window.SpookyAuth;
 
 async function getEndpoint() {
   const { API_ENDPOINT } = await window.SpookyConfig.get();
@@ -12,9 +12,10 @@ export async function fetchPhotoById(photoId) {
     const apiEndpoint = await getEndpoint();
     const response = await fetch(`${apiEndpoint}/admin/images/${photoId}`, {
       method: 'GET',
-      headers: HEADERS
+      headers: buildHeaders()
     });
 
+    if (response.status === 401) { await redirectToLogin(); return null; }
     if (!response.ok) {
       if (response.status === 404) return null;
       throw new Error(`Failed to fetch photo: ${response.status}`);
@@ -73,7 +74,7 @@ export async function uploadPhoto(file, itemId, season, isPrimary = false) {
   // Step 1: Presign
   const presignResponse = await fetch(`${apiEndpoint}/admin/images/presign`, {
     method: 'POST',
-    headers: HEADERS,
+    headers: buildHeaders(),
     body: JSON.stringify({
       context: 'item',
       photo_type: 'catalog',
@@ -84,6 +85,7 @@ export async function uploadPhoto(file, itemId, season, isPrimary = false) {
     })
   });
 
+  if (presignResponse.status === 401) { await redirectToLogin(); return null; }
   if (!presignResponse.ok) {
     const errorData = await presignResponse.json().catch(() => ({}));
     throw new Error(errorData.error || `Presign failed: ${presignResponse.status}`);
@@ -122,7 +124,7 @@ export async function uploadPhoto(file, itemId, season, isPrimary = false) {
   // Step 5: Confirm
   const confirmResponse = await fetch(`${apiEndpoint}/admin/images/confirm`, {
     method: 'POST',
-    headers: HEADERS,
+    headers: buildHeaders(),
     body: JSON.stringify({
       context: 'item',
       photo_type: 'catalog',
@@ -145,6 +147,7 @@ export async function uploadPhoto(file, itemId, season, isPrimary = false) {
     })
   });
 
+  if (confirmResponse.status === 401) { await redirectToLogin(); return null; }
   if (!confirmResponse.ok) {
     const errorData = await confirmResponse.json().catch(() => ({}));
     throw new Error(errorData.error || `Confirm failed: ${confirmResponse.status}`);
@@ -167,10 +170,11 @@ export async function linkPhotoToItem(photoId, itemId, isPrimary = false) {
   const apiEndpoint = await getEndpoint();
   const response = await fetch(`${apiEndpoint}/admin/images/${photoId}/link`, {
     method: 'POST',
-    headers: HEADERS,
+    headers: buildHeaders(),
     body: JSON.stringify({ item_id: itemId, is_primary: isPrimary })
   });
 
+  if (response.status === 401) { await redirectToLogin(); return null; }
   if (!response.ok) throw new Error(`Failed to link photo: ${response.status}`);
   return await response.json();
 }
@@ -179,10 +183,11 @@ export async function unlinkPhotoFromItem(photoId, itemId) {
   const apiEndpoint = await getEndpoint();
   const response = await fetch(`${apiEndpoint}/admin/images/${photoId}/unlink`, {
     method: 'POST',
-    headers: HEADERS,
+    headers: buildHeaders(),
     body: JSON.stringify({ item_id: itemId })
   });
 
+  if (response.status === 401) { await redirectToLogin(); return null; }
   if (!response.ok) throw new Error(`Failed to unlink photo: ${response.status}`);
   return await response.json();
 }
@@ -191,9 +196,10 @@ export async function deletePhoto(photoId) {
   const apiEndpoint = await getEndpoint();
   const response = await fetch(`${apiEndpoint}/admin/images/${photoId}`, {
     method: 'DELETE',
-    headers: HEADERS
+    headers: buildHeaders()
   });
 
+  if (response.status === 401) { await redirectToLogin(); return null; }
   if (!response.ok) throw new Error(`Failed to delete photo: ${response.status}`);
   return await response.json();
 }
@@ -217,8 +223,9 @@ export async function listPhotosForItem(itemId) {
   const apiEndpoint = await getEndpoint();
   const response = await fetch(
     `${apiEndpoint}/admin/images?item_id=${encodeURIComponent(itemId)}`,
-    { method: 'GET', headers: HEADERS }
+    { method: 'GET', headers: buildHeaders() }
   );
+  if (response.status === 401) { await redirectToLogin(); return null; }
   if (!response.ok) throw new Error(`Failed to list photos: ${response.status}`);
   return await response.json(); // { count, photos }
 }
@@ -227,9 +234,10 @@ export async function setPrimaryPhoto(photoId, itemId) {
   const apiEndpoint = await getEndpoint();
   const response = await fetch(`${apiEndpoint}/admin/images/set_primary`, {
     method: 'POST',
-    headers: HEADERS,
+    headers: buildHeaders(),
     body: JSON.stringify({ photo_id: photoId, context: 'item', item_id: itemId })
   });
+  if (response.status === 401) { await redirectToLogin(); return null; }
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.error || `Failed to set primary: ${response.status}`);

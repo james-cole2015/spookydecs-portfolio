@@ -2,7 +2,8 @@
 import { showToast } from '../shared/toast.js';
 
 const API_PATH = '/admin/images';
-const HEADERS = { 'Content-Type': 'application/json' };
+
+const { getAuthToken, buildHeaders, redirectToLogin } = window.SpookyAuth;
 
 async function getApiBase() {
   const { API_ENDPOINT } = await window.SpookyConfig.get();
@@ -23,7 +24,11 @@ export async function fetchImages(filters = {}) {
     if (filters.limit) params.append('limit', filters.limit);
 
     const apiBase = await getApiBase();
-    const response = await fetch(`${apiBase}?${params.toString()}`);
+    const response = await fetch(`${apiBase}?${params.toString()}`, {
+      headers: buildHeaders()
+    });
+
+    if (response.status === 401) { await redirectToLogin(); return null; }
 
     if (!response.ok) {
       const body = await response.text().catch(() => '');
@@ -42,7 +47,11 @@ export async function fetchImages(filters = {}) {
 export async function fetchImage(photoId) {
   try {
     const apiBase = await getApiBase();
-    const response = await fetch(`${apiBase}/${photoId}`);
+    const response = await fetch(`${apiBase}/${photoId}`, {
+      headers: buildHeaders()
+    });
+
+    if (response.status === 401) { await redirectToLogin(); return null; }
 
     if (!response.ok) {
       throw new Error(response.status === 404 ? 'Image not found' : `Failed to fetch image: ${response.statusText}`);
@@ -62,9 +71,11 @@ export async function updateImage(photoId, updates) {
     const apiBase = await getApiBase();
     const response = await fetch(`${apiBase}/${photoId}`, {
       method: 'PUT',
-      headers: HEADERS,
+      headers: buildHeaders(),
       body: JSON.stringify(updates)
     });
+
+    if (response.status === 401) { await redirectToLogin(); return null; }
 
     if (!response.ok) {
       const errorData = await response.json();
@@ -87,9 +98,11 @@ export async function patchImage(photoId, updates) {
     const apiBase = await getApiBase();
     const response = await fetch(`${apiBase}/${photoId}`, {
       method: 'PATCH',
-      headers: HEADERS,
+      headers: buildHeaders(),
       body: JSON.stringify(updates)
     });
+
+    if (response.status === 401) { await redirectToLogin(); return null; }
 
     if (!response.ok) {
       const errorData = await response.json();
@@ -110,7 +123,12 @@ export async function patchImage(photoId, updates) {
 export async function deleteImage(photoId) {
   try {
     const apiBase = await getApiBase();
-    const response = await fetch(`${apiBase}/${photoId}`, { method: 'DELETE' });
+    const response = await fetch(`${apiBase}/${photoId}`, {
+      method: 'DELETE',
+      headers: buildHeaders()
+    });
+
+    if (response.status === 401) { await redirectToLogin(); return null; }
 
     if (!response.ok) {
       const errorData = await response.json();
@@ -131,9 +149,11 @@ export async function setPrimaryPhoto(payload) {
     const apiBase = await getApiBase();
     const response = await fetch(`${apiBase}/set_primary`, {
       method: 'POST',
-      headers: HEADERS,
+      headers: buildHeaders(),
       body: JSON.stringify(payload)
     });
+
+    if (response.status === 401) { await redirectToLogin(); return null; }
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -152,7 +172,10 @@ export async function setPrimaryPhoto(payload) {
 export async function fetchIdeas() {
   try {
     const { API_ENDPOINT } = await window.SpookyConfig.get();
-    const response = await fetch(`${API_ENDPOINT}/ideas`);
+    const response = await fetch(`${API_ENDPOINT}/ideas`, {
+      headers: buildHeaders()
+    });
+    if (response.status === 401) { await redirectToLogin(); return []; }
     if (!response.ok) return [];
     const data = await response.json();
     return Array.isArray(data) ? data : (data?.data ?? data?.ideas ?? []);
@@ -166,8 +189,11 @@ export async function suggestTags(photoId) {
     const { API_ENDPOINT } = await window.SpookyConfig.get();
     const response = await fetch(`${API_ENDPOINT}/admin/images/${photoId}/suggest-tags`, {
       method: 'POST',
+      headers: buildHeaders(),
       credentials: 'include',
     });
+
+    if (response.status === 401) { await redirectToLogin(); return null; }
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -190,7 +216,11 @@ export async function getStats(photoType = null) {
       ? `${apiBase}/stats?photo_type=${photoType}`
       : `${apiBase}/stats`;
 
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: buildHeaders()
+    });
+
+    if (response.status === 401) { await redirectToLogin(); return null; }
 
     if (!response.ok) {
       throw new Error('Failed to fetch statistics');

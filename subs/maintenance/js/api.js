@@ -1,6 +1,6 @@
 // API client for maintenance records and items endpoints
 
-const HEADERS = { 'Content-Type': 'application/json' };
+const { getAuthToken, buildHeaders, redirectToLogin } = window.SpookyAuth;
 
 async function getApiEndpoint() {
   const { API_ENDPOINT } = await window.SpookyConfig.get();
@@ -8,6 +8,10 @@ async function getApiEndpoint() {
 }
 
 async function handleResponse(response) {
+  if (response.status === 401) {
+    await redirectToLogin();
+    return null;
+  }
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: 'Unknown error' }));
     throw new Error(error.error || `HTTP ${response.status}`);
@@ -22,7 +26,7 @@ async function handleResponse(response) {
 export async function fetchAllRecords() {
   const API_ENDPOINT = await getApiEndpoint();
   const response = await fetch(`${API_ENDPOINT}/admin/maintenance-records`, {
-    headers: HEADERS
+    headers: buildHeaders()
   });
 
   const json = await handleResponse(response);
@@ -36,7 +40,7 @@ export async function fetchRecordsByItem(itemId) {
   const API_ENDPOINT = await getApiEndpoint();
   const response = await fetch(
     `${API_ENDPOINT}/admin/maintenance-records?item_id=${encodeURIComponent(itemId)}`,
-    { headers: HEADERS }
+    { headers: buildHeaders() }
   );
 
   const json = await handleResponse(response);
@@ -50,7 +54,7 @@ export async function fetchRecord(recordId) {
   const API_ENDPOINT = await getApiEndpoint();
   const response = await fetch(
     `${API_ENDPOINT}/admin/maintenance-records/${encodeURIComponent(recordId)}`,
-    { headers: HEADERS }
+    { headers: buildHeaders() }
   );
 
   const json = await handleResponse(response);
@@ -61,7 +65,7 @@ export async function createRecord(recordData) {
   const API_ENDPOINT = await getApiEndpoint();
   const response = await fetch(`${API_ENDPOINT}/admin/maintenance-records`, {
     method: 'POST',
-    headers: HEADERS,
+    headers: buildHeaders(),
     body: JSON.stringify(recordData)
   });
 
@@ -75,7 +79,7 @@ export async function updateRecord(recordId, recordData) {
     `${API_ENDPOINT}/admin/maintenance-records/${encodeURIComponent(recordId)}`,
     {
       method: 'PUT',
-      headers: HEADERS,
+      headers: buildHeaders(),
       body: JSON.stringify(recordData)
     }
   );
@@ -90,7 +94,7 @@ export async function deleteRecord(recordId) {
     `${API_ENDPOINT}/admin/maintenance-records/${encodeURIComponent(recordId)}`,
     {
       method: 'DELETE',
-      headers: HEADERS
+      headers: buildHeaders()
     }
   );
 
@@ -108,7 +112,7 @@ export async function performInspection(recordId, inspectionData) {
     `${API_ENDPOINT}/admin/maintenance-records/${encodeURIComponent(recordId)}/inspect`,
     {
       method: 'POST',
-      headers: HEADERS,
+      headers: buildHeaders(),
       body: JSON.stringify(inspectionData)
     }
   );
@@ -127,7 +131,7 @@ export async function performRepair(recordId, repairData) {
     `${API_ENDPOINT}/admin/maintenance-records/${encodeURIComponent(recordId)}/repair`,
     {
       method: 'POST',
-      headers: HEADERS,
+      headers: buildHeaders(),
       body: JSON.stringify(repairData)
     }
   );
@@ -144,7 +148,7 @@ export async function fetchItem(itemId) {
   const API_ENDPOINT = await getApiEndpoint();
   const response = await fetch(
     `${API_ENDPOINT}/items/${encodeURIComponent(itemId)}`,
-    { headers: HEADERS }
+    { headers: buildHeaders() }
   );
 
   const json = await handleResponse(response);
@@ -159,7 +163,7 @@ export async function searchItems(query) {
   const API_ENDPOINT = await getApiEndpoint();
   const response = await fetch(
     `${API_ENDPOINT}/items?search=${encodeURIComponent(query)}`,
-    { headers: HEADERS }
+    { headers: buildHeaders() }
   );
 
   const json = await handleResponse(response);
@@ -178,7 +182,7 @@ export async function fetchAllItems(filters = {}) {
   const queryString = queryParams.toString();
   const url = `${API_ENDPOINT}/items${queryString ? '?' + queryString : ''}`;
 
-  const response = await fetch(url, { headers: HEADERS });
+  const response = await fetch(url, { headers: buildHeaders() });
   const json = await handleResponse(response);
   return json.data?.items || [];
 }
@@ -218,7 +222,7 @@ export async function fetchItemCosts(itemId) {
   const API_ENDPOINT = await getApiEndpoint();
   const response = await fetch(
     `${API_ENDPOINT}/finance/costs/item/${encodeURIComponent(itemId)}`,
-    { headers: HEADERS }
+    { headers: buildHeaders() }
   );
   const json = await handleResponse(response);
   return json; // { costs: [...], summary: {...}, count: N }
@@ -250,7 +254,7 @@ export async function getPresignedUrls(files, recordData) {
 
   const response = await fetch(`${API_ENDPOINT}/admin/images/presign`, {
     method: 'POST',
-    headers: HEADERS,
+    headers: buildHeaders(),
     body: JSON.stringify(requestBody)
   });
 
@@ -294,7 +298,7 @@ export async function confirmPhotoUpload(uploads, recordData, photoType) {
 
   const response = await fetch(`${API_ENDPOINT}/admin/images/confirm`, {
     method: 'POST',
-    headers: HEADERS,
+    headers: buildHeaders(),
     body: JSON.stringify(requestBody)
   });
 
@@ -306,7 +310,7 @@ export async function fetchPhoto(photoId) {
   const API_ENDPOINT = await getApiEndpoint();
   const response = await fetch(
     `${API_ENDPOINT}/admin/images/${encodeURIComponent(photoId)}`,
-    { headers: HEADERS }
+    { headers: buildHeaders() }
   );
 
   return handleResponse(response);

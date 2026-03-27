@@ -1,0 +1,346 @@
+/* Search Text Manager Page */
+
+.st-page {
+    max-width: 1200px;
+}
+
+.st-header {
+    margin-bottom: 2rem;
+}
+
+.st-back-btn {
+    background: none;
+    border: none;
+    color: var(--dark-blue);
+    cursor: pointer;
+    font-size: 0.875rem;
+    padding: 0;
+    margin-bottom: 0.75rem;
+    display: block;
+}
+
+.st-back-btn:hover {
+    text-decoration: underline;
+}
+
+.st-subtitle {
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+    font-size: 0.95rem;
+}
+
+/* Index management panel */
+.st-index-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.st-index-card {
+    background: var(--white);
+    border: 1px solid var(--border-gray);
+    border-radius: 8px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.st-index-card-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+    margin-bottom: 0.35rem;
+}
+
+.st-index-card-desc {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0;
+}
+
+.st-index-card-desc code {
+    font-family: monospace;
+    font-size: 0.8rem;
+    background: var(--neutral-gray);
+    border: 1px solid var(--border-gray);
+    border-radius: 3px;
+    padding: 0.05em 0.3em;
+}
+
+.st-index-card-body {
+    flex: 1;
+}
+
+.st-index-card-footer {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* Two-column layout */
+.st-layout {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+/* Sidebar — item selector */
+.st-sidebar {
+    border: 1px solid var(--border-gray);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--white);
+}
+
+.st-search-box {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border-gray);
+    background: var(--neutral-gray);
+}
+
+.st-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-gray);
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    background: var(--white);
+    outline: none;
+}
+
+.st-input:focus {
+    border-color: var(--primary-blue);
+}
+
+.st-results {
+    max-height: 480px;
+    overflow-y: auto;
+}
+
+.st-results-loading,
+.st-results-empty,
+.st-results-error {
+    padding: 1rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.st-results-error {
+    color: var(--error);
+}
+
+.st-result-item {
+    padding: 0.625rem 0.75rem;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-gray);
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+}
+
+.st-result-item:last-child {
+    border-bottom: none;
+}
+
+.st-result-item:hover,
+.st-result-item--active {
+    background: var(--light-blue);
+}
+
+.st-result-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.st-result-id {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-family: monospace;
+}
+
+/* Main content — editor */
+.st-main {
+    background: var(--white);
+    border: 1px solid var(--border-gray);
+    border-radius: 8px;
+    padding: 1.5rem;
+    min-height: 200px;
+}
+
+.st-empty-state,
+.st-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 160px;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.st-error {
+    color: var(--error);
+    padding: 1rem;
+    font-size: 0.9rem;
+}
+
+/* Item metadata row */
+.st-item-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+}
+
+.st-id-chip {
+    background: var(--neutral-gray);
+    border: 1px solid var(--border-gray);
+    border-radius: 4px;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.8rem;
+    font-family: monospace;
+    color: var(--text-secondary);
+}
+
+.st-item-name {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.st-season-badge {
+    background: var(--light-blue);
+    color: var(--dark-blue);
+    border-radius: 4px;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.st-item-link {
+    color: var(--dark-blue);
+    font-size: 0.85rem;
+    text-decoration: none;
+    margin-left: auto;
+}
+
+.st-item-link:hover {
+    text-decoration: underline;
+}
+
+/* Textarea */
+.st-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+}
+
+.st-textarea {
+    width: 100%;
+    min-height: 160px;
+    padding: 0.75rem;
+    border: 1px solid var(--border-gray);
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-family: system-ui, sans-serif;
+    color: var(--text-primary);
+    resize: vertical;
+    outline: none;
+    line-height: 1.5;
+}
+
+.st-textarea:focus {
+    border-color: var(--primary-blue);
+}
+
+/* Actions row */
+.st-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.st-action-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.st-btn {
+    padding: 0.5rem 1.25rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.15s;
+}
+
+.st-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.st-btn--primary {
+    background: var(--dark-blue);
+    color: var(--white);
+}
+
+.st-btn--primary:hover:not(:disabled) {
+    opacity: 0.85;
+}
+
+.st-btn--secondary {
+    background: var(--neutral-gray);
+    color: var(--text-primary);
+    border: 1px solid var(--border-gray);
+}
+
+.st-btn--secondary:hover:not(:disabled) {
+    background: var(--light-blue);
+}
+
+/* Status messages */
+.st-status {
+    font-size: 0.875rem;
+}
+
+.st-status--loading {
+    color: var(--text-secondary);
+}
+
+.st-status--success {
+    color: var(--success);
+}
+
+.st-status--error {
+    color: var(--error);
+}
+
+@media (max-width: 768px) {
+    .st-index-panel {
+        grid-template-columns: 1fr;
+    }
+
+    .st-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .st-results {
+        max-height: 240px;
+    }
+}

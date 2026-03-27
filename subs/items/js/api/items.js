@@ -1,6 +1,7 @@
 // Items API Client
 
-const HEADERS = { 'Content-Type': 'application/json' };
+const { getAuthToken, buildHeaders, redirectToLogin } = window.SpookyAuth;
+
 const ALLOWED_CLASSES = ['Decoration', 'Light', 'Accessory'];
 
 async function getEndpoint() {
@@ -40,10 +41,11 @@ export async function fetchAllItems(bustCache = false) {
 
   const response = await fetch(url, {
     method: 'GET',
-    headers: HEADERS,
+    headers: buildHeaders(),
     ...(bustCache && { cache: 'no-cache' })
   });
 
+  if (response.status === 401) { await redirectToLogin(); return null; }
   if (!response.ok) {
     throw new Error(`Failed to fetch items: ${response.status} ${response.statusText}`);
   }
@@ -74,10 +76,11 @@ export async function fetchItemById(itemId, bustCache = false) {
 
   const response = await fetch(url, {
     method: 'GET',
-    headers: HEADERS,
+    headers: buildHeaders(),
     ...(bustCache && { cache: 'no-cache' })
   });
 
+  if (response.status === 401) { await redirectToLogin(); return null; }
   if (!response.ok) {
     throw new Error(`Failed to fetch item ${itemId}: ${response.status} ${response.statusText}`);
   }
@@ -102,10 +105,11 @@ export async function createItem(itemData) {
 
   const response = await fetch(`${apiEndpoint}/items`, {
     method: 'POST',
-    headers: HEADERS,
+    headers: buildHeaders(),
     body: JSON.stringify(itemData)
   });
 
+  if (response.status === 401) { await redirectToLogin(); return null; }
   if (!response.ok) {
     const errorText = await response.text();
     let errorData;
@@ -124,10 +128,11 @@ export async function updateItem(itemId, itemData) {
 
   const response = await fetch(`${apiEndpoint}/items/${itemId}`, {
     method: 'PUT',
-    headers: HEADERS,
+    headers: buildHeaders(),
     body: JSON.stringify(itemData)
   });
 
+  if (response.status === 401) { await redirectToLogin(); return null; }
   if (!response.ok) {
     const errorText = await response.text();
     let errorData;
@@ -147,9 +152,10 @@ export async function deleteItem(itemId) {
 
   const response = await fetch(`${apiEndpoint}/items/${itemId}`, {
     method: 'DELETE',
-    headers: HEADERS
+    headers: buildHeaders()
   });
 
+  if (response.status === 401) { await redirectToLogin(); return null; }
   if (!response.ok) {
     const errorText = await response.text();
     let errorData;
@@ -165,9 +171,10 @@ export async function cascadePreviewItem(itemId) {
 
   const response = await fetch(`${apiEndpoint}/items/${itemId}/cascade`, {
     method: 'GET',
-    headers: HEADERS
+    headers: buildHeaders()
   });
 
+  if (response.status === 401) { await redirectToLogin(); return null; }
   if (!response.ok) {
     const errorText = await response.text();
     let errorData;
@@ -183,9 +190,10 @@ export async function cascadeDeleteItem(itemId) {
 
   const response = await fetch(`${apiEndpoint}/items/${itemId}/cascade`, {
     method: 'DELETE',
-    headers: HEADERS
+    headers: buildHeaders()
   });
 
+  if (response.status === 401) { await redirectToLogin(); return null; }
   if (!response.ok) {
     const errorText = await response.text();
     let errorData;
@@ -213,10 +221,11 @@ export async function bulkStore(itemIds, location) {
 
   const response = await fetch(`${apiEndpoint}/items/bulk`, {
     method: 'PATCH',
-    headers: HEADERS,
+    headers: buildHeaders(),
     body: JSON.stringify({ item_ids: itemIds, location })
   });
 
+  if (response.status === 401) { await redirectToLogin(); return null; }
   if (!response.ok) {
     const errorText = await response.text();
     let errorData;
@@ -233,9 +242,10 @@ export async function fetchImageById(imageId) {
     const apiEndpoint = await getEndpoint();
     const response = await fetch(`${apiEndpoint}/admin/images/${imageId}`, {
       method: 'GET',
-      headers: HEADERS
+      headers: buildHeaders()
     });
 
+    if (response.status === 401) { await redirectToLogin(); return null; }
     if (!response.ok) {
       console.warn(`Failed to fetch image ${imageId}: ${response.status}`);
       return null;

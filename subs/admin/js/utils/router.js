@@ -1,6 +1,7 @@
 // Router configuration using Navigo
 import { renderDashboard } from '../pages/dashboard.js';
 import { renderAbout } from '../pages/about.js';
+import { renderSearchText } from '../pages/search-text.js';
 
 let router = null;
 
@@ -24,6 +25,14 @@ export function initRouter(config) {
                 await renderAbout(config);
             } catch (error) {
                 console.error('Error rendering about page:', error);
+            }
+        })
+        .on('/search-text', async () => {
+            console.log('📍 Navigating to: Search Text Manager');
+            try {
+                await renderSearchText(config);
+            } catch (error) {
+                console.error('Error rendering search text page:', error);
             }
         })
         .notFound(() => {

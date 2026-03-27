@@ -5,7 +5,7 @@
 
 import STORAGE_CONFIG from './storage-config.js';
 
-const HEADERS = { 'Content-Type': 'application/json' };
+const { getAuthToken, buildHeaders, redirectToLogin } = window.SpookyAuth;
 
 async function getApiEndpoint() {
   const { API_ENDPOINT } = await window.SpookyConfig.get();
@@ -13,6 +13,10 @@ async function getApiEndpoint() {
 }
 
 async function handleResponse(response) {
+  if (response.status === 401) {
+    await redirectToLogin();
+    return null;
+  }
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: 'Unknown error' }));
     const errorMessage = error.error || error.message || `HTTP ${response.status}`;
@@ -42,7 +46,7 @@ export const storageAPI = {
       ? `${API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE}?${queryString}`
       : `${API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE}`;
 
-    const response = await fetch(url, { headers: HEADERS });
+    const response = await fetch(url, { headers: buildHeaders() });
     const data = await handleResponse(response);
 
     if (data.success && data.data) return data.data.storage_units || [];
@@ -53,7 +57,7 @@ export const storageAPI = {
     const API_ENDPOINT = await getApiEndpoint();
     const response = await fetch(
       `${API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_BY_ID(id)}`,
-      { headers: HEADERS }
+      { headers: buildHeaders() }
     );
     const data = await handleResponse(response);
 
@@ -65,7 +69,7 @@ export const storageAPI = {
     const API_ENDPOINT = await getApiEndpoint();
     const response = await fetch(`${API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_TOTES}`, {
       method: 'POST',
-      headers: HEADERS,
+      headers: buildHeaders(),
       body: JSON.stringify(data)
     });
     const result = await handleResponse(response);
@@ -78,7 +82,7 @@ export const storageAPI = {
     const API_ENDPOINT = await getApiEndpoint();
     const response = await fetch(`${API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_SELF}`, {
       method: 'POST',
-      headers: HEADERS,
+      headers: buildHeaders(),
       body: JSON.stringify(data)
     });
     const result = await handleResponse(response);
@@ -93,7 +97,7 @@ export const storageAPI = {
       `${API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_BY_ID(id)}`,
       {
         method: 'PUT',
-        headers: HEADERS,
+        headers: buildHeaders(),
         body: JSON.stringify(data)
       }
     );
@@ -109,7 +113,7 @@ export const storageAPI = {
       `${API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_BY_ID(id)}`,
       {
         method: 'DELETE',
-        headers: HEADERS
+        headers: buildHeaders()
       }
     );
     return handleResponse(response);
@@ -121,7 +125,7 @@ export const storageAPI = {
       `${API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_CONTENTS(storageId)}`,
       {
         method: 'POST',
-        headers: HEADERS,
+        headers: buildHeaders(),
         body: JSON.stringify({ item_ids: itemIds, mark_packed: markPacked })
       }
     );
@@ -137,7 +141,7 @@ export const storageAPI = {
       `${API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_CONTENTS(storageId)}`,
       {
         method: 'DELETE',
-        headers: HEADERS,
+        headers: buildHeaders(),
         body: JSON.stringify({ item_ids: itemIds })
       }
     );
@@ -151,7 +155,7 @@ export const storageAPI = {
     const API_ENDPOINT = await getApiEndpoint();
     const response = await fetch(`${API_ENDPOINT}/storage/pack-single`, {
       method: 'POST',
-      headers: HEADERS,
+      headers: buildHeaders(),
       body: JSON.stringify({ item_ids: itemIds, location })
     });
     const result = await handleResponse(response);
@@ -175,7 +179,7 @@ export const itemsAPI = {
       ? `${API_ENDPOINT}${STORAGE_CONFIG.API.ITEMS}?${queryString}`
       : `${API_ENDPOINT}${STORAGE_CONFIG.API.ITEMS}`;
 
-    const response = await fetch(url, { headers: HEADERS });
+    const response = await fetch(url, { headers: buildHeaders() });
     const data = await handleResponse(response);
 
     if (data.success && data.data && data.data.items) return data.data.items;
@@ -192,7 +196,7 @@ export const itemsAPI = {
     const API_ENDPOINT = await getApiEndpoint();
     const response = await fetch(
       `${API_ENDPOINT}${STORAGE_CONFIG.API.ITEMS_BY_ID(id)}`,
-      { headers: HEADERS }
+      { headers: buildHeaders() }
     );
     const data = await handleResponse(response);
 
@@ -206,7 +210,7 @@ export const itemsAPI = {
     const API_ENDPOINT = await getApiEndpoint();
     const response = await fetch(`${API_ENDPOINT}/admin/items/bulk`, {
       method: 'PATCH',
-      headers: HEADERS,
+      headers: buildHeaders(),
       body: JSON.stringify({ item_ids: itemIds, location })
     });
     const data = await handleResponse(response);
@@ -225,7 +229,7 @@ export const photosAPI = {
     try {
       const response = await fetch(
         `${API_ENDPOINT}/admin/images/${photoId}`,
-        { headers: HEADERS }
+        { headers: buildHeaders() }
       );
       const data = await handleResponse(response);
 
@@ -265,7 +269,7 @@ export const photosAPI = {
     try {
       const response = await fetch(
         `${API_ENDPOINT}/admin/images?${params.toString()}`,
-        { headers: HEADERS }
+        { headers: buildHeaders() }
       );
       const data = await handleResponse(response);
       return data; // { count, photos }
@@ -279,7 +283,7 @@ export const photosAPI = {
     const API_ENDPOINT = await getApiEndpoint();
     const response = await fetch(`${API_ENDPOINT}/admin/images/set_primary`, {
       method: 'POST',
-      headers: HEADERS,
+      headers: buildHeaders(),
       body: JSON.stringify({ photo_id: photoId, context: 'storage', storage_id: storageId })
     });
     const data = await handleResponse(response);
