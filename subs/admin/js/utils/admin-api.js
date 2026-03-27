@@ -167,9 +167,9 @@ export async function updateItemSearchText(itemId, searchText) {
   const config = await window.SpookyConfig.get();
 
   const response = await fetch(
-    `${config.API_ENDPOINT}/iris/items/${encodeURIComponent(itemId)}/search-text`,
+    `${config.API_ENDPOINT}/items/${encodeURIComponent(itemId)}`,
     {
-      method: 'POST',
+      method: 'PATCH',
       headers: buildHeaders(),
       body: JSON.stringify({ search_text: searchText })
     }
