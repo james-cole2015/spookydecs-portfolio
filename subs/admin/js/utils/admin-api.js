@@ -117,6 +117,122 @@ export async function calculateSystemHealth() {
 }
 
 /**
+ * Search items by query string
+ * @param {string} query - Search term
+ * @returns {Promise<Array>} Array of matching items
+ */
+export async function searchItems(query) {
+  const config = await window.SpookyConfig.get();
+  const params = new URLSearchParams({ search: query });
+
+  const response = await fetch(`${config.API_ENDPOINT}/items?${params}`, {
+    headers: buildHeaders()
+  });
+
+  if (response.status === 401) { await redirectToLogin(); return null; }
+
+  if (!response.ok) {
+    throw new Error(`Item search failed: ${response.status}`);
+  }
+
+  const result = await response.json();
+
+  if (!result.success) {
+    throw new Error(result.error || 'Item search failed');
+  }
+
+  return result.data?.items || [];
+}
+
+/**
+ * Get current search_text for an item
+ * @param {string} itemId - Item ID
+ * @returns {Promise<{item_id, short_name, season, search_text}>}
+ */
+export async function getItemSearchText(itemId) {
+  const config = await window.SpookyConfig.get();
+
+  const response = await fetch(
+    `${config.API_ENDPOINT}/iris/items/${encodeURIComponent(itemId)}/search-text`,
+    { headers: buildHeaders() }
+  );
+
+  if (response.status === 401) { await redirectToLogin(); return null; }
+
+  if (!response.ok) {
+    throw new Error(`Failed to get search text: ${response.status}`);
+  }
+
+  const result = await response.json();
+
+  if (!result.success) {
+    throw new Error(result.error || 'Failed to get search text');
+  }
+
+  return result.data;
+}
+
+/**
+ * Update search_text for an item
+ * @param {string} itemId - Item ID
+ * @param {string} searchText - New search text value
+ * @returns {Promise<{item_id, short_name, search_text}>}
+ */
+export async function updateItemSearchText(itemId, searchText) {
+  const config = await window.SpookyConfig.get();
+
+  const response = await fetch(
+    `${config.API_ENDPOINT}/iris/items/${encodeURIComponent(itemId)}/search-text`,
+    {
+      method: 'POST',
+      headers: buildHeaders(),
+      body: JSON.stringify({ search_text: searchText })
+    }
+  );
+
+  if (response.status === 401) { await redirectToLogin(); return null; }
+
+  if (!response.ok) {
+    throw new Error(`Failed to update search text: ${response.status}`);
+  }
+
+  const result = await response.json();
+
+  if (!result.success) {
+    throw new Error(result.error || 'Failed to update search text');
+  }
+
+  return result.data;
+}
+
+/**
+ * Trigger a full Iris vector index rebuild
+ * @returns {Promise<{indexed_count, image_embedded_count, text_embedded_count}>}
+ */
+export async function triggerReindex() {
+  const config = await window.SpookyConfig.get();
+
+  const response = await fetch(`${config.API_ENDPOINT}/iris/index`, {
+    method: 'POST',
+    headers: buildHeaders()
+  });
+
+  if (response.status === 401) { await redirectToLogin(); return null; }
+
+  if (!response.ok) {
+    throw new Error(`Reindex failed: ${response.status}`);
+  }
+
+  const result = await response.json();
+
+  if (!result.success) {
+    throw new Error(result.error || 'Reindex failed');
+  }
+
+  return result.data;
+}
+
+/**
  * Submit conversation to Iris
  * @param {Array<{role: string, content: string}>} messages - Full conversation history
  * @returns {Promise<{response: string, tool_calls_made: Array}>}

@@ -1,5 +1,6 @@
 // System Map Component
 import { calculateSystemHealth, getSubdomainUrls } from '../utils/admin-api.js';
+import { navigate } from '../utils/router.js';
 
 export class SystemMap {
     constructor() {
@@ -86,6 +87,12 @@ export class SystemMap {
                 description: 'Data quality checks to identify and correct data integrity issues.',
                 urlKey: 'inspector',
                 healthKey: 'inspector'
+            },
+            {
+                id: 'iris-admin',
+                title: 'Iris Admin',
+                description: 'Edit item search text and trigger vector index rebuilds for Iris.',
+                internalRoute: '/search-text'
             }
         ];
     }
@@ -147,6 +154,7 @@ export class SystemMap {
             </div>
         `;
 
+        this._attachInternalNavigation();
         return this.container;
     }
 
@@ -156,13 +164,29 @@ export class SystemMap {
         const grid = this.container.querySelector('.system-map-grid');
         if (grid) {
             grid.innerHTML = this.subdomains.map(subdomain => this.renderCard(subdomain)).join('');
+            this._attachInternalNavigation();
         }
     }
 
     renderCard(subdomain) {
+        const hasStats = subdomain.statsKey && this.stats[subdomain.statsKey];
+
+        if (subdomain.internalRoute) {
+            return `
+                <div class="system-card" data-internal-route="${subdomain.internalRoute}">
+                    <div class="system-card-header">
+                        <h3 class="system-card-title">${subdomain.title}</h3>
+                    </div>
+                    <p class="system-card-description">${subdomain.description}</p>
+                    <span class="system-card-action" style="cursor:pointer;">
+                        Open ${subdomain.title} →
+                    </span>
+                </div>
+            `;
+        }
+
         const url = this.urls[subdomain.urlKey] || '';
         const isPlaceholder = subdomain.placeholder || !url;
-        const hasStats = subdomain.statsKey && this.stats[subdomain.statsKey];
 
         return `
             <div class="system-card ${isPlaceholder ? 'system-card-placeholder' : ''}">
@@ -179,6 +203,13 @@ export class SystemMap {
                 }
             </div>
         `;
+    }
+
+    _attachInternalNavigation() {
+        if (!this.container) return;
+        this.container.querySelectorAll('[data-internal-route]').forEach(el => {
+            el.addEventListener('click', () => navigate(el.dataset.internalRoute));
+        });
     }
 
     renderStats(subdomain) {
