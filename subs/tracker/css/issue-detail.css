@@ -1,0 +1,492 @@
+/* ── Issue Detail Page ───────────────────────────────────────────────────────── */
+.issue-detail-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.id-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px 24px;
+}
+
+/* ── Container ──────────────────────────────────────────────────────────────── */
+.id-container {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+/* ── Back link ──────────────────────────────────────────────────────────────── */
+.id-back {
+  display: inline-block;
+  color: var(--text-3);
+  font-size: 12px;
+  margin-bottom: 20px;
+  transition: color 0.15s;
+}
+
+.id-back:hover {
+  color: var(--text-2);
+}
+
+.id-breadcrumbs .id-back {
+  margin-bottom: 0;
+}
+
+/* ── Card ───────────────────────────────────────────────────────────────────── */
+.id-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────────── */
+.id-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.id-number {
+  color: var(--text-3);
+  font-size: 13px;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.id-title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+/* ── Meta rows ──────────────────────────────────────────────────────────────── */
+.id-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: var(--surface-2);
+  border-radius: var(--radius);
+}
+
+.id-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.id-label {
+  font-size: 11px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  min-width: 96px;
+  flex-shrink: 0;
+}
+
+.id-value {
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+/* ── Description ────────────────────────────────────────────────────────────── */
+.id-description {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.id-description .id-label {
+  min-width: unset;
+}
+
+.id-body-text {
+  color: var(--text-2);
+  font-size: 13px;
+  font-family: var(--font-mono);
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.6;
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+
+.id-no-body {
+  color: var(--text-3);
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* ── Actions ────────────────────────────────────────────────────────────────── */
+.id-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+.id-gh-link {
+  font-size: 12px;
+  color: var(--text-3);
+  transition: color 0.15s;
+}
+
+.id-gh-link:hover {
+  color: var(--accent);
+}
+
+/* ── Error state ────────────────────────────────────────────────────────────── */
+.id-error {
+  gap: 8px;
+}
+
+.id-error-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.id-error-msg {
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+/* ── Skeleton loading ───────────────────────────────────────────────────────── */
+.id-skeleton-wrap {
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 40px;
+}
+
+.id-skeleton {
+  height: 16px;
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 0.4; }
+  50%       { opacity: 0.8; }
+}
+
+/* ── Breadcrumbs ─────────────────────────────────────────────────────────────── */
+.id-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 18px;
+  font-size: 12px;
+  color: var(--text-3);
+}
+.id-breadcrumb-sep { color: var(--text-3); }
+.id-breadcrumb-current { color: var(--text-2); }
+
+/* ── Select inputs in meta ───────────────────────────────────────────────────── */
+.id-select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.id-select:focus { outline: none; border-color: var(--accent); }
+
+/* ── Section label ───────────────────────────────────────────────────────────── */
+.id-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+/* ── Description editable ────────────────────────────────────────────────────── */
+.id-desc-textarea {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 8px 10px;
+  font-size: 13px;
+  width: 100%;
+  resize: vertical;
+  font-family: var(--font-mono);
+}
+.id-desc-textarea:focus { outline: none; border-color: var(--accent); }
+
+.id-empty { color: var(--text-3); font-style: italic; font-size: 12px; }
+
+/* ── Tasks section ───────────────────────────────────────────────────────────── */
+.id-tasks-section,
+.id-notes-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+.id-task-count,
+.id-note-count {
+  font-size: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1px 6px;
+  font-weight: 400;
+}
+
+/* Task progress bar */
+.id-task-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0 4px;
+}
+
+.id-task-progress-track {
+  flex: 1;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.id-task-progress-bar {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.2s ease;
+}
+
+.id-task-progress-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+.id-task-row {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  border-bottom: 1px solid var(--border);
+}
+
+.id-task-row-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 4px;
+}
+
+.id-task-expand {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--text-3);
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 2px;
+  cursor: pointer;
+  transition: color 0.15s, transform 0.15s;
+  flex-shrink: 0;
+}
+.id-task-expand:hover { color: var(--text-2); }
+.id-task-expand-open { transform: rotate(90deg); }
+
+.id-task-detail {
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 4px 12px 30px;
+  border-top: 1px solid var(--border);
+}
+
+.id-task-detail-desc {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.id-task-detail-desc-text {
+  color: var(--text-2);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.55;
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+}
+
+.id-task-detail-desc-textarea {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 6px 8px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  resize: vertical;
+  width: 100%;
+}
+.id-task-detail-desc-textarea:focus { outline: none; border-color: var(--accent); }
+
+.id-task-detail-desc-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.id-task-detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+.id-task-detail-meta-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.id-task-detail-state-select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 2px 6px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.id-task-detail-state-select:focus { outline: none; border-color: var(--accent); }
+
+.id-task-detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.id-task-detail-tag {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1px 7px;
+  font-size: 10px;
+  color: var(--text-3);
+}
+
+.id-task-row-done .id-task-title {
+  text-decoration: line-through;
+  color: var(--text-3);
+}
+
+.id-task-toggle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: 11px;
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.id-task-toggle:hover { border-color: var(--accent); color: var(--accent); }
+.id-task-done { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
+.id-task-title {
+  flex: 1;
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.id-empty-tasks,
+.id-empty-notes {
+  font-size: 12px;
+  color: var(--text-3);
+  padding: 8px 0;
+  font-style: italic;
+}
+
+.id-add-task,
+.id-add-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.id-task-new-input {
+  flex: 1;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 6px 8px;
+  font-size: 12px;
+}
+.id-task-new-input:focus { outline: none; border-color: var(--accent); }
+
+/* ── Notes section ───────────────────────────────────────────────────────────── */
+.id-note {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.id-note-text {
+  font-size: 13px;
+  color: var(--text-2);
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.55;
+}
+
+.id-note-meta {
+  font-size: 10px;
+  color: var(--text-3);
+  margin-top: 4px;
+}
+
+.id-note-new-input {
+  flex: 1;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 6px 8px;
+  font-size: 12px;
+  resize: vertical;
+  font-family: var(--font-mono);
+}
+.id-note-new-input:focus { outline: none; border-color: var(--accent); }
