@@ -22,3 +22,6 @@ app_docs/
 
 
 CLAUDE.md
+.env.example
+scripts/backfill_tasks.py
+scripts/seed_epics.py
