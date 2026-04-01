@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SpookyDecs Tracker</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/pm.css" />
+  <link rel="stylesheet" href="css/priority-list.css" />
+  <link rel="stylesheet" href="css/timeline.css" />
+  <link rel="stylesheet" href="css/issue-detail.css" />
+  <link rel="stylesheet" href="css/epics.css" />
+</head>
+<body>
+  <spookydecs-header
+    page-title="Tracker"
+    user-name="Admin"
+    user-role="Administrator"
+    logout-url="https://auth.spookydecs.com">
+  </spookydecs-header>
+
+  <div id="app">
+    <div id="loading" class="app-loading">
+      <span class="loading-word">loading</span>
+    </div>
+  </div>
+
+  <!-- SpookyDecs shared infrastructure -->
+  <script src="https://assets.spookydecs.com/components/api-config.js"></script>
+  <script src="https://assets.spookydecs.com/components/auth-helpers.js"></script>
+
+  <!-- Dev shim: fallback SpookyConfig + SpookyAuth when CDN is unreachable (localhost only) -->
+  <script>
+    if (!window.SpookyConfig) {
+      window.SpookyConfig = {
+        get: async () => ({
+          API_ENDPOINT: 'https://miinu7boec.execute-api.us-east-2.amazonaws.com/dev',
+        }),
+        getStage: () => 'dev',
+      };
+    }
+    if (!window.SpookyAuth) {
+      window.SpookyAuth = {
+        buildHeaders: () => ({ 'Content-Type': 'application/json' }),
+        getAuthToken: () => null,
+        redirectToLogin: () => {},
+        setToken: () => {},
+      };
+    }
+  </script>
+
+  <!-- Localhost dev: route API calls through Vite proxy (no auth cookie needed) -->
+  <script>
+    if (window.location.hostname === 'localhost' && window.SpookyConfig) {
+      const _get = window.SpookyConfig.get.bind(window.SpookyConfig);
+      window.SpookyConfig.get = async () => ({ ...(await _get()), API_ENDPOINT: '/devapi' });
+    }
+  </script>
+
+  <script src="https://assets.spookydecs.com/components/spookydecs-header.js"></script>
+
+  <!-- Navigo router -->
+  <script src="https://unpkg.com/navigo@8.11.1/lib/navigo.min.js"></script>
+
+  <!-- Utils -->
+  <script src="js/utils/api.js"></script>
+  <script src="js/utils/router.js"></script>
+  <script src="js/utils/state.js"></script>
+  <script src="js/utils/theme.js"></script>
+
+  <!-- Shared -->
+  <script src="js/shared/toast.js"></script>
+  <script src="js/shared/modal.js"></script>
+
+  <!-- Components -->
+  <script src="js/components/EffortBadge.js"></script>
+
+  <!-- Pages -->
+  <script src="js/pages/landing.js"></script>
+  <script src="js/pages/priority-list.js"></script>
+  <script src="js/pages/timeline.js"></script>
+  <script src="js/pages/issue-detail.js"></script>
+  <script src="js/pages/epics-list.js"></script>
+  <script src="js/pages/epic-detail.js"></script>
+  <script src="js/pages/create-issue.js"></script>
+
+  <!-- App entry point -->
+  <script src="js/app.js"></script>
+
+</body>
+</html>

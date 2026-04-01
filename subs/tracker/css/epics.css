@@ -1,0 +1,488 @@
+/* ══════════════════════════════════════════════════════════════════════════════
+   epics.css
+   Styles for EpicsListPage (el-) and EpicDetailPage (ed-).
+   All design tokens come from pm.css.
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+
+/* ── Epics List Page ─────────────────────────────────────────────────────────── */
+
+.epics-list-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.el-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 24px 48px;
+}
+
+/* ── Status bands ──────────────────────────────────────────────────────────── */
+
+.el-band {
+  margin-bottom: 36px;
+}
+
+.el-band-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  padding-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.el-band-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.el-band-count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-3);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1px 6px;
+}
+
+/* ── Milestone cards grid ──────────────────────────────────────────────────── */
+
+.el-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.el-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  text-decoration: none;
+  color: inherit;
+}
+
+.el-card:hover {
+  border-color: var(--border-light);
+  background: var(--surface-2);
+}
+
+.el-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.el-card-name {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+/* ── Progress bar ──────────────────────────────────────────────────────────── */
+
+.el-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.el-progress-track {
+  height: 4px;
+  background: var(--surface-2);
+  border-radius: 2px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.el-progress-bar {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.el-progress-label {
+  font-size: 10px;
+  color: var(--text-3);
+}
+
+/* ── Future milestones (not_planned) — compact chips ───────────────────────── */
+
+.el-cards--compact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.el-future-chip {
+  font-size: 11px;
+  color: var(--text-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px 10px;
+  opacity: 0.5;
+  user-select: none;
+}
+
+/* ── Skeleton loaders ──────────────────────────────────────────────────────── */
+
+.el-skeleton-card {
+  height: 90px;
+  background: var(--surface-2);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+/* ── Milestone status badge variants ───────────────────────────────────────── */
+/* (badge-in-progress and badge-done already exist in pm.css — reused as-is) */
+
+.badge-planned    { background: #4d9fff22; color: #7ab8ff; border: 1px solid #4d9fff44; }
+.badge-planning   { background: #a78bfa2e; color: #c4b0fd; border: 1px solid #a78bfa44; }
+.badge-completed  { background: #c8f13522; color: var(--accent); border: 1px solid #c8f13544; }
+.badge-not-planned { background: var(--surface-2); color: var(--text-3); border: 1px solid var(--border); }
+
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   Epic Detail Page
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+.epic-detail-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.ed-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px 24px 48px;
+}
+
+.ed-container {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+/* ── Back link ─────────────────────────────────────────────────────────────── */
+
+.ed-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-3);
+  margin-bottom: 20px;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.ed-back:hover { color: var(--text-2); }
+
+/* ── Header ────────────────────────────────────────────────────────────────── */
+
+.ed-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.ed-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+/* ── Description ───────────────────────────────────────────────────────────── */
+
+.ed-description {
+  font-size: 12px;
+  color: var(--text-2);
+  line-height: 1.65;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 28px;
+}
+
+/* ── Issue groups ──────────────────────────────────────────────────────────── */
+
+.ed-issue-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.ed-group-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  padding-bottom: 8px;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ed-group-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.ed-group-count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-3);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1px 5px;
+}
+
+/* ── Issue rows ────────────────────────────────────────────────────────────── */
+
+.ed-issue-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  margin-bottom: 2px;
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s;
+  animation: rowIn 0.18s ease both;
+}
+
+.ed-issue-row:hover {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+.ed-issue-number {
+  font-size: 11px;
+  color: var(--text-3);
+  width: 38px;
+  flex-shrink: 0;
+}
+
+.ed-issue-title {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.ed-issue-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.ed-priority {
+  font-size: 10px;
+  color: var(--text-3);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+.ed-priority.set {
+  color: var(--text-2);
+  border-color: var(--border-light);
+}
+
+/* ── Skeleton loaders ──────────────────────────────────────────────────────── */
+
+.ed-skeleton {
+  height: 14px;
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+/* ── Empty epic message ────────────────────────────────────────────────────── */
+
+.ed-empty {
+  padding: 48px 0;
+  text-align: center;
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+/* ── Epic detail — updated layout ───────────────────────────────────────────── */
+
+.ed-breadcrumbs {
+  margin-bottom: 16px;
+}
+
+.ed-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.ed-issue-count {
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+.ed-due-date-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+.ed-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+  margin-right: 4px;
+}
+
+.ed-due-value {
+  color: var(--text-2);
+  font-size: 12px;
+}
+
+.ed-due-input {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 3px 6px;
+  font-size: 12px;
+}
+.ed-due-input:focus { outline: none; border-color: var(--accent); }
+
+/* ── Description edit block ─────────────────────────────────────────────────── */
+.ed-description-wrap {
+  margin-bottom: 24px;
+  padding: 14px;
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.ed-desc-text {
+  font-size: 12px;
+  color: var(--text-2);
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.6;
+}
+
+.ed-desc-textarea {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 8px 10px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  resize: vertical;
+}
+.ed-desc-textarea:focus { outline: none; border-color: var(--accent); }
+
+/* ── Two-column layout ───────────────────────────────────────────────────────── */
+.ed-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 8px;
+}
+
+@media (max-width: 640px) {
+  .ed-columns { grid-template-columns: 1fr; }
+}
+
+.ed-col-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-3);
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.ed-empty-col {
+  font-size: 12px;
+  color: var(--text-3);
+  font-style: italic;
+  padding: 8px 0;
+}
+
+.ed-issue-completed .ed-issue-title {
+  font-style: italic;
+  color: var(--text-3);
+}
+
+/* ── Effort badge (simple, reused in ed- context) ─────────────────────────── */
+.effort-badge {
+  font-size: 10px;
+  color: var(--text-3);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+/* ── Epic card: description + due date ───────────────────────────────────────── */
+.el-card-desc {
+  font-size: 11px;
+  color: var(--text-3);
+  line-height: 1.5;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.el-card-due {
+  font-size: 10px;
+  color: var(--text-3);
+}

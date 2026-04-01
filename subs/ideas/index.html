@@ -12,6 +12,15 @@
   <script src="https://assets.spookydecs.com/components/spookydecs-header.js"></script>
   <script src="https://assets.spookydecs.com/components/api-config.js"></script>
   <script src="https://assets.spookydecs.com/components/auth-helpers.js"></script>
+
+  <!-- Localhost dev: route API calls through Vite proxy (no auth cookie needed) -->
+  <script>
+    if (window.location.hostname === 'localhost' && window.SpookyConfig) {
+      const _get = window.SpookyConfig.get.bind(window.SpookyConfig);
+      window.SpookyConfig.get = async () => ({ ...(await _get()), API_ENDPOINT: '/devapi' });
+    }
+  </script>
+
   <script src="https://assets.spookydecs.com/components/photo-upload-service.js"></script>
 
   <!-- Styles -->
