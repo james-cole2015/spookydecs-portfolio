@@ -447,6 +447,9 @@
   margin-bottom: 8px;
   padding-bottom: 6px;
   border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .ed-empty-col {

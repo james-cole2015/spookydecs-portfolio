@@ -93,20 +93,40 @@ const EpicDetailPage = (() => {
     }
   }
 
+  const ED_PRIORITY_TIERS = ['P0', 'P1', 'P2', ''];
+  const ED_PRIORITY_ORDER = { P0: 0, P1: 1, P2: 2 };
+
+  function buildOpenIssuesList(openIssues, slug, viewMode) {
+    if (!openIssues.length) return `<div class="ed-empty-col">No open issues.</div>`;
+    if (viewMode !== 'priority') {
+      return openIssues.map(i => buildIssueRow(i, slug, false)).join('');
+    }
+    let html = '';
+    ED_PRIORITY_TIERS.forEach(tier => {
+      const group = openIssues.filter(i => (i.priority || '') === tier);
+      if (!group.length) return;
+      const label     = tier || 'None';
+      const tierClass = tier ? `pl-section-${tier.toLowerCase()}` : 'pl-section-none';
+      html += `<div class="pl-section-label ${tierClass}">${label}</div>`;
+      group.forEach(i => { html += buildIssueRow(i, slug, false); });
+    });
+    return html;
+  }
+
   function renderDetail(epic, issues, slug) {
     const body = document.getElementById('ed-body');
     if (!body) return;
 
-    const PRIORITY_ORDER = { P0: 0, P1: 1, P2: 2 };
     const openIssues = issues
       .filter(i => i.state !== 'completed')
       .sort((a, b) => {
         const ar = a.priority_rank ?? Infinity;
         const br = b.priority_rank ?? Infinity;
         if (ar !== br) return ar - br;
-        return (PRIORITY_ORDER[a.priority] ?? 3) - (PRIORITY_ORDER[b.priority] ?? 3);
+        return (ED_PRIORITY_ORDER[a.priority] ?? 3) - (ED_PRIORITY_ORDER[b.priority] ?? 3);
       });
     const completedIssues = issues.filter(i => i.state === 'completed');
+    const viewMode = State.get('view', 'rank');
 
     body.innerHTML = `
       <div class="ed-container">
@@ -140,11 +160,16 @@ const EpicDetailPage = (() => {
 
         <div class="ed-columns">
           <div class="ed-col">
-            <div class="ed-col-label">Open (${openIssues.length})</div>
-            ${openIssues.length
-              ? openIssues.map(i => buildIssueRow(i, slug, false)).join('')
-              : `<div class="ed-empty-col">No open issues.</div>`
-            }
+            <div class="ed-col-label">
+              Open (${openIssues.length})
+              <div class="pl-view-toggle">
+                <button class="pl-toggle-btn ${viewMode === 'rank' ? 'active' : ''}" data-view="rank">Rank</button>
+                <button class="pl-toggle-btn ${viewMode === 'priority' ? 'active' : ''}" data-view="priority">Priority</button>
+              </div>
+            </div>
+            <div id="ed-open-list">
+              ${buildOpenIssuesList(openIssues, slug, viewMode)}
+            </div>
           </div>
           <div class="ed-col">
             <div class="ed-col-label">Completed (${completedIssues.length})</div>
@@ -157,7 +182,7 @@ const EpicDetailPage = (() => {
       </div>
     `;
 
-    bindDetail(epic, slug);
+    bindDetail(epic, slug, openIssues);
   }
 
   function buildIssueRow(issue, epicSlug, completed) {
@@ -179,7 +204,32 @@ const EpicDetailPage = (() => {
     `;
   }
 
-  function bindDetail(epic, slug) {
+  function bindOpenListRows(slug) {
+    const list = document.getElementById('ed-open-list');
+    if (!list) return;
+    list.querySelectorAll('.ed-issue-row[data-href]').forEach(row => {
+      row.addEventListener('click', () => Router.navigate(row.dataset.href));
+    });
+  }
+
+  function bindViewToggle(openIssues, slug) {
+    document.querySelectorAll('.pl-toggle-btn[data-view]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const newView = btn.dataset.view;
+        State.set({ view: newView === 'rank' ? null : newView });
+        document.querySelectorAll('.pl-toggle-btn[data-view]').forEach(b =>
+          b.classList.toggle('active', b.dataset.view === newView)
+        );
+        const list = document.getElementById('ed-open-list');
+        if (list) {
+          list.innerHTML = buildOpenIssuesList(openIssues, slug, newView);
+          bindOpenListRows(slug);
+        }
+      });
+    });
+  }
+
+  function bindDetail(epic, slug, openIssues) {
     document.getElementById('ed-back-btn')?.addEventListener('click', e => {
       e.preventDefault();
       Router.navigate('/epics');
@@ -190,11 +240,13 @@ const EpicDetailPage = (() => {
       Router.navigate('/');
     });
 
-    // Issue row navigation
-    document.querySelectorAll('.ed-issue-row[data-href]').forEach(row => {
-      row.addEventListener('click', () => {
-        Router.navigate(row.dataset.href);
-      });
+    // Issue row navigation + view toggle
+    bindOpenListRows(slug);
+    bindViewToggle(openIssues, slug);
+
+    // Completed column row navigation
+    document.querySelectorAll('.ed-col:last-child .ed-issue-row[data-href]').forEach(row => {
+      row.addEventListener('click', () => Router.navigate(row.dataset.href));
     });
 
     // Due date editing
