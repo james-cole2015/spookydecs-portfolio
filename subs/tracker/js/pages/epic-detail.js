@@ -97,12 +97,14 @@ const EpicDetailPage = (() => {
     const body = document.getElementById('ed-body');
     if (!body) return;
 
+    const PRIORITY_ORDER = { P0: 0, P1: 1, P2: 2 };
     const openIssues = issues
       .filter(i => i.state !== 'completed')
       .sort((a, b) => {
         const ar = a.priority_rank ?? Infinity;
         const br = b.priority_rank ?? Infinity;
-        return ar - br;
+        if (ar !== br) return ar - br;
+        return (PRIORITY_ORDER[a.priority] ?? 3) - (PRIORITY_ORDER[b.priority] ?? 3);
       });
     const completedIssues = issues.filter(i => i.state === 'completed');
 
@@ -169,6 +171,7 @@ const EpicDetailPage = (() => {
         <span class="ed-issue-title">${escHtml(issue.title)}</span>
         <div class="ed-issue-meta">
           ${taskTotal > 0 ? `<span class="pl-task-badge">${taskDone}/${taskTotal} ✓</span>` : ''}
+          ${issue.priority ? `<span class="badge badge-${issue.priority.toLowerCase()}">${escHtml(issue.priority)}</span>` : ''}
           ${issue.effort ? `<span class="effort-badge">${escHtml(issue.effort)}</span>` : ''}
           <span class="badge ${stateBadgeClass(issue.state)}">${issue.state || 'backlog'}</span>
         </div>

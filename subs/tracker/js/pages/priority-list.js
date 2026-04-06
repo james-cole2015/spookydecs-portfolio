@@ -25,6 +25,8 @@ const PriorityListPage = (() => {
     state:  'all',
   };
 
+  let viewMode = State.get('view', 'rank'); // 'rank' | 'priority'
+
   // ── Render entry point ─────────────────────────────────────────────────────
   async function render() {
     const app = document.getElementById('app');
@@ -59,6 +61,10 @@ const PriorityListPage = (() => {
               <option value="completed">Completed</option>
             </select>
             <span id="pl-count" class="pl-count"></span>
+            <div class="pl-view-toggle">
+              <button class="pl-toggle-btn ${viewMode === 'rank' ? 'active' : ''}" data-view="rank">Rank</button>
+              <button class="pl-toggle-btn ${viewMode === 'priority' ? 'active' : ''}" data-view="priority">Priority</button>
+            </div>
           </div>
         </div>
         <div class="pl-body" id="pl-body"></div>
@@ -146,6 +152,15 @@ const PriorityListPage = (() => {
       return;
     }
 
+    body.classList.toggle('pl-body--priority', viewMode === 'priority');
+    if (viewMode === 'priority') {
+      renderPriorityGrouped(body);
+    } else {
+      renderRanked(body);
+    }
+  }
+
+  function renderRanked(body) {
     const ranked   = filtered.filter(i => i.priority_rank != null);
     const unranked = filtered.filter(i => i.priority_rank == null);
 
@@ -161,6 +176,28 @@ const PriorityListPage = (() => {
         html += buildRow(issue, null);
       });
     }
+
+    body.innerHTML = html;
+    bindRows();
+  }
+
+  const PRIORITY_TIERS = ['P0', 'P1', 'P2', ''];
+
+  function renderPriorityGrouped(body) {
+    const groups = {};
+    PRIORITY_TIERS.forEach(t => {
+      groups[t] = filtered.filter(i => (i.priority || '') === t).sort(rankSort);
+    });
+
+    let html = '';
+    PRIORITY_TIERS.forEach(tier => {
+      const group = groups[tier];
+      if (!group.length) return;
+      const label     = tier || 'None';
+      const tierClass = tier ? `pl-section-${tier.toLowerCase()}` : 'pl-section-none';
+      html += `<div class="pl-section-label ${tierClass}">${label}</div>`;
+      group.forEach(issue => { html += buildRow(issue, issue.priority_rank ?? null); });
+    });
 
     body.innerHTML = html;
     bindRows();
@@ -190,6 +227,7 @@ const PriorityListPage = (() => {
       <div class="pl-row"
            data-id="${escHtml(issue.issue_number)}"
            data-rank="${issue.priority_rank ?? ''}"
+           data-priority="${escHtml(issue.priority || '')}"
            draggable="true">
         <span class="pl-handle">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -254,6 +292,18 @@ const PriorityListPage = (() => {
       if (e.target.id === 'nav-home-btn') {
         e.preventDefault();
         Router.navigate('/');
+      }
+    });
+
+    document.addEventListener('click', e => {
+      const btn = e.target.closest('.pl-toggle-btn[data-view]');
+      if (btn && btn.dataset.view !== viewMode) {
+        viewMode = btn.dataset.view;
+        State.set({ view: viewMode === 'rank' ? null : viewMode });
+        document.querySelectorAll('.pl-toggle-btn').forEach(b =>
+          b.classList.toggle('active', b.dataset.view === viewMode)
+        );
+        applyFilters();
       }
     });
   }
@@ -328,10 +378,21 @@ const PriorityListPage = (() => {
     const moved = filtered.splice(dragSrcIdx, 1)[0];
     filtered.splice(targetIdx, 0, moved);
 
-    assignRanks(targetIdx);
+    let priorityChanged = false;
+    if (viewMode === 'priority') {
+      const targetPriority = e.currentTarget.dataset.priority || null;
+      const currentPriority = moved.priority || null;
+      if (currentPriority !== targetPriority) {
+        moved.priority = targetPriority || undefined;
+        const master = issues.find(i => i.issue_number === moved.issue_number);
+        if (master) master.priority = moved.priority;
+        priorityChanged = true;
+      }
+    }
 
+    assignRanks(targetIdx);
     renderList();
-    scheduleSave(moved);
+    scheduleSave(moved, priorityChanged);
   }
 
   function onDragEnd(e) {
@@ -363,14 +424,16 @@ const PriorityListPage = (() => {
   }
 
   // ── Debounced save ─────────────────────────────────────────────────────────
-  function scheduleSave(issue) {
+  function scheduleSave(issue, includePriority = false) {
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => saveRank(issue), 600);
+    saveTimer = setTimeout(() => saveRank(issue, includePriority), 600);
   }
 
-  async function saveRank(issue) {
+  async function saveRank(issue, includePriority = false) {
     try {
-      await TrackerApi.issues.update(issue.issue_number, { priority_rank: issue.priority_rank });
+      const payload = { priority_rank: issue.priority_rank };
+      if (includePriority) payload.priority = issue.priority ?? null;
+      await TrackerApi.issues.update(issue.issue_number, payload);
     } catch (err) {
       Toast.show(`Failed to save rank: ${err.message}`, 'error');
     }
