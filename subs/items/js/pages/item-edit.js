@@ -6,6 +6,7 @@ import { navigate } from '../utils/router.js';
 import { toast } from '../shared/toast.js';
 import { ItemEditForm } from '../components/ItemEditForm.js';
 import { actionCenter } from '../components/ActionCenter.js';
+import { canMutate } from '../utils/auth.js';
 
 class ItemEditPage {
   constructor() {
@@ -14,8 +15,13 @@ class ItemEditPage {
   }
   
   async render(itemId) {
+    if (!canMutate()) {
+      const container = document.getElementById('app-container');
+      container.innerHTML = `<div class="error-container"><h1>Insufficient Permissions</h1><p>Your role does not allow editing items.</p><button class="btn-primary" onclick="history.back()">Go Back</button></div>`;
+      return;
+    }
     const loadingOverlay = document.getElementById('loading-overlay');
-    
+
     try {
       loadingOverlay?.classList.remove('hidden');
       

@@ -6,6 +6,7 @@ import { cascadePreviewItem, cascadeDeleteItem, retireItem, getMaintenanceUrl, g
 import { toast } from '../shared/toast.js';
 import { modal } from '../shared/modal.js';
 import { navigate } from '../utils/router.js';
+import { canMutate, canAdminAction } from '../utils/auth.js';
 
 /**
  * Build the HTML body for the cascade delete confirmation modal.
@@ -223,6 +224,14 @@ fab.addEventListener('click', () => this.toggle());
    * Handle action button clicks
    */
   async handleAction(action) {
+    if (!canMutate()) {
+      toast.show('Insufficient Permissions', 'Your role does not allow this action.', 'error');
+      return;
+    }
+    if ((action === 'retire' || action === 'delete') && !canAdminAction()) {
+      toast.show('Insufficient Permissions', 'Only admins can retire or delete items.', 'error');
+      return;
+    }
     switch (action) {
       case 'upload-photo':
         await this.handleUploadPhoto();
