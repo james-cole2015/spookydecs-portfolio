@@ -7,9 +7,9 @@ class Toast {
     if (!this.container) {
       this.container = document.createElement('div');
       this.container.id = 'toast-container';
-      this.container.className = 'toast-container';
       document.body.appendChild(this.container);
     }
+    this.container.className = 'toast-container';
   }
   
   show(title, message, type = 'info', duration = 4000) {
