@@ -92,6 +92,10 @@ class ItemsListPage {
   }
   
   async handleMore(itemId) {
+    if (!canMutate()) {
+      toast.show('Insufficient Permissions', 'Your role does not allow modifying items.', 'error');
+      return;
+    }
     const item = this.allItems.find(i => i.id === itemId);
     if (!item) return;
     
