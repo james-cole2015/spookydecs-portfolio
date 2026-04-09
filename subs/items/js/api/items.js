@@ -1,6 +1,6 @@
 // Items API Client
 
-const { getAuthToken, buildHeaders, redirectToLogin } = window.SpookyAuth;
+const { getAuthToken, buildHeaders, redirectToLogin, hasMinRole } = window.SpookyAuth;
 
 const ALLOWED_CLASSES = ['Decoration', 'Light', 'Accessory'];
 
@@ -101,6 +101,7 @@ export async function fetchItemById(itemId, bustCache = false) {
 }
 
 export async function createItem(itemData) {
+  if (!hasMinRole('builder')) throw new Error('Insufficient permissions');
   const apiEndpoint = await getEndpoint();
 
   const response = await fetch(`${apiEndpoint}/items`, {
@@ -124,6 +125,7 @@ export async function createItem(itemData) {
 }
 
 export async function updateItem(itemId, itemData) {
+  if (!hasMinRole('builder')) throw new Error('Insufficient permissions');
   const apiEndpoint = await getEndpoint();
 
   const response = await fetch(`${apiEndpoint}/items/${itemId}`, {
@@ -148,6 +150,7 @@ export async function updateItem(itemId, itemData) {
 }
 
 export async function deleteItem(itemId) {
+  if (!hasMinRole('admin')) throw new Error('Insufficient permissions');
   const apiEndpoint = await getEndpoint();
 
   const response = await fetch(`${apiEndpoint}/items/${itemId}`, {
@@ -186,6 +189,7 @@ export async function cascadePreviewItem(itemId) {
 }
 
 export async function cascadeDeleteItem(itemId) {
+  if (!hasMinRole('admin')) throw new Error('Insufficient permissions');
   const apiEndpoint = await getEndpoint();
 
   const response = await fetch(`${apiEndpoint}/items/${itemId}/cascade`, {
@@ -205,18 +209,22 @@ export async function cascadeDeleteItem(itemId) {
 }
 
 export async function retireItem(itemId) {
+  if (!hasMinRole('admin')) throw new Error('Insufficient permissions');
   return await updateItem(itemId, { status: 'Retired' });
 }
 
 export async function bulkRetireItems(itemIds) {
+  if (!hasMinRole('admin')) throw new Error('Insufficient permissions');
   return await Promise.all(itemIds.map(id => retireItem(id)));
 }
 
 export async function bulkDeleteItems(itemIds) {
+  if (!hasMinRole('admin')) throw new Error('Insufficient permissions');
   return await Promise.all(itemIds.map(id => deleteItem(id)));
 }
 
 export async function bulkStore(itemIds, location) {
+  if (!hasMinRole('builder')) throw new Error('Insufficient permissions');
   const apiEndpoint = await getEndpoint();
 
   const response = await fetch(`${apiEndpoint}/items/bulk`, {
