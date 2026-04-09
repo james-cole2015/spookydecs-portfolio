@@ -5,7 +5,7 @@
 
 import STORAGE_CONFIG from './storage-config.js';
 
-const { getAuthToken, buildHeaders, redirectToLogin } = window.SpookyAuth;
+const { getAuthToken, buildHeaders, redirectToLogin, hasMinRole } = window.SpookyAuth;
 
 async function getApiEndpoint() {
   const { API_ENDPOINT } = await window.SpookyConfig.get();
@@ -66,6 +66,7 @@ export const storageAPI = {
   },
 
   async createTote(data) {
+    if (!hasMinRole('builder')) throw new Error('Insufficient permissions');
     const API_ENDPOINT = await getApiEndpoint();
     const response = await fetch(`${API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_TOTES}`, {
       method: 'POST',
@@ -79,6 +80,7 @@ export const storageAPI = {
   },
 
   async createSelf(data) {
+    if (!hasMinRole('builder')) throw new Error('Insufficient permissions');
     const API_ENDPOINT = await getApiEndpoint();
     const response = await fetch(`${API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_SELF}`, {
       method: 'POST',
@@ -92,6 +94,7 @@ export const storageAPI = {
   },
 
   async update(id, data) {
+    if (!hasMinRole('builder')) throw new Error('Insufficient permissions');
     const API_ENDPOINT = await getApiEndpoint();
     const response = await fetch(
       `${API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_BY_ID(id)}`,
@@ -108,6 +111,7 @@ export const storageAPI = {
   },
 
   async delete(id) {
+    if (!hasMinRole('admin')) throw new Error('Insufficient permissions');
     const API_ENDPOINT = await getApiEndpoint();
     const response = await fetch(
       `${API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_BY_ID(id)}`,
@@ -120,6 +124,7 @@ export const storageAPI = {
   },
 
   async addItems(storageId, itemIds, markPacked = false) {
+    if (!hasMinRole('builder')) throw new Error('Insufficient permissions');
     const API_ENDPOINT = await getApiEndpoint();
     const response = await fetch(
       `${API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_CONTENTS(storageId)}`,
@@ -136,6 +141,7 @@ export const storageAPI = {
   },
 
   async removeItems(storageId, itemIds) {
+    if (!hasMinRole('builder')) throw new Error('Insufficient permissions');
     const API_ENDPOINT = await getApiEndpoint();
     const response = await fetch(
       `${API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_CONTENTS(storageId)}`,
@@ -152,6 +158,7 @@ export const storageAPI = {
   },
 
   async packSingleItems(itemIds, location) {
+    if (!hasMinRole('builder')) throw new Error('Insufficient permissions');
     const API_ENDPOINT = await getApiEndpoint();
     const response = await fetch(`${API_ENDPOINT}/storage/pack-single`, {
       method: 'POST',
@@ -207,6 +214,7 @@ export const itemsAPI = {
   },
 
   async bulkStore(itemIds, location) {
+    if (!hasMinRole('builder')) throw new Error('Insufficient permissions');
     const API_ENDPOINT = await getApiEndpoint();
     const response = await fetch(`${API_ENDPOINT}/admin/items/bulk`, {
       method: 'PATCH',
@@ -280,6 +288,7 @@ export const photosAPI = {
   },
 
   async setPrimary(photoId, storageId) {
+    if (!hasMinRole('builder')) throw new Error('Insufficient permissions');
     const API_ENDPOINT = await getApiEndpoint();
     const response = await fetch(`${API_ENDPOINT}/admin/images/set_primary`, {
       method: 'POST',
