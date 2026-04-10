@@ -8,6 +8,7 @@ import { navigate } from '../utils/router.js';
 import { renderBreadcrumb } from '../shared/breadcrumb.js';
 import { toast } from '../shared/toast.js';
 import { modal } from '../shared/modal.js';
+import { canMutate } from '../utils/auth.js';
 
 class ItemsListPage {
   constructor() {
@@ -75,6 +76,10 @@ class ItemsListPage {
   }
   
   handleCreate() {
+    if (!canMutate()) {
+      toast.show('Insufficient Permissions', 'Your role does not allow creating items.', 'error');
+      return;
+    }
     navigate('/create');
   }
 
@@ -87,6 +92,10 @@ class ItemsListPage {
   }
   
   async handleMore(itemId) {
+    if (!canMutate()) {
+      toast.show('Insufficient Permissions', 'Your role does not allow modifying items.', 'error');
+      return;
+    }
     const item = this.allItems.find(i => i.id === itemId);
     if (!item) return;
     

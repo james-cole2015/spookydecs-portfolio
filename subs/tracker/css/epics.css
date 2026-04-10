@@ -447,6 +447,9 @@
   margin-bottom: 8px;
   padding-bottom: 6px;
   border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .ed-empty-col {
@@ -460,6 +463,11 @@
   font-style: italic;
   color: var(--text-3);
 }
+
+/* ── Priority badges (used in epic-detail issue rows) ────────────────────── */
+.badge-p0 { background: rgba(255, 80,  80,  0.15); color: var(--red);    border: 1px solid rgba(255, 80,  80,  0.35); }
+.badge-p1 { background: rgba(255, 180, 50,  0.15); color: var(--yellow); border: 1px solid rgba(255, 180, 50,  0.35); }
+.badge-p2 { background: rgba(100, 200, 100, 0.10); color: var(--accent); border: 1px solid rgba(100, 200, 100, 0.25); }
 
 /* ── Effort badge (simple, reused in ed- context) ─────────────────────────── */
 .effort-badge {

@@ -6,6 +6,7 @@ import { ItemFormWizard } from '../components/ItemFormWizard.js';
 import { actionModal } from '../components/ActionModal.js';
 import { toast } from '../shared/toast.js';
 import { navigate } from '../utils/router.js';
+import { canMutate } from '../utils/auth.js';
 
 class ItemFormPage {
   constructor() {
@@ -13,6 +14,11 @@ class ItemFormPage {
   }
 
   render() {
+    if (!canMutate()) {
+      const container = document.getElementById('app-container');
+      container.innerHTML = `<div class="error-container"><h1>Insufficient Permissions</h1><p>Your role does not allow creating items.</p><button class="btn-primary" onclick="itemFormPage.handleCancel()">Back to Items</button></div>`;
+      return;
+    }
     const container = document.getElementById('app-container');
     container.innerHTML = `
       <div class="view-header view-header--wizard">

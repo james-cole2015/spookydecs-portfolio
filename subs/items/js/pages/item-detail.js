@@ -820,12 +820,17 @@ class ItemDetailPage {
   async handleSaveSection() {
     if (!this.editingSection) return;
     
+    if (!window.SpookyAuth.hasMinRole('builder')) {
+      toast.error('Insufficient Permissions', 'Your role does not allow editing items.');
+      return;
+    }
+
     // Validate
     if (!this.editingSection.validate()) {
       toast.error('Validation Failed', 'Please fix the errors in the form');
       return;
     }
-    
+
     const loadingOverlay = document.getElementById('loading-overlay');
     
     try {

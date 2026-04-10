@@ -92,6 +92,30 @@
   padding: 8px 24px 24px;
 }
 
+/* ── View toggle ─────────────────────────────────────────────────────────────── */
+.pl-view-toggle {
+  display: flex;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.pl-toggle-btn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-3);
+  padding: 4px 10px;
+  transition: all 0.15s;
+  cursor: pointer;
+}
+
+.pl-toggle-btn.active {
+  background: var(--surface);
+  color: var(--text);
+}
+
 /* ── Unranked section ───────────────────────────────────────────────────────── */
 .pl-section-label {
   font-size: 10px;
@@ -111,6 +135,18 @@
   height: 1px;
   background: var(--border);
 }
+
+/* Priority group label color variants */
+.pl-section-p0   { color: var(--red); }
+.pl-section-p1   { color: var(--yellow); }
+.pl-section-p2   { color: var(--accent); }
+.pl-section-none { color: var(--text-3); }
+
+/* Priority-grouped mode: colored left border on rows */
+.pl-body--priority .pl-row                      { border-left: 3px solid transparent; padding-left: 8px; }
+.pl-body--priority .pl-row[data-priority="P0"]  { border-left-color: var(--red); }
+.pl-body--priority .pl-row[data-priority="P1"]  { border-left-color: var(--yellow); }
+.pl-body--priority .pl-row[data-priority="P2"]  { border-left-color: var(--accent); }
 
 /* ── Issue row ──────────────────────────────────────────────────────────────── */
 .pl-row {
