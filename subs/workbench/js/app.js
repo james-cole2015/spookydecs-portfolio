@@ -12,6 +12,7 @@ export const appState = {
 };
 
 async function initApp() {
+  if (!window.SpookyAuth.enforceEnvAccess()) return;
   try {
     initRouter();
   } catch (error) {

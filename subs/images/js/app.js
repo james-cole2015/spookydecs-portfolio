@@ -10,6 +10,7 @@ import { renderEntitiesPage } from './pages/entities.js';
 import { renderEntityDetail } from './pages/entity-detail.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
+  if (!window.SpookyAuth.enforceEnvAccess()) return;
   try {
     await window.SpookyConfig.get();
 

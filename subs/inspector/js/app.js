@@ -4,6 +4,7 @@
  */
 
 async function initializeApp() {
+    if (!window.SpookyAuth.enforceEnvAccess()) return;
     const container = document.getElementById('app-container');
 
     try {
