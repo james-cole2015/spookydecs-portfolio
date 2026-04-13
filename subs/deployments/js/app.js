@@ -131,6 +131,7 @@ const routes = [
 
 // Initialize router
 document.addEventListener('DOMContentLoaded', () => {
+  if (!window.SpookyAuth.enforceEnvAccess()) return;
   initRouter(routes);
 });
 

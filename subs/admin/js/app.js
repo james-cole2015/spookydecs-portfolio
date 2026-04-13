@@ -50,6 +50,7 @@ class App {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    if (!window.SpookyAuth.enforceEnvAccess()) return;
     const app = new App();
     app.init();
 });

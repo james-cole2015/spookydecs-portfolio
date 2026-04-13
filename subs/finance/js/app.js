@@ -6,6 +6,7 @@ console.log('App.js loaded');
 
 // Wait for DOM to be ready
 document.addEventListener('DOMContentLoaded', () => {
+  if (!window.SpookyAuth.enforceEnvAccess()) return;
   console.log('DOM ready, initializing app...');
   console.log('Current pathname:', window.location.pathname);
   

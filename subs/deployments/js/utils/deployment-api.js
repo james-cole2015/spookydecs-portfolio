@@ -1,6 +1,6 @@
 // Deployment API Client
 
-const { getAuthToken, buildHeaders, redirectToLogin } = window.SpookyAuth;
+const { getAuthToken, buildHeaders, redirectToLogin, hasMinRole } = window.SpookyAuth;
 
 async function getConfig() {
   return await window.SpookyConfig.get();
@@ -45,14 +45,17 @@ export async function getDeployment(deploymentId, include = []) {
 }
 
 export async function createDeployment(deploymentData) {
+  if (!hasMinRole('builder')) throw new Error('Insufficient permissions');
   return await apiCall('/deployments', 'POST', deploymentData);
 }
 
 export async function updateDeployment(deploymentId, updates) {
+  if (!hasMinRole('builder')) throw new Error('Insufficient permissions');
   return await apiCall(`/deployments/${deploymentId}`, 'PUT', updates);
 }
 
 export async function deleteDeployment(deploymentId) {
+  if (!hasMinRole('admin')) throw new Error('Insufficient permissions');
   return await apiCall(`/deployments/${deploymentId}`, 'DELETE');
 }
 
@@ -67,6 +70,7 @@ export async function checkDeploymentExists(season, year) {
 }
 
 export async function completeDeployment(deploymentId) {
+  if (!hasMinRole('builder')) throw new Error('Insufficient permissions');
   return await apiCall(`/deployments/${deploymentId}/complete`, 'POST');
 }
 
@@ -103,10 +107,12 @@ export async function getItem(itemId) {
 // Sessions
 
 export async function createSession(deploymentId, sessionData) {
+  if (!hasMinRole('builder')) throw new Error('Insufficient permissions');
   return await apiCall(`/deployments/${deploymentId}/sessions`, 'POST', sessionData);
 }
 
 export async function endSession(deploymentId, sessionId, data) {
+  if (!hasMinRole('builder')) throw new Error('Insufficient permissions');
   return await apiCall(`/deployments/${deploymentId}/sessions/${sessionId}`, 'PUT', data);
 }
 
@@ -129,19 +135,23 @@ export async function getAvailablePorts(deploymentId, zoneCode) {
 }
 
 export async function createConnection(deploymentId, connectionData) {
+  if (!hasMinRole('builder')) throw new Error('Insufficient permissions');
   return await apiCall(`/deployments/${deploymentId}/connections`, 'POST', connectionData);
 }
 
 export async function removeConnection(deploymentId, connectionId) {
+  if (!hasMinRole('builder')) throw new Error('Insufficient permissions');
   return await apiCall(`/deployments/${deploymentId}/connections/${connectionId}`, 'DELETE');
 }
 
 export async function updateConnection(deploymentId, connectionId, updates) {
+  if (!hasMinRole('builder')) throw new Error('Insufficient permissions');
   console.log('[deployment-api] updateConnection:', { deploymentId, connectionId, updates });
   return await apiCall(`/deployments/${deploymentId}/connections/${connectionId}`, 'PATCH', updates);
 }
 
 export async function updateConnectionPhotos(deploymentId, connectionId, photoIds) {
+  if (!hasMinRole('builder')) throw new Error('Insufficient permissions');
   console.log('[deployment-api] updateConnectionPhotos:', { deploymentId, connectionId, photoIds });
   return await apiCall(
     `/deployments/${deploymentId}/connections/${connectionId}/photos`,
@@ -186,17 +196,21 @@ export async function getStagingTotes(deploymentId) {
 }
 
 export async function stageTote(deploymentId, body) {
+  if (!hasMinRole('builder')) throw new Error('Insufficient permissions');
   return await apiCall(`/deployments/${deploymentId}/stage`, 'POST', body);
 }
 
 export async function apiTeardownStart(deploymentId) {
+  if (!hasMinRole('builder')) throw new Error('Insufficient permissions');
   return await apiCall(`/deployments/${deploymentId}/teardown/start`, 'POST');
 }
 
 export async function apiTeardownItem(deploymentId, itemId) {
+  if (!hasMinRole('builder')) throw new Error('Insufficient permissions');
   return await apiCall(`/deployments/${deploymentId}/teardown/item`, 'POST', { item_id: itemId });
 }
 
 export async function apiTeardownComplete(deploymentId) {
+  if (!hasMinRole('builder')) throw new Error('Insufficient permissions');
   return await apiCall(`/deployments/${deploymentId}/teardown/complete`, 'POST');
 }

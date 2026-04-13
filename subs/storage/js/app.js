@@ -10,6 +10,7 @@ import { BackToTop } from './shared/BackToTop.js';
  * Initialize application
  */
 function init() {
+  if (!window.SpookyAuth.enforceEnvAccess()) return;
   // Initialize router (it imports and registers handlers internally)
   initRouter();
   

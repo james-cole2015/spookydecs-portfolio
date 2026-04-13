@@ -11,6 +11,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+  if (!window.SpookyAuth.enforceEnvAccess()) return;
   ThemeManager.init();
   Router.init();
 });

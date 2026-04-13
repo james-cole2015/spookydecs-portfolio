@@ -12,6 +12,7 @@ import { renderItemEdit } from './pages/item-edit.js';
 // Initialize router with routes
 // IMPORTANT: Specific routes MUST come before parameterized routes
 document.addEventListener('DOMContentLoaded', () => {
+  if (!window.SpookyAuth.enforceEnvAccess()) return;
   initRouter({
     '/': () => renderItemsLanding(),
     '/items': () => renderItemsList(),                    // Must be before /:id
