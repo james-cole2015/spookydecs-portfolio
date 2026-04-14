@@ -7,7 +7,6 @@ import { toast } from '../shared/toast.js';
 import { getClassIcon, getSeasonIcon } from '../utils/item-config.js';
 import { actionDrawer } from '../components/ActionDrawer.js';
 import { EditableSection } from '../components/EditableSection.js';
-import { PhotoGallery } from '../components/PhotoGallery.js';
 
 class ItemDetailPage {
   constructor() {
@@ -744,13 +743,13 @@ class ItemDetailPage {
     const mountEl = document.getElementById('photo-gallery-mount');
     if (!mountEl) return;
 
-    const gallery = new PhotoGallery({
-      itemId: this.item.id,
-      season: this.item.season,
-      onAddPhotos: () => actionDrawer.handleUploadPhoto()
-    });
-
-    await gallery.render(mountEl);
+    mountEl.innerHTML = '';
+    const gallery = document.createElement('photo-gallery');
+    gallery.setAttribute('context', 'item');
+    gallery.setAttribute('item-id', this.item.id);
+    gallery.setAttribute('season', this.item.season || 'shared');
+    gallery.setAttribute('photo-type', 'catalog');
+    mountEl.appendChild(gallery);
     this.photoGallery = gallery;
   }
   
