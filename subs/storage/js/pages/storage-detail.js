@@ -7,7 +7,6 @@
 import { storageAPI, photosAPI } from '../utils/storage-api.js';
 import { formatStorageUnit } from '../utils/storage-config.js';
 import { StorageDetailView } from '../components/StorageDetailView.js';
-import { StoragePhotoGallery } from '../components/StoragePhotoGallery.js';
 import { ContentsPanel } from '../components/ContentsPanel.js';
 import { showModal, showDeleteConfirm } from '../shared/modal.js';
 import { showSuccess, showError } from '../shared/toast.js';
@@ -96,11 +95,14 @@ async function loadStorageUnit(storageId) {
     // Mount photo gallery
     const galleryContainer = document.getElementById('photo-gallery-container');
     if (galleryContainer) {
-      const gallery = new StoragePhotoGallery({
-        storageId: currentStorageUnit.id,
-        season: currentStorageUnit.season || currentStorageUnit.category || 'shared'
-      });
-      await gallery.render(galleryContainer);
+      galleryContainer.innerHTML = '';
+      const gallery = document.createElement('photo-gallery');
+      gallery.setAttribute('context', 'storage');
+      gallery.setAttribute('storage-id', currentStorageUnit.id);
+      gallery.setAttribute('season', currentStorageUnit.season || currentStorageUnit.category || 'shared');
+      gallery.setAttribute('photo-type', 'storage');
+      gallery.setAttribute('max-photos', '2');
+      galleryContainer.appendChild(gallery);
     }
 
     // Initialize contents panel with enriched data
