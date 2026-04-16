@@ -15,8 +15,7 @@ export class RecordDetailView {
     this.record = null;
     this.item = null;
     this.activeTab = 'details';
-    this.photoGallery = null;
-    
+
     // Track which sections are expanded (mobile)
     this.expandedSections = {
       description: true,      // Open by default
@@ -139,13 +138,4 @@ export class RecordDetailView {
     `;
   }
   
-  /**
-   * Cleanup method
-   */
-  destroy() {
-    if (this.photoGallery) {
-      this.photoGallery.destroy();
-      this.photoGallery = null;
-    }
-  }
 }
