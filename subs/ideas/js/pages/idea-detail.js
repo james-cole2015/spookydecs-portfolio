@@ -374,14 +374,47 @@ function _syncHeroToGallery(container, ideaId) {
   const updateHero = async () => {
     try {
       const photos = await getIdeaPhotos(ideaId);
+      if (!photos.length) return;
+
       const primary = photos.find(p => p.is_primary) || photos[0];
       if (!primary?.cloudfront_url) return;
-      const heroImg = container.querySelector('#hero-img');
+
+      // Rebuild hero img from images-table primary photo
       const heroDiv = container.querySelector('.detail-hero');
-      if (heroImg) {
-        heroImg.src = primary.cloudfront_url;
-      } else if (heroDiv) {
+      if (heroDiv) {
         heroDiv.innerHTML = `<img id="hero-img" src="${escAttr(primary.cloudfront_url)}" alt="" loading="lazy">`;
+      }
+
+      // Rebuild thumbnail strip from images-table photos (not stale idea.images[])
+      const galleryDiv = container.querySelector('.detail-gallery');
+      if (photos.length > 1) {
+        const noPrimary = !photos.some(p => p.is_primary);
+        const thumbsHtml = photos.map((p, i) => {
+          const isActive = p.is_primary || (noPrimary && i === 0);
+          return `<div class="gallery-thumb${isActive ? ' active' : ''}"
+                       data-url="${escAttr(p.cloudfront_url)}"
+                       data-idx="${i}">
+            <img src="${escAttr(p.thumb_cloudfront_url || p.cloudfront_url)}" alt="image ${i + 1}" loading="lazy">
+          </div>`;
+        }).join('');
+
+        if (galleryDiv) {
+          galleryDiv.innerHTML = thumbsHtml;
+        } else if (heroDiv) {
+          heroDiv.insertAdjacentHTML('afterend', `<div class="detail-gallery">${thumbsHtml}</div>`);
+        }
+
+        // Rewire thumb click handlers
+        container.querySelectorAll('.gallery-thumb').forEach(thumb => {
+          thumb.addEventListener('click', () => {
+            container.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
+            thumb.classList.add('active');
+            const heroImg = container.querySelector('#hero-img');
+            if (heroImg) heroImg.src = thumb.dataset.url;
+          });
+        });
+      } else if (galleryDiv) {
+        galleryDiv.remove();
       }
     } catch { /* silent */ }
   };
@@ -391,5 +424,8 @@ function _syncHeroToGallery(container, ideaId) {
     await originalRefresh();
     await updateHero();
   };
+
+  // Sync hero on initial load, not just after gallery refresh
+  updateHero();
 }
 
