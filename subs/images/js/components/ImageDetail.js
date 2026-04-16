@@ -14,10 +14,13 @@ function deriveCategory(photo) {
   // Derive category from photo_type and context
   const photoType = photo.photo_type;
 
+  // Check maintenance record context
+  if (photo.record_id) return 'maintenance';
+
   // Check item context
   if (photo.item_ids && photo.item_ids.length > 0) {
     if (photoType === 'catalog') return 'item_catalog';
-    if (photoType === 'repair') return 'maintenance';
+    if (photoType === 'repair' || photoType === 'inspection' || photoType === 'maintenance') return 'maintenance';
     if (photoType === 'deployment') return 'deployments';
   }
 
