@@ -3,7 +3,6 @@
 import { fetchRecord, createRecord, updateRecord, fetchItem, fetchMultiplePhotos } from '../api.js';
 import { appState } from '../state.js';
 import { navigateTo } from '../router.js';
-import { PhotoUpload } from './PhotoUpload.js';
 import { ItemSelector } from './form/ItemSelector.js';
 import { MaterialsList } from './form/MaterialsList.js';
 import { ExistingPhotos } from './form/ExistingPhotos.js';
@@ -18,7 +17,8 @@ export class RecordFormView {
     this.item = null;
     this.materials = [];
     this.isEditMode = !!recordId;
-    this.photoUploader = null;
+    this.pendingFiles = [];
+    this.photoCategory = 'documentation';
     this.existingPhotos = {
       before_photos: [],
       after_photos: [],
@@ -53,12 +53,7 @@ export class RecordFormView {
       
       container.innerHTML = this.renderForm();
       this.attachEventListeners(container);
-      
-      // Initialize photo uploader in edit mode
-      if (this.isEditMode) {
-        this.initializePhotoUploader(container);
-      }
-      
+
     } catch (error) {
       console.error('Failed to load form:', error);
       container.innerHTML = this.renderError();
@@ -236,7 +231,29 @@ export class RecordFormView {
       <div class="form-section">
         <h3>Photo Management</h3>
         ${this.existingPhotosView.render(this.existingPhotos)}
-        <div id="photo-upload-container"></div>
+        <div class="photo-upload" id="photo-upload-container">
+          <div class="photo-upload-header">
+            <label>Upload Photos <span class="optional">(Optional, max 3)</span></label>
+          </div>
+          <div class="photo-upload-controls">
+            <div class="category-selector">
+              <label for="photo-category">Category:</label>
+              <select id="photo-category" class="category-select">
+                <option value="documentation">Documentation</option>
+                <option value="before_photos">Before Photos</option>
+                <option value="after_photos">After Photos</option>
+              </select>
+            </div>
+            <button type="button" class="btn-select-photos" id="btn-select-photos">
+              📤 Select Photos
+            </button>
+            <input type="file" id="photo-file-input"
+              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/heic,image/heif"
+              multiple style="display: none;">
+          </div>
+          <div class="photo-count" id="photo-count">No photos selected</div>
+          <div class="photo-preview-grid" id="photo-preview"></div>
+        </div>
       </div>
     `;
   }
@@ -252,20 +269,91 @@ export class RecordFormView {
     `;
   }
   
-  initializePhotoUploader(container) {
-    const uploadContainer = container.querySelector('#photo-upload-container');
-    if (!uploadContainer) return;
-    
-    this.photoUploader = new PhotoUpload({
-      record_type: this.record.record_type,
-      season: this.item?.season || 'shared',
-      item_id: this.prefilledItemId
-    });
-    
-    uploadContainer.innerHTML = this.photoUploader.render();
-    this.photoUploader.attachEventListeners(uploadContainer);
+  attachPhotoListeners(container) {
+    const selectBtn = container.querySelector('#btn-select-photos');
+    const fileInput = container.querySelector('#photo-file-input');
+    const categorySelect = container.querySelector('#photo-category');
+
+    if (selectBtn && fileInput) {
+      selectBtn.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', (e) => this._handleFileSelection(e));
+    }
+
+    if (categorySelect) {
+      categorySelect.addEventListener('change', (e) => {
+        this.photoCategory = e.target.value;
+      });
+    }
   }
-  
+
+  _handleFileSelection(event) {
+    const files = Array.from(event.target.files);
+
+    if (files.length > 3) {
+      Toast.show('error', 'Photo Error', 'Maximum 3 photos allowed');
+      event.target.value = '';
+      return;
+    }
+
+    const maxSize = 10 * 1024 * 1024;
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif'];
+    for (const file of files) {
+      if (!validTypes.includes(file.type)) {
+        Toast.show('error', 'Photo Error', `Invalid file type: ${file.name}`);
+        event.target.value = '';
+        return;
+      }
+      if (file.size > maxSize) {
+        Toast.show('error', 'Photo Error', `File too large: ${file.name}. Max 10MB.`);
+        event.target.value = '';
+        return;
+      }
+    }
+
+    this.pendingFiles = files;
+    this._updatePhotoDisplay();
+  }
+
+  _updatePhotoDisplay() {
+    const countEl = document.getElementById('photo-count');
+    const previewEl = document.getElementById('photo-preview');
+    if (!countEl || !previewEl) return;
+
+    if (this.pendingFiles.length === 0) {
+      countEl.textContent = 'No photos selected';
+      countEl.className = 'photo-count';
+      previewEl.innerHTML = '';
+      return;
+    }
+
+    const names = this.pendingFiles.map(f => f.name).join(', ');
+    countEl.innerHTML = `<strong>${this.pendingFiles.length} photo${this.pendingFiles.length > 1 ? 's' : ''} selected</strong> <span class="file-names">${names}</span>`;
+    countEl.className = 'photo-count active';
+
+    previewEl.innerHTML = '';
+    this.pendingFiles.forEach((file, index) => {
+      const item = document.createElement('div');
+      item.className = 'photo-preview-item';
+      const img = document.createElement('img');
+      img.className = 'preview-image';
+      const reader = new FileReader();
+      reader.onload = (e) => { img.src = e.target.result; };
+      reader.readAsDataURL(file);
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'btn-remove-photo';
+      removeBtn.innerHTML = '×';
+      removeBtn.addEventListener('click', () => {
+        this.pendingFiles = this.pendingFiles.filter((_, i) => i !== index);
+        this._updatePhotoDisplay();
+      });
+      item.appendChild(img);
+      item.appendChild(removeBtn);
+      previewEl.appendChild(item);
+    });
+  }
+
+
   renderError() {
     return `
       <div class="error-container">
@@ -374,6 +462,11 @@ export class RecordFormView {
     // Materials listeners
     this.materialsList.attachEventListeners(container, this.materials);
     
+    // Photo upload listeners
+    if (this.isEditMode) {
+      this.attachPhotoListeners(container);
+    }
+
     // Photo remove listeners
     if (this.isEditMode) {
       this.existingPhotosView.attachEventListeners(container, (photoId, category) => {
@@ -404,13 +497,24 @@ export class RecordFormView {
         }));
       }
       
-      // Handle new uploads
-      if (this.photoUploader && this.photoUploader.hasPhotos()) {
+      // Handle new uploads via CDN photo-upload-service
+      if (this.pendingFiles.length > 0) {
         Toast.show('info', 'Uploading Photos', 'Please wait...');
         try {
-          const uploadedPhotos = await this.photoUploader.uploadPhotos();
-          const selectedCategory = this.photoUploader.getCategory();
-          attachments[selectedCategory].push(...uploadedPhotos);
+          const photoTypeMap = { repair: 'repair', maintenance: 'maintenance', inspection: 'inspection' };
+          const photoType = photoTypeMap[this.record?.record_type] || 'maintenance';
+          const service = document.createElement('photo-upload-service');
+          const result = await service.upload(this.pendingFiles, {
+            context:    'maintenance',
+            photo_type: photoType,
+            season:     this.item?.season || 'shared',
+            item_ids:   this.prefilledItemId ? [this.prefilledItemId] : [],
+            record_id:  this.recordId
+          });
+          if (!result?.success) throw new Error('Photo upload service returned failure');
+          attachments[this.photoCategory].push(
+            ...result.photo_ids.map(id => ({ photo_id: id, photo_type: photoType }))
+          );
         } catch (uploadError) {
           Toast.show('error', 'Photo Upload Failed', uploadError.message);
           return;
