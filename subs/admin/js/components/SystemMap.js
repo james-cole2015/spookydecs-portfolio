@@ -89,6 +89,12 @@ export class SystemMap {
                 healthKey: 'inspector'
             },
             {
+                id: 'tracker',
+                title: 'Tracker',
+                description: 'Manage epics, issues, and tasks for the SpookyDecs project.',
+                urlKey: 'tracker'
+            },
+            {
                 id: 'iris-admin',
                 title: 'Iris Admin',
                 description: 'Edit item search text and trigger vector index rebuilds for Iris.',

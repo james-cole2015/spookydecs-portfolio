@@ -20,7 +20,8 @@ export async function getSubdomainUrls() {
     audit: config.AUDIT_URL || '',
     inspector: config.INSPECT_URL || '',
     images: config.IMAGES_URL || '',
-    gallery: ''
+    gallery: '',
+    tracker: config.TRACKER_URL || ''
   };
 }
 
