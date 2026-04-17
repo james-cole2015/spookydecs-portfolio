@@ -11,7 +11,7 @@ export async function getSubdomainUrls() {
 
   return {
     ideas: config.IDEAS_ADMIN_URL || '',
-    items: config.INV_ADMIN_URL || '',
+    items: config.ITEMS_ADMIN || '',
     finance: config.finance_url || '',
     maintenance: config.MAINT_URL || '',
     storage: config.STR_ADM_URL || '',
@@ -20,7 +20,7 @@ export async function getSubdomainUrls() {
     audit: config.AUDIT_URL || '',
     inspector: config.INSPECT_URL || '',
     images: config.IMAGES_URL || '',
-    gallery: '',
+    gallery: config.GALLERY_ADM_URL || '',
     tracker: config.TRACKER_URL || ''
   };
 }

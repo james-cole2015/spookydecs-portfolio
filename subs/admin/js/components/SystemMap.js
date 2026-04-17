@@ -71,15 +71,15 @@ export class SystemMap {
                 title: 'Gallery',
                 description: 'Gallery of Previous Displays, Community Displays, and Project Builds.',
                 urlKey: 'gallery',
-                healthKey: 'gallery',
-                placeholder: true
+                healthKey: 'gallery'
             },
             {
                 id: 'audit',
                 title: 'Audit',
                 description: 'Review system logs, changes, and activity across all subdomains.',
                 urlKey: 'audit',
-                healthKey: 'audit'
+                healthKey: 'audit',
+                placeholder: true
             },
             {
                 id: 'inspector',
