@@ -71,15 +71,15 @@ export class SystemMap {
                 title: 'Gallery',
                 description: 'Gallery of Previous Displays, Community Displays, and Project Builds.',
                 urlKey: 'gallery',
-                healthKey: 'gallery',
-                placeholder: true
+                healthKey: 'gallery'
             },
             {
                 id: 'audit',
                 title: 'Audit',
                 description: 'Review system logs, changes, and activity across all subdomains.',
                 urlKey: 'audit',
-                healthKey: 'audit'
+                healthKey: 'audit',
+                placeholder: true
             },
             {
                 id: 'inspector',
@@ -87,6 +87,12 @@ export class SystemMap {
                 description: 'Data quality checks to identify and correct data integrity issues.',
                 urlKey: 'inspector',
                 healthKey: 'inspector'
+            },
+            {
+                id: 'tracker',
+                title: 'Tracker',
+                description: 'Manage epics, issues, and tasks for the SpookyDecs project.',
+                urlKey: 'tracker'
             },
             {
                 id: 'iris-admin',

@@ -6,8 +6,8 @@ import { showToast } from '../shared/toast.js';
 import { showConfirmModal } from '../shared/modal.js';
 import { ITEMS_BASE_URL, SEASON_PLACEHOLDERS } from '../utils/ideas-config.js';
 import { getCostModalHtml, wireCostModal } from './idea-detail-costs.js';
-import { loadPhotos, attachPhotoUpload } from './idea-detail-photos.js';
 import { renderError, renderNotFound, getYoutubeId, formatDate, escHtml, escAttr } from './idea-detail-utils.js';
+import { getIdeaPhotos } from '../utils/ideas-api.js';
 
 
 export async function renderIdeaDetail(container, id) {
@@ -194,13 +194,14 @@ async function _renderDetail(container, idea) {
           ` : ''}
 
           <div class="detail-section" id="id-photos-section">
-            <div class="detail-section-title-row">
-              <span class="detail-section-title" style="margin-bottom:0">Photos</span>
-              ${idea.status !== 'Built' ? `<button type="button" class="btn btn-sm btn-secondary" id="id-add-photo-btn">+ Add Photo</button>` : ''}
-            </div>
-            <input id="id-photo-file-input" type="file" multiple accept="image/*" style="display:none">
-            <span id="id-photo-status" style="display:none;font-size:0.85rem;color:var(--color-text-muted);margin-top:var(--space-2)"></span>
-            <div id="id-photos-grid" class="bd-photos-grid" style="margin-top:var(--space-3)"></div>
+            <div class="detail-section-title">Photos</div>
+            <photo-gallery
+              context="idea"
+              idea-id="${escAttr(idea.id)}"
+              season="${escAttr((idea.season || 'shared').toLowerCase())}"
+              photo-type="inspiration"
+              ${idea.status === 'Built' ? 'max-photos="0" no-set-primary' : ''}
+            ></photo-gallery>
           </div>
 
         </div>
@@ -358,8 +359,73 @@ async function _renderDetail(container, idea) {
     wireCostModal(container, idea);
   } // end status !== 'Considering'
 
-  // Photos — load from images table, then wire upload
-  loadPhotos(container, idea.id);
-  attachPhotoUpload(container, idea);
+  // Keep the hero image in sync with the gallery's primary photo.
+  // The gallery manages its own photo state (photos table); the hero initially
+  // renders from idea.images[] but needs to track gallery changes (uploads,
+  // set-primary) without re-navigating. We observe the gallery's shadow DOM
+  // and re-fetch from the API whenever it re-renders.
+  _syncHeroToGallery(container, idea.id);
+}
+
+function _syncHeroToGallery(container, ideaId) {
+  const gallery = container.querySelector('photo-gallery');
+  if (!gallery) return;
+
+  const updateHero = async () => {
+    try {
+      const photos = await getIdeaPhotos(ideaId);
+      if (!photos.length) return;
+
+      const primary = photos.find(p => p.is_primary) || photos[0];
+      if (!primary?.cloudfront_url) return;
+
+      // Rebuild hero img from images-table primary photo
+      const heroDiv = container.querySelector('.detail-hero');
+      if (heroDiv) {
+        heroDiv.innerHTML = `<img id="hero-img" src="${escAttr(primary.cloudfront_url)}" alt="" loading="lazy">`;
+      }
+
+      // Rebuild thumbnail strip from images-table photos (not stale idea.images[])
+      const galleryDiv = container.querySelector('.detail-gallery');
+      if (photos.length > 1) {
+        const noPrimary = !photos.some(p => p.is_primary);
+        const thumbsHtml = photos.map((p, i) => {
+          const isActive = p.is_primary || (noPrimary && i === 0);
+          return `<div class="gallery-thumb${isActive ? ' active' : ''}"
+                       data-url="${escAttr(p.cloudfront_url)}"
+                       data-idx="${i}">
+            <img src="${escAttr(p.thumb_cloudfront_url || p.cloudfront_url)}" alt="image ${i + 1}" loading="lazy">
+          </div>`;
+        }).join('');
+
+        if (galleryDiv) {
+          galleryDiv.innerHTML = thumbsHtml;
+        } else if (heroDiv) {
+          heroDiv.insertAdjacentHTML('afterend', `<div class="detail-gallery">${thumbsHtml}</div>`);
+        }
+
+        // Rewire thumb click handlers
+        container.querySelectorAll('.gallery-thumb').forEach(thumb => {
+          thumb.addEventListener('click', () => {
+            container.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
+            thumb.classList.add('active');
+            const heroImg = container.querySelector('#hero-img');
+            if (heroImg) heroImg.src = thumb.dataset.url;
+          });
+        });
+      } else if (galleryDiv) {
+        galleryDiv.remove();
+      }
+    } catch { /* silent */ }
+  };
+
+  const originalRefresh = gallery.refresh.bind(gallery);
+  gallery.refresh = async function () {
+    await originalRefresh();
+    await updateHero();
+  };
+
+  // Sync hero on initial load, not just after gallery refresh
+  updateHero();
 }
 
