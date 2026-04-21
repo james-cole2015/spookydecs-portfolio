@@ -2,11 +2,15 @@
 
 import { CostFormFields } from '../components/CostFormFields.js';
 import { CostReviewModal } from '../components/CostReviewModal.js';
-import { MultiItemReviewModal } from '../components/MultiItemReviewModal.js';
-import { ReceiptUploadModal } from '../components/ReceiptUploadModal.js';
 import { PackPurchaseForm } from '../components/PackPurchaseForm.js';
 import { createCost, updateImageAfterCostCreation } from '../utils/finance-api.js';
 import { toast } from '../shared/toast.js';
+import {
+  COST_TYPES,
+  CATEGORIES_BY_COST_TYPE,
+  SUBCATEGORIES,
+  RELATED_ID_CONFIG
+} from '../utils/finance-config.js';
 
 export async function renderNewCostRecord(container) {
   console.log('📄 renderNewCostRecord called');
@@ -67,8 +71,15 @@ export async function renderNewCostRecord(container) {
 
     console.log('✅ Page structure rendered');
 
-    // Initialize receipt modal
-    const receiptModal = new ReceiptUploadModal();
+    // Finance costConfig for ReceiptExtractorWidget
+    const financeCostConfig = {
+      costTypes: COST_TYPES,
+      categoriesByCostType: CATEGORIES_BY_COST_TYPE,
+      subcategories: Object.fromEntries(
+        Object.entries(SUBCATEGORIES).map(([k, v]) => [k, v])
+      ),
+      relatedIdConfig: RELATED_ID_CONFIG
+    };
 
     // Track current mode
     let currentMode = initialMode;
@@ -114,14 +125,12 @@ export async function renderNewCostRecord(container) {
     });
 
     // Attach event listeners
-    attachEventListeners(receiptModal, () => formFields);
+    attachExtractButton(() => formFields, financeCostConfig);
     console.log('✅ Event listeners attached');
 
     // Auto-open AI extraction modal when ?extract=true
     if (urlParams.get('extract') === 'true' && initialMode === 'single') {
-      receiptModal.open({}, (extractedData, extractionId, imageId) => {
-        handleAIExtractedData(extractedData, extractionId, imageId);
-      });
+      openReceiptWidget({}, financeCostConfig);
     }
     
   } catch (error) {
@@ -140,64 +149,75 @@ export async function renderNewCostRecord(container) {
   }
 }
 
-function attachEventListeners(receiptModal, getFormFields) {
-  // Extract with AI button
+function attachExtractButton(getFormFields, costConfig) {
   const extractBtn = document.getElementById('btn-extract-ai');
-  if (extractBtn) {
-    extractBtn.addEventListener('click', () => {
-      const formFields = typeof getFormFields === 'function' ? getFormFields() : getFormFields;
-      // Get context from URL params
-      const urlParams = new URLSearchParams(window.location.search);
-      const contextData = {
-        item_id: urlParams.get('item_id') || formFields?.formData?.related_item_id || null,
-        record_id: urlParams.get('record_id') || formFields?.formData?.related_record_id || null,
-        cost_type: urlParams.get('cost_type') || formFields?.formData?.cost_type || null,
-        category: urlParams.get('category') || formFields?.formData?.category || null
-      };
-
-      // Open modal with context and callback for MULTI-ITEM extraction
-      receiptModal.open(contextData, (extractedData, extractionId, imageId) => {
-        handleAIExtractedData(extractedData, extractionId, imageId, contextData);
-      });
-    });
-  }
+  if (!extractBtn) return;
+  // Clone to strip any stale listeners from prior renderMode calls
+  const btn = extractBtn.cloneNode(true);
+  extractBtn.replaceWith(btn);
+  btn.addEventListener('click', async () => {
+    if (btn.disabled) return;
+    const formFields = typeof getFormFields === 'function' ? getFormFields() : getFormFields;
+    const urlParams = new URLSearchParams(window.location.search);
+    const contextData = {
+      item_id:   urlParams.get('item_id')   || formFields?.formData?.related_item_id   || null,
+      record_id: urlParams.get('record_id') || formFields?.formData?.related_record_id || null,
+      cost_type: urlParams.get('cost_type') || formFields?.formData?.cost_type         || null,
+      category:  urlParams.get('category')  || formFields?.formData?.category          || null
+    };
+    btn.disabled = true;
+    try {
+      await openReceiptWidget(contextData, costConfig);
+    } finally {
+      btn.disabled = false;
+    }
+  });
 }
 
-// NEW: Handle AI-extracted multi-item data
-async function handleAIExtractedData(extractedData, extractionId, imageId, contextData = {}) {
-  console.log('📦 AI extracted data received:', extractedData);
+async function openReceiptWidget(contextData, costConfig) {
+  const { API_ENDPOINT } = await window.SpookyConfig.get();
+  const headers = window.SpookyAuth.buildHeaders();
 
-  // Check if we have multiple items or single item
-  const items = extractedData.items || [];
-  const receiptMetadata = extractedData.receipt_metadata || {};
-  const lineItemsDetected = extractedData.line_items_detected !== false;
+  // Pre-load caches in parallel
+  const [itemsRes, recordsRes, ideasRes] = await Promise.allSettled([
+    fetch(`${API_ENDPOINT}/items`, { headers }),
+    fetch(`${API_ENDPOINT}/admin/maintenance-records`, { headers }),
+    fetch(`${API_ENDPOINT}/ideas`, { headers })
+  ]);
 
-  if (items.length === 0) {
-    toast.error('No items could be extracted from receipt');
-    return;
-  }
+  const toArray = (res, key) => {
+    if (res.status !== 'fulfilled' || !res.value.ok) return [];
+    return res.value.json().then(j => {
+      const d = j?.data ?? j;
+      const arr = d[key] ?? d;
+      return Array.isArray(arr) ? arr : [];
+    });
+  };
 
-  // Show multi-item review modal
-  const multiItemModal = new MultiItemReviewModal();
+  const [items, records, ideas] = await Promise.all([
+    toArray(itemsRes, 'items'),
+    toArray(recordsRes, 'records'),
+    toArray(ideasRes, 'ideas')
+  ]);
 
-  await multiItemModal.show(
-    {
-      items: items,
-      receipt_metadata: receiptMetadata,
-      extraction_id: extractionId,
-      image_id: imageId,
-      line_items_detected: lineItemsDetected,
-      context: contextData
+  window.ReceiptExtractorWidget.open({
+    apiEndpoint: API_ENDPOINT,
+    contextData,
+    costConfig,
+    caches: { items, records, ideas },
+    onComplete: (confirmedItems) => {
+      if (!confirmedItems.length) return;
+      // Add finance-specific fields the widget doesn't know about
+      const costRecords = confirmedItems.map(item => ({
+        ...item,
+        value:     item.total_cost,
+        cost_date: item.purchase_date,
+        currency:  'USD'
+      }));
+      handleBatchCostRecordCreation(costRecords, confirmedItems[0].extraction_id, confirmedItems[0].image_id);
     },
-    {
-      onConfirm: (costRecords) => {
-        handleBatchCostRecordCreation(costRecords, extractionId, imageId);
-      },
-      onCancel: () => {
-        console.log('User cancelled multi-item review');
-      }
-    }
-  );
+    onCancel: () => {}
+  });
 }
 
 // NEW: Batch create multiple cost records
@@ -243,17 +263,13 @@ async function handleBatchCostRecordCreation(costRecords, extractionId, imageId)
     }
   }
 
-  // Show summary toast
   if (failCount === 0) {
     toast.success(`Successfully created ${successCount} cost record${successCount > 1 ? 's' : ''}`);
+    setTimeout(() => { window.location.href = '/'; }, 2000);
   } else {
-    toast.warning(`Created ${successCount} record${successCount > 1 ? 's' : ''}, ${failCount} failed`);
+    toast.warning(`Created ${successCount} record${successCount > 1 ? 's' : ''}, ${failCount} failed — check console for details`);
+    // No redirect on partial failure so the error stays visible
   }
-
-  // Redirect to finance page after short delay
-  setTimeout(() => {
-    window.location.href = '/';
-  }, 2000);
 }
 
 // EXISTING: Handle manual form submission (single record)

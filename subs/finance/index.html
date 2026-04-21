@@ -23,12 +23,7 @@
 
   <script src="https://assets.spookydecs.com/components/photo-upload-service.js"></script>
   <script src="https://assets.spookydecs.com/components/photo-upload-modal.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script>
-    if (window.pdfjsLib) {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    }
-  </script>
+  <script src="https://assets.spookydecs.com/components/receipt-extractor-widget.js"></script>
 
   
   <!-- Styles -->
@@ -51,9 +46,7 @@
 <body>
   <!-- Header Component -->
   <spookydecs-header 
-    page-title="Finance" 
-    user-name="Admin"
-    user-role="Administrator"
+    page-title="Finance"
     logout-url="https://auth.spookydecs.com">
   </spookydecs-header>
 

@@ -6,7 +6,7 @@
  *
  * Layout:
  *   - Header: epic name, issue count, due date (editable)
- *   - Two columns: open issues (left, priority order) | completed issues (right, in italics)
+ *   - Tabs: Open (full-width, rank/priority toggle) | Completed (full-width)
  *   - Editable: due_date, description
  */
 
@@ -158,21 +158,19 @@ const EpicDetailPage = (() => {
           <button id="ed-desc-edit-btn" class="ed-inline-btn">edit</button>
         </div>
 
-        <div class="ed-columns">
-          <div class="ed-col">
-            <div class="ed-col-label">
-              Open (${openIssues.length})
-              <div class="pl-view-toggle">
-                <button class="pl-toggle-btn ${viewMode === 'rank' ? 'active' : ''}" data-view="rank">Rank</button>
-                <button class="pl-toggle-btn ${viewMode === 'priority' ? 'active' : ''}" data-view="priority">Priority</button>
-              </div>
-            </div>
-            <div id="ed-open-list">
-              ${buildOpenIssuesList(openIssues, slug, viewMode)}
+        <div class="ed-issues-section">
+          <div class="ed-tab-bar">
+            <button class="ed-tab active" data-tab="open">Open <span class="ed-tab-count">(${openIssues.length})</span></button>
+            <button class="ed-tab" data-tab="completed">Completed <span class="ed-tab-count">(${completedIssues.length})</span></button>
+            <div class="pl-view-toggle">
+              <button class="pl-toggle-btn ${viewMode === 'rank' ? 'active' : ''}" data-view="rank">Rank</button>
+              <button class="pl-toggle-btn ${viewMode === 'priority' ? 'active' : ''}" data-view="priority">Priority</button>
             </div>
           </div>
-          <div class="ed-col">
-            <div class="ed-col-label">Completed (${completedIssues.length})</div>
+          <div id="ed-open-list" class="ed-tab-panel">
+            ${buildOpenIssuesList(openIssues, slug, viewMode)}
+          </div>
+          <div id="ed-completed-list" class="ed-tab-panel" hidden>
             ${completedIssues.length
               ? completedIssues.map(i => buildIssueRow(i, slug, true)).join('')
               : `<div class="ed-empty-col">No completed issues.</div>`
@@ -244,9 +242,22 @@ const EpicDetailPage = (() => {
     bindOpenListRows(slug);
     bindViewToggle(openIssues, slug);
 
-    // Completed column row navigation
-    document.querySelectorAll('.ed-col:last-child .ed-issue-row[data-href]').forEach(row => {
+    // Completed panel row navigation
+    document.querySelectorAll('#ed-completed-list .ed-issue-row[data-href]').forEach(row => {
       row.addEventListener('click', () => Router.navigate(row.dataset.href));
+    });
+
+    // Tab switching
+    const viewToggle = document.querySelector('.pl-view-toggle');
+    document.querySelectorAll('.ed-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.ed-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const tab = btn.dataset.tab;
+        document.getElementById('ed-open-list').hidden = tab !== 'open';
+        document.getElementById('ed-completed-list').hidden = tab !== 'completed';
+        if (viewToggle) viewToggle.style.visibility = tab === 'open' ? 'visible' : 'hidden';
+      });
     });
 
     // Due date editing
