@@ -15,5 +15,14 @@
     "message": "Critical repair needed before Halloween deployment in 14 days"
   },
   "created_at": "2026-01-13T10:30:00.000Z",
-  "updated_at": "2026-01-13T10:30:00.000Z"
+  "updated_at": "2026-01-13T10:30:00.000Z",
+
+  "resolution_path": null,
+  "requires_confirmation": null,
+  "awaiting_confirmation": null,
+  "confirmation_requested_at": null,
+  "resolved_by": null,
+  "resolution_attempted_at": null,
+  "resolution_result": null,
+  "agent_notes": null
 }
