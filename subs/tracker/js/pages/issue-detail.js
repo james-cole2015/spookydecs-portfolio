@@ -156,6 +156,19 @@ const IssueDetailPage = (() => {
             </div>
           </div>
 
+          <div class="id-resolution" id="id-resolution-section" style="${(issue.state === 'completed' || issue.resolution) ? '' : 'display:none'}">
+            <div class="id-section-label">Resolution</div>
+            <div id="id-resolution-display" class="id-body-text ${issue.resolution ? '' : 'id-empty'}">
+              ${issue.resolution ? escHtml(issue.resolution) : 'Add a resolution…'}
+            </div>
+            <textarea id="id-resolution-input" class="id-desc-textarea" rows="3" style="display:none">${escHtml(issue.resolution || '')}</textarea>
+            <div id="id-resolution-actions" style="display:none;gap:8px;margin-top:6px">
+              <button id="id-resolution-save-btn" class="ci-btn-primary" style="font-size:12px;padding:4px 10px">Save</button>
+              <button id="id-resolution-cancel-btn" class="ci-btn-ghost" style="font-size:12px;padding:4px 10px">Cancel</button>
+            </div>
+            <button id="id-resolution-edit-btn" class="ed-inline-btn">edit</button>
+          </div>
+
           <div class="id-description">
             <div class="id-section-label">Description</div>
             <div id="id-desc-display" class="id-body-text ${issue.description ? '' : 'id-empty'}">
@@ -437,6 +450,8 @@ const IssueDetailPage = (() => {
     // State select
     document.getElementById('id-state-select')?.addEventListener('change', async e => {
       await patchIssue(id, { state: e.target.value });
+      const resSection = document.getElementById('id-resolution-section');
+      if (resSection) resSection.style.display = e.target.value === 'completed' ? '' : 'none';
     });
 
     // Epic select
@@ -485,6 +500,39 @@ const IssueDetailPage = (() => {
       descDisplay.style.display  = 'block';
       descEditBtn.style.display  = 'inline';
       descSaveBtn.disabled = false;
+    });
+
+    // Resolution edit
+    const resDisplay    = document.getElementById('id-resolution-display');
+    const resInput      = document.getElementById('id-resolution-input');
+    const resActions    = document.getElementById('id-resolution-actions');
+    const resEditBtn    = document.getElementById('id-resolution-edit-btn');
+    const resSaveBtn    = document.getElementById('id-resolution-save-btn');
+    const resCancelBtn  = document.getElementById('id-resolution-cancel-btn');
+
+    resEditBtn?.addEventListener('click', () => {
+      resDisplay.style.display  = 'none';
+      resEditBtn.style.display  = 'none';
+      resInput.style.display    = 'block';
+      resActions.style.display  = 'flex';
+    });
+    resCancelBtn?.addEventListener('click', () => {
+      resInput.style.display    = 'none';
+      resActions.style.display  = 'none';
+      resDisplay.style.display  = 'block';
+      resEditBtn.style.display  = 'inline';
+    });
+    resSaveBtn?.addEventListener('click', async () => {
+      const val = resInput.value.trim();
+      resSaveBtn.disabled = true;
+      await patchIssue(id, { resolution: val });
+      resDisplay.textContent   = val || 'Add a resolution…';
+      resDisplay.classList.toggle('id-empty', !val);
+      resInput.style.display   = 'none';
+      resActions.style.display = 'none';
+      resDisplay.style.display = 'block';
+      resEditBtn.style.display = 'inline';
+      resSaveBtn.disabled = false;
     });
 
     // Add task
