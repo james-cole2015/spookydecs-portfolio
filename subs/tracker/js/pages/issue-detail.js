@@ -48,12 +48,20 @@ const IssueDetailPage = (() => {
       const epics = epicData?.items || epicData || [];
       const tasks = taskData?.items || taskData || [];
 
+      let attachments = [];
+      try {
+        const attachmentData = await TrackerApi.attachments.list(issueParam);
+        attachments = attachmentData?.items || attachmentData || [];
+      } catch {
+        // attachment routes not yet deployed — render empty state
+      }
+
       if (!issue) {
         renderError(`Issue #${issueParam} not found.`);
         return;
       }
 
-      renderCard(issue, epics, tasks, epic);
+      renderCard(issue, epics, tasks, epic, attachments);
     } catch (err) {
       renderError(err.message);
     }
@@ -88,7 +96,7 @@ const IssueDetailPage = (() => {
   }
 
   // ── Card rendering ─────────────────────────────────────────────────────────
-  function renderCard(issue, epics, tasks, epicSlug) {
+  function renderCard(issue, epics, tasks, epicSlug, attachments = []) {
     const body = document.getElementById('id-body');
     if (!body) return;
 
@@ -207,12 +215,23 @@ const IssueDetailPage = (() => {
               <button id="id-add-note-btn" class="ci-btn-ghost">Add note</button>
             </div>
           </div>
+
+          <!-- Screenshots -->
+          <div class="id-attachments-section">
+            <div class="id-section-label">Screenshots</div>
+            <div class="id-attachment-strip" id="id-attachment-strip"></div>
+            <div class="id-add-attachment">
+              <button class="ci-btn-ghost" id="id-upload-attachment-btn">+ Add screenshot</button>
+            </div>
+          </div>
         </div>
       </div>`;
 
     renderTasks(tasks, issue.issue_number);
     renderNotes(issue.notes || []);
+    renderAttachments(attachments);
     bindCard(issue, epicSlug);
+    bindAttachments(issue.issue_number, issue);
   }
 
   // ── Tasks ──────────────────────────────────────────────────────────────────
@@ -585,6 +604,70 @@ const IssueDetailPage = (() => {
         Toast.show(`Failed to add note: ${err.message}`, 'error');
       } finally {
         input.disabled = false;
+      }
+    });
+  }
+
+  // ── Attachments ────────────────────────────────────────────────────────────
+  function renderAttachments(attachments) {
+    const strip = document.getElementById('id-attachment-strip');
+    if (!strip) return;
+    if (!attachments.length) {
+      strip.innerHTML = '<div class="id-empty id-attachment-empty">No screenshots yet.</div>';
+      return;
+    }
+    strip.innerHTML = attachments.map(a => `
+      <div class="id-attachment-thumb">
+        <a href="${escHtml(a.url)}" target="_blank" rel="noopener">
+          <img src="${escHtml(a.thumb_url || a.url)}" alt="screenshot" loading="lazy">
+        </a>
+        <button class="id-attachment-delete" data-id="${escHtml(a.id)}" title="Remove">×</button>
+      </div>
+    `).join('');
+  }
+
+  function bindAttachments(issueId, issue) {
+    document.getElementById('id-upload-attachment-btn')?.addEventListener('click', () => {
+      const modal = document.createElement('photo-upload-modal');
+      modal.setAttribute('context', 'tracker');
+      modal.setAttribute('photo-type', 'screenshot');
+      modal.setAttribute('season', 'shared');
+      modal.setAttribute('record-id', String(issue.issue_number));
+      modal.setAttribute('max-photos', '5');
+      document.body.appendChild(modal);
+
+      modal.addEventListener('upload-complete', async e => {
+        modal.remove();
+        const photos = (e.detail.photos || []).map(p => ({
+          photo_id:  p.photo_id,
+          url:       p.cloudfront_url,
+          thumb_url: p.thumb_cloudfront_url,
+          s3_key:    p.s3_key,
+        }));
+        try {
+          await TrackerApi.attachments.create(issueId, { photos });
+          const updated = await TrackerApi.attachments.list(issueId);
+          renderAttachments(updated?.items || updated || []);
+        } catch (err) {
+          Toast.show(`Failed to save attachment: ${err.message}`, 'error');
+        }
+      });
+
+      modal.addEventListener('upload-cancel', () => modal.remove());
+    });
+
+    // Event delegation for delete — bound once on the strip container
+    document.getElementById('id-attachment-strip')?.addEventListener('click', async e => {
+      const btn = e.target.closest('.id-attachment-delete');
+      if (!btn) return;
+      const attachmentId = btn.dataset.id;
+      btn.disabled = true;
+      try {
+        await TrackerApi.attachments.remove(issueId, attachmentId);
+        btn.closest('.id-attachment-thumb')?.remove();
+      } catch (err) {
+        Toast.show(`Failed to remove attachment: ${err.message}`, 'error');
+        btn.disabled = false;
       }
     });
   }
