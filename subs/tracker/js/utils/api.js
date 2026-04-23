@@ -75,6 +75,13 @@ const Api = {
     update: (taskId, data)=> request('PATCH',  `/tasks/${encodeURIComponent(taskId)}`, data),
     delete: (taskId)      => request('DELETE', `/tasks/${encodeURIComponent(taskId)}`),
   },
+
+  // ── Attachments ───────────────────────────────────────────────────────────
+  attachments: {
+    list:   (issueId)              => request('GET',    `/issues/${issueId}/attachments`),
+    create: (issueId, data)        => request('POST',   `/issues/${issueId}/attachments`, data),
+    remove: (issueId, attachmentId)=> request('DELETE', `/issues/${issueId}/attachments/${encodeURIComponent(attachmentId)}`),
+  },
 };
 
 window.TrackerApi = Api;
