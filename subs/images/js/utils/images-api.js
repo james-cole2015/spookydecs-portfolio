@@ -190,7 +190,6 @@ export async function suggestTags(photoId) {
     const response = await fetch(`${API_ENDPOINT}/admin/images/${photoId}/suggest-tags`, {
       method: 'POST',
       headers: buildHeaders(),
-      credentials: 'include',
     });
 
     if (response.status === 401) { await redirectToLogin(); return null; }
