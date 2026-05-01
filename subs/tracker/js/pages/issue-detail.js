@@ -224,6 +224,12 @@ const IssueDetailPage = (() => {
               <button class="ci-btn-ghost" id="id-upload-attachment-btn">+ Add screenshot</button>
             </div>
           </div>
+
+          <!-- Documents -->
+          <div class="id-documents-section" id="id-documents-section" style="display:none">
+            <div class="id-section-label">Documents</div>
+            <div class="id-document-list" id="id-document-list"></div>
+          </div>
         </div>
       </div>`;
 
@@ -610,20 +616,41 @@ const IssueDetailPage = (() => {
 
   // ── Attachments ────────────────────────────────────────────────────────────
   function renderAttachments(attachments) {
+    const photos = attachments.filter(a => (a.attachment_type || 'photo') === 'photo');
+    const docs   = attachments.filter(a => a.attachment_type === 'document');
+
     const strip = document.getElementById('id-attachment-strip');
-    if (!strip) return;
-    if (!attachments.length) {
-      strip.innerHTML = '<div class="id-empty id-attachment-empty">No screenshots yet.</div>';
-      return;
+    if (strip) {
+      if (!photos.length) {
+        strip.innerHTML = '<div class="id-empty id-attachment-empty">No screenshots yet.</div>';
+      } else {
+        strip.innerHTML = photos.map(a => `
+          <div class="id-attachment-thumb">
+            <a href="${escHtml(a.url)}" target="_blank" rel="noopener">
+              <img src="${escHtml(a.thumb_url || a.url)}" alt="screenshot" loading="lazy">
+            </a>
+            <button class="id-attachment-delete" data-id="${escHtml(a.id)}" title="Remove">×</button>
+          </div>
+        `).join('');
+      }
     }
-    strip.innerHTML = attachments.map(a => `
-      <div class="id-attachment-thumb">
-        <a href="${escHtml(a.url)}" target="_blank" rel="noopener">
-          <img src="${escHtml(a.thumb_url || a.url)}" alt="screenshot" loading="lazy">
-        </a>
-        <button class="id-attachment-delete" data-id="${escHtml(a.id)}" title="Remove">×</button>
-      </div>
-    `).join('');
+
+    const docSection = document.getElementById('id-documents-section');
+    const docList    = document.getElementById('id-document-list');
+    if (docSection && docList) {
+      if (!docs.length) {
+        docSection.style.display = 'none';
+      } else {
+        docSection.style.display = '';
+        docList.innerHTML = docs.map(a => `
+          <div class="id-doc-chip">
+            <a href="${escHtml(a.url)}" target="_blank" rel="noopener">${escHtml(a.filename || 'document')}</a>
+            <span class="id-doc-arrow">↗</span>
+            <button class="id-doc-delete" data-id="${escHtml(a.id)}" title="Remove">×</button>
+          </div>
+        `).join('');
+      }
+    }
   }
 
   function bindAttachments(issueId, issue) {
@@ -656,7 +683,7 @@ const IssueDetailPage = (() => {
       modal.addEventListener('upload-cancel', () => modal.remove());
     });
 
-    // Event delegation for delete — bound once on the strip container
+    // Event delegation for photo delete
     document.getElementById('id-attachment-strip')?.addEventListener('click', async e => {
       const btn = e.target.closest('.id-attachment-delete');
       if (!btn) return;
@@ -667,6 +694,25 @@ const IssueDetailPage = (() => {
         btn.closest('.id-attachment-thumb')?.remove();
       } catch (err) {
         Toast.show(`Failed to remove attachment: ${err.message}`, 'error');
+        btn.disabled = false;
+      }
+    });
+
+    // Event delegation for document delete
+    document.getElementById('id-document-list')?.addEventListener('click', async e => {
+      const btn = e.target.closest('.id-doc-delete');
+      if (!btn) return;
+      const attachmentId = btn.dataset.id;
+      btn.disabled = true;
+      try {
+        await TrackerApi.attachments.remove(issueId, attachmentId);
+        btn.closest('.id-doc-chip')?.remove();
+        const docList = document.getElementById('id-document-list');
+        if (docList && !docList.querySelector('.id-doc-chip')) {
+          document.getElementById('id-documents-section').style.display = 'none';
+        }
+      } catch (err) {
+        Toast.show(`Failed to remove document: ${err.message}`, 'error');
         btn.disabled = false;
       }
     });

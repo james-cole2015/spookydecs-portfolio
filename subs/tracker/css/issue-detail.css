@@ -573,3 +573,84 @@
 .id-add-attachment {
   margin-top: 6px;
 }
+
+/* ── Documents ─────────────────────────────────────────────────────────────── */
+.id-documents-section {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.id-document-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 0;
+}
+
+.id-doc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px 5px 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  max-width: 320px;
+}
+
+.id-doc-chip::before {
+  content: '📄';
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.id-doc-chip a {
+  color: var(--text-2);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.id-doc-chip a:hover {
+  color: var(--accent);
+}
+
+.id-doc-chip .id-doc-arrow {
+  color: var(--text-3);
+  font-size: 11px;
+  flex-shrink: 0;
+  pointer-events: none;
+  transition: color 0.15s;
+}
+
+.id-doc-chip:hover .id-doc-arrow {
+  color: var(--accent);
+}
+
+.id-doc-delete {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+  margin-left: 2px;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.id-doc-chip:hover .id-doc-delete {
+  opacity: 1;
+}
+
+.id-doc-delete:hover {
+  color: var(--red);
+}
