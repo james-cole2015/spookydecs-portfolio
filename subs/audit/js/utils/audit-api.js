@@ -14,7 +14,12 @@ const AuditAPI = {
     async request(path, params = {}) {
         const base = await this.getBaseUrl();
         const url = `${base}${path}${this.buildQuery(params)}`;
-        const response = await fetch(url);
+        const headers = window.SpookyAuth ? window.SpookyAuth.buildHeaders() : {};
+        const response = await fetch(url, { headers });
+        if (response.status === 401) {
+            if (window.SpookyAuth) await window.SpookyAuth.redirectToLogin();
+            return null;
+        }
         const result = await response.json().catch(() => ({}));
         if (!response.ok) {
             throw new Error(result.error || result.message || `HTTP ${response.status}`);
