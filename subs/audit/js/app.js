@@ -4,6 +4,7 @@ async function init() {
     } catch (err) {
         console.warn('SpookyConfig not available:', err);
     }
+    if (!window.SpookyAuth.enforceEnvAccess()) return;
     initRouter();
 }
 
