@@ -18,7 +18,7 @@ const AuditAPI = {
         const response = await fetch(url, { headers });
         if (response.status === 401) {
             if (window.SpookyAuth) await window.SpookyAuth.redirectToLogin();
-            return null;
+            throw new Error('Unauthorized');
         }
         const result = await response.json().catch(() => ({}));
         if (!response.ok) {
