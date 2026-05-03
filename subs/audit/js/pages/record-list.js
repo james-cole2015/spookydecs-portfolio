@@ -25,12 +25,12 @@ async function loadRecords(token) {
     renderRecordsTable(_tableContainer);
 
     try {
-        const { entityType, operation, environment } = AuditState.filters;
+        const { entityType, operation } = AuditState.filters;
         const isAllTypes = !entityType;
         const result = isAllTypes
-            ? await AuditAPI.getAllTypes({ operation, environment })
+            ? await AuditAPI.getAllTypes({ operation })
             : await AuditAPI.getRecords({
-                entityType, operation, environment,
+                entityType, operation,
                 nextToken: token,
                 limit: AuditConfig.DEFAULT_PAGE_SIZE
             });
@@ -69,11 +69,11 @@ async function handlePrevPage() {
 }
 
 async function handleBulkExport() {
-    const { entityType, operation, environment } = AuditState.filters;
+    const { entityType, operation } = AuditState.filters;
     showInfoToast('Fetching all records for export…', 4000);
 
     try {
-        const records = await AuditAPI.getAllRecordsForExport({ entityType, operation, environment });
+        const records = await AuditAPI.getAllRecordsForExport({ entityType, operation });
         if (!records.length) {
             showWarningToast('No records to export.');
             return;
@@ -81,7 +81,7 @@ async function handleBulkExport() {
 
         const format = await promptExportFormat();
         const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-        const label = [entityType || 'all', operation || 'all', environment].filter(Boolean).join('-');
+        const label = [entityType || 'all', operation || 'all', AuditAPI.getEnvironment()].filter(Boolean).join('-');
 
         if (format === 'json') {
             downloadFile(JSON.stringify(records, null, 2), `audit-export-${label}-${ts}.json`, 'application/json');

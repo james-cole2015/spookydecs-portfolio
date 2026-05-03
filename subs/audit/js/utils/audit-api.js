@@ -27,25 +27,32 @@ const AuditAPI = {
         return result.data || result;
     },
 
-    async getRecords({ entityType, operation, environment, nextToken, limit = AuditConfig.DEFAULT_PAGE_SIZE } = {}) {
+    getEnvironment() {
+        return window.SpookyConfig.getStage();
+    },
+
+    async getRecords({ entityType, operation, nextToken, limit = AuditConfig.DEFAULT_PAGE_SIZE } = {}) {
+        const environment = this.getEnvironment();
         return this.request('/audit/records', { entityType, operation, environment, nextToken, limit });
     },
 
-    async getEntityHistory({ entityType, entityId, environment, nextToken, limit = AuditConfig.DEFAULT_PAGE_SIZE } = {}) {
+    async getEntityHistory({ entityType, entityId, nextToken, limit = AuditConfig.DEFAULT_PAGE_SIZE } = {}) {
+        const environment = this.getEnvironment();
         return this.request(`/audit/${entityType}/${entityId}/history`, { environment, nextToken, limit });
     },
 
-    async getAllTypes({ operation, environment, limit = AuditConfig.DEFAULT_PAGE_SIZE } = {}) {
+    async getAllTypes({ operation, limit = AuditConfig.DEFAULT_PAGE_SIZE } = {}) {
         const types = Object.keys(AuditConfig.ENTITY_TYPES);
         const pages = await Promise.all(
-            types.map(t => this.getRecords({ entityType: t, operation, environment, limit }).catch(() => ({ records: [] })))
+            types.map(t => this.getRecords({ entityType: t, operation, limit }).catch(() => ({ records: [] })))
         );
         const merged = pages.flatMap(p => p.records || []);
         merged.sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
         return { records: merged.slice(0, limit), nextToken: null };
     },
 
-    async getAllRecordsForExport({ entityType, operation, environment } = {}) {
+    async getAllRecordsForExport({ entityType, operation } = {}) {
+        const environment = this.getEnvironment();
         const records = [];
         let token = null;
         do {

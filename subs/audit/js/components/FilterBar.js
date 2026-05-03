@@ -1,5 +1,5 @@
 function renderFilterBar(container) {
-    const { entityType, operation, environment } = AuditState.filters;
+    const { entityType, operation } = AuditState.filters;
 
     container.innerHTML = `
         <div class="filter-bar">
@@ -21,13 +21,6 @@ function renderFilterBar(container) {
                     ).join('')}
                 </select>
             </div>
-            <div class="filter-group">
-                <label class="filter-label">Environment</label>
-                <div class="env-toggle">
-                    <button class="env-btn ${environment === 'dev' ? 'active' : ''}" data-env="dev">Dev</button>
-                    <button class="env-btn ${environment === 'prod' ? 'active' : ''}" data-env="prod">Prod</button>
-                </div>
-            </div>
             <div class="filter-actions">
                 <button class="btn btn-ghost btn-sm" id="filter-reset">Reset</button>
                 <button class="btn btn-accent btn-sm" id="bulk-export-btn">Export all</button>
@@ -45,18 +38,9 @@ function renderFilterBar(container) {
         refreshRecordList();
     });
 
-    container.querySelectorAll('.env-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            setFilter('environment', btn.dataset.env);
-            renderFilterBar(container);
-            refreshRecordList();
-        });
-    });
-
     container.querySelector('#filter-reset').addEventListener('click', () => {
         AuditState.filters.entityType = '';
         AuditState.filters.operation = '';
-        AuditState.filters.environment = 'dev';
         resetPagination();
         renderFilterBar(container);
         refreshRecordList();

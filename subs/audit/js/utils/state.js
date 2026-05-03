@@ -1,8 +1,7 @@
 const AuditState = {
     filters: {
         entityType: '',
-        operation: '',
-        environment: 'dev'
+        operation: ''
     },
     records: [],
     currentPageToken: null,
