@@ -22,6 +22,30 @@ const IssueDetailPage = (() => {
       .replace(/"/g, '&quot;');
   }
 
+  function buildAcDisplay(items) {
+    if (!items || !items.length) {
+      return '<div class="id-empty">No acceptance criteria defined.</div>';
+    }
+    const dev     = items.filter(s => /^\[dev\]/i.test(s));
+    const prod    = items.filter(s => /^\[prod\]/i.test(s));
+    const general = items.filter(s => !/^\[(dev|prod)\]/i.test(s));
+    if (!dev.length && !prod.length) {
+      return `<ul class="id-ac-list">${items.map(s => `<li class="id-ac-item">${escHtml(s)}</li>`).join('')}</ul>`;
+    }
+    return [
+      { label: 'Dev',     items: dev },
+      { label: 'Prod',    items: prod },
+      { label: 'General', items: general },
+    ]
+      .filter(g => g.items.length)
+      .map(g => `
+        <div class="id-ac-group">
+          <span class="id-ac-group-label">${g.label}</span>
+          <ul class="id-ac-list">${g.items.map(s => `<li class="id-ac-item">${escHtml(s)}</li>`).join('')}</ul>
+        </div>`)
+      .join('');
+  }
+
   function stateBadgeClass(state) {
     return {
       'backlog':   'badge-backlog',
@@ -188,6 +212,20 @@ const IssueDetailPage = (() => {
               <button id="id-desc-cancel-btn" class="ci-btn-ghost" style="font-size:12px;padding:4px 10px">Cancel</button>
             </div>
             <button id="id-desc-edit-btn" class="ed-inline-btn">edit</button>
+          </div>
+
+          <!-- Acceptance Criteria -->
+          <div class="id-ac-section">
+            <div class="id-section-label">Acceptance Criteria</div>
+            <div id="id-ac-display">
+              ${buildAcDisplay(issue.acceptance_criteria || [])}
+            </div>
+            <textarea id="id-ac-input" class="id-desc-textarea" rows="6" style="display:none">${escHtml((issue.acceptance_criteria || []).join('\n'))}</textarea>
+            <div id="id-ac-actions" style="display:none;gap:8px;margin-top:6px">
+              <button id="id-ac-save-btn" class="ci-btn-primary" style="font-size:12px;padding:4px 10px">Save</button>
+              <button id="id-ac-cancel-btn" class="ci-btn-ghost" style="font-size:12px;padding:4px 10px">Cancel</button>
+            </div>
+            <button id="id-ac-edit-btn" class="ed-inline-btn">edit</button>
           </div>
 
           <!-- Tasks -->
@@ -558,6 +596,38 @@ const IssueDetailPage = (() => {
       resDisplay.style.display = 'block';
       resEditBtn.style.display = 'inline';
       resSaveBtn.disabled = false;
+    });
+
+    // Acceptance criteria edit
+    const acDisplay   = document.getElementById('id-ac-display');
+    const acInput     = document.getElementById('id-ac-input');
+    const acActions   = document.getElementById('id-ac-actions');
+    const acEditBtn   = document.getElementById('id-ac-edit-btn');
+    const acSaveBtn   = document.getElementById('id-ac-save-btn');
+    const acCancelBtn = document.getElementById('id-ac-cancel-btn');
+
+    acEditBtn?.addEventListener('click', () => {
+      acDisplay.style.display  = 'none';
+      acEditBtn.style.display  = 'none';
+      acInput.style.display    = 'block';
+      acActions.style.display  = 'flex';
+    });
+    acCancelBtn?.addEventListener('click', () => {
+      acInput.style.display    = 'none';
+      acActions.style.display  = 'none';
+      acDisplay.style.display  = 'block';
+      acEditBtn.style.display  = 'inline';
+    });
+    acSaveBtn?.addEventListener('click', async () => {
+      const val = acInput.value.split('\n').map(s => s.trim()).filter(Boolean);
+      acSaveBtn.disabled = true;
+      await patchIssue(id, { acceptance_criteria: val });
+      acDisplay.innerHTML      = buildAcDisplay(val);
+      acInput.style.display    = 'none';
+      acActions.style.display  = 'none';
+      acDisplay.style.display  = 'block';
+      acEditBtn.style.display  = 'inline';
+      acSaveBtn.disabled = false;
     });
 
     // Add task

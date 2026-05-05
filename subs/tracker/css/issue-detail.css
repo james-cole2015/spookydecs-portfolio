@@ -98,6 +98,59 @@
   font-size: 13px;
 }
 
+/* ── Acceptance Criteria ─────────────────────────────────────────────────────── */
+.id-ac-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.id-ac-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.id-ac-item {
+  position: relative;
+  padding: 6px 10px 6px 22px;
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--text-2);
+  line-height: 1.5;
+}
+
+.id-ac-item::before {
+  content: '·';
+  position: absolute;
+  left: 10px;
+  color: var(--text-3);
+}
+
+.id-ac-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.id-ac-group:last-child {
+  margin-bottom: 0;
+}
+
+.id-ac-group-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-3);
+}
+
 /* ── Description ────────────────────────────────────────────────────────────── */
 .id-description {
   display: flex;
