@@ -447,3 +447,94 @@
         max-width: none;
     }
 }
+
+/* ==================== IG ANALYSIS CARD ==================== */
+
+.violation-ig-card {
+    background: var(--surface-default, #ffffff);
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-left: 3px solid var(--color-accent, #81d4fa);
+    border-radius: var(--radius-lg, 8px);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.08));
+}
+
+.ig-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.ig-card-header h3 {
+    font-size: 1.125rem;
+    margin: 0;
+    color: var(--text-primary, #0f172a);
+}
+
+.ig-card-badges {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.ig-badge {
+    display: inline-block;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.ig-badge-warning {
+    background: var(--badge-warning-bg, #fef3c7);
+    color: var(--badge-warning-text, #92400e);
+}
+
+.ig-badge-info {
+    background: var(--color-accent-light, #e0f7fa);
+    color: #006064;
+}
+
+.ig-notes {
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--text-body, #1e293b);
+    margin: 0 0 1rem;
+    white-space: pre-wrap;
+}
+
+.ig-resolution-path {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--surface-muted, #f1f5f9);
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: var(--radius-md, 6px);
+    padding: 0.3rem 0.65rem;
+}
+
+.ig-path-label {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary, #64748b);
+}
+
+.ig-path-value {
+    font-family: ui-monospace, 'Cascadia Code', monospace;
+    font-size: 0.6875rem;
+    color: var(--text-body, #1e293b);
+}
+
+/* Disabled Resolve button in header */
+.violation-header-actions button[disabled] {
+    cursor: not-allowed;
+    opacity: 0.45;
+}

@@ -101,6 +101,46 @@ function renderViolationNav(violationId) {
 }
 
 /**
+ * Build the IG Analysis card HTML.
+ * Returns empty string when agent_notes is absent.
+ */
+function renderIGAnalysisCard(violation) {
+    const { agent_notes, resolution_path, requires_confirmation, awaiting_confirmation } = violation;
+    if (!agent_notes) return '';
+
+    const requiresConfirmationBadge = requires_confirmation
+        ? `<span class="ig-badge ig-badge-warning" title="Resolver Agent must request confirmation before acting">⚠ Confirmation required</span>`
+        : '';
+
+    const awaitingConfirmationBadge = awaiting_confirmation === 'true'
+        ? `<span class="ig-badge ig-badge-info">Awaiting confirmation</span>`
+        : '';
+
+    const resolutionPathChip = resolution_path
+        ? `<div class="ig-resolution-path">
+               <span class="ig-path-label">Path</span>
+               <span class="ig-path-value">${sanitizeHtml(resolution_path)}</span>
+           </div>`
+        : '';
+
+    return `
+        <div class="violation-ig-card">
+            <div class="ig-card-header">
+                <h3>IG Analysis</h3>
+                <div class="ig-card-badges">
+                    ${requiresConfirmationBadge}
+                    ${awaitingConfirmationBadge}
+                </div>
+            </div>
+            <div class="ig-card-body">
+                <p class="ig-notes">${sanitizeHtml(agent_notes)}</p>
+                ${resolutionPathChip}
+            </div>
+        </div>
+    `;
+}
+
+/**
  * Render violation content
  */
 function renderViolationContent() {
@@ -173,8 +213,20 @@ function renderViolationContent() {
             </div>
             
             <div class="violation-header-actions">
-                <button 
-                    class="btn btn-secondary" 
+                ${currentViolation.status === 'open' ? `
+                    <button class="btn btn-secondary" id="run-ig-btn">
+                        Run IG
+                    </button>
+                ` : ''}
+                <button
+                    class="btn btn-secondary"
+                    disabled
+                    title="Auto-resolution coming in Phase 4"
+                >
+                    Resolve
+                </button>
+                <button
+                    class="btn btn-secondary"
                     id="dismiss-violation-btn"
                     ${!canDismiss ? 'disabled' : ''}
                     ${!canDismiss && currentViolation.severity === 'Critical' ? 'title="Critical violations cannot be dismissed"' : ''}
@@ -261,10 +313,13 @@ function renderViolationContent() {
                     ${violationReasonHtml}
                 </div>
 
+                <!-- IG Analysis card — present only when agent_notes is populated -->
+                ${renderIGAnalysisCard(currentViolation)}
+
                 <div class="violation-notes-card">
                     <h3>Notes</h3>
-                    <textarea id="violation-notes" 
-                              rows="6" 
+                    <textarea id="violation-notes"
+                              rows="6"
                               placeholder="Add notes about this violation...">${sanitizeHtml(details.notes || '')}</textarea>
                     <button class="btn btn-primary" id="save-notes-btn">
                         Save Notes
@@ -273,14 +328,14 @@ function renderViolationContent() {
 
                 <div class="violation-actions-card">
                     <h3>Actions</h3>
-                    
+
                     ${currentViolation.severity === 'Critical' && currentViolation.status === 'open' ? `
                         <div class="critical-notice">
                             ⚠️ <strong>Critical violations cannot be dismissed.</strong>
                             <p>Please fix the issue or contact admin to adjust the rule severity.</p>
                         </div>
                     ` : ''}
-                    
+
                     <div class="delete-section">
                         <button class="btn btn-danger" id="delete-btn">
                             Delete Violation
@@ -309,6 +364,12 @@ function attachViolationDetailListeners() {
     const dismissBtn = document.getElementById('dismiss-violation-btn');
     if (dismissBtn && !dismissBtn.disabled) {
         dismissBtn.addEventListener('click', openDismissModal);
+    }
+
+    // Run IG
+    const runIGBtn = document.getElementById('run-ig-btn');
+    if (runIGBtn) {
+        runIGBtn.addEventListener('click', runInspectorGadget);
     }
 
     // Delete
@@ -367,6 +428,41 @@ async function saveViolationNotes() {
     } finally {
         saveBtn.disabled = false;
         saveBtn.textContent = 'Save Notes';
+    }
+}
+
+/**
+ * Clear IG annotations and invoke Inspector Gadget for this violation.
+ * IG runs asynchronously — the button gives immediate feedback, then
+ * reloads the violation after a short delay so the user can see when
+ * annotations arrive.
+ */
+async function runInspectorGadget() {
+    const btn = document.getElementById('run-ig-btn');
+    if (!btn) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Running...';
+
+    try {
+        await InspectorAPI.runIG(currentViolation.violation_id);
+        showSuccessToast('Inspector Gadget invoked — analysis will appear shortly');
+
+        // Give IG ~8 s to annotate, then refresh the card so the user sees results
+        setTimeout(async () => {
+            try {
+                const violationData = await InspectorAPI.getViolation(currentViolation.violation_id);
+                currentViolation = violationData.violation;
+                renderViolationContent();
+            } catch (_) {
+                // Non-critical — user can reload manually
+            }
+        }, 8000);
+
+    } catch (error) {
+        showErrorToast(`Failed to invoke Inspector Gadget: ${error.message}`);
+        btn.disabled = false;
+        btn.textContent = 'Run IG';
     }
 }
 

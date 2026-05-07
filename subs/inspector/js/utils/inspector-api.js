@@ -131,6 +131,10 @@ const InspectorAPI = {
     return this.request(`/admin/inspector/violations/${violationId}`, { method: 'DELETE' });
   },
 
+  async runIG(violationId) {
+    return this.request(`/admin/inspector/violations/${violationId}/run-ig`, { method: 'POST' });
+  },
+
   // ==================== BATCH OPERATIONS ====================
 
   async getViolationsForRule(ruleId) {

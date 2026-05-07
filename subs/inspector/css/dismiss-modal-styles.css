@@ -137,6 +137,8 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    border-left: 1px solid var(--border-default, #e2e8f0);
+    padding-left: 1rem;
 }
 
 .violation-page-header {

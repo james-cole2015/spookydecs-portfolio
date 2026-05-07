@@ -26,18 +26,30 @@
 | `updated_by` | String / null | Who last updated it |
 
 ### Agent Enrichment Fields
-Set by the Identification Agent and Resolver Agent after the evaluator creates the violation. All default to `null` at creation time and are never overwritten by re-evaluations.
 
-| Field | Type | Set by | Description |
-|-------|------|--------|-------------|
-| `resolution_path` | String / null | Identification Agent | Encoded resolution strategy, e.g. `auto:fill_field`, `manual:fix_relationship`, `manual:review_duplicate` |
-| `requires_confirmation` | Boolean / null | Identification Agent | `true` if Resolver Agent must request user confirmation before acting. Always `true` for Critical severity. |
-| `awaiting_confirmation` | String / null | Resolver Agent | `"true"` when the Resolver has sent a confirmation request and is waiting for a response. Stored as a string (not boolean) for GSI key compatibility. |
-| `confirmation_requested_at` | String / null | Resolver Agent | ISO timestamp when the confirmation request was sent |
-| `resolved_by` | String / null | Resolver Agent | Who or what resolved the violation: `"Resolver"`, `"manual"`, etc. |
-| `resolution_attempted_at` | String / null | Resolver Agent | ISO timestamp of the last resolution attempt |
-| `resolution_result` | String / null | Resolver Agent | Outcome: `"success"`, `"failed"`, `"skipped"`, etc. |
-| `agent_notes` | String / null | Either agent | Free-text notes appended by either agent during processing |
+Written by the Inspector Gadget (IG) agentic pipeline after the evaluator creates a violation. All fields are absent at creation time (never written as `null` — the consumer strips `None` values to satisfy sparse GSI constraints). Fields are grouped by phase.
+
+#### Phase 3 — Inspector Gadget (IG) fields
+Written by `sd_inspector_gadget` via an agentic Bedrock loop. IG is read-only: it only annotates, never modifies items or resolves violations. These fields are skipped if `agent_notes` is already present on the violation record (skip-if-populated guard).
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `agent_notes` | String / null | Human-readable recommendation from IG, referencing specific context gathered (field values, tote IDs, history). Free-text. |
+| `resolution_path` | String / null | Snake-case action identifier describing the recommended resolution strategy, e.g. `suggest_packing_location`, `schedule_maintenance`, `manual_review`. |
+| `requires_confirmation` | Boolean / null | `true` when the recommended action is high-risk or irreversible (e.g. retiring an item, deleting a record). IG sets this; the UI shows a warning badge when `true`. |
+
+#### Phase 4 — Resolver Agent fields (planned)
+Written by the Resolver Agent (not yet implemented). These fields are defined in the schema and GSI config but are absent from all current violation records.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `awaiting_confirmation` | String / null | `"true"` when the Resolver has sent a confirmation request and is waiting for a response. Stored as a String (not Boolean) for GSI key compatibility — records not awaiting confirmation omit this field entirely (sparse GSI). |
+| `confirmation_requested_at` | String / null | ISO timestamp when the Resolver sent the confirmation request. |
+| `resolved_by` | String / null | Identity of the resolver: `"Resolver"`, `"manual"`, etc. |
+| `resolution_attempted_at` | String / null | ISO timestamp of the last resolution attempt. |
+| `resolution_result` | String / null | Outcome of the resolution attempt: `"success"`, `"failed"`, `"skipped"`, etc. |
+
+> **Re-running IG:** Use `POST /admin/inspector/violations/{violation_id}/run-ig` to clear Phase 3 fields and re-invoke IG. The handler removes `agent_notes`, `resolution_path`, and `requires_confirmation` from DDB, then invokes `sd_inspector_gadget` with `action: "created"` to bypass the skip-if-populated guard.
 
 ### GSIs
 
