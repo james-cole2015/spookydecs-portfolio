@@ -25,11 +25,8 @@ class StatsBar {
             let violations;
 
             // If filters are provided, use filtered API call
-            if (filters.status || filters.severity || filters.rule_id) {
-                violations = await this.fetchFilteredViolations(filters);
-            } else {
-                violations = await InspectorAPI.getAllViolations();
-            }
+            const activeFilters = Object.keys(filters).length ? filters : { status: 'open' };
+            violations = await this.fetchFilteredViolations(activeFilters);
 
             this.stats = calculateStats(violations);
             this.render();
@@ -89,7 +86,7 @@ class StatsBar {
         this.container.innerHTML = `
             <div class="stats-bar">
                 <div class="stat-card stat-total">
-                    <div class="stat-label">Total</div>
+                    <div class="stat-label">Open</div>
                     <div class="stat-value">${this.stats.total}</div>
                 </div>
                 <div class="stat-card stat-critical">
