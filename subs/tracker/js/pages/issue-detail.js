@@ -144,126 +144,137 @@ const IssueDetailPage = (() => {
         <div class="id-card">
           <div class="id-header">
             <span class="id-number">#${issue.issue_number}</span>
-            <h1 class="id-title" id="id-title-display">${escHtml(issue.title)}</h1>
-          </div>
-
-          <div class="id-meta">
-            <div class="id-meta-row">
-              <span class="id-label">State</span>
-              <select class="id-select" id="id-state-select">
-                ${['backlog','planned','open','blocked','completed'].map(s =>
-                  `<option value="${s}" ${issue.state === s ? 'selected' : ''}>${s}</option>`
-                ).join('')}
-              </select>
-            </div>
-            <div class="id-meta-row">
-              <span class="id-label">Epic</span>
-              <select class="id-select" id="id-epic-select">
-                <option value="">— Backlog —</option>
-                ${epicOptions}
-              </select>
-            </div>
-            <div class="id-meta-row">
-              <span class="id-label">Priority</span>
-              <select class="id-select" id="id-priority-select">
-                <option value="">–</option>
-                ${['P0','P1','P2'].map(p =>
-                  `<option value="${p}" ${issue.priority === p ? 'selected' : ''}>${p}</option>`
-                ).join('')}
-              </select>
-            </div>
-            <div class="id-meta-row">
-              <span class="id-label">Effort</span>
-              <select class="id-select" id="id-effort-select">
-                <option value="">–</option>
-                ${['XS','S','M','L','XL'].map(e =>
-                  `<option value="${e}" ${issue.effort === e ? 'selected' : ''}>${e}</option>`
-                ).join('')}
-              </select>
-            </div>
-            <div class="id-meta-row">
-              <span class="id-label">Priority rank</span>
-              <span class="id-value">${issue.priority_rank != null ? `#${issue.priority_rank}` : '—'}</span>
-            </div>
-          </div>
-
-          <div class="id-resolution" id="id-resolution-section" style="${(issue.state === 'completed' || issue.resolution) ? '' : 'display:none'}">
-            <div class="id-section-label">Resolution</div>
-            <div id="id-resolution-display" class="id-body-text ${issue.resolution ? '' : 'id-empty'}">
-              ${issue.resolution ? escHtml(issue.resolution) : 'Add a resolution…'}
-            </div>
-            <textarea id="id-resolution-input" class="id-desc-textarea" rows="3" style="display:none">${escHtml(issue.resolution || '')}</textarea>
-            <div id="id-resolution-actions" style="display:none;gap:8px;margin-top:6px">
-              <button id="id-resolution-save-btn" class="ci-btn-primary" style="font-size:12px;padding:4px 10px">Save</button>
-              <button id="id-resolution-cancel-btn" class="ci-btn-ghost" style="font-size:12px;padding:4px 10px">Cancel</button>
-            </div>
-            <button id="id-resolution-edit-btn" class="ed-inline-btn">edit</button>
-          </div>
-
-          <div class="id-description">
-            <div class="id-section-label">Description</div>
-            <div id="id-desc-display" class="id-body-text ${issue.description ? '' : 'id-empty'}">${issue.description ? escHtml(issue.description.trim()) : 'No description.'}</div>
-            <textarea id="id-desc-input" class="id-desc-textarea" rows="5" style="display:none">${escHtml((issue.description || '').trim())}</textarea>
-            <div id="id-desc-actions" style="display:none;gap:8px;margin-top:6px">
-              <button id="id-desc-save-btn" class="ci-btn-primary" style="font-size:12px;padding:4px 10px">Save</button>
-              <button id="id-desc-cancel-btn" class="ci-btn-ghost" style="font-size:12px;padding:4px 10px">Cancel</button>
-            </div>
-            <button id="id-desc-edit-btn" class="ed-inline-btn">edit</button>
-          </div>
-
-          <!-- Acceptance Criteria -->
-          <div class="id-ac-section">
-            <div class="id-section-label">Acceptance Criteria</div>
-            <div id="id-ac-display">
-              ${buildAcDisplay(issue.acceptance_criteria || [])}
-            </div>
-            <textarea id="id-ac-input" class="id-desc-textarea" rows="6" style="display:none">${escHtml((issue.acceptance_criteria || []).join('\n'))}</textarea>
-            <div id="id-ac-actions" style="display:none;gap:8px;margin-top:6px">
-              <button id="id-ac-save-btn" class="ci-btn-primary" style="font-size:12px;padding:4px 10px">Save</button>
-              <button id="id-ac-cancel-btn" class="ci-btn-ghost" style="font-size:12px;padding:4px 10px">Cancel</button>
-            </div>
-            <button id="id-ac-edit-btn" class="ed-inline-btn">edit</button>
-          </div>
-
-          <!-- Tasks -->
-          <div class="id-tasks-section">
-            <div class="id-section-label">Tasks <span class="id-task-count" id="id-task-count">${tasks.length}</span></div>
-            <div class="id-task-progress" id="id-task-progress" style="display:none">
-              <div class="id-task-progress-track">
-                <div class="id-task-progress-bar" style="width:0%"></div>
+            <div class="id-title-wrap">
+              <div class="id-title-row">
+                <h1 class="id-title" id="id-title-display">${escHtml(issue.title)}</h1>
+                <button id="id-title-edit-btn" class="ed-inline-btn">edit</button>
               </div>
-              <span class="id-task-progress-label"></span>
-            </div>
-            <div id="id-tasks-list"></div>
-            <div class="id-add-task">
-              <input id="id-new-task-input" class="id-task-new-input" type="text" placeholder="Add a task…" />
-              <button id="id-add-task-btn" class="ci-btn-ghost">Add</button>
-            </div>
-          </div>
-
-          <!-- Notes -->
-          <div class="id-notes-section">
-            <div class="id-section-label">Notes <span class="id-note-count">${(issue.notes || []).length}</span></div>
-            <div id="id-notes-list"></div>
-            <div class="id-add-note">
-              <textarea id="id-new-note-input" class="id-note-new-input" rows="2" placeholder="Add a note or update…"></textarea>
-              <button id="id-add-note-btn" class="ci-btn-ghost">Add note</button>
+              <input id="id-title-input" class="id-title-input" type="text" value="${escHtml(issue.title)}" style="display:none">
+              <div id="id-title-actions" style="display:none;gap:8px;margin-top:6px">
+                <button id="id-title-save-btn" class="ci-btn-primary" style="font-size:12px;padding:4px 10px">Save</button>
+                <button id="id-title-cancel-btn" class="ci-btn-ghost" style="font-size:12px;padding:4px 10px">Cancel</button>
+              </div>
+              <div class="id-header-badges">
+                <span class="badge ${stateBadgeClass(issue.state)}">${issue.state}</span>
+                ${currentEpic ? `<span class="id-epic-badge">${escHtml(currentEpic)}</span>` : ''}
+              </div>
             </div>
           </div>
 
-          <!-- Screenshots -->
-          <div class="id-attachments-section">
-            <div class="id-section-label">Screenshots</div>
-            <div class="id-attachment-strip" id="id-attachment-strip"></div>
-            <div class="id-add-attachment">
-              <button class="ci-btn-ghost" id="id-upload-attachment-btn">+ Add screenshot</button>
-            </div>
-          </div>
+          <div class="id-columns">
+            <div class="id-main">
+              <div class="id-description">
+                <div class="id-section-label">Description</div>
+                <div id="id-desc-display" class="id-body-text ${issue.description ? '' : 'id-empty'}">${issue.description ? escHtml(issue.description.trim()) : 'No description.'}</div>
+                <textarea id="id-desc-input" class="id-desc-textarea" rows="5" style="display:none">${escHtml((issue.description || '').trim())}</textarea>
+                <div id="id-desc-actions" style="display:none;gap:8px;margin-top:6px">
+                  <button id="id-desc-save-btn" class="ci-btn-primary" style="font-size:12px;padding:4px 10px">Save</button>
+                  <button id="id-desc-cancel-btn" class="ci-btn-ghost" style="font-size:12px;padding:4px 10px">Cancel</button>
+                </div>
+                <button id="id-desc-edit-btn" class="ed-inline-btn">edit</button>
+              </div>
 
-          <!-- Documents -->
-          <div class="id-documents-section" id="id-documents-section" style="display:none">
-            <div class="id-section-label">Documents</div>
-            <div class="id-document-list" id="id-document-list"></div>
+              <div class="id-tasks-section">
+                <div class="id-section-label">Tasks <span class="id-task-count" id="id-task-count">${tasks.length}</span></div>
+                <div class="id-task-progress" id="id-task-progress" style="display:none">
+                  <div class="id-task-progress-track">
+                    <div class="id-task-progress-bar" style="width:0%"></div>
+                  </div>
+                  <span class="id-task-progress-label"></span>
+                </div>
+                <div id="id-tasks-list"></div>
+                <div class="id-add-task">
+                  <input id="id-new-task-input" class="id-task-new-input" type="text" placeholder="Add a task…" />
+                  <button id="id-add-task-btn" class="ci-btn-ghost">Add</button>
+                </div>
+              </div>
+
+              <div class="id-notes-section">
+                <div class="id-section-label">Notes <span class="id-note-count">${(issue.notes || []).length}</span></div>
+                <div id="id-notes-list"></div>
+                <div class="id-add-note">
+                  <textarea id="id-new-note-input" class="id-note-new-input" rows="2" placeholder="Add a note or update…"></textarea>
+                  <button id="id-add-note-btn" class="ci-btn-ghost">Add note</button>
+                </div>
+              </div>
+
+              <div class="id-attachments-section">
+                <div class="id-section-label">Screenshots</div>
+                <div class="id-attachment-strip" id="id-attachment-strip"></div>
+                <div class="id-add-attachment">
+                  <button class="ci-btn-ghost" id="id-upload-attachment-btn">+ Add screenshot</button>
+                </div>
+              </div>
+
+              <div class="id-documents-section" id="id-documents-section" style="display:none">
+                <div class="id-section-label">Documents</div>
+                <div class="id-document-list" id="id-document-list"></div>
+              </div>
+            </div>
+
+            <div class="id-sidebar">
+              <div class="id-meta">
+                <div class="id-meta-row">
+                  <span class="id-label">State</span>
+                  <select class="id-select" id="id-state-select">
+                    ${['backlog','planned','open','blocked','completed'].map(s =>
+                      `<option value="${s}" ${issue.state === s ? 'selected' : ''}>${s}</option>`
+                    ).join('')}
+                  </select>
+                </div>
+                <div class="id-meta-row">
+                  <span class="id-label">Epic</span>
+                  <select class="id-select" id="id-epic-select">
+                    <option value="">— Backlog —</option>
+                    ${epicOptions}
+                  </select>
+                </div>
+                <div class="id-meta-row">
+                  <span class="id-label">Priority</span>
+                  <select class="id-select" id="id-priority-select">
+                    <option value="">–</option>
+                    ${['P0','P1','P2'].map(p =>
+                      `<option value="${p}" ${issue.priority === p ? 'selected' : ''}>${p}</option>`
+                    ).join('')}
+                  </select>
+                </div>
+                <div class="id-meta-row">
+                  <span class="id-label">Effort</span>
+                  <select class="id-select" id="id-effort-select">
+                    <option value="">–</option>
+                    ${['XS','S','M','L','XL'].map(e =>
+                      `<option value="${e}" ${issue.effort === e ? 'selected' : ''}>${e}</option>`
+                    ).join('')}
+                  </select>
+                </div>
+                <div class="id-meta-row">
+                  <span class="id-label">Priority rank</span>
+                  <span class="id-value">${issue.priority_rank != null ? `#${issue.priority_rank}` : '—'}</span>
+                </div>
+              </div>
+
+              <div class="id-ac-section">
+                <div class="id-section-label">Acceptance Criteria</div>
+                <div id="id-ac-display">${buildAcDisplay(issue.acceptance_criteria || [])}</div>
+                <textarea id="id-ac-input" class="id-desc-textarea" rows="6" style="display:none">${escHtml((issue.acceptance_criteria || []).join('\n'))}</textarea>
+                <div id="id-ac-actions" style="display:none;gap:8px;margin-top:6px">
+                  <button id="id-ac-save-btn" class="ci-btn-primary" style="font-size:12px;padding:4px 10px">Save</button>
+                  <button id="id-ac-cancel-btn" class="ci-btn-ghost" style="font-size:12px;padding:4px 10px">Cancel</button>
+                </div>
+                <button id="id-ac-edit-btn" class="ed-inline-btn">edit</button>
+              </div>
+
+              <div class="id-resolution" id="id-resolution-section" style="${(issue.state === 'completed' || issue.resolution) ? '' : 'display:none'}">
+                <div class="id-section-label">Resolution</div>
+                <div id="id-resolution-display" class="id-body-text ${issue.resolution ? '' : 'id-empty'}">${issue.resolution ? escHtml(issue.resolution) : 'Add a resolution…'}</div>
+                <textarea id="id-resolution-input" class="id-desc-textarea" rows="3" style="display:none">${escHtml(issue.resolution || '')}</textarea>
+                <div id="id-resolution-actions" style="display:none;gap:8px;margin-top:6px">
+                  <button id="id-resolution-save-btn" class="ci-btn-primary" style="font-size:12px;padding:4px 10px">Save</button>
+                  <button id="id-resolution-cancel-btn" class="ci-btn-ghost" style="font-size:12px;padding:4px 10px">Cancel</button>
+                </div>
+                <button id="id-resolution-edit-btn" class="ed-inline-btn">edit</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>`;
@@ -509,14 +520,23 @@ const IssueDetailPage = (() => {
 
     // State select
     document.getElementById('id-state-select')?.addEventListener('change', async e => {
-      await patchIssue(id, { state: e.target.value });
+      const newState = e.target.value;
+      await patchIssue(id, { state: newState });
       const resSection = document.getElementById('id-resolution-section');
-      if (resSection) resSection.style.display = e.target.value === 'completed' ? '' : 'none';
+      if (resSection) resSection.style.display = newState === 'completed' ? '' : 'none';
+      const stateBadge = document.querySelector('.id-header-badges .badge');
+      if (stateBadge) {
+        stateBadge.className = `badge ${stateBadgeClass(newState)}`;
+        stateBadge.textContent = newState;
+      }
     });
 
     // Epic select
     document.getElementById('id-epic-select')?.addEventListener('change', async e => {
-      await patchIssue(id, { parent_epic: e.target.value || null });
+      const newEpic = e.target.value || null;
+      await patchIssue(id, { parent_epic: newEpic });
+      const epicBadge = document.querySelector('.id-header-badges .id-epic-badge');
+      if (epicBadge) epicBadge.textContent = newEpic || '';
     });
 
     // Priority select
@@ -527,6 +547,41 @@ const IssueDetailPage = (() => {
     // Effort select
     document.getElementById('id-effort-select')?.addEventListener('change', async e => {
       await patchIssue(id, { effort: e.target.value || null });
+    });
+
+    // Title edit
+    const titleDisplay  = document.getElementById('id-title-display');
+    const titleInput    = document.getElementById('id-title-input');
+    const titleActions  = document.getElementById('id-title-actions');
+    const titleEditBtn  = document.getElementById('id-title-edit-btn');
+    const titleSaveBtn  = document.getElementById('id-title-save-btn');
+    const titleCancelBtn = document.getElementById('id-title-cancel-btn');
+
+    titleEditBtn?.addEventListener('click', () => {
+      titleDisplay.style.display  = 'none';
+      titleEditBtn.style.display  = 'none';
+      titleInput.style.display    = 'block';
+      titleActions.style.display  = 'flex';
+      titleInput.focus();
+      titleInput.select();
+    });
+    titleCancelBtn?.addEventListener('click', () => {
+      titleInput.style.display    = 'none';
+      titleActions.style.display  = 'none';
+      titleDisplay.style.display  = 'block';
+      titleEditBtn.style.display  = 'inline';
+    });
+    titleSaveBtn?.addEventListener('click', async () => {
+      const val = titleInput.value.trim();
+      if (!val) return;
+      titleSaveBtn.disabled = true;
+      await patchIssue(id, { title: val });
+      titleDisplay.textContent    = val;
+      titleInput.style.display    = 'none';
+      titleActions.style.display  = 'none';
+      titleDisplay.style.display  = 'block';
+      titleEditBtn.style.display  = 'inline';
+      titleSaveBtn.disabled = false;
     });
 
     // Description edit
