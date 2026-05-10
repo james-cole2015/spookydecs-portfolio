@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "showcase",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "docs", "-p", "5174", "--no-clipboard"],
+      "port": 5174
+    }
+  ]
+}

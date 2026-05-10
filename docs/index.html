@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SpookyDecs — Portfolio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['Fira Code', 'monospace'] },
+          colors: {
+            brand: { DEFAULT: '#FF9900', dark: '#cc7a00', light: '#ffb833' },
+            surface: { 1: '#0d0d12', 2: '#13131a', 3: '#1a1a24', 4: '#22222f' },
+          },
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="bg-surface-1 text-gray-100 font-sans antialiased">
+
+  <!-- NAV -->
+  <nav id="nav" class="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-surface-1/90 backdrop-blur-md transition-all">
+    <div class="max-w-6xl mx-auto px-6 flex items-center justify-between h-14">
+      <span class="text-brand font-bold tracking-tight text-lg">SpookyDecs</span>
+      <div class="hidden md:flex items-center gap-7 text-sm text-gray-400">
+        <a href="#architecture" class="hover:text-white transition-colors">Architecture</a>
+        <a href="#services" class="hover:text-white transition-colors">AWS Services</a>
+        <a href="#subsystems" class="hover:text-white transition-colors">Subsystems</a>
+        <a href="#ai" class="hover:text-white transition-colors">AI Features</a>
+        <a href="#highlights" class="hover:text-white transition-colors">Highlights</a>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="https://admin.spookydecs.com" target="_blank" class="text-xs font-medium px-3 py-1.5 rounded-md border border-brand/40 text-brand hover:bg-brand hover:text-black transition-all">Live App</a>
+        <a href="https://github.com/james-cole2015/spookydecs-portfolio" target="_blank" class="text-xs font-medium px-3 py-1.5 rounded-md border border-white/10 text-gray-300 hover:border-white/30 hover:text-white transition-all">GitHub</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section id="hero" class="relative min-h-screen flex flex-col items-center justify-center text-center px-6 overflow-hidden pt-14">
+    <div class="hero-bg absolute inset-0 pointer-events-none"></div>
+    <div class="relative z-10 max-w-4xl mx-auto">
+      <div class="inline-flex items-center gap-2 text-xs font-mono text-brand/80 border border-brand/20 rounded-full px-4 py-1.5 mb-8 bg-brand/5">
+        <span class="w-1.5 h-1.5 rounded-full bg-brand animate-pulse"></span>
+        Serverless · Event-Driven · Multi-Environment
+      </div>
+      <h1 class="text-6xl md:text-8xl font-extrabold tracking-tight mb-4">
+        <span class="text-white">Spooky</span><span class="text-brand">Decs</span>
+      </h1>
+      <p class="text-xl md:text-2xl text-gray-400 font-medium mb-4 max-w-2xl mx-auto leading-relaxed">
+        A serverless holiday decoration management platform built on AWS — tracking 200+ items across multiple seasons with AI-powered tooling and automated workflows.
+      </p>
+      <p class="text-sm text-gray-600 mb-10 font-mono">admin.spookydecs.com</p>
+
+      <!-- Stats bar -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-12 max-w-2xl mx-auto">
+        <div class="stat-card">
+          <span class="stat-num">200+</span>
+          <span class="stat-label">Items Tracked</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num">15+</span>
+          <span class="stat-label">Lambda Functions</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num">13</span>
+          <span class="stat-label">Subsystems</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num">14</span>
+          <span class="stat-label">AWS Services</span>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a href="#architecture" class="cta-primary">Explore Architecture ↓</a>
+        <a href="https://admin.spookydecs.com" target="_blank" class="cta-secondary">View Live App ↗</a>
+      </div>
+    </div>
+    <div class="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce text-gray-700">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 13l5 5 5-5M7 6l5 5 5-5"/></svg>
+    </div>
+  </section>
+
+  <!-- PROBLEM / SOLUTION -->
+  <section id="about" class="py-24 px-6 border-t border-white/5">
+    <div class="max-w-5xl mx-auto">
+      <div class="section-label">The Problem</div>
+      <h2 class="section-title">Managing seasonal decorations at scale is harder than it looks.</h2>
+      <div class="grid md:grid-cols-2 gap-12 mt-12">
+        <div>
+          <h3 class="text-base font-semibold text-gray-300 mb-5 flex items-center gap-2">
+            <span class="w-5 h-5 rounded bg-red-900/40 border border-red-800/50 flex items-center justify-center text-red-400 text-xs">✕</span>
+            Before
+          </h3>
+          <ul class="space-y-4">
+            <li class="problem-item">200+ items scattered across totes, boxes, and zones — no single source of truth</li>
+            <li class="problem-item">Manual tracking of what's deployed vs packed vs in repair</li>
+            <li class="problem-item">No record of which outlets, cords, or zones power which displays</li>
+            <li class="problem-item">Season transitions were error-prone and time-consuming</li>
+            <li class="problem-item">No visibility into maintenance history or spend over time</li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-base font-semibold text-gray-300 mb-5 flex items-center gap-2">
+            <span class="w-5 h-5 rounded bg-green-900/40 border border-green-800/50 flex items-center justify-center text-green-400 text-xs">✓</span>
+            After
+          </h3>
+          <ul class="space-y-4">
+            <li class="solution-item">Real-time inventory across 10+ specialized subsystems with full audit trail</li>
+            <li class="solution-item">Automated status transitions triggered by packing, deployments, and maintenance events</li>
+            <li class="solution-item">Power network graph tracking outlets → cords → items</li>
+            <li class="solution-item">Full seasonal lifecycle: plan → stage → deploy → teardown → archive</li>
+            <li class="solution-item">AI agents for natural language queries, data enrichment, and receipt scanning</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ARCHITECTURE DIAGRAM -->
+  <section id="architecture" class="py-24 px-6 border-t border-white/5 bg-surface-2">
+    <div class="max-w-6xl mx-auto">
+      <div class="section-label">System Design</div>
+      <h2 class="section-title">Architecture</h2>
+      <p class="section-subtitle">Click any component to learn more.</p>
+      <div class="mt-12 flex flex-col lg:flex-row gap-8 items-start">
+        <!-- Diagram -->
+        <div class="flex-1 min-w-0">
+          <div id="diagram-container" class="rounded-xl border border-white/8 bg-surface-1 p-6 overflow-x-auto">
+            <svg id="arch-diagram" viewBox="0 0 640 580" class="w-full max-w-2xl mx-auto" xmlns="http://www.w3.org/2000/svg">
+              <!-- Flow arrows -->
+              <defs>
+                <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                  <path d="M0,0 L0,6 L8,3 z" fill="#374151"/>
+                </marker>
+                <marker id="arrow-brand" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                  <path d="M0,0 L0,6 L8,3 z" fill="#FF9900"/>
+                </marker>
+                <filter id="glow">
+                  <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                  <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+              </defs>
+
+              <!-- Layer backgrounds -->
+              <rect x="10" y="10" width="620" height="68" rx="8" fill="#13131a" stroke="#1f2937" stroke-width="1"/>
+              <rect x="10" y="98" width="620" height="68" rx="8" fill="#13131a" stroke="#1f2937" stroke-width="1"/>
+              <rect x="10" y="186" width="620" height="68" rx="8" fill="#13131a" stroke="#1f2937" stroke-width="1"/>
+              <rect x="10" y="274" width="620" height="68" rx="8" fill="#13131a" stroke="#1f2937" stroke-width="1"/>
+              <rect x="10" y="362" width="620" height="68" rx="8" fill="#13131a" stroke="#1f2937" stroke-width="1"/>
+              <rect x="10" y="450" width="620" height="110" rx="8" fill="#13131a" stroke="#1f2937" stroke-width="1"/>
+
+              <!-- Layer labels -->
+              <text x="24" y="30" fill="#4b5563" font-size="9" font-family="Fira Code, monospace" font-weight="500">USER</text>
+              <text x="24" y="118" fill="#4b5563" font-size="9" font-family="Fira Code, monospace" font-weight="500">EDGE</text>
+              <text x="24" y="206" fill="#4b5563" font-size="9" font-family="Fira Code, monospace" font-weight="500">API</text>
+              <text x="24" y="294" fill="#4b5563" font-size="9" font-family="Fira Code, monospace" font-weight="500">COMPUTE</text>
+              <text x="24" y="382" fill="#4b5563" font-size="9" font-family="Fira Code, monospace" font-weight="500">DATA</text>
+              <text x="24" y="470" fill="#4b5563" font-size="9" font-family="Fira Code, monospace" font-weight="500">EVENTS</text>
+
+              <!-- Flow connectors (vertical) -->
+              <line x1="320" y1="78" x2="320" y2="98" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow)"/>
+              <line x1="320" y1="166" x2="320" y2="186" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow)"/>
+              <line x1="320" y1="254" x2="320" y2="274" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow)"/>
+              <line x1="320" y1="342" x2="320" y2="362" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow)"/>
+              <line x1="320" y1="430" x2="320" y2="450" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+              <!-- USER LAYER -->
+              <g class="arch-node" data-id="browser" data-label="Browser / Admin Portal" data-desc="Users access SpookyDecs via a responsive web app hosted on CloudFront. The admin portal is a vanilla JS single-page app served from S3, with shared CDN components loaded from assets.spookydecs.com. Two environments: admin.spookydecs.com (prod) and dev-admin.spookydecs.com (dev).">
+                <rect x="220" y="18" width="200" height="52" rx="6" fill="#1a1a24" stroke="#374151" stroke-width="1.5" class="node-rect"/>
+                <text x="320" y="40" text-anchor="middle" fill="#e5e7eb" font-size="12" font-weight="600" font-family="Inter, sans-serif">Browser</text>
+                <text x="320" y="57" text-anchor="middle" fill="#6b7280" font-size="10" font-family="Inter, sans-serif">Admin Portal · assets CDN</text>
+              </g>
+
+              <!-- EDGE LAYER -->
+              <g class="arch-node" data-id="cloudfront" data-label="CloudFront + Lambda@Edge" data-desc="Two CloudFront distributions (dev and prod) serve the admin portal with global edge caching. Lambda@Edge intercepts every request and validates Cognito JWTs at the edge — before traffic ever reaches the origin. This delivers sub-50ms authentication with no additional round-trip to a backend auth service.">
+                <rect x="110" y="106" width="195" height="52" rx="6" fill="#1a1a24" stroke="#374151" stroke-width="1.5" class="node-rect"/>
+                <text x="207" y="128" text-anchor="middle" fill="#e5e7eb" font-size="12" font-weight="600" font-family="Inter, sans-serif">CloudFront</text>
+                <text x="207" y="145" text-anchor="middle" fill="#6b7280" font-size="10" font-family="Inter, sans-serif">2 distributions · edge caching</text>
+              </g>
+              <g class="arch-node" data-id="lambdaedge" data-label="Lambda@Edge Auth" data-desc="A Cognito-integrated Lambda@Edge function runs at CloudFront edge nodes worldwide. It validates JWT tokens on every request, rejecting unauthenticated traffic before it can reach API Gateway or S3. This pattern avoids a dedicated auth microservice while still achieving sub-50ms auth latency globally.">
+                <rect x="335" y="106" width="195" height="52" rx="6" fill="#1a1a24" stroke="#FF9900" stroke-width="1.5" class="node-rect"/>
+                <text x="432" y="128" text-anchor="middle" fill="#FF9900" font-size="12" font-weight="600" font-family="Inter, sans-serif">Lambda@Edge</text>
+                <text x="432" y="145" text-anchor="middle" fill="#6b7280" font-size="10" font-family="Inter, sans-serif">Cognito JWT · sub-50ms auth</text>
+              </g>
+              <line x1="305" y1="132" x2="335" y2="132" stroke="#FF9900" stroke-width="1" stroke-dasharray="4,3"/>
+
+              <!-- API LAYER -->
+              <g class="arch-node" data-id="apigw" data-label="API Gateway (HTTP API)" data-desc="A single regional HTTP API Gateway routes requests to all Lambda functions across all 13 subsystems. It handles CORS with multi-origin support (dev and prod domains), forwards Cognito-validated requests downstream, and maps paths like /items, /inspector, /iris/chat, etc. to their respective Lambda handlers.">
+                <rect x="170" y="194" width="300" height="52" rx="6" fill="#1a1a24" stroke="#374151" stroke-width="1.5" class="node-rect"/>
+                <text x="320" y="216" text-anchor="middle" fill="#e5e7eb" font-size="12" font-weight="600" font-family="Inter, sans-serif">API Gateway</text>
+                <text x="320" y="233" text-anchor="middle" fill="#6b7280" font-size="10" font-family="Inter, sans-serif">HTTP API · Regional · Multi-origin CORS</text>
+              </g>
+
+              <!-- COMPUTE LAYER -->
+              <g class="arch-node" data-id="lambda" data-label="Lambda Functions (15+)" data-desc="All business logic runs in Lambda — Python 3.12 for most handlers, Node.js 20.x for image processing. Each subsystem has its own Lambda(s): items, storage, deployments, maintenance, audit, images, finance, inspector, ideas, gallery, workbench, tracker, admin, Iris, and Inspector Gadget. Functions share a common response utility and are wired to API Gateway via route-level integrations.">
+                <rect x="110" y="282" width="300" height="52" rx="6" fill="#1a1a24" stroke="#374151" stroke-width="1.5" class="node-rect"/>
+                <text x="260" y="304" text-anchor="middle" fill="#e5e7eb" font-size="12" font-weight="600" font-family="Inter, sans-serif">Lambda Functions</text>
+                <text x="260" y="321" text-anchor="middle" fill="#6b7280" font-size="10" font-family="Inter, sans-serif">15+ handlers · Python 3.12 · Node.js 20.x</text>
+              </g>
+              <g class="arch-node" data-id="bedrock" data-label="AWS Bedrock (Claude)" data-desc="Three AI workloads run through AWS Bedrock. Iris (admin assistant) uses Claude 3.5 Sonnet with a 10-iteration agentic tool-calling loop. Inspector Gadget uses Claude 3 Haiku for read-only violation enrichment. Both agents operate through the existing API Gateway — no direct DynamoDB access. A third integration uses the external Claude API (not Bedrock) for async search_text generation on items and ideas.">
+                <rect x="430" y="282" width="195" height="52" rx="6" fill="#1a1a24" stroke="#a855f7" stroke-width="1.5" class="node-rect"/>
+                <text x="527" y="304" text-anchor="middle" fill="#c084fc" font-size="12" font-weight="600" font-family="Inter, sans-serif">Bedrock</text>
+                <text x="527" y="321" text-anchor="middle" fill="#6b7280" font-size="10" font-family="Inter, sans-serif">Claude 3.5 Sonnet · Haiku · Iris · IG</text>
+              </g>
+              <line x1="410" y1="308" x2="430" y2="308" stroke="#a855f7" stroke-width="1" stroke-dasharray="4,3"/>
+
+              <!-- DATA LAYER -->
+              <g class="arch-node" data-id="dynamodb" data-label="DynamoDB" data-desc="DynamoDB is the primary data store for all 13 subsystems. The data model uses single-table design principles with composite PK+SK patterns, multiple GSIs per table for query flexibility, and sparse GSIs for filtered scans (e.g., inspector violations awaiting confirmation). DynamoDB Streams feed the Audit Lambda for change tracking. On-demand billing means zero idle costs.">
+                <rect x="60" y="370" width="175" height="52" rx="6" fill="#1a1a24" stroke="#374151" stroke-width="1.5" class="node-rect"/>
+                <text x="147" y="392" text-anchor="middle" fill="#e5e7eb" font-size="12" font-weight="600" font-family="Inter, sans-serif">DynamoDB</text>
+                <text x="147" y="409" text-anchor="middle" fill="#6b7280" font-size="10" font-family="Inter, sans-serif">Multi-table · GSIs · Streams</text>
+              </g>
+              <g class="arch-node" data-id="s3" data-label="Amazon S3" data-desc="Three S3 buckets: dev, prod, and shared assets. The images workflow uses S3 Object Lock (90-day retention) on confirmed photos, a lifecycle rule that deletes unconfirmed uploads after 24 hours, and presigned URLs for direct client uploads up to 10MB — bypassing Lambda payload limits entirely. The shared assets bucket serves CDN components (header, upload modal, API config) at assets.spookydecs.com.">
+                <rect x="255" y="370" width="175" height="52" rx="6" fill="#1a1a24" stroke="#374151" stroke-width="1.5" class="node-rect"/>
+                <text x="342" y="392" text-anchor="middle" fill="#e5e7eb" font-size="12" font-weight="600" font-family="Inter, sans-serif">S3</text>
+                <text x="342" y="409" text-anchor="middle" fill="#6b7280" font-size="10" font-family="Inter, sans-serif">3 buckets · Object Lock · Presigned URLs</text>
+              </g>
+              <g class="arch-node" data-id="cognito" data-label="Amazon Cognito" data-desc="Two Cognito User Pools — one per environment (dev and prod). Cognito issues JWTs that Lambda@Edge validates at the CloudFront edge. The auth flow uses hosted UI for sign-in, with tokens stored in browser memory and forwarded as cookies on every API request. The Iris agent forwards auth cookies downstream to the existing SpookyDecs API endpoints it calls on behalf of the user.">
+                <rect x="450" y="370" width="175" height="52" rx="6" fill="#1a1a24" stroke="#374151" stroke-width="1.5" class="node-rect"/>
+                <text x="537" y="392" text-anchor="middle" fill="#e5e7eb" font-size="12" font-weight="600" font-family="Inter, sans-serif">Cognito</text>
+                <text x="537" y="409" text-anchor="middle" fill="#6b7280" font-size="10" font-family="Inter, sans-serif">2 user pools · JWT · Hosted UI</text>
+              </g>
+
+              <!-- EVENTS LAYER -->
+              <g class="arch-node" data-id="eventbridge" data-label="EventBridge" data-desc="EventBridge is the backbone of SpookyDecs' event-driven architecture. Subsystems publish domain events (item packed, photo confirmed, idea completed, vendor updated) to EventBridge, which routes them to SQS queues and consumer Lambdas. This decouples subsystems: storage writes to items via EventBridge, finance syncs vendor metadata to items via EventBridge, ideas trigger cost aggregation via EventBridge + SQS.">
+                <rect x="60" y="460" width="175" height="52" rx="6" fill="#1a1a24" stroke="#374151" stroke-width="1.5" class="node-rect"/>
+                <text x="147" y="482" text-anchor="middle" fill="#e5e7eb" font-size="12" font-weight="600" font-family="Inter, sans-serif">EventBridge</text>
+                <text x="147" y="499" text-anchor="middle" fill="#6b7280" font-size="10" font-family="Inter, sans-serif">Event routing · decoupled subs</text>
+              </g>
+              <g class="arch-node" data-id="sqs" data-label="Amazon SQS" data-desc="SQS queues buffer events between EventBridge and consumer Lambdas, providing durability and backpressure. Consumer patterns include: ideas build completion → SQS → finance cost aggregation Lambda; S3 upload events → SQS → image optimization Lambda. The queue acts as a reliability layer — if a consumer Lambda fails, the message is retried automatically.">
+                <rect x="255" y="460" width="175" height="52" rx="6" fill="#1a1a24" stroke="#374151" stroke-width="1.5" class="node-rect"/>
+                <text x="342" y="482" text-anchor="middle" fill="#e5e7eb" font-size="12" font-weight="600" font-family="Inter, sans-serif">SQS</text>
+                <text x="342" y="499" text-anchor="middle" fill="#6b7280" font-size="10" font-family="Inter, sans-serif">Event buffering · retry durability</text>
+              </g>
+              <g class="arch-node" data-id="cicd" data-label="CI/CD Pipeline" data-desc="CodePipeline + CodeBuild automate all deployments. A push to the main branch triggers CodePipeline, which runs CodeBuild to fetch config from SSM Parameter Store, assemble environment-specific frontend bundles, and deploy to S3. Route 53 manages DNS for all subdomains. CloudWatch captures Lambda logs and build output for monitoring and debugging.">
+                <rect x="450" y="460" width="175" height="52" rx="6" fill="#1a1a24" stroke="#374151" stroke-width="1.5" class="node-rect"/>
+                <text x="537" y="482" text-anchor="middle" fill="#e5e7eb" font-size="12" font-weight="600" font-family="Inter, sans-serif">CI/CD · Observability</text>
+                <text x="537" y="499" text-anchor="middle" fill="#6b7280" font-size="10" font-family="Inter, sans-serif">CodePipeline · CloudWatch · Route 53</text>
+              </g>
+
+              <!-- Event arrows -->
+              <line x1="147" y1="430" x2="147" y2="460" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow)"/>
+              <line x1="342" y1="430" x2="342" y2="460" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow)"/>
+              <line x1="235" y1="486" x2="255" y2="486" stroke="#374151" stroke-width="1" stroke-dasharray="4,3"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Detail panel -->
+        <div id="detail-panel" class="lg:w-80 shrink-0">
+          <div id="detail-default" class="rounded-xl border border-white/8 bg-surface-1 p-6 text-center text-gray-600 text-sm h-full flex flex-col items-center justify-center min-h-48">
+            <svg class="w-8 h-8 mb-3 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Click any component in the diagram to see details.
+          </div>
+          <div id="detail-content" class="rounded-xl border border-brand/30 bg-surface-1 p-6 hidden">
+            <div class="text-xs font-mono text-brand mb-1" id="detail-layer"></div>
+            <h3 class="font-bold text-white text-base mb-3" id="detail-title"></h3>
+            <p class="text-gray-400 text-sm leading-relaxed" id="detail-desc"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AWS SERVICES -->
+  <section id="services" class="py-24 px-6 border-t border-white/5">
+    <div class="max-w-5xl mx-auto">
+      <div class="section-label">Infrastructure</div>
+      <h2 class="section-title">AWS Services</h2>
+      <p class="section-subtitle">14 services spanning compute, storage, networking, security, AI, and DevOps.</p>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-12">
+
+        <div class="service-card">
+          <img src="assets/aws-icons/awslambda.svg" class="service-icon si-icon" alt="Lambda"/>
+          <span class="service-name">Lambda</span>
+          <span class="service-detail">15+ functions</span>
+        </div>
+        <div class="service-card">
+          <img src="assets/aws-icons/amazondynamodb.svg" class="service-icon si-icon" alt="DynamoDB"/>
+          <span class="service-name">DynamoDB</span>
+          <span class="service-detail">Primary data store</span>
+        </div>
+        <div class="service-card">
+          <img src="assets/aws-icons/amazons3.svg" class="service-icon si-icon" alt="S3"/>
+          <span class="service-name">S3</span>
+          <span class="service-detail">3 buckets</span>
+        </div>
+        <div class="service-card">
+          <img src="assets/aws-icons/amazoncloudfront.svg" class="service-icon si-icon" alt="CloudFront"/>
+          <span class="service-name">CloudFront</span>
+          <span class="service-detail">2 distributions</span>
+        </div>
+        <div class="service-card">
+          <img src="assets/aws-icons/amazoncognito.svg" class="service-icon si-icon" alt="Cognito"/>
+          <span class="service-name">Cognito</span>
+          <span class="service-detail">2 user pools</span>
+        </div>
+        <div class="service-card">
+          <img src="assets/aws-icons/amazonapigateway.svg" class="service-icon si-icon" alt="API Gateway"/>
+          <span class="service-name">API Gateway</span>
+          <span class="service-detail">HTTP API</span>
+        </div>
+        <div class="service-card">
+          <img src="assets/aws-icons/eventbridge.svg" class="service-icon si-icon" alt="EventBridge"/>
+          <span class="service-name">EventBridge</span>
+          <span class="service-detail">Event routing</span>
+        </div>
+        <div class="service-card">
+          <img src="assets/aws-icons/amazonsqs.svg" class="service-icon si-icon" alt="SQS"/>
+          <span class="service-name">SQS</span>
+          <span class="service-detail">Event buffering</span>
+        </div>
+        <div class="service-card">
+          <img src="assets/aws-icons/bedrock.svg" class="service-icon si-icon" alt="Bedrock"/>
+          <span class="service-name">Bedrock</span>
+          <span class="service-detail">Claude · Cohere</span>
+        </div>
+        <div class="service-card">
+          <img src="assets/aws-icons/amazoncloudwatch.svg" class="service-icon si-icon" alt="CloudWatch"/>
+          <span class="service-name">CloudWatch</span>
+          <span class="service-detail">Logs · metrics</span>
+        </div>
+        <div class="service-card">
+          <img src="assets/aws-icons/awscodepipeline.svg" class="service-icon si-icon" alt="CodePipeline"/>
+          <span class="service-name">CodePipeline</span>
+          <span class="service-detail">CI/CD</span>
+        </div>
+        <div class="service-card">
+          <img src="assets/aws-icons/codebuild.svg" class="service-icon si-icon" alt="CodeBuild"/>
+          <span class="service-name">CodeBuild</span>
+          <span class="service-detail">Build automation</span>
+        </div>
+        <div class="service-card">
+          <img src="assets/aws-icons/amazonroute53.svg" class="service-icon si-icon" alt="Route 53"/>
+          <span class="service-name">Route 53</span>
+          <span class="service-detail">DNS management</span>
+        </div>
+        <div class="service-card">
+          <img src="assets/aws-icons/awsiam.svg" class="service-icon si-icon" alt="IAM"/>
+          <span class="service-name">IAM</span>
+          <span class="service-detail">Least-privilege</span>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- SUBSYSTEMS -->
+  <section id="subsystems" class="py-24 px-6 border-t border-white/5 bg-surface-2">
+    <div class="max-w-5xl mx-auto">
+      <div class="section-label">Platform</div>
+      <h2 class="section-title">13 Subsystems</h2>
+      <p class="section-subtitle">Each subsystem is an independent unit with its own Lambda handler(s), DynamoDB table(s), and API routes.</p>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-12">
+
+        <div class="sub-card">
+          <div class="sub-header">
+            <span class="sub-icon">📦</span>
+            <span class="sub-name">Items</span>
+            <span class="sub-badge">Core</span>
+          </div>
+          <p class="sub-desc">Central inventory for 200+ decoration items. Full CRUD, 5 status states, cascade deletes across 4 tables, async AI-generated search text via Claude Haiku.</p>
+        </div>
+
+        <div class="sub-card">
+          <div class="sub-header">
+            <span class="sub-icon">🗄️</span>
+            <span class="sub-name">Storage</span>
+          </div>
+          <p class="sub-desc">Manages totes and shelving units. Storage units are stored as items with class=Storage in the shared table. Packing events flow async via EventBridge — no direct item writes.</p>
+        </div>
+
+        <div class="sub-card">
+          <div class="sub-header">
+            <span class="sub-icon">🎃</span>
+            <span class="sub-name">Deployments</span>
+          </div>
+          <p class="sub-desc">Full seasonal lifecycle: plan → stage → deploy → teardown → archive. Tracks zones, power connections, and item status transitions via composite DDB key patterns.</p>
+        </div>
+
+        <div class="sub-card">
+          <div class="sub-header">
+            <span class="sub-icon">🔧</span>
+            <span class="sub-name">Maintenance</span>
+          </div>
+          <p class="sub-desc">Repair and inspection lifecycle with reusable schedule templates. Writes to 3 tables per completion. Work window constraints enforce April–September scheduling.</p>
+        </div>
+
+        <div class="sub-card">
+          <div class="sub-header">
+            <span class="sub-icon">📋</span>
+            <span class="sub-name">Audit</span>
+          </div>
+          <p class="sub-desc">DynamoDB Streams consumer tracking changes across 8 sources. Normalized audit records with JSON diff visualization, 90-day TTL, and bulk CSV/JSON export.</p>
+        </div>
+
+        <div class="sub-card">
+          <div class="sub-header">
+            <span class="sub-icon">🖼️</span>
+            <span class="sub-name">Images</span>
+          </div>
+          <p class="sub-desc">Centralized photo system for the entire platform. Presigned S3 uploads, Sharp-based WebP optimization via EventBridge trigger, Object Lock on confirmed assets, 10+ GSI patterns.</p>
+        </div>
+
+        <div class="sub-card">
+          <div class="sub-header">
+            <span class="sub-icon">💰</span>
+            <span class="sub-name">Finance</span>
+          </div>
+          <p class="sub-desc">Cost and vendor tracking with Claude Vision receipt scanning. AI audit log for all extractions. Vendor metadata syncs to items via EventBridge. CDN-served ReceiptExtractorWidget web component.</p>
+        </div>
+
+        <div class="sub-card">
+          <div class="sub-header">
+            <span class="sub-icon">🔍</span>
+            <span class="sub-name">Inspector</span>
+            <span class="sub-badge sub-badge-ai">AI</span>
+          </div>
+          <p class="sub-desc">Automated data quality rules (6+ types) with Inspector Gadget — a Bedrock Haiku agent that enriches violations with context, resolution paths, and confirmation flags. Read-only by design.</p>
+        </div>
+
+        <div class="sub-card">
+          <div class="sub-header">
+            <span class="sub-icon">💡</span>
+            <span class="sub-name">Ideas</span>
+          </div>
+          <p class="sub-desc">Tracks decoration concepts from ideation through build. EventBridge → SQS → consumer aggregates build costs to Finance on completion. Async Claude Haiku search text generation.</p>
+        </div>
+
+        <div class="sub-card">
+          <div class="sub-header">
+            <span class="sub-icon">🖼️</span>
+            <span class="sub-name">Gallery</span>
+            <span class="sub-badge sub-badge-ai">AI</span>
+          </div>
+          <p class="sub-desc">Public seasonal photo showcase with Cohere Embed v4 vector similarity for AI-powered tag suggestions. Visitor uploads supported. Sparse GSI for public item queries — no auth required to browse.</p>
+        </div>
+
+        <div class="sub-card">
+          <div class="sub-header">
+            <span class="sub-icon">🛠️</span>
+            <span class="sub-name">Workbench</span>
+          </div>
+          <p class="sub-desc">Read-only seasonal dashboard aggregating active ideas and maintenance tasks. 3-column view by season with year selector and deep-links to source subsystems.</p>
+        </div>
+
+        <div class="sub-card">
+          <div class="sub-header">
+            <span class="sub-icon">🎛️</span>
+            <span class="sub-name">Admin</span>
+            <span class="sub-badge sub-badge-ai">AI</span>
+          </div>
+          <p class="sub-desc">Central hub aggregating system-wide stats and hosting the Iris AI assistant panel. System map shows all subsystem health and counts at a glance.</p>
+        </div>
+
+        <div class="sub-card">
+          <div class="sub-header">
+            <span class="sub-icon">📌</span>
+            <span class="sub-name">Tracker</span>
+          </div>
+          <p class="sub-desc">Developer-facing project management with epics, issues, and tasks. Drag-to-reorder priority ranking using float midpoint insertion. Tasks stored in parent issue maps — no separate records.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- AI FEATURES -->
+  <section id="ai" class="py-24 px-6 border-t border-white/5">
+    <div class="max-w-5xl mx-auto">
+      <div class="section-label">Intelligence</div>
+      <h2 class="section-title">AI Features</h2>
+      <p class="section-subtitle">Three AI models, four distinct integration patterns, zero ML infrastructure to manage.</p>
+      <div class="grid md:grid-cols-2 gap-6 mt-12">
+
+        <div class="ai-card">
+          <div class="ai-badge">Claude 3.5 Sonnet · Bedrock</div>
+          <h3 class="ai-title">Iris — Admin AI Assistant</h3>
+          <p class="ai-desc">Natural language interface embedded in the admin panel. Iris runs a 10-iteration agentic loop: it calls existing SpookyDecs API Gateway endpoints as tools, resolves item nicknames ("Zero", "the big reaper") to IDs via semantic search, and confirms before any write operation. Auth cookies are forwarded to downstream APIs — no separate auth layer needed for the agent.</p>
+          <div class="ai-tools">
+            <span class="ai-tool">search_items</span>
+            <span class="ai-tool">get_item</span>
+            <span class="ai-tool">pack_item</span>
+            <span class="ai-tool">create_maintenance_record</span>
+            <span class="ai-tool">create_item</span>
+          </div>
+        </div>
+
+        <div class="ai-card">
+          <div class="ai-badge">Claude 3 Haiku · Bedrock</div>
+          <h3 class="ai-title">Inspector Gadget — Violation Enrichment Agent</h3>
+          <p class="ai-desc">When the Inspector subsystem flags a data quality violation, Inspector Gadget runs a read-only Bedrock Haiku agentic loop to gather context from items, maintenance records, images, storage, and change history. It writes <code class="text-purple-400 text-xs">agent_notes</code>, <code class="text-purple-400 text-xs">resolution_path</code>, and <code class="text-purple-400 text-xs">requires_confirmation</code> back to the violation record. Skip-if-populated logic prevents redundant re-annotation.</p>
+          <div class="ai-tools">
+            <span class="ai-tool">get_item</span>
+            <span class="ai-tool">get_maintenance</span>
+            <span class="ai-tool">get_images</span>
+            <span class="ai-tool">get_audit_history</span>
+          </div>
+        </div>
+
+        <div class="ai-card">
+          <div class="ai-badge">Claude Vision · External API</div>
+          <h3 class="ai-title">Finance Receipt Scanner</h3>
+          <p class="ai-desc">The Finance subsystem uploads receipt photos to S3 via presigned URL, then passes the image to Claude Vision for automatic line-item extraction. Results are written to the finance table and every AI extraction is logged to a dedicated <code class="text-purple-400 text-xs">ai_audit_log</code> table for compliance. The extractor is packaged as a CDN web component (<code class="text-purple-400 text-xs">ReceiptExtractorWidget</code>) served from <code class="text-purple-400 text-xs">assets.spookydecs.com</code>.</p>
+        </div>
+
+        <div class="ai-card">
+          <div class="ai-badge">Cohere Embed v4 · Vector Search</div>
+          <h3 class="ai-title">Gallery — AI Tag Suggestion</h3>
+          <p class="ai-desc">When a photo is uploaded to the Gallery, Cohere Embed v4 generates an embedding and compares it against a pre-built item embedding index stored in S3. The top-k most similar items are surfaced as tag suggestions — enabling semantic photo-to-item matching without a vector database. The index is built asynchronously and cached in S3.</p>
+        </div>
+
+      </div>
+
+      <!-- Async search_text callout -->
+      <div class="mt-6 rounded-xl border border-white/8 bg-surface-3 p-6 flex gap-4">
+        <div class="text-2xl shrink-0">⚡</div>
+        <div>
+          <h4 class="font-semibold text-white text-sm mb-1">Async Search Text Generation</h4>
+          <p class="text-gray-400 text-sm leading-relaxed">Items and Ideas both generate a plain-English <code class="text-brand/80 text-xs">search_text</code> attribute via Claude Haiku immediately after creation — asynchronously, outside the API response path. This powers natural language queries in Iris and keyword search across the inventory without a dedicated search service.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TECHNICAL HIGHLIGHTS -->
+  <section id="highlights" class="py-24 px-6 border-t border-white/5 bg-surface-2">
+    <div class="max-w-5xl mx-auto">
+      <div class="section-label">Engineering</div>
+      <h2 class="section-title">Technical Highlights</h2>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-12">
+
+        <div class="highlight-card">
+          <div class="highlight-icon">⚡</div>
+          <h4 class="highlight-title">Sub-50ms Edge Auth</h4>
+          <p class="highlight-desc">Lambda@Edge validates Cognito JWTs at CloudFront edge nodes before requests reach the origin — no auth round-trip, no dedicated auth service.</p>
+        </div>
+
+        <div class="highlight-card">
+          <div class="highlight-icon">🔄</div>
+          <h4 class="highlight-title">Event-Driven Architecture</h4>
+          <p class="highlight-desc">EventBridge + SQS decouple all inter-subsystem communication. Storage, Finance, Ideas, and Gallery all publish domain events consumed asynchronously.</p>
+        </div>
+
+        <div class="highlight-card">
+          <div class="highlight-icon">🗄️</div>
+          <h4 class="highlight-title">Single-Table DynamoDB Design</h4>
+          <p class="highlight-desc">Composite PK+SK patterns, sparse GSIs, and DynamoDB Streams feed the audit trail across 8 event sources — all without a relational database.</p>
+        </div>
+
+        <div class="highlight-card">
+          <div class="highlight-icon">📸</div>
+          <h4 class="highlight-title">Automated Image Pipeline</h4>
+          <p class="highlight-desc">S3 upload → EventBridge trigger → Sharp Lambda → WebP thumbnail. Object Lock prevents accidental deletion of confirmed photos. Presigned URLs bypass Lambda payload limits.</p>
+        </div>
+
+        <div class="highlight-card">
+          <div class="highlight-icon">🚀</div>
+          <h4 class="highlight-title">Full CI/CD Pipeline</h4>
+          <p class="highlight-desc">CodePipeline + CodeBuild deploy frontend bundles automatically. SSM Parameter Store provides environment-specific config at build time — no secrets in code.</p>
+        </div>
+
+        <div class="highlight-card">
+          <div class="highlight-icon">🌍</div>
+          <h4 class="highlight-title">Multi-Environment Parity</h4>
+          <p class="highlight-desc">Dev and prod mirror each other completely — separate CloudFront distributions, Cognito pools, API Gateway stages, and Lambda aliases. Shared asset CDN across both.</p>
+        </div>
+
+        <div class="highlight-card">
+          <div class="highlight-icon">🧩</div>
+          <h4 class="highlight-title">CDN Web Components</h4>
+          <p class="highlight-desc">Shared UI components (header, upload modal, receipt extractor, API config) are served from assets.spookydecs.com and consumed via <code class="text-brand/70 text-xs">window.*</code> globals — no build step required.</p>
+        </div>
+
+        <div class="highlight-card">
+          <div class="highlight-icon">🔒</div>
+          <h4 class="highlight-title">Least-Privilege IAM</h4>
+          <p class="highlight-desc">Each Lambda has a scoped execution role. Secrets are stored in SSM Parameter Store and AWS Secrets Manager — never hardcoded or passed through environment variables in plaintext.</p>
+        </div>
+
+        <div class="highlight-card">
+          <div class="highlight-icon">💸</div>
+          <h4 class="highlight-title">Zero-Idle Cost Architecture</h4>
+          <p class="highlight-desc">Serverless throughout: Lambda, DynamoDB on-demand, S3 lifecycle cleanup of temp uploads, and CloudFront edge caching reduce both origin load and data transfer costs.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- RELEASES -->
+  <section id="releases" class="py-24 px-6 border-t border-white/5">
+    <div class="max-w-5xl mx-auto">
+      <div class="section-label">Changelog</div>
+      <h2 class="section-title">Releases</h2>
+      <p class="section-subtitle">Fetched live from GitHub.</p>
+
+      <div id="releases-loading" class="mt-12 flex items-center gap-3 text-gray-600 text-sm">
+        <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
+        Loading releases…
+      </div>
+
+      <div id="releases-error" class="mt-12 text-gray-600 text-sm hidden">
+        Could not load releases. <a href="https://github.com/james-cole2015/spookydecs-portfolio/releases" target="_blank" class="text-brand hover:underline">View on GitHub ↗</a>
+      </div>
+
+      <div id="releases-list" class="mt-12 space-y-4 hidden"></div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-white/5 py-12 px-6">
+    <div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div>
+        <div class="font-bold text-white text-lg">SpookyDecs</div>
+        <div class="text-gray-600 text-sm mt-0.5">Serverless holiday decoration management</div>
+      </div>
+      <div class="flex items-center gap-5 text-sm">
+        <a href="https://admin.spookydecs.com" target="_blank" class="text-gray-400 hover:text-brand transition-colors">Live App ↗</a>
+        <a href="https://github.com/james-cole2015/spookydecs-portfolio" target="_blank" class="text-gray-400 hover:text-white transition-colors">GitHub ↗</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="diagram.js"></script>
+</body>
+</html>

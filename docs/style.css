@@ -1,0 +1,299 @@
+/* ── Layout helpers ─────────────────────────────────── */
+.section-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #FF9900;
+  font-family: 'Fira Code', monospace;
+  margin-bottom: 0.75rem;
+}
+.section-title {
+  font-size: clamp(1.6rem, 4vw, 2.25rem);
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.15;
+  max-width: 36rem;
+}
+.section-subtitle {
+  margin-top: 0.75rem;
+  color: #6b7280;
+  font-size: 0.95rem;
+  max-width: 42rem;
+}
+
+/* ── Hero ───────────────────────────────────────────── */
+.hero-bg {
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 60%, rgba(255,153,0,0.06) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 80% 30%, rgba(168,85,247,0.05) 0%, transparent 70%);
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 1rem 0.75rem;
+  border-radius: 0.625rem;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.02);
+}
+.stat-num  { font-size: 1.5rem; font-weight: 800; color: #FF9900; line-height: 1; }
+.stat-label { font-size: 0.7rem; color: #6b7280; text-align: center; }
+
+.cta-primary {
+  display: inline-block;
+  padding: 0.75rem 1.75rem;
+  background: #FF9900;
+  color: #000;
+  font-weight: 700;
+  font-size: 0.875rem;
+  border-radius: 0.5rem;
+  transition: background 0.15s, transform 0.15s;
+}
+.cta-primary:hover { background: #ffb833; transform: translateY(-1px); }
+
+.cta-secondary {
+  display: inline-block;
+  padding: 0.75rem 1.75rem;
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #d1d5db;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: 0.5rem;
+  transition: border-color 0.15s, color 0.15s;
+}
+.cta-secondary:hover { border-color: rgba(255,255,255,0.3); color: #fff; }
+
+/* ── Problem / Solution ─────────────────────────────── */
+.problem-item, .solution-item {
+  position: relative;
+  padding-left: 1.25rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #9ca3af;
+}
+.problem-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ef4444;
+  opacity: 0.6;
+}
+.solution-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+  opacity: 0.6;
+}
+
+/* ── Architecture diagram ───────────────────────────── */
+.arch-node { cursor: pointer; }
+.arch-node .node-rect {
+  transition: stroke 0.15s, filter 0.15s;
+}
+.arch-node:hover .node-rect {
+  stroke: #FF9900;
+  filter: url(#glow);
+}
+.arch-node.active .node-rect {
+  stroke: #FF9900 !important;
+  filter: url(#glow);
+}
+
+/* ── AWS Services grid ──────────────────────────────── */
+.service-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 1.25rem 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.02);
+  transition: border-color 0.15s, background 0.15s, transform 0.15s;
+  cursor: default;
+}
+.service-card:hover {
+  border-color: rgba(255,153,0,0.3);
+  background: rgba(255,153,0,0.04);
+  transform: translateY(-2px);
+}
+.service-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  object-fit: contain;
+}
+/* Tint Simple Icons (black SVGs) to AWS orange */
+.si-icon {
+  filter: brightness(0) saturate(100%) invert(65%) sepia(80%) saturate(600%) hue-rotate(5deg) brightness(105%);
+}
+.service-name  { font-size: 0.8rem; font-weight: 600; color: #e5e7eb; text-align: center; }
+.service-detail { font-size: 0.68rem; color: #6b7280; text-align: center; }
+
+/* ── Subsystems ─────────────────────────────────────── */
+.sub-card {
+  padding: 1.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.02);
+  transition: border-color 0.15s, transform 0.15s;
+}
+.sub-card:hover {
+  border-color: rgba(255,255,255,0.12);
+  transform: translateY(-2px);
+}
+.sub-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.625rem;
+}
+.sub-icon  { font-size: 1.1rem; line-height: 1; }
+.sub-name  { font-size: 0.9rem; font-weight: 700; color: #e5e7eb; }
+.sub-badge {
+  margin-left: auto;
+  font-size: 0.6rem;
+  font-weight: 600;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(255,153,0,0.1);
+  border: 1px solid rgba(255,153,0,0.25);
+  color: #FF9900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.sub-badge-ai {
+  background: rgba(168,85,247,0.1);
+  border-color: rgba(168,85,247,0.25);
+  color: #c084fc;
+}
+.sub-desc { font-size: 0.8rem; color: #6b7280; line-height: 1.65; }
+
+/* ── AI Features ────────────────────────────────────── */
+.ai-card {
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(168,85,247,0.2);
+  background: rgba(168,85,247,0.03);
+  transition: border-color 0.15s, transform 0.15s;
+}
+.ai-card:hover {
+  border-color: rgba(168,85,247,0.35);
+  transform: translateY(-2px);
+}
+.ai-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  font-family: 'Fira Code', monospace;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(168,85,247,0.12);
+  border: 1px solid rgba(168,85,247,0.3);
+  color: #c084fc;
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.04em;
+}
+.ai-title { font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 0.625rem; }
+.ai-desc  { font-size: 0.83rem; color: #9ca3af; line-height: 1.7; margin-bottom: 0.875rem; }
+.ai-tools { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+.ai-tool  {
+  font-size: 0.68rem;
+  font-family: 'Fira Code', monospace;
+  padding: 0.2rem 0.55rem;
+  border-radius: 0.3rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #6b7280;
+}
+
+/* ── Releases ───────────────────────────────────────── */
+.release-card {
+  padding: 1.25rem 1.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.02);
+}
+.release-card-latest {
+  border-color: rgba(255,153,0,0.25);
+  background: rgba(255,153,0,0.03);
+}
+.release-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.release-tag {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #FF9900;
+}
+.release-badge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(255,153,0,0.12);
+  border: 1px solid rgba(255,153,0,0.3);
+  color: #FF9900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.release-badge-pre {
+  background: rgba(234,179,8,0.1);
+  border-color: rgba(234,179,8,0.3);
+  color: #eab308;
+}
+.release-date { font-size: 0.75rem; color: #6b7280; }
+.release-name { font-size: 0.875rem; font-weight: 600; color: #e5e7eb; margin-bottom: 0.5rem; }
+.release-body {
+  font-size: 0.8rem;
+  color: #6b7280;
+  line-height: 1.7;
+  margin-bottom: 0.75rem;
+}
+.release-h3 { font-size: 0.9rem; font-weight: 700; color: #d1d5db; margin: 0.75rem 0 0.25rem; }
+.release-h4 { font-size: 0.825rem; font-weight: 700; color: #9ca3af; margin: 0.625rem 0 0.2rem; }
+.release-h5 { font-size: 0.775rem; font-weight: 600; color: #6b7280; margin: 0.5rem 0 0.2rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.release-p  { margin: 0.25rem 0; }
+.release-ul { list-style: none; padding: 0; margin: 0.25rem 0; }
+.release-li { padding-left: 1rem; position: relative; }
+.release-li::before { content: '–'; position: absolute; left: 0; color: #4b5563; }
+.release-code { font-family: 'Fira Code', monospace; font-size: 0.72rem; background: rgba(255,255,255,0.06); border-radius: 3px; padding: 0.1rem 0.3rem; color: #9ca3af; }
+.release-link {
+  font-size: 0.75rem;
+  color: #4b5563;
+  transition: color 0.15s;
+}
+.release-link:hover { color: #FF9900; }
+
+/* ── Technical Highlights ───────────────────────────── */
+.highlight-card {
+  padding: 1.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.02);
+  transition: border-color 0.15s, transform 0.15s;
+}
+.highlight-card:hover {
+  border-color: rgba(255,255,255,0.1);
+  transform: translateY(-2px);
+}
+.highlight-icon { font-size: 1.5rem; margin-bottom: 0.625rem; }
+.highlight-title { font-size: 0.875rem; font-weight: 700; color: #e5e7eb; margin-bottom: 0.5rem; }
+.highlight-desc  { font-size: 0.8rem; color: #6b7280; line-height: 1.65; }
