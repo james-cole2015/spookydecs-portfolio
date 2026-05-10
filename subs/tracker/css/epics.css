@@ -500,6 +500,31 @@
 
 .ed-tab-bar .pl-view-toggle {
   margin-left: auto;
+  display: flex;
+  gap: 2px;
+  background: var(--surface-muted);
+  border-radius: var(--radius-md);
+  padding: 2px;
+}
+
+.pl-toggle-btn {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  padding: 4px 10px;
+  border-radius: calc(var(--radius-md) - 2px);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.pl-toggle-btn:hover { color: var(--text-secondary); }
+
+.pl-toggle-btn.active {
+  background: var(--surface-default);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
 }
 
 .ed-empty-col {
