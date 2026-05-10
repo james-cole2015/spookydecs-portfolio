@@ -3,13 +3,12 @@
  * Navigo router setup.
  *
  * Routes:
- *   /tracker                         → landing hub (4 cards)
- *   /tracker/priority                → priority list
+ *   /tracker                         → landing hub
+ *   /tracker/priority                → issues card grid
  *   /tracker/epics                   → epics list
  *   /tracker/epics/:slug             → epic detail
  *   /tracker/epics/:slug/:issue      → issue detail
  *   /tracker/new-issue               → create new issue
- *   /tracker/timeline                → timeline (active epics)
  */
 
 const Router = (() => {
@@ -25,10 +24,6 @@ const Router = (() => {
 
       .on('/priority', () => {
         PriorityListPage.render();
-      })
-
-      .on('/timeline', () => {
-        TimelinePage.render();
       })
 
       .on('/new-issue', () => {

@@ -111,8 +111,7 @@ const IssueDetailPage = (() => {
       <nav class="nav">
         <span class="nav-logo"><a href="/tracker" class="nav-logo-link" id="nav-home-btn">Tracker</a></span>
         <div class="nav-links">
-          <a class="nav-link" href="/tracker/priority">Priority</a>
-          <a class="nav-link" href="/tracker/timeline">Timeline</a>
+          <a class="nav-link" href="/tracker/priority">Issues</a>
           <a class="nav-link" href="/tracker/epics">Epics</a>
           <a class="nav-link" href="/tracker/new-issue">+ Issue</a>
         </div>

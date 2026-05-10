@@ -16,21 +16,15 @@ const LandingPage = (() => {
         <div class="landing-cards">
           ${buildCard({
             href:    '/priority',
-            icon:    '↕',
-            title:   'Priority View',
-            desc:    'All issues ranked by priority. Drag to reorder.',
+            icon:    '☰',
+            title:   'Issues',
+            desc:    'Browse all issues across epics.',
           })}
           ${buildCard({
             href:    '/epics',
             icon:    '◈',
             title:   'Epics',
             desc:    'Browse and manage epics with progress tracking.',
-          })}
-          ${buildCard({
-            href:    '/timeline',
-            icon:    '→',
-            title:   'Timeline',
-            desc:    'Active epics at a glance.',
           })}
           ${buildCard({
             href:    '/new-issue',

@@ -23,3 +23,9 @@ dde5d83 Merge branch 'development' merging to main
 [2026-05-02 16:54:44] ❌ Merge halted: main has commits not in development.
 Merge the following into development first, then re-run:
 6817d53 Create new issue: Update create item feature with updated maintenance map
+[2026-05-08 17:13:23] Failed during: fetch from origin
+git@ssh.github.com: Permission denied (publickey).
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.
