@@ -1,4 +1,32 @@
 /* ── Layout helpers ─────────────────────────────────── */
+/* ── Nav ────────────────────────────────────────────── */
+.nav-link {
+  color: #9ca3af;
+  font-size: 0.875rem;
+  transition: color 0.15s;
+}
+.nav-link:hover { color: #fff; }
+.nav-link.active { color: #FF9900; }
+
+.hamburger-bar {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: #9ca3af;
+  border-radius: 2px;
+  transition: background 0.15s;
+}
+#menu-btn:hover .hamburger-bar { background: #fff; }
+
+.mobile-nav-link {
+  color: #9ca3af;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: color 0.15s;
+}
+.mobile-nav-link:hover { color: #fff; }
+
+/* ── Layout helpers ─────────────────────────────────── */
 .section-label {
   font-size: 0.7rem;
   font-weight: 600;

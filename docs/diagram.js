@@ -59,11 +59,27 @@
     });
   });
 
-  // Nav shadow on scroll
+  // Nav shadow on scroll + active link highlight
   const nav = document.getElementById('nav');
+  const navLinks = document.querySelectorAll('.nav-link');
+  const sections = ['about','architecture','services','subsystems','ai','highlights','releases']
+    .map(id => document.getElementById(id)).filter(Boolean);
+
   window.addEventListener('scroll', () => {
     nav.classList.toggle('shadow-lg', window.scrollY > 20);
+    const mid = window.scrollY + window.innerHeight / 3;
+    let current = '';
+    sections.forEach(s => { if (s.offsetTop <= mid) current = s.id; });
+    navLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + current));
   }, { passive: true });
+
+  // Mobile menu toggle
+  const menuBtn = document.getElementById('menu-btn');
+  const mobileMenu = document.getElementById('mobile-menu');
+  menuBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+  document.querySelectorAll('.mobile-nav-link').forEach(l => {
+    l.addEventListener('click', () => mobileMenu.classList.add('hidden'));
+  });
 
   // Releases
   const RELEASES_URL = 'https://api.github.com/repos/james-cole2015/spookydecs-portfolio/releases';

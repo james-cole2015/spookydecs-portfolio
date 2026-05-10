@@ -29,16 +29,41 @@
   <nav id="nav" class="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-surface-1/90 backdrop-blur-md transition-all">
     <div class="max-w-6xl mx-auto px-6 flex items-center justify-between h-14">
       <span class="text-brand font-bold tracking-tight text-lg">SpookyDecs</span>
+
+      <!-- Desktop links -->
       <div class="hidden md:flex items-center gap-7 text-sm text-gray-400">
-        <a href="#architecture" class="hover:text-white transition-colors">Architecture</a>
-        <a href="#services" class="hover:text-white transition-colors">AWS Services</a>
-        <a href="#subsystems" class="hover:text-white transition-colors">Subsystems</a>
-        <a href="#ai" class="hover:text-white transition-colors">AI Features</a>
-        <a href="#highlights" class="hover:text-white transition-colors">Highlights</a>
+        <a href="#architecture" class="nav-link">Architecture</a>
+        <a href="#services" class="nav-link">AWS Services</a>
+        <a href="#subsystems" class="nav-link">Subsystems</a>
+        <a href="#ai" class="nav-link">AI Features</a>
+        <a href="#highlights" class="nav-link">Highlights</a>
+        <a href="#releases" class="nav-link">Releases</a>
       </div>
+
       <div class="flex items-center gap-3">
-        <a href="https://admin.spookydecs.com" target="_blank" class="text-xs font-medium px-3 py-1.5 rounded-md border border-brand/40 text-brand hover:bg-brand hover:text-black transition-all">Live App</a>
-        <a href="https://github.com/james-cole2015/spookydecs-portfolio" target="_blank" class="text-xs font-medium px-3 py-1.5 rounded-md border border-white/10 text-gray-300 hover:border-white/30 hover:text-white transition-all">GitHub</a>
+        <a href="https://admin.spookydecs.com" target="_blank" class="hidden sm:inline-block text-xs font-medium px-3 py-1.5 rounded-md border border-brand/40 text-brand hover:bg-brand hover:text-black transition-all">Live App</a>
+        <a href="https://github.com/james-cole2015/spookydecs-portfolio" target="_blank" class="hidden sm:inline-block text-xs font-medium px-3 py-1.5 rounded-md border border-white/10 text-gray-300 hover:border-white/30 hover:text-white transition-all">GitHub</a>
+
+        <!-- Hamburger (mobile only) -->
+        <button id="menu-btn" class="md:hidden flex flex-col gap-1.5 p-2 rounded" aria-label="Menu">
+          <span class="hamburger-bar"></span>
+          <span class="hamburger-bar"></span>
+          <span class="hamburger-bar"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile menu -->
+    <div id="mobile-menu" class="hidden md:hidden border-t border-white/5 bg-surface-1/95 px-6 py-4 flex flex-col gap-4">
+      <a href="#architecture" class="mobile-nav-link">Architecture</a>
+      <a href="#services" class="mobile-nav-link">AWS Services</a>
+      <a href="#subsystems" class="mobile-nav-link">Subsystems</a>
+      <a href="#ai" class="mobile-nav-link">AI Features</a>
+      <a href="#highlights" class="mobile-nav-link">Highlights</a>
+      <a href="#releases" class="mobile-nav-link">Releases</a>
+      <div class="flex gap-3 pt-2 border-t border-white/5">
+        <a href="https://admin.spookydecs.com" target="_blank" class="text-xs font-medium px-3 py-1.5 rounded-md border border-brand/40 text-brand">Live App</a>
+        <a href="https://github.com/james-cole2015/spookydecs-portfolio" target="_blank" class="text-xs font-medium px-3 py-1.5 rounded-md border border-white/10 text-gray-300">GitHub</a>
       </div>
     </div>
   </nav>
