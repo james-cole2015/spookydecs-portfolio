@@ -202,10 +202,8 @@ const IssueDetailPage = (() => {
 
           <div class="id-description">
             <div class="id-section-label">Description</div>
-            <div id="id-desc-display" class="id-body-text ${issue.description ? '' : 'id-empty'}">
-              ${issue.description ? escHtml(issue.description) : 'No description.'}
-            </div>
-            <textarea id="id-desc-input" class="id-desc-textarea" rows="5" style="display:none">${escHtml(issue.description || '')}</textarea>
+            <div id="id-desc-display" class="id-body-text ${issue.description ? '' : 'id-empty'}">${issue.description ? escHtml(issue.description.trim()) : 'No description.'}</div>
+            <textarea id="id-desc-input" class="id-desc-textarea" rows="5" style="display:none">${escHtml((issue.description || '').trim())}</textarea>
             <div id="id-desc-actions" style="display:none;gap:8px;margin-top:6px">
               <button id="id-desc-save-btn" class="ci-btn-primary" style="font-size:12px;padding:4px 10px">Save</button>
               <button id="id-desc-cancel-btn" class="ci-btn-ghost" style="font-size:12px;padding:4px 10px">Cancel</button>
