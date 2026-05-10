@@ -62,7 +62,7 @@
   // Nav shadow on scroll + active link highlight
   const nav = document.getElementById('nav');
   const navLinks = document.querySelectorAll('.nav-link');
-  const sections = ['about','architecture','services','subsystems','ai','highlights','releases']
+  const sections = ['about','architecture','services','subsystems','ai','highlights','whats-next','releases']
     .map(id => document.getElementById(id)).filter(Boolean);
 
   window.addEventListener('scroll', () => {
