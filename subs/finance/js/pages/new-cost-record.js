@@ -132,6 +132,12 @@ export async function renderNewCostRecord(container) {
     if (urlParams.get('extract') === 'true' && initialMode === 'single') {
       openReceiptWidget({}, financeCostConfig);
     }
+
+    // Auto-resume an abandoned session when ?resumeSession=<id>
+    const resumeSessionId = urlParams.get('resumeSession');
+    if (resumeSessionId && initialMode === 'single') {
+      resumeReceiptWidget(resumeSessionId, financeCostConfig);
+    }
     
   } catch (error) {
     console.error('❌ Error rendering new cost record page:', error);
@@ -174,11 +180,10 @@ function attachExtractButton(getFormFields, costConfig) {
   });
 }
 
-async function openReceiptWidget(contextData, costConfig) {
+async function loadWidgetDeps() {
   const { API_ENDPOINT } = await window.SpookyConfig.get();
   const headers = window.SpookyAuth.buildHeaders();
 
-  // Pre-load caches in parallel
   const [itemsRes, recordsRes, ideasRes] = await Promise.allSettled([
     fetch(`${API_ENDPOINT}/items`, { headers }),
     fetch(`${API_ENDPOINT}/admin/maintenance-records`, { headers }),
@@ -200,22 +205,40 @@ async function openReceiptWidget(contextData, costConfig) {
     toArray(ideasRes, 'ideas')
   ]);
 
+  return { API_ENDPOINT, items, records, ideas };
+}
+
+function onWidgetComplete(confirmedItems) {
+  if (!confirmedItems.length) return;
+  const costRecords = confirmedItems.map(item => ({
+    ...item,
+    value:     item.total_cost,
+    cost_date: item.purchase_date,
+    currency:  'USD'
+  }));
+  handleBatchCostRecordCreation(costRecords, confirmedItems[0].extraction_id, confirmedItems[0].image_id);
+}
+
+async function openReceiptWidget(contextData, costConfig) {
+  const { API_ENDPOINT, items, records, ideas } = await loadWidgetDeps();
   window.ReceiptExtractorWidget.open({
     apiEndpoint: API_ENDPOINT,
     contextData,
     costConfig,
     caches: { items, records, ideas },
-    onComplete: (confirmedItems) => {
-      if (!confirmedItems.length) return;
-      // Add finance-specific fields the widget doesn't know about
-      const costRecords = confirmedItems.map(item => ({
-        ...item,
-        value:     item.total_cost,
-        cost_date: item.purchase_date,
-        currency:  'USD'
-      }));
-      handleBatchCostRecordCreation(costRecords, confirmedItems[0].extraction_id, confirmedItems[0].image_id);
-    },
+    onComplete: onWidgetComplete,
+    onCancel: () => {}
+  });
+}
+
+async function resumeReceiptWidget(sessionId, costConfig) {
+  const { API_ENDPOINT, items, records, ideas } = await loadWidgetDeps();
+  window.ReceiptExtractorWidget.resume(sessionId, {
+    apiEndpoint: API_ENDPOINT,
+    sessionEndpoint: API_ENDPOINT,
+    costConfig,
+    caches: { items, records, ideas },
+    onComplete: onWidgetComplete,
     onCancel: () => {}
   });
 }
