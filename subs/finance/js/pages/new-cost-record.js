@@ -223,6 +223,7 @@ async function openReceiptWidget(contextData, costConfig) {
   const { API_ENDPOINT, items, records, ideas } = await loadWidgetDeps();
   window.ReceiptExtractorWidget.open({
     apiEndpoint: API_ENDPOINT,
+    extractEndpoint: '/finance/costs/ai-extract',
     contextData,
     costConfig,
     caches: { items, records, ideas },
@@ -236,6 +237,7 @@ async function resumeReceiptWidget(sessionId, costConfig) {
   window.ReceiptExtractorWidget.resume(sessionId, {
     apiEndpoint: API_ENDPOINT,
     sessionEndpoint: API_ENDPOINT,
+    extractEndpoint: '/finance/costs/ai-extract',
     costConfig,
     caches: { items, records, ideas },
     onComplete: onWidgetComplete,
