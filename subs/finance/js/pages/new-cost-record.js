@@ -224,6 +224,8 @@ async function openReceiptWidget(contextData, costConfig) {
   window.ReceiptExtractorWidget.open({
     apiEndpoint: API_ENDPOINT,
     extractEndpoint: '/finance/costs/ai-extract',
+    sessionEndpoint: API_ENDPOINT,
+    sourceSub: 'finance',
     contextData,
     costConfig,
     caches: { items, records, ideas },
