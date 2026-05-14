@@ -133,12 +133,6 @@ export async function renderNewCostRecord(container) {
       openReceiptWidget({}, financeCostConfig);
     }
 
-    // Auto-resume an abandoned session when ?resumeSession=<id>
-    const resumeSessionId = urlParams.get('resumeSession');
-    if (resumeSessionId && initialMode === 'single') {
-      resumeReceiptWidget(resumeSessionId, financeCostConfig);
-    }
-    
   } catch (error) {
     console.error('❌ Error rendering new cost record page:', error);
     
@@ -224,22 +218,7 @@ async function openReceiptWidget(contextData, costConfig) {
   window.ReceiptExtractorWidget.open({
     apiEndpoint: API_ENDPOINT,
     extractEndpoint: '/finance/costs/ai-extract',
-    sessionEndpoint: API_ENDPOINT,
-    sourceSub: 'finance',
     contextData,
-    costConfig,
-    caches: { items, records, ideas },
-    onComplete: onWidgetComplete,
-    onCancel: () => {}
-  });
-}
-
-async function resumeReceiptWidget(sessionId, costConfig) {
-  const { API_ENDPOINT, items, records, ideas } = await loadWidgetDeps();
-  window.ReceiptExtractorWidget.resume(sessionId, {
-    apiEndpoint: API_ENDPOINT,
-    sessionEndpoint: API_ENDPOINT,
-    extractEndpoint: '/finance/costs/ai-extract',
     costConfig,
     caches: { items, records, ideas },
     onComplete: onWidgetComplete,

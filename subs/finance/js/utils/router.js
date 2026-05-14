@@ -38,10 +38,6 @@ export function initRouter() {
       console.log('✅ Route matched: /new');
       await handleNewCostView();
     })
-    .on('/resume/:sessionId', ({ data }) => {
-      console.log('✅ Route matched: /resume/:sessionId', data);
-      navigateTo(`/new?resumeSession=${data.sessionId}`);
-    })
     .on('/costs/:costId', async (match) => {
       console.log('✅ Route matched: /costs/:costId', match.data);
       await handleCostDetailView(match);
