@@ -452,7 +452,7 @@
             <span class="sub-name">Inspector</span>
             <span class="sub-badge sub-badge-ai">AI</span>
           </div>
-          <p class="sub-desc">Automated data quality rules (6+ types) with Inspector Gadget — a Bedrock Haiku agent that enriches violations with context, resolution paths, and confirmation flags. Read-only by design.</p>
+          <p class="sub-desc">Automated data quality rules (6+ types) with a two-stage agent pipeline: Inspector Gadget (Bedrock Haiku) annotates violations with context and a staged write payload; the executor Lambda resolves them deterministically — no second LLM call needed.</p>
         </div>
 
         <div class="sub-card">
@@ -525,7 +525,7 @@
         <div class="ai-card">
           <div class="ai-badge">Claude 3 Haiku · Bedrock</div>
           <h3 class="ai-title">Inspector Gadget — Violation Enrichment Agent</h3>
-          <p class="ai-desc">When the Inspector subsystem flags a data quality violation, Inspector Gadget runs a read-only Bedrock Haiku agentic loop to gather context from items, maintenance records, images, storage, and change history. It writes <code class="text-purple-400 text-xs">agent_notes</code>, <code class="text-purple-400 text-xs">resolution_path</code>, and <code class="text-purple-400 text-xs">requires_confirmation</code> back to the violation record. Skip-if-populated logic prevents redundant re-annotation.</p>
+          <p class="ai-desc">When the Inspector subsystem flags a data quality violation, Inspector Gadget runs a Bedrock Haiku agentic loop to gather context from items, maintenance records, images, storage, and change history. It writes <code class="text-purple-400 text-xs">agent_notes</code>, <code class="text-purple-400 text-xs">resolution_path</code>, <code class="text-purple-400 text-xs">requires_confirmation</code>, and a concrete <code class="text-purple-400 text-xs">staged_resolution</code> payload back to the violation record, then emits <code class="text-purple-400 text-xs">Violation.Annotated</code>. A second thin Lambda — the executor — picks up that event and carries out the write directly, with no second LLM call. Skip-if-populated logic prevents redundant re-annotation.</p>
           <div class="ai-tools">
             <span class="ai-tool">get_item</span>
             <span class="ai-tool">get_maintenance</span>

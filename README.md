@@ -148,6 +148,27 @@ Centralized photo management system for SpookyDecs. Handles the full lifecycle o
 
 ---
 
+## Inspector
+
+Admin-only data quality monitoring tool. Evaluates configurable rules against items, images, and costs on a schedule (EventBridge) or manually via the UI. Violations are surfaced in the inspector frontend for review, dismissal, or agent-driven auto-resolution.
+
+### Key Concepts
+
+- **Rules** — Configurable checks across 6 categories: field validation, relationship eval, duplicate detection, entity relationship eval, required entity checks, and orphaned image detection. Stored in DynamoDB; activated/deactivated without code changes.
+- **Violations** — Detected rule failures tracked with status (open, resolved, dismissed), severity, entity reference, and agent enrichment fields (`agent_notes`, `resolution_path`, `requires_confirmation`, `staged_resolution`).
+- **Inspector Gadget (IG)** — LLM-powered enrichment agent (Bedrock Claude Haiku). Triggered by `Violation.Detected` via SQS. Gathers context from items, maintenance history, images, storage, and audit trail via an agentic loop, then writes annotations and a concrete `staged_resolution` payload back to the violation record. Emits `Violation.Annotated` to EventBridge on success.
+- **sd_inspector_executor** — Thin, deterministic resolution Lambda (no Bedrock, no agentic loop). Triggered by `Violation.Annotated` via SQS. Reads `staged_resolution` from the violation record and executes the write directly to the items table, then marks the violation resolved (`resolved_by=agent:executor`). Skips violations where `requires_confirmation=True` or `staged_resolution` is absent.
+- **Two-stage pipeline** — IG reasons and stages the write; the executor carries it out. High-risk violations (`requires_confirmation=True`) surface in the UI for human confirmation.
+
+### Main Views
+
+- **Dashboard** — Stats bar with violation counts, By Rule and By Item tab views
+- **Rule Detail** — Rule metadata, violations table, manual rule execution, description editing, CSV export
+- **Violation Detail** — Full violation record with IG agent notes, resolution path, dismissal modal, and prev/next navigation
+- **Item Detail** — All violations for a single item grouped by status
+
+---
+
 ## Items
 
 **Coming soon** - Documentation for inventory management (decorations, accessories, lights).
