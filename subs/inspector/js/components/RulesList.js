@@ -1,6 +1,6 @@
 /**
  * Rules List Component
- * Displays rules grouped by severity with expandable violations
+ * Displays rules grouped by dismissible policy with expandable violations
  */
 
 class RulesList {
@@ -164,25 +164,15 @@ class RulesList {
     }
 
     /**
-     * Group rules by severity
+     * Group rules by dismissible policy
      */
-    groupRulesBySeverity() {
-        const groups = {
-            Critical: [],
-            Attention: [],
-            Warning: [],
-            Info: []
-        };
+    groupRulesByDismissible() {
+        const groups = { false: [], true: [] };
 
         this.rules.forEach(rule => {
-            if (!rule.is_active) return; // Skip inactive rules
-            
-            const severity = rule.severity || 'Info';
-            if (groups[severity]) {
-                groups[severity].push(rule);
-            } else {
-                groups.Info.push(rule);
-            }
+            if (!rule.is_active) return;
+            const key = rule.dismissible === false ? 'false' : 'true';
+            groups[key].push(rule);
         });
 
         return groups;
@@ -201,16 +191,17 @@ class RulesList {
             return;
         }
 
-        const groupedRules = this.groupRulesBySeverity();
-        
+        const groupedRules = this.groupRulesByDismissible();
+
         let html = '<div class="rules-list">';
 
-        // Render each severity group
-        ['Critical', 'Attention', 'Warning', 'Info'].forEach(severity => {
-            const rules = groupedRules[severity];
-            if (rules.length === 0) return;
+        [
+            { key: 'false', label: 'Non-dismissible', icon: '⛔' },
+            { key: 'true',  label: 'Dismissible',     icon: '✅' }
+        ].forEach(({ key, label, icon }) => {
+            const rules = groupedRules[key];
+            if (!rules || rules.length === 0) return;
 
-            const severityConfig = getSeverityConfig(severity);
             const totalViolations = rules.reduce((sum, rule) => {
                 const ruleViolations = this.violationsByRule[rule.rule_id] || [];
                 return sum + ruleViolations.filter(v => !v.status || v.status === 'open').length;
@@ -220,7 +211,7 @@ class RulesList {
                 <div class="severity-group">
                     <div class="severity-header">
                         <h3>
-                            ${severityConfig.icon} ${severity} 
+                            ${icon} ${label}
                             <span class="count-badge">${totalViolations}</span>
                         </h3>
                     </div>
@@ -319,13 +310,13 @@ class RulesList {
         const violations = (this.violationsByRule[ruleId] || []).filter(v => !v.status || v.status === 'open');
         if (violations.length === 0) return;
 
-        const headers = ['violation_id', 'entity_id', 'item_name', 'severity', 'status', 'detected_at', 'resolved_at', 'message'];
+        const headers = ['violation_id', 'entity_id', 'item_name', 'dismissible', 'status', 'detected_at', 'resolved_at', 'message'];
 
         const rows = violations.map(v => [
             v.violation_id,
             v.entity_id,
             v.violation_details?.item_short_name || '',
-            v.severity,
+            v.dismissible === false ? 'false' : 'true',
             v.status,
             v.detected_at || '',
             v.resolved_at || '',

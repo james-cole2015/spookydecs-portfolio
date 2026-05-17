@@ -102,7 +102,6 @@ class ViolationsTable {
     async clearAllFilters() {
         this.filters = {
             status: null,
-            severity: null,
             rule_id: null
         };
         clearFilters();
@@ -140,34 +139,14 @@ class ViolationsTable {
                         <option value="dismissed" ${this.filters.status === 'dismissed' ? 'selected' : ''}>Dismissed</option>
                     </select>
                 </div>
-                
-                <div class="filter-group">
-                    <label>Severity:</label>
-                    <select id="filter-severity">
-                        <option value="">All</option>
-                        <option value="Critical" ${this.filters.severity === 'Critical' ? 'selected' : ''}>Critical</option>
-                        <option value="Attention" ${this.filters.severity === 'Attention' ? 'selected' : ''}>Attention</option>
-                        <option value="Warning" ${this.filters.severity === 'Warning' ? 'selected' : ''}>Warning</option>
-                        <option value="Info" ${this.filters.severity === 'Info' ? 'selected' : ''}>Info</option>
-                    </select>
-                </div>
-                
                 <button class="btn btn-secondary" id="clear-filters-btn">Clear Filters</button>
             </div>
         `;
 
-        // Attach filter listeners
         document.getElementById('filter-status').addEventListener('change', (e) => {
             this.applyFilters({
                 ...this.filters,
                 status: e.target.value || null
-            });
-        });
-
-        document.getElementById('filter-severity').addEventListener('change', (e) => {
-            this.applyFilters({
-                ...this.filters,
-                severity: e.target.value || null
             });
         });
 
@@ -199,7 +178,7 @@ class ViolationsTable {
                         <th>Item</th>
                         <th>Rule</th>
                         <th>Issue</th>
-                        <th>Severity</th>
+                        <th>Dismissible</th>
                         <th>Status</th>
                         <th>Detected</th>
                         <th>Actions</th>
@@ -227,7 +206,7 @@ class ViolationsTable {
      * Render single violation row
      */
     renderViolationRow(violation) {
-        const severityConfig = getSeverityConfig(violation.severity);
+        const dismissibleConfig = getDismissibleConfig(violation.dismissible);
         const statusConfig = getStatusConfig(violation.status);
 
         return `
@@ -236,9 +215,9 @@ class ViolationsTable {
                 <td>${sanitizeHtml(truncateText(violation.rule_id, 30))}</td>
                 <td>${sanitizeHtml(truncateText(violation.violation_details?.message || 'N/A', 50))}</td>
                 <td>
-                    <span class="badge ${severityConfig.badge}">
-                        ${severityConfig.icon} ${severityConfig.label}
-                    </span>
+                    ${violation.dismissible === false
+                        ? `<span class="badge ${dismissibleConfig.badge}">${dismissibleConfig.icon} ${dismissibleConfig.label}</span>`
+                        : ''}
                 </td>
                 <td>
                     <span class="badge ${statusConfig.badge}">

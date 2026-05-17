@@ -154,7 +154,7 @@ function renderItemViolations() {
                 <tr>
                     <th>Rule</th>
                     <th>Issue</th>
-                    <th>Severity</th>
+                    <th>Dismissible</th>
                     <th>Status</th>
                     <th>Detected</th>
                     <th>Actions</th>
@@ -162,16 +162,15 @@ function renderItemViolations() {
             </thead>
             <tbody>
                 ${activeViolations.map(v => {
-                    const severityConfig = getSeverityConfig(v.severity);
                     const statusConfig = getStatusConfig(v.status);
                     return `
                         <tr>
                             <td>${sanitizeHtml(v.rule_id)}</td>
                             <td>${sanitizeHtml(truncateText(v.violation_details?.message || 'N/A', 60))}</td>
                             <td>
-                                <span class="badge ${severityConfig.badge}">
-                                    ${severityConfig.icon} ${severityConfig.label}
-                                </span>
+                                ${v.dismissible === false
+                                    ? `<span class="badge badge-non-dismissible">⛔ Non-dismissible</span>`
+                                    : ''}
                             </td>
                             <td>
                                 <span class="badge ${statusConfig.badge}">
@@ -195,13 +194,12 @@ function renderItemViolations() {
     const cardsView = `
         <div class="violations-cards">
             ${activeViolations.map(v => {
-                const severityConfig = getSeverityConfig(v.severity);
                 const statusConfig = getStatusConfig(v.status);
                 return `
                     <div class="item-violation-card" data-violation-id="${v.violation_id}">
                         <div class="violation-card-item">${sanitizeHtml(v.rule_id)}</div>
                         <div class="violation-card-status">
-                            <span class="badge ${severityConfig.badge}">${severityConfig.icon} ${severityConfig.label}</span>
+                            ${v.dismissible === false ? `<span class="badge badge-non-dismissible">⛔ Non-dismissible</span>` : ''}
                             <span class="badge ${statusConfig.badge}">${statusConfig.label}</span>
                         </div>
                     </div>

@@ -7,7 +7,6 @@ const State = {
     currentTab: 'by-rule',
     filters: {
         status: null,
-        severity: null,
         rule_id: null
     },
     lastKey: null
@@ -82,7 +81,6 @@ function setCurrentTab(tab) {
 function getFiltersFromUrl() {
     return {
         status: getQueryParam('status'),
-        severity: getQueryParam('severity'),
         rule_id: getQueryParam('rule_id')
     };
 }
@@ -94,7 +92,6 @@ function setFilters(filters) {
     State.filters = { ...filters };
     updateQueryParams({
         status: filters.status,
-        severity: filters.severity,
         rule_id: filters.rule_id
     });
 }
@@ -105,12 +102,10 @@ function setFilters(filters) {
 function clearFilters() {
     State.filters = {
         status: null,
-        severity: null,
         rule_id: null
     };
     updateQueryParams({
         status: null,
-        severity: null,
         rule_id: null
     });
 }

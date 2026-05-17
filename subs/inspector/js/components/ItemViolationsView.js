@@ -82,10 +82,7 @@ class ItemViolationsView {
 
         this.items.forEach(item => {
             const stats = calculateStats(item.violations);
-            const criticalCount = stats.critical;
-            const attentionCount = stats.attention;
-            const warningCount = stats.warning;
-            const infoCount = stats.info;
+            const nonDismissibleCount = item.violations.filter(v => v.dismissible === false).length;
 
             html += `
                 <div class="item-card">
@@ -95,10 +92,8 @@ class ItemViolationsView {
                             <span class="item-id">${sanitizeHtml(item.entity_id)}</span>
                         </div>
                         <div class="item-stats">
-                            ${criticalCount > 0 ? `<span class="badge severity-critical">🔴 ${criticalCount}</span>` : ''}
-                            ${attentionCount > 0 ? `<span class="badge severity-attention">🟡 ${attentionCount}</span>` : ''}
-                            ${warningCount > 0 ? `<span class="badge severity-warning">🟡 ${warningCount}</span>` : ''}
-                            ${infoCount > 0 ? `<span class="badge severity-info">🔵 ${infoCount}</span>` : ''}
+                            <span class="badge status-open">🔴 ${stats.open} open</span>
+                            ${nonDismissibleCount > 0 ? `<span class="badge badge-non-dismissible">⛔ ${nonDismissibleCount} non-dismissible</span>` : ''}
                         </div>
                     </div>
                     
@@ -126,24 +121,23 @@ class ItemViolationsView {
                     <tr>
                         <th>Rule</th>
                         <th>Issue</th>
-                        <th>Severity</th>
+                        <th>Dismissible</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     ${violations.map(v => {
-                        const severityConfig = getSeverityConfig(v.severity);
                         const statusConfig = getStatusConfig(v.status);
-                        
+
                         return `
                             <tr>
                                 <td>${sanitizeHtml(truncateText(v.rule_id, 25))}</td>
                                 <td>${sanitizeHtml(truncateText(v.violation_details?.message || 'N/A', 40))}</td>
                                 <td>
-                                    <span class="badge ${severityConfig.badge}">
-                                        ${severityConfig.icon} ${severityConfig.label}
-                                    </span>
+                                    ${v.dismissible === false
+                                        ? `<span class="badge badge-non-dismissible">⛔ Non-dismissible</span>`
+                                        : ''}
                                 </td>
                                 <td>
                                     <span class="badge ${statusConfig.badge}">

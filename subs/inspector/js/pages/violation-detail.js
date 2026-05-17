@@ -145,11 +145,11 @@ function renderIGAnalysisCard(violation) {
  */
 function renderViolationContent() {
     const content = document.getElementById('violation-content');
-    const severityConfig = getSeverityConfig(currentViolation.severity);
+    const dismissibleConfig = getDismissibleConfig(currentViolation.dismissible);
     const statusConfig = getStatusConfig(currentViolation.status);
     const details = currentViolation.violation_details || {};
 
-    const canDismiss = currentViolation.severity !== 'Critical' && currentViolation.status === 'open';
+    const canDismiss = currentViolation.dismissible !== false && currentViolation.status === 'open';
 
     // Generate violation reason HTML using helper
     const violationReasonHtml = renderViolationReason(currentViolation);
@@ -203,9 +203,9 @@ function renderViolationContent() {
             <div class="violation-title-section">
                 <h1>Violation Details</h1>
                 <div class="violation-badges">
-                    <span class="badge ${severityConfig.badge}">
-                        ${severityConfig.icon} ${severityConfig.label}
-                    </span>
+                    ${currentViolation.dismissible === false
+                        ? `<span class="badge ${dismissibleConfig.badge}">${dismissibleConfig.icon} ${dismissibleConfig.label}</span>`
+                        : ''}
                     <span class="badge ${statusConfig.badge}">
                         ${statusConfig.label}
                     </span>
@@ -229,7 +229,7 @@ function renderViolationContent() {
                     class="btn btn-secondary"
                     id="dismiss-violation-btn"
                     ${!canDismiss ? 'disabled' : ''}
-                    ${!canDismiss && currentViolation.severity === 'Critical' ? 'title="Critical violations cannot be dismissed"' : ''}
+                    ${!canDismiss && currentViolation.dismissible === false ? 'title="This violation cannot be dismissed (rule policy)"' : ''}
                 >
                     Dismiss
                 </button>
@@ -329,10 +329,10 @@ function renderViolationContent() {
                 <div class="violation-actions-card">
                     <h3>Actions</h3>
 
-                    ${currentViolation.severity === 'Critical' && currentViolation.status === 'open' ? `
+                    ${currentViolation.dismissible === false && currentViolation.status === 'open' ? `
                         <div class="critical-notice">
-                            ⚠️ <strong>Critical violations cannot be dismissed.</strong>
-                            <p>Please fix the issue or contact admin to adjust the rule severity.</p>
+                            ⚠️ <strong>This violation cannot be dismissed.</strong>
+                            <p>The rule policy requires this issue to be fixed, not dismissed.</p>
                         </div>
                     ` : ''}
 

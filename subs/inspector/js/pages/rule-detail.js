@@ -63,7 +63,7 @@ async function renderRuleDetail(ruleId) {
  */
 function renderRuleDetailContent() {
     const content = document.getElementById('rule-detail-content');
-    const severityConfig = getSeverityConfig(currentRule.severity);
+    const dismissibleConfig = getDismissibleConfig(currentRule.dismissible);
     const categoryConfig = getRuleCategoryConfig(currentRule.rule_category);
     const stats = calculateStats(currentRuleViolations);
 
@@ -72,8 +72,8 @@ function renderRuleDetailContent() {
             <div class="rule-title-section">
                 <h1>${sanitizeHtml(currentRule.rule_name)}</h1>
                 <div class="rule-badges">
-                    <span class="badge ${severityConfig.badge}">
-                        ${severityConfig.icon} ${severityConfig.label}
+                    <span class="badge ${dismissibleConfig.badge}">
+                        ${dismissibleConfig.icon} ${dismissibleConfig.label}
                     </span>
                     <span class="badge ${currentRule.is_active ? 'badge-active' : 'badge-inactive'}">
                         ${currentRule.is_active ? 'Active' : 'Inactive'}
@@ -607,13 +607,13 @@ function exportCurrentTabViolations() {
         return;
     }
 
-    const headers = ['violation_id', 'entity_id', 'item_name', 'severity', 'status', 'detected_at', 'resolved_at', 'message'];
+    const headers = ['violation_id', 'entity_id', 'item_name', 'dismissible', 'status', 'detected_at', 'resolved_at', 'message'];
 
     const rows = violations.map(v => [
         v.violation_id,
         v.entity_id,
         v.violation_details?.item_short_name || '',
-        v.severity,
+        v.dismissible === false ? 'false' : 'true',
         v.status,
         v.detected_at || '',
         v.resolved_at || '',

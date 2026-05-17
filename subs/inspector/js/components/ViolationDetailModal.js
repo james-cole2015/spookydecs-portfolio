@@ -39,7 +39,7 @@ class ViolationDetailModal {
      * Render modal content
      */
     renderContent() {
-        const severityConfig = getSeverityConfig(this.violation.severity);
+        const dismissibleConfig = getDismissibleConfig(this.violation.dismissible);
         const statusConfig = getStatusConfig(this.violation.status);
         const details = this.violation.violation_details || {};
 
@@ -63,9 +63,9 @@ class ViolationDetailModal {
                         <span class="meta-value">${sanitizeHtml(this.violation.rule_id)}</span>
                     </div>
                     <div class="meta-row">
-                        <span class="meta-label">Severity:</span>
-                        <span class="badge ${severityConfig.badge}">
-                            ${severityConfig.icon} ${severityConfig.label}
+                        <span class="meta-label">Dismissible:</span>
+                        <span class="badge ${dismissibleConfig.badge}">
+                            ${dismissibleConfig.icon} ${dismissibleConfig.label}
                         </span>
                     </div>
                     <div class="meta-row">

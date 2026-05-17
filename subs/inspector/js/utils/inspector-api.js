@@ -104,12 +104,15 @@ const InspectorAPI = {
       limit = 25,
       lastKey = null,
       status = null,
-      severity = null,
       rule_id = null
     } = params;
 
-    const queryString = this.buildQueryString({ limit, lastKey, status, severity, rule_id });
+    const queryString = this.buildQueryString({ limit, lastKey, status, rule_id });
     return this.request(`/admin/inspector/violations${queryString}`, { method: 'GET' });
+  },
+
+  async getStats() {
+    return this.request('/admin/inspector/violations/stats', { method: 'GET' });
   },
 
   async getViolation(violationId) {

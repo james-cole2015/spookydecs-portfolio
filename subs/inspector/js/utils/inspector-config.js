@@ -4,32 +4,12 @@
  */
 
 const InspectorConfig = {
-    // Severity levels and colors
-    SEVERITY: {
-        Critical: {
-            label: 'Critical',
-            color: '#DC2626',
-            icon: '🔴',
-            badge: 'severity-critical'
-        },
-        Attention: {
-            label: 'Attention',
-            color: '#F59E0B',
-            icon: '🟡',
-            badge: 'severity-attention'
-        },
-        Warning: {
-            label: 'Warning',
-            color: '#F59E0B',
-            icon: '🟡',
-            badge: 'severity-warning'
-        },
-        Info: {
-            label: 'Info',
-            color: '#3B82F6',
-            icon: '🔵',
-            badge: 'severity-info'
-        }
+    // Resolution mode labels for the stats bar (open violations only)
+    RESOLUTION_MODE: {
+        unanalyzed:      { label: 'Unanalyzed',    badge: 'resolution-unanalyzed' },
+        auto_resolved:   { label: 'Auto-resolved',  badge: 'resolution-auto' },
+        manual_resolved: { label: 'Manual',         badge: 'resolution-manual' },
+        dismissed:       { label: 'Dismissed',      badge: 'resolution-dismissed' }
     },
 
     // Status types
@@ -129,10 +109,12 @@ function formatRelativeTime(dateString) {
 }
 
 /**
- * Get severity configuration
+ * Get dismissible badge config for a violation or rule
  */
-function getSeverityConfig(severity) {
-    return InspectorConfig.SEVERITY[severity] || InspectorConfig.SEVERITY.Info;
+function getDismissibleConfig(dismissible) {
+    return dismissible === false
+        ? { label: 'Non-dismissible', badge: 'badge-non-dismissible', icon: '⛔' }
+        : { label: 'Dismissible', badge: 'badge-dismissible', icon: '✅' };
 }
 
 /**
@@ -164,29 +146,6 @@ function sanitizeHtml(html) {
     const temp = document.createElement('div');
     temp.textContent = html;
     return temp.innerHTML;
-}
-
-/**
- * Group violations by severity
- */
-function groupViolationsBySeverity(violations) {
-    const groups = {
-        Critical: [],
-        Attention: [],
-        Warning: [],
-        Info: []
-    };
-    
-    violations.forEach(violation => {
-        const severity = violation.severity || 'Info';
-        if (groups[severity]) {
-            groups[severity].push(violation);
-        } else {
-            groups.Info.push(violation);
-        }
-    });
-    
-    return groups;
 }
 
 /**
@@ -229,28 +188,21 @@ function groupViolationsByItem(violations) {
 }
 
 /**
- * Calculate statistics from violations
+ * Calculate status statistics from a local list of violations
  */
 function calculateStats(violations) {
     const stats = {
         total: violations.length,
-        critical: 0,
-        attention: 0,
-        warning: 0,
-        info: 0,
         open: 0,
         resolved: 0,
         dismissed: 0
     };
-    
+
     violations.forEach(violation => {
-        const severity = violation.severity?.toLowerCase() || 'info';
         const status = violation.status || 'open';
-        
-        stats[severity] = (stats[severity] || 0) + 1;
-        stats[status] = (stats[status] || 0) + 1;
+        if (stats[status] !== undefined) stats[status]++;
     });
-    
+
     return stats;
 }
 /**
