@@ -70,10 +70,11 @@ const Api = {
 
   // ── Tasks ─────────────────────────────────────────────────────────────────
   tasks: {
-    list:   (issueId)     => request('GET',    `/tasks?issue_id=${encodeURIComponent(issueId)}`),
-    create: (data)        => request('POST',   '/tasks', data),
-    update: (taskId, data)=> request('PATCH',  `/tasks/${encodeURIComponent(taskId)}`, data),
-    delete: (taskId)      => request('DELETE', `/tasks/${encodeURIComponent(taskId)}`),
+    list:    (issueId)      => request('GET',    `/tasks?issue_id=${encodeURIComponent(issueId)}`),
+    create:  (data)         => request('POST',   '/tasks', data),
+    update:  (taskId, data) => request('PATCH',  `/tasks/${encodeURIComponent(taskId)}`, data),
+    addNote: (taskId, text) => request('PATCH',  `/tasks/${encodeURIComponent(taskId)}`, { add_note: text }),
+    delete:  (taskId)       => request('DELETE', `/tasks/${encodeURIComponent(taskId)}`),
   },
 
   // ── Attachments ───────────────────────────────────────────────────────────

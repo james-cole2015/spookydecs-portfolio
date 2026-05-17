@@ -420,6 +420,38 @@ const IssueDetailPage = (() => {
         }
       });
     });
+
+    // Add note (per row)
+    list.querySelectorAll('.id-task-row').forEach(row => {
+      const taskId     = row.querySelector('.id-task-toggle')?.dataset.taskId;
+      const noteInput  = row.querySelector('.id-task-note-input');
+      const noteSubmit = row.querySelector('.id-task-note-submit');
+      if (!noteSubmit) return;
+
+      noteSubmit.addEventListener('click', async () => {
+        const text = noteInput.value.trim();
+        if (!text) return;
+        noteSubmit.disabled = true;
+        try {
+          const res         = await TrackerApi.tasks.addNote(taskId, text);
+          const updatedTask = res?.item || res;
+          const lastNote    = Array.isArray(updatedTask?.notes) ? updatedTask.notes.at(-1) : null;
+          const notesList   = row.querySelector('.id-task-notes-list');
+          notesList.querySelector('.id-empty-notes')?.remove();
+          const el = document.createElement('div');
+          el.className = 'id-note';
+          el.innerHTML = `
+            <div class="id-note-text">${escHtml(lastNote?.text ?? text)}</div>
+            <div class="id-note-meta">${escHtml(lastNote?.created_at ?? '')}</div>`;
+          notesList.appendChild(el);
+          noteInput.value = '';
+        } catch (err) {
+          Toast.show(`Failed to add note: ${err.message}`, 'error');
+        } finally {
+          noteSubmit.disabled = false;
+        }
+      });
+    });
   }
 
   function fmtDate(iso) {
@@ -434,8 +466,10 @@ const IssueDetailPage = (() => {
     const state       = task.state || 'backlog';
     const desc        = task.description || '';
     const tags        = Array.isArray(task.tags) ? task.tags : [];
+    const notes       = Array.isArray(task.notes) ? task.notes : [];
     const createdStr  = fmtDate(task.task_created);
     const closedStr   = fmtDate(task.task_closed);
+    const taskNum     = task.id && task.id.includes('#') ? '#' + task.id.split('#')[1] : '';
 
     const stateOptions = ['backlog','planned','open','blocked','completed']
       .map(s => `<option value="${s}" ${state === s ? 'selected' : ''}>${s}</option>`)
@@ -450,12 +484,21 @@ const IssueDetailPage = (() => {
       closedStr  ? `<span>closed ${escHtml(closedStr)}</span>`   : '',
     ].filter(Boolean).join('');
 
+    const notesListHtml = notes.length
+      ? notes.map(n => `
+          <div class="id-note">
+            <div class="id-note-text">${escHtml(n.text)}</div>
+            <div class="id-note-meta">${escHtml(n.created_at || '')}</div>
+          </div>`).join('')
+      : `<div class="id-empty-notes">No notes yet.</div>`;
+
     return `
       <div class="id-task-row ${done ? 'id-task-row-done' : ''}">
         <div class="id-task-row-header">
           <button class="id-task-toggle ${done ? 'id-task-done' : ''}"
                   data-task-id="${escHtml(task.id)}"
                   data-state="${escHtml(state)}">${done ? '✓' : '○'}</button>
+          ${taskNum ? `<span class="id-task-num">${escHtml(taskNum)}</span>` : ''}
           <span class="id-task-title">${escHtml(task.title || task.description)}</span>
           <button class="id-task-expand" data-task-id="${escHtml(task.id)}" aria-label="Expand task">›</button>
         </div>
@@ -474,6 +517,14 @@ const IssueDetailPage = (() => {
             <select class="id-task-detail-state-select" data-task-id="${escHtml(task.id)}">${stateOptions}</select>
             ${tagsHtml}
             ${timestampsHtml}
+          </div>
+          <div class="id-task-notes">
+            <div class="id-task-notes-label">Notes</div>
+            <div class="id-task-notes-list">${notesListHtml}</div>
+            <div class="id-task-notes-form">
+              <textarea class="id-task-note-input" rows="2" placeholder="Add a note…"></textarea>
+              <button class="id-task-note-submit ci-btn-primary" style="font-size:11px;padding:3px 9px">Add</button>
+            </div>
           </div>
         </div>
       </div>
