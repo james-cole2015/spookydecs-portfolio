@@ -469,7 +469,8 @@ const IssueDetailPage = (() => {
     const notes       = Array.isArray(task.notes) ? task.notes : [];
     const createdStr  = fmtDate(task.task_created);
     const closedStr   = fmtDate(task.task_closed);
-    const taskNum     = task.id && task.id.includes('#') ? '#' + task.id.split('#')[1] : '';
+    const taskId      = task.task_id || task.id || '';
+    const taskNum     = taskId.includes('#') ? '#' + taskId.split('#')[1] : '';
 
     const stateOptions = ['backlog','planned','open','blocked','completed']
       .map(s => `<option value="${s}" ${state === s ? 'selected' : ''}>${s}</option>`)
@@ -496,11 +497,11 @@ const IssueDetailPage = (() => {
       <div class="id-task-row ${done ? 'id-task-row-done' : ''}">
         <div class="id-task-row-header">
           <button class="id-task-toggle ${done ? 'id-task-done' : ''}"
-                  data-task-id="${escHtml(task.id)}"
+                  data-task-id="${escHtml(taskId)}"
                   data-state="${escHtml(state)}">${done ? '✓' : '○'}</button>
           ${taskNum ? `<span class="id-task-num">${escHtml(taskNum)}</span>` : ''}
           <span class="id-task-title">${escHtml(task.title || task.description)}</span>
-          <button class="id-task-expand" data-task-id="${escHtml(task.id)}" aria-label="Expand task">›</button>
+          <button class="id-task-expand" data-task-id="${escHtml(taskId)}" aria-label="Expand task">›</button>
         </div>
         <div class="id-task-detail" style="display:none">
           <div class="id-task-detail-desc">
@@ -514,7 +515,7 @@ const IssueDetailPage = (() => {
           </div>
           <div class="id-task-detail-meta">
             <span class="id-task-detail-meta-label">State</span>
-            <select class="id-task-detail-state-select" data-task-id="${escHtml(task.id)}">${stateOptions}</select>
+            <select class="id-task-detail-state-select" data-task-id="${escHtml(taskId)}">${stateOptions}</select>
             ${tagsHtml}
             ${timestampsHtml}
           </div>
