@@ -53,7 +53,7 @@ export async function renderDashboard(config) {
     } catch (error) {
         console.error('Error rendering dashboard:', error);
         container.innerHTML = `
-            <div style="text-align: center; padding: 3rem; color: var(--error);">
+            <div style="text-align: center; padding: 3rem; color: var(--color-danger);">
                 <h2>Error Loading Dashboard</h2>
                 <p>Please try refreshing the page.</p>
             </div>

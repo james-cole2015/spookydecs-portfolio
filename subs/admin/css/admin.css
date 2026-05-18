@@ -1,17 +1,23 @@
 /* Admin Dashboard - Main Styles */
 
 :root {
-    --primary-blue: #81d4fa;
-    --light-blue: #e1f5fe;
-    --dark-blue: #0277bd;
-    --neutral-gray: #f5f7fa;
-    --border-gray: #e0e0e0;
+    --color-accent: #81d4fa;
+    --color-accent-hover: #4fc3f7;
+    --color-accent-light: #e0f7fa;
+    --color-primary: #3b82f6;
+    --color-primary-hover: #2563eb;
+    --color-primary-light: #eff6ff;
+    --surface-muted: #f1f5f9;
+    --border-default: #e2e8f0;
+    --border-hover: #cbd5e1;
     --text-primary: #0f172a;
     --text-secondary: #64748b;
-    --white: #ffffff;
-    --success: #10b981;
-    --warning: #f59e0b;
-    --error: #ef4444;
+    --surface-default: #ffffff;
+    --color-success: #16a34a;
+    --color-warning: #d97706;
+    --color-danger: #dc2626;
+    --shadow-focus: 0 0 0 3px rgba(59, 130, 246, 0.10);
+    --shadow-focus-accent: 0 0 0 3px rgba(129, 212, 250, 0.15);
 }
 
 * {
@@ -22,7 +28,7 @@
 
 body {
     font-family: system-ui, 'Segoe UI', Roboto, Arial, sans-serif;
-    background-color: var(--white);
+    background-color: var(--surface-default);
     color: var(--text-primary);
     line-height: 1.6;
 }
@@ -37,7 +43,7 @@ body {
 .page-title {
     font-size: 2rem;
     font-weight: 600;
-    color: var(--dark-blue);
+    color: var(--color-primary);
     margin-bottom: 2rem;
     text-align: center;
 }
@@ -64,7 +70,7 @@ body {
 .system-map-title {
     font-size: 1.5rem;
     font-weight: 600;
-    color: var(--dark-blue);
+    color: var(--color-primary);
     margin-bottom: 1rem;
 }
 
@@ -76,8 +82,8 @@ body {
 
 /* System Map Cards */
 .system-card {
-    background: var(--white);
-    border: 1px solid var(--border-gray);
+    background: var(--surface-default);
+    border: 1px solid var(--border-default);
     border-radius: 8px;
     padding: 1.5rem;
     transition: all 0.2s ease;
@@ -87,7 +93,7 @@ body {
 
 .system-card:hover {
     box-shadow: 0 4px 12px rgba(129, 212, 250, 0.15);
-    border-color: var(--primary-blue);
+    border-color: var(--color-accent);
 }
 
 .system-card-header {
@@ -129,7 +135,7 @@ body {
     border-radius: 6px;
     font-size: 0.875rem;
     font-weight: 500;
-    border: 1px solid var(--primary-blue);
+    border: 1px solid var(--color-accent);
     transition: all 0.2s ease;
     align-self: flex-start;
     margin-top: auto;
@@ -152,7 +158,7 @@ body {
 
 /* Header Link */
 .header-link {
-    color: var(--dark-blue);
+    color: var(--color-primary);
     text-decoration: none;
     font-size: 0.875rem;
     font-weight: 500;
@@ -161,7 +167,7 @@ body {
 }
 
 .header-link:hover {
-    color: var(--primary-blue);
+    color: var(--color-accent);
     text-decoration: underline;
 }
 

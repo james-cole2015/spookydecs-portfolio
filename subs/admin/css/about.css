@@ -14,7 +14,7 @@
 .about-title {
     font-size: 2.5rem;
     font-weight: 600;
-    color: var(--dark-blue);
+    color: var(--color-primary);
     margin-bottom: 1rem;
 }
 
@@ -25,8 +25,8 @@
 }
 
 .about-section {
-    background: var(--white);
-    border: 1px solid var(--border-gray);
+    background: var(--surface-default);
+    border: 1px solid var(--border-default);
     border-radius: 8px;
     padding: 2rem;
     margin-bottom: 2rem;
@@ -40,7 +40,7 @@
 .about-section-title {
     font-size: 1.5rem;
     font-weight: 600;
-    color: var(--dark-blue);
+    color: var(--color-primary);
     margin-bottom: 1rem;
     display: flex;
     align-items: center;
@@ -49,7 +49,7 @@
 
 .about-section-icon {
     font-size: 1.75rem;
-    color: var(--primary-blue);
+    color: var(--color-accent);
 }
 
 .about-section-content {
@@ -80,7 +80,7 @@
     content: "→";
     position: absolute;
     left: 0;
-    color: var(--primary-blue);
+    color: var(--color-accent);
     font-weight: bold;
 }
 
@@ -92,10 +92,10 @@
 }
 
 .about-feature-card {
-    background: var(--light-blue);
+    background: var(--color-accent-light);
     padding: 1.5rem;
     border-radius: 6px;
-    border-left: 4px solid var(--primary-blue);
+    border-left: 4px solid var(--color-accent);
     transition: all 0.2s ease;
 }
 
@@ -105,7 +105,7 @@
 
 .about-feature-title {
     font-weight: 600;
-    color: var(--dark-blue);
+    color: var(--color-primary);
     margin-bottom: 0.5rem;
 }
 
@@ -127,7 +127,7 @@
     padding: 0.5rem 1rem;
     background: linear-gradient(90deg, #b3e5fc 0%, #81d4fa 100%);
     color: var(--text-primary);
-    border: 1px solid var(--primary-blue);
+    border: 1px solid var(--color-accent);
     border-radius: 6px;
     font-size: 0.875rem;
     font-weight: 500;
@@ -136,7 +136,7 @@
 .about-cta {
     text-align: center;
     padding: 2rem;
-    background: var(--light-blue);
+    background: var(--color-accent-light);
     border-radius: 8px;
     margin-top: 2rem;
 }
@@ -144,7 +144,7 @@
 .about-cta-title {
     font-size: 1.25rem;
     font-weight: 600;
-    color: var(--dark-blue);
+    color: var(--color-primary);
     margin-bottom: 1rem;
 }
 
@@ -155,7 +155,7 @@
     color: var(--text-primary);
     text-decoration: none;
     border-radius: 6px;
-    border: 1px solid var(--primary-blue);
+    border: 1px solid var(--color-accent);
     font-size: 1rem;
     font-weight: 500;
     transition: all 0.2s ease;

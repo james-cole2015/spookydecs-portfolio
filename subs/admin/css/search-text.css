@@ -11,7 +11,7 @@
 .st-back-btn {
     background: none;
     border: none;
-    color: var(--dark-blue);
+    color: var(--color-primary);
     cursor: pointer;
     font-size: 0.875rem;
     padding: 0;
@@ -38,8 +38,8 @@
 }
 
 .st-index-card {
-    background: var(--white);
-    border: 1px solid var(--border-gray);
+    background: var(--surface-default);
+    border: 1px solid var(--border-default);
     border-radius: 8px;
     padding: 1.25rem;
     display: flex;
@@ -66,8 +66,8 @@
 .st-index-card-desc code {
     font-family: monospace;
     font-size: 0.8rem;
-    background: var(--neutral-gray);
-    border: 1px solid var(--border-gray);
+    background: var(--surface-muted);
+    border: 1px solid var(--border-default);
     border-radius: 3px;
     padding: 0.05em 0.3em;
 }
@@ -92,31 +92,31 @@
 
 /* Sidebar — item selector */
 .st-sidebar {
-    border: 1px solid var(--border-gray);
+    border: 1px solid var(--border-default);
     border-radius: 8px;
     overflow: hidden;
-    background: var(--white);
+    background: var(--surface-default);
 }
 
 .st-search-box {
     padding: 0.75rem;
-    border-bottom: 1px solid var(--border-gray);
-    background: var(--neutral-gray);
+    border-bottom: 1px solid var(--border-default);
+    background: var(--surface-muted);
 }
 
 .st-input {
     width: 100%;
     padding: 0.5rem 0.75rem;
-    border: 1px solid var(--border-gray);
+    border: 1px solid var(--border-default);
     border-radius: 6px;
     font-size: 0.9rem;
     color: var(--text-primary);
-    background: var(--white);
+    background: var(--surface-default);
     outline: none;
 }
 
 .st-input:focus {
-    border-color: var(--primary-blue);
+    border-color: var(--color-accent);
 }
 
 .st-results {
@@ -134,13 +134,13 @@
 }
 
 .st-results-error {
-    color: var(--error);
+    color: var(--color-danger);
 }
 
 .st-result-item {
     padding: 0.625rem 0.75rem;
     cursor: pointer;
-    border-bottom: 1px solid var(--border-gray);
+    border-bottom: 1px solid var(--border-default);
     display: flex;
     flex-direction: column;
     gap: 0.125rem;
@@ -152,7 +152,7 @@
 
 .st-result-item:hover,
 .st-result-item--active {
-    background: var(--light-blue);
+    background: var(--color-accent-light);
 }
 
 .st-result-name {
@@ -169,8 +169,8 @@
 
 /* Main content — editor */
 .st-main {
-    background: var(--white);
-    border: 1px solid var(--border-gray);
+    background: var(--surface-default);
+    border: 1px solid var(--border-default);
     border-radius: 8px;
     padding: 1.5rem;
     min-height: 200px;
@@ -187,7 +187,7 @@
 }
 
 .st-error {
-    color: var(--error);
+    color: var(--color-danger);
     padding: 1rem;
     font-size: 0.9rem;
 }
@@ -202,8 +202,8 @@
 }
 
 .st-id-chip {
-    background: var(--neutral-gray);
-    border: 1px solid var(--border-gray);
+    background: var(--surface-muted);
+    border: 1px solid var(--border-default);
     border-radius: 4px;
     padding: 0.2rem 0.5rem;
     font-size: 0.8rem;
@@ -218,8 +218,8 @@
 }
 
 .st-season-badge {
-    background: var(--light-blue);
-    color: var(--dark-blue);
+    background: var(--color-accent-light);
+    color: var(--color-primary);
     border-radius: 4px;
     padding: 0.2rem 0.5rem;
     font-size: 0.8rem;
@@ -227,7 +227,7 @@
 }
 
 .st-item-link {
-    color: var(--dark-blue);
+    color: var(--color-primary);
     font-size: 0.85rem;
     text-decoration: none;
     margin-left: auto;
@@ -252,7 +252,7 @@
     width: 100%;
     min-height: 160px;
     padding: 0.75rem;
-    border: 1px solid var(--border-gray);
+    border: 1px solid var(--border-default);
     border-radius: 6px;
     font-size: 0.9rem;
     font-family: system-ui, sans-serif;
@@ -263,7 +263,7 @@
 }
 
 .st-textarea:focus {
-    border-color: var(--primary-blue);
+    border-color: var(--color-accent);
 }
 
 /* Actions row */
@@ -296,8 +296,8 @@
 }
 
 .st-btn--primary {
-    background: var(--dark-blue);
-    color: var(--white);
+    background: var(--color-primary);
+    color: var(--surface-default);
 }
 
 .st-btn--primary:hover:not(:disabled) {
@@ -305,13 +305,13 @@
 }
 
 .st-btn--secondary {
-    background: var(--neutral-gray);
+    background: var(--surface-muted);
     color: var(--text-primary);
-    border: 1px solid var(--border-gray);
+    border: 1px solid var(--border-default);
 }
 
 .st-btn--secondary:hover:not(:disabled) {
-    background: var(--light-blue);
+    background: var(--color-accent-light);
 }
 
 /* Status messages */
@@ -324,11 +324,11 @@
 }
 
 .st-status--success {
-    color: var(--success);
+    color: var(--color-success);
 }
 
 .st-status--error {
-    color: var(--error);
+    color: var(--color-danger);
 }
 
 @media (max-width: 768px) {

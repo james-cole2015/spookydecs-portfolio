@@ -40,7 +40,7 @@ class App {
         const container = document.getElementById('app-container');
         if (container) {
             container.innerHTML = `
-                <div style="text-align: center; padding: 3rem; color: var(--error);">
+                <div style="text-align: center; padding: 3rem; color: var(--color-danger);">
                     <h2>Error</h2>
                     <p>${message}</p>
                 </div>
