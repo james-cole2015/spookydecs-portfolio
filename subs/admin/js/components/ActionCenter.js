@@ -87,7 +87,7 @@ export class ActionCenter {
             return '';
         }
 
-        const { by_severity, total } = this.inspectorStats;
+        const { by_resolution_mode = {}, total_open = 0 } = this.inspectorStats;
         const inspectorUrl = this.subdomainUrls?.inspector || '#';
 
         return `
@@ -96,31 +96,31 @@ export class ActionCenter {
                     <span class="action-section-icon">🔍</span>
                     <span class="action-section-title"><strong>Inspector</strong> - Data Quality and Readiness</span>
                 </div>
-                
+
                 <div class="action-section-body">
                     <div class="stats-list">
-                        <div class="stat-item critical">
+                        <div class="stat-item total">
                             <span class="stat-icon">🔴</span>
-                            <span class="stat-count">${by_severity.Critical || 0}</span>
-                            <span class="stat-label">Critical</span>
+                            <span class="stat-count">${total_open}</span>
+                            <span class="stat-label">Open</span>
                         </div>
-                        
-                        <div class="stat-item attention">
+
+                        <div class="stat-item unanalyzed">
                             <span class="stat-icon">🟠</span>
-                            <span class="stat-count">${by_severity.Attention || 0}</span>
-                            <span class="stat-label">Attention</span>
+                            <span class="stat-count">${by_resolution_mode.unanalyzed || 0}</span>
+                            <span class="stat-label">Unanalyzed</span>
                         </div>
-                        
-                        <div class="stat-item warning">
+
+                        <div class="stat-item auto-resolved">
                             <span class="stat-icon">🟡</span>
-                            <span class="stat-count">${by_severity.Warning || 0}</span>
-                            <span class="stat-label">Warnings</span>
+                            <span class="stat-count">${by_resolution_mode.auto_resolved || 0}</span>
+                            <span class="stat-label">Auto-resolved</span>
                         </div>
-                        
-                        <div class="stat-item info">
+
+                        <div class="stat-item dismissed">
                             <span class="stat-icon">🟢</span>
-                            <span class="stat-count">${by_severity.Info || 0}</span>
-                            <span class="stat-label">Info</span>
+                            <span class="stat-count">${by_resolution_mode.dismissed || 0}</span>
+                            <span class="stat-label">Dismissed</span>
                         </div>
                     </div>
                     

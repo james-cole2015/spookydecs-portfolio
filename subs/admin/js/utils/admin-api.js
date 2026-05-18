@@ -27,7 +27,7 @@ export async function getSubdomainUrls() {
 
 /**
  * Fetch Inspector violation statistics
- * @returns {Promise<Object>} Statistics object with by_severity, by_status, total
+ * @returns {Promise<Object>} Statistics object with by_resolution_mode, by_status, total_open
  */
 export async function fetchInspectorStats() {
   const config = await window.SpookyConfig.get();
