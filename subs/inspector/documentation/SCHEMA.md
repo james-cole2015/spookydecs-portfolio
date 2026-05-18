@@ -12,7 +12,7 @@
 | `rule_id` | String | Rule that triggered the violation |
 | `entity_id` | String | ID of the item or photo in violation |
 | `entity_type` | String | `"Item"` or `"Photo"` |
-| `severity` | String | `"Critical"`, `"Attention"`, `"Warning"`, or `"Info"` |
+| `dismissible` | Boolean | Copied from the rule at violation creation. `false` = cannot be dismissed (policy-blocked). Absent field defaults to dismissible. |
 | `status` | String | `"open"`, `"resolved"`, or `"dismissed"` |
 | `violation_details` | Map | Rule-specific payload (flexible JSON, varies by rule category) |
 | `detected_at` | String | ISO timestamp when first created |
@@ -56,9 +56,7 @@ Written by the Resolver Agent (not yet implemented). These fields are defined in
 | Index | PK | SK | Use Case |
 |-------|----|----|----------|
 | `entity_id-rule_id-index` | `entity_id` | `rule_id` | Sticky-dismiss check: find existing violation for (entity, rule) pair |
-| `severity_status-index` | `severity` | `status` | Stats aggregation by severity + status |
-| `status-index` | `status` | — | Filter all violations by status |
-| `severity-index` | `severity` | — | Filter all violations by severity |
+| `status-index` | `status` | — | Filter violations by status; stats endpoint pages all open violations through this index to group by `resolution_path` |
 | `rule_id-index` | `rule_id` | — | List all violations for a specific rule |
 | `awaiting_confirmation-status-index` | `awaiting_confirmation` | `status` | Sparse GSI — Resolver Agent queries `PK="true", SK="open"` to find violations pending user confirmation |
 
@@ -73,7 +71,7 @@ Written by the Resolver Agent (not yet implemented). These fields are defined in
 | `rule_id` | string | Unique identifier (uppercase, underscores) | `"MISSING_PRIMARY_PHOTO"` |
 | `rule_name` | string | Human-readable name | `"Missing Primary Photos"` |
 | `description` | string | Detailed explanation of what the rule checks | `"Decoration items without primary photo"` |
-| `severity` | string | Rule severity level | `"Critical"`, `"Attention"`, or `"Info"` |
+| `dismissible` | boolean | Whether violations from this rule can be dismissed. `false` = policy requires fix, not dismissal. Copied to violation records at creation time. | `true` or `false` |
 | `check_type` | string | How the rule is triggered | `"schedule"`, `"event"`, or `"manual"` |
 | `entity_types` | array | Which entity types this rule applies to | `["Item"]`, `["Storage"]`, `["Item", "Storage"]` |
 | `is_active` | boolean | Whether the rule is enabled | `true` or `false` |
@@ -133,12 +131,6 @@ The `rule_config` field is flexible and can contain any rule-specific parameters
 - `"less_than"` - Numeric comparison
 - `"regex"` - Regular expression match
 
-## Severity Levels
-
-- `"Critical"` - Immediate action required, blocks deployments
-- `"Attention"` - Should be addressed soon, non-blocking
-- `"Info"` - Informational, low priority
-
 ## Check Types
 
 - `"schedule"` - Runs on a cron schedule (requires `schedule_expression`)
@@ -152,7 +144,7 @@ The `rule_config` field is flexible and can contain any rule-specific parameters
   "rule_id": "MISSING_PRIMARY_PHOTO",
   "rule_name": "Missing Primary Photos",
   "description": "Decoration items without primary photo starting with PHOTO",
-  "severity": "Attention",
+  "dismissible": true,
   "check_type": "schedule",
   "schedule_expression": "cron(0 2 * * ? *)",
   "entity_types": ["Item"],
