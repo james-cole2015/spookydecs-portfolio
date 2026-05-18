@@ -228,12 +228,12 @@
               </g>
 
               <!-- COMPUTE LAYER -->
-              <g class="arch-node" data-id="lambda" data-label="Lambda Functions (15+)" data-desc="All business logic runs in Lambda — Python 3.12 for most handlers, Node.js 20.x for image processing. Each subsystem has its own Lambda(s): items, storage, deployments, maintenance, audit, images, finance, inspector, ideas, gallery, workbench, tracker, admin, Iris, and Inspector Gadget. Functions share a common response utility and are wired to API Gateway via route-level integrations.">
+              <g class="arch-node" data-id="lambda" data-label="Lambda Functions (16+)" data-desc="All business logic runs in Lambda — Python 3.12 for most handlers, Node.js 20.x for image processing. Each subsystem has its own Lambda(s): items, storage, deployments, maintenance, audit, images, finance, inspector, ideas, gallery, workbench, tracker, admin, Iris, Inspector Gadget, and the Inspector Executor. Functions share a common response utility and are wired to API Gateway via route-level integrations.">
                 <rect x="110" y="282" width="300" height="52" rx="6" fill="#1a1a24" stroke="#374151" stroke-width="1.5" class="node-rect"/>
                 <text x="260" y="304" text-anchor="middle" fill="#e5e7eb" font-size="12" font-weight="600" font-family="Inter, sans-serif">Lambda Functions</text>
                 <text x="260" y="321" text-anchor="middle" fill="#6b7280" font-size="10" font-family="Inter, sans-serif">15+ handlers · Python 3.12 · Node.js 20.x</text>
               </g>
-              <g class="arch-node" data-id="bedrock" data-label="AWS Bedrock (Claude)" data-desc="Three AI workloads run through AWS Bedrock. Iris (admin assistant) uses Claude 3.5 Sonnet with a 10-iteration agentic tool-calling loop. Inspector Gadget uses Claude 3 Haiku for read-only violation enrichment. Both agents operate through the existing API Gateway — no direct DynamoDB access. A third integration uses the external Claude API (not Bedrock) for async search_text generation on items and ideas.">
+              <g class="arch-node" data-id="bedrock" data-label="AWS Bedrock (Claude)" data-desc="Three AI workloads run through AWS Bedrock. Iris (admin assistant) uses Claude 3.5 Sonnet with a 10-iteration agentic tool-calling loop. Inspector Gadget uses Claude Sonnet 4.6 for read-only violation enrichment and staged resolution pre-staging. Both agents operate through the existing API Gateway — no direct DynamoDB access. A third integration uses the external Claude API (not Bedrock) for async search_text generation on items and ideas.">
                 <rect x="430" y="282" width="195" height="52" rx="6" fill="#1a1a24" stroke="#a855f7" stroke-width="1.5" class="node-rect"/>
                 <text x="527" y="304" text-anchor="middle" fill="#c084fc" font-size="12" font-weight="600" font-family="Inter, sans-serif">Bedrock</text>
                 <text x="527" y="321" text-anchor="middle" fill="#6b7280" font-size="10" font-family="Inter, sans-serif">Claude 3.5 Sonnet · Haiku · Iris · IG</text>
@@ -241,7 +241,7 @@
               <line x1="410" y1="308" x2="430" y2="308" stroke="#a855f7" stroke-width="1" stroke-dasharray="4,3"/>
 
               <!-- DATA LAYER -->
-              <g class="arch-node" data-id="dynamodb" data-label="DynamoDB" data-desc="DynamoDB is the primary data store for all 13 subsystems. The data model uses single-table design principles with composite PK+SK patterns, multiple GSIs per table for query flexibility, and sparse GSIs for filtered scans (e.g., inspector violations awaiting confirmation). DynamoDB Streams feed the Audit Lambda for change tracking. On-demand billing means zero idle costs.">
+              <g class="arch-node" data-id="dynamodb" data-label="DynamoDB" data-desc="DynamoDB is the primary data store for all 13 subsystems. The data model uses single-table design principles with composite PK+SK patterns, multiple GSIs per table for query flexibility, and sparse GSIs for filtered scans (e.g., inspector violations by status and resolution mode). DynamoDB Streams feed the Audit Lambda for change tracking. On-demand billing means zero idle costs.">
                 <rect x="60" y="370" width="175" height="52" rx="6" fill="#1a1a24" stroke="#374151" stroke-width="1.5" class="node-rect"/>
                 <text x="147" y="392" text-anchor="middle" fill="#e5e7eb" font-size="12" font-weight="600" font-family="Inter, sans-serif">DynamoDB</text>
                 <text x="147" y="409" text-anchor="middle" fill="#6b7280" font-size="10" font-family="Inter, sans-serif">Multi-table · GSIs · Streams</text>
@@ -523,14 +523,17 @@
         </div>
 
         <div class="ai-card">
-          <div class="ai-badge">Claude 3 Haiku · Bedrock</div>
+          <div class="ai-badge">Claude Sonnet 4.6 · Bedrock</div>
           <h3 class="ai-title">Inspector Gadget — Violation Enrichment Agent</h3>
-          <p class="ai-desc">When the Inspector subsystem flags a data quality violation, Inspector Gadget runs a Bedrock Haiku agentic loop to gather context from items, maintenance records, images, storage, and change history. It writes <code class="text-purple-400 text-xs">agent_notes</code>, <code class="text-purple-400 text-xs">resolution_path</code>, <code class="text-purple-400 text-xs">requires_confirmation</code>, and a concrete <code class="text-purple-400 text-xs">staged_resolution</code> payload back to the violation record, then emits <code class="text-purple-400 text-xs">Violation.Annotated</code>. A second thin Lambda — the executor — picks up that event and carries out the write directly, with no second LLM call. Skip-if-populated logic prevents redundant re-annotation.</p>
+          <p class="ai-desc">When the Inspector subsystem flags a data quality violation, Inspector Gadget runs a Bedrock agentic loop to gather context from items, maintenance records, images, storage, and change history. It writes <code class="text-purple-400 text-xs">agent_notes</code>, <code class="text-purple-400 text-xs">resolution_path</code>, <code class="text-purple-400 text-xs">requires_confirmation</code>, and a concrete <code class="text-purple-400 text-xs">staged_resolution</code> payload back to the violation record, then emits <code class="text-purple-400 text-xs">Violation.Annotated</code>. A second thin Lambda — the executor — picks up that event and carries out the write directly, with no second LLM call. Skip-if-populated logic prevents redundant re-annotation.</p>
           <div class="ai-tools">
+            <span class="ai-tool">get_violation</span>
             <span class="ai-tool">get_item</span>
-            <span class="ai-tool">get_maintenance</span>
+            <span class="ai-tool">get_maintenance_history</span>
             <span class="ai-tool">get_images</span>
-            <span class="ai-tool">get_audit_history</span>
+            <span class="ai-tool">get_storage_record</span>
+            <span class="ai-tool">get_item_change_history</span>
+            <span class="ai-tool">get_violation_history</span>
           </div>
         </div>
 

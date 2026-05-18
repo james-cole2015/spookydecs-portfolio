@@ -25,7 +25,7 @@ window.MilestoneData = (() => {
     { name: 'Crystal Lake',   status: 'planned'     },
     { name: 'Haddonfield',    status: 'planning'    },
     { name: 'Nostromo',       status: 'not_planned' },
-    { name: 'Bates',          status: 'not_planned' },
+    { name: 'Bates Hotel',    status: 'not_planned' },
     { name: 'Elm Street',     status: 'not_planned' },
     { name: 'Dakota',         status: 'not_planned' },
     { name: 'Erebus',         status: 'not_planned' },
