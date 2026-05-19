@@ -1,11 +1,18 @@
 // Action Center Component
 import { fetchInspectorStats, fetchWorkbenchStats, getSubdomainUrls } from '../utils/admin-api.js';
 
+const SEASON_LABELS = {
+    off_season: 'Off-Season',
+    halloween:  'Halloween',
+    christmas:  'Christmas',
+};
+
 export class ActionCenter {
     constructor() {
         this.inspectorStats = null;
         this.workbenchStats = null;
         this.subdomainUrls = null;
+        this.selectedSeason = null;
         this.loading = true;
         this.error = null;
     }
@@ -21,6 +28,7 @@ export class ActionCenter {
             
             this.inspectorStats = inspector;
             this.workbenchStats = workbench;
+            this.selectedSeason = workbench?.current_season || 'off_season';
             this.subdomainUrls = urls;
             this.loading = false;
         } catch (error) {
@@ -33,7 +41,7 @@ export class ActionCenter {
     render() {
         const container = document.createElement('div');
         container.className = 'action-center-container';
-        
+
         container.innerHTML = `
             <div class="action-center-header">
                 <h2 class="action-center-title">Action Center</h2>
@@ -42,7 +50,20 @@ export class ActionCenter {
                 ${this.renderContent()}
             </div>
         `;
-        
+
+        // Season pill delegation — re-render only the workbench section on click
+        container.addEventListener('click', (e) => {
+            const pill = e.target.closest('.season-pill');
+            if (!pill) return;
+            const season = pill.dataset.season;
+            if (season === this.selectedSeason) return;
+            this.selectedSeason = season;
+            const workbenchEl = container.querySelector('.workbench-section');
+            if (workbenchEl) {
+                workbenchEl.outerHTML = this.renderWorkbenchSection();
+            }
+        });
+
         return container;
     }
 
@@ -139,37 +160,51 @@ export class ActionCenter {
             return '';
         }
 
-        const { active, scheduled, completed } = this.workbenchStats;
+        const { seasons = {} } = this.workbenchStats;
+        const season = this.selectedSeason || 'off_season';
+        const { active = 0, scheduled = 0, completed = 0 } = seasons[season] || {};
         const workbenchUrl = this.subdomainUrls?.workbench || '#';
+        const seasonLabel = SEASON_LABELS[season] || season;
+
+        const seasonPills = Object.keys(SEASON_LABELS).map(key => `
+            <button
+                class="season-pill${key === season ? ' active' : ''}"
+                data-season="${key}"
+            >${SEASON_LABELS[key]}</button>
+        `).join('');
 
         return `
             <div class="action-section workbench-section">
                 <div class="action-section-header">
                     <span class="action-section-icon">🔧</span>
-                    <span class="action-section-title"><strong>Workbench</strong> - Off-Season Operations</span>
+                    <span class="action-section-title"><strong>Workbench</strong> - ${seasonLabel}</span>
                 </div>
-                
+
+                <div class="season-selector">
+                    ${seasonPills}
+                </div>
+
                 <div class="action-section-body">
                     <div class="stats-list">
                         <div class="stat-item active">
                             <span class="stat-icon">⚙️</span>
-                            <span class="stat-count">${active || 0}</span>
-                            <span class="stat-label">Active Repairs</span>
+                            <span class="stat-count">${active}</span>
+                            <span class="stat-label">Active</span>
                         </div>
-                        
+
                         <div class="stat-item scheduled">
                             <span class="stat-icon">📅</span>
-                            <span class="stat-count">${scheduled || 0}</span>
-                            <span class="stat-label">Scheduled Builds</span>
+                            <span class="stat-count">${scheduled}</span>
+                            <span class="stat-label">Scheduled</span>
                         </div>
-                        
+
                         <div class="stat-item completed">
                             <span class="stat-icon">✓</span>
-                            <span class="stat-count">${completed || 0}</span>
+                            <span class="stat-count">${completed}</span>
                             <span class="stat-label">Completed (90 days)</span>
                         </div>
                     </div>
-                    
+
                     <div class="action-section-footer">
                         <a href="${workbenchUrl}" class="action-button secondary">
                             View Workbench →

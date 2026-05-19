@@ -18,6 +18,14 @@
     --color-danger: #dc2626;
     --shadow-focus: 0 0 0 3px rgba(59, 130, 246, 0.10);
     --shadow-focus-accent: 0 0 0 3px rgba(129, 212, 250, 0.15);
+
+    /* Season badge tokens */
+    --badge-halloween-bg: #fff7ed;
+    --badge-halloween-text: #9a3412;
+    --badge-christmas-bg: #f0fdf4;
+    --badge-christmas-text: #15803d;
+    --badge-shared-bg: #f5f3ff;
+    --badge-shared-text: #5b21b6;
 }
 
 * {

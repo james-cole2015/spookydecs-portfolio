@@ -70,6 +70,57 @@
     flex-direction: column;
 }
 
+/* Season Selector Pills */
+.season-selector {
+    display: flex;
+    gap: 0.375rem;
+    padding: 0.625rem 1rem;
+    background: var(--surface-default);
+    border-bottom: 1px solid var(--border-default);
+}
+
+.season-pill {
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid var(--border-default);
+    background: var(--surface-muted);
+    color: var(--text-secondary);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.season-pill:hover {
+    border-color: var(--border-hover);
+    color: var(--text-primary);
+}
+
+/* Active state — season-specific badge colors */
+.season-pill[data-season="off_season"].active {
+    background: var(--badge-shared-bg);
+    border-color: var(--badge-shared-text);
+    color: var(--badge-shared-text);
+    font-weight: 600;
+}
+
+.season-pill[data-season="halloween"].active {
+    background: var(--badge-halloween-bg);
+    border-color: var(--badge-halloween-text);
+    color: var(--badge-halloween-text);
+    font-weight: 600;
+}
+
+.season-pill[data-season="christmas"].active {
+    background: var(--badge-christmas-bg);
+    border-color: var(--badge-christmas-text);
+    color: var(--badge-christmas-text);
+    font-weight: 600;
+}
+
 /* Stats List */
 .stats-list {
     display: flex;
