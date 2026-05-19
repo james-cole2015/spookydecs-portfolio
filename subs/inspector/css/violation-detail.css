@@ -538,3 +538,29 @@
     cursor: not-allowed;
     opacity: 0.45;
 }
+
+/* IG progress bar */
+.ig-progress-wrap {
+    position: relative;
+    height: 3px;
+    background: var(--color-border, #e2e8f0);
+    overflow: hidden;
+    border-radius: 0 0 var(--radius-lg, 8px) var(--radius-lg, 8px);
+    margin-top: 1rem;
+}
+
+.ig-progress-fill {
+    position: absolute;
+    top: 0;
+    left: -35%;
+    width: 35%;
+    height: 100%;
+    background: var(--color-accent, #81d4fa);
+    border-radius: 2px;
+    animation: ig-sweep 1.4s ease-in-out infinite;
+}
+
+@keyframes ig-sweep {
+    0%   { left: -35%; }
+    100% { left: 100%; }
+}

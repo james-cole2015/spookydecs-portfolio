@@ -444,22 +444,47 @@ async function runInspectorGadget() {
     btn.disabled = true;
     btn.textContent = 'Running...';
 
+    const progressWrap = document.createElement('div');
+    progressWrap.className = 'ig-progress-wrap';
+    progressWrap.innerHTML = '<div class="ig-progress-fill"></div>';
+    btn.closest('.violation-header-actions').after(progressWrap);
+
+    const removeProgress = () => progressWrap.remove();
+
     try {
         await InspectorAPI.runIG(currentViolation.violation_id);
         showSuccessToast('Inspector Gadget invoked — analysis will appear shortly');
 
-        // Give IG ~8 s to annotate, then refresh the card so the user sees results
-        setTimeout(async () => {
+        const POLL_INTERVAL = 3000;
+        const POLL_TIMEOUT  = 60000;
+        const started = Date.now();
+
+        const poll = async () => {
+            if (Date.now() - started >= POLL_TIMEOUT) {
+                removeProgress();
+                btn.disabled = false;
+                btn.textContent = 'Run IG';
+                showErrorToast('IG is taking longer than expected — check back soon');
+                return;
+            }
             try {
                 const violationData = await InspectorAPI.getViolation(currentViolation.violation_id);
-                currentViolation = violationData.violation;
-                renderViolationContent();
+                if (violationData.violation.agent_notes) {
+                    removeProgress();
+                    currentViolation = violationData.violation;
+                    renderViolationContent();
+                    return;
+                }
             } catch (_) {
-                // Non-critical — user can reload manually
+                // keep polling
             }
-        }, 8000);
+            setTimeout(poll, POLL_INTERVAL);
+        };
+
+        setTimeout(poll, POLL_INTERVAL);
 
     } catch (error) {
+        removeProgress();
         showErrorToast(`Failed to invoke Inspector Gadget: ${error.message}`);
         btn.disabled = false;
         btn.textContent = 'Run IG';

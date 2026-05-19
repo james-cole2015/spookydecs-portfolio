@@ -29,3 +29,9 @@ fatal: Could not read from remote repository.
 
 Please make sure you have the correct access rights
 and the repository exists.
+[2026-05-18 12:42:52] Failed during: fetch from origin
+git@ssh.github.com: Permission denied (publickey).
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.

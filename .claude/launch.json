@@ -6,6 +6,12 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["serve", "docs", "-p", "5174", "--no-clipboard"],
       "port": 5174
+    },
+    {
+      "name": "inspector",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "subs/inspector", "-p", "5175", "--no-clipboard"],
+      "port": 5175
     }
   ]
 }
