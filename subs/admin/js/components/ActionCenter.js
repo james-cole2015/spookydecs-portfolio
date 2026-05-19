@@ -166,7 +166,7 @@ export class ActionCenter {
                         <div class="stat-item completed">
                             <span class="stat-icon">✓</span>
                             <span class="stat-count">${completed || 0}</span>
-                            <span class="stat-label">Completed This Week</span>
+                            <span class="stat-label">Completed (90 days)</span>
                         </div>
                     </div>
                     
