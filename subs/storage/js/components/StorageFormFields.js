@@ -7,6 +7,13 @@
 import { getFormFields, getFieldOptions, validateField } from '../utils/storage-config.js';
 import { itemsAPI } from '../utils/storage-api.js';
 
+function _getStorageData(item) {
+  const sd = item.storage_data;
+  if (sd !== undefined) return sd;
+  const pd = item.packing_data || {};
+  return { ...pd, is_stored: pd.packing_status, location: pd.tote_location };
+}
+
 export class StorageFormFields {
   constructor(options = {}) {
     this.classType = options.classType || 'Tote'; // 'Tote' or 'Self'
@@ -215,8 +222,8 @@ export class StorageFormFields {
       // FIXED: Filter for self-contained eligibility
       // Items that are single_packed (came in original box) and not yet stored
       const items = allItems.filter(item => {
-        const isSinglePacked = item.packing_data?.single_packed === true;
-        const isUnpacked = item.packing_data?.packing_status === false;
+        const isSinglePacked = _getStorageData(item).single_packed === true;
+        const isUnpacked = _getStorageData(item).is_stored === false;
         const isNotReceptacle = item.class_type !== 'Receptacle';
         
         return isSinglePacked && isUnpacked && isNotReceptacle;

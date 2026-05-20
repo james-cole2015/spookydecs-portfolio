@@ -8,6 +8,13 @@ import { itemsAPI } from '../utils/storage-api.js';
 import { getPlaceholderImage } from '../utils/storage-config.js';
 import { renderBreadcrumb } from '../shared/breadcrumb.js';
 
+function _getStorageData(item) {
+  const sd = item.storage_data;
+  if (sd !== undefined) return sd;
+  const pd = item.packing_data || {};
+  return { ...pd, is_stored: pd.packing_status, location: pd.tote_location };
+}
+
 let allItems = [];
 let filteredItems = [];
 let currentFilters = { season: 'All', stored: 'All', search: '' };
@@ -68,7 +75,7 @@ async function loadData() {
     const items = await itemsAPI.getAll({});
 
     allItems = items.filter(item =>
-      item.packing_data?.packable === false &&
+      _getStorageData(item).packable === false &&
       item.class !== 'Deployment' &&
       item.class !== 'Storage' &&
       item.class_type !== 'Receptacle'
@@ -169,9 +176,9 @@ function applyFiltersAndRender() {
 
   if (currentFilters.stored && currentFilters.stored !== 'All') {
     if (currentFilters.stored === 'stored') {
-      result = result.filter(item => item.packing_data?.packing_status === true);
+      result = result.filter(item => _getStorageData(item).is_stored === true);
     } else {
-      result = result.filter(item => item.packing_data?.packing_status !== true);
+      result = result.filter(item => _getStorageData(item).is_stored !== true);
     }
   }
 
@@ -242,8 +249,9 @@ function renderCards() {
  */
 function renderItemCard(item) {
   const photoUrl = item.images?.thumb_cloudfront_url || item.images?.photo_url || getPlaceholderImage();
-  const isStored = item.packing_data?.packing_status === true;
-  const location = item.packing_data?.tote_location;
+  const sd = _getStorageData(item);
+  const isStored = sd.is_stored === true;
+  const location = sd.location;
   const season = item.season || '';
 
   const storedBadge = isStored
@@ -327,9 +335,9 @@ function collapseDetailPanel(grid) {
  * Render the inline detail panel content
  */
 function renderDetailPanel(item) {
-  const pd = item.packing_data || {};
-  const isStored = pd.packing_status === true;
-  const location = pd.tote_location;
+  const pd = _getStorageData(item);
+  const isStored = pd.is_stored === true;
+  const location = pd.location;
 
   return `
     <div class="np-detail-content">

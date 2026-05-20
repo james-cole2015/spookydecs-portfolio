@@ -4,6 +4,13 @@
 
 import { ItemFormFields } from './ItemFormFields.js';
 
+function _getStorageData(item) {
+  const sd = item.storage_data;
+  if (sd !== undefined) return sd;
+  const pd = item.packing_data || {};
+  return { ...pd, is_stored: pd.packing_status, location: pd.tote_location };
+}
+
 export class EditableSection {
   constructor(sectionId, sectionType, item) {
     this.sectionId = sectionId;
@@ -220,8 +227,8 @@ export class EditableSection {
     
     const fieldsHTML = `
       <div class="form-fields">
-        ${this.createFieldHTML('storage_tote_id', 'Tote ID', 'text', this.item.packing_data?.tote_id || '')}
-        ${this.createFieldHTML('storage_location', 'Location', 'text', this.item.packing_data?.tote_location || '')}
+        ${this.createFieldHTML('storage_tote_id', 'Tote ID', 'text', _getStorageData(this.item).tote_id || '')}
+        ${this.createFieldHTML('storage_location', 'Location', 'text', _getStorageData(this.item).location || '')}
       </div>
     `;
     
@@ -266,9 +273,7 @@ export class EditableSection {
           general_notes: this.item.general_notes
         };
       case 'storage':
-        return {
-          packing_data: { ...this.item.packing_data }
-        };
+        return { storage_data: { ..._getStorageData(this.item) } };
       default:
         return {};
     }
@@ -300,15 +305,18 @@ export class EditableSection {
       case 'overview':
         return formData;
         
-      case 'storage':
+      case 'storage': {
+        const existing = _getStorageData(this.item);
         return {
-          packing_data: {
-            ...(this.item.packing_data || {}),
-            tote_id: formData.storage_tote_id || '',
-            tote_location: formData.storage_location || '',
-            packing_status: formData.storage_tote_id ? true : false
+          storage_data: {
+            packable: existing.packable,
+            single_packed: existing.single_packed,
+            is_stored: formData.storage_tote_id ? true : (existing.is_stored || false),
+            tote_id: formData.storage_tote_id || existing.tote_id || '',
+            location: formData.storage_location || existing.location || '',
           }
         };
+      }
         
       default:
         return {};

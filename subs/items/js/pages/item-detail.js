@@ -8,6 +8,13 @@ import { getClassIcon, getSeasonIcon } from '../utils/item-config.js';
 import { actionDrawer } from '../components/ActionDrawer.js';
 import { EditableSection } from '../components/EditableSection.js';
 
+function _getStorageData(item) {
+  const sd = item.storage_data;
+  if (sd !== undefined) return sd;
+  const pd = item.packing_data || {};
+  return { ...pd, is_stored: pd.packing_status, location: pd.tote_location };
+}
+
 class ItemDetailPage {
   constructor() {
     this.item = null;
@@ -306,13 +313,14 @@ class ItemDetailPage {
   }
   
   renderStorageSection() {
+    const sd = _getStorageData(this.item);
     return `
       <div class="detail-section">
         <h2 class="section-title">Storage</h2>
         <div class="detail-grid">
-          ${this.renderField('Status', this.item.packing_data?.packing_status ? 'Packed' : 'Not Packed', 'packing_status', 'storage')}
-          ${this.item.packing_data?.tote_id ? this.renderField('Tote', this.item.packing_data.tote_id, 'tote_id', 'storage') : ''}
-          ${this.item.packing_data?.tote_location ? this.renderField('Location', this.item.packing_data.tote_location, 'tote_location', 'storage') : ''}
+          ${this.renderField('Status', sd.is_stored ? 'Packed' : 'Not Packed', 'packing_status', 'storage')}
+          ${sd.tote_id ? this.renderField('Tote', sd.tote_id, 'tote_id', 'storage') : ''}
+          ${sd.location ? this.renderField('Location', sd.location, 'tote_location', 'storage') : ''}
         </div>
       </div>
     `;
@@ -364,7 +372,7 @@ class ItemDetailPage {
   }
 
   async renderRelatedLinksSection() {
-    const toteId = this.item.packing_data?.tote_id;
+    const toteId = _getStorageData(this.item).tote_id;
     const itemId = this.item.id;
     const sourceIdeaId = this.item.source_idea_id || null;
 

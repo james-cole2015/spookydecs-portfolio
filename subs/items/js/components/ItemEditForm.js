@@ -4,6 +4,13 @@
 
 import { ItemFormFields } from './ItemFormFields.js';
 
+function _getStorageData(item) {
+  const sd = item.storage_data;
+  if (sd !== undefined) return sd;
+  const pd = item.packing_data || {};
+  return { ...pd, is_stored: pd.packing_status, location: pd.tote_location };
+}
+
 export class ItemEditForm {
   constructor(containerId) {
     this.container = document.getElementById(containerId);
@@ -118,17 +125,22 @@ export class ItemEditForm {
       }
     }
     
-    // Add storage/packing data
+    // Add storage data
     if (Object.keys(storageData).length > 0) {
-      updateData.packing_data = {
-        ...(this.item.packing_data || {})
+      const existing = _getStorageData(this.item);
+      updateData.storage_data = {
+        packable: existing.packable,
+        single_packed: existing.single_packed,
+        is_stored: existing.is_stored,
+        tote_id: existing.tote_id,
+        location: existing.location,
       };
-      
+
       if (storageData.storage_tote_id) {
-        updateData.packing_data.tote_id = storageData.storage_tote_id;
+        updateData.storage_data.tote_id = storageData.storage_tote_id;
       }
       if (storageData.storage_location) {
-        updateData.packing_data.tote_location = storageData.storage_location;
+        updateData.storage_data.location = storageData.storage_location;
       }
     }
     

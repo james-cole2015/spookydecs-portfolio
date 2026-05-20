@@ -4,6 +4,13 @@
 import { getStatusColor, getSeasonIcon, getPlaceholderIcon } from '../utils/item-config.js';
 import { navigate } from '../utils/router.js';
 
+function _getStorageData(item) {
+  const sd = item.storage_data;
+  if (sd !== undefined) return sd;
+  const pd = item.packing_data || {};
+  return { ...pd, is_stored: pd.packing_status, location: pd.tote_location };
+}
+
 export class ItemsCards {
   constructor(containerId) {
     this.container = document.getElementById(containerId);
@@ -121,13 +128,13 @@ export class ItemsCards {
     }
     
     // Storage location
-    if (item.packing_data?.tote_id) {
-      const location = item.packing_data.tote_location ?
-        ` • ${item.packing_data.tote_location}` : '';
+    const _sd = _getStorageData(item);
+    if (_sd.tote_id) {
+      const loc = _sd.location ? ` • ${_sd.location}` : '';
       lines.push(`
         <div class="item-detail-row">
           <span class="item-detail-icon">📦</span>
-          <span>${item.packing_data.tote_id}${location}</span>
+          <span>${_sd.tote_id}${loc}</span>
         </div>
       `);
     }

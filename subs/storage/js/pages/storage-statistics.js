@@ -5,6 +5,13 @@ import { formatStorageUnit } from '../utils/storage-config.js';
 import { showError } from '../shared/toast.js';
 import { renderBreadcrumb } from '../shared/breadcrumb.js';
 
+function _getStorageData(item) {
+  const sd = item.storage_data;
+  if (sd !== undefined) return sd;
+  const pd = item.packing_data || {};
+  return { ...pd, is_stored: pd.packing_status, location: pd.tote_location };
+}
+
 export async function renderStorageStatistics() {
   const app = document.getElementById('app');
 
@@ -47,7 +54,7 @@ export async function renderStorageStatistics() {
 }
 
 function calculateStats(storage, items) {
-  const packedItems = items.filter(item => item.packing_data?.packing_status !== false);
+  const packedItems = items.filter(item => _getStorageData(item).is_stored !== false);
   const packedStorage = storage.filter(unit => unit.packed !== false);
 
   const stats = {
@@ -61,7 +68,7 @@ function calculateStats(storage, items) {
   ['Halloween', 'Christmas', 'Shared'].forEach(season => {
     const seasonStorage = storage.filter(unit => unit.season === season);
     const seasonItems = items.filter(item => item.season === season);
-    const packedSeasonItems = seasonItems.filter(item => item.packing_data?.packing_status !== false);
+    const packedSeasonItems = seasonItems.filter(item => _getStorageData(item).is_stored !== false);
 
     if (seasonStorage.length > 0 || seasonItems.length > 0) {
       stats.by_season[season] = {

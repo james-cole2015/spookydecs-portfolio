@@ -8,6 +8,13 @@ import { storageAPI, itemsAPI, photosAPI } from '../utils/storage-api.js';
 import { formatStorageUnit } from '../utils/storage-config.js';
 import { getFiltersFromUrl, saveFiltersToUrl } from '../utils/state.js';
 import { FilterBar } from '../components/FilterBar.js';
+
+function _getStorageData(item) {
+  const sd = item.storage_data;
+  if (sd !== undefined) return sd;
+  const pd = item.packing_data || {};
+  return { ...pd, is_stored: pd.packing_status, location: pd.tote_location };
+}
 import { StorageCards } from '../components/StorageCards.js';
 import { PageHeader } from '../components/PageHeader.js';
 import { navigate } from '../utils/router.js';
@@ -176,7 +183,7 @@ function calculateStats(storage, items) {
     total_storage: storage.length,
     unpacked_storage: storage.filter(unit => unit.packed === false).length,
     total_items: items.length,
-    unpacked_items: items.filter(item => item.packing_data?.packing_status === false).length,
+    unpacked_items: items.filter(item => _getStorageData(item).is_stored === false).length,
     by_season: {}
   };
   
@@ -186,7 +193,7 @@ function calculateStats(storage, items) {
   seasons.forEach(season => {
     const seasonStorage = storage.filter(unit => unit.season === season);
     const seasonItems = items.filter(item => item.season === season);
-    const unpackedSeasonItems = seasonItems.filter(item => item.packing_data?.packing_status === false);
+    const unpackedSeasonItems = seasonItems.filter(item => _getStorageData(item).is_stored === false);
     
     if (seasonStorage.length > 0 || seasonItems.length > 0) {
       stats.by_season[season] = {

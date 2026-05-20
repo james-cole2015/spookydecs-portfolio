@@ -8,6 +8,13 @@
 
 import { getPlaceholderImage } from '../utils/storage-config.js';
 import { navigate } from '../utils/router.js';
+
+function _getStorageData(item) {
+  const sd = item.storage_data;
+  if (sd !== undefined) return sd;
+  const pd = item.packing_data || {};
+  return { ...pd, is_stored: pd.packing_status, location: pd.tote_location };
+}
 import { showError } from '../shared/toast.js';
 
 const PACKING_MODES = {
@@ -318,8 +325,9 @@ export class PackingWizard {
 
   filterSingleItems() {
     return this.availableItems.filter(item => {
-      const isSinglePacked = item.packing_data?.single_packed === true;
-      const isUnpacked = item.packing_data?.packing_status === false;
+      const sd = _getStorageData(item);
+      const isSinglePacked = sd.single_packed === true;
+      const isUnpacked = sd.is_stored === false;
       const isNotReceptacle = item.class_type !== 'Receptacle';
       return isSinglePacked && isUnpacked && isNotReceptacle;
     });
@@ -327,8 +335,9 @@ export class PackingWizard {
 
   filterStoreItems() {
     return this.availableItems.filter(item => {
-      const isNonPackable = item.packing_data?.packable === false;
-      const isUnstored = item.packing_data?.packing_status === false;
+      const sd = _getStorageData(item);
+      const isNonPackable = sd.packable === false;
+      const isUnstored = sd.is_stored === false;
       const isNotReceptacle = item.class_type !== 'Receptacle';
       return isNonPackable && isUnstored && isNotReceptacle;
     });

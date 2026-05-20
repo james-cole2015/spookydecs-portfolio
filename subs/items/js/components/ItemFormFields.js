@@ -8,6 +8,13 @@ import {
   ITEM_STATUS
 } from '../utils/item-config.js';
 
+function _getStorageData(item) {
+  const sd = item.storage_data;
+  if (sd !== undefined) return sd;
+  const pd = item.packing_data || {};
+  return { ...pd, is_stored: pd.packing_status, location: pd.tote_location };
+}
+
 export class ItemFormFields {
   constructor(containerId) {
     this.container = document.getElementById(containerId);
@@ -157,11 +164,11 @@ export class ItemFormFields {
   renderStorageFields(data = {}) {
     if (!this.container) return;
     
-    const packingData = data.packing_data || {};
-    
+    const packingData = _getStorageData(data);
+
     const fields = document.createElement('div');
     fields.className = 'form-fields';
-    
+
     fields.appendChild(this.createTextField(
       'storage_tote_id',
       'Storage Tote ID',
@@ -169,11 +176,11 @@ export class ItemFormFields {
       false,
       'e.g., TOTE 004'
     ));
-    
+
     fields.appendChild(this.createTextField(
       'storage_location',
       'Storage Location',
-      packingData.tote_location || '',
+      packingData.location || '',
       false,
       'e.g., Shed, Crawl Space'
     ));
