@@ -9,14 +9,12 @@ import { TotePackFlow } from '../components/TotePackFlow.js';
 import { showSuccess, showError, showInfo } from '../shared/toast.js';
 import { navigate } from '../utils/router.js';
 
-function _getStorageData(item) {
-  const sd = item.storage_data;
-  if (sd !== undefined) return sd;
-  const pd = item.packing_data || {};
-  return { ...pd, is_stored: pd.packing_status, location: pd.tote_location };
-}
 import { renderBreadcrumb } from '../shared/breadcrumb.js';
 import { showLoading, hideLoading } from '../app.js';
+
+function _getStorageData(item) {
+  return item.storage_data || {};
+}
 
 let packFlow = null;
 

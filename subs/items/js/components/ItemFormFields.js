@@ -9,10 +9,7 @@ import {
 } from '../utils/item-config.js';
 
 function _getStorageData(item) {
-  const sd = item.storage_data;
-  if (sd !== undefined) return sd;
-  const pd = item.packing_data || {};
-  return { ...pd, is_stored: pd.packing_status, location: pd.tote_location };
+  return item.storage_data || {};
 }
 
 export class ItemFormFields {

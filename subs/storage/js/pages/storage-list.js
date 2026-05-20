@@ -9,14 +9,12 @@ import { formatStorageUnit } from '../utils/storage-config.js';
 import { getFiltersFromUrl, saveFiltersToUrl } from '../utils/state.js';
 import { FilterBar } from '../components/FilterBar.js';
 
-function _getStorageData(item) {
-  const sd = item.storage_data;
-  if (sd !== undefined) return sd;
-  const pd = item.packing_data || {};
-  return { ...pd, is_stored: pd.packing_status, location: pd.tote_location };
-}
 import { StorageCards } from '../components/StorageCards.js';
 import { PageHeader } from '../components/PageHeader.js';
+
+function _getStorageData(item) {
+  return item.storage_data || {};
+}
 import { navigate } from '../utils/router.js';
 import { showSuccess, showError } from '../shared/toast.js';
 import { showModal } from '../shared/modal.js';
