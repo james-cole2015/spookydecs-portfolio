@@ -539,28 +539,26 @@
     opacity: 0.45;
 }
 
-/* IG progress bar — sits between header card and content grid */
-.ig-progress-wrap {
-    position: relative;
-    height: 3px;
-    background: var(--color-border, #e2e8f0);
-    overflow: hidden;
-    border-radius: 2px;
-    margin: -1rem 0 1rem;
+/* IG running state — spinner in button + status line in header */
+.ig-btn-spinner {
+    display: inline-block;
+    width: 0.75rem;
+    height: 0.75rem;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: ig-spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 0.25rem;
 }
 
-.ig-progress-fill {
-    position: absolute;
-    top: 0;
-    left: -35%;
-    width: 35%;
-    height: 100%;
-    background: var(--color-accent, #81d4fa);
-    border-radius: 2px;
-    animation: ig-sweep 1.4s ease-in-out infinite;
+@keyframes ig-spin {
+    to { transform: rotate(360deg); }
 }
 
-@keyframes ig-sweep {
-    0%   { left: -35%; }
-    100% { left: 100%; }
+.ig-status-line {
+    margin: 0.75rem 0 0;
+    font-size: 0.85rem;
+    color: var(--color-text-muted, #6b7280);
+    font-style: italic;
 }

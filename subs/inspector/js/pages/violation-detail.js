@@ -442,14 +442,17 @@ async function runInspectorGadget() {
     if (!btn) return;
 
     btn.disabled = true;
-    btn.textContent = 'Running...';
+    btn.innerHTML = '<span class="ig-btn-spinner"></span> Running...';
 
-    const progressWrap = document.createElement('div');
-    progressWrap.className = 'ig-progress-wrap';
-    progressWrap.innerHTML = '<div class="ig-progress-fill"></div>';
-    btn.closest('.violation-page-header').after(progressWrap);
+    const statusLine = document.createElement('p');
+    statusLine.className = 'ig-status-line';
+    statusLine.textContent = 'Inspector Gadget is analyzing this violation…';
+    btn.closest('.violation-header-actions').after(statusLine);
 
-    const removeProgress = () => progressWrap.remove();
+    const removeProgress = () => {
+        statusLine.remove();
+        btn.innerHTML = 'Run IG';
+    };
 
     try {
         await InspectorAPI.runIG(currentViolation.violation_id);
