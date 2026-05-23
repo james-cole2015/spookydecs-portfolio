@@ -242,7 +242,10 @@ function renderViolationContent() {
                 <h3>Metadata</h3>
                 <dl class="detail-list">
                     <dt>Violation ID:</dt>
-                    <dd class="violation-id">${sanitizeHtml(currentViolation.violation_id)}</dd>
+                    <dd class="violation-id">
+                        <code>${sanitizeHtml(currentViolation.violation_id)}</code>
+                        <button class="copy-id-btn" title="Copy violation ID" onclick="navigator.clipboard.writeText('${currentViolation.violation_id}').then(() => { this.textContent = '✓'; setTimeout(() => this.textContent = '⎘', 1500); }).catch(() => {})">⎘</button>
+                    </dd>
                     
                     <dt>${isDuplicate ? 'Items:' : 'Item:'}</dt>
                     <dd>${itemDisplay}</dd>
