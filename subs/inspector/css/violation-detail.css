@@ -539,14 +539,14 @@
     opacity: 0.45;
 }
 
-/* IG progress bar */
+/* IG progress bar — sits between header card and content grid */
 .ig-progress-wrap {
     position: relative;
     height: 3px;
     background: var(--color-border, #e2e8f0);
     overflow: hidden;
-    border-radius: 0 0 var(--radius-lg, 8px) var(--radius-lg, 8px);
-    margin-top: 1rem;
+    border-radius: 2px;
+    margin: -1rem 0 1rem;
 }
 
 .ig-progress-fill {

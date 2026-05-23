@@ -44,6 +44,7 @@ BACKUP_BUCKET  = 'sd-table-migration-backups'
 # transform: None | 'image' | 'finance'
 TABLES = [
     ('sd_items_records_prod',          'sd_items_records_dev',          'id',            None,                 None),
+    ('sd_storage_records_prod',        'sd_storage_records_dev',        'id',            None,                 None),
     ('sd_images_records_prod',         'sd_images_records_dev',         'photo_id',      None,                 'image'),
     ('sd_maintenance_records_prod',    'sd_maintenance_records_dev',    'record_id',     None,                 None),
     ('sd_maintenance_schedules_prod',  'sd_maintenance_schedules_dev',  'schedule_id',   None,                 None),
@@ -133,12 +134,17 @@ def rewrite_image_record(item):
 
 
 def rewrite_finance_record(item):
-    """Rewrite receipt_s3_key and its cloudfront_url if present."""
+    """Rewrite receipt_data nested S3 keys/URLs if present."""
     item = dict(item)
-    if 'receipt_s3_key' in item:
-        item['receipt_s3_key'] = _swap_stage(item['receipt_s3_key'])
-    if 'receipt_cloudfront_url' in item:
-        item['receipt_cloudfront_url'] = _swap_stage(item['receipt_cloudfront_url'])
+    rd = item.get('receipt_data')
+    if isinstance(rd, dict):
+        item['receipt_data'] = {
+            **rd,
+            's3_key':           _swap_stage(rd.get('s3_key', '')),
+            'cloudfront_url':   _swap_stage(rd.get('cloudfront_url', '')),
+            'thumbnail_s3_key': _swap_stage(rd.get('thumbnail_s3_key', '')),
+            'thumbnail_url':    _swap_stage(rd.get('thumbnail_url', '')),
+        }
     return item
 
 
@@ -255,9 +261,10 @@ def copy_table(resource, s3_client, prod_name, dev_name, pk, sk, transform_key, 
     # Copy prod → dev
     prod_table = resource.Table(prod_name)
     dev_table  = resource.Table(dev_name)
-    written    = 0
-    s3_copies  = 0
-    s3_skipped = 0
+    written             = 0
+    s3_copies           = 0
+    s3_skipped          = 0
+    _receipt_s3_copied  = set()
 
     for page in scan_all(prod_table):
         transformed_page = []
@@ -279,13 +286,29 @@ def copy_table(resource, s3_client, prod_name, dev_name, pk, sk, transform_key, 
                         else:
                             s3_skipped += 1
 
+            # S3 copy for finance receipts
+            if transform_key == 'finance':
+                rd = item.get('receipt_data')
+                if isinstance(rd, dict):
+                    for field in ('s3_key', 'thumbnail_s3_key'):
+                        dev_key = rd.get(field, '')  # already rewritten to /dev/ by transform
+                        if dev_key:
+                            prod_key = dev_key.replace('/dev/', '/prod/', 1)
+                            if prod_key != dev_key and prod_key not in _receipt_s3_copied:
+                                copy_image_s3(s3_client, prod_key, dry_run)
+                                _receipt_s3_copied.add(prod_key)
+                                if not dry_run:
+                                    s3_copies += 1
+                                else:
+                                    s3_skipped += 1
+
         if not dry_run:
             batch_write(dev_table, transformed_page)
         written += len(transformed_page)
 
     label = '[DRY RUN] Would write' if dry_run else 'Written'
     print(f'  {label} {written} records to {dev_name}.')
-    if transform_key == 'image':
+    if transform_key in ('image', 'finance'):
         count = s3_skipped if dry_run else s3_copies
         verb = 'Would copy' if dry_run else 'Copied'
         print(f'  {verb} {count} S3 objects.')

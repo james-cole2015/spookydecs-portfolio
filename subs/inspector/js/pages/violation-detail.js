@@ -447,7 +447,7 @@ async function runInspectorGadget() {
     const progressWrap = document.createElement('div');
     progressWrap.className = 'ig-progress-wrap';
     progressWrap.innerHTML = '<div class="ig-progress-fill"></div>';
-    btn.closest('.violation-header-actions').after(progressWrap);
+    btn.closest('.violation-page-header').after(progressWrap);
 
     const removeProgress = () => progressWrap.remove();
 
