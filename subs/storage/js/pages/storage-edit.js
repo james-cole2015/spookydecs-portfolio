@@ -348,12 +348,11 @@ async function handleSave(storageId) {
     // Get form data
     const formData = formFields.getData();
     
-    // Build update payload
+    // Build update payload (API uses 'name', form field named 'short_name' internally)
     const updateData = {
       location: formData.location,
-      short_name: formData.short_name,
-      general_notes: formData.general_notes,
-      packed: packedCheckbox ? packedCheckbox.checked : currentStorageUnit.packed
+      name: formData.short_name,
+      general_notes: formData.general_notes
     };
     
     // Only include size for totes

@@ -241,11 +241,17 @@ export function formatStorageUnit(unit) {
   // Normalize old vs new data structures
   const season = unit.season || unit.category;
   const classType = unit.class_type || (unit.type === 'TOTE' ? 'Tote' : 'Self');
-  
+  // V1.4 schema: renamed short_name → name
+  const shortName = unit.name || unit.short_name;
+  // V1.4 schema: changed packed:bool → status:str ('Packed', 'Stored', 'Staged', 'Partial', 'Empty', 'Out of Service')
+  const packed = ['Packed', 'Stored', 'Staged'].includes(unit.status) || Boolean(unit.packed);
+
   return {
     ...unit,
     season,
     class_type: classType,
+    short_name: shortName,
+    packed,
     contents_count: unit.contents_count || (unit.contents ? unit.contents.length : 0)
   };
 }

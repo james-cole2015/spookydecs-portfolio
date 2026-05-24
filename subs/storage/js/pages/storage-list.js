@@ -273,7 +273,7 @@ function applyFilters(storage, filters) {
   
   // Filter by packed status
   if (filters.packed && filters.packed !== 'All') {
-    const isPacked = filters.packed === 'true';
+    const isPacked = filters.packed === 'Packed';
     filtered = filtered.filter(unit => unit.packed === isPacked);
   }
   

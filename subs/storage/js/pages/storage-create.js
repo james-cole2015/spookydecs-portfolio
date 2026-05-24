@@ -58,7 +58,7 @@ async function handleComplete(classType, formData, uploadedPhotoIds) {
       storageUnit = await storageAPI.createTote({
         season: formData.season,
         location: formData.location,
-        short_name: formData.short_name,
+        name: formData.short_name,
         size: formData.size,
         general_notes: formData.general_notes || ''
       });
@@ -67,7 +67,7 @@ async function handleComplete(classType, formData, uploadedPhotoIds) {
       storageUnit = await storageAPI.createSelf({
         season: formData.season,
         location: formData.location,
-        short_name: formData.short_name,
+        name: formData.short_name,
         item_id: formData.item_id,
         general_notes: formData.general_notes || ''
       });
