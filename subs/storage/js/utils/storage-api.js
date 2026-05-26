@@ -3,7 +3,7 @@
  * Handles all HTTP requests to the storage endpoints
  */
 
-import STORAGE_CONFIG from './storage-config.js';
+import STORAGE_CONFIG, { formatStorageUnit } from './storage-config.js';
 
 const { getAuthToken, buildHeaders, redirectToLogin, hasMinRole } = window.SpookyAuth;
 
@@ -49,8 +49,8 @@ export const storageAPI = {
     const response = await fetch(url, { headers: buildHeaders() });
     const data = await handleResponse(response);
 
-    if (data.success && data.data) return data.data.storage_units || [];
-    return data.storage_units || [];
+    const units = (data.success && data.data) ? data.data.storage_units || [] : data.storage_units || [];
+    return units.map(formatStorageUnit);
   },
 
   async getById(id) {
@@ -61,8 +61,8 @@ export const storageAPI = {
     );
     const data = await handleResponse(response);
 
-    if (data.success && data.data && data.data.storage_unit) return data.data.storage_unit;
-    return data.storage_unit || null;
+    const unit = (data.success && data.data && data.data.storage_unit) ? data.data.storage_unit : data.storage_unit || null;
+    return unit ? formatStorageUnit(unit) : null;
   },
 
   async createTote(data) {
@@ -75,8 +75,8 @@ export const storageAPI = {
     });
     const result = await handleResponse(response);
 
-    if (result.success && result.data && result.data.storage_unit) return result.data.storage_unit;
-    return result.storage_unit || null;
+    const unit = (result.success && result.data && result.data.storage_unit) ? result.data.storage_unit : result.storage_unit || null;
+    return unit ? formatStorageUnit(unit) : null;
   },
 
   async createSelf(data) {
@@ -89,8 +89,8 @@ export const storageAPI = {
     });
     const result = await handleResponse(response);
 
-    if (result.success && result.data && result.data.storage_unit) return result.data.storage_unit;
-    return result.storage_unit || null;
+    const unit = (result.success && result.data && result.data.storage_unit) ? result.data.storage_unit : result.storage_unit || null;
+    return unit ? formatStorageUnit(unit) : null;
   },
 
   async update(id, data) {
@@ -106,8 +106,8 @@ export const storageAPI = {
     );
     const result = await handleResponse(response);
 
-    if (result.success && result.data && result.data.storage_unit) return result.data.storage_unit;
-    return result.storage_unit || null;
+    const unit = (result.success && result.data && result.data.storage_unit) ? result.data.storage_unit : result.storage_unit || null;
+    return unit ? formatStorageUnit(unit) : null;
   },
 
   async delete(id) {
