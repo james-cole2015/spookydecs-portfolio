@@ -48,13 +48,13 @@
 
 .violation-nav-counter {
     font-size: 0.875rem;
-    color: var(--color-text-secondary);
+    color: var(--text-secondary);
     white-space: nowrap;
 }
 
 .violation-page-header {
     background: white;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--border-default);
     border-radius: 8px;
     padding: 2rem;
     margin-bottom: 2rem;
@@ -81,7 +81,7 @@
 .violation-notes-card,
 .violation-actions-card {
     background: white;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--border-default);
     border-radius: 8px;
     padding: 1.5rem;
     margin-bottom: 1.5rem;
@@ -93,7 +93,7 @@
 .violation-actions-card h3 {
     font-size: 1.125rem;
     margin-bottom: 1rem;
-    color: var(--color-text);
+    color: var(--text-primary);
 }
 
 .detail-list {
@@ -103,7 +103,7 @@
 
 .detail-list dt {
     font-weight: 600;
-    color: var(--color-text-secondary);
+    color: var(--text-secondary);
     font-size: 0.875rem;
     margin-bottom: 0.25rem;
 }
@@ -118,7 +118,7 @@
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    background: var(--color-light-gray);
+    background: var(--surface-muted);
     padding: 0.5rem;
     border-radius: 4px;
     word-break: break-all;
@@ -133,13 +133,13 @@
 
 .violation-message {
     line-height: 1.6;
-    color: var(--color-text);
+    color: var(--text-primary);
 }
 
 .violation-notes-card textarea {
     width: 100%;
     padding: 0.75rem;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--border-default);
     border-radius: 6px;
     font-family: inherit;
     font-size: 0.875rem;
@@ -193,7 +193,7 @@
 
 .modal-header {
     padding: 1.5rem;
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--border-default);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -209,7 +209,7 @@
     border: none;
     font-size: 1.5rem;
     cursor: pointer;
-    color: var(--color-text-secondary);
+    color: var(--text-secondary);
     padding: 0;
     width: 30px;
     height: 30px;
@@ -219,7 +219,7 @@
 }
 
 .modal-close:hover {
-    color: var(--color-text);
+    color: var(--text-primary);
 }
 
 .modal-body {
@@ -228,7 +228,7 @@
 
 .modal-footer {
     padding: 1rem 1.5rem;
-    border-top: 1px solid var(--color-border);
+    border-top: 1px solid var(--border-default);
     display: flex;
     justify-content: flex-end;
     gap: 0.5rem;
@@ -251,24 +251,24 @@
     display: flex;
     justify-content: space-between;
     padding: 0.5rem 0;
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--border-default);
 }
 
 .meta-label {
     font-weight: 600;
-    color: var(--color-text-secondary);
+    color: var(--text-secondary);
     font-size: 0.875rem;
 }
 
 .meta-value {
-    color: var(--color-text);
+    color: var(--text-primary);
 }
 
 .violation-id {
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    background: var(--color-light-gray);
+    background: var(--surface-muted);
     padding: 0.25rem 0.5rem;
     border-radius: 4px;
     word-break: break-all;
@@ -287,7 +287,7 @@
     border: none;
     cursor: pointer;
     font-size: 1.1rem;
-    color: var(--color-text-muted, #6b7280);
+    color: var(--text-muted);
     padding: 0 0.25rem;
     line-height: 1;
     transition: color 0.15s;
@@ -310,7 +310,7 @@
 .violation-notes textarea {
     width: 100%;
     padding: 0.75rem;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--border-default);
     border-radius: 6px;
     font-family: inherit;
     font-size: 0.875rem;
@@ -338,14 +338,14 @@
 
 .item-card {
     background: white;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--border-default);
     border-radius: 8px;
     overflow: hidden;
 }
 
 .item-header {
     padding: 1rem 1.5rem;
-    background: var(--color-light-gray);
+    background: var(--surface-muted);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -358,7 +358,7 @@
 
 .item-id {
     font-size: 0.75rem;
-    color: var(--color-text-secondary);
+    color: var(--text-secondary);
     font-family: monospace;
 }
 
@@ -377,7 +377,7 @@
     bottom: 2rem;
     right: 2rem;
     background: white;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--border-default);
     border-radius: 6px;
     padding: 1rem 1.5rem;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
@@ -398,7 +398,7 @@
 }
 
 .toast-error {
-    border-left: 4px solid var(--color-critical);
+    border-left: 4px solid var(--color-danger);
 }
 
 .toast-warning {
@@ -406,13 +406,13 @@
 }
 
 .toast-info {
-    border-left: 4px solid var(--color-info);
+    border-left: 4px solid var(--color-primary);
 }
 
 /* Filters Bar */
 .filters-bar {
     background: white;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--border-default);
     border-radius: 8px;
     padding: 1rem 1.5rem;
     margin-bottom: 1.5rem;
@@ -431,12 +431,12 @@
 .filter-group label {
     font-size: 0.875rem;
     font-weight: 500;
-    color: var(--color-text-secondary);
+    color: var(--text-secondary);
 }
 
 .filter-group select {
     padding: 0.5rem;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--border-default);
     border-radius: 6px;
     font-size: 0.875rem;
     min-width: 120px;
@@ -452,7 +452,7 @@
 .end-of-list {
     text-align: center;
     padding: 1rem;
-    color: var(--color-text-secondary);
+    color: var(--text-secondary);
     font-size: 0.875rem;
 }
 
@@ -591,6 +591,6 @@
 .ig-status-line {
     margin: 0.75rem 0 0;
     font-size: 0.85rem;
-    color: var(--color-text-muted, #6b7280);
+    color: var(--text-muted);
     font-style: italic;
 }

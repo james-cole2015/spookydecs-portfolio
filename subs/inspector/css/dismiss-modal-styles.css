@@ -7,10 +7,10 @@
 }
 
 .dismiss-instructions {
-    background: #f8f9fa;
+    background: var(--surface-muted);
     padding: 1rem;
     border-radius: 6px;
-    border-left: 4px solid #ffc107;
+    border-left: 4px solid var(--color-warning);
 }
 
 .dismiss-instructions p {
@@ -31,7 +31,7 @@
 #dismissal-reason {
     width: 100%;
     padding: 0.75rem;
-    border: 2px solid #dee2e6;
+    border: 2px solid var(--border-default);
     border-radius: 6px;
     font-family: inherit;
     font-size: 0.95rem;
@@ -42,8 +42,8 @@
 
 #dismissal-reason:focus {
     outline: none;
-    border-color: #80bdff;
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    border-color: var(--color-accent);
+    box-shadow: var(--shadow-focus-accent);
 }
 
 .character-counter {
@@ -55,11 +55,11 @@
 }
 
 .char-count-divider {
-    color: #6c757d;
+    color: var(--text-secondary);
 }
 
 .char-count-max {
-    color: #6c757d;
+    color: var(--text-secondary);
 }
 
 #char-count {
@@ -69,15 +69,15 @@
 }
 
 .char-count-below-min {
-    color: #dc3545;
+    color: var(--color-danger);
 }
 
 .char-count-valid {
-    color: #28a745;
+    color: var(--color-success);
 }
 
 .char-count-max-reached {
-    color: #ffc107;
+    color: var(--color-warning);
 }
 
 .char-status {
@@ -86,15 +86,15 @@
 }
 
 .char-status-warning {
-    color: #dc3545;
+    color: var(--color-danger);
 }
 
 .char-status-success {
-    color: #28a745;
+    color: var(--color-success);
 }
 
 .char-status-max {
-    color: #ffc107;
+    color: var(--color-warning);
 }
 
 .validation-message {
@@ -104,21 +104,21 @@
 }
 
 .validation-error {
-    color: #dc3545;
+    color: var(--color-danger);
 }
 
 .violation-context {
-    background: #f8f9fa;
+    background: var(--surface-muted);
     padding: 1rem;
     border-radius: 6px;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--border-default);
 }
 
 .violation-context h4 {
     margin: 0 0 0.75rem 0;
     font-size: 0.95rem;
     font-weight: 600;
-    color: #495057;
+    color: var(--text-label);
 }
 
 .context-item {
@@ -128,7 +128,7 @@
 }
 
 .context-item strong {
-    color: #495057;
+    color: var(--text-label);
     margin-right: 0.5rem;
 }
 
@@ -137,7 +137,7 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    border-left: 1px solid var(--border-default, #e2e8f0);
+    border-left: 1px solid var(--border-default);
     padding-left: 1rem;
 }
 
@@ -147,7 +147,7 @@
     align-items: flex-start;
     margin-bottom: 1.5rem;
     padding-bottom: 1rem;
-    border-bottom: 2px solid #e9ecef;
+    border-bottom: 2px solid var(--border-default);
 }
 
 #dismiss-violation-btn:disabled {
@@ -161,12 +161,12 @@
         flex-direction: column;
         gap: 1rem;
     }
-    
+
     .violation-header-actions {
         width: 100%;
         justify-content: flex-end;
     }
-    
+
     #dismissal-reason {
         font-size: 1rem;
     }
