@@ -1,15 +1,46 @@
 /* Inspector Main Styles */
 
 :root {
-    --color-critical: #DC2626;
-    --color-warning: #F59E0B;
-    --color-info: #3B82F6;
-    --color-success: #10B981;
-    --color-gray: #6B7280;
-    --color-light-gray: #F3F4F6;
-    --color-border: #E5E7EB;
-    --color-text: #111827;
-    --color-text-secondary: #6B7280;
+    /* Color — primary, accent, semantic */
+    --color-primary: #3b82f6;
+    --color-primary-hover: #2563eb;
+    --color-primary-light: #eff6ff;
+
+    --color-accent: #81d4fa;
+    --color-accent-hover: #4fc3f7;
+    --color-accent-light: #e0f7fa;
+
+    --color-success: #16a34a;
+    --color-warning: #d97706;
+    --color-danger: #dc2626;
+
+    /* Text scale */
+    --text-primary: #0f172a;
+    --text-body: #1e293b;
+    --text-secondary: #64748b;
+    --text-muted: #94a3b8;
+    --text-label: #475569;
+
+    /* Surface + border */
+    --surface-default: #ffffff;
+    --surface-subtle: #f8fafc;
+    --surface-muted: #f1f5f9;
+    --border-default: #e2e8f0;
+    --border-hover: #cbd5e1;
+
+    /* Badge sets */
+    --badge-warning-bg: #fef3c7;
+    --badge-warning-text: #92400e;
+    --badge-danger-bg: #fee2e2;
+    --badge-danger-text: #991b1b;
+    --badge-active-bg: #d1fae5;
+    --badge-active-text: #065f46;
+    --badge-neutral-bg: #f1f5f9;
+    --badge-neutral-text: #475569;
+
+    /* Shadow */
+    --shadow-focus: 0 0 0 3px rgba(59, 130, 246, 0.10);
+    --shadow-focus-accent: 0 0 0 3px rgba(129, 212, 250, 0.15);
 }
 
 * {
@@ -20,7 +51,7 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    color: var(--color-text);
+    color: var(--text-primary);
     line-height: 1.6;
     background: #FAFAFA;
 }
@@ -32,7 +63,7 @@ body {
     justify-content: center;
     min-height: 100vh;
     font-size: 1.25rem;
-    color: var(--color-text-secondary);
+    color: var(--text-secondary);
 }
 
 /* Main Container */
@@ -64,7 +95,7 @@ body {
 
 .stat-card {
     background: white;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--border-default);
     border-radius: 8px;
     padding: 1.5rem;
     text-align: center;
@@ -72,7 +103,7 @@ body {
 
 .stat-label {
     font-size: 0.875rem;
-    color: var(--color-text-secondary);
+    color: var(--text-secondary);
     margin-bottom: 0.5rem;
     display: block;
 }
@@ -84,11 +115,11 @@ body {
 }
 
 .stat-card.stat-total .stat-value {
-    color: var(--color-text);
+    color: var(--text-primary);
 }
 
 .stat-card.stat-critical .stat-value {
-    color: var(--color-critical);
+    color: var(--color-danger);
 }
 
 .stat-card.stat-attention .stat-value {
@@ -100,7 +131,7 @@ body {
 }
 
 .stat-card.stat-info .stat-value {
-    color: var(--color-info);
+    color: var(--color-primary);
 }
 
 /* Tab Bar */
@@ -108,7 +139,7 @@ body {
     display: flex;
     gap: 0.5rem;
     margin-bottom: 2rem;
-    border-bottom: 2px solid var(--color-border);
+    border-bottom: 2px solid var(--border-default);
 }
 
 .tab-btn {
@@ -119,18 +150,18 @@ body {
     cursor: pointer;
     font-size: 1rem;
     font-weight: 500;
-    color: var(--color-text-secondary);
+    color: var(--text-secondary);
     transition: all 0.2s;
 }
 
 .tab-btn:hover:not(:disabled) {
-    color: var(--color-text);
-    background: var(--color-light-gray);
+    color: var(--text-primary);
+    background: var(--surface-muted);
 }
 
 .tab-btn.active {
-    color: var(--color-text);
-    border-bottom-color: var(--color-info);
+    color: var(--text-primary);
+    border-bottom-color: var(--color-primary);
 }
 
 .tab-btn:disabled {
@@ -147,15 +178,15 @@ body {
 
 .severity-group {
     background: white;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--border-default);
     border-radius: 8px;
     overflow: hidden;
 }
 
 .severity-header {
     padding: 1rem 1.5rem;
-    background: var(--color-light-gray);
-    border-bottom: 1px solid var(--color-border);
+    background: var(--surface-muted);
+    border-bottom: 1px solid var(--border-default);
 }
 
 .severity-header h3 {
@@ -166,7 +197,7 @@ body {
 }
 
 .count-badge {
-    background: var(--color-text);
+    background: var(--text-primary);
     color: white;
     padding: 0.25rem 0.75rem;
     border-radius: 12px;
@@ -181,7 +212,7 @@ body {
 }
 
 .rule-card {
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--border-default);
 }
 
 .rule-card:last-child {
@@ -198,7 +229,7 @@ body {
 }
 
 .rule-header:hover {
-    background: var(--color-light-gray);
+    background: var(--surface-muted);
 }
 
 .rule-title {
@@ -209,7 +240,7 @@ body {
 
 .expand-icon {
     font-size: 0.75rem;
-    color: var(--color-text-secondary);
+    color: var(--text-secondary);
 }
 
 .rule-meta {
@@ -220,11 +251,11 @@ body {
 
 .violation-count {
     font-size: 0.875rem;
-    color: var(--color-text-secondary);
+    color: var(--text-secondary);
 }
 
 .violation-count.has-violations {
-    color: var(--color-critical);
+    color: var(--color-danger);
     font-weight: 600;
 }
 
@@ -249,7 +280,7 @@ body {
 
 .rule-description {
     margin: 1rem 0;
-    color: var(--color-text-secondary);
+    color: var(--text-secondary);
 }
 
 .rule-actions {
@@ -274,13 +305,13 @@ body {
 .violations-table-mini td {
     padding: 0.5rem;
     text-align: left;
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--border-default);
 }
 
 .violations-table-mini th {
-    background: var(--color-light-gray);
+    background: var(--surface-muted);
     font-weight: 600;
-    color: var(--color-text-secondary);
+    color: var(--text-secondary);
 }
 
 .violations-table-mini tr:last-child td {
@@ -289,7 +320,7 @@ body {
 
 .more-violations {
     text-align: center;
-    color: var(--color-text-secondary);
+    color: var(--text-secondary);
     font-style: italic;
     margin-top: 0.5rem;
 }
@@ -304,44 +335,44 @@ body {
 }
 
 .severity-critical {
-    background: #FEE2E2;
-    color: var(--color-critical);
+    background: var(--badge-danger-bg);
+    color: var(--color-danger);
 }
 
 .severity-attention,
 .severity-warning {
-    background: #FEF3C7;
-    color: #D97706;
+    background: var(--badge-warning-bg);
+    color: var(--color-warning);
 }
 
 .severity-info {
-    background: #DBEAFE;
-    color: var(--color-info);
+    background: var(--color-primary-light);
+    color: var(--color-primary);
 }
 
 .status-open {
-    background: #FEE2E2;
-    color: var(--color-critical);
+    background: var(--badge-danger-bg);
+    color: var(--color-danger);
 }
 
 .status-resolved {
-    background: #D1FAE5;
+    background: var(--badge-active-bg);
     color: var(--color-success);
 }
 
 .status-dismissed {
-    background: #F3F4F6;
-    color: var(--color-gray);
+    background: var(--badge-neutral-bg);
+    color: var(--text-secondary);
 }
 
 .badge-active {
-    background: #D1FAE5;
+    background: var(--badge-active-bg);
     color: var(--color-success);
 }
 
 .badge-inactive {
-    background: #F3F4F6;
-    color: var(--color-gray);
+    background: var(--badge-neutral-bg);
+    color: var(--text-secondary);
 }
 
 /* Buttons */
@@ -356,25 +387,25 @@ body {
 }
 
 .btn-primary {
-    background: var(--color-info);
+    background: var(--color-primary);
     color: white;
 }
 
 .btn-primary:hover:not(:disabled) {
-    background: #2563EB;
+    background: var(--color-primary-hover);
 }
 
 .btn-secondary {
-    background: var(--color-light-gray);
-    color: var(--color-text);
+    background: var(--surface-muted);
+    color: var(--text-primary);
 }
 
 .btn-secondary:hover:not(:disabled) {
-    background: #E5E7EB;
+    background: var(--border-default);
 }
 
 .btn-danger {
-    background: var(--color-critical);
+    background: var(--color-danger);
     color: white;
 }
 
@@ -409,14 +440,14 @@ body {
     align-items: center;
     justify-content: center;
     padding: 3rem;
-    color: var(--color-text-secondary);
+    color: var(--text-secondary);
 }
 
 .loading-spinner {
     width: 40px;
     height: 40px;
-    border: 3px solid var(--color-light-gray);
-    border-top-color: var(--color-info);
+    border: 3px solid var(--surface-muted);
+    border-top-color: var(--color-primary);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
 }
@@ -431,7 +462,7 @@ body {
 .empty-state {
     text-align: center;
     padding: 3rem;
-    color: var(--color-text-secondary);
+    color: var(--text-secondary);
 }
 
 /* Error State */
@@ -439,12 +470,12 @@ body {
     text-align: center;
     padding: 2rem;
     background: #FEE2E2;
-    border: 1px solid var(--color-critical);
+    border: 1px solid var(--color-danger);
     border-radius: 8px;
 }
 
 .error-message {
-    color: var(--color-critical);
+    color: var(--color-danger);
     margin-bottom: 1rem;
 }
 
@@ -453,7 +484,7 @@ body {
     text-align: center;
     padding: 4rem 2rem;
     background: white;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--border-default);
     border-radius: 8px;
 }
 
@@ -462,7 +493,7 @@ body {
 }
 
 .coming-soon p {
-    color: var(--color-text-secondary);
+    color: var(--text-secondary);
     margin-bottom: 0.5rem;
 }
 

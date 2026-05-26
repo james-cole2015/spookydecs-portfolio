@@ -7,14 +7,14 @@
     display: block;
     margin-bottom: 8px;
     font-weight: 500;
-    color: #374151;
+    color: var(--text-label);
     font-size: 14px;
 }
 
 .form-control {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--border-default);
     border-radius: 6px;
     font-size: 14px;
     font-family: inherit;
@@ -24,19 +24,19 @@
 
 .form-control:focus {
     outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-focus);
 }
 
 .form-control:disabled {
-    background-color: #f3f4f6;
-    color: #6b7280;
+    background: var(--surface-muted);
+    color: var(--text-secondary);
     cursor: not-allowed;
 }
 
 .form-control[readonly] {
-    background-color: #f9fafb;
-    color: #6b7280;
+    background: var(--surface-subtle);
+    color: var(--text-secondary);
 }
 
 textarea.form-control {
@@ -47,11 +47,11 @@ textarea.form-control {
 .char-counter {
     margin-top: 8px;
     font-size: 13px;
-    color: #6b7280;
+    color: var(--text-secondary);
     text-align: right;
 }
 
 .char-counter #char-count {
     font-weight: 600;
-    color: #374151;
+    color: var(--text-label);
 }

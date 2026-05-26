@@ -1,6 +1,5 @@
 /* Violation Reason Section Styles */
 
-/* Card wrapper for violation reason */
 .violation-reason-card {
   margin-bottom: 1.5rem;
 }
@@ -12,16 +11,16 @@
 .violation-reason-section {
   margin-top: 1.5rem;
   padding: 1.5rem;
-  background-color: #f8f9fa;
+  background: var(--surface-muted);
   border-radius: 8px;
-  border-left: 4px solid #6c757d;
+  border-left: 4px solid var(--border-default);
 }
 
 .violation-reason-section h3 {
   margin: 0 0 1rem 0;
   font-size: 1rem;
   font-weight: 600;
-  color: #495057;
+  color: var(--text-label);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -35,7 +34,7 @@
 
 .violation-reason-list li {
   padding: 0.5rem 0;
-  border-bottom: 1px solid #dee2e6;
+  border-bottom: 1px solid var(--border-default);
 }
 
 .violation-reason-list li:last-child {
@@ -43,34 +42,34 @@
 }
 
 .violation-reason-list code {
-  background-color: #e9ecef;
+  background: var(--color-accent-light);
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-size: 0.9rem;
-  color: #d63384;
-  font-family: 'Courier New', Courier, monospace;
+  color: var(--text-body);
+  font-family: ui-monospace, 'Cascadia Code', monospace;
 }
 
 /* Field-based violations */
 .violation-reason-field {
   margin: 0;
   font-size: 0.95rem;
-  color: #6c757d;
+  color: var(--text-secondary);
 }
 
 .violation-reason-field code {
-  background-color: #e9ecef;
+  background: var(--color-accent-light);
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
-  color: #d63384;
-  font-family: 'Courier New', Courier, monospace;
+  color: var(--text-body);
+  font-family: ui-monospace, 'Cascadia Code', monospace;
 }
 
 /* Duplicate violations */
 .violation-reason-duplicate p {
   margin: 0.75rem 0;
   font-size: 0.95rem;
-  color: #495057;
+  color: var(--text-label);
 }
 
 .violation-reason-duplicate p:first-child {
@@ -83,34 +82,34 @@
 
 .violation-reason-duplicate strong {
   font-weight: 600;
-  color: #212529;
+  color: var(--text-primary);
   display: inline-block;
   min-width: 140px;
 }
 
 .violation-reason-duplicate code {
-  background-color: #e9ecef;
+  background: var(--color-accent-light);
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
-  color: #d63384;
-  font-family: 'Courier New', Courier, monospace;
+  color: var(--text-body);
+  font-family: ui-monospace, 'Cascadia Code', monospace;
 }
 
 .violation-reason-duplicate .item-id {
-  color: #6c757d;
+  color: var(--text-secondary);
   font-size: 0.85rem;
   margin-left: 0.5rem;
 }
 
 /* Severity-based border colors */
 .violation-reason-section[data-severity="Critical"] {
-  border-left-color: #dc3545;
+  border-left-color: var(--color-danger);
 }
 
 .violation-reason-section[data-severity="Warning"] {
-  border-left-color: #ffc107;
+  border-left-color: var(--color-warning);
 }
 
 .violation-reason-section[data-severity="Attention"] {
-  border-left-color: #17a2b8;
+  border-left-color: var(--color-warning);
 }
