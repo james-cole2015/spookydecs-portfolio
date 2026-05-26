@@ -7,7 +7,7 @@
   color: white;
   border: none;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -28,12 +28,12 @@
 
 .photo-upload-section .upload-description {
   margin: 0 0 16px 0;
-  font-size: 14px;
-  color: #6b7280;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
 }
 
 .photo-upload-section .upload-success {
-  color: #059669;
+  color: var(--success-color);
   font-weight: 600;
   margin-top: 12px;
   display: inline-flex;
@@ -49,9 +49,9 @@
 .current-photo-preview {
   width: 150px;
   height: 150px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   overflow: hidden;
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--border-color);
   margin-bottom: 12px;
 }
 
@@ -68,7 +68,7 @@
   color: white;
   border: none;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;

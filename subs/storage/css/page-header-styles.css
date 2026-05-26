@@ -27,7 +27,7 @@
 
 .page-title {
   margin: 0;
-  font-size: 24px;
+  font-size: 2rem;
   font-weight: 700;
   color: var(--text-color);
   display: flex;
@@ -36,19 +36,19 @@
 }
 
 .page-icon {
-  font-size: 28px;
+  font-size: 2.25rem;
 }
 
-/* Stats Toggle Button (visible on mobile) */
+/* Stats Toggle Button - mobile only */
 .btn-stats-toggle {
-  display: flex;
+  display: none;
   align-items: center;
   gap: var(--spacing-xs);
   padding: 8px 16px;
   background: white;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 500;
   color: var(--text-color);
   cursor: pointer;
@@ -58,13 +58,13 @@
 
 .btn-stats-toggle:hover {
   background: var(--bg-secondary);
-  border-color: var(--primary-color);
+  border-color: var(--color-primary);
 }
 
 .btn-stats-toggle:focus {
   outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(129, 212, 250, 0.1);
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-focus);
 }
 
 .btn-stats-toggle .stats-label {
@@ -72,7 +72,7 @@
 }
 
 .btn-stats-toggle .stats-icon {
-  font-size: 12px;
+  font-size: 0.75rem;
   transition: transform 0.2s;
 }
 
@@ -87,22 +87,10 @@
   flex-wrap: wrap;
 }
 
-/* Stats Container - Collapsible on Mobile */
+/* Stats Container */
 .page-stats {
-  max-height: 0;
-  overflow: hidden;
-  opacity: 0;
-  transform: translateY(-10px);
-  transition: max-height 0.4s ease, opacity 0.3s ease, transform 0.3s ease;
   background: var(--bg-secondary);
   border-radius: var(--radius-lg);
-  padding: 0;
-}
-
-.page-stats.expanded {
-  max-height: 800px;
-  opacity: 1;
-  transform: translateY(0);
   padding: var(--spacing-lg);
   margin-bottom: var(--spacing-md);
 }
@@ -110,7 +98,7 @@
 /* Stats Grid */
 .stats-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: var(--spacing-md);
 }
 
@@ -132,7 +120,7 @@
 }
 
 .stat-icon {
-  font-size: 32px;
+  font-size: 2rem;
   width: 48px;
   height: 48px;
   display: flex;
@@ -143,7 +131,7 @@
 }
 
 .stat-card.stat-primary .stat-icon {
-  background: #e1f5fe;
+  background: var(--color-primary-light);
 }
 
 .stat-card.stat-warning .stat-icon {
@@ -160,7 +148,7 @@
 }
 
 .stat-value {
-  font-size: 28px;
+  font-size: 1.75rem;
   font-weight: 700;
   color: var(--text-color);
   line-height: 1;
@@ -168,7 +156,7 @@
 }
 
 .stat-label {
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: var(--text-secondary);
   text-transform: uppercase;
@@ -188,7 +176,7 @@
 }
 
 .season-stats-title {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
@@ -198,7 +186,7 @@
 
 .season-stats-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--spacing-sm);
 }
 
@@ -209,7 +197,7 @@
   padding: var(--spacing-sm) var(--spacing-md);
   background: white;
   border-radius: var(--radius-md);
-  border-left: 3px solid var(--primary-color);
+  border-left: 3px solid var(--color-primary);
 }
 
 .season-header {
@@ -219,11 +207,11 @@
 }
 
 .season-icon {
-  font-size: 16px;
+  font-size: 1rem;
 }
 
 .season-name {
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--text-color);
 }
@@ -232,7 +220,7 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--text-secondary);
   flex-wrap: wrap;
 }
@@ -251,62 +239,54 @@
 }
 
 /* ============================================
-   RESPONSIVE - TABLET (768px+)
+   RESPONSIVE
    ============================================ */
-@media (min-width: 768px) {
+@media (max-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .season-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
   .page-title {
-    font-size: 32px;
+    font-size: 1.5rem;
   }
-  
+
   .page-icon {
-    font-size: 36px;
+    font-size: 1.75rem;
   }
-  
-  /* Hide stats toggle on tablet/desktop - stats always visible */
+
   .btn-stats-toggle {
-    display: none;
+    display: flex;
   }
-  
-  /* Stats always expanded on desktop */
+
   .page-stats {
-    max-height: none;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: max-height 0.4s ease, opacity 0.3s ease, transform 0.3s ease;
+    padding: 0;
+    margin-bottom: 0;
+  }
+
+  .page-stats.expanded {
+    max-height: 800px;
     opacity: 1;
     transform: translateY(0);
     padding: var(--spacing-lg);
     margin-bottom: var(--spacing-md);
   }
-  
-  /* Stats grid - 2 columns on tablet */
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  /* Season stats - 2 columns */
-  .season-stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
 
-/* ============================================
-   RESPONSIVE - DESKTOP (1024px+)
-   ============================================ */
-@media (min-width: 1024px) {
-  /* Stats grid - 4 columns on desktop */
   .stats-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: 1fr;
   }
-  
-  /* Season stats - 3 columns */
-  .season-stats-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
 
-/* ============================================
-   RESPONSIVE - LARGE DESKTOP (1400px+)
-   ============================================ */
-@media (min-width: 1400px) {
-  .stats-grid {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  .season-stats-grid {
+    grid-template-columns: 1fr;
   }
 }
