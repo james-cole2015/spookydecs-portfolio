@@ -16,27 +16,27 @@
   display: block;
   font-weight: 600;
   margin-bottom: 0.25rem;
-  color: #1f2937;
+  color: var(--text-color);
 }
 
 .uploader-header .optional {
   font-weight: 400;
-  color: #6b7280;
+  color: var(--text-secondary);
   font-size: 0.875rem;
 }
 
 .uploader-header .form-help {
   margin: 0;
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 /* Dropzone */
 .uploader-dropzone {
   position: relative;
   border: 2px dashed #d1d5db;
-  border-radius: 8px;
-  background: #f9fafb;
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
   transition: all 0.2s ease;
   cursor: pointer;
   min-height: 200px;
@@ -51,8 +51,8 @@
 }
 
 .uploader-dropzone.dragover {
-  border-color: #3b82f6;
-  background: #eff6ff;
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
 }
 
 /* Dropzone Content (initial state) */
@@ -74,13 +74,13 @@
 }
 
 .dropzone-text strong {
-  color: #3b82f6;
+  color: var(--color-primary);
   font-weight: 600;
 }
 
 .dropzone-hint {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 /* Photo Preview */
@@ -102,7 +102,7 @@
 .photo-preview-img {
   max-width: 100%;
   max-height: 300px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   object-fit: contain;
 }
 
@@ -144,7 +144,7 @@
   background: rgba(0, 0, 0, 0.7);
   color: white;
   padding: 0.75rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: 0.875rem;
 }
 
@@ -183,16 +183,16 @@
 
 .current-photo-preview {
   margin-top: 0.5rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
   padding: 1rem;
-  background: #f9fafb;
+  background: var(--bg-secondary);
 }
 
 .current-photo-img {
   max-width: 100%;
   max-height: 300px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   object-fit: contain;
   display: block;
   margin: 0 auto;
@@ -202,7 +202,7 @@
 .photo-upload-section {
   margin-bottom: 2rem;
   padding-bottom: 2rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .photo-upload-section h3 {

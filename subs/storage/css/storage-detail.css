@@ -15,7 +15,7 @@
 .storage-photo-gallery-section::before {
   content: 'Photos';
   display: block;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 600;
   color: #111827;
   margin-bottom: 16px;
@@ -30,12 +30,12 @@
 .photo-gallery-loading,
 .photo-gallery-empty {
   color: #6B7280;
-  font-size: 14px;
+  font-size: 0.875rem;
   padding: 4px 0;
 }
 
 .photo-gallery-subtitle {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   color: #6B7280;
   text-transform: uppercase;
@@ -110,7 +110,7 @@
   background: none;
   border: none;
   color: white;
-  font-size: 36px;
+  font-size: 2.25rem;
   line-height: 1;
   cursor: pointer;
   opacity: 0.8;
@@ -126,7 +126,7 @@
   left: 6px;
   background: #3B82F6;
   color: white;
-  font-size: 11px;
+  font-size: 0.6875rem;
   font-weight: 600;
   padding: 2px 7px;
   border-radius: 4px;
@@ -136,7 +136,7 @@
   display: block;
   width: 100%;
   padding: 6px 4px;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 500;
   color: #3B82F6;
   background: white;
@@ -160,12 +160,12 @@
 }
 
 .photo-limit-notice {
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--text-secondary);
 }
 
 .btn-sm {
-  font-size: 13px;
+  font-size: 0.8125rem;
   padding: 6px 12px;
 }
 
@@ -226,7 +226,7 @@
 
 .detail-title {
   margin: 0;
-  font-size: 28px;
+  font-size: 1.75rem;
   font-weight: 700;
   color: var(--text-color);
 }
@@ -236,7 +236,7 @@
   padding: 4px 8px;
   background: var(--bg-secondary);
   border-radius: var(--radius-sm);
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--text-secondary);
   font-family: monospace;
 }
@@ -252,7 +252,7 @@
   display: inline-block;
   padding: 6px 16px;
   border-radius: var(--radius-pill); /* Pill shaped */
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
   background: #f3f4f6; /* Light grey */
   color: var(--text-color);
@@ -261,18 +261,18 @@
 
 /* Season badge colors */
 .detail-badge.badge-halloween {
-  background: #fed7aa;
-  color: #9a3412;
+  background: var(--badge-halloween-bg);
+  color: var(--badge-halloween-text);
 }
 
 .detail-badge.badge-christmas {
-  background: #fecaca;
-  color: #991b1b;
+  background: var(--badge-christmas-bg);
+  color: var(--badge-christmas-text);
 }
 
 .detail-badge.badge-shared {
-  background: #ddd6fe;
-  color: #5b21b6;
+  background: var(--badge-shared-bg);
+  color: var(--badge-shared-text);
 }
 
 /* Type badge */
@@ -315,7 +315,7 @@
 
 .section-title {
   margin: 0 0 var(--spacing-md) 0;
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 600;
   color: var(--text-color);
   padding-bottom: var(--spacing-sm);
@@ -335,14 +335,14 @@
 }
 
 .detail-label {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
 }
 
 .detail-value {
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--text-color);
 }
 
@@ -350,12 +350,12 @@
   padding: var(--spacing-md);
   background: var(--bg-secondary);
   border-radius: var(--radius-md);
-  border-left: 4px solid var(--primary-color);
+  border-left: 4px solid var(--color-primary);
 }
 
 .detail-notes p {
   margin: 0;
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1.6;
   color: var(--text-color);
 }
@@ -391,7 +391,7 @@
 }
 
 .remove-selection-count {
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--text-secondary);
   font-weight: 500;
 }
@@ -474,13 +474,13 @@
   padding: 2px 6px;
   background: var(--bg-secondary);
   border-radius: var(--radius-sm);
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: var(--text-secondary);
   font-family: monospace;
 }
 
 .content-name {
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--text-color);
 }
@@ -489,7 +489,7 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--text-secondary);
 }
 
@@ -513,13 +513,13 @@
 }
 
 .empty-icon {
-  font-size: 48px;
+  font-size: 3rem;
   margin-bottom: var(--spacing-md);
 }
 
 .contents-empty h3 {
   margin: 0 0 var(--spacing-sm) 0;
-  font-size: 18px;
+  font-size: 1.125rem;
   color: var(--text-color);
 }
 
@@ -548,7 +548,7 @@
   }
   
   .detail-title {
-    font-size: 36px;
+    font-size: 2.25rem;
   }
   
   .detail-grid {
