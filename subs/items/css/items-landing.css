@@ -48,13 +48,13 @@
 }
 
 .option-card.active:hover {
-  border-color: var(--primary-dark, #29b6f6);
+  border-color: var(--color-primary-hover);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
 }
 
 .option-card.active:hover .card-icon {
-  background: var(--primary-dark, #29b6f6);
+  background: var(--color-primary-hover);
   color: #fff;
 }
 
@@ -72,7 +72,7 @@
 }
 
 .option-card.active .card-icon {
-  background: var(--primary-color, #81d4fa);
+  background: var(--color-primary);
 }
 
 .card-header h3 {
@@ -100,7 +100,7 @@
 }
 
 .bc-link {
-  color: var(--primary-dark, #29b6f6);
+  color: var(--color-primary-hover);
   text-decoration: none;
   cursor: pointer;
 }

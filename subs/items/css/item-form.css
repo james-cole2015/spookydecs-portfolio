@@ -41,8 +41,8 @@
   position: sticky;
   top: 56px; /* below site header */
   z-index: 100;
-  background: white;
-  border-bottom: 1px solid #e5e7eb;
+  background: var(--surface-default);
+  border-bottom: 1px solid var(--border-default);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -62,8 +62,8 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #e5e7eb;
-  color: #9ca3af;
+  background: var(--border-default);
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -79,13 +79,13 @@
 }
 
 .step.completed .step-number {
-  background: #10b981;
+  background: var(--color-success);
   color: white;
 }
 
 .step-label {
   font-size: 11px;
-  color: #9ca3af;
+  color: var(--text-muted);
   font-weight: 500;
   white-space: nowrap;
 }
@@ -96,20 +96,20 @@
 }
 
 .step.completed .step-label {
-  color: #10b981;
+  color: var(--color-success);
 }
 
 .step-connector {
   width: 32px;
   height: 2px;
-  background: #e5e7eb;
+  background: var(--border-default);
   margin-bottom: 16px; /* aligns with step-number center */
   flex-shrink: 0;
   transition: background 0.2s;
 }
 
 .step-connector--completed {
-  background: #10b981;
+  background: var(--color-success);
 }
 
 /* ----------------------------------------
@@ -122,7 +122,7 @@
 
 .wizard-step {
   padding: 32px 0;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid var(--surface-muted);
 }
 
 .wizard-step:last-child {
@@ -160,14 +160,14 @@
 .step-panel h2 {
   margin: 0 0 6px 0;
   font-size: 20px;
-  color: #1f2937;
+  color: var(--text-body);
   text-align: center;
 }
 
 .step-description {
   margin: 0 0 24px 0;
   font-size: 14px;
-  color: #6b7280;
+  color: var(--text-secondary);
   text-align: center;
 }
 
@@ -186,8 +186,8 @@
 .class-card,
 .type-card {
   padding: 24px 20px;
-  border: 2px solid #e5e7eb;
-  border-radius: 12px;
+  border: 2px solid var(--border-default);
+  border-radius: var(--radius-xl);
   text-align: center;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s, transform 0.15s, box-shadow 0.15s;
@@ -221,7 +221,7 @@
 .type-label {
   font-size: 14px;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--text-body);
 }
 
 /* ----------------------------------------
@@ -236,9 +236,9 @@
   margin: 0 0 14px 0;
   font-size: 15px;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--text-body);
   padding-bottom: 8px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border-default);
 }
 
 .form-fields {
@@ -258,7 +258,7 @@
 
 .no-fields-message {
   font-size: 14px;
-  color: #9ca3af;
+  color: var(--text-muted);
   font-style: italic;
   padding: 8px 0;
 }
@@ -280,9 +280,9 @@
    Preview Card (Step 4)
 ---------------------------------------- */
 .preview-card {
-  background: #f9fafb;
-  border: 2px solid #e5e7eb;
-  border-radius: 12px;
+  background: var(--surface-subtle);
+  border: 2px solid var(--border-default);
+  border-radius: var(--radius-xl);
   overflow: hidden;
   width: 100%;
   max-width: 600px;
@@ -290,14 +290,14 @@
 
 .preview-header {
   padding: 20px 24px;
-  background: white;
-  border-bottom: 2px solid #e5e7eb;
+  background: var(--surface-default);
+  border-bottom: 2px solid var(--border-default);
 }
 
 .preview-title {
   font-size: 22px;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--text-body);
   margin-bottom: 6px;
   display: flex;
   align-items: center;
@@ -310,7 +310,7 @@
 
 .preview-class {
   font-size: 13px;
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 .preview-sections {
@@ -329,7 +329,7 @@
   margin: 0 0 10px 0;
   font-size: 12px;
   font-weight: 700;
-  color: #6b7280;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.6px;
 }
@@ -345,24 +345,24 @@
 }
 
 .preview-label {
-  color: #6b7280;
+  color: var(--text-secondary);
   font-weight: 500;
 }
 
 .preview-value {
-  color: #1f2937;
+  color: var(--text-body);
   margin-left: 4px;
 }
 
 .preview-notes {
   margin: 10px 0 0;
   font-size: 14px;
-  color: #374151;
+  color: var(--text-label);
   line-height: 1.6;
   padding: 10px 12px;
-  background: white;
-  border-radius: 6px;
-  border: 1px solid #e5e7eb;
+  background: var(--surface-default);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-default);
 }
 
 /* Save button below preview */
