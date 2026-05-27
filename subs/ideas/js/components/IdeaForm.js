@@ -105,9 +105,12 @@ export function renderIdeaForm(container, idea, onSubmit, onCancel) {
 
         <div class="form-group">
           <label class="form-label" for="f-prep-start">Prep Start Date</label>
-          <input class="form-input" id="f-prep-start" type="date"
-            value="${escapeAttr(idea?.prep_start || '')}"${isEdit ? ' readonly' : ''}>
-          ${isEdit ? '<div class="form-hint">Set automatically by status transitions.</div>' : ''}
+          ${isEdit
+            ? `<div class="form-value">${idea?.prep_start || '—'}</div>
+               <input type="hidden" id="f-prep-start" value="${escapeAttr(idea?.prep_start || '')}">
+               <div class="form-hint">Set automatically by status transitions.</div>`
+            : `<input class="form-input" id="f-prep-start" type="date" value="${escapeAttr(idea?.prep_start || '')}">`
+          }
         </div>
 
         <div class="form-group">
@@ -125,13 +128,19 @@ export function renderIdeaForm(container, idea, onSubmit, onCancel) {
         <div class="form-row">
           <div class="form-group">
             <label class="form-label" for="f-build-start">Build Start Date</label>
-            <input class="form-input" id="f-build-start" type="date"
-              value="${escapeAttr(idea?.build_start || '')}"${isEdit ? ' readonly' : ''}>
+            ${isEdit
+              ? `<div class="form-value">${idea?.build_start || '—'}</div>
+                 <input type="hidden" id="f-build-start" value="${escapeAttr(idea?.build_start || '')}">`
+              : `<input class="form-input" id="f-build-start" type="date" value="${escapeAttr(idea?.build_start || '')}">`
+            }
           </div>
           <div class="form-group">
             <label class="form-label" for="f-build-complete">Build Complete Date</label>
-            <input class="form-input" id="f-build-complete" type="date"
-              value="${escapeAttr(idea?.build_complete || '')}"${isEdit ? ' readonly' : ''}>
+            ${isEdit
+              ? `<div class="form-value">${idea?.build_complete || '—'}</div>
+                 <input type="hidden" id="f-build-complete" value="${escapeAttr(idea?.build_complete || '')}">`
+              : `<input class="form-input" id="f-build-complete" type="date" value="${escapeAttr(idea?.build_complete || '')}">`
+            }
           </div>
           ${isEdit ? '<div class="form-hint" style="margin-top:var(--space-1)">Set automatically by status transitions.</div>' : ''}
         </div>
@@ -140,8 +149,8 @@ export function renderIdeaForm(container, idea, onSubmit, onCancel) {
           <label class="form-label" for="f-item-id">Item ID</label>
           <input class="form-input" id="f-item-id" type="text"
             value="${escapeAttr(idea?.item_id || '')}"
-            placeholder="e.g. ITEM-hal-20261001-abc1">
-          <div class="form-hint">Link to the items record once the build is complete.</div>
+            placeholder="e.g. ITEM-hal-20261001-abc1"${isEdit ? ' readonly' : ''}>
+          <div class="form-hint">${isEdit ? 'Linked item — managed by build workflow.' : 'Link to the items record once the build is complete.'}</div>
         </div>
       </div>
 

@@ -775,6 +775,12 @@ input, select, textarea { font-family: inherit; }
   margin-top: var(--space-1);
 }
 
+.form-value {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  padding: var(--space-2) 0;
+}
+
 .form-textarea {
   resize: vertical;
   min-height: 90px;

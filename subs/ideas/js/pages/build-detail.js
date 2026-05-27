@@ -233,28 +233,22 @@ function _renderBuild(container, idea) {
 
             <div class="bd-sidebar-field">
               <div class="bd-sidebar-label">Prep Start</div>
-              <div class="bd-inline-field" data-field="prep_start" data-type="date">
-                <div class="bd-field-display${!idea.prep_start ? ' empty' : ''}" id="bd-prep-start-display">
-                  ${idea.prep_start ? _formatDate(idea.prep_start) : '—'}
-                </div>
+              <div id="bd-prep-start-display" class="bd-field-display${!idea.prep_start ? ' empty' : ''}">
+                ${idea.prep_start ? _formatDate(idea.prep_start) : '—'}
               </div>
             </div>
 
             <div class="bd-sidebar-field">
               <div class="bd-sidebar-label">Build Start</div>
-              <div class="bd-inline-field" data-field="build_start" data-type="date">
-                <div class="bd-field-display${!idea.build_start ? ' empty' : ''}" id="bd-build-start-display">
-                  ${idea.build_start ? _formatDate(idea.build_start) : '—'}
-                </div>
+              <div id="bd-build-start-display" class="bd-field-display${!idea.build_start ? ' empty' : ''}">
+                ${idea.build_start ? _formatDate(idea.build_start) : '—'}
               </div>
             </div>
 
             <div class="bd-sidebar-field">
               <div class="bd-sidebar-label">Build Complete</div>
-              <div class="bd-inline-field" data-field="build_complete" data-type="date">
-                <div class="bd-field-display${!idea.build_complete ? ' empty' : ''}" id="bd-build-complete-display">
-                  ${idea.build_complete ? _formatDate(idea.build_complete) : '—'}
-                </div>
+              <div id="bd-build-complete-display" class="bd-field-display${!idea.build_complete ? ' empty' : ''}">
+                ${idea.build_complete ? _formatDate(idea.build_complete) : '—'}
               </div>
             </div>
 
