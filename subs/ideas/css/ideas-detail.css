@@ -10,8 +10,8 @@
 
 /* ---- Hero Image ------------------------------------------- */
 .detail-hero {
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
   overflow: hidden;
   margin-bottom: var(--space-4);
@@ -31,7 +31,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-border-strong);
+  color: var(--border-hover);
 }
 
 .detail-hero-placeholder svg {
@@ -49,7 +49,7 @@
   margin-bottom: var(--space-6);
   overflow-x: auto;
   scrollbar-width: thin;
-  scrollbar-color: var(--color-border) transparent;
+  scrollbar-color: var(--border-default) transparent;
   padding-bottom: var(--space-1);
 }
 
@@ -76,7 +76,7 @@
 }
 
 .gallery-thumb:hover:not(.active) {
-  border-color: var(--color-border-strong);
+  border-color: var(--border-hover);
 }
 
 /* ---- Detail Header ---------------------------------------- */
@@ -95,9 +95,9 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  background: color-mix(in srgb, var(--color-success, #16a34a) 10%, transparent);
-  border-left: 3px solid var(--color-success, #16a34a);
-  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
+  border-left: 3px solid var(--color-success);
+  color: var(--text-primary);
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
   margin-bottom: var(--space-4);
@@ -105,7 +105,7 @@
 }
 
 .idea-complete-banner a {
-  color: var(--color-success, #16a34a);
+  color: var(--color-success);
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
@@ -118,7 +118,7 @@
 .detail-title {
   font-size: var(--text-2xl);
   font-weight: 700;
-  color: var(--color-text);
+  color: var(--text-primary);
   line-height: 1.25;
   margin-bottom: var(--space-4);
 }
@@ -156,8 +156,8 @@
 
 /* ---- Field Rows ------------------------------------------- */
 .detail-section {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--surface-default);
+  border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
   padding: var(--space-5);
 }
@@ -165,10 +165,10 @@
 .detail-section-title {
   font-size: var(--text-sm);
   font-weight: 700;
-  color: var(--color-text);
+  color: var(--text-primary);
   margin-bottom: var(--space-4);
   padding-bottom: var(--space-2);
-  border-bottom: 2px solid var(--color-border);
+  border-bottom: 2px solid var(--border-default);
 }
 
 .detail-field {
@@ -176,7 +176,7 @@
   flex-direction: column;
   gap: var(--space-1);
   padding: var(--space-3) 0;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--border-default);
 }
 
 .detail-field:first-of-type { padding-top: 0; }
@@ -187,19 +187,19 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--color-text-muted);
+  color: var(--text-muted);
 }
 
 .detail-field-value {
   font-size: var(--text-base);
-  color: var(--color-text);
+  color: var(--text-primary);
   line-height: 1.55;
   white-space: pre-wrap;
   word-break: break-word;
 }
 
 .detail-field-value.empty {
-  color: var(--color-text-muted);
+  color: var(--text-muted);
   font-style: italic;
 }
 
@@ -213,7 +213,7 @@
 /* ---- Timestamps ------------------------------------------- */
 .detail-timestamps {
   font-size: var(--text-xs);
-  color: var(--color-text-muted);
+  color: var(--text-muted);
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
@@ -226,7 +226,7 @@
   justify-content: space-between;
   margin-bottom: var(--space-4);
   padding-bottom: var(--space-2);
-  border-bottom: 2px solid var(--color-border);
+  border-bottom: 2px solid var(--border-default);
 }
 
 .detail-section-title-row .detail-section-title {
@@ -247,9 +247,9 @@
 
 .materials-list li {
   font-size: var(--text-base);
-  color: var(--color-text);
+  color: var(--text-primary);
   padding: var(--space-1) 0;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--border-default);
 }
 
 .materials-list li:last-child { border-bottom: none; }
@@ -260,7 +260,7 @@
   align-items: center;
   gap: var(--space-4);
   padding: var(--space-3) 0;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--border-default);
   margin-bottom: var(--space-3);
 }
 
@@ -275,20 +275,20 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--color-text-muted);
+  color: var(--text-muted);
 }
 
 .costs-summary-value {
   font-size: var(--text-lg);
   font-weight: 700;
-  color: var(--color-text);
+  color: var(--text-primary);
 }
 
-.costs-summary-value.over-budget { color: var(--color-danger, #dc2626); }
+.costs-summary-value.over-budget { color: var(--color-danger); }
 
 .costs-summary-sep {
   font-size: var(--text-sm);
-  color: var(--color-text-muted);
+  color: var(--text-muted);
 }
 
 .cost-rows {
@@ -298,7 +298,7 @@
 
 .cost-row {
   padding: var(--space-2) 0;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--border-default);
 }
 
 .cost-row:last-child { border-bottom: none; }
@@ -312,7 +312,7 @@
 
 .cost-row-name {
   font-size: var(--text-base);
-  color: var(--color-text);
+  color: var(--text-primary);
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -323,13 +323,13 @@
 .cost-row-amount {
   font-size: var(--text-base);
   font-weight: 600;
-  color: var(--color-text);
+  color: var(--text-primary);
   flex-shrink: 0;
 }
 
 .cost-row-meta {
   font-size: var(--text-xs);
-  color: var(--color-text-muted);
+  color: var(--text-muted);
   margin-top: 2px;
 }
 
@@ -361,8 +361,8 @@
 }
 
 .log-cost-modal {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--surface-default);
+  border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
   width: 100%;
   max-width: 480px;
@@ -382,7 +382,7 @@
 .log-cost-modal-header h2 {
   font-size: var(--text-lg);
   font-weight: 700;
-  color: var(--color-text);
+  color: var(--text-primary);
   margin: 0;
 }
 
@@ -390,13 +390,13 @@
   background: none;
   border: none;
   font-size: 22px;
-  color: var(--color-text-muted);
+  color: var(--text-muted);
   cursor: pointer;
   line-height: 1;
   padding: 0 var(--space-1);
 }
 
-.log-cost-close:hover { color: var(--color-text); }
+.log-cost-close:hover { color: var(--text-primary); }
 
 .lc-receipt-row {
   display: flex;
@@ -407,7 +407,7 @@
 
 .lc-receipt-name {
   font-size: var(--text-sm);
-  color: var(--color-text-muted);
+  color: var(--text-muted);
   max-width: 220px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -418,7 +418,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--color-text-muted);
+  color: var(--text-muted);
   padding: 0 4px;
   font-size: var(--text-sm);
   line-height: 1;
@@ -442,11 +442,11 @@
 .not-found-content h2 {
   font-size: var(--text-xl);
   font-weight: 700;
-  color: var(--color-text);
+  color: var(--text-primary);
   margin-bottom: var(--space-3);
 }
 
 .not-found-content p {
-  color: var(--color-text-secondary);
+  color: var(--text-label);
   margin-bottom: var(--space-6);
 }
