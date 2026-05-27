@@ -66,7 +66,6 @@ async function _handleSubmit(data, existingIdea, isEdit) {
       link:            data.link,
       notes:           data.notes,
       tags:            data.tags,
-      images:          data.images,
       estimated_cost:  data.estimated_cost,
       materials:       data.materials,
       prep_start:      data.prep_start,
@@ -80,10 +79,8 @@ async function _handleSubmit(data, existingIdea, isEdit) {
     if (isEdit) {
       // PUT — id must be in body
       body.id = existingIdea.id;
-      // Upload new files first if any
       if (data.selectedFiles.length > 0) {
-        const newUrls = await _uploadFiles(data.selectedFiles, existingIdea);
-        body.images = [...body.images, ...newUrls];
+        await _uploadFiles(data.selectedFiles, existingIdea);
       }
       resultIdea = await updateIdea(body);
       // updateIdea may return the updated idea or just success
@@ -96,13 +93,9 @@ async function _handleSubmit(data, existingIdea, isEdit) {
       resultIdea = await createIdea(body);
       const createdId = resultIdea?.id || resultIdea;
 
-      // Upload files if any, then update with URLs
       if (data.selectedFiles.length > 0 && createdId) {
         try {
-          const newUrls = await _uploadFiles(data.selectedFiles, { id: createdId, season: data.season });
-          if (newUrls.length > 0) {
-            await updateIdea({ ...body, id: createdId, images: newUrls });
-          }
+          await _uploadFiles(data.selectedFiles, { id: createdId, season: data.season });
         } catch (uploadErr) {
           // Non-fatal — idea exists, photos just didn't attach
           showToast('Idea created (photo upload failed: ' + uploadErr.message + ')', 'warning');
@@ -126,7 +119,7 @@ async function _handleSubmit(data, existingIdea, isEdit) {
 }
 
 async function _uploadFiles(files, idea) {
-  if (!files.length) return [];
+  if (!files.length) return;
 
   const service = document.createElement('photo-upload-service');
 
@@ -141,8 +134,4 @@ async function _uploadFiles(files, idea) {
   if (!result?.success) {
     throw new Error('Photo upload service returned failure');
   }
-
-  return (result.photos || [])
-    .map(p => p.cloudfront_url)
-    .filter(Boolean);
 }
