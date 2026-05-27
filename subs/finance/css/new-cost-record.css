@@ -13,7 +13,7 @@
   gap: 8px;
   margin-bottom: 20px;
   font-size: 14px;
-  color: #6B7280;
+  color: #64748b;
 }
 
 .breadcrumb-link {
@@ -28,11 +28,11 @@
 }
 
 .breadcrumb-separator {
-  color: #9CA3AF;
+  color: #94a3b8;
 }
 
 .breadcrumb-current {
-  color: #1F2937;
+  color: #1e293b;
   font-weight: 500;
 }
 
@@ -43,19 +43,19 @@
   align-items: flex-start;
   margin-bottom: 24px;
   padding-bottom: 20px;
-  border-bottom: 2px solid #E5E7EB;
+  border-bottom: 2px solid #e2e8f0;
 }
 
 .header-left h1 {
   font-size: 28px;
   font-weight: 700;
-  color: #1F2937;
+  color: #1e293b;
   margin: 0 0 8px 0;
 }
 
 .page-subtitle {
   font-size: 14px;
-  color: #6B7280;
+  color: #64748b;
   margin: 0;
 }
 
@@ -68,7 +68,7 @@
 .form-card {
   background: white;
   border-radius: 8px;
-  border: 1px solid #E5E7EB;
+  border: 1px solid #e2e8f0;
   padding: 24px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
@@ -97,13 +97,13 @@
 }
 
 .btn-secondary {
-  background-color: #F3F4F6;
-  color: #374151;
-  border: 1px solid #D1D5DB;
+  background-color: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
 }
 
 .btn-secondary:hover {
-  background-color: #E5E7EB;
+  background-color: #e2e8f0;
 }
 
 /* Responsive */

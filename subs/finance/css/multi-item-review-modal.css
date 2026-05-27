@@ -51,7 +51,7 @@
   margin: 0;
   font-size: 1.5rem;
   font-weight: 600;
-  color: #1f2937;
+  color: #1e293b;
 }
 
 .modal-subtitle {
@@ -85,7 +85,7 @@
   border: none;
   font-size: 2rem;
   line-height: 1;
-  color: #9ca3af;
+  color: #94a3b8;
   cursor: pointer;
   padding: 0;
   width: 32px;
@@ -98,8 +98,8 @@
 }
 
 .close-btn:hover {
-  background: #f3f4f6;
-  color: #1f2937;
+  background: #f1f5f9;
+  color: #1e293b;
 }
 
 /* Summary Bar */
@@ -410,10 +410,10 @@
 /* Buttons */
 .btn-secondary {
   padding: 0.625rem 1.25rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid #cbd5e1;
   border-radius: 6px;
   background: white;
-  color: #374151;
+  color: #334155;
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -421,8 +421,8 @@
 }
 
 .btn-secondary:hover {
-  background: #f9fafb;
-  border-color: #9ca3af;
+  background: #f8fafc;
+  border-color: #94a3b8;
 }
 
 .btn-primary {
@@ -459,13 +459,13 @@
 
 .multi-item-review-modal .btn-secondary {
   background-color: white !important;
-  color: #374151 !important;
-  border: 1px solid #d1d5db !important;
+  color: #334155 !important;
+  border: 1px solid #cbd5e1 !important;
 }
 
 .multi-item-review-modal .btn-secondary:hover {
-  background-color: #f9fafb !important;
-  border-color: #9ca3af !important;
+  background-color: #f8fafc !important;
+  border-color: #94a3b8 !important;
 }
 
 /* Responsive Design */

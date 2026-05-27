@@ -20,13 +20,13 @@
 .section-title {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #111827;
+  color: #0f172a;
   margin: 0 0 0.5rem 0;
 }
 
 .section-subtitle {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #64748b;
   margin: 0 0 1.5rem 0;
 }
 
@@ -38,8 +38,8 @@
 }
 
 .summary-card {
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
   padding: 1.5rem;
   text-align: center;
@@ -53,7 +53,7 @@
 
 .card-label {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #64748b;
   margin-bottom: 0.5rem;
   font-weight: 500;
 }
@@ -61,7 +61,7 @@
 .card-value {
   font-size: 2rem;
   font-weight: 700;
-  color: #111827;
+  color: #0f172a;
 }
 
 /* Category Cards */
@@ -149,7 +149,7 @@
   align-items: flex-start;
   gap: 1rem;
   padding: 1rem;
-  background: #f9fafb;
+  background: #f8fafc;
   border-left: 4px solid #3b82f6;
   border-radius: 4px;
 }
@@ -161,13 +161,13 @@
 
 .insight-text {
   font-size: 0.95rem;
-  color: #374151;
+  color: #334155;
   line-height: 1.6;
 }
 
 .insight-text strong {
   font-weight: 600;
-  color: #111827;
+  color: #0f172a;
 }
 
 /* Breakdowns Grid */
@@ -179,7 +179,7 @@
 
 .stat-card {
   background: white;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e2e8f0;
   border-radius: 12px;
   padding: 1.5rem;
 }
@@ -187,7 +187,7 @@
 .stat-card-title {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #111827;
+  color: #0f172a;
   margin: 0 0 1.5rem 0;
 }
 
@@ -218,19 +218,19 @@
 
 .stat-item-label {
   font-size: 0.875rem;
-  color: #374151;
+  color: #334155;
   font-weight: 500;
 }
 
 .stat-item-value {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #111827;
+  color: #0f172a;
 }
 
 .stat-bar {
   height: 8px;
-  background: #e5e7eb;
+  background: #e2e8f0;
   border-radius: 4px;
   overflow: hidden;
 }
@@ -244,7 +244,7 @@
 /* Empty States */
 .empty-message {
   text-align: center;
-  color: #9ca3af;
+  color: #94a3b8;
   padding: 2rem;
   font-size: 0.875rem;
 }

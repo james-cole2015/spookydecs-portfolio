@@ -1,4 +1,11 @@
-/* Receipt Upload Modal Styles */
+/*
+ * Receipt Upload Modal Styles
+ *
+ * NOTE: The orange (#ff6b35) used in .processing-spinner and .btn-primary is a
+ * CDN component artifact from the shared receipt-upload component in configs-spookydecs.
+ * Do NOT normalize it to the portfolio app's native color tokens — it belongs to
+ * the CDN component and must be tracked/changed in the configs repo separately.
+ */
 
 /* Modal Overlay - Fixed positioning for proper modal display */
 .receipt-upload-modal {
@@ -40,7 +47,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem 2rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e2e8f0;
   flex-shrink: 0;
 }
 
@@ -48,7 +55,7 @@
   margin: 0;
   font-size: 1.5rem;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--text-body);
 }
 
 .receipt-upload-close-btn {
@@ -56,7 +63,7 @@
   border: none;
   font-size: 2rem;
   line-height: 1;
-  color: #9ca3af;
+  color: var(--text-muted);
   cursor: pointer;
   padding: 0;
   width: 32px;
@@ -69,8 +76,8 @@
 }
 
 .receipt-upload-close-btn:hover {
-  background: #f3f4f6;
-  color: #1f2937;
+  background: var(--surface-muted);
+  color: var(--text-body);
 }
 
 .receipt-upload-modal-body {
@@ -82,13 +89,13 @@
 
 /* Upload Area */
 #upload-area {
-  border: 2px dashed #d1d5db;
+  border: 2px dashed #cbd5e1;
   border-radius: 8px;
   padding: 3rem 2rem;
   text-align: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  background: #f9fafb;
+  background: #f8fafc;
 }
 
 #upload-area:hover {
@@ -103,7 +110,7 @@
 }
 
 #upload-area svg {
-  color: #9ca3af;
+  color: #94a3b8;
   margin: 0 auto 1rem;
   display: block;
 }
@@ -111,7 +118,7 @@
 .upload-text {
   margin: 0.5rem 0;
   font-size: 1.125rem;
-  color: #1f2937;
+  color: var(--text-body);
 }
 
 .upload-text strong {
@@ -120,7 +127,7 @@
 
 .upload-hint {
   font-size: 0.875rem;
-  color: #9ca3af;
+  color: var(--text-muted);
   margin: 0.5rem 0 0 0;
 }
 
@@ -137,7 +144,7 @@
 .processing-spinner {
   width: 64px;
   height: 64px;
-  border: 4px solid #f3f4f6;
+  border: 4px solid #f1f5f9;
   border-top-color: #ff6b35;
   border-radius: 50%;
   animation: spin 1s linear infinite;
@@ -151,7 +158,7 @@
 #processing-text {
   margin: 0 0 1rem 0;
   font-size: 1.125rem;
-  color: #1f2937;
+  color: var(--text-body);
   font-weight: 500;
 }
 
@@ -159,7 +166,7 @@
   width: 100%;
   max-width: 300px;
   height: 8px;
-  background: #f3f4f6;
+  background: #f1f5f9;
   border-radius: 4px;
   overflow: hidden;
 }
@@ -188,7 +195,7 @@
 
 .preview-filename {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   text-align: center;
   word-break: break-word;
 }
@@ -199,26 +206,26 @@
   gap: 1rem;
   justify-content: flex-end;
   padding: 1rem 2rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #e2e8f0;
   flex-shrink: 0;
 }
 
 /* Buttons */
 .btn-secondary {
   padding: 0.625rem 1.25rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-md);
   background: white;
-  color: #374151;
-  font-size: 0.875rem;
+  color: #334155;
+  font-size: var(--text-base);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .btn-secondary:hover {
-  background: #f9fafb;
-  border-color: #9ca3af;
+  background: var(--surface-subtle);
+  border-color: var(--text-muted);
 }
 
 .btn-primary {

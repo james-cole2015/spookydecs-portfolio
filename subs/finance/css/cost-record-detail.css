@@ -33,11 +33,11 @@
 }
 
 .breadcrumb-separator {
-  color: #9ca3af;
+  color: #94a3b8;
 }
 
 .breadcrumb-current {
-  color: #6b7280;
+  color: #64748b;
 }
 
 /* Page Header Section */
@@ -47,19 +47,19 @@
   align-items: flex-start;
   margin-bottom: 2rem;
   padding-bottom: 1.5rem;
-  border-bottom: 2px solid #e5e7eb;
+  border-bottom: 2px solid #e2e8f0;
 }
 
 .header-left h1 {
   font-size: 2rem;
   font-weight: 700;
-  color: #111827;
+  color: #0f172a;
   margin: 0 0 0.5rem 0;
 }
 
 .detail-subtitle {
   font-size: 1rem;
-  color: #6b7280;
+  color: #64748b;
   margin: 0;
 }
 
@@ -73,7 +73,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.25rem;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e2e8f0;
   border-radius: 6px;
   font-size: 0.875rem;
   font-weight: 500;
@@ -83,22 +83,22 @@
 
 .btn-action.btn-edit {
   background: white;
-  color: #111827;
+  color: #0f172a;
 }
 
 .btn-action.btn-edit:hover {
-  background: #f9fafb;
-  border-color: #d1d5db;
+  background: #f8fafc;
+  border-color: #cbd5e1;
 }
 
 .btn-action.btn-receipt {
   background: white;
-  color: #111827;
+  color: #0f172a;
 }
 
 .btn-action.btn-receipt:hover {
-  background: #f9fafb;
-  border-color: #d1d5db;
+  background: #f8fafc;
+  border-color: #cbd5e1;
 }
 
 .btn-action.btn-delete {
@@ -151,7 +151,7 @@
 /* Cost Details Section */
 .cost-details-section {
   background: #ffffff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
   padding: 2rem;
   margin-bottom: 2rem;
@@ -161,7 +161,7 @@
 .cost-details-section h2 {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #111827;
+  color: #0f172a;
   margin: 0 0 1.5rem 0;
   text-align: center;
 }
@@ -183,14 +183,14 @@
   border: none;
   padding: 0.5rem;
   cursor: pointer;
-  color: #9ca3af;
+  color: #94a3b8;
   font-size: 1.5rem;
   line-height: 1;
   transition: all 0.2s;
 }
 
 .details-toggle:hover {
-  color: #6b7280;
+  color: #64748b;
 }
 
 .details-toggle .chevron {
@@ -232,7 +232,7 @@
 }
 
 .detail-row.highlight {
-  background: #f9fafb;
+  background: #f8fafc;
   padding: 1rem;
   margin: 0.5rem -1rem;
   border-radius: 6px;
@@ -240,13 +240,13 @@
 
 .detail-label {
   font-weight: 500;
-  color: #6b7280;
+  color: #64748b;
   flex: 0 0 150px;
   min-width: 150px;
 }
 
 .detail-value {
-  color: #111827;
+  color: #0f172a;
   font-weight: 500;
   text-align: right;
   flex: 1;
@@ -261,14 +261,14 @@
 
 .detail-divider {
   height: 1px;
-  background: #e5e7eb;
+  background: #e2e8f0;
   margin: 0.5rem 0;
 }
 
 /* Description & Notes */
 .description-section {
   background: #ffffff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
   padding: 2rem;
   margin-bottom: 2rem;
@@ -288,13 +288,13 @@
 .notes-block h3 {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #111827;
+  color: #0f172a;
   margin: 0 0 0.75rem 0;
 }
 
 .description-block p,
 .notes-block p {
-  color: #4b5563;
+  color: #475569;
   line-height: 1.6;
   margin: 0;
 }
@@ -302,7 +302,7 @@
 /* Receipt Section */
 .receipt-section {
   background: #ffffff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
   padding: 2rem;
   margin-bottom: 2rem;
@@ -311,7 +311,7 @@
 .receipt-section h3 {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #111827;
+  color: #0f172a;
   margin: 0 0 1rem 0;
 }
 
@@ -325,7 +325,7 @@
 .receipt-thumbnail {
   max-width: 200px;
   height: auto;
-  border: 2px solid #e5e7eb;
+  border: 2px solid #e2e8f0;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
@@ -359,13 +359,13 @@
 /* Metadata Section */
 .metadata-section {
   padding-top: 2rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #e2e8f0;
   text-align: center;
 }
 
 .metadata-text {
   font-size: 0.875rem;
-  color: #9ca3af;
+  color: #94a3b8;
   margin: 0.5rem 0;
 }
 

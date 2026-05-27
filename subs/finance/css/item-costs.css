@@ -1,7 +1,7 @@
 /* Item Costs Page Styles */
 
 .item-costs-page {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 2rem;
 }
@@ -27,11 +27,11 @@
 }
 
 .breadcrumb-separator {
-  color: #9ca3af;
+  color: #94a3b8;
 }
 
 .breadcrumb-current {
-  color: #6b7280;
+  color: #64748b;
 }
 
 /* Page Header Section */
@@ -41,13 +41,13 @@
   align-items: flex-start;
   margin-bottom: 2rem;
   padding-bottom: 1.5rem;
-  border-bottom: 2px solid #e5e7eb;
+  border-bottom: 2px solid #e2e8f0;
 }
 
 .header-left h1 {
   font-size: 2rem;
   font-weight: 700;
-  color: #111827;
+  color: #0f172a;
   margin: 0 0 0.5rem 0;
 }
 
@@ -64,13 +64,13 @@
   gap: 1.5rem;
   margin-bottom: 2rem;
   padding-bottom: 1.5rem;
-  border-bottom: 2px solid #e5e7eb;
+  border-bottom: 2px solid #e2e8f0;
 }
 
 .btn-back {
   background: none;
   border: none;
-  color: #6b7280;
+  color: #64748b;
   cursor: pointer;
   font-size: 1rem;
   padding: 0.5rem 1rem;
@@ -79,8 +79,8 @@
 }
 
 .btn-back:hover {
-  background-color: #f3f4f6;
-  color: #111827;
+  background-color: #f1f5f9;
+  color: #0f172a;
 }
 
 .item-title {
@@ -90,12 +90,12 @@
 .item-title h1 {
   font-size: 2rem;
   font-weight: 700;
-  color: #111827;
+  color: #0f172a;
   margin: 0;
 }
 
 .item-subtitle {
-  color: #6b7280;
+  color: #64748b;
   font-size: 0.95rem;
   margin: 0.25rem 0 0 0;
 }
@@ -108,7 +108,7 @@
 .financial-summary h2 {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #111827;
+  color: #0f172a;
   margin: 0 0 1rem 0;
 }
 
@@ -120,7 +120,7 @@
 
 .summary-card {
   background: #ffffff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
   padding: 1.5rem;
   transition: box-shadow 0.2s;
@@ -132,19 +132,19 @@
 
 .card-label {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #64748b;
   margin-bottom: 0.5rem;
 }
 
 .card-value {
   font-size: 1.75rem;
   font-weight: 700;
-  color: #111827;
+  color: #0f172a;
 }
 
 .card-count {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #64748b;
   margin-top: 0.5rem;
 }
 
@@ -165,7 +165,7 @@
   border: none;
   padding: 0.25rem;
   cursor: pointer;
-  color: #9ca3af;
+  color: #94a3b8;
   font-size: 1.5rem;
   line-height: 1;
   transition: all 0.2s;
@@ -173,7 +173,7 @@
 }
 
 .summary-card.collapsible .card-toggle:hover {
-  color: #6b7280;
+  color: #64748b;
 }
 
 .summary-card.collapsible .chevron {
@@ -192,14 +192,14 @@
 
 .card-info {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #64748b;
   margin-top: 0.5rem;
 }
 
 /* Cost Breakdown */
 .cost-breakdown {
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
   padding: 1.5rem;
   margin-bottom: 2rem;
@@ -208,7 +208,7 @@
 .cost-breakdown h3 {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #111827;
+  color: #0f172a;
   margin: 0 0 1rem 0;
 }
 
@@ -229,7 +229,7 @@
 
 .breakdown-label {
   font-weight: 500;
-  color: #374151;
+  color: #334155;
 }
 
 .breakdown-details {
@@ -239,13 +239,13 @@
 }
 
 .breakdown-count {
-  color: #6b7280;
+  color: #64748b;
   font-size: 0.875rem;
 }
 
 .breakdown-amount {
   font-weight: 600;
-  color: #111827;
+  color: #0f172a;
 }
 
 /* Action Bar */
@@ -272,9 +272,9 @@
 }
 
 .btn-secondary {
-  background-color: #f3f4f6;
-  color: #111827;
-  border: 1px solid #e5e7eb;
+  background-color: #f1f5f9;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
   padding: 0.75rem 1.5rem;
   border-radius: 6px;
   font-size: 1rem;
@@ -284,7 +284,7 @@
 }
 
 .btn-secondary:hover {
-  background-color: #e5e7eb;
+  background-color: #e2e8f0;
 }
 
 /* Cost History Section */
@@ -302,7 +302,7 @@
 .cost-history-header h2 {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #111827;
+  color: #0f172a;
   margin: 0;
 }
 
@@ -341,7 +341,7 @@
 
 .cost-card {
   background: #ffffff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
   padding: 1.5rem;
   transition: all 0.2s;
@@ -350,7 +350,7 @@
 
 .cost-card:hover {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  border-color: #d1d5db;
+  border-color: #cbd5e1;
 }
 
 .cost-card-header {
@@ -363,7 +363,7 @@
 .cost-date {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #6b7280;
+  color: #64748b;
 }
 
 .receipt-badge {
@@ -384,7 +384,7 @@
 .cost-type {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #111827;
+  color: #0f172a;
 }
 
 .cost-amount {
@@ -394,7 +394,7 @@
 }
 
 .cost-description {
-  color: #4b5563;
+  color: #475569;
   margin-bottom: 0.75rem;
   line-height: 1.5;
 }
@@ -403,7 +403,7 @@
   display: flex;
   gap: 0.5rem;
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #64748b;
 }
 
 .cost-vendor {
@@ -411,14 +411,14 @@
 }
 
 .cost-category {
-  color: #9ca3af;
+  color: #94a3b8;
 }
 
 .cost-card-actions {
   display: flex;
   gap: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #e2e8f0;
 }
 
 .btn-link {
@@ -439,7 +439,7 @@
 .empty-state {
   text-align: center;
   padding: 3rem;
-  color: #6b7280;
+  color: #64748b;
 }
 
 /* Responsive - Mobile */
