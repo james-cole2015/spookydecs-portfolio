@@ -106,7 +106,8 @@ export function renderIdeaForm(container, idea, onSubmit, onCancel) {
         <div class="form-group">
           <label class="form-label" for="f-prep-start">Prep Start Date</label>
           <input class="form-input" id="f-prep-start" type="date"
-            value="${escapeAttr(idea?.prep_start || '')}">
+            value="${escapeAttr(idea?.prep_start || '')}"${isEdit ? ' readonly' : ''}>
+          ${isEdit ? '<div class="form-hint">Set automatically by status transitions.</div>' : ''}
         </div>
 
         <div class="form-group">
@@ -125,13 +126,14 @@ export function renderIdeaForm(container, idea, onSubmit, onCancel) {
           <div class="form-group">
             <label class="form-label" for="f-build-start">Build Start Date</label>
             <input class="form-input" id="f-build-start" type="date"
-              value="${escapeAttr(idea?.build_start || '')}">
+              value="${escapeAttr(idea?.build_start || '')}"${isEdit ? ' readonly' : ''}>
           </div>
           <div class="form-group">
             <label class="form-label" for="f-build-complete">Build Complete Date</label>
             <input class="form-input" id="f-build-complete" type="date"
-              value="${escapeAttr(idea?.build_complete || '')}">
+              value="${escapeAttr(idea?.build_complete || '')}"${isEdit ? ' readonly' : ''}>
           </div>
+          ${isEdit ? '<div class="form-hint" style="margin-top:var(--space-1)">Set automatically by status transitions.</div>' : ''}
         </div>
 
         <div class="form-group">
