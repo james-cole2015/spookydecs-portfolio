@@ -1,15 +1,97 @@
 /* Workbench — Seasonal Monitor Styles */
 
+:root {
+  /* ── Text ─────────────────────────────────────────────────────────────────── */
+  --text-primary:   #0f172a;
+  --text-body:      #1e293b;
+  --text-secondary: #64748b;
+  --text-muted:     #94a3b8;
+  --text-label:     #475569;
+
+  /* ── Borders ──────────────────────────────────────────────────────────────── */
+  --border-default: #e2e8f0;
+  --border-hover:   #cbd5e1;
+
+  /* ── Surfaces ─────────────────────────────────────────────────────────────── */
+  --surface-default: #ffffff;
+  --surface-subtle:  #f8fafc;
+  --surface-muted:   #f1f5f9;
+
+  /* ── Primary action (surface sub — no accent) ─────────────────────────────── */
+  --color-primary:       #3b82f6;
+  --color-primary-hover: #2563eb;
+  --color-primary-light: #eff6ff;
+  --shadow-focus:        0 0 0 3px rgba(59, 130, 246, 0.10);
+
+  /* ── Semantic ─────────────────────────────────────────────────────────────── */
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --color-danger:  #dc2626;
+  --color-orange:  #f97316;
+
+  /* ── Shadows ──────────────────────────────────────────────────────────────── */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.10);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+  /* ── Border radius ────────────────────────────────────────────────────────── */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+
+  /* ── Spacing ──────────────────────────────────────────────────────────────── */
+  --space-xs:  0.25rem;
+  --space-sm:  0.5rem;
+  --space-md:  1rem;
+  --space-lg:  1.5rem;
+  --space-xl:  2rem;
+  --space-2xl: 3rem;
+
+  /* ── Status badges ────────────────────────────────────────────────────────── */
+  --badge-deployed-bg:   #dbeafe;
+  --badge-deployed-text: #1d4ed8;
+  --badge-active-bg:     #d1fae5;
+  --badge-active-text:   #065f46;
+  --badge-neutral-bg:    #f1f5f9;
+  --badge-neutral-text:  #475569;
+  --badge-warning-bg:    #fef3c7;
+  --badge-warning-text:  #92400e;
+  --badge-danger-bg:     #fee2e2;
+  --badge-danger-text:   #991b1b;
+
+  /* ── Season badges ────────────────────────────────────────────────────────── */
+  --badge-halloween-bg:   #fff7ed;
+  --badge-halloween-text: #9a3412;
+  --badge-christmas-bg:   #f0fdf4;
+  --badge-christmas-text: #15803d;
+  --badge-shared-bg:      #f5f3ff;
+  --badge-shared-text:    #5b21b6;
+
+  /* ── Season column accents (domain colors — not system tokens) ────────────── */
+  /* Off-season indigo is the visual identifier for the off-season column header.
+     It is NOT a sub accent — workbench is a surface sub. Interactive UI elements
+     (year pills, buttons) use --color-primary. Only the column header and its
+     mobile tab use these domain tokens. */
+  --season-off-season-accent:       #6366f1;
+  --season-off-season-accent-hover: #4f46e5;
+  --season-off-season-bg:           #eef2ff;
+  --season-halloween-accent:        var(--color-orange);
+  --season-halloween-bg:            var(--badge-halloween-bg);
+  --season-christmas-accent:        var(--badge-christmas-text);
+  --season-christmas-bg:            var(--badge-christmas-bg);
+}
+
 * {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  padding: 16px;
+  padding: var(--space-md);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #f8fafc;
-  color: #0f172a;
+  background: var(--surface-subtle);
+  color: var(--text-primary);
 }
 
 #app-container {
@@ -22,22 +104,22 @@ body {
 .year-selector {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
 }
 
 .year-selector__label {
   font-size: 13px;
   font-weight: 600;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .year-pill {
   font-size: 13px;
   font-weight: 600;
-  color: #64748b;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  color: var(--text-secondary);
+  background: var(--surface-muted);
+  border: 1px solid var(--border-default);
   border-radius: 999px;
   padding: 4px 14px;
   cursor: pointer;
@@ -45,25 +127,25 @@ body {
 }
 
 .year-pill:hover {
-  background: #e2e8f0;
-  color: #0f172a;
+  background: var(--border-default);
+  color: var(--text-primary);
 }
 
 .year-pill--active {
-  background: #6366f1;
-  color: #fff;
-  border-color: #6366f1;
+  background: var(--season-off-season-accent);
+  color: var(--surface-default);
+  border-color: var(--season-off-season-accent);
 }
 
 .year-pill--active:hover {
-  background: #4f46e5;
-  border-color: #4f46e5;
-  color: #fff;
+  background: var(--season-off-season-accent-hover);
+  border-color: var(--season-off-season-accent-hover);
+  color: var(--surface-default);
 }
 
 .year-pill--clear {
   background: transparent;
-  color: #94a3b8;
+  color: var(--text-muted);
   border-color: transparent;
 }
 
@@ -80,12 +162,12 @@ body {
 /* ── Monitor layout ─────────────────────────────────────────────────────────── */
 
 .seasonal-monitor {
-  padding: 8px 0;
+  padding: var(--space-sm) 0;
 }
 
 .monitor-columns {
   display: flex;
-  gap: 16px;
+  gap: var(--space-md);
   align-items: flex-start;
 }
 
@@ -94,9 +176,9 @@ body {
 .season-column {
   flex: 1 1 0;
   min-width: 0;
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  background: var(--surface-default);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
   overflow: hidden;
 }
 
@@ -104,13 +186,13 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px 10px;
+  padding: 14px var(--space-md) 10px;
   border-bottom: 2px solid;
 }
 
-.season-column--off-season .column-header { border-color: #6366f1; background: #eef2ff; }
-.season-column--halloween  .column-header { border-color: #f97316; background: #fff7ed; }
-.season-column--christmas  .column-header { border-color: #22c55e; background: #f0fdf4; }
+.season-column--off-season .column-header { border-color: var(--season-off-season-accent); background: var(--season-off-season-bg); }
+.season-column--halloween  .column-header { border-color: var(--season-halloween-accent);  background: var(--season-halloween-bg);  }
+.season-column--christmas  .column-header { border-color: var(--season-christmas-accent);  background: var(--season-christmas-bg);  }
 
 .column-title {
   margin: 0;
@@ -119,17 +201,17 @@ body {
 }
 
 .column-count {
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--border-default);
+  color: var(--text-label);
   font-size: 12px;
   font-weight: 600;
-  padding: 2px 8px;
+  padding: 2px var(--space-sm);
   border-radius: 999px;
 }
 
 .column-empty {
-  padding: 24px 16px;
-  color: #94a3b8;
+  padding: var(--space-lg) var(--space-md);
+  color: var(--text-muted);
   font-size: 14px;
   text-align: center;
   margin: 0;
@@ -138,8 +220,8 @@ body {
 /* ── Sections ────────────────────────────────────────────────────────────────── */
 
 .season-section {
-  padding: 12px 16px 4px;
-  border-bottom: 1px solid #f1f5f9;
+  padding: 12px var(--space-md) 4px;
+  border-bottom: 1px solid var(--surface-muted);
 }
 
 .season-section:last-child {
@@ -147,25 +229,25 @@ body {
 }
 
 .section-label {
-  margin: 0 0 8px;
+  margin: 0 0 var(--space-sm);
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .section-cards {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-sm);
 }
 
 .empty-state {
-  margin: 0 0 8px;
+  margin: 0 0 var(--space-sm);
   font-size: 13px;
-  color: #cbd5e1;
+  color: var(--border-hover);
 }
 
 /* ── Cards ───────────────────────────────────────────────────────────────────── */
@@ -173,37 +255,37 @@ body {
 .seasonal-card {
   display: block;
   padding: 10px 12px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
   color: inherit;
   cursor: pointer;
   transition: background 0.12s, border-color 0.12s;
 }
 
 .seasonal-card:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
+  background: var(--surface-muted);
+  border-color: var(--border-hover);
 }
 
 .card-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--space-sm);
 }
 
 .card-title {
   font-size: 13px;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-body);
   line-height: 1.4;
 }
 
 .card-description {
   margin: 4px 0 0;
   font-size: 12px;
-  color: #64748b;
+  color: var(--text-secondary);
   line-height: 1.4;
 }
 
@@ -216,7 +298,7 @@ body {
 
 .card-meta-item {
   font-size: 11px;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 /* ── Badges ──────────────────────────────────────────────────────────────────── */
@@ -233,34 +315,34 @@ body {
 }
 
 /* Idea statuses */
-.badge-status--workbench  { background: #dbeafe; color: #1d4ed8; }
-.badge-status--planning   { background: #fef9c3; color: #854d0e; }
+.badge-status--workbench { background: var(--badge-deployed-bg);  color: var(--badge-deployed-text); }
+.badge-status--planning  { background: var(--badge-warning-bg);   color: var(--badge-warning-text);  }
 
 /* Maintenance statuses */
-.badge-status--scheduled  { background: #f0fdf4; color: #166534; border: 1px solid #86efac; }
-.badge-status--in-progress { background: #fff7ed; color: #9a3412; border: 1px solid #fdba74; }
+.badge-status--scheduled   { background: var(--badge-christmas-bg);  color: var(--badge-christmas-text);  border: 1px solid #86efac; }
+.badge-status--in-progress { background: var(--badge-halloween-bg);  color: var(--badge-halloween-text);  border: 1px solid #fdba74; }
 
 /* Terminal idea statuses */
-.badge-status--built     { background: #f0fdf4; color: #166534; }
-.badge-status--abandoned { background: #f1f5f9; color: #64748b; }
-.badge-status--considering { background: #f1f5f9; color: #64748b; }
+.badge-status--built       { background: var(--badge-christmas-bg); color: var(--badge-christmas-text); }
+.badge-status--abandoned   { background: var(--badge-neutral-bg);   color: var(--badge-neutral-text);   }
+.badge-status--considering { background: var(--badge-neutral-bg);   color: var(--badge-neutral-text);   }
 
 /* Terminal maintenance statuses */
-.badge-status--completed { background: #f0fdf4; color: #166534; }
-.badge-status--cancelled { background: #f1f5f9; color: #64748b; }
+.badge-status--completed { background: var(--badge-christmas-bg); color: var(--badge-christmas-text); }
+.badge-status--cancelled { background: var(--badge-neutral-bg);   color: var(--badge-neutral-text);   }
 
 /* Criticality */
-.badge-criticality--low      { background: #f0fdf4; color: #166534; }
-.badge-criticality--medium   { background: #fef9c3; color: #854d0e; }
-.badge-criticality--high     { background: #fff7ed; color: #9a3412; }
-.badge-criticality--critical { background: #fef2f2; color: #991b1b; }
+.badge-criticality--low      { background: var(--badge-christmas-bg); color: var(--badge-christmas-text); }
+.badge-criticality--medium   { background: var(--badge-warning-bg);   color: var(--badge-warning-text);   }
+.badge-criticality--high     { background: var(--badge-halloween-bg); color: var(--badge-halloween-text); }
+.badge-criticality--critical { background: var(--badge-danger-bg);    color: var(--badge-danger-text);    }
 
 /* ── Completed disclosure ────────────────────────────────────────────────────── */
 
 .completed-disclosure {
-  margin-top: 16px;
-  border-top: 1px dashed #e2e8f0;
-  padding: 10px 16px 12px;
+  margin-top: var(--space-md);
+  border-top: 1px dashed var(--border-default);
+  padding: 10px var(--space-md) 12px;
 }
 
 .completed-disclosure__toggle {
@@ -272,7 +354,7 @@ body {
   cursor: pointer;
   font-size: 12px;
   font-weight: 600;
-  color: #64748b;
+  color: var(--text-secondary);
   padding: 4px 0 4px;
   width: 100%;
   text-align: left;
@@ -287,7 +369,7 @@ body {
 
 .completed-disclosure__content {
   display: none;
-  margin-top: 8px;
+  margin-top: var(--space-sm);
 }
 
 .completed-disclosure__content.is-open { display: block; }
@@ -295,9 +377,9 @@ body {
 /* ── Error state ─────────────────────────────────────────────────────────────── */
 
 .error-state {
-  padding: 32px;
+  padding: var(--space-xl);
   text-align: center;
-  color: #ef4444;
+  color: var(--color-danger);
   font-size: 14px;
 }
 
@@ -314,21 +396,23 @@ body {
   font-weight: 600;
   border: none;
   border-bottom: 3px solid transparent;
-  background: #fff;
+  background: var(--surface-default);
   cursor: pointer;
   transition: border-color 0.15s, color 0.15s;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
-.season-tab--off-season.season-tab--active { border-color: #6366f1; color: #6366f1; }
-.season-tab--halloween.season-tab--active  { border-color: #f97316; color: #f97316; }
-.season-tab--christmas.season-tab--active  { border-color: #22c55e; color: #22c55e; }
+.season-tab--off-season.season-tab--active { border-color: var(--season-off-season-accent); color: var(--season-off-season-accent); }
+.season-tab--halloween.season-tab--active  { border-color: var(--season-halloween-accent);  color: var(--season-halloween-accent);  }
+.season-tab--christmas.season-tab--active  { border-color: var(--season-christmas-accent);  color: var(--season-christmas-accent);  }
 
 /* ── Responsive ──────────────────────────────────────────────────────────────── */
 
+/* 900px (not 768px): three equal-width columns need ~280px each to stay readable.
+   The layout collapses earlier than a single-column page would. */
 @media (max-width: 900px) {
   body {
-    padding: 8px;
+    padding: var(--space-sm);
   }
 
   .year-selector {
@@ -340,9 +424,9 @@ body {
     position: sticky;
     top: 0;
     z-index: 10;
-    background: #fff;
-    border-bottom: 1px solid #e2e8f0;
-    border-radius: 8px 8px 0 0;
+    background: var(--surface-default);
+    border-bottom: 1px solid var(--border-default);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     margin-bottom: 12px;
     overflow: hidden;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
