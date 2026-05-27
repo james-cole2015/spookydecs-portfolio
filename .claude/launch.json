@@ -13,5 +13,12 @@
       "runtimeArgs": ["serve", "subs/inspector", "-p", "5175", "--no-clipboard"],
       "port": 5175
     }
+    ,
+    {
+      "name": "workbench",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "subs/workbench", "-p", "5176", "--no-clipboard"],
+      "port": 5176
+    }
   ]
 }
