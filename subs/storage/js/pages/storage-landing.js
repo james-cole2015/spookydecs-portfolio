@@ -47,6 +47,13 @@ export function renderStorageLanding() {
           description: 'Track oversized items stored directly by location — not packed in totes or boxes.',
           route: '/storage/non-packable'
         })}
+        ${renderCard({
+          id: 'unpacked',
+          icon: '🔍',
+          title: 'Unpacked Items',
+          description: 'Post-pack audit — see which items are not yet in storage, scoped by season.',
+          route: '/storage/unpacked'
+        })}
       </div>
     </div>
   `;
