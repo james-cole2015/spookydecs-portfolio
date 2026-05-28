@@ -60,7 +60,8 @@ async function loadData() {
     itemsAdminUrl = config.ITEMS_ADMIN || 'https://dev-items.spookydecs.com';
     storageAdminUrl = config.STORAGE_ADMIN || '';
 
-    allItems = (await itemsAPI.getUnpacked()).filter(item => item.class !== 'Receptacle');
+    const AUDITABLE_CLASSES = ['Decoration', 'Light', 'Accessory'];
+    allItems = (await itemsAPI.getUnpacked()).filter(item => AUDITABLE_CLASSES.includes(item.class));
 
     renderFilterBar();
     applySeasonAndRender();
