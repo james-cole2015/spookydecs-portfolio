@@ -194,7 +194,7 @@ export const itemsAPI = {
   },
 
   async getUnpacked(season = null) {
-    const filters = { packing_status: 'false' };
+    const filters = { unpacked: 'true' };
     if (season) filters.season = season;
     return this.getAll(filters);
   },
