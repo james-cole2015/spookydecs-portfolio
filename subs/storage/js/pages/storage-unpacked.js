@@ -60,7 +60,11 @@ async function loadData() {
     itemsAdminUrl = config.ITEMS_ADMIN || 'https://dev-items.spookydecs.com';
     storageAdminUrl = config.STORAGE_ADMIN || '';
 
-    allItems = (await itemsAPI.getUnpacked()).filter(item => item.class_type !== 'Receptacle');
+    allItems = (await itemsAPI.getUnpacked()).filter(item =>
+      item.class !== 'Deployment' &&
+      item.class !== 'Storage' &&
+      item.class_type !== 'Receptacle'
+    );
 
     renderFilterBar();
     applySeasonAndRender();
@@ -150,9 +154,9 @@ function renderRow(item) {
     ? `<span class="unpacked-tote">Tote: ${toteId}</span>`
     : `<span class="unpacked-tote unpacked-tote--none">No tote assigned</span>`;
 
-  const itemLink = `<a class="unpacked-link" href="${itemsAdminUrl}/${item.id}">View item →</a>`;
+  const itemLink = `<a class="unpacked-link" href="${itemsAdminUrl}/${item.id}" target="_blank" rel="noopener noreferrer">View item →</a>`;
   const toteLink = toteId && storageAdminUrl
-    ? `<a class="unpacked-link" href="${storageAdminUrl}/storage/${toteId}">View tote →</a>`
+    ? `<a class="unpacked-link" href="${storageAdminUrl}/storage/${toteId}" target="_blank" rel="noopener noreferrer">View tote →</a>`
     : '';
 
   return `
