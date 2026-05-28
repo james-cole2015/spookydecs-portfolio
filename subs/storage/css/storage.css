@@ -1220,3 +1220,111 @@
   display: flex;
   gap: var(--spacing-sm);
 }
+
+/* =============================================
+   Unpacked Items Audit Page
+   ============================================= */
+
+.page-subtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.unpacked-list {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.unpacked-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--bg-color);
+  border-bottom: 1px solid var(--border-color);
+  transition: background 0.15s ease;
+}
+
+.unpacked-row:last-child {
+  border-bottom: none;
+}
+
+.unpacked-row:hover {
+  background: var(--bg-secondary);
+}
+
+.unpacked-row__name {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.unpacked-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.unpacked-meta {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.unpacked-row__tote {
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.unpacked-tote {
+  color: var(--text-secondary);
+  font-family: ui-monospace, 'Cascadia Code', monospace;
+  font-size: 0.75rem;
+}
+
+.unpacked-tote--none {
+  color: #94a3b8;
+  font-family: inherit;
+  font-style: italic;
+  font-size: 0.8125rem;
+}
+
+.unpacked-row__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  white-space: nowrap;
+}
+
+.unpacked-link {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.unpacked-link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .unpacked-row {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+  }
+
+  .unpacked-row__tote,
+  .unpacked-row__actions {
+    justify-self: start;
+  }
+}
