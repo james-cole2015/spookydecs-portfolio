@@ -102,9 +102,11 @@ function renderFilterBar() {
   const filterContainer = document.getElementById('filter-container');
   if (!filterContainer) return;
 
+  const hasActiveFilters = currentSeason !== 'All' || currentClass !== 'All' || currentClassType !== 'All';
+
   filterContainer.innerHTML = `
     <div class="filter-bar">
-      <div class="filter-dropdowns expanded">
+      <div class="filter-dropdowns expanded" style="margin-top: 0;">
         <div class="filter-group">
           <select class="filter-select" id="unpacked-season-filter">
             <option value="All"       ${currentSeason === 'All'       ? 'selected' : ''}>Season: All</option>
@@ -126,6 +128,7 @@ function renderFilterBar() {
             ${renderClassTypeOptions()}
           </select>
         </div>
+        ${hasActiveFilters ? `<button class="btn-clear-filters" id="unpacked-clear-filters">Clear filters</button>` : ''}
       </div>
     </div>
   `;
@@ -138,13 +141,20 @@ function renderFilterBar() {
   document.getElementById('unpacked-class-filter').addEventListener('change', (e) => {
     currentClass = e.target.value;
     currentClassType = 'All';
-    // Re-render just the class_type select with cascaded options
     document.getElementById('unpacked-classtype-filter').innerHTML = renderClassTypeOptions();
     document.getElementById('unpacked-classtype-filter').addEventListener('change', onClassTypeChange);
     applyFiltersAndRender();
   });
 
   document.getElementById('unpacked-classtype-filter').addEventListener('change', onClassTypeChange);
+
+  document.getElementById('unpacked-clear-filters')?.addEventListener('click', () => {
+    currentSeason = 'All';
+    currentClass = 'All';
+    currentClassType = 'All';
+    renderFilterBar();
+    applyFiltersAndRender();
+  });
 }
 
 function onClassTypeChange(e) {
