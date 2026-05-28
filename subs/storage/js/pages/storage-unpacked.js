@@ -10,8 +10,17 @@ import { renderBreadcrumb } from '../shared/breadcrumb.js';
 
 let allItems = [];
 let currentSeason = 'All';
+let currentClass = 'All';
+let currentClassType = 'All';
 let itemsAdminUrl = 'https://dev-items.spookydecs.com';
 let storageAdminUrl = '';
+
+const CLASS_TYPES = {
+  All:         ['All', 'Inflatable', 'Static Prop', 'Animatronic', 'String Light', 'Spot Light', 'Plug', 'Cord', 'Adapter'],
+  Decoration:  ['All', 'Inflatable', 'Static Prop', 'Animatronic'],
+  Light:       ['All', 'String Light', 'Spot Light'],
+  Accessory:   ['All', 'Plug', 'Cord', 'Adapter'],
+};
 
 export async function renderUnpackedPage() {
   const app = document.getElementById('app');
@@ -67,7 +76,7 @@ async function loadData() {
     );
 
     renderFilterBar();
-    applySeasonAndRender();
+    applyFiltersAndRender();
 
   } catch (error) {
     console.error('Failed to load unpacked items:', error);
@@ -80,6 +89,13 @@ async function loadData() {
       </div>
     `;
   }
+}
+
+function renderClassTypeOptions() {
+  const types = CLASS_TYPES[currentClass] || CLASS_TYPES.All;
+  return types.map(t =>
+    `<option value="${t}" ${currentClassType === t ? 'selected' : ''}>${t === 'All' ? 'Type: All' : t}</option>`
+  ).join('');
 }
 
 function renderFilterBar() {
@@ -97,20 +113,56 @@ function renderFilterBar() {
             <option value="Shared"    ${currentSeason === 'Shared'    ? 'selected' : ''}>Season: Shared</option>
           </select>
         </div>
+        <div class="filter-group">
+          <select class="filter-select" id="unpacked-class-filter">
+            <option value="All"        ${currentClass === 'All'        ? 'selected' : ''}>Class: All</option>
+            <option value="Decoration" ${currentClass === 'Decoration' ? 'selected' : ''}>Decoration</option>
+            <option value="Light"      ${currentClass === 'Light'      ? 'selected' : ''}>Light</option>
+            <option value="Accessory"  ${currentClass === 'Accessory'  ? 'selected' : ''}>Accessory</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <select class="filter-select" id="unpacked-classtype-filter">
+            ${renderClassTypeOptions()}
+          </select>
+        </div>
       </div>
     </div>
   `;
 
   document.getElementById('unpacked-season-filter').addEventListener('change', (e) => {
     currentSeason = e.target.value;
-    applySeasonAndRender();
+    applyFiltersAndRender();
   });
+
+  document.getElementById('unpacked-class-filter').addEventListener('change', (e) => {
+    currentClass = e.target.value;
+    currentClassType = 'All';
+    // Re-render just the class_type select with cascaded options
+    document.getElementById('unpacked-classtype-filter').innerHTML = renderClassTypeOptions();
+    document.getElementById('unpacked-classtype-filter').addEventListener('change', onClassTypeChange);
+    applyFiltersAndRender();
+  });
+
+  document.getElementById('unpacked-classtype-filter').addEventListener('change', onClassTypeChange);
 }
 
-function applySeasonAndRender() {
-  const filtered = currentSeason === 'All'
-    ? allItems
-    : allItems.filter(item => item.season === currentSeason);
+function onClassTypeChange(e) {
+  currentClassType = e.target.value;
+  applyFiltersAndRender();
+}
+
+function applyFiltersAndRender() {
+  let filtered = allItems;
+
+  if (currentSeason !== 'All')
+    filtered = filtered.filter(item => item.season === currentSeason);
+
+  if (currentClass !== 'All')
+    filtered = filtered.filter(item => item.class === currentClass);
+
+  if (currentClassType !== 'All')
+    filtered = filtered.filter(item => item.class_type === currentClassType);
 
   renderList(filtered);
 }
