@@ -404,6 +404,7 @@
 /* ===== Collapsed Filter Panel (<= 768px) ===== */
 .filter-bar-collapsed {
   padding: 12px;
+  display: none;
 }
 
 .filters-top-row {
@@ -480,7 +481,7 @@
 }
 
 .filters-dropdown-panel.open {
-  display: flex;
+  display: none; /* shown only on mobile — see max-width override below */
 }
 
 .filters-dropdown-panel .filter-group {
@@ -743,10 +744,12 @@
   }
 }
 
-@media (min-width: 769px) {
-  /* Hide collapsed filter UI on desktop */
-  .filter-bar-collapsed .filters-top-row,
-  .filters-dropdown-panel {
-    display: none !important;
+@media (max-width: 768px) {
+  /* Show collapsed filter UI on mobile */
+  .filter-bar-collapsed {
+    display: block;
+  }
+  .filters-dropdown-panel.open {
+    display: flex;
   }
 }

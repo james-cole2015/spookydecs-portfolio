@@ -6,7 +6,7 @@
 
 .storage-photo-gallery-section {
   background: white;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 20px 24px;
   margin-bottom: 16px;
@@ -17,7 +17,7 @@
   display: block;
   font-size: 1rem;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-color);
   margin-bottom: 16px;
 }
 
@@ -29,7 +29,7 @@
 
 .photo-gallery-loading,
 .photo-gallery-empty {
-  color: #6B7280;
+  color: var(--text-secondary);
   font-size: 0.875rem;
   padding: 4px 0;
 }
@@ -37,7 +37,7 @@
 .photo-gallery-subtitle {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #6B7280;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin: 0 0 10px 0;
@@ -57,7 +57,7 @@
   position: relative;
   border-radius: 8px;
   overflow: hidden;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--border-color);
   background: #F9FAFB;
   width: 130px;
   flex-shrink: 0;
@@ -141,7 +141,7 @@
   color: #3B82F6;
   background: white;
   border: none;
-  border-top: 1px solid #E5E7EB;
+  border-top: 1px solid var(--border-color);
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
@@ -192,15 +192,17 @@
    ============================================ */
 .detail-header {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: flex-start;
   gap: var(--spacing-lg);
   padding: var(--spacing-lg);
   border-bottom: 1px solid var(--border-color);
 }
 
 .detail-photo {
-  width: 100%;
-  height: 300px;
+  width: 350px;
+  height: 350px;
+  flex-shrink: 0;
   border-radius: var(--radius-md);
   overflow: hidden;
   background: var(--bg-secondary);
@@ -216,6 +218,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
+  flex: 1;
 }
 
 .detail-title-section {
@@ -226,7 +229,7 @@
 
 .detail-title {
   margin: 0;
-  font-size: 1.75rem;
+  font-size: 2.25rem;
   font-weight: 700;
   color: var(--text-color);
 }
@@ -254,7 +257,7 @@
   border-radius: var(--radius-pill); /* Pill shaped */
   font-size: 0.8125rem;
   font-weight: 600;
-  background: #f3f4f6; /* Light grey */
+  background: #f1f5f9; /* Light grey */
   color: var(--text-color);
   text-transform: capitalize;
 }
@@ -288,7 +291,7 @@
 }
 
 .detail-badge.packed-badge.unpacked {
-  background: #f3f4f6;
+  background: #f1f5f9;
   color: var(--secondary-color);
 }
 
@@ -324,7 +327,7 @@
 
 .detail-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--spacing-md);
 }
 
@@ -529,39 +532,35 @@
 }
 
 /* ============================================
-   RESPONSIVE - TABLET & DESKTOP
+   RESPONSIVE - MOBILE OVERRIDES
    ============================================ */
-@media (min-width: 768px) {
-  .detail-header {
-    flex-direction: row;
-    align-items: flex-start;
-  }
-  
-  .detail-photo {
-    width: 350px;
-    height: 350px;
-    flex-shrink: 0;
-  }
-  
-  .detail-info {
-    flex: 1;
-  }
-  
-  .detail-title {
-    font-size: 2.25rem;
-  }
-  
+@media (max-width: 1023px) {
   .detail-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  
-  .detail-actions {
-    flex-direction: row;
-  }
 }
 
-@media (min-width: 1024px) {
+@media (max-width: 767px) {
+  .detail-header {
+    flex-direction: column;
+    align-items: initial;
+  }
+
+  .detail-photo {
+    width: 100%;
+    height: 300px;
+    flex-shrink: unset;
+  }
+
+  .detail-info {
+    flex: unset;
+  }
+
+  .detail-title {
+    font-size: 1.75rem;
+  }
+
   .detail-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: 1fr;
   }
 }

@@ -240,6 +240,7 @@ body {
 /* ===== Collapsed Filter Panel (<= 768px) ===== */
 .table-filters-collapsed {
   margin-bottom: 1rem;
+  display: none;
 }
 
 .filters-top-row {
@@ -506,6 +507,11 @@ body {
   transform: translateY(-2px);
 }
 
+/* Default: cost-cards hidden on desktop */
+.cost-cards {
+  display: none;
+}
+
 /* ===== Mobile Cards (< 768px) ===== */
 @media (max-width: 768px) {
   body {
@@ -517,6 +523,10 @@ body {
   }
 
   .cost-cards {
+    display: block;
+  }
+
+  .table-filters-collapsed {
     display: block;
   }
 
@@ -604,16 +614,6 @@ body {
   }
 }
 
-@media (min-width: 769px) {
-  .cost-cards {
-    display: none;
-  }
-
-  /* Hide collapsed filter UI on desktop */
-  .table-filters-collapsed {
-    display: none;
-  }
-}
 
 /* ===== Loading & Empty States ===== */
 .loading-spinner {

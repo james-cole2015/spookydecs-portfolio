@@ -121,7 +121,7 @@
 .wizard-container--vertical .wizard-step {
   display: block;
   padding: 2rem 0;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .wizard-container--vertical .wizard-step:last-child {
@@ -584,7 +584,7 @@
   width: 100%;
   height: 200px;
   overflow: hidden;
-  background: #f3f4f6;
+  background: #f1f5f9;
 }
 
 .card-photo img {
@@ -612,7 +612,7 @@
   font-size: 0.75rem;
   font-family: 'Courier New', monospace;
   color: var(--text-secondary);
-  background: #f3f4f6;
+  background: #f1f5f9;
   padding: 2px 0.375rem;
   border-radius: var(--radius-sm);
 }
@@ -687,7 +687,7 @@
   height: 3.75rem;
   border-radius: 0.375rem;
   overflow: hidden;
-  background: #f3f4f6;
+  background: #f1f5f9;
   flex-shrink: 0;
 }
 
@@ -713,7 +713,7 @@
   font-size: 0.6875rem;
   font-family: 'Courier New', monospace;
   color: var(--text-secondary);
-  background: #f3f4f6;
+  background: #f1f5f9;
   padding: 2px 0.375rem;
   border-radius: var(--radius-sm);
   flex-shrink: 0;
@@ -915,7 +915,7 @@
   font-size: 0.6875rem;
   font-family: 'Courier New', monospace;
   color: var(--text-secondary);
-  background: #f3f4f6;
+  background: #f1f5f9;
   padding: 2px 0.375rem;
   border-radius: var(--radius-sm);
 }
@@ -951,7 +951,7 @@
   font-size: 0.6875rem;
   font-family: 'Courier New', monospace;
   color: var(--text-secondary);
-  background: #f3f4f6;
+  background: #f1f5f9;
   padding: 2px 0.375rem;
   border-radius: var(--radius-sm);
   margin-right: 0.5rem;
@@ -1028,7 +1028,7 @@
 }
 
 .btn-secondary {
-  background: #f3f4f6;
+  background: #f1f5f9;
   color: #374151;
 }
 
@@ -1162,7 +1162,7 @@
   overflow: hidden;
   margin-bottom: 1rem;
   box-shadow: 0 0.25rem 6px rgba(0, 0, 0, 0.1);
-  border: 3px solid #f3f4f6;
+  border: 3px solid #f1f5f9;
 }
 
 .profile-photo-img {
