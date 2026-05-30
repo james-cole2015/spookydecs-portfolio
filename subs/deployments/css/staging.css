@@ -9,7 +9,7 @@
   gap: 0.5rem;
   padding: 1rem 0;
   font-size: 0.875rem;
-  color: var(--gray-600);
+  color: var(--text-label);
   margin-bottom: 1.5rem;
 }
 
@@ -17,7 +17,7 @@
   background: none;
   border: none;
   padding: 0;
-  color: var(--gray-600);
+  color: var(--text-label);
   text-decoration: none;
   cursor: pointer;
   font-size: 0.875rem;
@@ -25,16 +25,16 @@
 }
 
 .breadcrumb-link:hover {
-  color: var(--gray-900);
+  color: var(--text-primary);
 }
 
 .breadcrumb-sep {
-  color: var(--gray-600);
+  color: var(--text-label);
   opacity: 0.5;
 }
 
 .breadcrumb-current {
-  color: var(--gray-900);
+  color: var(--text-primary);
   font-weight: 500;
 }
 
@@ -52,13 +52,13 @@
 .staging-title {
   font-size: 1.875rem;
   font-weight: 700;
-  color: var(--gray-900);
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
 }
 
 .staging-subtitle {
   font-size: 1rem;
-  color: var(--gray-600);
+  color: var(--text-label);
 }
 
 /* ─── Loading & Error States ─────────────────────────────────────────────── */
@@ -69,15 +69,15 @@
   align-items: center;
   justify-content: center;
   padding: 4rem 0;
-  color: var(--gray-600);
+  color: var(--text-label);
   gap: 1rem;
 }
 
 .spinner {
   width: 2rem;
   height: 2rem;
-  border: 3px solid var(--gray-200);
-  border-top-color: var(--primary-blue);
+  border: 3px solid var(--border-default);
+  border-top-color: var(--color-primary);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
@@ -92,7 +92,7 @@
   align-items: center;
   gap: 1rem;
   padding: 4rem 0;
-  color: var(--gray-600);
+  color: var(--text-label);
 }
 
 .staging-error-banner {
@@ -100,17 +100,17 @@
   border: 1px solid #fca5a5;
   color: #b91c1c;
   padding: 0.75rem 1rem;
-  border-radius: var(--border-radius);
+  border-radius: var(--radius-lg);
   font-size: 0.875rem;
   margin-bottom: 1.5rem;
 }
 
 .btn-back {
   padding: 0.75rem 1.5rem;
-  background: var(--white);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--border-radius);
-  color: var(--gray-900);
+  background: var(--surface-default);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  color: var(--text-primary);
   cursor: pointer;
   font-size: 0.875rem;
 }
@@ -120,7 +120,7 @@
 .staging-empty {
   text-align: center;
   padding: 2rem 1rem;
-  color: var(--gray-400);
+  color: var(--text-muted);
   font-size: 0.875rem;
   font-style: italic;
 }
@@ -145,7 +145,7 @@
   align-items: center;
   justify-content: space-between;
   padding-bottom: 0.75rem;
-  border-bottom: 2px solid var(--gray-200);
+  border-bottom: 2px solid var(--border-default);
 }
 
 .staging-column--staged .staging-column-header {
@@ -155,7 +155,7 @@
 .staging-column-title {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--gray-900);
+  color: var(--text-primary);
   margin: 0;
 }
 
@@ -165,8 +165,8 @@
 
 .staging-column-count {
   font-size: 0.75rem;
-  color: var(--gray-500);
-  background: var(--gray-100);
+  color: var(--text-secondary);
+  background: var(--surface-muted);
   padding: 2px 0.5rem;
   border-radius: 999px;
 }
@@ -182,9 +182,9 @@
 /* ─── Individual Tote Card ───────────────────────────────────────────────── */
 
 .staging-tote-card {
-  background: var(--white);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--border-radius);
+  background: var(--surface-default);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
@@ -197,8 +197,8 @@
 }
 
 .staging-tote-card.is-readonly {
-  background: var(--gray-50);
-  border-color: var(--gray-200);
+  background: var(--surface-subtle);
+  border-color: var(--border-default);
   opacity: 0.85;
 }
 
@@ -222,7 +222,7 @@
 .tote-card-name {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--gray-900);
+  color: var(--text-primary);
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -230,7 +230,7 @@
 }
 
 .staging-tote-card.is-readonly .tote-card-name {
-  color: var(--gray-700);
+  color: var(--text-body);
 }
 
 .tote-card-tags {
@@ -241,8 +241,8 @@
 
 .tote-tag {
   font-size: 0.75rem;
-  background: var(--gray-100);
-  color: var(--gray-600);
+  background: var(--surface-muted);
+  color: var(--text-label);
   padding: 2px 0.5rem;
   border-radius: 4px;
 }
@@ -255,10 +255,10 @@
 
 .btn-stage-tote {
   padding: 0.625rem 1rem;
-  background: var(--primary-blue);
+  background: var(--color-primary);
   color: white;
   border: none;
-  border-radius: var(--border-radius);
+  border-radius: var(--radius-lg);
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -267,7 +267,7 @@
 }
 
 .btn-stage-tote:hover:not(:disabled) {
-  background: var(--primary-blue-dark);
+  background: var(--color-primary-hover);
 }
 
 .btn-stage-tote:disabled {
@@ -291,7 +291,7 @@
   align-items: center;
   gap: 1rem;
   font-size: 0.875rem;
-  color: var(--gray-600);
+  color: var(--text-label);
 }
 
 .tote-item-count {
@@ -301,7 +301,7 @@
 .btn-see-items {
   background: none;
   border: none;
-  color: var(--primary-blue);
+  color: var(--color-primary);
   font-size: 0.875rem;
   cursor: pointer;
   padding: 0;
@@ -317,7 +317,7 @@
 
 .tote-items-list {
   display: none;
-  border-top: 1px solid var(--gray-200);
+  border-top: 1px solid var(--border-default);
   padding-top: 1rem;
 }
 
@@ -339,12 +339,12 @@
   align-items: center;
   gap: 0.75rem;
   font-size: 0.875rem;
-  color: var(--gray-900);
+  color: var(--text-primary);
   padding: 0.5rem 0;
 }
 
 .tote-item-row.item-staged {
-  color: var(--gray-500);
+  color: var(--text-secondary);
 }
 
 .tote-item-name {
@@ -364,13 +364,13 @@
 
 .tote-item-meta {
   font-size: 0.75rem;
-  color: var(--gray-500);
+  color: var(--text-secondary);
   flex-shrink: 0;
 }
 
 .tote-items-empty {
   font-size: 0.875rem;
-  color: var(--gray-400);
+  color: var(--text-muted);
   font-style: italic;
 }
 
@@ -382,7 +382,7 @@
   }
 
   .staging-column--staged {
-    border-top: 2px solid var(--gray-200);
+    border-top: 2px solid var(--border-default);
     padding-top: 1.5rem;
   }
 }

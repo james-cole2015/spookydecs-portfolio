@@ -13,15 +13,15 @@
   justify-content: space-between;
   align-items: flex-start;
   padding: 1.5rem;
-  background: var(--white);
-  border-bottom: 2px solid var(--gray-200);
+  background: var(--surface-default);
+  border-bottom: 2px solid var(--border-default);
   gap: 1rem;
 }
 
 .session-info h2 {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--gray-900);
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
   display: flex;
   align-items: center;
@@ -33,8 +33,8 @@
   align-items: center;
   justify-content: center;
   padding: 0.25rem 0.75rem;
-  background: var(--primary-blue);
-  color: var(--white);
+  background: var(--color-primary);
+  color: var(--surface-default);
   border-radius: 6px;
   font-size: 0.875rem;
   font-weight: 600;
@@ -43,15 +43,15 @@
 
 .session-meta {
   font-size: 0.95rem;
-  color: var(--gray-600);
+  color: var(--text-label);
 }
 
 .btn-end-session {
   padding: 0.625rem 1.25rem;
   background: #DC2626;
-  color: var(--white);
+  color: var(--surface-default);
   border: none;
-  border-radius: var(--border-radius);
+  border-radius: var(--radius-lg);
   font-size: 0.95rem;
   font-weight: 500;
   cursor: pointer;
@@ -80,9 +80,9 @@
 .connections-panel {
   display: flex;
   flex-direction: column;
-  background: var(--white);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--border-radius);
+  background: var(--surface-default);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
   height: 100%;
@@ -93,14 +93,14 @@
   align-items: center;
   justify-content: space-between;
   padding: 1rem 1.25rem;
-  background: var(--gray-50);
-  border-bottom: 1px solid var(--gray-200);
+  background: var(--surface-subtle);
+  border-bottom: 1px solid var(--border-default);
 }
 
 .panel-header h3 {
   font-size: 1.125rem;
   font-weight: 600;
-  color: var(--gray-900);
+  color: var(--text-primary);
   margin: 0;
 }
 
@@ -111,8 +111,8 @@
   min-width: 1.75rem;
   height: 1.75rem;
   padding: 0 0.5rem;
-  background: var(--primary-blue);
-  color: var(--white);
+  background: var(--color-primary);
+  color: var(--surface-default);
   border-radius: 12px;
   font-size: 0.875rem;
   font-weight: 600;
@@ -132,9 +132,9 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 1rem;
-  background: var(--white);
-  border: 2px solid var(--gray-200);
-  border-radius: var(--border-radius);
+  background: var(--surface-default);
+  border: 2px solid var(--border-default);
+  border-radius: var(--radius-lg);
   margin-bottom: 0.75rem;
   transition: all 0.2s;
 }
@@ -144,7 +144,7 @@
 }
 
 .source-card:hover {
-  border-color: var(--primary-blue);
+  border-color: var(--color-primary);
   box-shadow: var(--shadow-md);
 }
 
@@ -163,14 +163,14 @@
 .source-id {
   font-family: monospace;
   font-size: 0.875rem;
-  color: var(--gray-700);
+  color: var(--text-body);
   font-weight: 600;
 }
 
 .source-class {
   padding: 0.125rem 0.5rem;
-  background: var(--gray-100);
-  color: var(--gray-700);
+  background: var(--surface-muted);
+  color: var(--text-body);
   border-radius: 4px;
   font-size: 0.75rem;
   font-weight: 500;
@@ -179,7 +179,7 @@
 .source-name {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--gray-900);
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
 }
 
@@ -192,8 +192,8 @@
 .port-badge {
   display: inline-block;
   padding: 0.25rem 0.625rem;
-  background: var(--primary-blue-light);
-  color: var(--primary-blue-dark);
+  background: var(--color-primary-light);
+  color: var(--color-primary-hover);
   border-radius: 4px;
   font-size: 0.75rem;
   font-weight: 600;
@@ -201,10 +201,10 @@
 
 .btn-connect {
   padding: 0.5rem 1rem;
-  background: var(--primary-blue);
-  color: var(--white);
+  background: var(--color-primary);
+  color: var(--surface-default);
   border: none;
-  border-radius: var(--border-radius);
+  border-radius: var(--radius-lg);
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -213,7 +213,7 @@
 }
 
 .btn-connect:hover {
-  background: var(--primary-blue-dark);
+  background: var(--color-primary-hover);
   transform: translateY(-1px);
 }
 
@@ -224,9 +224,9 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 1rem;
-  background: var(--gray-50);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--border-radius);
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
   margin-bottom: 0.75rem;
 }
 
@@ -251,19 +251,19 @@
 .node-id {
   font-family: monospace;
   font-size: 0.875rem;
-  color: var(--gray-800);
+  color: var(--text-primary);
   font-weight: 600;
 }
 
 .node-port {
   font-size: 0.75rem;
-  color: var(--gray-600);
+  color: var(--text-label);
   font-family: monospace;
 }
 
 .connection-arrow {
   font-size: 1.25rem;
-  color: var(--primary-blue);
+  color: var(--color-primary);
   font-weight: bold;
 }
 
@@ -273,9 +273,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--white);
-  color: var(--gray-500);
-  border: 1px solid var(--gray-300);
+  background: var(--surface-default);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-hover);
   border-radius: 4px;
   font-size: 1.25rem;
   line-height: 1;
@@ -302,13 +302,13 @@
 
 .empty-state p {
   font-size: 1rem;
-  color: var(--gray-600);
+  color: var(--text-label);
   margin: 0;
 }
 
 .empty-hint {
   font-size: 0.875rem;
-  color: var(--gray-500);
+  color: var(--text-secondary);
   margin-top: 0.5rem;
 }
 
@@ -328,8 +328,8 @@
 }
 
 .modal-content {
-  background: var(--white);
-  border-radius: var(--border-radius);
+  background: var(--surface-default);
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   max-width: 600px;
   width: 100%;
@@ -355,13 +355,13 @@
   align-items: center;
   justify-content: space-between;
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--gray-200);
+  border-bottom: 1px solid var(--border-default);
 }
 
 .modal-header h3 {
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--gray-900);
+  color: var(--text-primary);
   margin: 0;
 }
 
@@ -369,7 +369,7 @@
   background: none;
   border: none;
   font-size: 1.5rem;
-  color: var(--gray-400);
+  color: var(--text-muted);
   cursor: pointer;
   padding: 0;
   width: 2rem;
@@ -381,7 +381,7 @@
 }
 
 .btn-close-modal:hover {
-  color: var(--gray-600);
+  color: var(--text-label);
 }
 
 .modal-body {
@@ -395,8 +395,8 @@
   justify-content: flex-end;
   gap: 0.75rem;
   padding: 1rem 1.5rem;
-  border-top: 1px solid var(--gray-200);
-  background: var(--gray-50);
+  border-top: 1px solid var(--border-default);
+  background: var(--surface-subtle);
 }
 
 /* Port Selection */
@@ -409,7 +409,7 @@
 .selection-label {
   font-size: 1rem;
   font-weight: 500;
-  color: var(--gray-800);
+  color: var(--text-primary);
   margin: 0;
 }
 
@@ -425,22 +425,22 @@
   align-items: center;
   gap: 0.5rem;
   padding: 1rem;
-  background: var(--white);
-  border: 2px solid var(--gray-200);
-  border-radius: var(--border-radius);
+  background: var(--surface-default);
+  border: 2px solid var(--border-default);
+  border-radius: var(--radius-lg);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .port-btn:hover {
-  border-color: var(--primary-blue);
-  background: var(--primary-blue-light);
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
 }
 
 .port-btn.selected {
-  border-color: var(--primary-blue);
-  background: var(--primary-blue);
-  color: var(--white);
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--surface-default);
 }
 
 .port-icon {
@@ -468,15 +468,15 @@
 .destination-search {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 1px solid var(--gray-300);
-  border-radius: var(--border-radius);
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-lg);
   font-size: 0.95rem;
   transition: border-color 0.2s;
 }
 
 .destination-search:focus {
   outline: none;
-  border-color: var(--primary-blue);
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
@@ -492,25 +492,25 @@
   display: flex;
   align-items: center;
   padding: 0.75rem 1rem;
-  background: var(--white);
-  border: 2px solid var(--gray-200);
-  border-radius: var(--border-radius);
+  background: var(--surface-default);
+  border: 2px solid var(--border-default);
+  border-radius: var(--radius-lg);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .destination-item:hover {
-  border-color: var(--primary-blue);
-  background: var(--primary-blue-light);
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
 }
 
 .destination-item.selected {
-  border-color: var(--primary-blue);
-  background: var(--primary-blue);
+  border-color: var(--color-primary);
+  background: var(--color-primary);
 }
 
 .destination-item.selected .item-info {
-  color: var(--white);
+  color: var(--surface-default);
 }
 
 .item-info {
@@ -533,8 +533,8 @@
 
 .item-class {
   padding: 0.125rem 0.5rem;
-  background: var(--gray-100);
-  color: var(--gray-700);
+  background: var(--surface-muted);
+  color: var(--text-body);
   border-radius: 4px;
   font-size: 0.75rem;
   font-weight: 500;
@@ -542,16 +542,16 @@
 
 .destination-item.selected .item-class {
   background: rgba(255, 255, 255, 0.2);
-  color: var(--white);
+  color: var(--surface-default);
 }
 
 /* Modal Buttons */
 .btn-secondary {
   padding: 0.625rem 1.25rem;
-  background: var(--gray-100);
-  color: var(--gray-800);
+  background: var(--surface-muted);
+  color: var(--text-primary);
   border: none;
-  border-radius: var(--border-radius);
+  border-radius: var(--radius-lg);
   font-size: 0.95rem;
   font-weight: 500;
   cursor: pointer;
@@ -559,15 +559,15 @@
 }
 
 .btn-secondary:hover {
-  background: var(--gray-200);
+  background: var(--border-default);
 }
 
 .btn-primary {
   padding: 0.625rem 1.25rem;
-  background: var(--primary-blue);
-  color: var(--white);
+  background: var(--color-primary);
+  color: var(--surface-default);
   border: none;
-  border-radius: var(--border-radius);
+  border-radius: var(--radius-lg);
   font-size: 0.95rem;
   font-weight: 500;
   cursor: pointer;
@@ -575,7 +575,7 @@
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--primary-blue-dark);
+  background: var(--color-primary-hover);
   transform: translateY(-1px);
 }
 
@@ -646,15 +646,15 @@
 
 .review-summary {
   padding: 1rem;
-  background: var(--gray-50);
-  border-radius: var(--border-radius);
-  border-left: 4px solid var(--primary-blue);
+  background: var(--surface-subtle);
+  border-radius: var(--radius-lg);
+  border-left: 4px solid var(--color-primary);
 }
 
 .review-summary p {
   margin: 0;
   font-size: 0.95rem;
-  color: var(--gray-800);
+  color: var(--text-primary);
 }
 
 .review-summary p:not(:last-child) {
@@ -675,10 +675,10 @@
 .review-section h4 {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--gray-900);
+  color: var(--text-primary);
   margin: 0;
   padding-bottom: 0.5rem;
-  border-bottom: 2px solid var(--gray-200);
+  border-bottom: 2px solid var(--border-default);
 }
 
 .connections-review-list {
@@ -696,9 +696,9 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 0.75rem 1rem;
-  background: var(--white);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--border-radius);
+  background: var(--surface-default);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
 }
 
 .connection-info {
@@ -712,18 +712,18 @@
   gap: 0.5rem;
   font-family: monospace;
   font-size: 0.875rem;
-  color: var(--gray-700);
+  color: var(--text-body);
   margin-bottom: 0.25rem;
 }
 
 .flow-arrow {
-  color: var(--primary-blue);
+  color: var(--color-primary);
   font-weight: bold;
 }
 
 .item-name-small {
   font-size: 0.875rem;
-  color: var(--gray-600);
+  color: var(--text-label);
 }
 
 .photo-actions {
@@ -738,8 +738,8 @@
   align-items: center;
   gap: 0.25rem;
   padding: 0.25rem 0.625rem;
-  background: var(--primary-blue-light);
-  color: var(--primary-blue-dark);
+  background: var(--color-primary-light);
+  color: var(--color-primary-hover);
   border-radius: 4px;
   font-size: 0.75rem;
   font-weight: 600;
@@ -753,10 +753,10 @@
 .btn-add-photo,
 .btn-add-more-photos {
   padding: 0.375rem 0.75rem;
-  background: var(--primary-blue);
-  color: var(--white);
+  background: var(--color-primary);
+  color: var(--surface-default);
   border: none;
-  border-radius: var(--border-radius);
+  border-radius: var(--radius-lg);
   font-size: 0.8125rem;
   font-weight: 500;
   cursor: pointer;
@@ -766,23 +766,23 @@
 
 .btn-add-photo:hover,
 .btn-add-more-photos:hover {
-  background: var(--primary-blue-dark);
+  background: var(--color-primary-hover);
   transform: translateY(-1px);
 }
 
 .btn-add-more-photos {
-  background: var(--gray-100);
-  color: var(--gray-800);
+  background: var(--surface-muted);
+  color: var(--text-primary);
 }
 
 .btn-add-more-photos:hover {
-  background: var(--gray-200);
+  background: var(--border-default);
 }
 
 .accessory-label {
   padding: 0.25rem 0.625rem;
-  background: var(--gray-100);
-  color: var(--gray-600);
+  background: var(--surface-muted);
+  color: var(--text-label);
   border-radius: 4px;
   font-size: 0.75rem;
   font-weight: 500;
@@ -791,8 +791,8 @@
 .session-notes-input {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid var(--gray-300);
-  border-radius: var(--border-radius);
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-lg);
   font-size: 0.95rem;
   font-family: inherit;
   resize: vertical;
@@ -802,7 +802,7 @@
 
 .session-notes-input:focus {
   outline: none;
-  border-color: var(--primary-blue);
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
@@ -810,7 +810,7 @@
   background: none;
   border: none;
   font-size: 1.5rem;
-  color: var(--gray-400);
+  color: var(--text-muted);
   cursor: pointer;
   padding: 0;
   width: 2rem;
@@ -822,16 +822,16 @@
 }
 
 .btn-close-review:hover {
-  color: var(--gray-600);
+  color: var(--text-label);
 }
 
 .btn-skip-photos {
-  background: var(--gray-100);
-  color: var(--gray-800);
+  background: var(--surface-muted);
+  color: var(--text-primary);
 }
 
 .btn-skip-photos:hover:not(:disabled) {
-  background: var(--gray-200);
+  background: var(--border-default);
 }
 
 /* Mobile responsiveness */
@@ -866,23 +866,23 @@
 /* Search bar */
 .sources-search {
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--gray-200);
+  border-bottom: 1px solid var(--border-default);
   flex-shrink: 0;
 }
 
 .sources-search__input {
   width: 100%;
   padding: 0.5rem 0.75rem;
-  border: 1px solid var(--gray-300);
-  border-radius: var(--border-radius);
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-lg);
   font-size: 0.875rem;
-  background: var(--white);
+  background: var(--surface-default);
   transition: border-color 0.2s;
 }
 
 .sources-search__input:focus {
   outline: none;
-  border-color: var(--primary-blue);
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
@@ -904,9 +904,9 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.875rem 0.5rem 0.75rem;
-  background: var(--white);
-  border: 2px solid var(--gray-200);
-  border-radius: var(--border-radius);
+  background: var(--surface-default);
+  border: 2px solid var(--border-default);
+  border-radius: var(--radius-lg);
   cursor: pointer;
   transition: border-color 0.2s, box-shadow 0.2s, opacity 0.2s;
   position: relative;
@@ -915,7 +915,7 @@
 }
 
 .eligible-card:hover:not(.eligible-card--disabled) {
-  border-color: var(--primary-blue);
+  border-color: var(--color-primary);
   box-shadow: var(--shadow-md);
 }
 
@@ -928,7 +928,7 @@
 .eligible-card__icon {
   width: 2rem;
   height: 2rem;
-  color: var(--gray-500);
+  color: var(--text-secondary);
   flex-shrink: 0;
 }
 
@@ -938,7 +938,7 @@
 }
 
 .eligible-card:hover:not(.eligible-card--disabled) .eligible-card__icon {
-  color: var(--primary-blue);
+  color: var(--color-primary);
 }
 
 /* Text */
@@ -954,7 +954,7 @@
 .eligible-card__name {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--gray-900);
+  color: var(--text-primary);
   line-height: 1.2;
   word-break: break-word;
   width: 100%;
@@ -963,7 +963,7 @@
 .eligible-card__id {
   font-family: monospace;
   font-size: 0.7rem;
-  color: var(--gray-500);
+  color: var(--text-secondary);
   word-break: break-all;
   width: 100%;
 }
@@ -973,8 +973,8 @@
   position: absolute;
   top: 0.375rem;
   right: 0.375rem;
-  background: var(--primary-blue-light);
-  color: var(--primary-blue-dark);
+  background: var(--color-primary-light);
+  color: var(--color-primary-hover);
   font-size: 0.65rem;
   font-weight: 700;
   padding: 0.125rem 0.375rem;
@@ -987,8 +987,8 @@
   position: absolute;
   top: 0.375rem;
   left: 0.375rem;
-  background: var(--gray-200);
-  color: var(--gray-600);
+  background: var(--border-default);
+  color: var(--text-label);
   font-size: 0.65rem;
   font-weight: 700;
   font-family: monospace;
@@ -1004,7 +1004,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.25rem 0;
-  color: var(--gray-500);
+  color: var(--text-secondary);
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -1016,7 +1016,7 @@
   content: '';
   flex: 1;
   height: 1px;
-  background: var(--gray-200);
+  background: var(--border-default);
 }
 
 /* Destination filter chips in ConnectionModal */
@@ -1029,10 +1029,10 @@
 
 .dest-filter-btn {
   padding: 0.375rem 0.75rem;
-  border: 1px solid var(--gray-300);
+  border: 1px solid var(--border-hover);
   border-radius: 20px;
-  background: var(--white);
-  color: var(--gray-700);
+  background: var(--surface-default);
+  color: var(--text-body);
   font-size: 0.8125rem;
   font-weight: 500;
   cursor: pointer;
@@ -1040,20 +1040,20 @@
 }
 
 .dest-filter-btn:hover {
-  border-color: var(--primary-blue);
-  color: var(--primary-blue);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .dest-filter-btn.active {
-  background: var(--primary-blue);
-  border-color: var(--primary-blue);
-  color: var(--white);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--surface-default);
 }
 
 /* Loading state in modal */
 .loading-state {
   padding: 2rem;
   text-align: center;
-  color: var(--gray-500);
+  color: var(--text-secondary);
   font-size: 0.95rem;
 }
