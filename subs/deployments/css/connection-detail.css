@@ -1,7 +1,7 @@
 /* Connection Detail Page Styles */
 
 .connection-detail-container {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
 }
@@ -28,7 +28,7 @@
 .connection-title h1 {
   font-size: 1.875rem;
   font-weight: 700;
-  color: var(--gray-900);
+  color: var(--text-primary);
   margin: 0 0 0.5rem 0;
 }
 
@@ -67,7 +67,7 @@
 .connection-flow-section h2 {
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--gray-900);
+  color: var(--text-primary);
   margin: 0 0 1.5rem 0;
 }
 
@@ -77,14 +77,14 @@
   justify-content: center;
   gap: 2rem;
   padding: 2rem;
-  background: var(--gray-50);
-  border: 1px solid var(--gray-200);
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-default);
   border-radius: 8px;
 }
 
 .flow-item {
   background: white;
-  border: 2px solid var(--gray-200);
+  border: 2px solid var(--border-default);
   border-radius: 8px;
   padding: 1.5rem;
   min-width: 200px;
@@ -97,7 +97,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--gray-500);
+  color: var(--text-secondary);
   margin-bottom: 0.5rem;
 }
 
@@ -105,7 +105,7 @@
   font-family: 'Courier New', monospace;
   font-size: 0.875rem;
   font-weight: 700;
-  color: var(--gray-900);
+  color: var(--text-primary);
   margin-bottom: 0.75rem;
   word-break: break-all;
 }
@@ -125,13 +125,13 @@
   flex-direction: column;
   align-items: center;
   gap: 0.25rem;
-  color: var(--gray-400);
+  color: var(--text-muted);
 }
 
 .arrow-line {
   width: 60px;
   height: 2px;
-  background: var(--gray-300);
+  background: var(--border-hover);
 }
 
 .arrow-head {
@@ -151,7 +151,7 @@
 .items-section h2 {
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--gray-900);
+  color: var(--text-primary);
   margin: 0 0 1.5rem 0;
 }
 
@@ -162,8 +162,8 @@
 }
 
 .item-detail-card {
-  background: var(--gray-50);
-  border: 2px solid var(--gray-200);
+  background: var(--surface-subtle);
+  border: 2px solid var(--border-default);
   border-radius: 8px;
   padding: 1.5rem;
   display: flex;
@@ -182,7 +182,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--gray-600);
+  color: var(--text-label);
 }
 
 .item-photo,
@@ -191,7 +191,7 @@
   aspect-ratio: 1;
   border-radius: 6px;
   overflow: hidden;
-  background: var(--gray-200);
+  background: var(--border-default);
 }
 
 .item-photo img {
@@ -218,14 +218,14 @@
 .item-card-name {
   font-size: 1.125rem;
   font-weight: 600;
-  color: var(--gray-900);
+  color: var(--text-primary);
   margin-bottom: 0.25rem;
 }
 
 .item-card-id {
   font-family: 'Courier New', monospace;
   font-size: 0.75rem;
-  color: var(--gray-600);
+  color: var(--text-label);
   margin-bottom: 0.5rem;
 }
 
@@ -234,12 +234,12 @@
   align-items: center;
   gap: 0.5rem;
   font-size: 0.75rem;
-  color: var(--gray-600);
+  color: var(--text-label);
   margin-bottom: 0.75rem;
 }
 
 .item-separator {
-  color: var(--gray-400);
+  color: var(--text-muted);
 }
 
 .item-status {
@@ -271,8 +271,8 @@
 }
 
 .status-default {
-  background: var(--gray-200);
-  color: var(--gray-700);
+  background: var(--border-default);
+  color: var(--text-body);
 }
 
 .item-detail-link {
@@ -317,13 +317,13 @@
 .section-header h2 {
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--gray-900);
+  color: var(--text-primary);
   margin: 0;
 }
 
 .illuminates-count {
   font-size: 0.875rem;
-  color: var(--gray-600);
+  color: var(--text-label);
   font-weight: 500;
 }
 
@@ -384,7 +384,7 @@
 .illuminated-name {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--gray-900);
+  color: var(--text-primary);
   margin-bottom: 0.25rem;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -394,7 +394,7 @@
 .illuminated-id {
   font-family: 'Courier New', monospace;
   font-size: 0.75rem;
-  color: var(--gray-600);
+  color: var(--text-label);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -411,7 +411,7 @@
 .metadata-section h2 {
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--gray-900);
+  color: var(--text-primary);
   margin: 0 0 1rem 0;
 }
 
@@ -423,15 +423,15 @@
 
 .metadata-card {
   padding: 1rem;
-  background: var(--gray-50);
+  background: var(--surface-subtle);
   border-radius: 6px;
-  border: 1px solid var(--gray-200);
+  border: 1px solid var(--border-default);
 }
 
 .metadata-label {
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--gray-600);
+  color: var(--text-label);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 0.5rem;
@@ -440,7 +440,7 @@
 .metadata-value {
   font-size: 1.125rem;
   font-weight: 600;
-  color: var(--gray-900);
+  color: var(--text-primary);
 }
 
 .metadata-value.metadata-mono {
@@ -451,7 +451,7 @@
 
 .metadata-subvalue {
   font-size: 0.875rem;
-  color: var(--gray-600);
+  color: var(--text-label);
   margin-top: 0.25rem;
 }
 
@@ -466,16 +466,16 @@
 .notes-section h2 {
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--gray-900);
+  color: var(--text-primary);
   margin: 0 0 1rem 0;
 }
 
 .notes-content {
   padding: 1rem;
-  background: var(--gray-50);
-  border: 1px solid var(--gray-200);
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-default);
   border-radius: 6px;
-  color: var(--gray-900);
+  color: var(--text-primary);
   line-height: 1.6;
   white-space: pre-wrap;
 }
@@ -484,11 +484,11 @@
 .empty-state {
   text-align: center;
   padding: 3rem 1rem;
-  color: var(--gray-600);
+  color: var(--text-label);
 }
 
 .empty-hint {
-  color: var(--gray-500);
+  color: var(--text-secondary);
   font-size: 0.875rem;
 }
 

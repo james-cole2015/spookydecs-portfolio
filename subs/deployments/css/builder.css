@@ -14,19 +14,19 @@
 .builder-header h1 {
   font-size: 1.75rem;
   font-weight: 700;
-  color: var(--gray-900);
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
 }
 
 .builder-header p {
   font-size: 1rem;
-  color: var(--gray-600);
+  color: var(--text-label);
 }
 
 .btn-back {
   background: none;
   border: none;
-  color: var(--primary-blue);
+  color: var(--color-primary);
   font-size: 0.95rem;
   padding: 0.5rem 0;
   cursor: pointer;
@@ -38,13 +38,13 @@
 }
 
 .btn-back:hover {
-  color: var(--primary-blue-dark);
+  color: var(--color-primary-hover);
 }
 
 /* Form Styles */
 .deployment-form {
-  background: var(--white);
-  border-radius: var(--border-radius);
+  background: var(--surface-default);
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   overflow: hidden;
 }
@@ -55,7 +55,7 @@
 
 .form-section {
   padding: 1.5rem;
-  border-bottom: 1px solid var(--gray-200);
+  border-bottom: 1px solid var(--border-default);
 }
 
 .form-section:last-child {
@@ -65,13 +65,13 @@
 .form-section h2 {
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--gray-900);
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
 }
 
 .section-description {
   font-size: 0.95rem;
-  color: var(--gray-600);
+  color: var(--text-label);
   margin-bottom: 1rem;
 }
 
@@ -93,7 +93,7 @@
   display: block;
   font-size: 0.95rem;
   font-weight: 500;
-  color: var(--gray-800);
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
 }
 
@@ -102,23 +102,23 @@
 }
 
 .optional {
-  color: var(--gray-400);
+  color: var(--text-muted);
   font-weight: 400;
 }
 
 .form-control {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid var(--gray-300);
-  border-radius: var(--border-radius);
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-lg);
   font-size: 1rem;
   transition: border-color 0.2s;
-  background: var(--white);
+  background: var(--surface-default);
 }
 
 .form-control:focus {
   outline: none;
-  border-color: var(--primary-blue);
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
@@ -129,7 +129,7 @@
 .form-help {
   display: block;
   font-size: 0.875rem;
-  color: var(--gray-600);
+  color: var(--text-label);
   margin-top: 0.25rem;
 }
 
@@ -165,9 +165,9 @@ textarea.form-control {
   align-items: center;
   gap: 1rem;
   padding: 1rem;
-  background: var(--gray-50);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--border-radius);
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
 }
 
 .zone-icon {
@@ -178,27 +178,27 @@ textarea.form-control {
 .zone-info h3 {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--gray-900);
+  color: var(--text-primary);
   margin-bottom: 0.25rem;
 }
 
 .zone-code {
   font-size: 0.875rem;
-  color: var(--gray-600);
+  color: var(--text-label);
   font-family: monospace;
 }
 
 .zone-receptacle {
   font-size: 0.875rem;
-  color: var(--gray-500);
+  color: var(--text-secondary);
   font-family: monospace;
 }
 
 /* Form Actions */
 .form-actions {
   padding: 1.5rem;
-  background: var(--gray-50);
-  border-top: 1px solid var(--gray-200);
+  background: var(--surface-subtle);
+  border-top: 1px solid var(--border-default);
   display: flex;
   justify-content: flex-end;
 }
@@ -206,7 +206,7 @@ textarea.form-control {
 .btn {
   padding: 0.75rem 1.5rem;
   border: none;
-  border-radius: var(--border-radius);
+  border-radius: var(--radius-lg);
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
@@ -218,12 +218,12 @@ textarea.form-control {
 }
 
 .btn-primary {
-  background: var(--primary-blue);
-  color: var(--white);
+  background: var(--color-primary);
+  color: var(--surface-default);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--primary-blue-dark);
+  background: var(--color-primary-hover);
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
 }
@@ -254,7 +254,7 @@ textarea.form-control {
 /* Zones Dashboard */
 .zones-page {
   padding: 1rem;
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
 }
 
@@ -265,7 +265,7 @@ textarea.form-control {
 .deployment-info h1 {
   font-size: 1.75rem;
   font-weight: 700;
-  color: var(--gray-900);
+  color: var(--text-primary);
   margin-bottom: 0.75rem;
 }
 
@@ -283,21 +283,21 @@ textarea.form-control {
   border-radius: 12px;
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--white);
+  color: var(--surface-default);
 }
 
 .meta-item {
   font-size: 0.95rem;
-  color: var(--gray-600);
+  color: var(--text-label);
 }
 
 .deployment-notes {
   font-size: 1rem;
-  color: var(--gray-700);
-  background: var(--gray-50);
+  color: var(--text-body);
+  background: var(--surface-subtle);
   padding: 1rem;
-  border-radius: var(--border-radius);
-  border-left: 3px solid var(--primary-blue);
+  border-radius: var(--radius-lg);
+  border-left: 3px solid var(--color-primary);
   margin-top: 1rem;
 }
 
@@ -309,16 +309,16 @@ textarea.form-control {
 }
 
 .zone-card {
-  background: var(--white);
-  border: 2px solid var(--gray-200);
-  border-radius: var(--border-radius);
+  background: var(--surface-default);
+  border: 2px solid var(--border-default);
+  border-radius: var(--radius-lg);
   padding: 1.5rem;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .zone-card:hover {
-  border-color: var(--primary-blue);
+  border-color: var(--color-primary);
   box-shadow: var(--shadow-lg);
   transform: translateY(-2px);
 }
@@ -342,13 +342,13 @@ textarea.form-control {
 .zone-title h3 {
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--gray-900);
+  color: var(--text-primary);
   margin-bottom: 0.25rem;
 }
 
 .zone-title .zone-code {
   font-size: 0.875rem;
-  color: var(--gray-600);
+  color: var(--text-label);
   font-family: monospace;
 }
 
@@ -367,13 +367,13 @@ textarea.form-control {
 .stat-value {
   font-size: 2rem;
   font-weight: 700;
-  color: var(--primary-blue);
+  color: var(--color-primary);
   line-height: 1;
 }
 
 .stat-label {
   font-size: 0.875rem;
-  color: var(--gray-600);
+  color: var(--text-label);
   margin-top: 0.25rem;
 }
 
@@ -382,7 +382,7 @@ textarea.form-control {
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem;
-  background: var(--gray-50);
+  background: var(--surface-subtle);
   border-radius: 6px;
   font-size: 0.875rem;
 }
@@ -393,21 +393,21 @@ textarea.form-control {
 
 .receptacle-id {
   font-family: monospace;
-  color: var(--gray-700);
+  color: var(--text-body);
 }
 
 .zone-card-footer {
-  border-top: 1px solid var(--gray-200);
+  border-top: 1px solid var(--border-default);
   padding-top: 1rem;
 }
 
 .btn-zone-action {
   width: 100%;
   padding: 0.75rem;
-  background: var(--primary-blue-light);
-  color: var(--primary-blue-dark);
+  background: var(--color-primary-light);
+  color: var(--color-primary-hover);
   border: none;
-  border-radius: var(--border-radius);
+  border-radius: var(--radius-lg);
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
@@ -419,8 +419,8 @@ textarea.form-control {
 }
 
 .btn-zone-action:hover {
-  background: var(--primary-blue);
-  color: var(--white);
+  background: var(--color-primary);
+  color: var(--surface-default);
 }
 
 .btn-zone-action .icon {
@@ -434,10 +434,10 @@ textarea.form-control {
   bottom: 2rem;
   right: 2rem;
   padding: 1rem 1.5rem;
-  border-radius: var(--border-radius);
+  border-radius: var(--radius-lg);
   font-size: 0.95rem;
   font-weight: 500;
-  color: var(--white);
+  color: var(--surface-default);
   box-shadow: var(--shadow-lg);
   opacity: 0;
   transform: translateY(1rem);
@@ -474,22 +474,22 @@ textarea.form-control {
   width: 3rem;
   height: 3rem;
   border-width: 3px;
-  border-color: var(--gray-300);
-  border-top-color: var(--primary-blue);
+  border-color: var(--border-hover);
+  border-top-color: var(--color-primary);
   margin-bottom: 1rem;
 }
 
 .loading-container p {
-  color: var(--gray-600);
+  color: var(--text-label);
 }
 
 .error-container h2 {
-  color: var(--gray-900);
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
 }
 
 .error-container p {
-  color: var(--gray-600);
+  color: var(--text-label);
   margin-bottom: 1.5rem;
 }
 
@@ -568,16 +568,16 @@ textarea.form-control {
 
 /* Staging Card Specific Styles - matches zone card */
 .staging-card {
-  background: var(--white);
-  border: 2px solid var(--gray-200);
-  border-radius: var(--border-radius);
+  background: var(--surface-default);
+  border: 2px solid var(--border-default);
+  border-radius: var(--radius-lg);
   padding: 1.5rem;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .staging-card:hover {
-  border-color: var(--primary-blue);
+  border-color: var(--color-primary);
   box-shadow: var(--shadow-lg);
   transform: translateY(-2px);
 }
@@ -601,7 +601,7 @@ textarea.form-control {
 .staging-card .card-header h2 {
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--gray-900);
+  color: var(--text-primary);
   margin: 0;
 }
 
@@ -610,18 +610,18 @@ textarea.form-control {
 }
 
 .staging-card .card-description {
-  color: var(--gray-600);
+  color: var(--text-label);
   font-size: 0.95rem;
 }
 
 .staging-card .card-footer {
-  border-top: 1px solid var(--gray-200);
+  border-top: 1px solid var(--border-default);
   padding-top: 1rem;
   margin-top: 1rem;
 }
 
 .staging-card .card-action {
-  color: var(--primary-blue);
+  color: var(--color-primary);
   font-weight: 600;
   font-size: 1rem;
 }

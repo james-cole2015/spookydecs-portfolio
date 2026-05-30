@@ -15,7 +15,7 @@
 }
 
 .breadcrumb-link:hover {
-  color: #ff6b35;
+  color: var(--color-primary);
   text-decoration: underline;
 }
 
