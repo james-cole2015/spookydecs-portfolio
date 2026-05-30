@@ -45,7 +45,7 @@
   position: relative;
   width: 100%;
   padding-top: 75%; /* 4:3 aspect ratio */
-  background: var(--gray-200);
+  background: var(--surface-muted);
   overflow: hidden;
 }
 
@@ -79,8 +79,8 @@
 }
 
 .photo-browser-season.season-halloween {
-  background: #ff6b35;
-  color: white;
+  background: var(--badge-halloween-bg);
+  color: var(--badge-halloween-text);
 }
 
 .photo-browser-season.season-christmas {
@@ -89,8 +89,8 @@
 }
 
 .photo-browser-season.season-shared {
-  background: var(--gray-400);
-  color: white;
+  background: var(--surface-muted);
+  color: var(--text-body);
 }
 
 /* Lightbox Styles */
@@ -200,12 +200,12 @@
 
 .lightbox-prev {
   left: 1rem;
-  border-radius: 0 8px 8px 0;
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
 }
 
 .lightbox-next {
   right: 1rem;
-  border-radius: 8px 0 0 8px;
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
 }
 
 .lightbox-controls {
