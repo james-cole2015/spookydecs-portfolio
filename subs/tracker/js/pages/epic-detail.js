@@ -23,7 +23,7 @@ const EpicDetailPage = (() => {
   function stateBadgeClass(state) {
     return {
       'open':      'badge-in-progress',
-      'planned':   'badge-planned',
+      'ready':     'badge-ready',
       'blocked':   'badge-blocked',
       'backlog':   'badge-backlog',
       'completed': 'badge-done',

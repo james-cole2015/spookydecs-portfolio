@@ -45,7 +45,7 @@ const PriorityListPage = (() => {
             <select id="pl-state-filter" class="pl-select">
               <option value="all">All states</option>
               <option value="backlog">Backlog</option>
-              <option value="planned">Planned</option>
+              <option value="ready">Ready</option>
               <option value="open">Open</option>
               <option value="blocked">Blocked</option>
               <option value="completed">Completed</option>
@@ -141,7 +141,7 @@ const PriorityListPage = (() => {
   function buildCard(issue) {
     const stateClass = {
       'backlog':   'badge-backlog',
-      'planned':   'badge-planned',
+      'ready':     'badge-ready',
       'open':      'badge-in-progress',
       'blocked':   'badge-blocked',
       'completed': 'badge-done',

@@ -317,7 +317,7 @@ input, textarea, select { font: inherit; }
 
 /* Issue / task state badges */
 .badge-backlog     { background: var(--surface-muted);          color: var(--text-muted);      border: 1px solid var(--border-default); }
-.badge-planned     { background: var(--color-primary-light);    color: var(--color-primary);   border: 1px solid rgba(59,130,246,0.2); }
+.badge-ready       { background: #ede9fe;                        color: #5b21b6;                border: 1px solid #ddd6fe; }
 .badge-open        { background: #fef3c7;                       color: #92400e;                border: 1px solid #fde68a; }
 .badge-in-progress { background: #fef3c7;                       color: #92400e;                border: 1px solid #fde68a; }
 .badge-blocked     { background: #fee2e2;                       color: #991b1b;                border: 1px solid #fecaca; }

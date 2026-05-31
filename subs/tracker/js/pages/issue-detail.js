@@ -49,7 +49,7 @@ const IssueDetailPage = (() => {
   function stateBadgeClass(state) {
     return {
       'backlog':   'badge-backlog',
-      'planned':   'badge-planned',
+      'ready':     'badge-ready',
       'open':      'badge-in-progress',
       'blocked':   'badge-blocked',
       'completed': 'badge-done',
@@ -217,7 +217,7 @@ const IssueDetailPage = (() => {
                 <div class="id-meta-row">
                   <span class="id-label">State</span>
                   <select class="id-select" id="id-state-select">
-                    ${['backlog','planned','open','blocked','completed'].map(s =>
+                    ${['backlog','ready','open','blocked','completed'].map(s =>
                       `<option value="${s}" ${issue.state === s ? 'selected' : ''}>${s}</option>`
                     ).join('')}
                   </select>
