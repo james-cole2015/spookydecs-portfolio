@@ -410,14 +410,24 @@ function _renderEnrichmentSection(ae) {
 
   if (status === 'complete' || status === 'partial') {
     const isPartial = status === 'partial';
+    const resultsHtml = [
+      _renderEnrichmentPhotos(ae.photos),
+      _renderEnrichmentLinks(ae.purchase_links),
+      _renderEnrichmentMaterials(ae.materials),
+      _renderEnrichmentInstructions(ae.instructions),
+      _renderEnrichmentCost(ae.estimated_cost),
+      _renderEnrichmentTags(ae.tags),
+    ].filter(Boolean).join('');
+    const noResults = !resultsHtml && isPartial;
     return `
       <div class="detail-section-title-row">
         <span class="detail-section-title" style="margin-bottom:0">AI Enrichment</span>
         <span class="enrichment-status-chip enrichment-status-chip--${status}">${isPartial ? 'Partial' : 'Complete'}</span>
       </div>
       ${_renderSubAgentPanel(ae.sub_agents)}
-      <div class="enrichment-summary">${_buildEnrichmentSummary(ae)}</div>
-      ${isPartial ? '<p class="enrichment-partial-note">Some sub-agents returned nothing — re-run to try again.</p>' : ''}
+      ${resultsHtml}
+      ${noResults ? '<p class="enrichment-partial-note">No results returned — re-run to try again.</p>' : ''}
+      ${isPartial && resultsHtml ? '<p class="enrichment-partial-note">Some sub-agents returned nothing — re-run to try again.</p>' : ''}
       <button class="btn btn-secondary btn-sm" id="enrich-btn">↺ Re-run enrichment</button>
     `;
   }
@@ -472,7 +482,122 @@ function _buildEnrichmentSummary(ae) {
   return parts.length ? parts.join(' · ') : 'No results returned';
 }
 
+function _renderEnrichmentPhotos(photos) {
+  if (!photos?.length) return '';
+  const thumbs = photos.map(p => `
+    <div class="enrichment-photo-thumb">
+      <img src="${escAttr(p.url)}" alt="${escAttr(p.alt || '')}" loading="lazy"
+           onerror="this.closest('.enrichment-photo-thumb').style.display='none'">
+      ${p.source ? `<span class="enrichment-photo-source">${escHtml(p.source)}</span>` : ''}
+    </div>`).join('');
+  return `<div class="enrichment-block">
+    <p class="enrichment-block-label">Photos</p>
+    <div class="enrichment-photos">${thumbs}</div>
+  </div>`;
+}
+
+function _renderEnrichmentLinks(links) {
+  if (!links?.length) return '';
+  const byCategory = {};
+  for (const l of links) {
+    const raw = l.category || 'Other';
+    const cat = raw.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    (byCategory[cat] = byCategory[cat] || []).push(l);
+  }
+  const groups = Object.entries(byCategory).map(([cat, items]) => {
+    const visible = items.slice(0, 3);
+    const hidden  = items.slice(3);
+    const rows = (subset) => subset.map(l => {
+      const price = l.price_usd != null ? ` · $${Number(l.price_usd).toFixed(2)}` : '';
+      return `<div class="enrichment-link-row">
+        <span class="enrichment-link-retailer">${escHtml(l.retailer || '')}</span>
+        <span class="enrichment-link-product">${escHtml(l.product || '')}</span>
+        <span class="enrichment-link-price">${escHtml(price)}</span>
+        <a class="enrichment-link-buy" href="${escAttr(l.url || '#')}" target="_blank" rel="noopener noreferrer">Buy ↗</a>
+      </div>`;
+    }).join('');
+    const moreBlock = hidden.length ? `
+      <div class="enrichment-links-more" style="display:none">${rows(hidden)}</div>
+      <button class="enrichment-show-more" type="button">Show ${hidden.length} more</button>` : '';
+    return `<div class="enrichment-links-group">
+      <p class="enrichment-links-category">${escHtml(cat)}</p>
+      ${rows(visible)}${moreBlock}
+    </div>`;
+  }).join('');
+  return `<div class="enrichment-block">
+    <p class="enrichment-block-label">Purchase Links</p>
+    ${groups}
+  </div>`;
+}
+
+function _renderEnrichmentMaterials(materials) {
+  if (!materials?.length) return '';
+  const items = materials.map(m => {
+    const meta = [m.quantity, m.notes].filter(Boolean).map(escHtml).join(' — ');
+    return `<li>${escHtml(m.item || '')}${meta ? `<span class="enrichment-meta"> · ${meta}</span>` : ''}</li>`;
+  }).join('');
+  return `<div class="enrichment-block">
+    <p class="enrichment-block-label">Materials</p>
+    <ul class="materials-list">${items}</ul>
+  </div>`;
+}
+
+function _renderEnrichmentInstructions(steps) {
+  if (!steps?.length) return '';
+  const renderStep = (s) => `<li>
+    <strong>${escHtml(s.title || `Step ${s.step}`)}</strong>
+    <p class="enrichment-step-detail">${escHtml(s.detail || '')}</p>
+  </li>`;
+  const visible = steps.slice(0, 3);
+  const hidden  = steps.slice(3);
+  const moreBlock = hidden.length ? `
+    <div class="enrichment-steps-more" style="display:none">${hidden.map(renderStep).join('')}</div>
+    <button class="enrichment-show-more" type="button">Show ${hidden.length} more steps</button>` : '';
+  return `<div class="enrichment-block">
+    <p class="enrichment-block-label">Instructions</p>
+    <ol class="enrichment-steps">${visible.map(renderStep).join('')}</ol>${moreBlock}
+  </div>`;
+}
+
+function _renderEnrichmentCost(cost) {
+  if (!cost) return '';
+  const { diy_build: diy, pre_made_alternative: pre } = cost;
+  if (!diy && !pre) return '';
+  const row = (label, obj) => obj ? `<div class="enrichment-cost-row">
+    <span class="enrichment-cost-label">${escHtml(label)}</span>
+    <span class="enrichment-cost-range">${escHtml(obj.range_usd || '')}</span>
+    ${obj.notes ? `<span class="enrichment-cost-notes">${escHtml(obj.notes)}</span>` : ''}
+  </div>` : '';
+  return `<div class="enrichment-block">
+    <p class="enrichment-block-label">Estimated Cost</p>
+    ${row('DIY Build', diy)}${row('Pre-made', pre)}
+  </div>`;
+}
+
+function _renderEnrichmentTags(tags) {
+  if (!tags?.length) return '';
+  const badges = tags.map(t => `<span class="enrichment-tag">${escHtml(t)}</span>`).join('');
+  return `<div class="enrichment-block">
+    <p class="enrichment-block-label">AI-Suggested Tags</p>
+    <div class="enrichment-ai-tags">${badges}</div>
+  </div>`;
+}
+
+function _wireEnrichShowMore(sectionEl) {
+  sectionEl.querySelectorAll('.enrichment-show-more').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const moreEl = btn.previousElementSibling;
+      if (!moreEl) return;
+      moreEl.style.display = moreEl.style.display === 'none' ? '' : 'none';
+      btn.textContent = moreEl.style.display === 'none'
+        ? btn.textContent.replace('Hide', 'Show')
+        : btn.textContent.replace('Show', 'Hide');
+    });
+  });
+}
+
 function _wireEnrichBtn(sectionEl, ideaId) {
+  _wireEnrichShowMore(sectionEl);
   const btn = sectionEl.querySelector('#enrich-btn');
   if (!btn) return;
   btn.addEventListener('click', async () => {
