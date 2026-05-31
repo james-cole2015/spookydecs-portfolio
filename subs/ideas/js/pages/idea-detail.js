@@ -1,6 +1,6 @@
 // Idea Detail Page
 
-import { getIdea, updateIdea, deleteIdea } from '../utils/ideas-api.js';
+import { getIdea, updateIdea, deleteIdea, startEnrichment } from '../utils/ideas-api.js';
 import { navigateTo } from '../utils/router.js';
 import { showToast } from '../shared/toast.js';
 import { showConfirmModal } from '../shared/modal.js';
@@ -158,6 +158,11 @@ async function _renderDetail(container, idea) {
           <div class="detail-section">
             <div class="detail-section-title">Notes</div>
             <div class="detail-field-value">${escHtml(idea.notes)}</div>
+          </div>` : ''}
+
+          ${idea.status !== 'Built' ? `
+          <div class="detail-section" id="enrichment-section">
+            ${_renderEnrichmentSection(idea.agent_enrichment)}
           </div>` : ''}
 
           <div class="detail-section">
@@ -359,6 +364,17 @@ async function _renderDetail(container, idea) {
     wireCostModal(container, idea);
   } // end status !== 'Considering'
 
+  // Enrichment section
+  if (idea.status !== 'Built') {
+    const enrichSection = container.querySelector('#enrichment-section');
+    if (enrichSection) {
+      _wireEnrichBtn(enrichSection, idea.id);
+      if (idea.agent_enrichment?.status === 'in_progress') {
+        startEnrichmentPoll(enrichSection, idea.id);
+      }
+    }
+  }
+
   // Keep the hero image in sync with the gallery's primary photo.
   // The gallery manages its own photo state (photos table); the hero initially
   // renders from idea.images[] but needs to track gallery changes (uploads,
@@ -366,6 +382,146 @@ async function _renderDetail(container, idea) {
   // and re-fetch from the API whenever it re-renders.
   _syncHeroToGallery(container, idea.id);
 }
+
+// ---- Enrichment section -----------------------------------------
+
+function _renderEnrichmentSection(ae) {
+  const status = ae?.status;
+
+  if (!status) {
+    return `
+      <div class="detail-section-title-row">
+        <span class="detail-section-title" style="margin-bottom:0">AI Enrichment</span>
+      </div>
+      <p class="enrichment-intro">Automatically populate photos, purchase links, materials, and cost estimates using AI.</p>
+      <button class="btn btn-primary btn-sm" id="enrich-btn">✨ Enrich with AI</button>
+    `;
+  }
+
+  if (status === 'in_progress') {
+    return `
+      <div class="detail-section-title-row">
+        <span class="detail-section-title" style="margin-bottom:0">AI Enrichment</span>
+        <span class="enrichment-status-chip enrichment-status-chip--in-progress">Enriching…</span>
+      </div>
+      ${_renderSubAgentPanel(ae.sub_agents)}
+    `;
+  }
+
+  if (status === 'complete' || status === 'partial') {
+    const isPartial = status === 'partial';
+    return `
+      <div class="detail-section-title-row">
+        <span class="detail-section-title" style="margin-bottom:0">AI Enrichment</span>
+        <span class="enrichment-status-chip enrichment-status-chip--${status}">${isPartial ? 'Partial' : 'Complete'}</span>
+      </div>
+      ${_renderSubAgentPanel(ae.sub_agents)}
+      <div class="enrichment-summary">${_buildEnrichmentSummary(ae)}</div>
+      ${isPartial ? '<p class="enrichment-partial-note">Some sub-agents returned nothing — re-run to try again.</p>' : ''}
+      <button class="btn btn-secondary btn-sm" id="enrich-btn">↺ Re-run enrichment</button>
+    `;
+  }
+
+  if (status === 'failed') {
+    if (ae.error) console.warn('[enrichment] failed:', ae.error);
+    return `
+      <div class="detail-section-title-row">
+        <span class="detail-section-title" style="margin-bottom:0">AI Enrichment</span>
+        <span class="enrichment-status-chip enrichment-status-chip--failed">Failed</span>
+      </div>
+      <p class="enrichment-error">Enrichment couldn't complete — the AI returned an unexpected response. Try re-running.</p>
+      <button class="btn btn-primary btn-sm" id="enrich-btn">Retry enrichment</button>
+    `;
+  }
+
+  return '';
+}
+
+function _renderSubAgentPanel(subAgents) {
+  if (!subAgents) return '';
+  const rows = [
+    { key: 'photos',         label: 'Photos' },
+    { key: 'purchase_links', label: 'Purchase Links' },
+    { key: 'research',       label: 'Research' },
+  ];
+  return `<div class="enrichment-panel">${
+    rows.map(r => {
+      const state = subAgents[r.key] || 'pending';
+      return `<div class="enrichment-sub-agent">
+        <span class="enrichment-sub-agent-label">${r.label}</span>
+        ${_subAgentChip(state)}
+      </div>`;
+    }).join('')
+  }</div>`;
+}
+
+function _subAgentChip(state) {
+  if (state === 'pending')  return `<span class="enrichment-chip enrichment-chip--pending"><span class="enrichment-pulse"></span>Pending</span>`;
+  if (state === 'complete') return `<span class="enrichment-chip enrichment-chip--complete">✓ Complete</span>`;
+  if (state === 'empty')    return `<span class="enrichment-chip enrichment-chip--empty">None found</span>`;
+  if (state === 'failed')   return `<span class="enrichment-chip enrichment-chip--failed">✗ Failed</span>`;
+  return `<span class="enrichment-chip enrichment-chip--empty">${escHtml(state)}</span>`;
+}
+
+function _buildEnrichmentSummary(ae) {
+  const parts = [];
+  if (ae.photos?.length)         parts.push(`${ae.photos.length} photo${ae.photos.length !== 1 ? 's' : ''}`);
+  if (ae.purchase_links?.length) parts.push(`${ae.purchase_links.length} link${ae.purchase_links.length !== 1 ? 's' : ''}`);
+  if (ae.materials?.length)      parts.push(`${ae.materials.length} material${ae.materials.length !== 1 ? 's' : ''}`);
+  if (ae.instructions?.length)   parts.push(`${ae.instructions.length} instruction${ae.instructions.length !== 1 ? 's' : ''}`);
+  return parts.length ? parts.join(' · ') : 'No results returned';
+}
+
+function _wireEnrichBtn(sectionEl, ideaId) {
+  const btn = sectionEl.querySelector('#enrich-btn');
+  if (!btn) return;
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    btn.textContent = 'Starting…';
+    try {
+      await startEnrichment(ideaId);
+      const optimisticAe = {
+        status: 'in_progress',
+        started_at: new Date().toISOString(),
+        sub_agents: { photos: 'pending', purchase_links: 'pending', research: 'pending' },
+      };
+      sectionEl.innerHTML = _renderEnrichmentSection(optimisticAe);
+      _wireEnrichBtn(sectionEl, ideaId);
+      startEnrichmentPoll(sectionEl, ideaId);
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = '✨ Enrich with AI';
+      showToast(err.message || 'Enrichment failed to start', 'error');
+    }
+  });
+}
+
+const POLL_INTERVAL_MS = 4000;
+const POLL_MAX_TICKS = 75; // ~5 min
+
+function startEnrichmentPoll(sectionEl, ideaId) {
+  let ticks = 0;
+  const intervalId = setInterval(async () => {
+    if (!sectionEl.isConnected) { clearInterval(intervalId); return; }
+    ticks++;
+    if (ticks >= POLL_MAX_TICKS) {
+      clearInterval(intervalId);
+      const panel = sectionEl.querySelector('.enrichment-panel');
+      if (panel) panel.insertAdjacentHTML('afterend', '<p class="enrichment-timeout">Still running — refresh to check the latest status.</p>');
+      return;
+    }
+    try {
+      const refreshed = await getIdea(ideaId);
+      const ae = refreshed?.agent_enrichment;
+      if (!ae) return;
+      sectionEl.innerHTML = _renderEnrichmentSection(ae);
+      _wireEnrichBtn(sectionEl, ideaId);
+      if (ae.status !== 'in_progress') clearInterval(intervalId);
+    } catch { /* silent — retry next tick */ }
+  }, POLL_INTERVAL_MS);
+}
+
+// ---- Hero / gallery sync ----------------------------------------
 
 function _syncHeroToGallery(container, ideaId) {
   const gallery = container.querySelector('photo-gallery');

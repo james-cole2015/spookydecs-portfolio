@@ -425,6 +425,148 @@
 }
 .btn-link.lc-receipt-remove:hover { color: var(--color-danger); }
 
+/* ---- AI Enrichment section -------------------------------- */
+.enrichment-intro {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: 0 0 var(--space-4);
+}
+
+.enrichment-status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+.enrichment-status-chip--in-progress {
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+}
+
+.enrichment-status-chip--complete {
+  background: color-mix(in srgb, var(--color-success) 12%, transparent);
+  color: var(--color-success);
+}
+
+.enrichment-status-chip--partial {
+  background: color-mix(in srgb, #f59e0b 12%, transparent);
+  color: #b45309;
+}
+
+.enrichment-status-chip--failed {
+  background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+  color: var(--color-danger);
+}
+
+/* Sub-agent panel */
+.enrichment-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: var(--space-3) 0 var(--space-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.enrichment-sub-agent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-default);
+  background: var(--surface-subtle);
+}
+
+.enrichment-sub-agent:last-child { border-bottom: none; }
+
+.enrichment-sub-agent-label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* State chips inside the panel */
+.enrichment-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+}
+
+.enrichment-chip--pending {
+  background: var(--surface-default);
+  color: var(--text-muted);
+  border: 1px solid var(--border-default);
+}
+
+.enrichment-chip--complete {
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
+  color: var(--color-success);
+}
+
+.enrichment-chip--empty {
+  background: var(--surface-default);
+  color: var(--text-muted);
+  border: 1px dashed var(--border-default);
+}
+
+.enrichment-chip--failed {
+  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+  color: var(--color-danger);
+}
+
+/* Pending pulse dot */
+.enrichment-pulse {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  animation: enrichment-pulse 1.4s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes enrichment-pulse {
+  0%, 100% { opacity: 0.3; transform: scale(0.85); }
+  50%       { opacity: 1;   transform: scale(1); }
+}
+
+/* Summary counts */
+.enrichment-summary {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin-bottom: var(--space-3);
+}
+
+/* Partial / timeout / error messages */
+.enrichment-partial-note,
+.enrichment-timeout {
+  font-size: var(--text-sm);
+  color: #b45309;
+  margin: 0 0 var(--space-3);
+}
+
+.enrichment-timeout { color: var(--text-muted); }
+
+.enrichment-error {
+  font-size: var(--text-sm);
+  color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 8%, transparent);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-3);
+  word-break: break-word;
+}
+
 /* ---- Not Found -------------------------------------------- */
 .not-found-page {
   display: flex;
