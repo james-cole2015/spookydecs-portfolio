@@ -45,10 +45,32 @@ export async function listIdeas() {
   return Array.isArray(data) ? data : (data?.ideas || []);
 }
 
-// GET single idea by id (fetches all, finds by id)
+// GET single idea by id — uses the GET /ideas/{id} route (cheap polling target);
+// falls back to fetch-all-and-filter if that route isn't reachable yet.
 export async function getIdea(id) {
+  const endpoint = await getEndpoint();
+  try {
+    const response = await fetch(`${endpoint}/${encodeURIComponent(id)}`, {
+      method: 'GET',
+      headers: buildHeaders()
+    });
+    if (response.status === 404) return null;
+    if (response.ok) return await handleResponse(response);
+  } catch (_) {
+    // route unavailable — fall through to the list scan
+  }
   const ideas = await listIdeas();
   return ideas.find(i => i.id === id) || null;
+}
+
+// POST /ideas/{id}/enrich — kick off async agent enrichment (returns 202 body)
+export async function startEnrichment(id) {
+  const endpoint = await getEndpoint();
+  const response = await fetch(`${endpoint}/${encodeURIComponent(id)}/enrich`, {
+    method: 'POST',
+    headers: buildHeaders()
+  });
+  return await handleResponse(response);
 }
 
 // POST create new idea
