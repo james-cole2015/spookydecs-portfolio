@@ -391,18 +391,18 @@ function _renderEnrichmentSection(ae) {
   if (!status) {
     return `
       <div class="detail-section-title-row">
-        <span class="detail-section-title" style="margin-bottom:0">AI Enrichment</span>
+        <span class="detail-section-title" style="margin-bottom:0">Ask Igor</span>
       </div>
-      <p class="enrichment-intro">Automatically populate photos, purchase links, materials, and cost estimates using AI.</p>
-      <button class="btn btn-primary btn-sm" id="enrich-btn">✨ Enrich with AI</button>
+      <p class="enrichment-intro">Igor researches the web to gather reference photos, purchase links, materials, build instructions, and a cost estimate for this idea.</p>
+      <button class="btn btn-primary btn-sm" id="enrich-btn">🔦 Ask Igor</button>
     `;
   }
 
   if (status === 'in_progress') {
     return `
       <div class="detail-section-title-row">
-        <span class="detail-section-title" style="margin-bottom:0">AI Enrichment</span>
-        <span class="enrichment-status-chip enrichment-status-chip--in-progress">Enriching…</span>
+        <span class="detail-section-title" style="margin-bottom:0">Ask Igor</span>
+        <span class="enrichment-status-chip enrichment-status-chip--in-progress">Igor is researching…</span>
       </div>
       ${_renderSubAgentPanel(ae.sub_agents)}
     `;
@@ -421,14 +421,16 @@ function _renderEnrichmentSection(ae) {
     const noResults = !resultsHtml && isPartial;
     return `
       <div class="detail-section-title-row">
-        <span class="detail-section-title" style="margin-bottom:0">AI Enrichment</span>
+        <span class="enrichment-header-actions">
+          <span class="detail-section-title" style="margin-bottom:0">Ask Igor</span>
+          <button class="btn btn-secondary btn-sm" id="enrich-btn">↺ Re-fetch</button>
+        </span>
         <span class="enrichment-status-chip enrichment-status-chip--${status}">${isPartial ? 'Partial' : 'Complete'}</span>
       </div>
       ${_renderSubAgentPanel(ae.sub_agents)}
       ${resultsHtml}
-      ${noResults ? '<p class="enrichment-partial-note">No results returned — re-run to try again.</p>' : ''}
-      ${isPartial && resultsHtml ? '<p class="enrichment-partial-note">Some sub-agents returned nothing — re-run to try again.</p>' : ''}
-      <button class="btn btn-secondary btn-sm" id="enrich-btn">↺ Re-run enrichment</button>
+      ${noResults ? '<p class="enrichment-partial-note">Igor didn\'t turn up anything this time — ask again to retry.</p>' : ''}
+      ${isPartial && resultsHtml ? '<p class="enrichment-partial-note">Igor came up empty on some sources — ask again to retry.</p>' : ''}
     `;
   }
 
@@ -436,11 +438,13 @@ function _renderEnrichmentSection(ae) {
     if (ae.error) console.warn('[enrichment] failed:', ae.error);
     return `
       <div class="detail-section-title-row">
-        <span class="detail-section-title" style="margin-bottom:0">AI Enrichment</span>
+        <span class="enrichment-header-actions">
+          <span class="detail-section-title" style="margin-bottom:0">Ask Igor</span>
+          <button class="btn btn-primary btn-sm" id="enrich-btn">↺ Re-fetch</button>
+        </span>
         <span class="enrichment-status-chip enrichment-status-chip--failed">Failed</span>
       </div>
-      <p class="enrichment-error">Enrichment couldn't complete — the AI returned an unexpected response. Try re-running.</p>
-      <button class="btn btn-primary btn-sm" id="enrich-btn">Retry enrichment</button>
+      <p class="enrichment-error">Igor hit a snag — the response came back malformed. Try asking again.</p>
     `;
   }
 
@@ -602,7 +606,7 @@ function _wireEnrichBtn(sectionEl, ideaId) {
   if (!btn) return;
   btn.addEventListener('click', async () => {
     btn.disabled = true;
-    btn.textContent = 'Starting…';
+    btn.textContent = 'Waking Igor…';
     try {
       await startEnrichment(ideaId);
       const optimisticAe = {
@@ -615,8 +619,8 @@ function _wireEnrichBtn(sectionEl, ideaId) {
       startEnrichmentPoll(sectionEl, ideaId);
     } catch (err) {
       btn.disabled = false;
-      btn.textContent = '✨ Enrich with AI';
-      showToast(err.message || 'Enrichment failed to start', 'error');
+      btn.textContent = '🔦 Ask Igor';
+      showToast(err.message || 'Igor failed to start', 'error');
     }
   });
 }
@@ -632,7 +636,7 @@ function startEnrichmentPoll(sectionEl, ideaId) {
     if (ticks >= POLL_MAX_TICKS) {
       clearInterval(intervalId);
       const panel = sectionEl.querySelector('.enrichment-panel');
-      if (panel) panel.insertAdjacentHTML('afterend', '<p class="enrichment-timeout">Still running — refresh to check the latest status.</p>');
+      if (panel) panel.insertAdjacentHTML('afterend', '<p class="enrichment-timeout">Igor is still researching — refresh to check the latest status.</p>');
       return;
     }
     try {

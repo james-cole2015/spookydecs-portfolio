@@ -235,6 +235,16 @@
   margin-bottom: 0;
 }
 
+/* Igor enrichment header: pair the "Ask Igor" title with its re-fetch button
+   on the left; the status chip floats right (via the row's space-between). Keeps
+   re-fetch always visible in the header, not buried under the results. */
+.enrichment-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
 /* ---- Materials list --------------------------------------- */
 .materials-list {
   list-style: none;
