@@ -1,7 +1,7 @@
 /* Mobile Styles - Breakpoint: 768px and below */
 
 /* ===== MOBILE BREAKPOINT ===== */
-@media (max-width: 767px) {
+@media (max-width: 768px) {
   
   /* ===== VIEW SELECTOR LABEL ===== */
   .view-selector-label {
@@ -31,23 +31,23 @@
   }
   
   .header-actions .btn-mobile-icon.btn-calendar {
-    background-color: #6C757D;
+    background-color: var(--text-secondary);
     color: white;
   }
   
   .header-actions .btn-mobile-icon.btn-calendar:hover,
   .header-actions .btn-mobile-icon.btn-calendar:active {
-    background-color: #5A6268;
+    background-color: var(--text-label);
   }
   
   .header-actions .btn-mobile-icon.btn-create {
-    background-color: #3B82F6;
+    background-color: var(--color-primary);
     color: white;
   }
   
   .header-actions .btn-mobile-icon.btn-create:hover,
   .header-actions .btn-mobile-icon.btn-create:active {
-    background-color: #2563EB;
+    background-color: var(--color-primary-hover);
   }
   
   /* Hide desktop button text/labels */
@@ -65,9 +65,9 @@
     padding: 12px 16px;
     font-size: 16px;
     font-weight: 500;
-    color: #1F2937;
+    color: var(--text-body);
     background: white;
-    border: 2px solid #E5E7EB;
+    border: 2px solid var(--border-default);
     border-radius: 8px;
     cursor: pointer;
     appearance: none;
@@ -79,7 +79,7 @@
   
   .tabs-mobile-select:focus {
     outline: none;
-    border-color: #3B82F6;
+    border-color: var(--color-primary);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   }
   
@@ -105,18 +105,18 @@
     width: 100%;
     padding: 14px 20px;
     background: white;
-    border: 2px solid #E5E7EB;
+    border: 2px solid var(--border-default);
     border-radius: 8px;
     font-size: 16px;
     font-weight: 500;
-    color: #1F2937;
+    color: var(--text-body);
     cursor: pointer;
     margin-bottom: 16px;
     transition: all 0.2s;
   }
   
   .filters-mobile-trigger:active {
-    background-color: #F9FAFB;
+    background-color: var(--surface-subtle);
   }
   
   .filters-mobile-trigger .filter-icon {
@@ -124,7 +124,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #6B7280;
+    color: var(--text-secondary);
   }
   
   .filters-mobile-trigger .filter-icon svg {
@@ -133,7 +133,7 @@
   }
   
   .filters-mobile-trigger .filter-count {
-    background-color: #3B82F6;
+    background-color: var(--color-primary);
     color: white;
     padding: 2px 8px;
     border-radius: 10px;
@@ -187,21 +187,21 @@
     justify-content: space-between;
     align-items: center;
     padding: 20px;
-    border-bottom: 1px solid #E5E7EB;
+    border-bottom: 1px solid var(--border-default);
     flex-shrink: 0;
   }
   
   .filters-mobile-drawer-header h3 {
     font-size: 18px;
     font-weight: 600;
-    color: #111827;
+    color: var(--text-primary);
   }
   
   .filters-mobile-close {
     background: transparent;
     border: none;
     font-size: 24px;
-    color: #6B7280;
+    color: var(--text-secondary);
     cursor: pointer;
     padding: 4px;
     display: flex;
@@ -217,7 +217,7 @@
   
   .filters-mobile-drawer-footer {
     padding: 16px 20px;
-    border-top: 1px solid #E5E7EB;
+    border-top: 1px solid var(--border-default);
     display: flex;
     gap: 12px;
     flex-shrink: 0;
@@ -234,13 +234,13 @@
   }
   
   .filters-apply-btn {
-    background-color: #3B82F6;
+    background-color: var(--color-primary);
     color: white;
   }
   
   .filters-clear-btn {
-    background-color: #E5E7EB;
-    color: #1F2937;
+    background-color: var(--border-default);
+    color: var(--text-body);
   }
   
   /* ===== TABLE → CARDS ===== */
@@ -256,7 +256,7 @@
   
   .mobile-card {
     background: white;
-    border: 1px solid #E5E7EB;
+    border: 1px solid var(--border-default);
     border-radius: 8px;
     padding: 16px;
     cursor: pointer;
@@ -264,7 +264,7 @@
   }
   
   .mobile-card:active {
-    background-color: #F9FAFB;
+    background-color: var(--surface-subtle);
     transform: scale(0.98);
   }
   
@@ -288,7 +288,7 @@
   /* Status Colors */
   .mobile-card-status.status-scheduled {
     background-color: #DBEAFE;
-    color: #1E40AF;
+    color: #1d4ed8;
   }
   
   .mobile-card-status.status-in_progress {
@@ -302,8 +302,8 @@
   }
   
   .mobile-card-status.status-cancelled {
-    background-color: #F3F4F6;
-    color: #6B7280;
+    background-color: var(--surface-muted);
+    color: var(--text-secondary);
   }
   
   .mobile-card-status.status-pending {
@@ -325,11 +325,11 @@
   }
   
   .mobile-card-criticality-dot.critical {
-    background-color: #EF4444;
+    background-color: var(--color-danger);
   }
   
   .mobile-card-criticality-dot.high {
-    background-color: #F97316;
+    background-color: var(--color-schedule);
   }
   
   .mobile-card-criticality-dot.medium {
@@ -337,24 +337,24 @@
   }
   
   .mobile-card-criticality-dot.low {
-    background-color: #10B981;
+    background-color: var(--color-success);
   }
   
   .mobile-card-criticality-dot.none {
-    background-color: #9CA3AF;
+    background-color: var(--text-muted);
   }
   
   .mobile-card-criticality-label {
     font-size: 12px;
     font-weight: 500;
-    color: #6B7280;
+    color: var(--text-secondary);
     text-transform: capitalize;
   }
   
   .mobile-card-title {
     font-size: 16px;
     font-weight: 600;
-    color: #111827;
+    color: var(--text-primary);
     margin-bottom: 8px;
     line-height: 1.4;
   }
@@ -382,7 +382,7 @@
   
   .mobile-card-type.type-maintenance {
     background-color: #DBEAFE;
-    color: #1E40AF;
+    color: #1d4ed8;
   }
   
   .mobile-card-type.type-inspection {
@@ -410,10 +410,10 @@
     text-align: center;
     padding: 12px 16px;
     font-size: 13px;
-    color: #6B7280;
+    color: var(--text-secondary);
     background: white;
     border-radius: 8px;
-    border: 1px solid #E5E7EB;
+    border: 1px solid var(--border-default);
     margin-bottom: 16px;
   }
   
@@ -434,7 +434,7 @@
   .spinner-dot {
     width: 10px;
     height: 10px;
-    background-color: #3B82F6;
+    background-color: var(--color-primary);
     border-radius: 50%;
     animation: pulse 1.4s ease-in-out infinite;
   }
@@ -466,13 +466,13 @@
   
   .end-icon {
     font-size: 32px;
-    color: #10B981;
+    color: var(--color-success);
     margin-bottom: 8px;
   }
   
   .end-of-results p {
     font-size: 14px;
-    color: #6B7280;
+    color: var(--text-secondary);
     font-weight: 500;
   }
   
@@ -482,7 +482,7 @@
     right: 24px;
     width: 48px;
     height: 48px;
-    background-color: #3B82F6;
+    background-color: var(--color-primary);
     color: white;
     border: none;
     border-radius: 50%;

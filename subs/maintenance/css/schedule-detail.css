@@ -14,9 +14,9 @@
 
 .schedule-detail-view .schedule-detail-header .btn-back {
   padding: 10px 16px;
-  background-color: #f3f4f6;
-  color: #374151;
-  border: 1px solid #d1d5db;
+  background-color: var(--surface-muted);
+  color: var(--text-label);
+  border: 1px solid var(--border-hover);
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
@@ -25,8 +25,8 @@
 }
 
 .schedule-detail-view .schedule-detail-header .btn-back:hover {
-  background-color: #e5e7eb;
-  border-color: #9ca3af;
+  background-color: var(--border-default);
+  border-color: var(--text-muted);
 }
 
 /* Desktop Action Buttons */
@@ -61,39 +61,39 @@
 
 /* Button Colors - Apply (Green), Generate (Blue), Edit (Yellow), Delete (Red) */
 .schedule-detail-view .schedule-detail-header #btn-apply-to-items {
-  background-color: #10B981;
+  background-color: var(--color-success);
   color: white;
 }
 
 .schedule-detail-view .schedule-detail-header #btn-apply-to-items:hover {
-  background-color: #059669;
+  background-color: var(--color-money);
 }
 
 .schedule-detail-view .schedule-detail-header #btn-generate {
-  background-color: #3B82F6;
+  background-color: var(--color-primary);
   color: white;
 }
 
 .schedule-detail-view .schedule-detail-header #btn-generate:hover {
-  background-color: #2563EB;
+  background-color: var(--color-primary-hover);
 }
 
 .schedule-detail-view .schedule-detail-header #btn-edit {
-  background-color: #F59E0B;
+  background-color: var(--color-warning);
   color: white;
 }
 
 .schedule-detail-view .schedule-detail-header #btn-edit:hover {
-  background-color: #D97706;
+  background-color: var(--color-warning);
 }
 
 .schedule-detail-view .schedule-detail-header #btn-delete {
-  background-color: #EF4444;
+  background-color: var(--color-danger);
   color: #000000;
 }
 
 .schedule-detail-view .schedule-detail-header #btn-delete:hover {
-  background-color: #DC2626;
+  background-color: var(--color-danger);
 }
 
 /* ===== TABS STYLES ===== */
@@ -102,7 +102,7 @@
   display: flex !important;
   gap: 8px;
   margin-bottom: 24px;
-  border-bottom: 2px solid #e5e7eb;
+  border-bottom: 2px solid var(--border-default);
   padding: 0 4px;
   position: relative;
   min-height: 48px;
@@ -120,20 +120,20 @@
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
-  color: #6b7280;
+  color: var(--text-secondary);
   transition: all 0.2s;
   position: relative;
   margin-bottom: -2px;
 }
 
 .schedule-detail-view .detail-view .detail-tab-button:hover {
-  color: #111827;
-  background-color: #f9fafb;
+  color: var(--text-primary);
+  background-color: var(--surface-subtle);
 }
 
 .schedule-detail-view .detail-view .detail-tab-button.active {
-  color: #f97316 !important;
-  border-bottom-color: #f97316 !important;
+  color: var(--color-schedule) !important;
+  border-bottom-color: var(--color-schedule) !important;
   background-color: #fff7ed;
 }
 
@@ -152,8 +152,8 @@
   min-width: 24px;
   height: 20px;
   padding: 0 6px;
-  background-color: #e5e7eb;
-  color: #374151;
+  background-color: var(--border-default);
+  color: var(--text-label);
   border-radius: 10px;
   font-size: 12px;
   font-weight: 600;
@@ -161,7 +161,7 @@
 }
 
 .schedule-detail-view .detail-tab-button.active .tab-count {
-  background-color: #fed7aa;
+  background-color: #fff7ed;
   color: #9a3412;
 }
 
@@ -200,17 +200,17 @@
 .schedule-detail-view .items-using-template-table thead th {
   text-align: left;
   padding: 12px 16px;
-  background-color: #f9fafb;
-  border-bottom: 2px solid #e5e7eb;
+  background-color: var(--surface-subtle);
+  border-bottom: 2px solid var(--border-default);
   font-weight: 600;
   font-size: 13px;
-  color: #374151;
+  color: var(--text-label);
   white-space: nowrap;
 }
 
 .schedule-detail-view .items-using-template-table tbody td {
   padding: 12px 16px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border-default);
   vertical-align: middle;
 }
 
@@ -229,30 +229,30 @@
 }
 
 .schedule-detail-view .items-using-template-table .item-row.clickable:hover {
-  background-color: #f9fafb !important;
+  background-color: var(--surface-subtle) !important;
 }
 
 .schedule-detail-view .items-using-template-table .item-id-code {
   font-family: 'Monaco', 'Courier New', monospace;
   font-size: 12px;
-  background-color: #f3f4f6;
+  background-color: var(--surface-muted);
   padding: 4px 8px;
   border-radius: 4px;
-  color: #374151;
+  color: var(--text-label);
   font-weight: 500;
   display: inline-block;
 }
 
 .schedule-detail-view .items-using-template-table .item-name {
   font-weight: 500;
-  color: #111827;
+  color: var(--text-primary);
 }
 
 .schedule-detail-view .items-using-template-table .class-type-badge {
   display: inline-block;
   padding: 4px 10px;
   background-color: #dbeafe;
-  color: #1e40af;
+  color: #1d4ed8;
   border-radius: 12px;
   font-size: 12px;
   font-weight: 600;
@@ -268,23 +268,23 @@
 }
 
 .schedule-detail-view .season-badge.season-halloween {
-  background-color: #fed7aa;
+  background-color: #fff7ed;
   color: #9a3412;
 }
 
 .schedule-detail-view .season-badge.season-christmas {
-  background-color: #dbeafe;
-  color: #1e40af;
+  background-color: #f0fdf4;
+  color: #15803d;
 }
 
 .schedule-detail-view .season-badge.season-shared {
-  background-color: #e9d5ff;
-  color: #6b21a8;
+  background-color: #f5f3ff;
+  color: #5b21b6;
 }
 
 .schedule-detail-view .season-badge.season-unknown {
-  background-color: #e5e7eb;
-  color: #374151;
+  background-color: var(--border-default);
+  color: var(--text-label);
 }
 
 .schedule-detail-view .items-using-template-table .status-badge {
@@ -310,16 +310,16 @@
   font-size: 12px !important;
   font-weight: 500;
   border-radius: 6px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-hover);
   background-color: white;
-  color: #374151;
+  color: var(--text-label);
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .schedule-detail-view .items-using-template-table .btn-small:hover {
-  background-color: #f9fafb;
-  border-color: #9ca3af;
+  background-color: var(--surface-subtle);
+  border-color: var(--text-muted);
 }
 
 .schedule-detail-view .btn-view-item {
@@ -334,14 +334,14 @@
   align-items: center;
   margin-bottom: 20px;
   padding-bottom: 12px;
-  border-bottom: 2px solid #e5e7eb;
+  border-bottom: 2px solid var(--border-default);
 }
 
 .schedule-detail-view .card-header-with-actions h3 {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
 }
 
 .schedule-detail-view .items-table-container {
@@ -357,14 +357,14 @@
   align-items: center;
   justify-content: center;
   padding: 60px 20px;
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 .schedule-detail-view .loading-state .spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid #e5e7eb;
-  border-top-color: #f97316;
+  border: 4px solid var(--border-default);
+  border-top-color: var(--color-schedule);
   border-radius: 50%;
   animation: scheduleDetailSpin 0.8s linear infinite;
   margin-bottom: 16px;
@@ -412,18 +412,18 @@
 .schedule-detail-view .empty-state h3 {
   font-size: 20px;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   margin: 0 0 8px 0;
 }
 
 .schedule-detail-view .empty-state p {
   font-size: 14px;
-  color: #6b7280;
+  color: var(--text-secondary);
   margin: 0 0 24px 0;
 }
 
 /* ===== MOBILE STYLES ===== */
-@media (max-width: 767px) {
+@media (max-width: 768px) {
   
   /* Mobile Header */
   .schedule-detail-view .schedule-detail-header {
@@ -461,39 +461,39 @@
   
   /* Mobile Button Colors */
   .schedule-detail-view .schedule-detail-header #btn-apply-to-items {
-    background-color: #10B981 !important;
+    background-color: var(--color-success) !important;
     color: white !important;
   }
   
   .schedule-detail-view .schedule-detail-header #btn-apply-to-items:active {
-    background-color: #059669 !important;
+    background-color: var(--color-money) !important;
   }
   
   .schedule-detail-view .schedule-detail-header #btn-generate {
-    background-color: #3B82F6 !important;
+    background-color: var(--color-primary) !important;
     color: white !important;
   }
   
   .schedule-detail-view .schedule-detail-header #btn-generate:active {
-    background-color: #2563EB !important;
+    background-color: var(--color-primary-hover) !important;
   }
   
   .schedule-detail-view .schedule-detail-header #btn-edit {
-    background-color: #F59E0B !important;
+    background-color: var(--color-warning) !important;
     color: white !important;
   }
   
   .schedule-detail-view .schedule-detail-header #btn-edit:active {
-    background-color: #D97706 !important;
+    background-color: var(--color-warning) !important;
   }
   
   .schedule-detail-view .schedule-detail-header #btn-delete {
-    background-color: #EF4444 !important;
+    background-color: var(--color-danger) !important;
     color: #000000 !important;
   }
   
   .schedule-detail-view .schedule-detail-header #btn-delete:active {
-    background-color: #DC2626 !important;
+    background-color: var(--color-danger) !important;
   }
   
   .schedule-detail-view .schedule-detail-header .btn-icon:hover {
@@ -507,7 +507,7 @@
     gap: 8px;
     padding: 0 8px;
     overflow: visible;
-    border-bottom: 2px solid #e5e7eb;
+    border-bottom: 2px solid var(--border-default);
     margin-bottom: 20px;
   }
   

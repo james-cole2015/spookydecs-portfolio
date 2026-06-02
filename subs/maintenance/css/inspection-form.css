@@ -16,13 +16,13 @@
 .form-header h1 {
   font-size: 1.875rem;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   margin: 0;
 }
 
 .form-section {
   background: white;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--border-default);
   border-radius: 8px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
@@ -31,20 +31,20 @@
 .form-section h2 {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   margin: 0 0 1rem 0;
 }
 
 .form-section h3 {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #374151;
+  color: var(--text-label);
   margin: 0 0 1rem 0;
 }
 
 /* Read-only detail grid - FIXED alignment */
 .detail-grid.readonly {
-  background: #F9FAFB;
+  background: var(--surface-subtle);
   padding: 1rem;
   border-radius: 6px;
 }
@@ -55,7 +55,7 @@
   gap: 16px;
   align-items: center;
   padding: 0.5rem 0;
-  border-bottom: 1px solid #E5E7EB;
+  border-bottom: 1px solid var(--border-default);
 }
 
 .detail-grid.readonly .detail-row:last-child {
@@ -69,12 +69,12 @@
 
 .detail-grid.readonly .detail-label {
   font-weight: 500;
-  color: #6B7280;
+  color: var(--text-secondary);
   font-size: 0.875rem;
 }
 
 .detail-grid.readonly .detail-value {
-  color: #111827;
+  color: var(--text-primary);
   text-align: left;
 }
 
@@ -90,7 +90,7 @@
 .form-group label {
   display: block;
   font-weight: 500;
-  color: #374151;
+  color: var(--text-label);
   margin-bottom: 0.5rem;
   font-size: 0.875rem;
 }
@@ -101,10 +101,10 @@
 .form-group select {
   width: 100%;
   padding: 0.625rem 0.875rem;
-  border: 1px solid #D1D5DB;
+  border: 1px solid var(--border-hover);
   border-radius: 6px;
   font-size: 0.9375rem;
-  color: #111827;
+  color: var(--text-primary);
   background: white;
   transition: border-color 0.15s ease;
 }
@@ -113,7 +113,7 @@
 .form-group textarea:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #F97316;
+  border-color: var(--color-schedule);
   box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
 }
 
@@ -134,14 +134,14 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem 1rem;
-  border: 2px solid #E5E7EB;
+  border: 2px solid var(--border-default);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .radio-label:hover {
-  border-color: #F97316;
+  border-color: var(--color-schedule);
   background: #FFF7ED;
 }
 
@@ -156,7 +156,7 @@
 }
 
 .radio-label span {
-  color: #374151;
+  color: var(--text-label);
   font-size: 0.9375rem;
 }
 
@@ -185,8 +185,8 @@
 
 /* Task forms */
 .task-form {
-  background: #F9FAFB;
-  border: 1px solid #E5E7EB;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-default);
   border-radius: 6px;
   padding: 1rem;
   margin-bottom: 1rem;
@@ -198,22 +198,22 @@
   align-items: center;
   margin-bottom: 1rem;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid #E5E7EB;
+  border-bottom: 1px solid var(--border-default);
 }
 
 .task-form-header h4 {
   font-size: 1rem;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   margin: 0;
 }
 
 .btn-remove-task {
   padding: 0.375rem 0.75rem;
   background: white;
-  border: 1px solid #DC2626;
+  border: 1px solid var(--color-danger);
   border-radius: 4px;
-  color: #DC2626;
+  color: var(--color-danger);
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -221,7 +221,7 @@
 }
 
 .btn-remove-task:hover {
-  background: #DC2626;
+  background: var(--color-danger);
   color: white;
 }
 
@@ -232,7 +232,7 @@
   gap: 1rem;
   margin-top: 2rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #E5E7EB;
+  border-top: 1px solid var(--border-default);
 }
 
 /* Form error */
@@ -260,7 +260,7 @@
   justify-content: center;
   width: 80px;
   height: 80px;
-  background: #10B981;
+  background: var(--color-success);
   color: white;
   border-radius: 50%;
   font-size: 3rem;
@@ -270,20 +270,20 @@
 .success-container h1 {
   font-size: 1.875rem;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   margin-bottom: 0.75rem;
 }
 
 .success-container p {
-  color: #6B7280;
+  color: var(--text-secondary);
   font-size: 1rem;
   margin-bottom: 2rem;
 }
 
 /* Success tasks */
 .success-tasks {
-  background: #F9FAFB;
-  border: 1px solid #E5E7EB;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-default);
   border-radius: 8px;
   padding: 1.5rem;
   margin-bottom: 2rem;
@@ -293,7 +293,7 @@
 .success-tasks h3 {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   margin: 0 0 1rem 0;
 }
 
@@ -305,7 +305,7 @@
 
 .task-links li {
   padding: 0.75rem;
-  border-bottom: 1px solid #E5E7EB;
+  border-bottom: 1px solid var(--border-default);
 }
 
 .task-links li:last-child {
@@ -313,7 +313,7 @@
 }
 
 .task-links a {
-  color: #F97316;
+  color: var(--color-schedule);
   text-decoration: none;
   font-weight: 500;
   font-size: 0.9375rem;
@@ -327,7 +327,7 @@
 }
 
 .task-meta {
-  color: #6B7280;
+  color: var(--text-secondary);
   font-size: 0.875rem;
 }
 
@@ -349,12 +349,12 @@
 .error-container h1 {
   font-size: 1.875rem;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   margin-bottom: 1rem;
 }
 
 .error-container p {
-  color: #6B7280;
+  color: var(--text-secondary);
   font-size: 1rem;
   margin-bottom: 2rem;
 }
