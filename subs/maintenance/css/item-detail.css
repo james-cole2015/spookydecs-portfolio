@@ -74,7 +74,7 @@
   .item-detail-view .view-selector-label {
     font-size: 13px;
     font-weight: 500;
-    color: #6B7280;
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     margin-bottom: 12px;
@@ -92,9 +92,9 @@
     padding: 12px 16px;
     font-size: 16px;
     font-weight: 500;
-    color: #1F2937;
+    color: var(--text-body);
     background: white;
-    border: 2px solid #E5E7EB;
+    border: 2px solid var(--border-default);
     border-radius: 8px;
     cursor: pointer;
     appearance: none;
@@ -106,7 +106,7 @@
   
   .item-detail-view .tabs-mobile-select:focus {
     outline: none;
-    border-color: #3B82F6;
+    border-color: var(--color-primary);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   }
   
@@ -128,7 +128,7 @@
   
   .item-detail-view .mobile-record-card {
     background: white;
-    border: 1px solid #E5E7EB;
+    border: 1px solid var(--border-default);
     border-radius: 8px;
     padding: 16px;
     cursor: pointer;
@@ -136,7 +136,7 @@
   }
   
   .item-detail-view .mobile-record-card:active {
-    background-color: #F9FAFB;
+    background-color: var(--surface-subtle);
     transform: scale(0.98);
   }
   
@@ -151,7 +151,7 @@
   .item-detail-view .mobile-record-card-title {
     font-size: 16px;
     font-weight: 600;
-    color: #111827;
+    color: var(--text-primary);
     line-height: 1.4;
     flex: 1;
   }
@@ -169,18 +169,18 @@
     align-items: center;
     margin-top: 12px;
     padding-top: 12px;
-    border-top: 1px solid #F3F4F6;
+    border-top: 1px solid var(--surface-muted);
   }
   
   .item-detail-view .mobile-record-card-date {
     font-size: 13px;
-    color: #6B7280;
+    color: var(--text-secondary);
   }
   
   .item-detail-view .mobile-record-card-cost {
     font-size: 14px;
     font-weight: 600;
-    color: #10B981;
+    color: var(--color-success);
   }
   
   /* Item Detail: Adjust content padding */

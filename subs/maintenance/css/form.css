@@ -12,14 +12,14 @@
 .form-container {
   background: white;
   border-radius: 8px;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--border-default);
   padding: 32px;
 }
 
 .form-container h1 {
   font-size: 28px;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   margin-bottom: 32px;
 }
 
@@ -35,7 +35,7 @@
   flex-direction: column;
   gap: 16px;
   padding-bottom: 32px;
-  border-bottom: 1px solid #E5E7EB;
+  border-bottom: 1px solid var(--border-default);
 }
 
 .form-section:last-of-type {
@@ -46,7 +46,7 @@
 .form-section h3 {
   font-size: 18px;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   margin-bottom: 8px;
 }
 
@@ -60,27 +60,27 @@
 .form-group label {
   font-size: 13px;
   font-weight: 500;
-  color: #374151;
+  color: var(--text-label);
 }
 
 .form-input {
   padding: 10px 14px;
-  border: 1px solid #D1D5DB;
+  border: 1px solid var(--border-hover);
   border-radius: 6px;
   font-size: 14px;
-  color: #1F2937;
+  color: var(--text-body);
   transition: all 0.2s;
 }
 
 .form-input:focus {
   outline: none;
-  border-color: #3B82F6;
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .form-input:read-only {
-  background-color: #F9FAFB;
-  color: #6B7280;
+  background-color: var(--surface-subtle);
+  color: var(--text-secondary);
   cursor: not-allowed;
 }
 
@@ -104,20 +104,20 @@ textarea.form-input {
 .item-info {
   margin-top: 8px;
   padding: 12px;
-  background: #F9FAFB;
+  background: var(--surface-subtle);
   border-radius: 6px;
-  border-left: 3px solid #3B82F6;
+  border-left: 3px solid var(--color-primary);
 }
 
 .item-info strong {
   display: block;
-  color: #111827;
+  color: var(--text-primary);
   margin-bottom: 4px;
 }
 
 .item-meta {
   font-size: 12px;
-  color: #6B7280;
+  color: var(--text-secondary);
 }
 
 /* Materials List */
@@ -128,11 +128,11 @@ textarea.form-input {
 }
 
 .empty-text {
-  color: #6B7280;
+  color: var(--text-secondary);
   font-style: italic;
   padding: 12px;
   text-align: center;
-  background: #F9FAFB;
+  background: var(--surface-subtle);
   border-radius: 6px;
 }
 
@@ -140,9 +140,9 @@ textarea.form-input {
   display: flex;
   gap: 12px;
   padding: 16px;
-  background: #F9FAFB;
+  background: var(--surface-subtle);
   border-radius: 6px;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--border-default);
 }
 
 .material-fields {
@@ -166,7 +166,7 @@ textarea.form-input {
 
 .btn-remove {
   background-color: #FEE2E2;
-  color: #DC2626;
+  color: var(--color-danger);
   border: 1px solid #FEE2E2;
   padding: 8px 16px;
   border-radius: 6px;
@@ -185,14 +185,14 @@ textarea.form-input {
 /* Placeholder Box */
 .placeholder-box {
   padding: 24px;
-  background: #F9FAFB;
-  border: 2px dashed #D1D5DB;
+  background: var(--surface-subtle);
+  border: 2px dashed var(--border-hover);
   border-radius: 8px;
   text-align: center;
 }
 
 .placeholder-box p {
-  color: #6B7280;
+  color: var(--text-secondary);
   margin: 0;
 }
 
@@ -202,150 +202,7 @@ textarea.form-input {
   justify-content: flex-end;
   gap: 12px;
   padding-top: 24px;
-  border-top: 1px solid #E5E7EB;
-}
-
-/* Toast Notifications */
-.toast-container {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  pointer-events: none;
-}
-
-.toast {
-  min-width: 320px;
-  max-width: 420px;
-  padding: 16px 20px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.08);
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  pointer-events: auto;
-  animation: slideInRight 0.3s ease-out;
-  border-left: 4px solid;
-}
-
-.toast.success {
-  border-left-color: #10B981;
-}
-
-.toast.error {
-  border-left-color: #EF4444;
-}
-
-.toast.warning {
-  border-left-color: #F59E0B;
-}
-
-.toast.info {
-  border-left-color: #3B82F6;
-}
-
-.toast-icon {
-  flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  font-size: 14px;
-}
-
-.toast.success .toast-icon {
-  background: #D1FAE5;
-  color: #10B981;
-}
-
-.toast.error .toast-icon {
-  background: #FEE2E2;
-  color: #EF4444;
-}
-
-.toast.warning .toast-icon {
-  background: #FEF3C7;
-  color: #F59E0B;
-}
-
-.toast.info .toast-icon {
-  background: #DBEAFE;
-  color: #3B82F6;
-}
-
-.toast-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.toast-title {
-  font-weight: 600;
-  font-size: 14px;
-  color: #111827;
-}
-
-.toast-message {
-  font-size: 13px;
-  color: #6B7280;
-  line-height: 1.5;
-}
-
-.toast-close {
-  flex-shrink: 0;
-  background: none;
-  border: none;
-  color: #9CA3AF;
-  cursor: pointer;
-  padding: 0;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  transition: all 0.2s;
-  font-size: 18px;
-  line-height: 1;
-}
-
-.toast-close:hover {
-  background: #F3F4F6;
-  color: #4B5563;
-}
-
-@keyframes slideInRight {
-  from {
-    transform: translateX(400px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-.toast.hiding {
-  animation: slideOutRight 0.3s ease-in forwards;
-}
-
-@keyframes slideOutRight {
-  from {
-    transform: translateX(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateX(400px);
-    opacity: 0;
-  }
+  border-top: 1px solid var(--border-default);
 }
 
 /* Responsive */
@@ -373,28 +230,21 @@ textarea.form-input {
   .form-actions button {
     width: 100%;
   }
-  
-  .toast-container {
-    top: 10px;
-    right: 10px;
-    left: 10px;
-  }
-  
-  .toast {
-    min-width: auto;
-    width: 100%;
-  }
 }
 
 /* Photo Upload Component Styles */
-/* Add this to your existing CSS file (e.g., form.css or main.css) */
+/* CDN COMPONENT ARTIFACT — the #ff6600 orange below mirrors the shared
+   photo-upload component served from the configs repo (assets.spookydecs.com).
+   Do NOT normalize #ff6600 to the canonical --color-orange / --color-schedule here;
+   it intentionally matches the external component. Normalization is tracked
+   separately in the configs repo. See design.md "CDN component orange". */
 
 .photo-upload {
   margin: 20px 0;
   padding: 20px;
-  background: #f8f9fa;
+  background: var(--surface-subtle);
   border-radius: 8px;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--border-default);
 }
 
 .photo-upload-header {
@@ -404,12 +254,12 @@ textarea.form-input {
 .photo-upload-header label {
   font-weight: 600;
   font-size: 1rem;
-  color: #2c3e50;
+  color: var(--text-primary);
 }
 
 .photo-upload-header .optional {
   font-weight: 400;
-  color: #6c757d;
+  color: var(--text-secondary);
   font-size: 0.9rem;
 }
 
@@ -429,12 +279,12 @@ textarea.form-input {
 
 .category-selector label {
   font-weight: 500;
-  color: #495057;
+  color: var(--text-label);
 }
 
 .category-select {
   padding: 8px 12px;
-  border: 1px solid #ced4da;
+  border: 1px solid var(--border-hover);
   border-radius: 4px;
   background: white;
   font-size: 0.95rem;
@@ -462,26 +312,26 @@ textarea.form-input {
 
 .photo-count {
   padding: 10px;
-  background: #e9ecef;
+  background: var(--surface-muted);
   border-radius: 4px;
   font-size: 0.9rem;
-  color: #495057;
+  color: var(--text-label);
 }
 
 .photo-count.active {
-  background: #d4edda;
-  color: #155724;
+  background: #d1fae5;
+  color: #065f46;
 }
 
 .photo-count strong {
-  color: #2c3e50;
+  color: var(--text-primary);
 }
 
 .photo-count .file-names {
   display: block;
   margin-top: 5px;
   font-size: 0.85rem;
-  color: #6c757d;
+  color: var(--text-secondary);
   word-break: break-word;
 }
 
@@ -495,7 +345,7 @@ textarea.form-input {
 .photo-preview-item {
   position: relative;
   background: white;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--border-default);
   border-radius: 8px;
   overflow: hidden;
   transition: box-shadow 0.2s;
@@ -509,7 +359,7 @@ textarea.form-input {
   width: 100%;
   height: 150px;
   object-fit: cover;
-  background: #f8f9fa;
+  background: var(--surface-subtle);
 }
 
 .preview-info {
@@ -518,7 +368,7 @@ textarea.form-input {
 
 .preview-name {
   font-size: 0.85rem;
-  color: #2c3e50;
+  color: var(--text-primary);
   font-weight: 500;
   margin-bottom: 4px;
   word-break: break-word;
@@ -526,7 +376,7 @@ textarea.form-input {
 
 .preview-size {
   font-size: 0.75rem;
-  color: #6c757d;
+  color: var(--text-secondary);
 }
 
 .btn-remove-photo {
@@ -549,7 +399,7 @@ textarea.form-input {
 }
 
 .btn-remove-photo:hover {
-  background: #dc3545;
+  background: var(--color-danger);
 }
 
 .upload-progress {
@@ -557,13 +407,13 @@ textarea.form-input {
   padding: 15px;
   background: white;
   border-radius: 4px;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--border-default);
 }
 
 .progress-bar {
   width: 100%;
   height: 8px;
-  background: #e9ecef;
+  background: var(--surface-muted);
   border-radius: 4px;
   overflow: hidden;
   margin-bottom: 8px;
@@ -579,7 +429,7 @@ textarea.form-input {
 .progress-text {
   text-align: center;
   font-size: 0.9rem;
-  color: #495057;
+  color: var(--text-label);
   font-weight: 500;
 }
 
@@ -589,12 +439,12 @@ textarea.form-input {
   padding: 15px;
   background: white;
   border-radius: 8px;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--border-default);
 }
 
 .existing-photos-section h4 {
   margin: 0 0 15px 0;
-  color: #2c3e50;
+  color: var(--text-primary);
   font-size: 1rem;
   font-weight: 600;
 }
@@ -607,8 +457,8 @@ textarea.form-input {
 
 .existing-photo-item {
   position: relative;
-  background: #f8f9fa;
-  border: 1px solid #dee2e6;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-default);
   border-radius: 6px;
   overflow: hidden;
   transition: transform 0.2s;
@@ -631,7 +481,7 @@ textarea.form-input {
 
 .photo-filename {
   font-size: 0.8rem;
-  color: #2c3e50;
+  color: var(--text-primary);
   font-weight: 500;
   margin-bottom: 4px;
   overflow: hidden;
@@ -641,7 +491,7 @@ textarea.form-input {
 
 .photo-type {
   font-size: 0.75rem;
-  color: #6c757d;
+  color: var(--text-secondary);
   text-transform: capitalize;
 }
 
@@ -670,7 +520,7 @@ textarea.form-input {
 }
 
 .btn-remove-existing-photo:hover {
-  background: #dc3545;
+  background: var(--color-danger);
 }
 
 /* Photos Tab - RecordDetail */
@@ -681,408 +531,9 @@ textarea.form-input {
 .no-photos {
   text-align: center;
   padding: 40px 20px;
-  background: #f8f9fa;
+  background: var(--surface-subtle);
   border-radius: 8px;
-  border: 2px dashed #dee2e6;
-}
-
-.no-photos p {
-  margin: 0 0 15px 0;
-  color: #6c757d;
-  font-size: 1rem;
-}
-
-.photos-categories {
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
-}
-
-.photo-category h4 {
-  margin: 0 0 15px 0;
-  color: #2c3e50;
-  font-size: 1.1rem;
-  font-weight: 600;
-  padding-bottom: 10px;
-  border-bottom: 2px solid #ff6600;
-}
-
-.photo-category-loading {
-  padding: 20px;
-  text-align: center;
-  color: #6c757d;
-  font-style: italic;
-}
-
-.photo-category-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 15px;
-}
-
-.photo-grid-item {
-  background: white;
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
-  overflow: hidden;
-  transition: all 0.2s;
-}
-
-.photo-grid-item:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-}
-
-.photo-grid-thumb {
-  width: 100%;
-  height: 160px;
-  object-fit: cover;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-
-.photo-grid-thumb:hover {
-  opacity: 0.9;
-}
-
-.photo-grid-info {
-  padding: 12px;
-}
-
-.photo-type-badge {
-  display: inline-block;
-  padding: 4px 8px;
-  background: #ff6600;
-  color: white;
-  font-size: 0.7rem;
-  font-weight: 600;
-  border-radius: 3px;
-  text-transform: uppercase;
-}
-
-.photo-actions {
-  margin-top: 30px;
-  text-align: center;
-  padding-top: 20px;
-  border-top: 1px solid #dee2e6;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .photo-upload-controls {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .category-selector {
-    justify-content: space-between;
-  }
-  
-  .photo-preview-grid,
-  .existing-photos-grid,
-  .photo-category-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  }
-}
-
-/* Photo Upload Component Styles */
-/* Add this to your existing CSS file (e.g., form.css or main.css) */
-
-.photo-upload {
-  margin: 20px 0;
-  padding: 20px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #dee2e6;
-}
-
-.photo-upload-header {
-  margin-bottom: 15px;
-}
-
-.photo-upload-header label {
-  font-weight: 600;
-  font-size: 1rem;
-  color: #2c3e50;
-}
-
-.photo-upload-header .optional {
-  font-weight: 400;
-  color: #6c757d;
-  font-size: 0.9rem;
-}
-
-.photo-upload-controls {
-  display: flex;
-  gap: 15px;
-  align-items: center;
-  margin-bottom: 15px;
-  flex-wrap: wrap;
-}
-
-.category-selector {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.category-selector label {
-  font-weight: 500;
-  color: #495057;
-}
-
-.category-select {
-  padding: 8px 12px;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  background: white;
-  font-size: 0.95rem;
-  cursor: pointer;
-}
-
-.category-select:hover {
-  border-color: #ff6600;
-}
-
-.btn-select-photos {
-  padding: 10px 20px;
-  background: #ff6600;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: background 0.2s;
-}
-
-.btn-select-photos:hover {
-  background: #e55b00;
-}
-
-.photo-count {
-  padding: 10px;
-  background: #e9ecef;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  color: #495057;
-}
-
-.photo-count.active {
-  background: #d4edda;
-  color: #155724;
-}
-
-.photo-count strong {
-  color: #2c3e50;
-}
-
-.photo-count .file-names {
-  display: block;
-  margin-top: 5px;
-  font-size: 0.85rem;
-  color: #6c757d;
-  word-break: break-word;
-}
-
-.photo-preview-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 15px;
-  margin-top: 15px;
-}
-
-.photo-preview-item {
-  position: relative;
-  background: white;
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
-  overflow: hidden;
-  transition: box-shadow 0.2s;
-}
-
-.photo-preview-item:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.preview-image {
-  width: 100%;
-  height: 150px;
-  object-fit: cover;
-  background: #f8f9fa;
-}
-
-.preview-info {
-  padding: 10px;
-}
-
-.preview-name {
-  font-size: 0.85rem;
-  color: #2c3e50;
-  font-weight: 500;
-  margin-bottom: 4px;
-  word-break: break-word;
-}
-
-.preview-size {
-  font-size: 0.75rem;
-  color: #6c757d;
-}
-
-.btn-remove-photo {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 28px;
-  height: 28px;
-  background: rgba(220, 53, 69, 0.9);
-  color: white;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 1.2rem;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s;
-}
-
-.btn-remove-photo:hover {
-  background: #dc3545;
-}
-
-.upload-progress {
-  margin-top: 15px;
-  padding: 15px;
-  background: white;
-  border-radius: 4px;
-  border: 1px solid #dee2e6;
-}
-
-.progress-bar {
-  width: 100%;
-  height: 8px;
-  background: #e9ecef;
-  border-radius: 4px;
-  overflow: hidden;
-  margin-bottom: 8px;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #ff6600, #ff9944);
-  transition: width 0.3s ease;
-  border-radius: 4px;
-}
-
-.progress-text {
-  text-align: center;
-  font-size: 0.9rem;
-  color: #495057;
-  font-weight: 500;
-}
-
-/* Existing Photos Display */
-.existing-photos-section {
-  margin: 20px 0;
-  padding: 15px;
-  background: white;
-  border-radius: 8px;
-  border: 1px solid #dee2e6;
-}
-
-.existing-photos-section h4 {
-  margin: 0 0 15px 0;
-  color: #2c3e50;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.existing-photos-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 12px;
-}
-
-.existing-photo-item {
-  position: relative;
-  background: #f8f9fa;
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
-  overflow: hidden;
-  transition: transform 0.2s;
-}
-
-.existing-photo-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.existing-photo-thumb {
-  width: 100%;
-  height: 120px;
-  object-fit: cover;
-}
-
-.existing-photo-info {
-  padding: 8px;
-}
-
-.photo-filename {
-  font-size: 0.8rem;
-  color: #2c3e50;
-  font-weight: 500;
-  margin-bottom: 4px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.photo-type {
-  font-size: 0.75rem;
-  color: #6c757d;
-  text-transform: capitalize;
-}
-
-.btn-remove-existing-photo {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 24px;
-  height: 24px;
-  background: rgba(220, 53, 69, 0.9);
-  color: white;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 1rem;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.2s, background 0.2s;
-}
-
-.existing-photo-item:hover .btn-remove-existing-photo {
-  opacity: 1;
-}
-
-.btn-remove-existing-photo:hover {
-  background: #dc3545;
-}
-
-/* Photos Tab - RecordDetail */
-.photos-tab {
-  padding: 20px 0;
-}
-
-.no-photos {
-  text-align: center;
-  padding: 40px 20px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border: 2px dashed #dee2e6;
+  border: 2px dashed var(--border-default);
 }
 
 .no-photos .placeholder-icon {
@@ -1092,13 +543,13 @@ textarea.form-input {
 
 .no-photos h3 {
   margin: 0 0 10px 0;
-  color: #495057;
+  color: var(--text-label);
   font-size: 1.25rem;
 }
 
 .no-photos p {
   margin: 0 0 20px 0;
-  color: #6c757d;
+  color: var(--text-secondary);
   font-size: 1rem;
 }
 
@@ -1110,7 +561,7 @@ textarea.form-input {
 
 .photo-category h4 {
   margin: 0 0 15px 0;
-  color: #2c3e50;
+  color: var(--text-primary);
   font-size: 1.1rem;
   font-weight: 600;
   padding-bottom: 10px;
@@ -1120,7 +571,7 @@ textarea.form-input {
 .photo-category-loading {
   padding: 20px;
   text-align: center;
-  color: #6c757d;
+  color: var(--text-secondary);
   font-style: italic;
 }
 
@@ -1132,7 +583,7 @@ textarea.form-input {
 
 .photo-grid-item {
   background: white;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--border-default);
   border-radius: 8px;
   overflow: hidden;
   transition: all 0.2s;
@@ -1174,7 +625,7 @@ textarea.form-input {
   margin-top: 30px;
   text-align: center;
   padding-top: 20px;
-  border-top: 1px solid #dee2e6;
+  border-top: 1px solid var(--border-default);
 }
 
 /* Responsive adjustments */
@@ -1207,7 +658,7 @@ textarea.form-input {
   background: transparent;
   border: none;
   font-size: 20px;
-  color: #9CA3AF;
+  color: var(--text-muted);
   cursor: pointer;
   padding: 0;
   width: 24px;
@@ -1220,7 +671,7 @@ textarea.form-input {
 }
 
 .autocomplete-clear:hover {
-  color: #374151;
+  color: var(--text-label);
 }
 
 .autocomplete-input {

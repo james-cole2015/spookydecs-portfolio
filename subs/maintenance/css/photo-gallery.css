@@ -10,7 +10,7 @@
 .gallery-thumbnail:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
-  border-color: #3B82F6;
+  border-color: var(--color-primary);
 }
 
 /* Add zoom icon indicator on hover */
@@ -93,7 +93,7 @@
 .photo-category-loading {
   padding: 40px 20px;
   text-align: center;
-  color: #6B7280;
+  color: var(--text-secondary);
   font-size: 14px;
 }
 
@@ -111,13 +111,13 @@
   border-radius: 8px;
   overflow: hidden;
   cursor: pointer;
-  border: 2px solid #E5E7EB;
+  border: 2px solid var(--border-default);
   transition: all 0.2s;
-  background: #F9FAFB;
+  background: var(--surface-subtle);
 }
 
 .photo-grid-item:hover {
-  border-color: #3B82F6;
+  border-color: var(--color-primary);
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
   transform: translateY(-2px);
 }
@@ -172,7 +172,7 @@
 .photo-category h4 {
   font-size: 16px;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   margin-bottom: 12px;
   display: flex;
   align-items: center;

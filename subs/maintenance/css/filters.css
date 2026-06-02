@@ -3,7 +3,7 @@
 .filters-container {
   background: white;
   border-radius: 8px;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--border-default);
   padding: 20px;
   margin-bottom: 24px;
   overflow: visible;
@@ -20,13 +20,13 @@
 .filters-header h3 {
   font-size: 16px;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   text-align: center;
 }
 
 .clear-filters-btn {
   background-color: #FEE2E2;
-  color: #DC2626;
+  color: var(--color-danger);
   border: 1px solid #FEE2E2;
   padding: 6px 16px;
   border-radius: 16px;
@@ -61,7 +61,7 @@
 .filter-group label {
   font-size: 13px;
   font-weight: 500;
-  color: #374151;
+  color: var(--text-label);
   text-align: center;
 }
 
@@ -73,11 +73,11 @@
 .filter-dropdown-btn {
   width: 100%;
   padding: 8px 12px;
-  background: #F3F4F6;
-  border: 1px solid #E5E7EB;
+  background: var(--surface-muted);
+  border: 1px solid var(--border-default);
   border-radius: 16px;
   font-size: 13px;
-  color: #1F2937;
+  color: var(--text-body);
   cursor: pointer;
   display: flex;
   justify-content: space-between;
@@ -86,11 +86,11 @@
 }
 
 .filter-dropdown-btn:hover {
-  background: #E5E7EB;
+  background: var(--border-default);
 }
 
 .filter-badge {
-  background-color: #3B82F6;
+  background-color: var(--color-primary);
   color: white;
   padding: 2px 8px;
   border-radius: 10px;
@@ -106,7 +106,7 @@
   right: 0;
   min-width: 200px;
   background: white;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--border-default);
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   max-height: 250px;
@@ -129,12 +129,12 @@
 }
 
 .filter-option:hover {
-  background-color: #F9FAFB;
+  background-color: var(--surface-subtle);
 }
 
 .filter-option.selected {
-  background-color: #EFF6FF;
-  color: #3B82F6;
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
 }
 
 .filter-option input[type="checkbox"] {
@@ -153,18 +153,18 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background-color: #F3F4F6;
-  border: 1px solid #E5E7EB;
+  background-color: var(--surface-muted);
+  border: 1px solid var(--border-default);
   padding: 4px 10px;
   border-radius: 12px;
   font-size: 12px;
-  color: #1F2937;
+  color: var(--text-body);
 }
 
 .pill-remove {
   background: none;
   border: none;
-  color: #6B7280;
+  color: var(--text-secondary);
   font-size: 16px;
   cursor: pointer;
   padding: 0;
@@ -173,7 +173,7 @@
 }
 
 .pill-remove:hover {
-  color: #EF4444;
+  color: var(--color-danger);
 }
 
 /* Autocomplete */
@@ -184,16 +184,16 @@
 .autocomplete-input {
   width: 100%;
   padding: 8px 12px;
-  background: #F3F4F6;
-  border: 1px solid #E5E7EB;
+  background: var(--surface-muted);
+  border: 1px solid var(--border-default);
   border-radius: 16px;
   font-size: 13px;
-  color: #1F2937;
+  color: var(--text-body);
 }
 
 .autocomplete-input:focus {
   outline: none;
-  border-color: #3B82F6;
+  border-color: var(--color-primary);
   background: white;
 }
 
@@ -203,7 +203,7 @@
   left: 0;
   right: 0;
   background: white;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--border-default);
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   max-height: 250px;
@@ -223,16 +223,16 @@
 }
 
 .autocomplete-result:hover {
-  background-color: #F9FAFB;
+  background-color: var(--surface-subtle);
 }
 
 .autocomplete-result strong {
-  color: #1F2937;
+  color: var(--text-body);
 }
 
 .autocomplete-empty {
   padding: 10px 12px;
-  color: #6B7280;
+  color: var(--text-secondary);
   font-style: italic;
 }
 
@@ -247,22 +247,22 @@
 .date-input {
   width: 100%;
   padding: 8px 12px;
-  background: #F3F4F6;
-  border: 1px solid #E5E7EB;
+  background: var(--surface-muted);
+  border: 1px solid var(--border-default);
   border-radius: 16px;
   font-size: 13px;
-  color: #1F2937;
+  color: var(--text-body);
   min-width: 0;
 }
 
 .date-input:focus {
   outline: none;
-  border-color: #3B82F6;
+  border-color: var(--color-primary);
   background: white;
 }
 
 .date-range span {
-  color: #6B7280;
+  color: var(--text-secondary);
   font-size: 13px;
   white-space: nowrap;
 }

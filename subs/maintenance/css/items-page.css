@@ -7,7 +7,7 @@
 .items-page-loading {
   padding: 4rem 2rem;
   text-align: center;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 /* Filter Buttons */
@@ -27,7 +27,7 @@
 .filter-group-label {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -40,10 +40,10 @@
 
 .filter-btn {
   padding: 0.3rem 0.75rem;
-  border: 1.5px solid #cbd5e1;
+  border: 1.5px solid var(--border-hover);
   border-radius: 9999px;
   background: #fff;
-  color: #475569;
+  color: var(--text-label);
   font-size: 0.8125rem;
   font-weight: 500;
   cursor: pointer;
@@ -56,8 +56,8 @@
 }
 
 .filter-btn.active {
-  background: #3b82f6;
-  border-color: #3b82f6;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
   color: #fff;
 }
 
@@ -68,7 +68,7 @@
   border: 1.5px solid #fecaca;
   border-radius: 9999px;
   background: #fff;
-  color: #dc2626;
+  color: var(--color-danger);
   font-size: 0.8125rem;
   font-weight: 500;
   cursor: pointer;
@@ -83,7 +83,7 @@
   grid-column: 1 / -1;
   padding: 3rem 2rem;
   text-align: center;
-  color: #94a3b8;
+  color: var(--text-muted);
   font-size: 0.9375rem;
 }
 
@@ -98,7 +98,7 @@
 /* Item Card */
 .item-card {
   background: #fff;
-  border: 2px solid #e2e8f0;
+  border: 2px solid var(--border-default);
   border-radius: 10px;
   padding: 1.5rem;
   cursor: pointer;
@@ -109,7 +109,7 @@
 }
 
 .item-card:hover {
-  border-color: #3b82f6;
+  border-color: var(--color-primary);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
 }
@@ -118,7 +118,7 @@
   width: 48px;
   height: 48px;
   min-width: 48px;
-  background: #f1f5f9;
+  background: var(--surface-muted);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -139,7 +139,7 @@
 .item-card-name {
   font-size: 1rem;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text-primary);
   margin-bottom: 0.25rem;
   white-space: nowrap;
   overflow: hidden;
@@ -148,13 +148,13 @@
 
 .item-card-meta {
   font-size: 0.8125rem;
-  color: #94a3b8;
+  color: var(--text-muted);
   margin-bottom: 0.625rem;
 }
 
 .item-card-stats {
   font-size: 0.875rem;
-  color: #475569;
+  color: var(--text-label);
 }
 
 .item-card-open-badge {
@@ -169,7 +169,7 @@
 }
 
 /* Responsive */
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .items-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
