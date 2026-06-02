@@ -158,7 +158,10 @@ const PriorityListPage = (() => {
       <div class="pl-card" data-href="${escHtml(issueUrl)}">
         <div class="pl-card-header">
           <span class="pl-card-number">#${issue.issue_number}</span>
-          <span class="badge ${stateClass}">${issue.state || 'backlog'}</span>
+          <div class="pl-card-header-badges">
+            ${issue.added_mid_epic === true ? `<span class="badge badge-mid-epic" title="Ad hoc — added after the epic was already active (post-refinement)">AdHoc</span>` : ''}
+            <span class="badge ${stateClass}">${issue.state || 'backlog'}</span>
+          </div>
         </div>
         <div class="pl-card-title">${escHtml(issue.title)}</div>
         <div class="pl-card-footer">
