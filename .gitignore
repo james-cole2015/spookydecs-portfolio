@@ -27,3 +27,4 @@ scripts/backfill_tasks.py
 scripts/seed_epics.py
 scripts/*
 lambda_creation_log.txt
+fail-log.txt
