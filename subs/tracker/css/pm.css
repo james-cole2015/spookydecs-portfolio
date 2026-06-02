@@ -349,6 +349,13 @@ input, textarea, select { font: inherit; }
   color: var(--color-danger);
 }
 
+/* Mid-epic (scope creep) badge — shown when an issue was added after the epic went active */
+.badge-mid-epic {
+  background: #fff7ed;
+  color: #9a3412;
+  border: 1px solid #fed7aa;
+}
+
 /* ── Empty state ─────────────────────────────────────────────────────────────── */
 .empty-state {
   display: flex;

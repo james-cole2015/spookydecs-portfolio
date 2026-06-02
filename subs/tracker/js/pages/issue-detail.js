@@ -157,6 +157,7 @@ const IssueDetailPage = (() => {
               <div class="id-header-badges">
                 <span class="badge ${stateBadgeClass(issue.state)}">${issue.state}</span>
                 ${currentEpic ? `<span class="id-epic-badge">${escHtml(currentEpic)}</span>` : ''}
+                ${issue.added_mid_epic === true ? `<span class="badge badge-mid-epic" title="Ad hoc — added after the epic was already active (post-refinement)">AdHoc</span>` : ''}
               </div>
             </div>
           </div>
