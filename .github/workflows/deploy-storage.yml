@@ -40,5 +40,5 @@ jobs:
     uses: ./.github/workflows/_deploy-sub.yml
     with:
       sub: storage
-      deploy_env: ${{ inputs.deploy_env }}
+      deploy_env: ${{ inputs.deploy_env || 'demo' }}
     secrets: inherit

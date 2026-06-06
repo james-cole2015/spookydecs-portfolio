@@ -51,9 +51,16 @@ jobs:
           node-version: '20'
 
       - name: Build
-        if: inputs.build_command != ''
         working-directory: subs/${{ inputs.sub }}
-        run: ${{ inputs.build_command }}
+        env:
+          BUILD_COMMAND: ${{ inputs.build_command }}
+        run: |
+          if [ -n "$BUILD_COMMAND" ]; then
+            echo "Running build: $BUILD_COMMAND"
+            eval "$BUILD_COMMAND"
+          else
+            echo "No build_command — static sync, skipping build."
+          fi
 
       - name: Resolve sync source
         id: src
