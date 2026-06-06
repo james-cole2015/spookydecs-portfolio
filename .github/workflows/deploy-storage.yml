@@ -18,6 +18,13 @@ on:
         options: [demo, prod]
         default: demo
 
+# Required so the called reusable workflow can request id-token: write for OIDC.
+# (Repo default_workflow_permissions is "read", which would otherwise cap
+# id-token at "none" and fail the call at startup.)
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   deploy-dev:
     if: github.event_name == 'push' && github.ref == 'refs/heads/development'
