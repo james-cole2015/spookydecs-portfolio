@@ -30,6 +30,51 @@ const EpicDetailPage = (() => {
     }[state] || 'badge-backlog';
   }
 
+  // ── Date / scope helpers (degrade gracefully when fields are null/absent) ──────
+  function fmtDate(iso) {
+    if (!iso) return null;
+    const d = new Date(iso);
+    if (isNaN(d)) return null;
+    // Format in UTC: dates are stored as UTC timestamps (e.g. 2026-06-01T00:00:00Z),
+    // and rendering in local time would roll a UTC-midnight date back a day in western timezones.
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
+  }
+
+  function daysBetween(startIso, endIso) {
+    const start = new Date(startIso);
+    const end   = endIso ? new Date(endIso) : new Date();
+    if (isNaN(start) || isNaN(end)) return null;
+    const days = Math.floor((end - start) / 86400000);
+    return days < 0 ? 0 : days;
+  }
+
+  // Epic lifecycle line: nothing unless started_at exists.
+  function buildEpicDates(epic) {
+    const startedRaw = epic.started_at || epic.startedAt;
+    const startStr   = fmtDate(startedRaw);
+    if (!startStr) return '';
+
+    const completedRaw = epic.completed_at || epic.completedAt;
+    const endStr       = fmtDate(completedRaw);
+    const days         = daysBetween(startedRaw, completedRaw);
+
+    const target   = endStr || 'in progress';
+    const duration = days === null ? '' : ` · ${days} day${days === 1 ? '' : 's'}${endStr ? '' : ' ongoing'}`;
+    return `<span class="ed-dates"><span class="ed-label">Timeline:</span> ${escHtml(startStr)} → ${escHtml(target)}${duration}</span>`;
+  }
+
+  // Baseline-vs-added scope count, computed from the issues array.
+  function buildScopeCount(issues) {
+    const total = issues.length;
+    if (!total) return '';
+    const added    = issues.filter(i => i.added_mid_epic === true).length;
+    const baseline = total - added;
+    const addedClause = added > 0 ? ` · ${added} ad hoc` : '';
+    return `<span class="ed-scope-count">${baseline} baseline${addedClause}</span>`;
+  }
+
+  const MID_EPIC_BADGE = `<span class="badge badge-mid-epic" title="Ad hoc — added after the epic was already active (post-refinement)">AdHoc</span>`;
+
   // ── Render entry point ───────────────────────────────────────────────────────
   async function render({ slug } = {}) {
     const app = document.getElementById('app');
@@ -137,6 +182,8 @@ const EpicDetailPage = (() => {
           <h1 class="ed-title">${escHtml(epic.title)}</h1>
           <div class="ed-header-meta">
             <span class="ed-issue-count">${issues.length} issue${issues.length !== 1 ? 's' : ''}</span>
+            ${buildScopeCount(issues)}
+            ${buildEpicDates(epic)}
             <div class="ed-due-date-wrap">
               <span class="ed-label">Due:</span>
               <span id="ed-due-display" class="ed-due-value ${epic.due_date ? '' : 'ed-empty'}">${epic.due_date ? escHtml(epic.due_date) : 'not set'}</span>
@@ -192,6 +239,7 @@ const EpicDetailPage = (() => {
         <span class="ed-issue-number">#${issue.issue_number}</span>
         <span class="ed-issue-title">${escHtml(issue.title)}</span>
         <div class="ed-issue-meta">
+          ${issue.added_mid_epic === true ? MID_EPIC_BADGE : ''}
           ${taskTotal > 0 ? `<span class="pl-task-badge">${taskDone}/${taskTotal} ✓</span>` : ''}
           ${issue.priority ? `<span class="badge badge-${issue.priority.toLowerCase()}">${escHtml(issue.priority)}</span>` : ''}
           ${issue.effort ? `<span class="effort-badge">${escHtml(issue.effort)}</span>` : ''}

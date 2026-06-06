@@ -1,0 +1,110 @@
+# Reusable deploy workflow for a single frontend sub.
+# Called by per-sub caller workflows (e.g. deploy-storage.yml) which pass the
+# sub name + target env. Handles: optional build -> resolve sync source ->
+# OIDC auth -> SSM lookup -> S3 sync -> CloudFront invalidation.
+#
+# build_command / artifact_dir are optional so this same template serves both
+# vanilla-JS subs (no build, sync the sub root) and built subs once the React
+# migration (#267) lands (build, then sync the artifact dir) with zero rework.
+name: Deploy Sub (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      sub:
+        description: 'Sub name (e.g. storage) — maps to subs/<sub>/'
+        required: true
+        type: string
+      deploy_env:
+        description: 'Target environment: dev | prod | demo'
+        required: true
+        type: string
+      build_command:
+        description: 'Optional build command run in subs/<sub>/ (e.g. "npm ci && npm run build"). Empty = no build.'
+        required: false
+        type: string
+        default: ''
+      artifact_dir:
+        description: 'Optional build output dir relative to subs/<sub>/ (e.g. "dist"). Empty = sync the sub root.'
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  id-token: write   # required for OIDC
+  contents: read    # required for checkout
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-${{ inputs.sub }}-${{ inputs.deploy_env }}
+      cancel-in-progress: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        if: inputs.build_command != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build
+        working-directory: subs/${{ inputs.sub }}
+        env:
+          BUILD_COMMAND: ${{ inputs.build_command }}
+        run: |
+          if [ -n "$BUILD_COMMAND" ]; then
+            echo "Running build: $BUILD_COMMAND"
+            eval "$BUILD_COMMAND"
+          else
+            echo "No build_command — static sync, skipping build."
+          fi
+
+      - name: Resolve sync source
+        id: src
+        run: |
+          if [[ -n "${{ inputs.artifact_dir }}" ]]; then
+            echo "path=subs/${{ inputs.sub }}/${{ inputs.artifact_dir }}/" >> "$GITHUB_OUTPUT"
+          else
+            echo "path=subs/${{ inputs.sub }}/" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_PORTFOLIO_ROLE_ARN }}
+          aws-region: us-east-2
+
+      - name: Fetch deploy config from SSM
+        id: ssm
+        run: |
+          SUB="${{ inputs.sub }}"
+          ENV="${{ inputs.deploy_env }}"
+          BUCKET=$(aws ssm get-parameter --name "/spooky-decs/$SUB/$ENV/s3-bucket" \
+            --query 'Parameter.Value' --output text 2>/dev/null || true)
+          DISTRO=$(aws ssm get-parameter --name "/spooky-decs/$SUB/$ENV/cf-distribution" \
+            --query 'Parameter.Value' --output text 2>/dev/null || true)
+          if [[ -z "$BUCKET" || "$BUCKET" == "None" || -z "$DISTRO" || "$DISTRO" == "None" ]]; then
+            echo "::error::Missing SSM params for $SUB/$ENV (bucket='$BUCKET' distro='$DISTRO')"
+            exit 1
+          fi
+          echo "Target bucket:       $BUCKET"
+          echo "CloudFront distro:   $DISTRO"
+          echo "bucket=$BUCKET" >> "$GITHUB_OUTPUT"
+          echo "distribution=$DISTRO" >> "$GITHUB_OUTPUT"
+
+      - name: Sync to S3
+        run: |
+          aws s3 sync "${{ steps.src.outputs.path }}" "s3://${{ steps.ssm.outputs.bucket }}" \
+            --delete \
+            --exclude ".git/*" \
+            --exclude "*.md" \
+            --exclude ".gitignore"
+
+      - name: Invalidate CloudFront
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ steps.ssm.outputs.distribution }}" \
+            --paths "/*" --no-cli-pager

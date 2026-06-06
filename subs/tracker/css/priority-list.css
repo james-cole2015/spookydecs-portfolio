@@ -146,6 +146,13 @@
   flex-shrink: 0;
 }
 
+.pl-card-header-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
 /* ── Card title ─────────────────────────────────────────────────────────────── */
 .pl-card-title {
   font-size: 0.875rem;
