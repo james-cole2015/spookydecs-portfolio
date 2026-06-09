@@ -607,13 +607,13 @@
         <div class="highlight-card">
           <div class="highlight-icon">🚀</div>
           <h4 class="highlight-title">Full CI/CD Pipeline</h4>
-          <p class="highlight-desc">CodePipeline + CodeBuild deploy frontend bundles automatically. SSM Parameter Store provides environment-specific config at build time — no secrets in code.</p>
+          <p class="highlight-desc">CodePipeline + CodeBuild deploy the vanilla subs; newer React subs deploy via GitHub Actions using OIDC role assumption — keyless, no long-lived AWS credentials. SSM Parameter Store provides per-environment config at build time, no secrets in code.</p>
         </div>
 
         <div class="highlight-card">
           <div class="highlight-icon">🌍</div>
           <h4 class="highlight-title">Multi-Environment Parity</h4>
-          <p class="highlight-desc">Dev and prod mirror each other completely — separate CloudFront distributions, Cognito pools, API Gateway stages, and Lambda aliases. Shared asset CDN across both.</p>
+          <p class="highlight-desc">Dev, prod, and an isolated always-on demo mirror each other — separate CloudFront distributions, Cognito groups, API Gateway stages, and DynamoDB tables, with a shared asset CDN across all three.</p>
         </div>
 
         <div class="highlight-card">
@@ -632,6 +632,18 @@
           <div class="highlight-icon">💸</div>
           <h4 class="highlight-title">Zero-Idle Cost Architecture</h4>
           <p class="highlight-desc">Serverless throughout: Lambda, DynamoDB on-demand, S3 lifecycle cleanup of temp uploads, and CloudFront edge caching reduce both origin load and data transfer costs.</p>
+        </div>
+
+        <div class="highlight-card">
+          <div class="highlight-icon">🧪</div>
+          <h4 class="highlight-title">Self-Resetting Demo Environment</h4>
+          <p class="highlight-desc">A fully isolated demo stage — its own DynamoDB tables, CloudFront distributions, and Cognito group — seeded from a sanitized prod snapshot. A scheduled Lambda backs up, truncates, and re-seeds every table weekly, so reviewers always land on clean, realistic data.</p>
+        </div>
+
+        <div class="highlight-card">
+          <div class="highlight-icon">⚛️</div>
+          <h4 class="highlight-title">React + TypeScript Migration</h4>
+          <p class="highlight-desc">Subsystems are migrating from vanilla JS to React + Vite + HeroUI in TypeScript, while still consuming the same CDN auth/config globals — proving the shared-component contract holds across both frontend stacks. Storage shipped first.</p>
         </div>
 
       </div>
