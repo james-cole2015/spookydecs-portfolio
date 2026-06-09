@@ -21,6 +21,13 @@ vite.config.js
 app_docs/
 
 
+# React subs: build manifests MUST be committed so CI `npm ci && npm run build`
+# can run. These wildcards negate the global package.json / package-lock.json
+# ignores above for every sub at once (storage #267 + the #330-#341 migration fleet),
+# so a new React sub needs no .gitignore edit. (dist/ and node_modules/ stay ignored.)
+!subs/*/package.json
+!subs/*/package-lock.json
+
 CLAUDE.md
 .env.example
 scripts/backfill_tasks.py

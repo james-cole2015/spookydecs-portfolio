@@ -141,11 +141,21 @@ export async function createItem(body) {
   return await handleResponse(response);
 }
 
-// DELETE idea by id
+// DELETE idea via cascade endpoint — removes associated costs + photos then the idea record
 export async function deleteIdea(id) {
   const endpoint = await getEndpoint();
-  const response = await fetch(`${endpoint}?id=${encodeURIComponent(id)}`, {
+  const response = await fetch(`${endpoint}/${encodeURIComponent(id)}/cascade`, {
     method: 'DELETE',
+    headers: buildHeaders()
+  });
+  return await handleResponse(response);
+}
+
+// GET preview of records that would be deleted with the idea (no side effects)
+export async function previewIdeaCascade(id) {
+  const endpoint = await getEndpoint();
+  const response = await fetch(`${endpoint}/${encodeURIComponent(id)}/cascade`, {
+    method: 'GET',
     headers: buildHeaders()
   });
   return await handleResponse(response);
