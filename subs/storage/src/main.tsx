@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { HeroUIProvider } from '@heroui/react';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
-import { ConfigProvider } from './providers/ConfigProvider';
+import { ConfigProvider } from '@spookydecs/ui';
 import { ThemeProvider } from './providers/ThemeProvider';
 import { ToastProvider } from './lib/toast';
 import './index.css';

@@ -1,0 +1,35 @@
+{
+  "name": "portfolio",
+  "version": "1.0.0",
+  "description": "## Table of Contents",
+  "main": "index.js",
+  "workspaces": [
+    "packages/*",
+    "subs/storage"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "dev:items": "SUB=items vite",
+    "dev:tracker": "SUB=tracker vite",
+    "dev:finance": "SUB=finance vite",
+    "dev:admin": "SUB=admin vite",
+    "dev:audit": "SUB=audit vite",
+    "dev:deployments": "SUB=deployments vite",
+    "dev:gallery": "SUB=gallery vite",
+    "dev:ideas": "SUB=ideas vite",
+    "dev:images": "SUB=images vite",
+    "dev:inspector": "SUB=inspector vite",
+    "dev:maintenance": "SUB=maintenance vite",
+    "dev:storage": "SUB=storage vite",
+    "dev:workbench": "SUB=workbench vite",
+    "build": "vite build",
+    "build:storage": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-storage",
+    "preview": "vite preview"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "vite": "^6.4.1"
+  }
+}

@@ -29,6 +29,11 @@ on:
         required: false
         type: string
         default: ''
+      build_workdir:
+        description: 'Optional working-directory for the Build step (e.g. "." for workspace builds). Default: subs/<sub>/'
+        required: false
+        type: string
+        default: ''
 
 permissions:
   id-token: write   # required for OIDC
@@ -51,7 +56,7 @@ jobs:
           node-version: '20'
 
       - name: Build
-        working-directory: subs/${{ inputs.sub }}
+        working-directory: ${{ inputs.build_workdir != '' && inputs.build_workdir || format('subs/{0}', inputs.sub) }}
         env:
           BUILD_COMMAND: ${{ inputs.build_command }}
         run: |

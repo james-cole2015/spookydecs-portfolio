@@ -5,6 +5,7 @@ export default {
   content: [
     './index.html',
     './src/**/*.{ts,tsx}',
+    '../../packages/ui/src/**/*.{ts,tsx}',
     // @heroui/theme gets nested under @heroui/react/node_modules (npm doesn't
     // hoist it), so match it wherever it lands — otherwise Tailwind purges all
     // of HeroUI's component classes and the components render unstyled.
