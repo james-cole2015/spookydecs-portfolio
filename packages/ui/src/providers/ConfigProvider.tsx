@@ -2,8 +2,6 @@
  * ConfigProvider — resolves `window.SpookyConfig.get()` ONCE at app boot and
  * exposes the result synchronously via context. Replaces the vanilla pattern of
  * `await window.SpookyConfig.get()` on every API call.
- *
- * Reusable playbook artifact: copy verbatim into future React subs.
  */
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { Spinner } from '@heroui/react';

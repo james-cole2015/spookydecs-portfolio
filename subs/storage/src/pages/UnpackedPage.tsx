@@ -5,7 +5,7 @@ import { itemsAPI, type ItemRecord } from '../api/storageApi';
 import { Typography } from '../components/Typography';
 import { getPlaceholderImage, seasonChipColor } from '../config/storageConfig';
 import { Breadcrumbs, PageHeader, LoadingState, ErrorState, EmptyState } from '../components/Layout';
-import { useConfig } from '../providers/ConfigProvider';
+import { useConfig } from '@spookydecs/ui';
 
 export default function UnpackedPage() {
   const config = useConfig();
