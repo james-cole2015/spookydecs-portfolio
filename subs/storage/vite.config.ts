@@ -52,6 +52,11 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react(), autoAuthPlugin],
+    resolve: {
+      alias: {
+        '@spookydecs/ui': resolve(repoRoot, 'packages/ui/src'),
+      },
+    },
     server: {
       port: 3000,
       open: true,

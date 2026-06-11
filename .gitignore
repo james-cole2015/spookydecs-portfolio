@@ -28,6 +28,12 @@ app_docs/
 !subs/*/package.json
 !subs/*/package-lock.json
 
+# Workspace root + ui package manifests must be committed for CI to work.
+!package.json
+!package-lock.json
+!packages/*/package.json
+!packages/*/package-lock.json
+
 CLAUDE.md
 .env.example
 scripts/backfill_tasks.py
