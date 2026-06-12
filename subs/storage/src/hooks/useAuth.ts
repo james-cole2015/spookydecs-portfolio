@@ -3,7 +3,7 @@
  * Synchronous; no provider needed. Reusable playbook artifact.
  */
 import { useMemo } from 'react';
-import type { SpookyTokenClaims, SpookyRole } from '../types/spooky-globals';
+import type { SpookyTokenClaims, SpookyRole } from '@spookydecs/ui';
 
 export interface UseAuth {
   buildHeaders: (extra?: Record<string, string>) => Record<string, string>;
