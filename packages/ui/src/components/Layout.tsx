@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Spinner, Breadcrumbs as HeroBreadcrumbs, BreadcrumbItem, Button } from '@heroui/react';
-import { Typography } from '@spookydecs/ui';
+import { Typography } from './Typography';
 
 export interface Crumb {
   label: string;

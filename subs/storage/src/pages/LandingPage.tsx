@@ -1,8 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Card, CardBody, CardHeader } from '@heroui/react';
 import { Package, Plus, BarChart3, Luggage, Ruler, Search, type LucideIcon } from 'lucide-react';
-import { PageHeader } from '../components/Layout';
-import { Typography } from '@spookydecs/ui';
+import { PageHeader, Typography } from '@spookydecs/ui';
 
 interface HubCard {
   id: string;

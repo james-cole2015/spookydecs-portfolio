@@ -4,10 +4,9 @@ import { Card, CardBody, Button, Tabs, Tab, Select, SelectItem, Checkbox, Chip }
 import { Luggage, Package, MapPin, Ruler, Save } from 'lucide-react';
 import { storageAPI, itemsAPI, type ItemRecord } from '../api/storageApi';
 import STORAGE_CONFIG, { type StorageUnit } from '../config/storageConfig';
-import { Breadcrumbs, PageHeader, LoadingState, ErrorState } from '../components/Layout';
+import { Breadcrumbs, PageHeader, LoadingState, ErrorState, useAuth } from '@spookydecs/ui';
 import { ItemPicker } from '../components/ItemPicker';
 import { useToast } from '../lib/toast';
-import { useAuth } from '@spookydecs/ui';
 
 function storageData(item: ItemRecord): Record<string, unknown> {
   return (item.storage_data as Record<string, unknown>) ?? {};

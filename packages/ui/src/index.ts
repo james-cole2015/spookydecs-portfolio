@@ -8,4 +8,6 @@ export type { Theme } from './providers/ThemeProvider';
 export { ThemeSwitch } from './components/ThemeSwitch';
 export { Typography } from './components/Typography';
 export type { TypographyType } from './components/Typography';
+export { Breadcrumbs, PageContainer, PageHeader, LoadingState, ErrorState, EmptyState } from './components/Layout';
+export type { Crumb } from './components/Layout';
 export { spookyHeroUI } from './theme';

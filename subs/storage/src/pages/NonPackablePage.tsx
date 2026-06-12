@@ -3,8 +3,7 @@ import { Card, CardBody, Chip, Image, Select, SelectItem, Input } from '@heroui/
 import { Ruler } from 'lucide-react';
 import { itemsAPI, type ItemRecord } from '../api/storageApi';
 import { getPlaceholderImage, seasonChipColor } from '../config/storageConfig';
-import { Breadcrumbs, PageHeader, LoadingState, ErrorState, EmptyState } from '../components/Layout';
-import { Typography, useConfig } from '@spookydecs/ui';
+import { Breadcrumbs, PageHeader, LoadingState, ErrorState, EmptyState, Typography, useConfig } from '@spookydecs/ui';
 
 function sd(item: ItemRecord): Record<string, unknown> {
   return (item.storage_data as Record<string, unknown>) ?? {};

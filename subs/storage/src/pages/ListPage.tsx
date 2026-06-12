@@ -12,11 +12,10 @@ import { Package, BarChart3, Luggage, Plus } from 'lucide-react';
 import { storageAPI, itemsAPI, photosAPI, type ItemRecord } from '../api/storageApi';
 import { type StorageUnit } from '../config/storageConfig';
 import { applyFilters, calculateStats, type StorageStats } from '../lib/stats';
-import { Breadcrumbs, PageHeader, LoadingState, ErrorState, EmptyState } from '../components/Layout';
+import { Breadcrumbs, PageHeader, LoadingState, ErrorState, EmptyState, Typography, useAuth } from '@spookydecs/ui';
 import { FilterBar, type Filters } from '../components/FilterBar';
 import { StorageCard } from '../components/StorageCard';
 import { ConfirmDialog } from '../components/ConfirmDialog';
-import { Typography, useAuth } from '@spookydecs/ui';
 import { useToast } from '../lib/toast';
 
 const FILTER_KEYS = ['season', 'location', 'class_type', 'packed', 'search'];

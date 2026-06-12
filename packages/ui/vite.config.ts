@@ -21,7 +21,7 @@ export default defineConfig({
       formats: ['es'],
     },
     rollupOptions: {
-      external: [/^react(\/|$)/, /^react-dom(\/|$)/, '@heroui/react', 'framer-motion', 'lucide-react'],
+      external: [/^react(\/|$)/, /^react-dom(\/|$)/, /^react-router-dom(\/|$)/, '@heroui/react', 'framer-motion', 'lucide-react'],
       output: {
         entryFileNames: '[name].js',
         globals: {

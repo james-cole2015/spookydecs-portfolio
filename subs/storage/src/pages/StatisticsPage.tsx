@@ -2,9 +2,8 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { Card, CardBody, CardHeader } from '@heroui/react';
 import { BarChart3, Package, Tag } from 'lucide-react';
 import { storageAPI, itemsAPI, type ItemRecord } from '../api/storageApi';
-import { Typography } from '@spookydecs/ui';
+import { Typography, Breadcrumbs, PageHeader, LoadingState, ErrorState } from '@spookydecs/ui';
 import type { StorageUnit } from '../config/storageConfig';
-import { Breadcrumbs, PageHeader, LoadingState, ErrorState } from '../components/Layout';
 
 function sd(item: ItemRecord): Record<string, unknown> {
   return (item.storage_data as Record<string, unknown>) ?? {};

@@ -5,10 +5,9 @@ import { PackageCheck, Pencil, Trash2 } from 'lucide-react';
 import { storageAPI, photosAPI } from '../api/storageApi';
 import { getPlaceholderImage, seasonChipColor, type StorageUnit } from '../config/storageConfig';
 import { StatusChip } from '../components/StatusChip';
-import { Breadcrumbs, LoadingState, ErrorState } from '../components/Layout';
+import { Breadcrumbs, LoadingState, ErrorState, Typography, useAuth } from '@spookydecs/ui';
 import { PhotoGallery } from '../components/PhotoGallery';
 import { ConfirmDialog } from '../components/ConfirmDialog';
-import { Typography, useAuth } from '@spookydecs/ui';
 import { useToast } from '../lib/toast';
 
 interface ContentItem {

@@ -3,8 +3,7 @@ import { Card, CardBody, Chip, Image, Select, SelectItem, Input } from '@heroui/
 import { Search } from 'lucide-react';
 import { itemsAPI, type ItemRecord } from '../api/storageApi';
 import { getPlaceholderImage, seasonChipColor } from '../config/storageConfig';
-import { Breadcrumbs, PageHeader, LoadingState, ErrorState, EmptyState } from '../components/Layout';
-import { Typography, useConfig } from '@spookydecs/ui';
+import { Breadcrumbs, PageHeader, LoadingState, ErrorState, EmptyState, Typography, useConfig } from '@spookydecs/ui';
 
 export default function UnpackedPage() {
   const config = useConfig();
