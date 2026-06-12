@@ -4,15 +4,16 @@
 #   demo / prod          -> manual workflow_dispatch only (keeps demo freezable)
 #
 # Storage is a React + Vite app built via the @spookydecs/ui npm workspace (#320).
-# build_workdir '.' runs npm ci && npm run build:storage from the repo root so the
-# workspace hoisting resolves @spookydecs/ui before the storage build. artifact_dir
+# build_workdir '.' runs from the repo root so workspace hoisting resolves
+# @spookydecs/ui. The lib is built first (npm run build -w @spookydecs/ui) since
+# dist/ is gitignored and CI cannot rely on a checked-in build. artifact_dir
 # is still dist (relative to subs/storage/ — resolved by the reusable workflow).
 name: Deploy Storage Sub
 
 on:
   push:
     branches: [development, main]
-    paths: ['subs/storage/**']
+    paths: ['subs/storage/**', 'packages/ui/**']
   workflow_dispatch:
     inputs:
       deploy_env:
@@ -36,7 +37,7 @@ jobs:
     with:
       sub: storage
       deploy_env: dev
-      build_command: 'npm ci && npm run build:storage'
+      build_command: 'npm ci && npm run build -w @spookydecs/ui && npm run build:storage'
       build_workdir: '.'
       artifact_dir: dist
     secrets: inherit
@@ -47,7 +48,7 @@ jobs:
     with:
       sub: storage
       deploy_env: prod
-      build_command: 'npm ci && npm run build:storage'
+      build_command: 'npm ci && npm run build -w @spookydecs/ui && npm run build:storage'
       build_workdir: '.'
       artifact_dir: dist
     secrets: inherit
@@ -58,7 +59,7 @@ jobs:
     with:
       sub: storage
       deploy_env: ${{ inputs.deploy_env || 'demo' }}
-      build_command: 'npm ci && npm run build:storage'
+      build_command: 'npm ci && npm run build -w @spookydecs/ui && npm run build:storage'
       build_workdir: '.'
       artifact_dir: dist
     secrets: inherit
