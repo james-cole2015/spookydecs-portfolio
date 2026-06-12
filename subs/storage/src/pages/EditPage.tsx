@@ -5,7 +5,7 @@ import { Pencil, Save } from 'lucide-react';
 import { storageAPI } from '../api/storageApi';
 import { Breadcrumbs, PageHeader, LoadingState, ErrorState, useAuth } from '@spookydecs/ui';
 import { StorageForm, validateForm, type FormData } from '../components/StorageForm';
-import { useToast } from '../lib/toast';
+import { useToast } from '@spookydecs/ui';
 
 export default function EditPage() {
   const { id = '' } = useParams();
