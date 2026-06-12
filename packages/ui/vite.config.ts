@@ -10,13 +10,20 @@ export default defineConfig({
   ],
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
+      // Two entries: the React barrel (index) and the standalone theme plugin
+      // (theme). theme.js stays free of the React surface so a sub's
+      // tailwind.config can import `@spookydecs/ui/theme` without pulling React
+      // into the Tailwind/PostCSS toolchain.
+      entry: {
+        index: resolve(__dirname, 'src/index.ts'),
+        theme: resolve(__dirname, 'src/theme.ts'),
+      },
       formats: ['es'],
-      fileName: 'index',
     },
     rollupOptions: {
-      external: [/^react(\/|$)/, /^react-dom(\/|$)/, '@heroui/react', 'framer-motion'],
+      external: [/^react(\/|$)/, /^react-dom(\/|$)/, '@heroui/react', 'framer-motion', 'lucide-react'],
       output: {
+        entryFileNames: '[name].js',
         globals: {
           react: 'React',
           'react-dom': 'ReactDOM',
