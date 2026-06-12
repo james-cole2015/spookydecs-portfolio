@@ -3,6 +3,8 @@ export type { SpookyConfigValues, SpookyConfigGlobal, SpookyTokenClaims, SpookyR
 export { ConfigProvider, useConfig } from './providers/ConfigProvider';
 export { useAuth } from './hooks/useAuth';
 export type { UseAuth } from './hooks/useAuth';
+export { useToast } from './hooks/useToast';
+export type { ToastApi } from './hooks/useToast';
 export { ThemeProvider, useTheme } from './providers/ThemeProvider';
 export type { Theme } from './providers/ThemeProvider';
 export { ThemeSwitch } from './components/ThemeSwitch';

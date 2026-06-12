@@ -6,7 +6,7 @@ import { storageAPI, itemsAPI, type ItemRecord } from '../api/storageApi';
 import STORAGE_CONFIG, { type StorageUnit } from '../config/storageConfig';
 import { Breadcrumbs, PageHeader, LoadingState, ErrorState, useAuth } from '@spookydecs/ui';
 import { ItemPicker } from '../components/ItemPicker';
-import { useToast } from '../lib/toast';
+import { useToast } from '@spookydecs/ui';
 
 function storageData(item: ItemRecord): Record<string, unknown> {
   return (item.storage_data as Record<string, unknown>) ?? {};

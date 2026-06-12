@@ -8,7 +8,7 @@ import { StatusChip } from '../components/StatusChip';
 import { Breadcrumbs, LoadingState, ErrorState, Typography, useAuth } from '@spookydecs/ui';
 import { PhotoGallery } from '../components/PhotoGallery';
 import { ConfirmDialog } from '../components/ConfirmDialog';
-import { useToast } from '../lib/toast';
+import { useToast } from '@spookydecs/ui';
 
 interface ContentItem {
   id: string;
