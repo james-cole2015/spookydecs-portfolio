@@ -17,7 +17,7 @@ import { Breadcrumbs, PageHeader, LoadingState, ErrorState, EmptyState } from '.
 import { FilterBar, type Filters } from '../components/FilterBar';
 import { StorageCard } from '../components/StorageCard';
 import { ConfirmDialog } from '../components/ConfirmDialog';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '@spookydecs/ui';
 import { useToast } from '../lib/toast';
 
 const FILTER_KEYS = ['season', 'location', 'class_type', 'packed', 'search'];

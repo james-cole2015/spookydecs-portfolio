@@ -9,7 +9,7 @@ import { Breadcrumbs, LoadingState, ErrorState } from '../components/Layout';
 import { PhotoGallery } from '../components/PhotoGallery';
 import { Typography } from '../components/Typography';
 import { ConfirmDialog } from '../components/ConfirmDialog';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '@spookydecs/ui';
 import { useToast } from '../lib/toast';
 
 interface ContentItem {
