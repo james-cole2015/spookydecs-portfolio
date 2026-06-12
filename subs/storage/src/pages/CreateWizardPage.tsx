@@ -10,7 +10,7 @@ import { Typography } from '../components/Typography';
 import { StorageForm, validateForm, type FormData } from '../components/StorageForm';
 import { openPhotoUploadModal } from '../components/PhotoGallery';
 import { useToast } from '../lib/toast';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '@spookydecs/ui';
 
 type ClassType = 'Tote' | 'Self';
 

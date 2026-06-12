@@ -6,7 +6,7 @@ import { storageAPI } from '../api/storageApi';
 import { Breadcrumbs, PageHeader, LoadingState, ErrorState } from '../components/Layout';
 import { StorageForm, validateForm, type FormData } from '../components/StorageForm';
 import { useToast } from '../lib/toast';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '@spookydecs/ui';
 
 export default function EditPage() {
   const { id = '' } = useParams();
