@@ -9,7 +9,6 @@ import {
   useDisclosure,
 } from '@heroui/react';
 import { Package, BarChart3, Luggage, Plus } from 'lucide-react';
-import { Typography } from '../components/Typography';
 import { storageAPI, itemsAPI, photosAPI, type ItemRecord } from '../api/storageApi';
 import { type StorageUnit } from '../config/storageConfig';
 import { applyFilters, calculateStats, type StorageStats } from '../lib/stats';
@@ -17,7 +16,7 @@ import { Breadcrumbs, PageHeader, LoadingState, ErrorState, EmptyState } from '.
 import { FilterBar, type Filters } from '../components/FilterBar';
 import { StorageCard } from '../components/StorageCard';
 import { ConfirmDialog } from '../components/ConfirmDialog';
-import { useAuth } from '@spookydecs/ui';
+import { Typography, useAuth } from '@spookydecs/ui';
 import { useToast } from '../lib/toast';
 
 const FILTER_KEYS = ['season', 'location', 'class_type', 'packed', 'search'];

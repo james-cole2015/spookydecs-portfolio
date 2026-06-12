@@ -6,4 +6,6 @@ export type { UseAuth } from './hooks/useAuth';
 export { ThemeProvider, useTheme } from './providers/ThemeProvider';
 export type { Theme } from './providers/ThemeProvider';
 export { ThemeSwitch } from './components/ThemeSwitch';
+export { Typography } from './components/Typography';
+export type { TypographyType } from './components/Typography';
 export { spookyHeroUI } from './theme';

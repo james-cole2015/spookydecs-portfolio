@@ -2,10 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { Card, CardBody, Chip, Image, Select, SelectItem, Input } from '@heroui/react';
 import { Search } from 'lucide-react';
 import { itemsAPI, type ItemRecord } from '../api/storageApi';
-import { Typography } from '../components/Typography';
 import { getPlaceholderImage, seasonChipColor } from '../config/storageConfig';
 import { Breadcrumbs, PageHeader, LoadingState, ErrorState, EmptyState } from '../components/Layout';
-import { useConfig } from '@spookydecs/ui';
+import { Typography, useConfig } from '@spookydecs/ui';
 
 export default function UnpackedPage() {
   const config = useConfig();

@@ -6,11 +6,10 @@ import { Plus, Package, FileBox, Camera, ArrowLeft, ArrowRight, Save } from 'luc
 import { storageAPI, photosAPI } from '../api/storageApi';
 import STORAGE_CONFIG from '../config/storageConfig';
 import { Breadcrumbs, PageHeader } from '../components/Layout';
-import { Typography } from '../components/Typography';
 import { StorageForm, validateForm, type FormData } from '../components/StorageForm';
 import { openPhotoUploadModal } from '../components/PhotoGallery';
 import { useToast } from '../lib/toast';
-import { useAuth } from '@spookydecs/ui';
+import { Typography, useAuth } from '@spookydecs/ui';
 
 type ClassType = 'Tote' | 'Self';
 

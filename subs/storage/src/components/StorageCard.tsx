@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardBody, CardFooter, Chip, Button, Image, Divider } from '@heroui/react';
 import { Trash2, PackageCheck } from 'lucide-react';
 import { getPlaceholderImage, seasonChipColor, type StorageUnit } from '../config/storageConfig';
-import { Typography } from './Typography';
+import { Typography } from '@spookydecs/ui';
 import { StatusChip } from './StatusChip';
 
 export function StorageCard({

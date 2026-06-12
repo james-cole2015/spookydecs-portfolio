@@ -7,9 +7,8 @@ import { getPlaceholderImage, seasonChipColor, type StorageUnit } from '../confi
 import { StatusChip } from '../components/StatusChip';
 import { Breadcrumbs, LoadingState, ErrorState } from '../components/Layout';
 import { PhotoGallery } from '../components/PhotoGallery';
-import { Typography } from '../components/Typography';
 import { ConfirmDialog } from '../components/ConfirmDialog';
-import { useAuth } from '@spookydecs/ui';
+import { Typography, useAuth } from '@spookydecs/ui';
 import { useToast } from '../lib/toast';
 
 interface ContentItem {
