@@ -6,10 +6,11 @@ export default {
     './index.html',
     './src/**/*.{ts,tsx}',
     '../../packages/ui/src/**/*.{ts,tsx}',
-    // @heroui/theme gets nested under @heroui/react/node_modules (npm doesn't
-    // hoist it), so match it wherever it lands — otherwise Tailwind purges all
-    // of HeroUI's component classes and the components render unstyled.
+    // @heroui/theme is hoisted to the workspace root node_modules (not the sub's
+    // local node_modules) because npm workspaces deduplicate packages. Both paths
+    // are listed so this works whether run from the sub dir or the repo root.
     './node_modules/**/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}',
+    '../../node_modules/**/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}',
   ],
   theme: {
     extend: {},
