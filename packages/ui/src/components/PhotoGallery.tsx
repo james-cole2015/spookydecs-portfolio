@@ -112,7 +112,13 @@ export function PhotoGallery({
   }, [reload]);
 
   const primary = useMemo(() => photos.find((p) => p.is_primary) ?? null, [photos]);
-  const secondary = useMemo(() => photos.filter((p) => !p.is_primary), [photos]);
+  // Everything that isn't the chosen primary is secondary — keyed by photo_id, not
+  // the is_primary flag, so malformed data with duplicate (or zero) primaries still
+  // renders every photo instead of dropping the extras.
+  const secondary = useMemo(
+    () => photos.filter((p) => p.photo_id !== primary?.photo_id),
+    [photos, primary],
+  );
 
   // Lightbox order = primary first, then secondary (matches the CDN component).
   const lightboxPhotos = useMemo(
