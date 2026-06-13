@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* Follow the active HeroUI theme's background/foreground (set via the
+   dark/light class on <html>) so the page recolors when the theme switches. */
+body {
+  background-color: hsl(var(--heroui-background));
+  color: hsl(var(--heroui-foreground));
+}
+
+#root {
+  min-height: calc(100vh - 64px);
+}
+
+/* ── Bespoke JSON-diff panes (RecordDetailModal) ──
+   No HeroUI primitive covers a scroll-synced Before/After diff with changed-field
+   key highlighting, so the panes are hand-styled here. Colors follow the active
+   HeroUI theme via its CSS variables so they recolor with dark/light. */
+.audit-diff-pane {
+  margin: 0;
+  flex: 1;
+  max-height: 60vh;
+  overflow: auto;
+  padding: 0.75rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.75rem;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: hsl(var(--heroui-foreground));
+}
+
+.diff-key-highlight {
+  background: hsl(var(--heroui-warning) / 0.35);
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+.diff-empty,
+.diff-empty-inline {
+  padding: 0.75rem;
+  font-size: 0.875rem;
+  font-style: italic;
+  color: hsl(var(--heroui-default-400));
+  text-align: center;
+}

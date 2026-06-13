@@ -6,7 +6,8 @@
   "workspaces": [
     "packages/*",
     "subs/storage",
-    "subs/workbench"
+    "subs/workbench",
+    "subs/audit"
   ],
   "scripts": {
     "dev": "vite",
@@ -26,6 +27,7 @@
     "build": "vite build",
     "build:storage": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-storage",
     "build:workbench": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-workbench",
+    "build:audit": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-audit",
     "preview": "vite preview"
   },
   "keywords": [],
