@@ -34,7 +34,7 @@ export function FilterBar({
       <Select
         size="sm"
         variant="bordered"
-        label="Entity Type"
+        aria-label="Filter by entity type"
         className="w-48"
         disallowEmptySelection
         selectedKeys={[entityType]}
@@ -48,7 +48,7 @@ export function FilterBar({
       <Select
         size="sm"
         variant="bordered"
-        label="Operation"
+        aria-label="Filter by operation"
         className="w-48"
         disallowEmptySelection
         selectedKeys={[operation]}
