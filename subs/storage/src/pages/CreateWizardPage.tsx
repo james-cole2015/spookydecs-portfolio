@@ -7,7 +7,7 @@ import { storageAPI, photosAPI } from '../api/storageApi';
 import STORAGE_CONFIG from '../config/storageConfig';
 import { Breadcrumbs, PageHeader, Typography, useAuth } from '@spookydecs/ui';
 import { StorageForm, validateForm, type FormData } from '../components/StorageForm';
-import { openPhotoUploadModal } from '../components/PhotoGallery';
+import { openPhotoUploadModal } from '../lib/photoUpload';
 import { useToast } from '@spookydecs/ui';
 
 type ClassType = 'Tote' | 'Self';

@@ -37,9 +37,10 @@
 
     <!-- Shared CDN web components (coexist with React) -->
     <!-- Header is now the native React <AppHeader> from @spookydecs/ui (#348) — CDN spookydecs-header dropped here. -->
+    <!-- Gallery is now the native React <PhotoGallery> from @spookydecs/ui (#328) — CDN photo-gallery dropped here. -->
+    <!-- Upload stays a CDN concern: PhotoGallery's "Add Photos" + the create wizard delegate to <photo-upload-modal>. -->
     <script src="https://assets.spookydecs.com/components/photo-upload-service.js"></script>
     <script src="https://assets.spookydecs.com/components/photo-upload-modal.js"></script>
-    <script src="https://assets.spookydecs.com/components/photo-gallery.js"></script>
 </head>
 <body>
     <!-- Deployed via GitHub Actions (_deploy-sub.yml / deploy-storage.yml, #269) -->

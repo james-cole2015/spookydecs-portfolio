@@ -5,8 +5,7 @@ import { PackageCheck, Pencil, Trash2 } from 'lucide-react';
 import { storageAPI, photosAPI } from '../api/storageApi';
 import { getPlaceholderImage, seasonChipColor, type StorageUnit } from '../config/storageConfig';
 import { StatusChip } from '../components/StatusChip';
-import { Breadcrumbs, LoadingState, ErrorState, Typography, useAuth } from '@spookydecs/ui';
-import { PhotoGallery } from '../components/PhotoGallery';
+import { Breadcrumbs, LoadingState, ErrorState, Typography, useAuth, PhotoGallery } from '@spookydecs/ui';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useToast } from '@spookydecs/ui';
 
@@ -187,7 +186,13 @@ export default function DetailPage() {
           </CardHeader>
           <Divider />
           <CardBody>
-            <PhotoGallery storageId={unit.id} season={String(unit.season ?? 'shared')} />
+            <PhotoGallery
+              context="storage"
+              entityId={unit.id}
+              season={String(unit.season ?? 'shared')}
+              photoType="storage"
+              maxPhotos={2}
+            />
           </CardBody>
         </Card>
 
