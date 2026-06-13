@@ -15,9 +15,13 @@
       "types": "./dist/theme.d.ts",
       "import": "./dist/theme.js",
       "default": "./dist/theme.js"
+    },
+    "./tailwind-preset": {
+      "import": "./tailwind-preset.js",
+      "default": "./tailwind-preset.js"
     }
   },
-  "files": ["dist"],
+  "files": ["dist", "tailwind-preset.js"],
   "scripts": {
     "build": "vite build && tsc --emitDeclarationOnly --declaration --declarationDir dist"
   },

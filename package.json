@@ -5,7 +5,8 @@
   "main": "index.js",
   "workspaces": [
     "packages/*",
-    "subs/storage"
+    "subs/storage",
+    "subs/workbench"
   ],
   "scripts": {
     "dev": "vite",
@@ -24,6 +25,7 @@
     "dev:workbench": "SUB=workbench vite",
     "build": "vite build",
     "build:storage": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-storage",
+    "build:workbench": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-workbench",
     "preview": "vite preview"
   },
   "keywords": [],
