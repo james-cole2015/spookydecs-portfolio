@@ -162,7 +162,12 @@ export function PhotoGallery({
           [map.setPrimaryKey]: entityId,
         }),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        // Surface the server's message (e.g. "storage record not found") rather
+        // than swallowing it behind a bare status code.
+        const detail = await res.text().catch(() => '');
+        throw new Error(`HTTP ${res.status}${detail ? `: ${detail}` : ''}`);
+      }
       await reload();
     } catch (err) {
       console.error('PhotoGallery: set primary failed', err);
