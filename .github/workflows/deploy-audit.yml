@@ -1,0 +1,65 @@
+# Caller workflow for the audit sub (#341; mirrors deploy-workbench.yml).
+#   push to development  -> deploy dev   (auto)
+#   push to main         -> deploy prod  (auto)
+#   demo / prod          -> manual workflow_dispatch only (keeps demo freezable)
+#
+# Audit is a React + Vite app built via the @spookydecs/ui npm workspace
+# (#320/#330). build_workdir '.' runs from the repo root so workspace hoisting
+# resolves @spookydecs/ui. The lib is built first (npm run build -w @spookydecs/ui)
+# since dist/ is gitignored and CI cannot rely on a checked-in build. artifact_dir
+# is still dist (relative to subs/audit/ — resolved by the reusable workflow).
+name: Deploy Audit Sub
+
+on:
+  push:
+    branches: [development, main]
+    paths: ['subs/audit/**', 'packages/ui/**']
+  workflow_dispatch:
+    inputs:
+      deploy_env:
+        description: 'Target env for manual deploy'
+        required: true
+        type: choice
+        options: [demo, prod]
+        default: demo
+
+# Required so the called reusable workflow can request id-token: write for OIDC.
+# (Repo default_workflow_permissions is "read", which would otherwise cap
+# id-token at "none" and fail the call at startup.)
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-dev:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/development'
+    uses: ./.github/workflows/_deploy-sub.yml
+    with:
+      sub: audit
+      deploy_env: dev
+      build_command: 'npm ci && npm run build -w @spookydecs/ui && npm run build:audit'
+      build_workdir: '.'
+      artifact_dir: dist
+    secrets: inherit
+
+  deploy-prod:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/_deploy-sub.yml
+    with:
+      sub: audit
+      deploy_env: prod
+      build_command: 'npm ci && npm run build -w @spookydecs/ui && npm run build:audit'
+      build_workdir: '.'
+      artifact_dir: dist
+    secrets: inherit
+
+  deploy-manual:
+    if: github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/_deploy-sub.yml
+    with:
+      sub: audit
+      deploy_env: ${{ inputs.deploy_env || 'demo' }}
+      build_command: 'npm ci && npm run build -w @spookydecs/ui && npm run build:audit'
+      build_workdir: '.'
+      artifact_dir: dist
+    secrets: inherit

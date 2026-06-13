@@ -1,14 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Audit | SpookyDecs</title>
 
-    <script src="https://assets.spookydecs.com/components/spookydecs-header.js"></script>
+    <!-- Theme init (no-flash): set dark/light class from localStorage before paint. Default dark. -->
+    <script>
+      (function () {
+        var t = localStorage.getItem('sd-theme');
+        if (t !== 'light' && t !== 'dark') t = 'dark';
+        var el = document.documentElement;
+        el.classList.remove('light', 'dark');
+        el.classList.add(t);
+        el.style.colorScheme = t;
+      })();
+    </script>
+
+    <!-- Shared CDN config + auth (provide window.SpookyConfig / window.SpookyAuth) -->
     <script src="https://assets.spookydecs.com/components/api-config.js"></script>
     <script src="https://assets.spookydecs.com/components/auth-helpers.js"></script>
 
+    <!-- Localhost dev: route API calls through the Vite proxy (no auth cookie needed) -->
     <script>
       if (window.location.hostname === 'localhost' && window.SpookyConfig) {
         const _get = window.SpookyConfig.get.bind(window.SpookyConfig);
@@ -16,30 +29,15 @@
       }
     </script>
 
-    <link rel="stylesheet" href="/css/audit.css">
-    <link rel="stylesheet" href="/css/record-detail.css">
+    <!-- Header is the native React <AppHeader> from @spookydecs/ui (#348) — CDN spookydecs-header dropped here. -->
+    <!-- Audit is a read-only viewer with no photos: no cropper / photo-upload / gallery scripts. -->
 </head>
 <body>
-    <spookydecs-header page-title="Audit" logout-url="https://auth.spookydecs.com"></spookydecs-header>
+    <!-- Deployed via GitHub Actions (_deploy-sub.yml / deploy-audit.yml, #341) -->
+    <!-- React mount point (header renders inside the React tree via <AppHeader>) -->
+    <div id="root"></div>
 
-    <main id="app-container"></main>
-
-    <script src="https://unpkg.com/navigo@8.11.1/lib/navigo.min.js"></script>
-
-    <script src="/js/shared/toast.js"></script>
-    <script src="/js/shared/modal.js"></script>
-
-    <script src="/js/utils/audit-config.js"></script>
-    <script src="/js/utils/state.js"></script>
-    <script src="/js/utils/audit-api.js"></script>
-    <script src="/js/utils/router.js"></script>
-
-    <script src="/js/components/FilterBar.js"></script>
-    <script src="/js/components/RecordsTable.js"></script>
-    <script src="/js/components/RecordDetailModal.js"></script>
-
-    <script src="/js/pages/record-list.js"></script>
-
-    <script src="/js/app.js"></script>
+    <!-- React entry (Vite builds to ./dist for the deploy) -->
+    <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>
