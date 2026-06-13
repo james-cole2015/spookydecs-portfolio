@@ -36,20 +36,14 @@
 
 
     <!-- Shared CDN web components (coexist with React) -->
-    <script src="https://assets.spookydecs.com/components/spookydecs-header.js"></script>
+    <!-- Header is now the native React <AppHeader> from @spookydecs/ui (#348) — CDN spookydecs-header dropped here. -->
     <script src="https://assets.spookydecs.com/components/photo-upload-service.js"></script>
     <script src="https://assets.spookydecs.com/components/photo-upload-modal.js"></script>
     <script src="https://assets.spookydecs.com/components/photo-gallery.js"></script>
 </head>
 <body>
     <!-- Deployed via GitHub Actions (_deploy-sub.yml / deploy-storage.yml, #269) -->
-    <!-- Shared header web component -->
-    <spookydecs-header
-        page-title="Storage Management"
-        logout-url="https://auth.spookydecs.com">
-    </spookydecs-header>
-
-    <!-- React mount point -->
+    <!-- React mount point (header renders inside the React tree via <AppHeader>) -->
     <div id="root"></div>
 
     <!-- React entry (Vite builds to ./dist for the demo deploy) -->

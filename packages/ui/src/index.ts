@@ -12,4 +12,7 @@ export { Typography } from './components/Typography';
 export type { TypographyType } from './components/Typography';
 export { Breadcrumbs, PageContainer, PageHeader, LoadingState, ErrorState, EmptyState } from './components/Layout';
 export type { Crumb } from './components/Layout';
+export { AppHeader } from './components/AppHeader';
+export type { AppHeaderProps } from './components/AppHeader';
+export { DemoResetBanner, isDemoEnv } from './components/DemoResetBanner';
 export { spookyHeroUI } from './theme';
