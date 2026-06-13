@@ -131,7 +131,9 @@ export function AppHeader({
   const { claims } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const name = userName ?? (claims?.['cognito:username'] as string | undefined) ?? 'User';
+  const name =
+    userName ??
+    (claims ? ((claims['cognito:username'] as string | undefined) ?? 'User') : 'Not signed in');
   const role = userRole ?? (claims?.['custom:role'] as string | undefined) ?? '';
 
   // Resolve each nav item's URL from config and drop the ones with no key set,
@@ -161,24 +163,17 @@ export function AppHeader({
         className="mb-6 rounded-large"
         isBordered
       >
-        <NavbarContent justify="start">
+        <NavbarContent justify="start" className="gap-2">
+          {/* Mobile: HeroUI menu toggle. Desktop: icon-only nav dropdown. Both far left. */}
           <NavbarMenuToggle
             aria-label={isMenuOpen ? 'Close navigation' : 'Open navigation'}
             className="sm:hidden"
           />
-          <NavbarBrand className="gap-1">
-            <span className="font-semibold text-foreground">SpookyDecs</span>
-            <span className="hidden text-default-500 sm:inline"> – {pageTitle}</span>
-          </NavbarBrand>
-        </NavbarContent>
-
-        {/* Desktop cluster: app-switcher dropdown, identity, theme, logout. */}
-        <NavbarContent justify="end" className="gap-3">
           <NavbarItem className="hidden sm:flex">
             <Dropdown>
               <DropdownTrigger>
-                <Button variant="flat" size="sm" startContent={<MenuIcon size={16} />}>
-                  Navigate
+                <Button isIconOnly variant="light" size="sm" aria-label="Open navigation">
+                  <MenuIcon size={20} />
                 </Button>
               </DropdownTrigger>
               <DropdownMenu aria-label="Site navigation" items={navItems}>
@@ -202,7 +197,14 @@ export function AppHeader({
               </DropdownMenu>
             </Dropdown>
           </NavbarItem>
+          <NavbarBrand className="gap-1">
+            <span className="font-semibold text-foreground">SpookyDecs</span>
+            <span className="hidden text-default-500 sm:inline"> – {pageTitle}</span>
+          </NavbarBrand>
+        </NavbarContent>
 
+        {/* Right cluster: identity, theme, logout. */}
+        <NavbarContent justify="end" className="gap-3">
           <NavbarItem className="hidden items-center gap-2 sm:flex">
             <span className="text-small text-default-600">{name}</span>
             {role && (
