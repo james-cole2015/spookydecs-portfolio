@@ -19,9 +19,14 @@
     "./tailwind-preset": {
       "import": "./tailwind-preset.js",
       "default": "./tailwind-preset.js"
+    },
+    "./vite-cdn-dev": {
+      "types": "./vite-cdn-dev.d.ts",
+      "import": "./vite-cdn-dev.js",
+      "default": "./vite-cdn-dev.js"
     }
   },
-  "files": ["dist", "tailwind-preset.js"],
+  "files": ["dist", "tailwind-preset.js", "vite-cdn-dev.js", "vite-cdn-dev.d.ts"],
   "scripts": {
     "build": "vite build && tsc --emitDeclarationOnly --declaration --declarationDir dist"
   },

@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
+import { spookyCdnDev } from '@spookydecs/ui/vite-cdn-dev';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
@@ -51,7 +52,10 @@ export default defineConfig(({ mode }) => {
   };
 
   return {
-    plugins: [react(), autoAuthPlugin],
+    // spookyCdnDev: dev-only — serve assets.spookydecs.com/components/* from the
+    // local configs-spookydecs repo so CDN-component edits are testable without a
+    // deploy round-trip (#357). No-op in `vite build` (production keeps CDN URLs).
+    plugins: [react(), autoAuthPlugin, spookyCdnDev()],
     resolve: {
       alias: {
         '@spookydecs/ui': resolve(repoRoot, 'packages/ui/src'),
