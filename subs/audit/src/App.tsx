@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { PageContainer, LoadingState, AppHeader } from '@spookydecs/ui';
+import { PageContainer, LoadingState, AppHeader, useAuth } from '@spookydecs/ui';
 
 // The audit viewer is one lazy chunk — mirrors storage/workbench App.tsx. The
 // header hosts the theme switch (#348), so there is no per-page ThemeSwitch here.
@@ -12,11 +12,12 @@ export default function App() {
   // case render nothing while the redirect navigates away. Runs under
   // ConfigProvider, so the runtime config is already resolved here.
   const [access, setAccess] = useState<'checking' | 'granted' | 'denied'>('checking');
+  const { enforceEnvAccess } = useAuth();
 
   useEffect(() => {
-    const ok = window.SpookyAuth?.enforceEnvAccess?.() ?? false;
+    const ok = enforceEnvAccess();
     setAccess(ok ? 'granted' : 'denied');
-  }, []);
+  }, [enforceEnvAccess]);
 
   if (access === 'checking') return <LoadingState label="Checking access…" />;
   if (access === 'denied') return null;
