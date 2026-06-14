@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { PageContainer, LoadingState, Hello, AppHeader } from '@spookydecs/ui';
+import { PageContainer, LoadingState, AppHeader } from '@spookydecs/ui';
 
 // Lazy-load pages so each route is its own chunk (playbook pattern: mirrors the
 // vanilla router's lazy page imports and keeps the initial bundle small).
@@ -18,7 +18,6 @@ export default function App() {
   return (
     <PageContainer>
       <AppHeader pageTitle="Storage Management" />
-      <Hello />
       <Suspense fallback={<LoadingState />}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
