@@ -106,7 +106,7 @@ export const RELATED_ID_CONFIG = {
     label: 'Related Idea', 
     required: false, 
     endpoint: '/ideas',
-    searchFields: ['idea_name', 'id']
+    searchFields: ['title', 'idea_name', 'id']
   },
   supply_purchase: null, // No related field
   other: { 
