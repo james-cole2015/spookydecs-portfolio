@@ -71,6 +71,29 @@ export const spookyUIContent = [
   ...heroUIThemeContent(),
 ];
 
+/**
+ * A consuming sub's COMPLETE content list — its own `index.html` + `src`, plus
+ * the cross-cutting `spookyUIContent` safelist. Each sub calls this from its
+ * tailwind.config.js as `content: spookySubContent(import.meta.url)`.
+ *
+ * The sub's own globs are resolved to ABSOLUTE paths from the sub's config-file
+ * location (passed in as `import.meta.url`) — not left relative. Tailwind resolves
+ * relative `content` globs against `process.cwd()`, and `npm run dev:<sub>` runs
+ * Vite from the repo root (cwd = root), so a relative `./src/**` silently matches
+ * nothing in dev: the sub's bespoke classes (responsive grid breakpoints, custom
+ * layout) get purged and the UI renders in a degraded single-column/mobile layout
+ * even though HeroUI's safelisted classes still load. Anchoring on the config-file
+ * dir makes the globs cwd-independent so dev and build scan the same files. (#358)
+ */
+export function spookySubContent(importMetaUrl) {
+  const subDir = dirname(fileURLToPath(importMetaUrl));
+  return [
+    resolve(subDir, 'index.html'),
+    resolve(subDir, 'src/**/*.{ts,tsx}'),
+    ...spookyUIContent,
+  ];
+}
+
 /** HeroUI plugin + brand theme + dark mode. Consume via `presets: [...]`. */
 const spookyTailwindPreset = {
   theme: { extend: {} },
