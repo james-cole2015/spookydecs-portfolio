@@ -1,41 +1,43 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SpookyDecs Admin</title>
-    
-    <!-- Styles -->
-    <link rel="stylesheet" href="/css/admin.css">
-    <link rel="stylesheet" href="/css/action-center.css">
-    <link rel="stylesheet" href="/css/iris.css">
-    <link rel="stylesheet" href="/css/about.css">
-    <link rel="stylesheet" href="/css/search-text.css">
+
+    <!-- Theme init (no-flash): set dark/light class from localStorage before paint. Default dark. -->
+    <script>
+      (function () {
+        var t = localStorage.getItem('sd-theme');
+        if (t !== 'light' && t !== 'dark') t = 'dark';
+        var el = document.documentElement;
+        el.classList.remove('light', 'dark');
+        el.classList.add(t);
+        el.style.colorScheme = t;
+      })();
+    </script>
+
+    <!-- Shared CDN config + auth (provide window.SpookyConfig / window.SpookyAuth) -->
+    <script src="https://assets.spookydecs.com/components/api-config.js"></script>
+    <script src="https://assets.spookydecs.com/components/auth-helpers.js"></script>
+
+    <!-- Localhost dev: route API calls through the Vite proxy (no auth cookie needed) -->
+    <script>
+      if (window.location.hostname === 'localhost' && window.SpookyConfig) {
+        const _get = window.SpookyConfig.get.bind(window.SpookyConfig);
+        window.SpookyConfig.get = async () => ({ ...(await _get()), API_ENDPOINT: '/devapi' });
+      }
+    </script>
+
+    <!-- Header is now the native React <AppHeader> from @spookydecs/ui (#348) — CDN spookydecs-header dropped here. -->
+    <!-- admin uses no photo web components — no upload/gallery CDN scripts needed. -->
 </head>
 <body>
-  <script src="https://assets.spookydecs.com/components/api-config.js"></script>
-  <script src="https://assets.spookydecs.com/components/auth-helpers.js"></script>
+    <!-- Deployed via GitHub Actions (_deploy-sub.yml / deploy-admin.yml, #269/#331) -->
+    <!-- React mount point (header renders inside the React tree via <AppHeader>) -->
+    <div id="root"></div>
 
-  <!-- Localhost dev: route API calls through Vite proxy (no auth cookie needed) -->
-  <script>
-    if (window.location.hostname === 'localhost' && window.SpookyConfig) {
-      const _get = window.SpookyConfig.get.bind(window.SpookyConfig);
-      window.SpookyConfig.get = async () => ({ ...(await _get()), API_ENDPOINT: '/devapi' });
-    }
-  </script>
-
-  <script src="https://assets.spookydecs.com/components/spookydecs-header.js"></script>
-
-  <spookydecs-header page-title="Administration" logout-url="https://auth.spookydecs.com"></spookydecs-header>
-
-
-    <!-- Main Content Container -->
-    <div id="app-container">
-        <!-- Router will inject content here -->
-    </div>
-
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/navigo@8.11.1/lib/navigo.min.js"></script>
-    <script type="module" src="/js/app.js"></script>
+    <!-- React entry (Vite builds to ./dist for the deploy) -->
+    <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>
