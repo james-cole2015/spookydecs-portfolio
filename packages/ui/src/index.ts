@@ -15,5 +15,7 @@ export { AppHeader } from './components/AppHeader';
 export type { AppHeaderProps } from './components/AppHeader';
 export { PhotoGallery } from './components/PhotoGallery';
 export type { PhotoGalleryProps, PhotoGalleryContext } from './components/PhotoGallery';
+export { PhotoLightbox } from './components/PhotoLightbox';
+export type { PhotoLightboxProps, LightboxPhoto, LightboxThumbnailProps } from './components/PhotoLightbox';
 export { DemoResetBanner, isDemoEnv } from './components/DemoResetBanner';
 export { spookyHeroUI } from './theme';
