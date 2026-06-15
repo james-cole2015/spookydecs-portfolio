@@ -4,6 +4,8 @@ export { useAuth } from './hooks/useAuth';
 export type { UseAuth } from './hooks/useAuth';
 export { useToast } from './hooks/useToast';
 export type { ToastApi } from './hooks/useToast';
+export { usePhotoUpload } from './hooks/usePhotoUpload';
+export type { UsePhotoUpload, PhotoUploadOptions, OpenPhotoUploadOptions, UploadedPhoto } from './hooks/usePhotoUpload';
 export { ThemeProvider, useTheme } from './providers/ThemeProvider';
 export type { Theme } from './providers/ThemeProvider';
 export { ThemeSwitch } from './components/ThemeSwitch';
