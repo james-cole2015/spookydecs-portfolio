@@ -1,67 +1,36 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SpookyDecs Gallery - Holiday Display Showcase</title>
-  
-  <!-- CSS -->
-  <link rel="stylesheet" href="css/gallery.css">
-  <link rel="stylesheet" href="css/hero-carousel.css">
-  <link rel="stylesheet" href="css/showcase.css">
-  <link rel="stylesheet" href="css/progress.css">
-  <link rel="stylesheet" href="css/community.css">
-
-
-      <script src="https://assets.spookydecs.com/components/api-config.js"></script>
-
-  
-  <!-- PhotoSwipe CSS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@5.3.8/dist/photoswipe.css">
-  
-  <!-- Favicon -->
+  <title>SpookyDecs Gallery — Holiday Display Showcase</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎃</text></svg>">
+
+  <!-- Theme init (no-flash): set dark/light class from localStorage before paint. Default dark. -->
+  <script>
+    (function () {
+      var t = localStorage.getItem('sd-theme');
+      if (t !== 'light' && t !== 'dark') t = 'dark';
+      var el = document.documentElement;
+      el.classList.remove('light', 'dark');
+      el.classList.add(t);
+      el.style.colorScheme = t;
+    })();
+  </script>
+
+  <!-- Shared CDN config (provides window.SpookyConfig). Gallery reads are public — no auth-helpers. -->
+  <script src="https://assets.spookydecs.com/components/api-config.js"></script>
+
+  <!-- Localhost dev: route API calls through the Vite proxy -->
+  <script>
+    if (window.location.hostname === 'localhost' && window.SpookyConfig) {
+      const _get = window.SpookyConfig.get.bind(window.SpookyConfig);
+      window.SpookyConfig.get = async () => ({ ...(await _get()), API_ENDPOINT: '/devapi' });
+    }
+  </script>
 </head>
 <body>
-  <!-- Gallery Container -->
-  <div class="gallery-container">
-    <!-- Header -->
-    <header class="gallery-header">
-      <div class="header-content">
-        <div class="gallery-logo">
-          <span>🎃</span> SpookyDecs Gallery
-        </div>
-        <div style="display: flex; align-items: center; gap: 1rem;">
-          <div id="theme-toggle"></div>
-          <div id="section-tabs"></div>
-        </div>
-      </div>
-    </header>
-
-    <!-- Main Content -->
-    <main class="gallery-main">
-      <div id="app"></div>
-    </main>
-
-    <!-- Footer -->
-    <footer class="gallery-footer">
-      <div class="footer-content">
-        <p class="footer-text">
-          SpookyDecs Gallery - Showcasing creative holiday displays
-        </p>
-        <div class="footer-links">
-          <a href="#" class="footer-link">About</a>
-          <a href="#" class="footer-link">Submit Your Display</a>
-          <a href="#" class="footer-link">Contact</a>
-        </div>
-      </div>
-    </footer>
-  </div>
-
-  <!-- PhotoSwipe JS -->
-  <script type="module" src="https://cdn.jsdelivr.net/npm/photoswipe@5.3.8/dist/photoswipe.esm.min.js"></script>
-  
-  <!-- App JS -->
-  <script type="module" src="js/app.js"></script>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>
