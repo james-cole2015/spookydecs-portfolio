@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Button, Card, CardBody, Divider, Image } from '@heroui/react';
-import { Breadcrumbs, PageHeader, LoadingState, ErrorState, useToast, useAuth } from '@spookydecs/ui';
+import { Breadcrumbs, PageHeader, LoadingState, ErrorState, Typography, useToast, useAuth } from '@spookydecs/ui';
 import { fetchItemById, updateItem } from '../api/itemsApi';
 import { type Item, type StorageData } from '../api/types';
 import { BasicFields, ClassSpecificFields, VendorFields, StorageFields } from '../components/ItemFormFields';
@@ -140,7 +140,7 @@ export default function EditPage() {
 
   return (
     <div className="p-4 max-w-2xl mx-auto">
-      <Breadcrumbs crumbs={[{ label: 'Items' }, { label: item.short_name }, { label: 'Edit' }]} />
+      <Breadcrumbs crumbs={[{ label: 'Items', to: '/' }, { label: item.short_name, to: `/${item.id}` }, { label: 'Edit' }]} />
       <div className="flex items-center gap-4 mb-6">
         {item.images?.cloudfront_url ? (
           <Image src={item.images.cloudfront_url} alt={item.short_name} className="w-16 h-16 rounded-lg object-cover" />
@@ -149,8 +149,8 @@ export default function EditPage() {
         )}
         <div>
           <PageHeader title="Edit Item" />
-          <p className="text-sm text-foreground-500">{item.short_name} — {item.class} / {item.class_type}</p>
-          <p className="text-xs text-foreground-400">{item.id}</p>
+          <Typography type="body-sm" className="text-foreground-500">{item.short_name} — {item.class} / {item.class_type}</Typography>
+          <Typography type="body-xs" className="text-foreground-400">{item.id}</Typography>
         </div>
       </div>
 
@@ -158,12 +158,12 @@ export default function EditPage() {
         <Card className="mb-4">
           <CardBody className="flex flex-col gap-6">
             <div>
-              <p className="font-semibold mb-3">Basic Information</p>
+              <Typography type="h6" className="mb-3">Basic Information</Typography>
               <BasicFields register={register} errors={errors} showStatus />
             </div>
             <Divider />
             <div>
-              <p className="font-semibold mb-3">{item.class} / {item.class_type} Details</p>
+              <Typography type="h6" className="mb-3">{item.class} / {item.class_type} Details</Typography>
               <ClassSpecificFields
                 classType={item.class_type}
                 register={register}
@@ -174,12 +174,12 @@ export default function EditPage() {
             </div>
             <Divider />
             <div>
-              <p className="font-semibold mb-3">Vendor Information</p>
+              <Typography type="h6" className="mb-3">Vendor Information</Typography>
               <VendorFields register={register} />
             </div>
             <Divider />
             <div>
-              <p className="font-semibold mb-3">Storage Information</p>
+              <Typography type="h6" className="mb-3">Storage Information</Typography>
               <StorageFields register={register} />
             </div>
           </CardBody>

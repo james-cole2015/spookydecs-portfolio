@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Button, Card, CardBody, Divider } from '@heroui/react';
-import { Breadcrumbs, PageHeader, useToast, useAuth } from '@spookydecs/ui';
+import { Breadcrumbs, PageHeader, Typography, useToast, useAuth } from '@spookydecs/ui';
 import { CLASS_HIERARCHY, TYPE_ICONS, getClassIcon } from '../config/itemsConfig';
 import { BasicFields, ClassSpecificFields, VendorFields, StorageFields } from '../components/ItemFormFields';
 import { type ItemFormValues, DEFAULT_VALUES } from '../components/ItemFormSchema';
@@ -71,7 +71,7 @@ export default function CreatePage() {
 
   return (
     <div className="p-4 max-w-2xl mx-auto">
-      <Breadcrumbs crumbs={[{ label: 'Items' }, { label: 'Create Item' }]} />
+      <Breadcrumbs crumbs={[{ label: 'Items', to: '/' }, { label: 'Create Item' }]} />
       <PageHeader title="Create Item" />
 
       {/* Step indicator */}
@@ -99,7 +99,7 @@ export default function CreatePage() {
         {step >= 1 && (
           <Card className="mb-4">
             <CardBody>
-              <p className="font-semibold mb-3">1. Select Item Class</p>
+              <Typography type="h6" className="mb-3">1. Select Item Class</Typography>
               <div className="grid grid-cols-3 gap-3">
                 {Object.keys(CLASS_HIERARCHY).map((cls) => (
                   <button
@@ -121,7 +121,7 @@ export default function CreatePage() {
         {step >= 2 && selectedClass && (
           <Card className="mb-4">
             <CardBody>
-              <p className="font-semibold mb-3">2. Select {selectedClass} Type</p>
+              <Typography type="h6" className="mb-3">2. Select {selectedClass} Type</Typography>
               <div className="grid grid-cols-3 gap-3">
                 {classTypes.map((type) => (
                   <button
@@ -144,12 +144,12 @@ export default function CreatePage() {
           <Card className="mb-4">
             <CardBody className="flex flex-col gap-6">
               <div>
-                <p className="font-semibold mb-3">3. Basic Information</p>
+                <Typography type="h6" className="mb-3">3. Basic Information</Typography>
                 <BasicFields register={register} errors={errors} showStatus={false} />
               </div>
               <Divider />
               <div>
-                <p className="font-semibold mb-3">{selectedClass} Details</p>
+                <Typography type="h6" className="mb-3">{selectedClass} Details</Typography>
                 <ClassSpecificFields
                   classType={selectedClassType}
                   register={register}
@@ -160,12 +160,12 @@ export default function CreatePage() {
               </div>
               <Divider />
               <div>
-                <p className="font-semibold mb-3">Vendor Information</p>
+                <Typography type="h6" className="mb-3">Vendor Information</Typography>
                 <VendorFields register={register} />
               </div>
               <Divider />
               <div>
-                <p className="font-semibold mb-3">Storage Information</p>
+                <Typography type="h6" className="mb-3">Storage Information</Typography>
                 <StorageFields register={register} />
               </div>
               <div className="flex justify-end">
@@ -181,7 +181,7 @@ export default function CreatePage() {
         {step >= 4 && (
           <Card className="mb-4">
             <CardBody>
-              <p className="font-semibold mb-3">4. Review & Confirm</p>
+              <Typography type="h6" className="mb-3">4. Review & Confirm</Typography>
               <ReviewSummary values={getValues()} />
               <div className="flex gap-3 justify-end mt-4">
                 <Button variant="flat" type="button" onPress={() => setStep(3)}>← Back</Button>

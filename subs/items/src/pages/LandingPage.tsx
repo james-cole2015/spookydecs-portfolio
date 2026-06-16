@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Card, CardBody } from '@heroui/react';
-import { Breadcrumbs, PageHeader } from '@spookydecs/ui';
+import { Breadcrumbs, PageHeader, Typography } from '@spookydecs/ui';
 
 const CARDS = [
   { icon: '🎃', title: 'Decorations',  description: 'Inflatables, Animatronics, and Static Props.', route: '/items?class=Decoration' },
@@ -26,8 +26,8 @@ export default function LandingPage() {
             <CardBody className="flex flex-row items-center gap-4 p-5">
               <span className="text-4xl">{c.icon}</span>
               <div>
-                <p className="font-semibold text-lg">{c.title}</p>
-                <p className="text-sm text-foreground-500">{c.description}</p>
+                <Typography type="h5" className="text-foreground">{c.title}</Typography>
+                <Typography type="body-sm" className="text-foreground-500">{c.description}</Typography>
               </div>
             </CardBody>
           </Card>

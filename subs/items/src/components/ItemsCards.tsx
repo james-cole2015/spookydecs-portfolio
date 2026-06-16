@@ -1,7 +1,7 @@
 // ItemsCards — grid of item cards (#332)
 import { Card, CardBody, CardFooter, Button, Chip } from '@heroui/react';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
-import { EmptyState, useToast } from '@spookydecs/ui';
+import { EmptyState, useToast, Typography } from '@spookydecs/ui';
 import { type Item } from '../api/types';
 import { getPlaceholderIcon, getSeasonIcon, getStatusColor } from '../config/itemsConfig';
 import { ConfirmDialog } from './ConfirmDialog';
@@ -71,12 +71,12 @@ export function ItemsCards({ items, onView, onEdit, onDelete, canWrite, canDelet
                   )}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1">
-                      <p className="font-semibold truncate">{item.short_name}</p>
+                      <Typography type="h6" as="div" className="truncate text-foreground">{item.short_name}</Typography>
                       {item.maintenance?.repair_data?.needs_repair && item.operational_status !== false && (
                         <span title="Needs repair">🔧</span>
                       )}
                     </div>
-                    <p className="text-xs text-foreground-500">{item.class_type} · {seasonIcon} {item.season}</p>
+                    <Typography type="body-xs" as="div" className="text-foreground-500">{item.class_type} · {seasonIcon} {item.season}</Typography>
                     <div className="flex flex-wrap gap-1 mt-1">
                       <Chip size="sm" variant="flat" color={statusVariant(item.status)}>{item.status}</Chip>
                       {item.operational_status === false && (

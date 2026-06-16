@@ -71,7 +71,7 @@ export default function ListPage() {
 
   return (
     <div className="p-4 max-w-6xl mx-auto">
-      <Breadcrumbs crumbs={[{ label: 'Items' }, { label: title }]} />
+      <Breadcrumbs crumbs={[{ label: 'Items', to: '/' }, { label: title }]} />
       <div className="flex items-center justify-between mb-4">
         <PageHeader title="Inventory Management" />
         {canWrite && (

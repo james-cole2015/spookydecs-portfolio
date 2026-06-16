@@ -1,6 +1,7 @@
 // FilterBar — useSearchParams-driven filter controls (#332)
-// Receptacles excluded from class list (per ALLOWED_CLASSES); connection_building preserved.
-import { useState } from 'react';
+// Local state mirrors props so selections are immediate; syncs from URL on external nav.
+// Selects use key+defaultSelectedKeys (remount on change) to avoid HeroUI controlled-state issues.
+import { useEffect, useState } from 'react';
 import { Select, SelectItem, Input, Button } from '@heroui/react';
 import { CLASS_HIERARCHY, SEASONS, ITEM_STATUS } from '../config/itemsConfig';
 
@@ -32,87 +33,104 @@ interface Props {
 }
 
 export function FilterBar({ filters, onChange }: Props) {
-  const [search, setSearch] = useState(filters.search);
-  const classTypes = filters.class ? CLASS_HIERARCHY[filters.class]?.types ?? [] : [];
+  const [local, setLocal] = useState<Filters>(filters);
+
+  // Sync when URL changes externally (browser back/forward, landing-page nav)
+  useEffect(() => {
+    setLocal(filters);
+  }, [
+    filters.search, filters.season, filters.class,
+    filters.class_type, filters.status, filters.maintenance,
+  ]);
 
   function update(patch: Partial<Filters>) {
-    const next = { ...filters, ...patch };
+    const next = { ...local, ...patch };
     if ('class' in patch) next.class_type = '';
+    setLocal(next);
     onChange(next);
   }
 
   function clearAll() {
-    setSearch('');
-    onChange({ search: '', season: '', class: '', class_type: '', status: '', maintenance: '' });
+    const empty: Filters = { search: '', season: '', class: '', class_type: '', status: '', maintenance: '' };
+    setLocal(empty);
+    onChange(empty);
+  }
+
+  const isActive = FILTER_KEYS.some((k) => local[k] !== '');
+
+  function pick(key: keyof Filters) {
+    return (keys: any) => {
+      const value = (keys instanceof Set ? [...keys][0] : undefined) as string ?? '';
+      update({ [key]: value } as Partial<Filters>);
+    };
   }
 
   return (
-    <div className="flex flex-wrap gap-3 mb-4 items-end">
-      <div className="flex-1 min-w-[200px]">
-        <Input
-          placeholder="Search by name or ID..."
-          value={search}
-          onValueChange={(v) => {
-            setSearch(v);
-            clearTimeout((FilterBar as any)._debounce);
-            (FilterBar as any)._debounce = setTimeout(() => update({ search: v.trim() }), 300);
-          }}
-          size="sm"
-        />
-      </div>
-      <Select
-        placeholder="Status"
-        selectedKeys={filters.status ? [filters.status] : []}
-        onSelectionChange={(keys) => update({ status: [...keys][0] as string ?? '' })}
+    <div className="mb-6 grid grid-cols-2 gap-4 rounded-xl border border-default-200 bg-content1 p-4 sm:grid-cols-3 lg:grid-cols-5">
+      <Input
         size="sm"
-        className="w-36"
+        variant="bordered"
+        label="Search"
+        placeholder="Search by name or ID..."
+        value={local.search}
+        onValueChange={(v) => {
+          setLocal((prev) => ({ ...prev, search: v }));
+          clearTimeout((FilterBar as any)._debounce);
+          (FilterBar as any)._debounce = setTimeout(() => update({ search: v.trim() }), 300);
+        }}
+        isClearable
+        onClear={() => update({ search: '' })}
+      />
+      <Select
+        key={`status-${local.status}`}
+        size="sm"
+        variant="bordered"
+        label="Status"
+        defaultSelectedKeys={new Set(local.status ? [local.status] : [])}
+        onSelectionChange={pick('status')}
       >
         {ITEM_STATUS.map((s) => <SelectItem key={s.value}>{s.label}</SelectItem>)}
       </Select>
       <Select
-        placeholder="Season"
-        selectedKeys={filters.season ? [filters.season] : []}
-        onSelectionChange={(keys) => update({ season: [...keys][0] as string ?? '' })}
+        key={`season-${local.season}`}
         size="sm"
-        className="w-36"
+        variant="bordered"
+        label="Season"
+        defaultSelectedKeys={new Set(local.season ? [local.season] : [])}
+        onSelectionChange={pick('season')}
       >
-        {SEASONS.map((s) => <SelectItem key={s.value}>{s.icon} {s.label}</SelectItem>)}
+        {SEASONS.map((s) => <SelectItem key={s.value} textValue={s.label}>{s.icon} {s.label}</SelectItem>)}
       </Select>
       <Select
-        placeholder="Class"
-        selectedKeys={filters.class ? [filters.class] : []}
-        onSelectionChange={(keys) => update({ class: [...keys][0] as string ?? '' })}
+        key={`class-${local.class}`}
         size="sm"
-        className="w-36"
+        variant="bordered"
+        label="Class"
+        defaultSelectedKeys={new Set(local.class ? [local.class] : [])}
+        onSelectionChange={pick('class')}
       >
         {Object.keys(CLASS_HIERARCHY).map((cls) => (
-          <SelectItem key={cls}>{CLASS_HIERARCHY[cls].icon} {cls}</SelectItem>
+          <SelectItem key={cls} textValue={cls}>{CLASS_HIERARCHY[cls].icon} {cls}</SelectItem>
         ))}
       </Select>
-      {classTypes.length > 0 && (
-        <Select
-          placeholder="Type"
-          selectedKeys={filters.class_type ? [filters.class_type] : []}
-          onSelectionChange={(keys) => update({ class_type: [...keys][0] as string ?? '' })}
-          size="sm"
-          className="w-36"
-        >
-          {classTypes.map((t) => <SelectItem key={t}>{t}</SelectItem>)}
-        </Select>
-      )}
       <Select
-        placeholder="Maintenance"
-        selectedKeys={filters.maintenance ? [filters.maintenance] : []}
-        onSelectionChange={(keys) => update({ maintenance: [...keys][0] as string ?? '' })}
+        key={`maintenance-${local.maintenance}`}
         size="sm"
-        className="w-40"
+        variant="bordered"
+        label="Maintenance"
+        defaultSelectedKeys={new Set(local.maintenance ? [local.maintenance] : [])}
+        onSelectionChange={pick('maintenance')}
       >
         <SelectItem key="needs_repair">Needs Repair</SelectItem>
         <SelectItem key="non_operational">Non-Operational</SelectItem>
       </Select>
-      <Button size="sm" variant="flat" onPress={clearAll}>
-        Clear Filters
-      </Button>
+      {isActive && (
+        <div className="flex items-center">
+          <Button size="sm" variant="flat" color="secondary" onPress={clearAll}>
+            Clear Filters
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

@@ -22,8 +22,41 @@ export interface VendorMetadata {
   vendor_store?: string;
 }
 
+export interface RepairData {
+  needs_repair?: boolean;
+  operational_blocker_record_id?: string;
+}
+
+export interface InspectionData {
+  applied_templates?: string[];
+  next_inspection_date?: string;
+  last_synced_at?: string;
+}
+
+export interface RecurringMaintenanceData {
+  applied_templates?: string[];
+  next_maintenance_date?: string;
+  last_synced_at?: string;
+}
+
+export interface GenerationHistoryEntry {
+  template_id: string;
+  record_id: string;
+  due_date: string;
+}
+
 export interface MaintenanceData {
-  repair_data?: { needs_repair?: boolean };
+  repair_data?: RepairData;
+  inspection_data?: InspectionData;
+  maintenance_data?: RecurringMaintenanceData;
+  generation_history?: GenerationHistoryEntry[];
+}
+
+export interface DeploymentData {
+  deployed?: boolean;
+  last_deployment_id?: string;
+  last_deployed_at?: string;
+  previous_deployments?: string[];
 }
 
 export interface Item {
@@ -56,7 +89,8 @@ export interface Item {
   maintenance?: MaintenanceData;
   operational_status?: boolean;
   search_text?: string;
-  deployment_data?: Record<string, unknown>;
+  source_idea_id?: string;
+  deployment_data?: DeploymentData;
 }
 
 export interface CascadePreview {
@@ -77,8 +111,12 @@ export interface Photo {
 export interface MaintenanceRecord {
   id: string;
   item_id?: string;
-  description?: string;
-  date?: string;
+  record_type?: string;
   status?: string;
+  title?: string;
+  description?: string;
+  date_performed?: string;
+  date_scheduled?: string;
+  created_at?: string;
   [key: string]: unknown;
 }
