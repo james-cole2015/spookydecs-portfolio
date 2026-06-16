@@ -1,0 +1,60 @@
+# Caller workflow for the items sub React + HeroUI migration (#332).
+#   push to development  -> deploy dev   (auto)
+#   push to main         -> deploy prod + demo (auto, via Paxin smoke test gate)
+#   manual               -> demo or prod on demand
+#
+# Build runs from the repo root (build_workdir '.') so @spookydecs/ui workspace
+# hoisting resolves. The ui lib is built first since dist/ is gitignored.
+# artifact_dir is dist (relative to subs/items/, resolved by the reusable workflow).
+name: Deploy Items Sub
+
+on:
+  push:
+    branches: [development, main]
+    paths: ['subs/items/**', 'packages/ui/**']
+  workflow_dispatch:
+    inputs:
+      deploy_env:
+        description: 'Target env for manual deploy'
+        required: true
+        type: choice
+        options: [demo, prod]
+        default: demo
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-dev:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/development'
+    uses: ./.github/workflows/_deploy-sub.yml
+    with:
+      sub: items
+      deploy_env: dev
+      build_command: 'npm ci && npm run build -w @spookydecs/ui && npm run build:items'
+      build_workdir: '.'
+      artifact_dir: dist
+    secrets: inherit
+
+  deploy-prod:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/_deploy-sub.yml
+    with:
+      sub: items
+      deploy_env: prod
+      build_command: 'npm ci && npm run build -w @spookydecs/ui && npm run build:items'
+      build_workdir: '.'
+      artifact_dir: dist
+    secrets: inherit
+
+  deploy-manual:
+    if: github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/_deploy-sub.yml
+    with:
+      sub: items
+      deploy_env: ${{ inputs.deploy_env || 'demo' }}
+      build_command: 'npm ci && npm run build -w @spookydecs/ui && npm run build:items'
+      build_workdir: '.'
+      artifact_dir: dist
+    secrets: inherit

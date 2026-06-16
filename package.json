@@ -5,6 +5,7 @@
   "main": "index.js",
   "workspaces": [
     "packages/*",
+    "subs/items",
     "subs/storage",
     "subs/workbench",
     "subs/audit",
@@ -13,7 +14,7 @@
   ],
   "scripts": {
     "dev": "vite",
-    "dev:items": "SUB=items vite",
+    "dev:items": "npm run dev -w spookydecs-items",
     "dev:finance": "SUB=finance vite",
     "dev:deployments": "SUB=deployments vite",
     "dev:gallery": "SUB=gallery vite",
@@ -27,6 +28,7 @@
     "dev:admin": "npm run dev -w spookydecs-admin",
     "dev:tracker": "npm run dev -w spookydecs-tracker",
     "build": "vite build",
+    "build:items": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-items",
     "build:storage": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-storage",
     "build:workbench": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-workbench",
     "build:audit": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-audit",
