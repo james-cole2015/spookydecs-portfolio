@@ -8,12 +8,12 @@
     "subs/storage",
     "subs/workbench",
     "subs/audit",
-    "subs/admin"
+    "subs/admin",
+    "subs/tracker"
   ],
   "scripts": {
     "dev": "vite",
     "dev:items": "SUB=items vite",
-    "dev:tracker": "SUB=tracker vite",
     "dev:finance": "SUB=finance vite",
     "dev:deployments": "SUB=deployments vite",
     "dev:gallery": "SUB=gallery vite",
@@ -25,11 +25,13 @@
     "dev:workbench": "npm run dev -w spookydecs-workbench",
     "dev:audit": "npm run dev -w spookydecs-audit",
     "dev:admin": "npm run dev -w spookydecs-admin",
+    "dev:tracker": "npm run dev -w spookydecs-tracker",
     "build": "vite build",
     "build:storage": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-storage",
     "build:workbench": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-workbench",
     "build:audit": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-audit",
     "build:admin": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-admin",
+    "build:tracker": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-tracker",
     "preview": "vite preview"
   },
   "keywords": [],

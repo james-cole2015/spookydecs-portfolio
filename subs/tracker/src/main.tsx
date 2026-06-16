@@ -1,0 +1,22 @@
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { HeroUIProvider, ToastProvider } from '@heroui/react';
+import { BrowserRouter } from 'react-router-dom';
+import App from './App';
+import { ConfigProvider, ThemeProvider } from '@spookydecs/ui';
+import './index.css';
+
+ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+  <React.StrictMode>
+    <ThemeProvider>
+      <HeroUIProvider>
+        <ToastProvider placement="bottom-right" />
+        <ConfigProvider>
+          <BrowserRouter basename="/tracker">
+            <App />
+          </BrowserRouter>
+        </ConfigProvider>
+      </HeroUIProvider>
+    </ThemeProvider>
+  </React.StrictMode>,
+);

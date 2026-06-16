@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* Follow the active HeroUI theme's background/foreground (set via the
+   dark/light class on <html>) so the page recolors when the theme switches. */
+body {
+  background-color: hsl(var(--heroui-background));
+  color: hsl(var(--heroui-foreground));
+}
+
+#root {
+  min-height: calc(100vh - 64px);
+}
