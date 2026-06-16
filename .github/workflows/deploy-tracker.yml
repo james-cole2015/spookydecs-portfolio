@@ -1,0 +1,35 @@
+# Caller workflow for the tracker sub (#340).
+#   push to development -> deploy dev (auto)
+#
+# tracker is an INTERNAL ADMIN TOOL and is DEV-ONLY (#340): there is no prod or
+# demo deploy, and it is excluded from the Paxin prod smoke test (#371). Hence
+# this caller has only the dev job — no deploy-prod (push to main) and no manual
+# demo/prod workflow_dispatch (cf. deploy-storage.yml, which has all three).
+#
+# Like storage, tracker is a React + Vite app built via the @spookydecs/ui npm
+# workspace (#320). build_workdir '.' runs from the repo root so workspace
+# hoisting resolves @spookydecs/ui; the lib is built first (dist/ is gitignored).
+# artifact_dir is dist (relative to subs/tracker/, resolved by the reusable flow).
+name: Deploy Tracker Sub
+
+on:
+  push:
+    branches: [development]
+    paths: ['subs/tracker/**', 'packages/ui/**']
+
+# Required so the called reusable workflow can request id-token: write for OIDC.
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-dev:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/development'
+    uses: ./.github/workflows/_deploy-sub.yml
+    with:
+      sub: tracker
+      deploy_env: dev
+      build_command: 'npm ci && npm run build -w @spookydecs/ui && npm run build:tracker'
+      build_workdir: '.'
+      artifact_dir: dist
+    secrets: inherit
