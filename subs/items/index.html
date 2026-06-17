@@ -1,9 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Inventory Management | SpookyDecs</title>
+
+  <!-- Theme init (no-flash): set dark/light class from localStorage before paint. Default dark. -->
+  <script>
+    (function () {
+      var t = localStorage.getItem('sd-theme');
+      if (t !== 'light' && t !== 'dark') t = 'dark';
+      var el = document.documentElement;
+      el.classList.remove('light', 'dark');
+      el.classList.add(t);
+      el.style.colorScheme = t;
+    })();
+  </script>
 
   <script src="https://assets.spookydecs.com/components/api-config.js"></script>
   <script src="https://assets.spookydecs.com/components/auth-helpers.js"></script>
