@@ -22,7 +22,7 @@ import {
   type LightboxPhoto,
 } from '@spookydecs/ui';
 import { fetchImages, fetchIdeas, setPrimaryPhoto } from '../api/imagesApi';
-import type { Photo } from '../config/imagesConfig';
+import { seasonChipColor, type Photo } from '../config/imagesConfig';
 
 type EntityType = 'item' | 'storage' | 'idea';
 
@@ -216,7 +216,7 @@ export default function EntityDetail() {
             </Chip>
           )}
           {seasons.map((s) => (
-            <Chip key={s} size="sm" variant="dot" color="secondary">
+            <Chip key={s} size="sm" variant="flat" color={seasonChipColor(s)}>
               {s}
             </Chip>
           ))}
@@ -272,7 +272,7 @@ export default function EntityDetail() {
                       {ptLabel}
                     </Chip>
                   )}
-                  <Chip size="sm" variant="dot" color="secondary">
+                  <Chip size="sm" variant="flat" color={seasonChipColor(photo.season)}>
                     {photo.season || ''}
                   </Chip>
                   {photo.is_public && (

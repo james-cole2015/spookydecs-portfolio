@@ -126,6 +126,26 @@ export const IMAGES_CONFIG = {
   } as Record<string, FilterOption[]>,
 } as const;
 
+export type ChipColor = 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger';
+
+/**
+ * Season pill color — single source of truth, matching the storage sub
+ * (Halloween=orange/warning, Christmas=green/success, Shared=violet/secondary).
+ * Case-insensitive since images stores lowercase season values.
+ */
+export function seasonChipColor(season?: string): ChipColor {
+  switch ((season || '').toLowerCase()) {
+    case 'halloween':
+      return 'warning';
+    case 'christmas':
+      return 'success';
+    case 'shared':
+      return 'secondary';
+    default:
+      return 'default';
+  }
+}
+
 /** Validate category and its required fields. */
 export function validateCategory(
   category: string,

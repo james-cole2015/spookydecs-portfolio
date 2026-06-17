@@ -8,7 +8,7 @@ import { useRef } from 'react';
 import { Button, Card, Chip, Input } from '@heroui/react';
 import { Pencil, Star, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import type { GalleryData, Photo } from '../config/imagesConfig';
+import { seasonChipColor, type GalleryData, type Photo } from '../config/imagesConfig';
 
 interface Props {
   photo: Photo;
@@ -62,7 +62,7 @@ export function GalleryPhotoCard({ photo, onUpdate, onDelete }: Props) {
         {location && <p className="text-tiny text-default-500">📍 {location}</p>}
 
         <div className="flex flex-wrap items-center gap-1">
-          <Chip size="sm" variant="flat" color="secondary">
+          <Chip size="sm" variant="flat" color={seasonChipColor(photo.season)}>
             {photo.season}
           </Chip>
           <Chip size="sm" variant="flat">

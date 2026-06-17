@@ -17,7 +17,7 @@ import {
   type LightboxPhoto,
 } from '@spookydecs/ui';
 import { fetchImages } from '../api/imagesApi';
-import { isOrphaned, type Photo } from '../config/imagesConfig';
+import { isOrphaned, seasonChipColor, type Photo } from '../config/imagesConfig';
 import { FilterPanel, readFilters, writeFilters, type ImageUiFilters } from '../components/FilterPanel';
 
 function applyClientFilters(photos: Photo[], filters: ImageUiFilters): Photo[] {
@@ -136,7 +136,7 @@ export default function PhotoBrowser() {
                   <Chip
                     size="sm"
                     variant="solid"
-                    color="secondary"
+                    color={seasonChipColor(photo.season || 'shared')}
                     className="absolute left-2 top-2"
                   >
                     {(photo.season || 'shared').toUpperCase()}
