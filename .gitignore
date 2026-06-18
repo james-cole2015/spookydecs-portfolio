@@ -41,3 +41,6 @@ scripts/seed_epics.py
 scripts/*
 lambda_creation_log.txt
 fail-log.txt
+
+# Local-only infra verifier (AWS-credentialed; not committed)
+scripts/verify_sub_infra.py

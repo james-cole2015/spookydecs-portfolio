@@ -1,71 +1,52 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SpookyDecs - Finance</title>
-  
-  <!-- External Dependencies -->
-  <script src="https://unpkg.com/navigo@8.11.1/lib/navigo.min.js"></script>
-  
-  <!-- SpookyDecs Header Component -->
-  <script src="https://assets.spookydecs.com/components/spookydecs-header.js"></script>
-  <script src="https://assets.spookydecs.com/components/api-config.js"></script>
-  <script src="https://assets.spookydecs.com/components/auth-helpers.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpookyDecs - Finance</title>
 
-  <!-- Localhost dev: route API calls through Vite proxy (no auth cookie needed) -->
-  <script>
-    if (window.location.hostname === 'localhost' && window.SpookyConfig) {
-      const _get = window.SpookyConfig.get.bind(window.SpookyConfig);
-      window.SpookyConfig.get = async () => ({ ...(await _get()), API_ENDPOINT: '/devapi' });
-    }
-  </script>
+    <!-- Theme init (no-flash): set dark/light class from localStorage before paint. Default dark. -->
+    <script>
+      (function () {
+        var t = localStorage.getItem('sd-theme');
+        if (t !== 'light' && t !== 'dark') t = 'dark';
+        var el = document.documentElement;
+        el.classList.remove('light', 'dark');
+        el.classList.add(t);
+        el.style.colorScheme = t;
+      })();
+    </script>
 
-  <script src="https://assets.spookydecs.com/components/photo-upload-service.js"></script>
-  <script src="https://assets.spookydecs.com/components/photo-upload-modal.js"></script>
-  <script src="https://assets.spookydecs.com/components/receipt-extractor-widget.js"></script>
+    <!-- Cropper.js for photo cropping (used by the CDN photo-upload flow) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
 
-  
-  <!-- Styles -->
-  <link rel="stylesheet" href="/css/finance.css">
-  <link rel="stylesheet" href="/css/gift-checkbox-styles.css">
-  <link rel="stylesheet" href="/css/cost-detail.css">
-  <link rel="stylesheet" href="/css/cost-form.css">
-  <link rel="stylesheet" href="/css/new-cost-record.css">
-  <link rel="stylesheet" href="/css/receipt-upload-modal.css">
-  <link rel="stylesheet" href="/css/multi-item-review-modal.css">  
-  <link rel="stylesheet" href="/css/item-costs.css">
-  <link rel="stylesheet" href="/css/cost-record-detail.css">
-  <link rel="stylesheet" href="/css/stats-panel.css">
-  <link rel="stylesheet" href="/css/receipts.css">
-  <link rel="stylesheet" href="/css/items-browse.css">
-  <link rel="stylesheet" href="/css/finance-landing.css">
-  <link rel="stylesheet" href="/css/pack-form.css">
+    <!-- Shared CDN config + auth (provide window.SpookyConfig / window.SpookyAuth) -->
+    <script src="https://assets.spookydecs.com/components/api-config.js"></script>
+    <script src="https://assets.spookydecs.com/components/auth-helpers.js"></script>
 
+    <!-- Localhost dev: route API calls through the Vite proxy (no auth cookie needed) -->
+    <script>
+      if (window.location.hostname === 'localhost' && window.SpookyConfig) {
+        const _get = window.SpookyConfig.get.bind(window.SpookyConfig);
+        window.SpookyConfig.get = async () => ({ ...(await _get()), API_ENDPOINT: '/devapi' });
+      }
+    </script>
+
+    <!-- Shared CDN web components (coexist with React) -->
+    <!-- Header is now the native React <AppHeader> from @spookydecs/ui (#348) — CDN spookydecs-header dropped here. -->
+    <!-- Upload stays a CDN concern: CostDetailView + PackPurchaseForm delegate to <photo-upload-modal>/<photo-upload-service> via usePhotoUpload. -->
+    <script src="https://assets.spookydecs.com/components/photo-upload-service.js"></script>
+    <script src="https://assets.spookydecs.com/components/photo-upload-modal.js"></script>
+    <!-- Receipt extractor stays CDN-only for #333 (mounted imperatively); #382 converts it to a @spookydecs/ui primitive. -->
+    <script src="https://assets.spookydecs.com/components/receipt-extractor-widget.js"></script>
 </head>
 <body>
-  <!-- Header Component -->
-  <spookydecs-header 
-    page-title="Finance"
-    logout-url="https://auth.spookydecs.com">
-  </spookydecs-header>
+    <!-- Deployed via GitHub Actions (_deploy-sub.yml / deploy-finance.yml, #269/#333) -->
+    <!-- React mount point (header renders inside the React tree via <AppHeader>) -->
+    <div id="root"></div>
 
-  <!-- Loading Indicator -->
-  <div id="loading-indicator" style="display: none;">
-    <div class="loading-spinner"></div>
-  </div>
-
-  <!-- Main Content -->
-  <div id="main-content"></div>
-
-  <!-- Detail Drawer -->
-  <div id="cost-detail-drawer" class="drawer"></div>
-
-  <!-- Modals -->
-  <div id="modal-container"></div>
-  <div id="toast-container"></div>
-
-  <!-- App Scripts -->
-  <script type="module" src="/js/app.js"></script>
+    <!-- React entry (Vite builds to ./dist for the deploy) -->
+    <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>
