@@ -6,6 +6,7 @@
   "workspaces": [
     "packages/*",
     "subs/items",
+    "subs/finance",
     "subs/storage",
     "subs/workbench",
     "subs/audit",
@@ -18,7 +19,7 @@
   "scripts": {
     "dev": "vite",
     "dev:items": "npm run dev -w spookydecs-items",
-    "dev:finance": "SUB=finance vite",
+    "dev:finance": "npm run dev -w spookydecs-finance",
     "dev:deployments": "SUB=deployments vite",
     "dev:gallery": "npm run dev -w spookydecs-gallery",
     "dev:ideas": "npm run dev -w spookydecs-ideas",
@@ -32,6 +33,7 @@
     "dev:tracker": "npm run dev -w spookydecs-tracker",
     "build": "vite build",
     "build:items": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-items",
+    "build:finance": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-finance",
     "build:gallery": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-gallery",
     "build:images": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-images",
     "build:ideas": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-ideas",
