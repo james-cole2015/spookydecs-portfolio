@@ -24,7 +24,7 @@ import {
   type Violation,
   type ViolationStatus,
 } from '../config/inspectorConfig';
-import { StatusChip, NonDismissibleChip } from './chips';
+import { StatusChip, DismissibleChip } from './chips';
 
 interface ViolationsTableProps {
   violations: Violation[];
@@ -143,7 +143,9 @@ export function ViolationsTable({
                   <TableRow key={v.violation_id}>
                     <TableCell>{v.rule_id}</TableCell>
                     <TableCell>{truncateText(v.violation_details?.message || 'N/A', 60)}</TableCell>
-                    <TableCell>{v.dismissible === false ? <NonDismissibleChip /> : ''}</TableCell>
+                    <TableCell>
+                      <DismissibleChip dismissible={v.dismissible} />
+                    </TableCell>
                     <TableCell>
                       <StatusChip status={v.status} />
                     </TableCell>

@@ -37,6 +37,19 @@ export function NonDismissibleChip() {
   );
 }
 
+/**
+ * Policy chip for a violation: ⛔ Non-dismissible when the rule forbids dismissal,
+ * otherwise a subtle ✅ Dismissible. `dismissible` defaults to true (the normal state).
+ */
+export function DismissibleChip({ dismissible }: { dismissible?: boolean }) {
+  if (dismissible === false) return <NonDismissibleChip />;
+  return (
+    <Chip size="sm" variant="flat" color="success">
+      ✅ Dismissible
+    </Chip>
+  );
+}
+
 export function ActiveChip({ active }: { active?: boolean }) {
   return (
     <Chip size="sm" variant="flat" color={active ? 'success' : 'default'}>

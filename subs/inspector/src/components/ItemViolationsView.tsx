@@ -23,7 +23,7 @@ import {
   truncateText,
   type Violation,
 } from '../config/inspectorConfig';
-import { StatusChip, NonDismissibleChip } from './chips';
+import { StatusChip, DismissibleChip } from './chips';
 
 export function ItemViolationsView({ violations }: { violations: Violation[] }) {
   const navigate = useNavigate();
@@ -82,7 +82,9 @@ export function ItemViolationsView({ violations }: { violations: Violation[] }) 
                       <TableCell>
                         {truncateText(v.violation_details?.message || 'N/A', 40)}
                       </TableCell>
-                      <TableCell>{v.dismissible === false ? <NonDismissibleChip /> : ''}</TableCell>
+                      <TableCell>
+                        <DismissibleChip dismissible={v.dismissible} />
+                      </TableCell>
                       <TableCell>
                         <StatusChip status={v.status} />
                       </TableCell>
