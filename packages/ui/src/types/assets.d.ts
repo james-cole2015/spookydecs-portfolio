@@ -5,3 +5,11 @@ declare module '*.css?inline' {
   const content: string;
   export default content;
 }
+
+// `?url` resolves an asset to its final emitted URL string. useReceiptExtractor
+// imports the pdf.js worker this way so the consuming sub's Vite build emits a
+// hashed worker asset and points GlobalWorkerOptions.workerSrc at it.
+declare module '*?url' {
+  const url: string;
+  export default url;
+}

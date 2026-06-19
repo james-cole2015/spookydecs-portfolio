@@ -31,6 +31,7 @@
     "build": "vite build && tsc --emitDeclarationOnly --declaration --declarationDir dist"
   },
   "dependencies": {
+    "pdfjs-dist": "^4.10.38",
     "photoswipe": "^5.4.4",
     "react-photoswipe-gallery": "^4.1.2"
   },
