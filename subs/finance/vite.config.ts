@@ -61,6 +61,15 @@ export default defineConfig(({ mode }) => {
         '@spookydecs/ui': resolve(repoRoot, 'packages/ui/src'),
       },
     },
+    // Pre-bundle pdfjs-dist at server start. The receipt-extractor primitive
+    // (@spookydecs/ui ReceiptExtractorModal, #382) lazy `import()`s it only when a
+    // PDF is picked; without this, Vite first *discovers* the dep mid-session,
+    // re-optimizes, and the in-flight dynamic import 504s ("Failed to fetch
+    // dynamically imported module"). Including it up front avoids the race.
+    // Any React sub that consumes the receipt primitive needs this same entry.
+    optimizeDeps: {
+      include: ['pdfjs-dist'],
+    },
     server: {
       port: 3000,
       open: true,
