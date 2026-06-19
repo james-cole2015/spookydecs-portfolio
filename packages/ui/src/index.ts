@@ -6,6 +6,23 @@ export { useToast } from './hooks/useToast';
 export type { ToastApi } from './hooks/useToast';
 export { usePhotoUpload } from './hooks/usePhotoUpload';
 export type { UsePhotoUpload, PhotoUploadOptions, OpenPhotoUploadOptions, UploadedPhoto } from './hooks/usePhotoUpload';
+export { useReceiptExtractor } from './hooks/useReceiptExtractor';
+export type {
+  UseReceiptExtractor,
+  ReceiptExtractorConfig,
+  ReceiptExtractorCostConfig,
+  ReceiptExtractorCaches,
+  ReceiptExtractorContextData,
+  ReceiptExtractorRelatedConfig,
+  ReceiptExtractorConfirmedItem,
+  ReceiptExtractorOption,
+  ReceiptExtractorPhase,
+  ReceiptReviewItem,
+} from './hooks/useReceiptExtractor';
+export { ReceiptExtractorModal } from './components/ReceiptExtractorModal';
+export type { ReceiptExtractorModalProps } from './components/ReceiptExtractorModal';
+export { rasterizePdfToImage } from './lib/rasterizePdf';
+export type { RasterizePdfOptions } from './lib/rasterizePdf';
 export { ThemeProvider, useTheme } from './providers/ThemeProvider';
 export type { Theme } from './providers/ThemeProvider';
 export { ThemeSwitch } from './components/ThemeSwitch';

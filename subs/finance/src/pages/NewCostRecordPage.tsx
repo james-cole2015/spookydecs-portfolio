@@ -2,7 +2,16 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, Card, CardBody, Tabs, Tab } from '@heroui/react';
 import { Sparkles } from 'lucide-react';
-import { Breadcrumbs, PageHeader, useToast, useConfig, useAuth } from '@spookydecs/ui';
+import {
+  Breadcrumbs,
+  PageHeader,
+  useToast,
+  useConfig,
+  useAuth,
+  ReceiptExtractorModal,
+  type ReceiptExtractorConfirmedItem,
+  type ReceiptExtractorCostConfig,
+} from '@spookydecs/ui';
 import { CostForm, type CostFormInitial } from '../components/CostForm';
 import { CostReviewModal } from '../components/CostReviewModal';
 import { PackPurchaseForm } from '../components/PackPurchaseForm';
@@ -13,9 +22,8 @@ import {
   SUBCATEGORIES,
   RELATED_ID_CONFIG,
 } from '../config/financeConfig';
-import type { ReceiptExtractorConfirmedItem } from '../types/finance-globals';
 
-const financeCostConfig = {
+const financeCostConfig: ReceiptExtractorCostConfig = {
   costTypes: COST_TYPES,
   categoriesByCostType: CATEGORIES_BY_COST_TYPE,
   subcategories: SUBCATEGORIES,
@@ -61,6 +69,23 @@ export default function NewCostRecordPage() {
   const [reviewOpen, setReviewOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const autoOpened = useRef(false);
+
+  // Receipt-extractor modal (@spookydecs/ui primitive, #382). Caches are consumer-
+  // loaded on open and handed to the modal; the primitive fetches nothing itself.
+  const [extractorOpen, setExtractorOpen] = useState(false);
+  const [loadingExtractor, setLoadingExtractor] = useState(false);
+  const [caches, setCaches] = useState<{ items: any[]; records: any[]; ideas: any[] }>({
+    items: [],
+    records: [],
+    ideas: [],
+  });
+
+  const contextData = {
+    item_id: itemId,
+    record_id: recordId,
+    cost_type: params.get('cost_type') ?? undefined,
+    category: params.get('category') ?? undefined,
+  };
 
   const formInitial: CostFormInitial = {
     related_item_id: itemId,
@@ -108,26 +133,16 @@ export default function NewCostRecordPage() {
   };
 
   const openReceiptWidget = async () => {
-    const contextData = {
-      item_id: itemId,
-      record_id: recordId,
-      cost_type: params.get('cost_type') ?? undefined,
-      category: params.get('category') ?? undefined,
-    };
+    setLoadingExtractor(true);
     try {
       const { items, records, ideas } = await loadWidgetDeps(API_ENDPOINT, buildHeaders());
-      window.ReceiptExtractorWidget.open({
-        apiEndpoint: API_ENDPOINT,
-        extractEndpoint: '/finance/costs/ai-extract',
-        contextData,
-        costConfig: financeCostConfig,
-        caches: { items, records, ideas },
-        onComplete: onWidgetComplete,
-        onCancel: () => {},
-      });
+      setCaches({ items, records, ideas });
+      setExtractorOpen(true);
     } catch (err) {
       console.error('Failed to open receipt extractor:', err);
       toast.showError('Failed to open receipt extractor');
+    } finally {
+      setLoadingExtractor(false);
     }
   };
 
@@ -191,7 +206,12 @@ export default function NewCostRecordPage() {
         subtitle="Track expenses for maintenance, repairs, and equipment"
         actions={
           mode === 'single' ? (
-            <Button color="primary" startContent={<Sparkles size={16} />} onPress={openReceiptWidget}>
+            <Button
+              color="primary"
+              startContent={<Sparkles size={16} />}
+              onPress={openReceiptWidget}
+              isLoading={loadingExtractor}
+            >
               Extract with AI
             </Button>
           ) : undefined
@@ -225,6 +245,18 @@ export default function NewCostRecordPage() {
         isSaving={saving}
         onConfirm={handleConfirmSave}
         onClose={() => !saving && setReviewOpen(false)}
+      />
+
+      <ReceiptExtractorModal
+        isOpen={extractorOpen}
+        onClose={() => setExtractorOpen(false)}
+        apiEndpoint={API_ENDPOINT}
+        extractEndpoint="/finance/costs/ai-extract"
+        contextData={contextData}
+        costConfig={financeCostConfig}
+        caches={caches}
+        onComplete={onWidgetComplete}
+        onCancel={() => {}}
       />
     </div>
   );
