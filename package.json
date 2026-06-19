@@ -14,7 +14,8 @@
     "subs/tracker",
     "subs/gallery",
     "subs/images",
-    "subs/ideas"
+    "subs/ideas",
+    "subs/inspector"
   ],
   "scripts": {
     "dev": "vite",
@@ -24,7 +25,7 @@
     "dev:gallery": "npm run dev -w spookydecs-gallery",
     "dev:ideas": "npm run dev -w spookydecs-ideas",
     "dev:images": "npm run dev -w spookydecs-images",
-    "dev:inspector": "SUB=inspector vite",
+    "dev:inspector": "npm run dev -w spookydecs-inspector",
     "dev:maintenance": "SUB=maintenance vite",
     "dev:storage": "npm run dev -w spookydecs-storage",
     "dev:workbench": "npm run dev -w spookydecs-workbench",
@@ -37,6 +38,7 @@
     "build:gallery": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-gallery",
     "build:images": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-images",
     "build:ideas": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-ideas",
+    "build:inspector": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-inspector",
     "build:storage": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-storage",
     "build:workbench": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-workbench",
     "build:audit": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-audit",

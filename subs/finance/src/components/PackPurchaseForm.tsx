@@ -11,7 +11,7 @@ import {
   CardBody,
 } from '@heroui/react';
 import { Paperclip } from 'lucide-react';
-import { useToast, usePhotoUpload } from '@spookydecs/ui';
+import { useToast, usePhotoUpload, rasterizePdfToImage } from '@spookydecs/ui';
 import { createCost, getItems, updateImageAfterCostCreation } from '../api/financeApi';
 import { formatCurrency } from '../config/financeConfig';
 import { ConfirmDialog } from './ConfirmDialog';
@@ -25,29 +25,6 @@ interface PickableItem {
 }
 
 const nameOf = (i: PickableItem) => i.short_name || i.shortName || i.id;
-
-async function convertPdfToImage(file: File): Promise<File> {
-  if (!window.pdfjsLib) throw new Error('PDF conversion library not loaded');
-  const arrayBuffer = await file.arrayBuffer();
-  const pdf = await window.pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
-  const page = await pdf.getPage(1);
-  const viewport = page.getViewport({ scale: 2.0 });
-  const canvas = document.createElement('canvas');
-  canvas.width = viewport.width;
-  canvas.height = viewport.height;
-  await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
-  return new Promise((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => {
-        if (!blob) return reject(new Error('Canvas conversion failed'));
-        const name = file.name.replace(/\.pdf$/i, '.jpg');
-        resolve(new File([blob], name, { type: 'image/jpeg' }));
-      },
-      'image/jpeg',
-      0.92,
-    );
-  });
-}
 
 // Pack purchase mode of the new-cost page (replaces the vanilla PackPurchaseForm):
 // multi-item picker, derived per-item cost, optional receipt, create one pack record.
@@ -98,7 +75,7 @@ export function PackPurchaseForm() {
     let processed = file;
     if (file.type === 'application/pdf') {
       try {
-        processed = await convertPdfToImage(file);
+        processed = await rasterizePdfToImage(file);
       } catch (err) {
         console.error('PDF conversion failed:', err);
         toast.showError('Failed to convert PDF to image. Please use JPEG or PNG instead.');

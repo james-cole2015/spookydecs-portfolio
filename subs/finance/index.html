@@ -38,8 +38,7 @@
     <!-- Upload stays a CDN concern: CostDetailView + PackPurchaseForm delegate to <photo-upload-modal>/<photo-upload-service> via usePhotoUpload. -->
     <script src="https://assets.spookydecs.com/components/photo-upload-service.js"></script>
     <script src="https://assets.spookydecs.com/components/photo-upload-modal.js"></script>
-    <!-- Receipt extractor stays CDN-only for #333 (mounted imperatively); #382 converts it to a @spookydecs/ui primitive. -->
-    <script src="https://assets.spookydecs.com/components/receipt-extractor-widget.js"></script>
+    <!-- Receipt extraction is now the @spookydecs/ui <ReceiptExtractorModal> primitive (#382) — CDN receipt-extractor-widget.js dropped here. -->
 </head>
 <body>
     <!-- Deployed via GitHub Actions (_deploy-sub.yml / deploy-finance.yml, #269/#333) -->

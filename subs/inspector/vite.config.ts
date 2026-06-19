@@ -5,10 +5,10 @@ import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
 // Reuse the repo-root .env.local (COGNITO_USERNAME/PASSWORD) so local dev auth
-// works without duplicating creds into subs/finance/.
+// works without duplicating creds into subs/storage/.
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 
-// Per-sub Vite config for the finance React app (#333).
+// Per-sub Vite config for the storage React app (#267).
 // Mirrors the repo-root vite.config.js dev ergonomics (the `/devapi` proxy +
 // Cognito auto-auth) so `npm run dev` here behaves like the vanilla subs, but
 // builds a self-contained bundle to ./dist for the #269 GitHub Actions deploy
@@ -60,15 +60,6 @@ export default defineConfig(({ mode }) => {
       alias: {
         '@spookydecs/ui': resolve(repoRoot, 'packages/ui/src'),
       },
-    },
-    // Pre-bundle pdfjs-dist at server start. The receipt-extractor primitive
-    // (@spookydecs/ui ReceiptExtractorModal, #382) lazy `import()`s it only when a
-    // PDF is picked; without this, Vite first *discovers* the dep mid-session,
-    // re-optimizes, and the in-flight dynamic import 504s ("Failed to fetch
-    // dynamically imported module"). Including it up front avoids the race.
-    // Any React sub that consumes the receipt primitive needs this same entry.
-    optimizeDeps: {
-      include: ['pdfjs-dist'],
     },
     server: {
       port: 3000,
