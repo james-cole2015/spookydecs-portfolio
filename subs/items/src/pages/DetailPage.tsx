@@ -370,7 +370,8 @@ export default function DetailPage() {
       <section id="storage" className="mb-4">
         <SectionCard title="Storage">
           <div className="grid grid-cols-2 gap-x-6 gap-y-1">
-            <Field label="Status"   value={storage.is_stored ? 'Packed' : 'Not Packed'} />
+            {/* Packing display driven off canonical status (#280) — Packed = in a tote */}
+            <Field label="Status"   value={item.status === 'Packed' ? 'Packed' : 'Not Packed'} />
             {toteId           && <Field label="Tote"     value={toteId} />}
             {storage.location && <Field label="Location" value={storage.location} />}
           </div>
