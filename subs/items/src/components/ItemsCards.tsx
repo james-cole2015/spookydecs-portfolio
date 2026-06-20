@@ -17,7 +17,7 @@ interface Props {
 }
 
 function statusVariant(status: string): 'success' | 'default' | 'primary' | 'danger' {
-  if (status === 'Active') return 'success';
+  if (status === 'Ready') return 'success';
   if (status === 'Deployed') return 'primary';
   if (status === 'Retired') return 'danger';
   return 'default';

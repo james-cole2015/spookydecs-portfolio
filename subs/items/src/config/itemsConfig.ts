@@ -15,11 +15,17 @@ export const SEASONS = [
   { value: 'Shared',    label: 'Shared',    icon: '🔄' },
 ] as const;
 
+// Canonical item lifecycle (see items.md §6A — #280):
+// Ready → Packed → Staged → PreDeployment → Deployed → TearDown → (repack) → Packed
+// Ready/Packed are the items-owned states; the rest are set by the deployments flow.
 export const ITEM_STATUS = [
-  { value: 'Active',   label: 'Active',   color: '#16a34a' },
-  { value: 'Packed',   label: 'Packed',   color: '#6b7280' },
-  { value: 'Deployed', label: 'Deployed', color: '#3b82f6' },
-  { value: 'Retired',  label: 'Retired',  color: '#ef4444' },
+  { value: 'Ready',         label: 'Ready',          color: '#16a34a' },
+  { value: 'Packed',        label: 'Packed',         color: '#6b7280' },
+  { value: 'Staged',        label: 'Staged',         color: '#f59e0b' },
+  { value: 'PreDeployment', label: 'Pre-Deployment', color: '#0ea5e9' },
+  { value: 'Deployed',      label: 'Deployed',       color: '#3b82f6' },
+  { value: 'TearDown',      label: 'Tear Down',      color: '#f97316' },
+  { value: 'Retired',       label: 'Retired',        color: '#ef4444' },
 ] as const;
 
 // Fields per class_type — verbatim from item-config.js
