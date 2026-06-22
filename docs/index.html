@@ -201,7 +201,7 @@
               <line x1="320" y1="430" x2="320" y2="450" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow)"/>
 
               <!-- USER LAYER -->
-              <g class="arch-node" data-id="browser" data-label="Browser / Admin Portal" data-desc="Users access SpookyDecs via a responsive web app hosted on CloudFront. The admin portal is a vanilla JS single-page app served from S3, with shared CDN components loaded from assets.spookydecs.com. Two environments: admin.spookydecs.com (prod) and dev-admin.spookydecs.com (dev).">
+              <g class="arch-node" data-id="browser" data-label="Browser / Admin Portal" data-desc="Users access SpookyDecs via a responsive web app hosted on CloudFront. The admin portal is a React + Vite + TypeScript single-page app served from S3, built on the shared @spookydecs/ui component library. Two environments: admin.spookydecs.com (prod) and dev-admin.spookydecs.com (dev).">
                 <rect x="220" y="18" width="200" height="52" rx="6" fill="#1a1a24" stroke="#374151" stroke-width="1.5" class="node-rect"/>
                 <text x="320" y="40" text-anchor="middle" fill="#e5e7eb" font-size="12" font-weight="600" font-family="Inter, sans-serif">Browser</text>
                 <text x="320" y="57" text-anchor="middle" fill="#6b7280" font-size="10" font-family="Inter, sans-serif">Admin Portal · assets CDN</text>
@@ -268,7 +268,7 @@
                 <text x="342" y="482" text-anchor="middle" fill="#e5e7eb" font-size="12" font-weight="600" font-family="Inter, sans-serif">SQS</text>
                 <text x="342" y="499" text-anchor="middle" fill="#6b7280" font-size="10" font-family="Inter, sans-serif">Event buffering · retry durability</text>
               </g>
-              <g class="arch-node" data-id="cicd" data-label="CI/CD Pipeline" data-desc="CodePipeline + CodeBuild deploy the vanilla subs; React subs deploy via GitHub Actions with OIDC (keyless, no stored credentials). A push to main triggers the relevant pipeline, which fetches config from SSM Parameter Store, assembles environment-specific frontend bundles, and deploys to S3. Route 53 manages DNS for all subdomains. CloudWatch captures Lambda logs and build output for monitoring and debugging.">
+              <g class="arch-node" data-id="cicd" data-label="CI/CD Pipeline" data-desc="Every sub deploys via GitHub Actions with OIDC (keyless, no stored credentials) — the legacy CodePipeline/CodeBuild stacks were fully retired. A push to main triggers the reusable deploy workflow, which fetches config from SSM Parameter Store, assembles environment-specific frontend bundles, and deploys to S3. Route 53 manages DNS for all subdomains. CloudWatch captures Lambda logs and build output for monitoring and debugging.">
                 <rect x="450" y="460" width="175" height="52" rx="6" fill="#1a1a24" stroke="#374151" stroke-width="1.5" class="node-rect"/>
                 <text x="537" y="482" text-anchor="middle" fill="#e5e7eb" font-size="12" font-weight="600" font-family="Inter, sans-serif">CI/CD · Observability</text>
                 <text x="537" y="499" text-anchor="middle" fill="#6b7280" font-size="10" font-family="Inter, sans-serif">CodePipeline · CloudWatch · Route 53</text>
@@ -607,7 +607,7 @@
         <div class="highlight-card">
           <div class="highlight-icon">🚀</div>
           <h4 class="highlight-title">Full CI/CD Pipeline</h4>
-          <p class="highlight-desc">CodePipeline + CodeBuild deploy the vanilla subs; newer React subs deploy via GitHub Actions using OIDC role assumption — keyless, no long-lived AWS credentials. SSM Parameter Store provides per-environment config at build time, no secrets in code.</p>
+          <p class="highlight-desc">Every sub deploys via GitHub Actions using OIDC role assumption — keyless, no long-lived AWS credentials — through a single reusable workflow; the legacy CodePipeline/CodeBuild stacks were fully retired. SSM Parameter Store provides per-environment config at build time, no secrets in code.</p>
         </div>
 
         <div class="highlight-card">
@@ -619,7 +619,7 @@
         <div class="highlight-card">
           <div class="highlight-icon">🧩</div>
           <h4 class="highlight-title">CDN Web Components</h4>
-          <p class="highlight-desc">Shared UI components (header, upload modal, receipt extractor, API config) are served from assets.spookydecs.com and consumed via <code class="text-brand/70 text-xs">window.*</code> globals — no build step required. React subs now use native <code class="text-brand/70 text-xs">@spookydecs/ui</code> equivalents (app header, photo gallery); the CDN components remain for the vanilla subs.</p>
+          <p class="highlight-desc">Shared UI components (header, upload modal, receipt extractor, API config) were originally served from assets.spookydecs.com and consumed via <code class="text-brand/70 text-xs">window.*</code> globals — no build step required. They have since been replaced by native <code class="text-brand/70 text-xs">@spookydecs/ui</code> equivalents (app header, photo gallery, receipt extractor) now that every sub is React; the CDN components remain only as legacy fallbacks.</p>
         </div>
 
         <div class="highlight-card">
@@ -642,8 +642,8 @@
 
         <div class="highlight-card">
           <div class="highlight-icon">⚛️</div>
-          <h4 class="highlight-title">React + TypeScript Migration</h4>
-          <p class="highlight-desc">Storage, workbench, and audit now run on React + Vite + HeroUI in TypeScript, all sharing a single <code class="text-brand/70 text-xs">@spookydecs/ui</code> workspace package — the design system (theme, typography, layout, toasts, app header, photo gallery) extracted into one published library instead of copied per sub. Config and auth still bootstrap from CDN globals, so React and vanilla subs interoperate.</p>
+          <h4 class="highlight-title">React + TypeScript Design System</h4>
+          <p class="highlight-desc">Every sub now runs on React + Vite + HeroUI in TypeScript, all sharing a single <code class="text-brand/70 text-xs">@spookydecs/ui</code> workspace package — the design system (theme, typography, layout, toasts, app header, photo gallery, receipt extractor) extracted into one published library instead of copied per sub. The migration off bespoke vanilla JS is complete; not a single vanilla sub remains.</p>
         </div>
 
       </div>
