@@ -36,7 +36,7 @@ export interface ItemFormValues {
 
 export const DEFAULT_VALUES: ItemFormValues = {
   class: '', class_type: '',
-  short_name: '', season: '', status: 'Packed',
+  short_name: '', season: '', status: 'Ready',
   date_acquired: '', general_notes: '',
   height_length: '', stakes: '', tethers: '', adapter: '', power_inlet: false,
   color: '', bulb_type: '', length: '', male_ends: '', female_ends: '', watts: '', amps: '',

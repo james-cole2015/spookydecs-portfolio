@@ -16,7 +16,8 @@
     "subs/images",
     "subs/ideas",
     "subs/inspector",
-    "subs/deployments"
+    "subs/deployments",
+    "subs/maintenance"
   ],
   "scripts": {
     "dev": "vite",
@@ -27,7 +28,7 @@
     "dev:ideas": "npm run dev -w spookydecs-ideas",
     "dev:images": "npm run dev -w spookydecs-images",
     "dev:inspector": "npm run dev -w spookydecs-inspector",
-    "dev:maintenance": "SUB=maintenance vite",
+    "dev:maintenance": "npm run dev -w spookydecs-maintenance",
     "dev:storage": "npm run dev -w spookydecs-storage",
     "dev:workbench": "npm run dev -w spookydecs-workbench",
     "dev:audit": "npm run dev -w spookydecs-audit",
@@ -46,6 +47,7 @@
     "build:admin": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-admin",
     "build:tracker": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-tracker",
     "build:deployments": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-deployments",
+    "build:maintenance": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-maintenance",
     "preview": "vite preview"
   },
   "keywords": [],

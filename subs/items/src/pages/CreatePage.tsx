@@ -203,7 +203,7 @@ function ReviewSummary({ values }: { values: ItemFormValues }) {
     ['Type',      values.class_type],
     ['Name',      values.short_name],
     ['Season',    values.season],
-    ['Status',    'Packed'],
+    ['Status',    values.status],
   ];
   if (values.date_acquired)      rows.push(['Date Acquired',  values.date_acquired]);
   if (values.general_notes)      rows.push(['Notes',          values.general_notes]);

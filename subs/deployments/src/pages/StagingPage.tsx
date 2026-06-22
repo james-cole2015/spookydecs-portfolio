@@ -8,7 +8,8 @@ import type { Deployment } from '../config/deploymentsConfig';
 
 interface Tote {
   id: string;
-  short_name: string;
+  /** Storage record display name (API field is `name`, e.g. "Fiery Reaper (Original Box)"). */
+  name?: string;
   season?: string;
   location?: string;
   size?: string;
@@ -33,7 +34,7 @@ function ToteCard({
       <CardBody className="gap-2">
         <div className="flex items-start justify-between gap-2">
           <div>
-            <h3 className="font-semibold text-foreground">{tote.short_name}</h3>
+            <h3 className="font-semibold text-foreground">{tote.name || tote.id}</h3>
             <div className="mt-1 flex flex-wrap gap-1">
               {tote.season && (
                 <Chip size="sm" variant="flat">
@@ -216,7 +217,7 @@ export default function StagingPage() {
 
       <ConfirmDialog
         isOpen={!!confirmTote}
-        title={`Stage "${confirmTote?.short_name || ''}"?`}
+        title={`Stage "${confirmTote?.name || confirmTote?.id || ''}"?`}
         body={`This will mark ${confirmTote?.contents?.length || 0} item${
           (confirmTote?.contents?.length || 0) !== 1 ? 's' : ''
         } as Staged and open the tote.`}

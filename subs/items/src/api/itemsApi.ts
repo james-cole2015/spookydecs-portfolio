@@ -119,7 +119,7 @@ export function buildCreatePayload(formData: Record<string, any>): Record<string
     category:  formData.class_type,
     shortName: formData.short_name,
     season:    formData.season,
-    status:    'Packed',
+    status:    'Ready',
   };
 
   if (formData.date_acquired)   d.dateAcquired   = formData.date_acquired;
