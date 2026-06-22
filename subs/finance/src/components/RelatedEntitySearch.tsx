@@ -22,8 +22,8 @@ function displayFields(item: any, config: RelatedIdConfig): RelatedOption {
       itemId: item.item_id,
     };
   }
-  // ideas
-  return { id: item.id, primary: item.idea_name || item.name, secondary: item.id, itemId: item.item_id };
+  // ideas — ideas store their display name in `title` (idea_name/name are legacy/absent)
+  return { id: item.id, primary: item.title || item.idea_name || item.name, secondary: item.id, itemId: item.item_id };
 }
 
 async function loadRelatedData(
