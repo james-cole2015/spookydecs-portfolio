@@ -178,7 +178,8 @@ export interface UseReceiptExtractor {
   subcategoriesFor: (category: string) => string[];
   relatedConfigFor: (costType: string) => ReceiptExtractorRelatedConfig | null;
   relatedRequiredFor: (costType: string, category: string) => boolean;
-  relatedOptionsFor: (costType: string, query: string) => { id: string; primary: string; secondary: string }[];
+  /** Full, uncapped option list for a cost type — HeroUI <Autocomplete> filters client-side. */
+  relatedOptionsAllFor: (costType: string) => { id: string; primary: string; secondary: string }[];
   /** Validate all selected items; on success fire onComplete and return true. */
   confirm: () => boolean;
   /** Invoke the caller's onCancel. */
@@ -522,18 +523,11 @@ export function useReceiptExtractor(config: ReceiptExtractorConfig): UseReceiptE
     return typeof related.required === 'function' ? related.required(category) : related.required;
   }, []);
 
-  const relatedOptionsFor = useCallback(
-    (costType: string, query: string) => {
+  const relatedOptionsAllFor = useCallback(
+    (costType: string) => {
       const related = configRef.current.costConfig.relatedIdConfig?.[costType];
       if (!related) return [];
-      const searchFields = related.searchFields || ['id'];
-      const available = cacheForCostType(costType);
-      const filtered = query
-        ? available.filter((e) =>
-            searchFields.some((f) => String(e[f] ?? '').toLowerCase().includes(query.toLowerCase())),
-          )
-        : available;
-      return filtered.slice(0, 10).map((e) => entityDisplay(e, costType));
+      return cacheForCostType(costType).map((e) => entityDisplay(e, costType));
     },
     [cacheForCostType, entityDisplay],
   );
@@ -635,7 +629,7 @@ export function useReceiptExtractor(config: ReceiptExtractorConfig): UseReceiptE
     subcategoriesFor,
     relatedConfigFor,
     relatedRequiredFor,
-    relatedOptionsFor,
+    relatedOptionsAllFor,
     confirm,
     cancel,
   };
