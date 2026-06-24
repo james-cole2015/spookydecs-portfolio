@@ -84,7 +84,7 @@ export default function DetailPage() {
           finance:     config.finance_url       || '',
           maintenance: config.MAINT_URL         || '',
           images:      config.IMAGES_URL        || '',
-          ideas:       config.IDEAS_ADMIN_URL   || '',
+          ideas:       config.IDEAS_URL         || '',
         });
       } catch { /* config not critical */ }
     } catch (e: any) {

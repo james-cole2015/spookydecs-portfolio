@@ -7,8 +7,10 @@
  * onComplete, onCancel) and it drives `useReceiptExtractor` internally. The modal
  * body swaps on the hook's phase: upload → processing → review.
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
+  Autocomplete,
+  AutocompleteItem,
   Button,
   Checkbox,
   Chip,
@@ -24,7 +26,7 @@ import {
   Spinner,
   Textarea,
 } from '@heroui/react';
-import { ChevronDown, UploadCloud, X } from 'lucide-react';
+import { ChevronDown, UploadCloud } from 'lucide-react';
 import {
   useReceiptExtractor,
   type ReceiptExtractorConfig,
@@ -259,9 +261,6 @@ function ItemCard({
   const relatedRequired = related ? rx.relatedRequiredFor(costType, category) : false;
   const relatedField = related?.field;
   const currentRelatedId = relatedField ? (item[relatedField] as string) || '' : '';
-  const currentRelatedDisplay = relatedField
-    ? ((item[`${relatedField}_display`] as string) || currentRelatedId)
-    : '';
 
   return (
     <div
@@ -363,10 +362,9 @@ function ItemCard({
                 key={`${index}-${costType}-${relatedField}`}
                 label={related.label}
                 required={relatedRequired}
-                initialDisplay={currentRelatedDisplay}
-                hasValue={!!currentRelatedId}
+                selectedId={currentRelatedId}
                 error={item.errors?.[relatedField]}
-                getOptions={(q) => rx.relatedOptionsFor(costType, q)}
+                options={rx.relatedOptionsAllFor(costType)}
                 onSelect={(id) => rx.selectRelated(index, id)}
                 onClear={() => rx.clearRelated(index)}
               />
@@ -399,99 +397,57 @@ function ItemCard({
   );
 }
 
-// ─── Related-entity autocomplete (search → dropdown → select/clear) ───────────
+// ─── Related-entity autocomplete (HeroUI Autocomplete: type-to-filter → select) ──
+// HeroUI renders the listbox in a portaled Popover, so it escapes the line-item
+// card's overflow:hidden (which previously clipped the dropdown and made lower
+// results unreachable — #407). Filtering and the clear button are built in.
 
 function RelatedSelector({
   label,
   required,
-  initialDisplay,
-  hasValue,
+  selectedId,
   error,
-  getOptions,
+  options,
   onSelect,
   onClear,
 }: {
   label: string;
   required: boolean;
-  initialDisplay: string;
-  hasValue: boolean;
+  selectedId: string;
   error?: string;
-  getOptions: (query: string) => { id: string; primary: string; secondary: string }[];
+  options: { id: string; primary: string; secondary: string }[];
   onSelect: (id: string) => void;
   onClear: () => void;
 }) {
-  const [query, setQuery] = useState(initialDisplay);
-  const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState(hasValue);
-
-  const options = useMemo(() => (open ? getOptions(query === initialDisplay && selected ? '' : query) : []), [
-    open,
-    query,
-    selected,
-    initialDisplay,
-    getOptions,
-  ]);
-
   return (
-    <div className="relative">
-      <Input
-        label={`${label}${required ? '' : ' (Optional)'}`}
-        isRequired={required}
-        placeholder={`Search ${label.toLowerCase()}s…`}
-        value={query}
-        autoComplete="off"
-        isInvalid={!!error}
-        errorMessage={error}
-        onValueChange={(v) => {
-          setQuery(v);
-          setSelected(false);
-          setOpen(true);
-        }}
-        onFocus={() => setOpen(true)}
-        onBlur={() => setTimeout(() => setOpen(false), 150)}
-        endContent={
-          selected ? (
-            <button
-              type="button"
-              aria-label="Clear"
-              className="text-default-400 hover:text-danger"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                onClear();
-                setSelected(false);
-                setQuery('');
-              }}
-            >
-              <X size={16} />
-            </button>
-          ) : null
+    <Autocomplete
+      label={`${label}${required ? '' : ' (Optional)'}`}
+      placeholder={`Search ${label.toLowerCase()}s…`}
+      isRequired={required}
+      isInvalid={!!error}
+      errorMessage={error}
+      defaultItems={options}
+      selectedKey={selectedId || null}
+      onSelectionChange={(key) => {
+        if (key == null) {
+          onClear();
+          return;
         }
-      />
-      {open && (
-        <div className="absolute z-50 mt-1 max-h-52 w-full overflow-y-auto rounded-medium border border-default-200 bg-content1 shadow-medium">
-          {options.length === 0 ? (
-            <div className="px-3 py-2 text-center text-sm text-default-400">No results found</div>
-          ) : (
-            options.map((o) => (
-              <button
-                key={o.id}
-                type="button"
-                className="flex w-full items-center justify-between gap-2 border-b border-default-100 px-3 py-2 text-left last:border-b-0 hover:bg-default-100"
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  onSelect(o.id);
-                  setQuery(o.primary);
-                  setSelected(true);
-                  setOpen(false);
-                }}
-              >
-                <span className="font-medium">{o.primary}</span>
-                {o.secondary && <Chip size="sm" variant="flat" className="font-mono text-xs">{o.secondary}</Chip>}
-              </button>
-            ))
-          )}
-        </div>
+        onSelect(String(key));
+      }}
+    >
+      {(opt) => (
+        <AutocompleteItem key={opt.id} textValue={opt.primary}>
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-medium">{opt.primary}</span>
+            {opt.secondary && (
+              <Chip size="sm" variant="flat" className="font-mono text-xs">
+                {opt.secondary}
+              </Chip>
+            )}
+          </div>
+        </AutocompleteItem>
       )}
-    </div>
+    </Autocomplete>
   );
 }

@@ -69,7 +69,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Inspector', configKey: 'INSPECT_URL', Icon: Search },
   { label: 'Images', configKey: 'IMAGES_URL', Icon: ImageIcon },
   { label: 'Gallery', configKey: 'GALLERY_ADM_URL', Icon: LayoutGrid },
-  { label: 'Ideas', configKey: 'IDEAS_ADMIN_URL', Icon: Lightbulb },
+  { label: 'Ideas', configKey: 'IDEAS_URL', Icon: Lightbulb },
   { label: 'Audit', configKey: 'AUDIT_URL', Icon: FileText },
   { label: 'Admin', configKey: 'ADMIN_URL', Icon: Shield },
   { label: 'Workbench', configKey: 'WORKBENCH_URL', Icon: Hammer },

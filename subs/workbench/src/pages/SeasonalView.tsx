@@ -66,7 +66,7 @@ export default function SeasonalView() {
   const [activeSeason, setActiveSeason] = useState<SeasonKey | null>(null);
 
   const apiEndpoint = config.API_ENDPOINT;
-  const ideasAdminUrl = (config.IDEAS_ADMIN_URL as string | undefined) ?? '';
+  const ideasAdminUrl = (config.IDEAS_URL as string | undefined) ?? '';
   const maintUrl = (config.MAINT_URL as string | undefined) ?? '';
 
   useEffect(() => {
