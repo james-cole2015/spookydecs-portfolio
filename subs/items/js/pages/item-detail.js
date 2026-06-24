@@ -381,7 +381,7 @@ class ItemDetailPage {
       financeBase    = config.finance_url    || '';
       maintenanceBase = config.MAINT_URL    || '';
       imagesBase     = config.IMAGES_URL    || '';
-      ideasBase      = config.IDEAS_ADMIN_URL || '';
+      ideasBase      = config.IDEAS_URL || '';
     } catch (err) {
       console.warn('Could not load SpookyConfig for related links:', err);
     }
