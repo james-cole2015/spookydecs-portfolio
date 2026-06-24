@@ -23,7 +23,7 @@ export async function getSubdomainUrls(): Promise<SubdomainUrls> {
   const config = await window.SpookyConfig.get();
 
   return {
-    ideas: (config.IDEAS_ADMIN_URL as string) || '',
+    ideas: (config.IDEAS_URL as string) || '',
     items: (config.ITEMS_ADMIN as string) || '',
     finance: (config.finance_url as string) || '',
     maintenance: (config.MAINT_URL as string) || '',
