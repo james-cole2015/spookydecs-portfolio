@@ -324,5 +324,5 @@ export async function getItemUrl(itemId: string): Promise<string> {
 
 export async function getCostsUrl(): Promise<string> {
   const cfg = await window.SpookyConfig.get();
-  return (cfg as any).finance_url;
+  return (cfg as any).FINANCE_URL;
 }

@@ -378,7 +378,7 @@ class ItemDetailPage {
     try {
       const config = await window.SpookyConfig.get();
       storageBase    = config.STR_ADM_URL   || '';
-      financeBase    = config.finance_url    || '';
+      financeBase    = config.FINANCE_URL    || '';
       maintenanceBase = config.MAINT_URL    || '';
       imagesBase     = config.IMAGES_URL    || '';
       ideasBase      = config.IDEAS_URL || '';

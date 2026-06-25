@@ -81,7 +81,7 @@ export default function DetailPage() {
         const config = await (window as any).SpookyConfig.get() as any;
         setRelatedUrls({
           storage:     config.STR_ADM_URL      || '',
-          finance:     config.finance_url       || '',
+          finance:     config.FINANCE_URL       || '',
           maintenance: config.MAINT_URL         || '',
           images:      config.IMAGES_URL        || '',
           ideas:       config.IDEAS_URL         || '',

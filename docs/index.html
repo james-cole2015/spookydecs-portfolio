@@ -617,6 +617,12 @@
         </div>
 
         <div class="highlight-card">
+          <div class="highlight-icon">🛡️</div>
+          <h4 class="highlight-title">Fail-Closed Environment Isolation</h4>
+          <p class="highlight-desc">A single shared handler decorator enforces that a credential issued for one environment can only operate against that environment — a CI gate fails the build on any Lambda that isn't wrapped, so new functions are isolated by default rather than by remembering to opt in. Closed a cross-environment auth gap across all 63 handlers.</p>
+        </div>
+
+        <div class="highlight-card">
           <div class="highlight-icon">🧩</div>
           <h4 class="highlight-title">CDN Web Components</h4>
           <p class="highlight-desc">Shared UI components (header, upload modal, receipt extractor, API config) were originally served from assets.spookydecs.com and consumed via <code class="text-brand/70 text-xs">window.*</code> globals — no build step required. They have since been replaced by native <code class="text-brand/70 text-xs">@spookydecs/ui</code> equivalents (app header, photo gallery, receipt extractor) now that every sub is React; the CDN components remain only as legacy fallbacks.</p>
