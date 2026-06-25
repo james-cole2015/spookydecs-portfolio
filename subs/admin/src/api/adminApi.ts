@@ -25,7 +25,7 @@ export async function getSubdomainUrls(): Promise<SubdomainUrls> {
   return {
     ideas: (config.IDEAS_URL as string) || '',
     items: (config.ITEMS_ADMIN as string) || '',
-    finance: (config.finance_url as string) || '',
+    finance: (config.FINANCE_URL as string) || '',
     maintenance: (config.MAINT_URL as string) || '',
     storage: (config.STR_ADM_URL as string) || '',
     workbench: (config.WORKBENCH_URL as string) || '',

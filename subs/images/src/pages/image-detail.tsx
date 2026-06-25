@@ -81,7 +81,7 @@ export default function ImageDetailPage({ editMode = false }: { editMode?: boole
       <ImageDetail
         photo={photo}
         editMode={editMode}
-        financeUrl={config.finance_url || ''}
+        financeUrl={config.FINANCE_URL || ''}
         maintUrl={config.MAINT_URL || ''}
         from={from}
       />
