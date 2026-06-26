@@ -163,6 +163,8 @@ export interface Idea {
   build_start?: string;
   build_complete?: string;
   item_id?: string;
+  related_item_id?: string;
+  built_item_ids?: string[];
   bucket?: string;
   agent_enrichment?: AgentEnrichment;
   createdAt?: string;
