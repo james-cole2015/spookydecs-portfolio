@@ -1,0 +1,214 @@
+/*
+ * Seasonal theme tokens — CSS custom properties keyed by `[data-season] × (.dark | .light)`.
+ * `data-season` is set by SeasonProvider; `.dark`/`.light` is owned by HeroUI's ThemeProvider.
+ * The two axes compose: the season picks the palette, the switch picks light/dark within it.
+ *
+ * v1 is CSS-only (gradients + inline SVG motifs) — no external art dependency.
+ */
+
+/* ---- season-agnostic defaults (fallback before data-season resolves) ---- */
+:root {
+  --sd-accent: #7c3aed;
+  --sd-accent-2: #ec4899;
+  --sd-hero-from: #1e1b4b;
+  --sd-hero-via: #312e81;
+  --sd-hero-to: #0b0612;
+  --sd-hero-text: #f5f3ff;
+  --sd-hero-muted: rgba(245, 243, 255, 0.72);
+  --sd-chip-bg: rgba(255, 255, 255, 0.08);
+  --sd-chip-border: rgba(255, 255, 255, 0.16);
+}
+
+/* =========================== HALLOWEEN =========================== */
+:root[data-season='halloween'] {
+  --sd-accent: #ff7518;   /* pumpkin */
+  --sd-accent-2: #8b5cf6; /* witch purple */
+}
+:root[data-season='halloween'].dark {
+  --sd-hero-from: #1a0b2e;
+  --sd-hero-via: #2d1b4e;
+  --sd-hero-to: #1b1030;
+  --sd-hero-text: #f7ecff;
+  --sd-hero-muted: rgba(247, 236, 255, 0.72);
+  --sd-chip-bg: rgba(255, 117, 24, 0.12);
+  --sd-chip-border: rgba(255, 117, 24, 0.32);
+}
+:root[data-season='halloween'].light {
+  --sd-hero-from: #ffe7cf;
+  --sd-hero-via: #ffd9b0;
+  --sd-hero-to: #f3e3ff;
+  --sd-hero-text: #2a0d3f;
+  --sd-hero-muted: rgba(42, 13, 63, 0.7);
+  --sd-chip-bg: rgba(255, 117, 24, 0.16);
+  --sd-chip-border: rgba(255, 117, 24, 0.4);
+}
+
+/* =========================== CHRISTMAS =========================== */
+:root[data-season='christmas'] {
+  --sd-accent: #16a34a;   /* evergreen */
+  --sd-accent-2: #dc2626; /* holly red */
+}
+:root[data-season='christmas'].dark {
+  --sd-hero-from: #07271a;
+  --sd-hero-via: #0d3b27;
+  --sd-hero-to: #0a2317;
+  --sd-hero-text: #ecfdf5;
+  --sd-hero-muted: rgba(236, 253, 245, 0.72);
+  --sd-chip-bg: rgba(220, 38, 38, 0.14);
+  --sd-chip-border: rgba(220, 38, 38, 0.34);
+}
+:root[data-season='christmas'].light {
+  --sd-hero-from: #e9fbf0;
+  --sd-hero-via: #d4f3e0;
+  --sd-hero-to: #fde8e8;
+  --sd-hero-text: #0c2a1c;
+  --sd-hero-muted: rgba(12, 42, 28, 0.7);
+  --sd-chip-bg: rgba(22, 163, 74, 0.16);
+  --sd-chip-border: rgba(22, 163, 74, 0.4);
+}
+
+/* ============================= PLAIN ============================= */
+:root[data-season='plain'] {
+  --sd-accent: #6366f1;   /* indigo */
+  --sd-accent-2: #06b6d4; /* cyan */
+}
+:root[data-season='plain'].dark {
+  --sd-hero-from: #0f172a;
+  --sd-hero-via: #1e293b;
+  --sd-hero-to: #131c30;
+  --sd-hero-text: #f8fafc;
+  --sd-hero-muted: rgba(248, 250, 252, 0.7);
+  --sd-chip-bg: rgba(99, 102, 241, 0.14);
+  --sd-chip-border: rgba(99, 102, 241, 0.32);
+}
+:root[data-season='plain'].light {
+  --sd-hero-from: #eef2ff;
+  --sd-hero-via: #e0e7ff;
+  --sd-hero-to: #ecfeff;
+  --sd-hero-text: #0f172a;
+  --sd-hero-muted: rgba(15, 23, 42, 0.7);
+  --sd-chip-bg: rgba(99, 102, 241, 0.14);
+  --sd-chip-border: rgba(99, 102, 241, 0.34);
+}
+
+/* ----------------------------- hero ----------------------------- */
+.sd-hero {
+  background: linear-gradient(160deg, var(--sd-hero-from), var(--sd-hero-via) 55%, var(--sd-hero-to));
+  color: var(--sd-hero-text);
+}
+/* Dissolve the hero into the page so there is no hard seam. Fades to the real
+   HeroUI background token, so it's correct in every season and both themes.
+   Sits above the gradient but below the hero content (which is z-10). */
+.sd-hero::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 160px;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent, hsl(var(--heroui-background)));
+}
+.sd-hero-muted {
+  color: var(--sd-hero-muted);
+}
+.sd-accent-text {
+  color: var(--sd-accent);
+}
+.sd-cta {
+  background: linear-gradient(120deg, var(--sd-accent), var(--sd-accent-2));
+  color: #fff;
+}
+.sd-chip {
+  background: var(--sd-chip-bg);
+  border: 1px solid var(--sd-chip-border);
+}
+
+/* --------------------------- motifs ----------------------------- */
+/* Ambient overlay scoped to the hero: an absolute layer clipped by the hero's
+   overflow-hidden, above the gradient but behind the hero content (z-10). Confined
+   to the hero so the atmosphere reads as a branded touch, not a full-page gimmick. */
+.sd-motif {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Halloween — drifting bats */
+.sd-bat {
+  position: absolute;
+  top: var(--top, 10%);
+  left: -8vw;
+  font-size: var(--size, 1.5rem);
+  opacity: 0.45;
+  animation: sd-drift var(--dur, 22s) linear infinite;
+  animation-delay: var(--delay, 0s);
+}
+@keyframes sd-drift {
+  from {
+    transform: translateX(0) translateY(0);
+  }
+  50% {
+    transform: translateX(58vw) translateY(-3vh);
+  }
+  to {
+    transform: translateX(120vw) translateY(2vh);
+  }
+}
+/* Wing-flap: squash horizontally to fake the wings beating. */
+.sd-bat-wing {
+  display: inline-block;
+  animation: sd-flap var(--flap, 0.4s) ease-in-out infinite;
+}
+@keyframes sd-flap {
+  0%,
+  100% {
+    transform: scaleX(1) scaleY(1);
+  }
+  50% {
+    transform: scaleX(0.55) scaleY(1.08);
+  }
+}
+
+/* Christmas — falling snowflakes (glyphs, not balls) */
+.sd-snow {
+  position: absolute;
+  top: -4vh;
+  left: var(--left, 50%);
+  font-size: var(--size, 14px);
+  line-height: 1;
+  color: #fff;
+  text-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
+  /* fall (transform) + twinkle (opacity) run together; they touch different
+     properties so they don't fight. */
+  animation:
+    sd-fall var(--dur, 12s) linear infinite,
+    sd-twinkle var(--tw, 3s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+@keyframes sd-fall {
+  from {
+    transform: translateY(0) translateX(0) rotate(0deg);
+  }
+  to {
+    transform: translateY(108vh) translateX(4vw) rotate(180deg);
+  }
+}
+@keyframes sd-twinkle {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+/* Accessibility: never animate (and hide the overlay) when reduced motion is requested. */
+@media (prefers-reduced-motion: reduce) {
+  .sd-motif {
+    display: none;
+  }
+}
