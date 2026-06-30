@@ -4,13 +4,25 @@
  */
 
 /**
- * Primary "Enter the demo" destination.
- *
- * #364 builds this as a single easily-changed constant. The final target (and the
- * demo user's role) are decided in #365 — once the ephemeral mint flow exists this
- * may instead point at the in-page identity-generation step. Repoint here.
+ * Where a logged-in demo visitor lands — the admin console. This is the
+ * post-login destination, passed as the `redirect` to the real auth flow.
  */
-export const ENTER_DEMO_URL = 'https://demo-admin.spookydecs.com';
+export const DEMO_ADMIN_URL = 'https://demo-admin.spookydecs.com';
+
+/**
+ * Primary "Enter the demo" destination (#365): the genuine Cognito login at
+ * auth.spookydecs.com, which redirects to demo-admin after sign-in. The visitor
+ * mints a throwaway identity in-page (Generate), then pastes those creds here.
+ * Showcasing the real auth is a deliberate portfolio plus, not friction.
+ */
+export const ENTER_DEMO_URL = `https://auth.spookydecs.com/?redirect=${encodeURIComponent(DEMO_ADMIN_URL)}`;
+
+/**
+ * Path appended to `API_ENDPOINT` (from SpookyConfig) for the ephemeral demo-user
+ * mint. Public, unauthenticated, demo-stage only. Rate-limited (interim throttle;
+ * #368 owns real abuse controls).
+ */
+export const MINT_SESSION_PATH = '/demo/session';
 
 /** Public demo gallery, linked from the preview strip. */
 export const DEMO_GALLERY_URL = 'https://demo-gallery.spookydecs.com';

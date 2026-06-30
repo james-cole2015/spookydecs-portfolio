@@ -1,16 +1,15 @@
 /**
  * Hero — the top fold: seasonal headline + tagline, an AWS/tech blurb, the
- * agentic-systems trio (first-class, not a footnote), and the primary
- * "Enter the demo" CTA.
+ * self-service identity-mint flow (Generate → Enter), and the agentic-systems
+ * trio (first-class, not a footnote).
  */
-import { Button, Chip, Tooltip } from '@heroui/react';
-import { ArrowRight } from 'lucide-react';
+import { Chip } from '@heroui/react';
 import { useSeason } from '../season/SeasonProvider';
 import { SEASON_COPY } from '../season/seasons';
-import { ENTER_DEMO_URL, TECH_HIGHLIGHTS } from '../config/landingConfig';
+import { TECH_HIGHLIGHTS } from '../config/landingConfig';
 import { AgenticTrio } from './AgenticTrio';
 import { FloorCollapseBanner } from './FloorCollapseBanner';
-import { IdentityTeaser } from './IdentityTeaser';
+import { IdentityMintFlow } from './IdentityMintFlow';
 import { SeasonMotif } from './SeasonMotif';
 
 export function Hero() {
@@ -35,27 +34,10 @@ export function Hero() {
           ))}
         </div>
 
-        {/* Front-and-center notices, directly above the single entry CTA. */}
+        {/* Self-service entry: generate a throwaway identity, then enter via real auth. */}
         <div className="mt-8 flex flex-col gap-2">
-          <IdentityTeaser />
+          <IdentityMintFlow />
           <FloorCollapseBanner />
-        </div>
-
-        <div className="mt-6">
-          <Tooltip
-            content="We’ll generate a temporary Cognito identity and redirect you straight into the app — no signup."
-            placement="bottom"
-          >
-            <Button
-              as="a"
-              href={ENTER_DEMO_URL}
-              size="lg"
-              endContent={<ArrowRight size={18} />}
-              className="sd-cta font-semibold"
-            >
-              {copy.cta}
-            </Button>
-          </Tooltip>
         </div>
 
         <div className="mt-12">
