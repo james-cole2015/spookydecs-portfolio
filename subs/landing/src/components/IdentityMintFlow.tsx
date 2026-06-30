@@ -10,10 +10,16 @@
  *
  * Showcasing the real auth flow is a deliberate portfolio plus. Enter stays disabled
  * until Generate succeeds, so the visitor always has creds in hand before they go.
+ *
+ * Credential hygiene (show-once): the minted creds live ONLY in in-memory React state —
+ * never localStorage/sessionStorage — so a page reload or re-roll clears them. Enter
+ * opens auth in a NEW tab (target=_blank) so the landing tab stays put and the creds
+ * remain visible to copy/paste without persisting them anywhere. A warning makes the
+ * show-once behavior explicit, mirroring how AWS/GitHub surface a secret exactly once.
  */
 import { useState } from 'react';
 import { Button, Snippet, Tooltip } from '@heroui/react';
-import { ArrowRight, Dices, Loader2 } from 'lucide-react';
+import { AlertTriangle, ArrowRight, Dices, Loader2 } from 'lucide-react';
 import { useConfig } from '@spookydecs/ui';
 import { useSeason } from '../season/SeasonProvider';
 import { SEASON_COPY } from '../season/seasons';
@@ -82,8 +88,12 @@ export function IdentityMintFlow() {
           <Snippet symbol="" variant="bordered" size="sm" className="w-full" codeString={identity.password}>
             {identity.password}
           </Snippet>
-          <p className="text-xs text-foreground/60">
-            Copy both — you’ll paste them into the sign-in page. They’re temporary and not shown again.
+          <p className="flex items-start gap-1.5 text-xs font-medium text-warning">
+            <AlertTriangle size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
+            <span>
+              Copy these now — for security they’re shown only once. They’ll disappear if you reload
+              the page or re-roll. (You can always generate a new identity.)
+            </span>
           </p>
         </div>
       )}
@@ -107,7 +117,7 @@ export function IdentityMintFlow() {
         <Tooltip
           content={
             identity
-              ? 'Opens the real sign-in — paste your username and password.'
+              ? 'Opens the real sign-in in a new tab — paste your username and password.'
               : 'Generate an identity first.'
           }
           placement="bottom"
@@ -117,6 +127,8 @@ export function IdentityMintFlow() {
             <Button
               as={identity ? 'a' : 'button'}
               href={identity ? ENTER_DEMO_URL : undefined}
+              target={identity ? '_blank' : undefined}
+              rel={identity ? 'noopener noreferrer' : undefined}
               isDisabled={!identity}
               size="lg"
               endContent={<ArrowRight size={18} />}
