@@ -21,7 +21,7 @@ export default function CreatePage() {
   const [step, setStep] = useState<Step>(1);
   const [saving, setSaving] = useState(false);
 
-  const { register, watch, setValue, handleSubmit, getValues, formState: { errors } } = useForm<ItemFormValues>({
+  const { register, control, watch, setValue, handleSubmit, getValues, formState: { errors } } = useForm<ItemFormValues>({
     defaultValues: DEFAULT_VALUES,
   });
 
@@ -148,7 +148,7 @@ export default function CreatePage() {
             <CardBody className="flex flex-col gap-6">
               <div>
                 <Typography type="h6" className="mb-3">3. Basic Information</Typography>
-                <BasicFields register={register} errors={errors} showStatus={false} />
+                <BasicFields register={register} control={control} errors={errors} showStatus={false} />
               </div>
               <Divider />
               <div>

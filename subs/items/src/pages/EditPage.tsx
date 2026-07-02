@@ -96,7 +96,7 @@ export default function EditPage() {
   const [error, setError]   = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const { register, reset, watch, setValue, handleSubmit, formState: { errors } } = useForm<ItemFormValues>({
+  const { register, control, reset, watch, setValue, handleSubmit, formState: { errors } } = useForm<ItemFormValues>({
     defaultValues: DEFAULT_VALUES,
   });
 
@@ -159,7 +159,7 @@ export default function EditPage() {
           <CardBody className="flex flex-col gap-6">
             <div>
               <Typography type="h6" className="mb-3">Basic Information</Typography>
-              <BasicFields register={register} errors={errors} showStatus />
+              <BasicFields register={register} control={control} errors={errors} showStatus />
             </div>
             <Divider />
             <div>

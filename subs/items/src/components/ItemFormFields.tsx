@@ -1,17 +1,18 @@
 // Dynamic form fields driven by class_type — used in wizard (step 3) and edit form (#332)
 // react-hook-form: register/errors/setValue passed in from the parent form context.
 import { Input, Select, SelectItem, Checkbox } from '@heroui/react';
-import { type UseFormRegister, type FieldErrors, type UseFormSetValue } from 'react-hook-form';
+import { Controller, type UseFormRegister, type FieldErrors, type UseFormSetValue, type Control } from 'react-hook-form';
 import { CLASS_TYPE_ATTRIBUTES, FIELD_METADATA, SEASONS, ITEM_STATUS } from '../config/itemsConfig';
 import { type ItemFormValues } from './ItemFormSchema';
 
 interface BasicFieldsProps {
   register: UseFormRegister<ItemFormValues>;
+  control: Control<ItemFormValues>;
   errors: FieldErrors<ItemFormValues>;
   showStatus?: boolean;
 }
 
-export function BasicFields({ register, errors, showStatus }: BasicFieldsProps) {
+export function BasicFields({ register, control, errors, showStatus }: BasicFieldsProps) {
   return (
     <div className="flex flex-col gap-4">
       <Input
@@ -21,19 +22,40 @@ export function BasicFields({ register, errors, showStatus }: BasicFieldsProps) 
         isInvalid={!!errors.short_name}
         errorMessage={errors.short_name?.message}
       />
-      <Select
-        label="Season"
-        isRequired
-        {...register('season')}
-        isInvalid={!!errors.season}
-        errorMessage={errors.season?.message}
-      >
-        {SEASONS.map((s) => <SelectItem key={s.value}>{s.icon} {s.label}</SelectItem>)}
-      </Select>
+      {/* HeroUI Select is not a native <select>, so register() never propagates the
+          selection into react-hook-form — use Controller + selectedKeys/onChange. */}
+      <Controller
+        control={control}
+        name="season"
+        rules={{ required: 'Season is required.' }}
+        render={({ field }) => (
+          <Select
+            label="Season"
+            isRequired
+            selectedKeys={field.value ? [field.value] : []}
+            onChange={(e) => field.onChange(e.target.value)}
+            isInvalid={!!errors.season}
+            errorMessage={errors.season?.message}
+          >
+            {SEASONS.map((s) => <SelectItem key={s.value}>{s.icon} {s.label}</SelectItem>)}
+          </Select>
+        )}
+      />
       {showStatus && (
-        <Select label="Status" {...register('status')}>
-          {ITEM_STATUS.map((s) => <SelectItem key={s.value}>{s.label}</SelectItem>)}
-        </Select>
+        <Controller
+          control={control}
+          name="status"
+          render={({ field }) => (
+            <Select
+              label="Status"
+              selectedKeys={field.value ? [field.value] : []}
+              onChange={(e) => e.target.value && field.onChange(e.target.value)}
+              disallowEmptySelection
+            >
+              {ITEM_STATUS.map((s) => <SelectItem key={s.value}>{s.label}</SelectItem>)}
+            </Select>
+          )}
+        />
       )}
       <Input label="Date Acquired" placeholder="Year (e.g. 2023)" {...register('date_acquired')} />
       <Input label="Notes" placeholder="Any additional notes" {...register('general_notes')} />
