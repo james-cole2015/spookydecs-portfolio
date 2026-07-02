@@ -1,0 +1,22 @@
+/* Seasonal palette tokens + hero/motif styles (data-season × .dark/.light).
+   Must precede the @tailwind directives (CSS requires @import first). */
+@import './season/seasons.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: hsl(var(--heroui-background));
+  color: hsl(var(--heroui-foreground));
+}
+
+#root {
+  min-height: 100vh;
+}

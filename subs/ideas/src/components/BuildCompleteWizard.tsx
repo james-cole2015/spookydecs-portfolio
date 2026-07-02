@@ -71,8 +71,10 @@ export function BuildCompleteWizard({
   isOpen: boolean;
   onClose: () => void;
 }) {
+  const MAX_UNITS = 20;
   const [step, setStep] = useState(1);
   const [completeDate, setCompleteDate] = useState(idea.build_complete || todayIso());
+  const [units, setUnits] = useState('1');
   const [shortName, setShortName] = useState(idea.title);
   const [cls, setCls] = useState('');
   const [classType, setClassType] = useState('');
@@ -83,8 +85,15 @@ export function BuildCompleteWizard({
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [createdItemId, setCreatedItemId] = useState('');
+  const [createdItemIds, setCreatedItemIds] = useState<string[]>([]);
 
   const fields = useMemo(() => specFields(cls, classType), [cls, classType]);
+
+  function parseUnits(): number | null {
+    const n = Number(units);
+    if (!Number.isInteger(n) || n < 1 || n > MAX_UNITS) return null;
+    return n;
+  }
 
   async function goToStep2() {
     setStep(2);
@@ -101,48 +110,74 @@ export function BuildCompleteWizard({
   function validateStep2(): boolean {
     setError('');
     if (!shortName.trim()) return setError('Item name is required.'), false;
+    if (parseUnits() === null)
+      return setError(`Units built must be a whole number from 1 to ${MAX_UNITS}.`), false;
     if (!cls) return setError('Class is required.'), false;
     if (!classType) return setError('Type is required.'), false;
     return true;
   }
 
+  function buildItemBody(name: string): Record<string, unknown> {
+    const itemBody: Record<string, unknown> = {
+      short_name: name,
+      class: cls,
+      class_type: classType,
+      season: idea.season,
+      status: 'Ready', // §6A canonical lifecycle (#280) — legacy 'Active' was renamed to 'Ready'
+      general_notes: generalNotes.trim(),
+      date_acquired: String(new Date().getFullYear()),
+      build_data: { idea_build: true, related_idea_id: idea.id },
+    };
+    if (cls === 'Decoration') {
+      itemBody.height_length = spec.height_length || '';
+      itemBody.tethers = spec.tethers || '0';
+      itemBody.stakes = spec.stakes || '0';
+      if ('adapter' in spec) itemBody.adapter = spec.adapter || '';
+    }
+    if (cls === 'Light') {
+      itemBody.bulb_type = spec.bulb_type || '';
+      itemBody.color = spec.color || '';
+      itemBody.amps = spec.amps || '';
+      itemBody.watts = spec.watts || '';
+      itemBody.has_power_inlet = hasPowerInlet;
+      if ('length' in spec) itemBody.length = spec.length || '';
+    }
+    if (cls === 'Accessory') {
+      itemBody.male_ends = spec.male_ends || '1';
+      itemBody.female_ends = spec.female_ends || '1';
+      if ('length' in spec) itemBody.length = spec.length || '';
+    }
+    return itemBody;
+  }
+
   async function submit() {
     setError('');
+    const n = parseUnits();
+    if (n === null) {
+      setError(`Units built must be a whole number from 1 to ${MAX_UNITS}.`);
+      return;
+    }
     setSubmitting(true);
-    try {
-      const itemBody: Record<string, unknown> = {
-        short_name: shortName.trim(),
-        class: cls,
-        class_type: classType,
-        season: idea.season,
-        status: 'Active',
-        general_notes: generalNotes.trim(),
-        date_acquired: String(new Date().getFullYear()),
-        build_data: { idea_build: true, related_idea_id: idea.id },
-      };
-      if (cls === 'Decoration') {
-        itemBody.height_length = spec.height_length || '';
-        itemBody.tethers = spec.tethers || '0';
-        itemBody.stakes = spec.stakes || '0';
-        if ('adapter' in spec) itemBody.adapter = spec.adapter || '';
-      }
-      if (cls === 'Light') {
-        itemBody.bulb_type = spec.bulb_type || '';
-        itemBody.color = spec.color || '';
-        itemBody.amps = spec.amps || '';
-        itemBody.watts = spec.watts || '';
-        itemBody.has_power_inlet = hasPowerInlet;
-        if ('length' in spec) itemBody.length = spec.length || '';
-      }
-      if (cls === 'Accessory') {
-        itemBody.male_ends = spec.male_ends || '1';
-        itemBody.female_ends = spec.female_ends || '1';
-        if ('length' in spec) itemBody.length = spec.length || '';
-      }
 
-      const itemResult = await createItem(itemBody);
-      const itemId = itemResult?.confirmation?.id || itemResult?.preview?.id || itemResult?.id;
-      if (!itemId) throw new Error('Item created but no ID returned');
+    // Batch build (#435): create N item records, each backlinked to the idea. All N
+    // share the same short_name — the items handler's per-class atomic number in the
+    // generated id (…-046, …-047) is what distinguishes the copies, so no name suffix
+    // is needed (and a suffix would only pollute the id, which is derived from
+    // short_name). Creates are sequential (awaited) so the ConsistentRead atomic
+    // generator increments cleanly across them.
+    // Track created ids as we go so a mid-loop failure can report exactly which
+    // items were already created (no rollback) — both in the UI and the console.
+    const created: string[] = [];
+    const name = shortName.trim();
+    try {
+      for (let i = 0; i < n; i++) {
+        const itemResult = await createItem(buildItemBody(name));
+        const itemId =
+          itemResult?.confirmation?.id || itemResult?.preview?.id || itemResult?.id;
+        if (!itemId) throw new Error(`Item ${i + 1} of ${n} created but no ID returned`);
+        created.push(itemId);
+        setCreatedItemIds([...created]);
+      }
 
       await updateIdea({
         id: idea.id,
@@ -150,14 +185,31 @@ export function BuildCompleteWizard({
         title: idea.title,
         status: 'Built',
         build_complete: completeDate || todayIso(),
-        item_id: itemId,
-        related_item_id: itemId,
+        item_id: created[0],
+        related_item_id: created[0],
+        built_item_ids: created,
       });
 
-      setCreatedItemId(itemId);
+      console.log(`[435] Batch build complete: idea=${idea.id} items=`, created);
+      setCreatedItemId(created[0]);
       setStep(4); // success
     } catch (err) {
-      setError('Error: ' + (err as Error).message);
+      const msg = (err as Error).message;
+      console.error(
+        `[435] Batch build failed for idea=${idea.id} after creating ${created.length} of ${n} item(s):`,
+        created,
+        err,
+      );
+      setCreatedItemIds(created);
+      if (created.length > 0) {
+        setError(
+          `Created ${created.length} of ${n} item(s) (${created.join(', ')}) before failing: ` +
+            `${msg}. The idea was NOT marked Built and these items are not yet linked — ` +
+            `link or delete them manually.`,
+        );
+      } else {
+        setError('Error: ' + msg);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -214,7 +266,34 @@ export function BuildCompleteWizard({
                   Logged costs: {costSummary}
                 </p>
               )}
-              <Input isRequired label="Item Name" value={shortName} onValueChange={setShortName} />
+              <div className="flex gap-3">
+                <Input
+                  isRequired
+                  className="flex-1"
+                  label="Item Name"
+                  value={shortName}
+                  onValueChange={setShortName}
+                />
+                <Input
+                  isRequired
+                  type="number"
+                  min={1}
+                  max={MAX_UNITS}
+                  step={1}
+                  className="w-32"
+                  label="Units built"
+                  description={`1–${MAX_UNITS}`}
+                  value={units}
+                  onValueChange={setUnits}
+                />
+              </div>
+              {parseUnits() !== null && parseUnits()! > 1 && (
+                <p className="rounded-medium bg-default-100 px-3 py-2 text-tiny text-default-500">
+                  Creates {parseUnits()} separate item records (each named “
+                  {shortName.trim() || 'Item'}”, distinguished by id), with the build cost split
+                  evenly across them.
+                </p>
+              )}
               <div className="flex gap-3">
                 <Select
                   isRequired
@@ -274,6 +353,10 @@ export function BuildCompleteWizard({
               <h3 className="text-medium font-semibold">Confirm &amp; Submit</h3>
               <div className="flex flex-col divide-y divide-default-100 text-small">
                 <ReviewRow label="Item Name" value={shortName} />
+                <ReviewRow
+                  label="Units built"
+                  value={parseUnits() && parseUnits()! > 1 ? `${parseUnits()} items` : '1 item'}
+                />
                 <ReviewRow label="Class / Type" value={`${cls} / ${classType}`} />
                 <ReviewRow label="Season" value={idea.season} />
                 <ReviewRow label="Completion Date" value={completeDate ? formatDate(completeDate) : '—'} />
@@ -288,7 +371,16 @@ export function BuildCompleteWizard({
               </div>
               <h3 className="text-large font-semibold">Build Complete!</h3>
               <p className="text-small text-default-500">
-                Item <strong className="text-foreground">{createdItemId}</strong> created.
+                {createdItemIds.length > 1 ? (
+                  <>
+                    <strong className="text-foreground">{createdItemIds.length} items</strong>{' '}
+                    created from this idea.
+                  </>
+                ) : (
+                  <>
+                    Item <strong className="text-foreground">{createdItemId}</strong> created.
+                  </>
+                )}
               </p>
             </div>
           )}

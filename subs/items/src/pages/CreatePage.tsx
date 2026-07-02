@@ -57,9 +57,12 @@ export default function CreatePage() {
     setSaving(true);
     try {
       const payload = buildCreatePayload(data);
-      const item = await createItem(payload);
+      // createItem resolves the { preview, confirmation } wrapper — there is no top-level
+      // `id` on it, so navigating to `/${item.id}` landed on `/undefined` → "item not found"
+      // (#446). Route back to the items list on success instead; the new record shows there.
+      await createItem(payload);
       toast.showSuccess('Item created!');
-      navigate(`/${(item as any).id}`);
+      navigate('/items');
     } catch (e: any) {
       toast.showError(e?.message ?? 'Failed to create item.');
     } finally {

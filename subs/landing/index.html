@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpookyDecs — Live Demo</title>
+  <meta name="description" content="Explore the SpookyDecs demo: a serverless, AI-augmented decoration management platform on AWS.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎃</text></svg>">
+
+  <!-- Theme init (no-flash): set dark/light class from localStorage before paint. Default dark. -->
+  <script>
+    (function () {
+      var t = localStorage.getItem('sd-theme');
+      if (t !== 'light' && t !== 'dark') t = 'dark';
+      var el = document.documentElement;
+      el.classList.remove('light', 'dark');
+      el.classList.add(t);
+      el.style.colorScheme = t;
+    })();
+  </script>
+
+  <!-- Shared CDN config (provides window.SpookyConfig). Landing is public/anonymous —
+       no auth-helpers.js is loaded so this page never gates on identity. The minted
+       demo session (#365/#366) will read SpookyConfig from here. -->
+  <script src="https://assets.spookydecs.com/components/api-config.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+</html>
