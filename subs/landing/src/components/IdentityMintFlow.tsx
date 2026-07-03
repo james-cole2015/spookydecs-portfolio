@@ -17,7 +17,7 @@
  * remain visible to copy/paste without persisting them anywhere. A warning makes the
  * show-once behavior explicit, mirroring how AWS/GitHub surface a secret exactly once.
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, Snippet, Tooltip } from '@heroui/react';
 import { AlertTriangle, ArrowRight, Dices, Loader2 } from 'lucide-react';
 import { useConfig } from '@spookydecs/ui';
@@ -33,6 +33,10 @@ interface MintedIdentity {
 
 type MintState = 'idle' | 'minting' | 'minted' | 'error';
 
+// Show-once hardening (#447): auto-hide the minted creds after this many seconds
+// so an abandoned session doesn't leave a plaintext admin login on screen.
+const AUTOHIDE_SECONDS = 60;
+
 export function IdentityMintFlow() {
   const { API_ENDPOINT } = useConfig();
   const { season } = useSeason();
@@ -41,6 +45,21 @@ export function IdentityMintFlow() {
   const [state, setState] = useState<MintState>('idle');
   const [identity, setIdentity] = useState<MintedIdentity | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
+
+  // Countdown → auto-hide (#447). One 1s timer per tick; cleanup clears it on
+  // unmount and on re-roll (secondsLeft resets), so no leaked/duplicate timers.
+  useEffect(() => {
+    if (secondsLeft === null) return;
+    if (secondsLeft <= 0) {
+      setIdentity(null);
+      setState('idle');
+      setSecondsLeft(null);
+      return;
+    }
+    const timer = setTimeout(() => setSecondsLeft((s) => (s === null ? null : s - 1)), 1000);
+    return () => clearTimeout(timer);
+  }, [secondsLeft]);
 
   async function handleGenerate() {
     setState('minting');
@@ -56,6 +75,7 @@ export function IdentityMintFlow() {
       if (!data?.username || !data?.password) throw new Error('Mint returned no credentials.');
       setIdentity(data);
       setState('minted');
+      setSecondsLeft(AUTOHIDE_SECONDS);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not generate an identity.');
       setState('error');
@@ -91,8 +111,9 @@ export function IdentityMintFlow() {
           <p className="flex items-start gap-1.5 text-xs font-medium text-warning">
             <AlertTriangle size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
             <span>
-              Copy these now — for security they’re shown only once. They’ll disappear if you reload
-              the page or re-roll. (You can always generate a new identity.)
+              Copy these now — for security they’re shown only once. They’ll auto-hide
+              {secondsLeft !== null ? ` in ${secondsLeft}s` : ''}, or if you reload the page or
+              re-roll. (You can always generate a new identity.)
             </span>
           </p>
         </div>
