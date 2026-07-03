@@ -22,8 +22,9 @@ export function BasicFields({ register, control, errors, showStatus }: BasicFiel
         isInvalid={!!errors.short_name}
         errorMessage={errors.short_name?.message}
       />
-      {/* HeroUI Select is not a native <select>, so register() never propagates the
-          selection into react-hook-form — use Controller + selectedKeys/onChange. */}
+      {/* HeroUI Select is not a native <select>: its native `onChange` only fires on
+          native/mobile interaction, NOT desktop listbox picks. Use Controller +
+          selectedKeys + onSelectionChange (the canonical API used across the app). */}
       <Controller
         control={control}
         name="season"
@@ -33,7 +34,7 @@ export function BasicFields({ register, control, errors, showStatus }: BasicFiel
             label="Season"
             isRequired
             selectedKeys={field.value ? [field.value] : []}
-            onChange={(e) => field.onChange(e.target.value)}
+            onSelectionChange={(keys) => field.onChange(((keys as Set<string>).values().next().value as string) ?? '')}
             isInvalid={!!errors.season}
             errorMessage={errors.season?.message}
           >
@@ -49,7 +50,10 @@ export function BasicFields({ register, control, errors, showStatus }: BasicFiel
             <Select
               label="Status"
               selectedKeys={field.value ? [field.value] : []}
-              onChange={(e) => e.target.value && field.onChange(e.target.value)}
+              onSelectionChange={(keys) => {
+                const v = (keys as Set<string>).values().next().value as string | undefined;
+                if (v) field.onChange(v);
+              }}
               disallowEmptySelection
             >
               {ITEM_STATUS.map((s) => <SelectItem key={s.value}>{s.label}</SelectItem>)}
