@@ -38,7 +38,7 @@ export function BasicFields({ register, setValue, watch, errors, showStatus }: B
         isInvalid={!!errors.season}
         errorMessage={errors.season?.message}
       >
-        {SEASONS.map((s) => <SelectItem key={s.value}>{s.icon} {s.label}</SelectItem>)}
+        {SEASONS.map((s) => <SelectItem key={s.value} textValue={s.label}>{s.icon} {s.label}</SelectItem>)}
       </Select>
       {showStatus && (
         <Select
