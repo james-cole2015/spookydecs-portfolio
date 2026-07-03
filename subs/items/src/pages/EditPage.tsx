@@ -159,7 +159,7 @@ export default function EditPage() {
           <CardBody className="flex flex-col gap-6">
             <div>
               <Typography type="h6" className="mb-3">Basic Information</Typography>
-              <BasicFields register={register} errors={errors} showStatus />
+              <BasicFields register={register} setValue={setValue} watch={watch} errors={errors} showStatus />
             </div>
             <Divider />
             <div>
