@@ -215,6 +215,7 @@ export const photosAPI = {
       const response = await fetch(`${API_ENDPOINT}/admin/images/${photoId}`, {
         headers: auth().buildHeaders(),
       });
+      if (response.status === 404) return null; // missing photo is not an error — degrade gracefully
       const data = await handleResponse(response);
       return data.success && data.data ? data.data : data;
     } catch (error) {
