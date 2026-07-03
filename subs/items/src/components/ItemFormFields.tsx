@@ -1,18 +1,26 @@
 // Dynamic form fields driven by class_type — used in wizard (step 3) and edit form (#332)
 // react-hook-form: register/errors/setValue passed in from the parent form context.
 import { Input, Select, SelectItem, Checkbox } from '@heroui/react';
-import { Controller, type UseFormRegister, type FieldErrors, type UseFormSetValue, type Control } from 'react-hook-form';
+import { type UseFormRegister, type FieldErrors, type UseFormSetValue, type UseFormWatch } from 'react-hook-form';
 import { CLASS_TYPE_ATTRIBUTES, FIELD_METADATA, SEASONS, ITEM_STATUS } from '../config/itemsConfig';
 import { type ItemFormValues } from './ItemFormSchema';
 
 interface BasicFieldsProps {
   register: UseFormRegister<ItemFormValues>;
-  control: Control<ItemFormValues>;
+  setValue: UseFormSetValue<ItemFormValues>;
+  watch: UseFormWatch<ItemFormValues>;
   errors: FieldErrors<ItemFormValues>;
   showStatus?: boolean;
 }
 
-export function BasicFields({ register, control, errors, showStatus }: BasicFieldsProps) {
+export function BasicFields({ register, setValue, watch, errors, showStatus }: BasicFieldsProps) {
+  // HeroUI Select does not integrate with RHF via register() or Controller (both
+  // leave the value unset). Drive it from form state with watch + setValue — the
+  // same pattern the storage/gallery selects use. register() here only attaches
+  // the required rule; the value is written by setValue on selection.
+  register('season', { required: 'Season is required.' });
+  const season = watch('season');
+  const status = watch('status');
   return (
     <div className="flex flex-col gap-4">
       <Input
@@ -22,44 +30,25 @@ export function BasicFields({ register, control, errors, showStatus }: BasicFiel
         isInvalid={!!errors.short_name}
         errorMessage={errors.short_name?.message}
       />
-      {/* HeroUI Select is not a native <select>: its native `onChange` only fires on
-          native/mobile interaction, NOT desktop listbox picks. Use Controller +
-          selectedKeys + onSelectionChange (the canonical API used across the app). */}
-      <Controller
-        control={control}
-        name="season"
-        rules={{ required: 'Season is required.' }}
-        render={({ field }) => (
-          <Select
-            label="Season"
-            isRequired
-            selectedKeys={field.value ? [field.value] : []}
-            onSelectionChange={(keys) => field.onChange(((keys as Set<string>).values().next().value as string) ?? '')}
-            isInvalid={!!errors.season}
-            errorMessage={errors.season?.message}
-          >
-            {SEASONS.map((s) => <SelectItem key={s.value}>{s.icon} {s.label}</SelectItem>)}
-          </Select>
-        )}
-      />
+      <Select
+        label="Season"
+        isRequired
+        selectedKeys={season ? [season] : []}
+        onChange={(e) => setValue('season', e.target.value, { shouldValidate: true })}
+        isInvalid={!!errors.season}
+        errorMessage={errors.season?.message}
+      >
+        {SEASONS.map((s) => <SelectItem key={s.value}>{s.icon} {s.label}</SelectItem>)}
+      </Select>
       {showStatus && (
-        <Controller
-          control={control}
-          name="status"
-          render={({ field }) => (
-            <Select
-              label="Status"
-              selectedKeys={field.value ? [field.value] : []}
-              onSelectionChange={(keys) => {
-                const v = (keys as Set<string>).values().next().value as string | undefined;
-                if (v) field.onChange(v);
-              }}
-              disallowEmptySelection
-            >
-              {ITEM_STATUS.map((s) => <SelectItem key={s.value}>{s.label}</SelectItem>)}
-            </Select>
-          )}
-        />
+        <Select
+          label="Status"
+          selectedKeys={status ? [status] : []}
+          onChange={(e) => e.target.value && setValue('status', e.target.value, { shouldValidate: true })}
+          disallowEmptySelection
+        >
+          {ITEM_STATUS.map((s) => <SelectItem key={s.value}>{s.label}</SelectItem>)}
+        </Select>
       )}
       <Input label="Date Acquired" placeholder="Year (e.g. 2023)" {...register('date_acquired')} />
       <Input label="Notes" placeholder="Any additional notes" {...register('general_notes')} />
