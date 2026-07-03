@@ -36,6 +36,14 @@ type MintState = 'idle' | 'minting' | 'minted' | 'error';
 // Show-once hardening (#447): auto-hide the minted creds after this many seconds
 // so an abandoned session doesn't leave a plaintext admin login on screen.
 const AUTOHIDE_SECONDS = 60;
+// Below this many seconds the countdown bar shifts warning → danger.
+const AUTOHIDE_URGENT_SECONDS = 10;
+
+function formatCountdown(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
 
 export function IdentityMintFlow() {
   const { API_ENDPOINT } = useConfig();
@@ -111,11 +119,34 @@ export function IdentityMintFlow() {
           <p className="flex items-start gap-1.5 text-xs font-medium text-warning">
             <AlertTriangle size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
             <span>
-              Copy these now — for security they’re shown only once. They’ll auto-hide
-              {secondsLeft !== null ? ` in ${secondsLeft}s` : ''}, or if you reload the page or
-              re-roll. (You can always generate a new identity.)
+              Copy these now — for security they’re shown only once, and auto-hide when the timer
+              runs out (or if you reload / re-roll). You can always generate a new identity.
             </span>
           </p>
+
+          {/* Auto-hide countdown (#447) — depleting bar + label, toast-dismiss style. */}
+          {secondsLeft !== null && (
+            <div className="mt-1 flex flex-col gap-1" aria-hidden="true">
+              <div className="flex items-center justify-between text-xs font-medium text-foreground/60">
+                <span>Auto-hides in</span>
+                <span
+                  className={`font-mono tabular-nums ${
+                    secondsLeft <= AUTOHIDE_URGENT_SECONDS ? 'text-danger' : 'text-warning'
+                  }`}
+                >
+                  {formatCountdown(secondsLeft)}
+                </span>
+              </div>
+              <div className="h-1 w-full overflow-hidden rounded-full bg-foreground/10">
+                <div
+                  className={`h-full rounded-full transition-[width] duration-1000 ease-linear ${
+                    secondsLeft <= AUTOHIDE_URGENT_SECONDS ? 'bg-danger' : 'bg-warning'
+                  }`}
+                  style={{ width: `${(secondsLeft / AUTOHIDE_SECONDS) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
         </div>
       )}
 
