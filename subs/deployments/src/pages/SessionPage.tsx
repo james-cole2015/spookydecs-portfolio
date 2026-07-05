@@ -320,17 +320,17 @@ export default function SessionPage() {
                 {connections.map((conn: any) => (
                   <div
                     key={conn.connection_id}
-                    className="flex items-center justify-between rounded-medium border border-default-200 p-2"
+                    className="flex items-center justify-between gap-2 rounded-medium border border-default-200 p-2"
                   >
-                    <div className="flex items-center gap-3 text-sm text-foreground">
-                      <div className="text-left">
-                        <div className="font-medium">{conn.from_item_id}</div>
-                        <div className="text-xs text-default-400">{conn.from_port}</div>
+                    <div className="grid flex-1 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 text-sm text-foreground">
+                      <div className="min-w-0 text-left">
+                        <div className="truncate font-medium">{conn.from_item_id}</div>
+                        <div className="truncate text-xs text-default-400">{conn.from_port}</div>
                       </div>
                       <span className="text-default-400">→</span>
-                      <div className="text-left">
-                        <div className="font-medium">{conn.to_item_id}</div>
-                        <div className="text-xs text-default-400">{conn.to_port}</div>
+                      <div className="min-w-0 text-left">
+                        <div className="truncate font-medium">{conn.to_item_id}</div>
+                        <div className="truncate text-xs text-default-400">{conn.to_port}</div>
                       </div>
                     </div>
                     <Button
