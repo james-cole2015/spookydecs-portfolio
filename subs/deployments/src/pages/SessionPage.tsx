@@ -324,7 +324,7 @@ export default function SessionPage() {
                       i > 0 ? 'border-t border-default-200' : ''
                     }`}
                   >
-                    <div className="min-w-0 text-left">
+                    <div className="min-w-0 text-right">
                       <div className="truncate font-medium">{conn.from_item_id}</div>
                       <div className="truncate text-xs text-default-400">{conn.from_port}</div>
                     </div>
