@@ -76,10 +76,21 @@ export function ConnectionModal({
   const [selected, setSelected] = useState<DestinationItem | null>(null);
   const [connecting, setConnecting] = useState(false);
 
+  // Illuminate step (shown only when the selected destination is a Light)
+  const [step, setStep] = useState<'destination' | 'illuminate'>('destination');
+  const [illuminates, setIlluminates] = useState<string[]>([]);
+  const [decorations, setDecorations] = useState<DestinationItem[]>([]);
+  const [illumSearch, setIllumSearch] = useState('');
+  const [illumLoading, setIllumLoading] = useState(false);
+
   useEffect(() => {
     if (!isOpen) return;
     setLoading(true);
     setSelected(null);
+    setStep('destination');
+    setIlluminates([]);
+    setDecorations([]);
+    setIllumSearch('');
     (async () => {
       try {
         const response = await searchItems({
@@ -116,6 +127,53 @@ export function ConnectionModal({
     });
   }, [allItems, search, classFilter]);
 
+  const filteredDecorations = useMemo(() => {
+    const q = illumSearch.toLowerCase().trim();
+    return decorations.filter((item) => {
+      return (
+        !q ||
+        item.short_name?.toLowerCase().includes(q) ||
+        item.id?.toLowerCase().includes(q)
+      );
+    });
+  }, [decorations, illumSearch]);
+
+  async function loadDecorations() {
+    setIllumLoading(true);
+    try {
+      const response = await searchItems({
+        season: deployment.season,
+        class: 'Decoration',
+      });
+      const items: DestinationItem[] = response?.data?.items || [];
+      // Exclude the source and destination items themselves.
+      const excluded = new Set<string>([sourceItem.item_id, selected?.id].filter(Boolean) as string[]);
+      setDecorations(items.filter((item) => !excluded.has(item.id)));
+    } catch (error) {
+      console.error('[ConnectionModal] Failed to load decorations:', error);
+      toast.showError('Failed to load decorations. You can still connect without selecting any.');
+      setDecorations([]);
+    } finally {
+      setIllumLoading(false);
+    }
+  }
+
+  function handlePrimaryPress() {
+    if (!selected) return;
+    if (step === 'destination' && selected.class === 'Light') {
+      setStep('illuminate');
+      loadDecorations();
+      return;
+    }
+    confirmConnection();
+  }
+
+  function toggleIlluminate(id: string) {
+    setIlluminates((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }
+
   async function confirmConnection() {
     if (!sourceItem || !selected) return;
     const fromPort = sourceItem.available_ports?.[0];
@@ -134,7 +192,7 @@ export function ConnectionModal({
         from_port: fromPort,
         to_item_id: selected.id,
         to_port: toPort,
-        illuminates: [],
+        illuminates,
         notes: '',
       };
       await createConnection(deployment.deployment_id, connectionData);
@@ -150,67 +208,138 @@ export function ConnectionModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose} backdrop="blur" size="lg" scrollBehavior="inside">
       <ModalContent>
-        <ModalHeader>Connect: {sourceItem.short_name}</ModalHeader>
+        <ModalHeader>
+          {step === 'destination'
+            ? `Connect: ${sourceItem.short_name}`
+            : `What does ${selected?.short_name} illuminate?`}
+        </ModalHeader>
         <ModalBody>
-          <p className="text-sm text-default-600">
-            Select what to plug into <strong>{sourceItem.short_name}</strong>:
-          </p>
-          <Tabs
-            aria-label="Class filter"
-            selectedKey={classFilter}
-            onSelectionChange={(k) => setClassFilter(String(k))}
-            size="sm"
-          >
-            <Tab key="all" title="All" />
-            <Tab key="Decoration" title="Decoration" />
-            <Tab key="Light" title="Light" />
-            <Tab key="Accessory" title="Accessory" />
-          </Tabs>
-          <Input
-            placeholder="Search items..."
-            value={search}
-            onValueChange={setSearch}
-            size="sm"
-            isClearable
-          />
-          <div className="max-h-80 overflow-y-auto">
-            {loading ? (
-              <div className="flex justify-center py-8">
-                <Spinner color="secondary" />
-              </div>
-            ) : filtered.length === 0 ? (
-              <p className="py-8 text-center text-sm text-default-500">
-                {allItems.length === 0 ? 'No items available' : 'No items match your search'}
+          {step === 'destination' ? (
+            <>
+              <p className="text-sm text-default-600">
+                Select what to plug into <strong>{sourceItem.short_name}</strong>:
               </p>
-            ) : (
-              <div className="flex flex-col gap-2">
-                {filtered.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => setSelected(item)}
-                    className={`flex items-center justify-between rounded-medium border p-2 text-left ${
-                      selected?.id === item.id
-                        ? 'border-secondary bg-secondary-50/40'
-                        : 'border-default-200 hover:border-default-400'
-                    }`}
-                  >
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium text-foreground">{item.short_name}</span>
-                      <span className="text-xs text-default-500">{item.id}</span>
-                    </div>
-                    <span className="text-xs text-default-400">{item.class}</span>
-                  </button>
-                ))}
+              <Tabs
+                aria-label="Class filter"
+                selectedKey={classFilter}
+                onSelectionChange={(k) => setClassFilter(String(k))}
+                size="sm"
+              >
+                <Tab key="all" title="All" />
+                <Tab key="Decoration" title="Decoration" />
+                <Tab key="Light" title="Light" />
+                <Tab key="Accessory" title="Accessory" />
+              </Tabs>
+              <Input
+                placeholder="Search items..."
+                value={search}
+                onValueChange={setSearch}
+                size="sm"
+                isClearable
+              />
+              <div className="max-h-80 overflow-y-auto">
+                {loading ? (
+                  <div className="flex justify-center py-8">
+                    <Spinner color="secondary" />
+                  </div>
+                ) : filtered.length === 0 ? (
+                  <p className="py-8 text-center text-sm text-default-500">
+                    {allItems.length === 0 ? 'No items available' : 'No items match your search'}
+                  </p>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {filtered.map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => setSelected(item)}
+                        className={`flex items-center justify-between rounded-medium border p-2 text-left ${
+                          selected?.id === item.id
+                            ? 'border-secondary bg-secondary-50/40'
+                            : 'border-default-200 hover:border-default-400'
+                        }`}
+                      >
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-foreground">{item.short_name}</span>
+                          <span className="text-xs text-default-500">{item.id}</span>
+                        </div>
+                        <span className="text-xs text-default-400">{item.class}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-default-600">
+                Select the decorations <strong>{selected?.short_name}</strong> lights up
+                <span className="text-default-400"> (optional)</span>:
+              </p>
+              <Input
+                placeholder="Search decorations..."
+                value={illumSearch}
+                onValueChange={setIllumSearch}
+                size="sm"
+                isClearable
+              />
+              <div className="max-h-80 overflow-y-auto">
+                {illumLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Spinner color="secondary" />
+                  </div>
+                ) : filteredDecorations.length === 0 ? (
+                  <p className="py-8 text-center text-sm text-default-500">
+                    {decorations.length === 0
+                      ? 'No decorations available'
+                      : 'No decorations match your search'}
+                  </p>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {filteredDecorations.map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => toggleIlluminate(item.id)}
+                        className={`flex items-center justify-between rounded-medium border p-2 text-left ${
+                          illuminates.includes(item.id)
+                            ? 'border-secondary bg-secondary-50/40'
+                            : 'border-default-200 hover:border-default-400'
+                        }`}
+                      >
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-foreground">{item.short_name}</span>
+                          <span className="text-xs text-default-500">{item.id}</span>
+                        </div>
+                        <span className="text-xs text-default-400">{item.class}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </ModalBody>
         <ModalFooter>
-          <Button variant="light" onPress={onClose}>
-            Cancel
-          </Button>
-          <Button color="primary" isDisabled={!selected} isLoading={connecting} onPress={confirmConnection}>
-            Connect
+          {step === 'illuminate' && (
+            <span className="mr-auto self-center text-xs text-default-500">
+              {illuminates.length} selected
+            </span>
+          )}
+          {step === 'destination' ? (
+            <Button variant="light" onPress={onClose}>
+              Cancel
+            </Button>
+          ) : (
+            <Button variant="light" onPress={() => setStep('destination')}>
+              Back
+            </Button>
+          )}
+          <Button
+            color="primary"
+            isDisabled={!selected}
+            isLoading={connecting}
+            onPress={handlePrimaryPress}
+          >
+            {step === 'destination' && selected?.class === 'Light' ? 'Next: Illuminate →' : 'Connect'}
           </Button>
         </ModalFooter>
       </ModalContent>
