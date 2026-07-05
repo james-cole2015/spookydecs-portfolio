@@ -26,14 +26,14 @@ function ConnectionsDetail({ session }: { session: Session }) {
   return (
     <div className="flex flex-col gap-2 bg-default-50 px-4 py-3">
       <h4 className="text-sm font-semibold text-foreground">Connections ({connections.length})</h4>
-      {connections.map((conn: any) => (
-        <a
-          key={conn.connection_id}
-          href={`/deployments/builder/${session.deployment_id || ''}/${session.session_id}/${conn.connection_id}`}
-          className="rounded-medium border border-default-200 bg-content1 p-2 hover:border-secondary"
-        >
-          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 text-sm text-foreground">
-            <div className="min-w-0 text-left">
+      <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,max-content)_auto_minmax(0,max-content)_minmax(0,1fr)] gap-x-3 gap-y-2 text-sm text-foreground">
+        {connections.map((conn: any) => (
+          <a
+            key={conn.connection_id}
+            href={`/deployments/builder/${session.deployment_id || ''}/${session.session_id}/${conn.connection_id}`}
+            className="col-span-full grid grid-cols-subgrid items-center rounded-medium border border-default-200 bg-content1 p-2 hover:border-secondary"
+          >
+            <div className="col-start-2 min-w-0 text-right">
               <div className="truncate font-medium">{conn.from_item_id}</div>
               <div className="truncate text-xs text-default-400">{conn.from_port}</div>
             </div>
@@ -42,15 +42,17 @@ function ConnectionsDetail({ session }: { session: Session }) {
               <div className="truncate font-medium">{conn.to_item_id}</div>
               <div className="truncate text-xs text-default-400">{conn.to_port}</div>
             </div>
-          </div>
-          {conn.illuminates?.length > 0 && (
-            <div className="mt-1 text-xs text-default-500">
-              💡 Illuminates: {conn.illuminates.join(', ')}
-            </div>
-          )}
-          {conn.notes && <div className="mt-1 text-xs text-default-500">{conn.notes}</div>}
-        </a>
-      ))}
+            {conn.illuminates?.length > 0 && (
+              <div className="col-span-full mt-1 text-xs text-default-500">
+                💡 Illuminates: {conn.illuminates.join(', ')}
+              </div>
+            )}
+            {conn.notes && (
+              <div className="col-span-full mt-1 text-xs text-default-500">{conn.notes}</div>
+            )}
+          </a>
+        ))}
+      </div>
     </div>
   );
 }
