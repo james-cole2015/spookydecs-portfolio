@@ -32,12 +32,16 @@ function ConnectionsDetail({ session }: { session: Session }) {
           href={`/deployments/builder/${session.deployment_id || ''}/${session.session_id}/${conn.connection_id}`}
           className="rounded-medium border border-default-200 bg-content1 p-2 hover:border-secondary"
         >
-          <div className="flex flex-wrap items-center gap-2 text-sm text-foreground">
-            <span className="font-medium">{conn.from_item_id}</span>
-            <span className="text-xs text-default-400">{conn.from_port}</span>
+          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 text-sm text-foreground">
+            <div className="min-w-0 text-left">
+              <div className="truncate font-medium">{conn.from_item_id}</div>
+              <div className="truncate text-xs text-default-400">{conn.from_port}</div>
+            </div>
             <span className="text-default-400">→</span>
-            <span className="font-medium">{conn.to_item_id}</span>
-            <span className="text-xs text-default-400">{conn.to_port}</span>
+            <div className="min-w-0 text-left">
+              <div className="truncate font-medium">{conn.to_item_id}</div>
+              <div className="truncate text-xs text-default-400">{conn.to_port}</div>
+            </div>
           </div>
           {conn.illuminates?.length > 0 && (
             <div className="mt-1 text-xs text-default-500">
