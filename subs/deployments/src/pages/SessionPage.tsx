@@ -316,7 +316,7 @@ export default function SessionPage() {
                 message="Start by connecting to the receptacle"
               />
             ) : (
-              <div className="grid grid-cols-[minmax(0,max-content)_auto_minmax(0,1fr)_auto] items-center gap-x-3 overflow-hidden rounded-medium border border-default-200 text-sm text-foreground">
+              <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,max-content)_auto_minmax(0,max-content)_auto] items-center gap-x-3 overflow-hidden rounded-medium border border-default-200 text-sm text-foreground">
                 {connections.map((conn: any, i: number) => (
                   <div
                     key={conn.connection_id}
@@ -324,7 +324,7 @@ export default function SessionPage() {
                       i > 0 ? 'border-t border-default-200' : ''
                     }`}
                   >
-                    <div className="min-w-0 text-right">
+                    <div className="col-start-2 min-w-0 text-right">
                       <div className="truncate font-medium">{conn.from_item_id}</div>
                       <div className="truncate text-xs text-default-400">{conn.from_port}</div>
                     </div>
