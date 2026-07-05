@@ -316,30 +316,29 @@ export default function SessionPage() {
                 message="Start by connecting to the receptacle"
               />
             ) : (
-              <div className="flex flex-col gap-2">
-                {connections.map((conn: any) => (
+              <div className="grid grid-cols-[minmax(0,max-content)_auto_minmax(0,1fr)_auto] items-center gap-x-3 overflow-hidden rounded-medium border border-default-200 text-sm text-foreground">
+                {connections.map((conn: any, i: number) => (
                   <div
                     key={conn.connection_id}
-                    className="flex items-center justify-between gap-2"
+                    className={`col-span-full grid grid-cols-subgrid items-center px-3 py-2 ${
+                      i > 0 ? 'border-t border-default-200' : ''
+                    }`}
                   >
-                    <div className="grid flex-1 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-stretch gap-2 text-sm text-foreground">
-                      <div className="min-w-0 rounded-medium border border-default-200 p-2 text-left">
-                        <div className="truncate font-medium">{conn.from_item_id}</div>
-                        <div className="truncate text-xs text-default-400">{conn.from_port}</div>
-                      </div>
-                      <div className="flex items-center justify-center rounded-medium border border-default-200 px-2 text-default-400">
-                        →
-                      </div>
-                      <div className="min-w-0 rounded-medium border border-default-200 p-2 text-left">
-                        <div className="truncate font-medium">{conn.to_item_id}</div>
-                        <div className="truncate text-xs text-default-400">{conn.to_port}</div>
-                      </div>
+                    <div className="min-w-0 text-left">
+                      <div className="truncate font-medium">{conn.from_item_id}</div>
+                      <div className="truncate text-xs text-default-400">{conn.from_port}</div>
+                    </div>
+                    <span className="text-default-400">→</span>
+                    <div className="min-w-0 text-left">
+                      <div className="truncate font-medium">{conn.to_item_id}</div>
+                      <div className="truncate text-xs text-default-400">{conn.to_port}</div>
                     </div>
                     <Button
                       isIconOnly
                       size="sm"
                       variant="light"
                       aria-label="Deactivate connection"
+                      className="justify-self-end"
                       onPress={() => {
                         setRemoveTarget(conn.connection_id);
                         setRemoveReason('');
