@@ -323,12 +323,12 @@ export default function SessionPage() {
                     className="flex items-center justify-between rounded-medium border border-default-200 p-2"
                   >
                     <div className="flex items-center gap-3 text-sm text-foreground">
-                      <div className="text-center">
+                      <div className="text-left">
                         <div className="font-medium">{conn.from_item_id}</div>
                         <div className="text-xs text-default-400">{conn.from_port}</div>
                       </div>
                       <span className="text-default-400">→</span>
-                      <div className="text-center">
+                      <div className="text-left">
                         <div className="font-medium">{conn.to_item_id}</div>
                         <div className="text-xs text-default-400">{conn.to_port}</div>
                       </div>
