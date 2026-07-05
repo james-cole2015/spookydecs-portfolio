@@ -323,7 +323,7 @@ export default function SessionPage() {
                     className="flex items-center justify-between gap-2 rounded-medium border border-default-200 p-2"
                   >
                     <div className="grid flex-1 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 text-sm text-foreground">
-                      <div className="min-w-0 text-right">
+                      <div className="min-w-0 text-left">
                         <div className="truncate font-medium">{conn.from_item_id}</div>
                         <div className="truncate text-xs text-default-400">{conn.from_port}</div>
                       </div>
