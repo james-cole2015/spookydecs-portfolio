@@ -64,6 +64,7 @@ export default function SessionPage() {
   const [portsData, setPortsData] = useState<any>({});
   const [connections, setConnections] = useState<Connection[]>([]);
   const [pendingPhotoIds, setPendingPhotoIds] = useState<Record<string, string[]>>({});
+  const [pendingPlacementPhotoIds, setPendingPlacementPhotoIds] = useState<Record<string, string[]>>({});
 
   const [search, setSearch] = useState('');
   const [connectSource, setConnectSource] = useState<SourceItem | null>(null);
@@ -118,6 +119,16 @@ export default function SessionPage() {
         conns.forEach((conn: any) => {
           next[conn.connection_id] = [
             ...new Set([...(conn.photo_ids || []), ...(prev[conn.connection_id] || [])]),
+          ];
+        });
+        return next;
+      });
+      const placementList: any[] = Array.isArray(data.placements) ? data.placements : [];
+      setPendingPlacementPhotoIds((prev) => {
+        const next: Record<string, string[]> = {};
+        placementList.forEach((p: any) => {
+          next[p.placement_id] = [
+            ...new Set([...(p.photo_ids || []), ...(prev[p.placement_id] || [])]),
           ];
         });
         return next;
@@ -196,6 +207,17 @@ export default function SessionPage() {
     });
   }
 
+  function handlePlacementPhotosUpdated(placementId: string, photoIds: string[]) {
+    setPendingPlacementPhotoIds((prev) => {
+      const existing = prev[placementId] || [];
+      const merged = [...existing];
+      photoIds.forEach((pid) => {
+        if (!merged.includes(pid)) merged.push(pid);
+      });
+      return { ...prev, [placementId]: merged };
+    });
+  }
+
   async function handleEndSessionConfirm(notes: string, skipPhotos: boolean) {
     if (!skipPhotos) {
       const updates = Object.keys(pendingPhotoIds)
@@ -209,7 +231,21 @@ export default function SessionPage() {
         })
         .filter((u) => u.newPhotos.length > 0)
         .map((u) => updateConnectionPhotos(deploymentId, u.connectionId, u.newPhotos));
-      if (updates.length > 0) await Promise.all(updates);
+
+      const placementUpdates = Object.keys(pendingPlacementPhotoIds)
+        .map((placementId) => {
+          const p = placements.find((pl) => pl.placement_id === placementId);
+          const existing = (p?.photo_ids as string[]) || [];
+          const newPhotos = (pendingPlacementPhotoIds[placementId] || []).filter(
+            (pid) => !existing.includes(pid),
+          );
+          return { placementId, newPhotos };
+        })
+        .filter((u) => u.newPhotos.length > 0)
+        .map((u) => updatePlacement(deploymentId, u.placementId, { photo_ids: u.newPhotos }));
+
+      const all = [...updates, ...placementUpdates];
+      if (all.length > 0) await Promise.all(all);
     }
     const response = await endSession(deploymentId, session!.session_id, { notes });
     if (!response?.success) throw new Error('Failed to end session');
@@ -459,8 +495,11 @@ export default function SessionPage() {
         zone={zone}
         session={session}
         connections={connections}
+        placements={placements}
         pendingPhotoIds={pendingPhotoIds}
+        pendingPlacementPhotoIds={pendingPlacementPhotoIds}
         onPhotosUpdated={handlePhotosUpdated}
+        onPlacementPhotosUpdated={handlePlacementPhotosUpdated}
         onConfirm={handleEndSessionConfirm}
       />
 

@@ -27,8 +27,11 @@ export function EndSessionReview({
   zone: _zone,
   session,
   connections,
+  placements,
   pendingPhotoIds,
+  pendingPlacementPhotoIds,
   onPhotosUpdated,
+  onPlacementPhotosUpdated,
   onConfirm,
 }: {
   isOpen: boolean;
@@ -37,8 +40,11 @@ export function EndSessionReview({
   zone: Zone;
   session: Session;
   connections: Connection[];
+  placements: any[];
   pendingPhotoIds: Record<string, string[]>;
+  pendingPlacementPhotoIds: Record<string, string[]>;
   onPhotosUpdated: (connectionId: string, photoIds: string[]) => void;
+  onPlacementPhotosUpdated: (placementId: string, photoIds: string[]) => void;
   onConfirm: (notes: string, skipPhotos: boolean) => Promise<void>;
 }) {
   const toast = useToast();
@@ -51,6 +57,9 @@ export function EndSessionReview({
   const sessionConnections = connections.filter(
     (conn: any) => conn.session_id === session.session_id,
   );
+  const sessionPlacements = (placements || []).filter(
+    (p: any) => p.session_id === session.session_id,
+  );
 
   async function loadSessionData() {
     setLoading(true);
@@ -61,7 +70,12 @@ export function EndSessionReview({
       ).catch(() => ({ success: false, data: [] }));
       const removedConnections = removedResponse.success ? removedResponse.data || [] : [];
 
-      const deployedItemIds = [...new Set(sessionConnections.map((c: any) => c.to_item_id))];
+      const deployedItemIds = [
+        ...new Set([
+          ...sessionConnections.map((c: any) => c.to_item_id),
+          ...sessionPlacements.map((p: any) => p.item_id),
+        ]),
+      ].filter(Boolean);
       const itemResponses = await Promise.all(deployedItemIds.map((id) => getItem(id as string)));
       const items: Record<string, any> = {};
       itemResponses
@@ -105,6 +119,25 @@ export function EndSessionReview({
     }
   }
 
+  async function handleAddPlacementPhoto(placementId: string, itemId: string) {
+    const photos = await photoUpload.open({
+      context: 'deployment',
+      photo_type: 'deployment',
+      season: deployment.season as string,
+      year: Number(deployment.year),
+      entityId: itemId,
+      maxPhotos: 5,
+      metadata: { 'deployment-id': deployment.deployment_id },
+    });
+    if (photos.length > 0) {
+      onPlacementPhotosUpdated(
+        placementId,
+        photos.map((p) => p.photo_id),
+      );
+      loadSessionData();
+    }
+  }
+
   async function confirmEndSession(skipPhotos: boolean) {
     setBusy(true);
     try {
@@ -136,7 +169,15 @@ export function EndSessionReview({
               <div className="rounded-medium bg-default-100 p-3 text-sm">
                 <p>
                   You created <strong>{totalConnections}</strong> connection
-                  {totalConnections !== 1 ? 's' : ''} in this session
+                  {totalConnections !== 1 ? 's' : ''}
+                  {sessionPlacements.length > 0 && (
+                    <>
+                      {' '}
+                      and deployed <strong>{sessionPlacements.length}</strong> static prop
+                      {sessionPlacements.length !== 1 ? 's' : ''}
+                    </>
+                  )}{' '}
+                  in this session
                 </p>
                 {missingPhotos > 0 && (
                   <p className="mt-1 text-warning">
@@ -198,6 +239,44 @@ export function EndSessionReview({
                 </div>
               ) : (
                 <p className="text-sm text-default-500">No connections made in this session</p>
+              )}
+
+              {sessionPlacements.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <h4 className="text-sm font-semibold text-foreground">Static Props</h4>
+                  {sessionPlacements.map((p: any) => {
+                    const item = data.items[p.item_id];
+                    const photoCount = pendingPlacementPhotoIds[p.placement_id]?.length || 0;
+                    return (
+                      <div
+                        key={p.placement_id}
+                        className="flex items-center justify-between rounded-medium border border-default-200 p-2"
+                      >
+                        <div>
+                          <div className="text-sm text-foreground">
+                            {item?.short_name || p.item_id}
+                          </div>
+                          <div className="text-xs text-default-500">{p.item_id}</div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {photoCount > 0 && (
+                            <Chip size="sm" variant="flat" startContent={<Camera size={14} />}>
+                              {photoCount}
+                            </Chip>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="flat"
+                            startContent={<Camera size={14} />}
+                            onPress={() => handleAddPlacementPhoto(p.placement_id, p.item_id)}
+                          >
+                            {photoCount > 0 ? 'More' : 'Photo'}
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               )}
 
               {data.removedConnections.length > 0 && (
