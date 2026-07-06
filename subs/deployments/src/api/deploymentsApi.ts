@@ -207,6 +207,23 @@ export async function updateConnectionPhotos(
   );
 }
 
+// Placements (static, non-powered props — #457)
+
+export async function createPlacement(deploymentId: string, placementData: unknown): Promise<any> {
+  if (!auth().hasMinRole('builder')) throw new Error('Insufficient permissions');
+  return await apiCall(`/deployments/${deploymentId}/placements`, 'POST', placementData);
+}
+
+export async function updatePlacement(
+  deploymentId: string,
+  placementId: string,
+  updates: unknown,
+): Promise<any> {
+  if (!auth().hasMinRole('builder')) throw new Error('Insufficient permissions');
+  console.log('[deployments-api] updatePlacement:', { deploymentId, placementId, updates });
+  return await apiCall(`/deployments/${deploymentId}/placements/${placementId}`, 'PATCH', updates);
+}
+
 export async function getConnection(
   deploymentId: string,
   sessionId: string,

@@ -20,9 +20,11 @@ import {
   getAvailablePorts,
   updateConnection,
   updateConnectionPhotos,
+  updatePlacement,
   endSession,
 } from '../api/deploymentsApi';
 import { ConnectionModal } from '../components/ConnectionModal';
+import { StaticPropModal } from '../components/StaticPropModal';
 import { EndSessionReview } from '../components/EndSessionReview';
 import type { Deployment, Zone, Session, Connection } from '../config/deploymentsConfig';
 
@@ -65,12 +67,16 @@ export default function SessionPage() {
 
   const [search, setSearch] = useState('');
   const [connectSource, setConnectSource] = useState<SourceItem | null>(null);
+  const [staticPropOpen, setStaticPropOpen] = useState(false);
   const [endReviewOpen, setEndReviewOpen] = useState(false);
 
-  // Remove-connection reason modal
+  // Remove reason modal (shared by connections and placements)
   const [removeTarget, setRemoveTarget] = useState<string | null>(null);
+  const [removeKind, setRemoveKind] = useState<'connection' | 'placement'>('connection');
   const [removeReason, setRemoveReason] = useState('');
   const [removing, setRemoving] = useState(false);
+
+  const placements: any[] = Array.isArray(portsData?.placements) ? portsData.placements : [];
 
   async function loadSession() {
     setLoading(true);
@@ -156,14 +162,17 @@ export default function SessionPage() {
     if (!removeTarget) return;
     setRemoving(true);
     try {
-      await updateConnection(deploymentId, removeTarget, {
-        removal_reason: removeReason || 'Item removed during session',
-      });
-      setPendingPhotoIds((prev) => {
-        const next = { ...prev };
-        delete next[removeTarget];
-        return next;
-      });
+      const reason = removeReason || 'Item removed during session';
+      if (removeKind === 'placement') {
+        await updatePlacement(deploymentId, removeTarget, { removal_reason: reason });
+      } else {
+        await updateConnection(deploymentId, removeTarget, { removal_reason: reason });
+        setPendingPhotoIds((prev) => {
+          const next = { ...prev };
+          delete next[removeTarget];
+          return next;
+        });
+      }
       toast.showSuccess('Item removed from deployment');
       setRemoveTarget(null);
       setRemoveReason('');
@@ -230,9 +239,14 @@ export default function SessionPage() {
           (session as any).start_time,
         ).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`}
         actions={
-          <Button color="danger" onPress={() => setEndReviewOpen(true)}>
-            End Session
-          </Button>
+          <div className="flex gap-2">
+            <Button color="secondary" variant="flat" onPress={() => setStaticPropOpen(true)}>
+              Deploy Static Prop
+            </Button>
+            <Button color="danger" onPress={() => setEndReviewOpen(true)}>
+              End Session
+            </Button>
+          </div>
         }
       />
 
@@ -340,6 +354,7 @@ export default function SessionPage() {
                       aria-label="Deactivate connection"
                       className="col-start-6 justify-self-end"
                       onPress={() => {
+                        setRemoveKind('connection');
                         setRemoveTarget(conn.connection_id);
                         setRemoveReason('');
                       }}
@@ -353,6 +368,57 @@ export default function SessionPage() {
           </CardBody>
         </Card>
       </div>
+
+      {/* Static Props panel (port-less props placed without a connection, #457) */}
+      <Card className="mt-4">
+        <CardBody className="gap-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-base font-semibold text-foreground">Static Props</h3>
+            <Chip size="sm" variant="flat">
+              {placements.length}
+            </Chip>
+          </div>
+          {placements.length === 0 ? (
+            <EmptyState
+              icon="🪦"
+              title="No static props yet"
+              message="Deploy a non-powered prop with “Deploy Static Prop”"
+            />
+          ) : (
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {placements.map((p: any) => (
+                <div
+                  key={p.placement_id}
+                  className="flex items-center gap-2 rounded-medium border border-default-200 p-2"
+                >
+                  <Sparkles className="text-secondary" size={20} />
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate text-sm font-medium text-foreground">
+                      {p.item_id}
+                    </span>
+                    {p.notes && (
+                      <span className="truncate text-xs text-default-400">{p.notes}</span>
+                    )}
+                  </div>
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    variant="light"
+                    aria-label="Remove static prop"
+                    onPress={() => {
+                      setRemoveKind('placement');
+                      setRemoveTarget(p.placement_id);
+                      setRemoveReason('');
+                    }}
+                  >
+                    <X size={16} />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardBody>
+      </Card>
 
       {connectSource && (
         <ConnectionModal
@@ -370,6 +436,21 @@ export default function SessionPage() {
           }}
         />
       )}
+
+      <StaticPropModal
+        isOpen={staticPropOpen}
+        onClose={() => setStaticPropOpen(false)}
+        deployment={deployment}
+        zone={zone}
+        session={session}
+        zones={zones}
+        activeConnections={connections}
+        activePlacements={placements}
+        onCreated={() => {
+          toast.showSuccess('Static prop deployed');
+          loadPorts();
+        }}
+      />
 
       <EndSessionReview
         isOpen={endReviewOpen}
