@@ -20,9 +20,11 @@ import {
   getAvailablePorts,
   updateConnection,
   updateConnectionPhotos,
+  updatePlacement,
   endSession,
 } from '../api/deploymentsApi';
 import { ConnectionModal } from '../components/ConnectionModal';
+import { StaticPropModal } from '../components/StaticPropModal';
 import { EndSessionReview } from '../components/EndSessionReview';
 import type { Deployment, Zone, Session, Connection } from '../config/deploymentsConfig';
 
@@ -62,15 +64,20 @@ export default function SessionPage() {
   const [portsData, setPortsData] = useState<any>({});
   const [connections, setConnections] = useState<Connection[]>([]);
   const [pendingPhotoIds, setPendingPhotoIds] = useState<Record<string, string[]>>({});
+  const [pendingPlacementPhotoIds, setPendingPlacementPhotoIds] = useState<Record<string, string[]>>({});
 
   const [search, setSearch] = useState('');
   const [connectSource, setConnectSource] = useState<SourceItem | null>(null);
+  const [staticPropOpen, setStaticPropOpen] = useState(false);
   const [endReviewOpen, setEndReviewOpen] = useState(false);
 
-  // Remove-connection reason modal
+  // Remove reason modal (shared by connections and placements)
   const [removeTarget, setRemoveTarget] = useState<string | null>(null);
+  const [removeKind, setRemoveKind] = useState<'connection' | 'placement'>('connection');
   const [removeReason, setRemoveReason] = useState('');
   const [removing, setRemoving] = useState(false);
+
+  const placements: any[] = Array.isArray(portsData?.placements) ? portsData.placements : [];
 
   async function loadSession() {
     setLoading(true);
@@ -116,6 +123,16 @@ export default function SessionPage() {
         });
         return next;
       });
+      const placementList: any[] = Array.isArray(data.placements) ? data.placements : [];
+      setPendingPlacementPhotoIds((prev) => {
+        const next: Record<string, string[]> = {};
+        placementList.forEach((p: any) => {
+          next[p.placement_id] = [
+            ...new Set([...(p.photo_ids || []), ...(prev[p.placement_id] || [])]),
+          ];
+        });
+        return next;
+      });
     } catch (e) {
       console.error('[Session] Error loading ports:', e);
       toast.showError('Failed to load connection data');
@@ -156,14 +173,17 @@ export default function SessionPage() {
     if (!removeTarget) return;
     setRemoving(true);
     try {
-      await updateConnection(deploymentId, removeTarget, {
-        removal_reason: removeReason || 'Item removed during session',
-      });
-      setPendingPhotoIds((prev) => {
-        const next = { ...prev };
-        delete next[removeTarget];
-        return next;
-      });
+      const reason = removeReason || 'Item removed during session';
+      if (removeKind === 'placement') {
+        await updatePlacement(deploymentId, removeTarget, { removal_reason: reason });
+      } else {
+        await updateConnection(deploymentId, removeTarget, { removal_reason: reason });
+        setPendingPhotoIds((prev) => {
+          const next = { ...prev };
+          delete next[removeTarget];
+          return next;
+        });
+      }
       toast.showSuccess('Item removed from deployment');
       setRemoveTarget(null);
       setRemoveReason('');
@@ -187,6 +207,17 @@ export default function SessionPage() {
     });
   }
 
+  function handlePlacementPhotosUpdated(placementId: string, photoIds: string[]) {
+    setPendingPlacementPhotoIds((prev) => {
+      const existing = prev[placementId] || [];
+      const merged = [...existing];
+      photoIds.forEach((pid) => {
+        if (!merged.includes(pid)) merged.push(pid);
+      });
+      return { ...prev, [placementId]: merged };
+    });
+  }
+
   async function handleEndSessionConfirm(notes: string, skipPhotos: boolean) {
     if (!skipPhotos) {
       const updates = Object.keys(pendingPhotoIds)
@@ -200,7 +231,21 @@ export default function SessionPage() {
         })
         .filter((u) => u.newPhotos.length > 0)
         .map((u) => updateConnectionPhotos(deploymentId, u.connectionId, u.newPhotos));
-      if (updates.length > 0) await Promise.all(updates);
+
+      const placementUpdates = Object.keys(pendingPlacementPhotoIds)
+        .map((placementId) => {
+          const p = placements.find((pl) => pl.placement_id === placementId);
+          const existing = (p?.photo_ids as string[]) || [];
+          const newPhotos = (pendingPlacementPhotoIds[placementId] || []).filter(
+            (pid) => !existing.includes(pid),
+          );
+          return { placementId, newPhotos };
+        })
+        .filter((u) => u.newPhotos.length > 0)
+        .map((u) => updatePlacement(deploymentId, u.placementId, { photo_ids: u.newPhotos }));
+
+      const all = [...updates, ...placementUpdates];
+      if (all.length > 0) await Promise.all(all);
     }
     const response = await endSession(deploymentId, session!.session_id, { notes });
     if (!response?.success) throw new Error('Failed to end session');
@@ -230,9 +275,14 @@ export default function SessionPage() {
           (session as any).start_time,
         ).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`}
         actions={
-          <Button color="danger" onPress={() => setEndReviewOpen(true)}>
-            End Session
-          </Button>
+          <div className="flex gap-2">
+            <Button color="secondary" variant="flat" onPress={() => setStaticPropOpen(true)}>
+              Deploy Static Prop
+            </Button>
+            <Button color="danger" onPress={() => setEndReviewOpen(true)}>
+              End Session
+            </Button>
+          </div>
         }
       />
 
@@ -316,29 +366,31 @@ export default function SessionPage() {
                 message="Start by connecting to the receptacle"
               />
             ) : (
-              <div className="flex flex-col gap-2">
-                {connections.map((conn: any) => (
+              <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,max-content)_auto_minmax(0,max-content)_minmax(0,1fr)_auto] items-center gap-x-3 overflow-hidden rounded-medium border border-default-200 text-sm text-foreground">
+                {connections.map((conn: any, i: number) => (
                   <div
                     key={conn.connection_id}
-                    className="flex items-center justify-between rounded-medium border border-default-200 p-2"
+                    className={`col-span-full grid grid-cols-subgrid items-center px-3 py-2 ${
+                      i > 0 ? 'border-t border-default-200' : ''
+                    }`}
                   >
-                    <div className="flex items-center gap-3 text-sm text-foreground">
-                      <div className="text-center">
-                        <div className="font-medium">{conn.from_item_id}</div>
-                        <div className="text-xs text-default-400">{conn.from_port}</div>
-                      </div>
-                      <span className="text-default-400">→</span>
-                      <div className="text-center">
-                        <div className="font-medium">{conn.to_item_id}</div>
-                        <div className="text-xs text-default-400">{conn.to_port}</div>
-                      </div>
+                    <div className="col-start-2 min-w-0 text-right">
+                      <div className="truncate font-medium">{conn.from_item_id}</div>
+                      <div className="truncate text-xs text-default-400">{conn.from_port}</div>
+                    </div>
+                    <span className="text-default-400">→</span>
+                    <div className="min-w-0 text-left">
+                      <div className="truncate font-medium">{conn.to_item_id}</div>
+                      <div className="truncate text-xs text-default-400">{conn.to_port}</div>
                     </div>
                     <Button
                       isIconOnly
                       size="sm"
                       variant="light"
                       aria-label="Deactivate connection"
+                      className="col-start-6 justify-self-end"
                       onPress={() => {
+                        setRemoveKind('connection');
                         setRemoveTarget(conn.connection_id);
                         setRemoveReason('');
                       }}
@@ -352,6 +404,57 @@ export default function SessionPage() {
           </CardBody>
         </Card>
       </div>
+
+      {/* Static Props panel (port-less props placed without a connection, #457) */}
+      <Card className="mt-4">
+        <CardBody className="gap-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-base font-semibold text-foreground">Static Props</h3>
+            <Chip size="sm" variant="flat">
+              {placements.length}
+            </Chip>
+          </div>
+          {placements.length === 0 ? (
+            <EmptyState
+              icon="🪦"
+              title="No static props yet"
+              message="Deploy a non-powered prop with “Deploy Static Prop”"
+            />
+          ) : (
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {placements.map((p: any) => (
+                <div
+                  key={p.placement_id}
+                  className="flex items-center gap-2 rounded-medium border border-default-200 p-2"
+                >
+                  <Sparkles className="text-secondary" size={20} />
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate text-sm font-medium text-foreground">
+                      {p.item_id}
+                    </span>
+                    {p.notes && (
+                      <span className="truncate text-xs text-default-400">{p.notes}</span>
+                    )}
+                  </div>
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    variant="light"
+                    aria-label="Remove static prop"
+                    onPress={() => {
+                      setRemoveKind('placement');
+                      setRemoveTarget(p.placement_id);
+                      setRemoveReason('');
+                    }}
+                  >
+                    <X size={16} />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardBody>
+      </Card>
 
       {connectSource && (
         <ConnectionModal
@@ -370,6 +473,21 @@ export default function SessionPage() {
         />
       )}
 
+      <StaticPropModal
+        isOpen={staticPropOpen}
+        onClose={() => setStaticPropOpen(false)}
+        deployment={deployment}
+        zone={zone}
+        session={session}
+        zones={zones}
+        activeConnections={connections}
+        activePlacements={placements}
+        onCreated={() => {
+          toast.showSuccess('Static prop deployed');
+          loadPorts();
+        }}
+      />
+
       <EndSessionReview
         isOpen={endReviewOpen}
         onClose={() => setEndReviewOpen(false)}
@@ -377,8 +495,11 @@ export default function SessionPage() {
         zone={zone}
         session={session}
         connections={connections}
+        placements={placements}
         pendingPhotoIds={pendingPhotoIds}
+        pendingPlacementPhotoIds={pendingPlacementPhotoIds}
         onPhotosUpdated={handlePhotosUpdated}
+        onPlacementPhotosUpdated={handlePlacementPhotosUpdated}
         onConfirm={handleEndSessionConfirm}
       />
 
