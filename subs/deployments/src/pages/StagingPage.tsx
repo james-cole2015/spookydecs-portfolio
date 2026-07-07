@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Card, CardBody, Chip } from '@heroui/react';
 import { Breadcrumbs, EmptyState, ErrorState, LoadingState, PageHeader, useToast } from '@spookydecs/ui';
-import { getDeployment, getStagingTotes, stageTote } from '../api/deploymentsApi';
+import { getDeployment, getStagingTotes, stageItems, stageTote } from '../api/deploymentsApi';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import type { Deployment } from '../config/deploymentsConfig';
 
@@ -16,6 +16,65 @@ interface Tote {
   contents_count?: number;
   contents?: string[];
   contents_details?: { id: string; short_name: string; class_type?: string; status?: string }[];
+}
+
+/** Large & Oversized (non-packable) item — lives in no storage unit, staged directly. */
+interface NonPackableItem {
+  id: string;
+  short_name?: string;
+  season?: string;
+  location?: string;
+  class_type?: string;
+  status?: string;
+}
+
+function PropCard({
+  item,
+  isStaged,
+  onStage,
+}: {
+  item: NonPackableItem;
+  isStaged: boolean;
+  onStage?: () => void;
+}) {
+  return (
+    <Card className={isStaged ? 'opacity-90' : ''}>
+      <CardBody className="gap-2">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <h3 className="font-semibold text-foreground">{item.short_name || item.id}</h3>
+            <div className="mt-1 flex flex-wrap gap-1">
+              {item.season && (
+                <Chip size="sm" variant="flat">
+                  {item.season}
+                </Chip>
+              )}
+              {item.class_type && (
+                <Chip size="sm" variant="flat">
+                  {item.class_type}
+                </Chip>
+              )}
+              {item.location && (
+                <Chip size="sm" variant="flat">
+                  {item.location}
+                </Chip>
+              )}
+            </div>
+          </div>
+          {isStaged ? (
+            <Chip color="success" variant="flat">
+              ✓ Staged
+            </Chip>
+          ) : (
+            <Button size="sm" color="primary" onPress={onStage}>
+              Stage Item
+            </Button>
+          )}
+        </div>
+        <span className="text-sm text-default-500">{item.id}</span>
+      </CardBody>
+    </Card>
+  );
 }
 
 function ToteCard({
@@ -105,7 +164,10 @@ export default function StagingPage() {
   const [deployment, setDeployment] = useState<Deployment | null>(null);
   const [totes, setTotes] = useState<Tote[]>([]);
   const [stagedTotes, setStagedTotes] = useState<Tote[]>([]);
+  const [nonPackable, setNonPackable] = useState<NonPackableItem[]>([]);
+  const [stagedNonPackable, setStagedNonPackable] = useState<NonPackableItem[]>([]);
   const [confirmTote, setConfirmTote] = useState<Tote | null>(null);
+  const [confirmItem, setConfirmItem] = useState<NonPackableItem | null>(null);
   const [staging, setStaging] = useState(false);
 
   useEffect(() => {
@@ -122,6 +184,8 @@ export default function StagingPage() {
         setDeployment(deploymentRes.data);
         setTotes(totesRes.data.totes || []);
         setStagedTotes(totesRes.data.staged_totes || []);
+        setNonPackable(totesRes.data.non_packable_items || []);
+        setStagedNonPackable(totesRes.data.staged_non_packable || []);
       } catch (e: any) {
         if (!cancelled) setError(e?.message || 'Failed to load staging area');
       } finally {
@@ -158,6 +222,24 @@ export default function StagingPage() {
     }
   }
 
+  async function handleStageItem() {
+    if (!confirmItem) return;
+    const item = confirmItem;
+    setStaging(true);
+    try {
+      await stageItems(deploymentId, [item.id]);
+      // Move the item from available → staged.
+      setNonPackable((prev) => prev.filter((i) => i.id !== item.id));
+      setStagedNonPackable((prev) => [...prev, { ...item, status: 'Staged' }]);
+      setConfirmItem(null);
+    } catch (e: any) {
+      console.error('[Staging] Stage item failed:', e);
+      toast.showError(e?.message || 'Failed to stage item. Please try again.');
+    } finally {
+      setStaging(false);
+    }
+  }
+
   if (loading) return <LoadingState label="Loading staging area…" />;
   if (error) return <ErrorState message={error} onRetry={() => navigate(`/deployments/builder/${deploymentId}/zones`)} />;
 
@@ -178,37 +260,61 @@ export default function StagingPage() {
       />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div>
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-foreground">Available to Stage</h2>
-            <span className="text-sm text-default-500">
-              {totes.length} tote{totes.length !== 1 ? 's' : ''}
-            </span>
-          </div>
-          {totes.length === 0 ? (
-            <EmptyState icon="📦" title="No totes available to stage." />
-          ) : (
-            <div className="flex flex-col gap-3">
-              {totes.map((tote) => (
-                <ToteCard key={tote.id} tote={tote} isStaged={false} onStage={() => setConfirmTote(tote)} />
-              ))}
+        <div className="flex flex-col gap-6">
+          <div>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-foreground">Available to Stage</h2>
+              <span className="text-sm text-default-500">
+                {totes.length} tote{totes.length !== 1 ? 's' : ''}
+              </span>
             </div>
-          )}
+            {totes.length === 0 ? (
+              <EmptyState icon="📦" title="No totes available to stage." />
+            ) : (
+              <div className="flex flex-col gap-3">
+                {totes.map((tote) => (
+                  <ToteCard key={tote.id} tote={tote} isStaged={false} onStage={() => setConfirmTote(tote)} />
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-foreground">Large &amp; Oversized</h2>
+              <span className="text-sm text-default-500">
+                {nonPackable.length} item{nonPackable.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+            {nonPackable.length === 0 ? (
+              <EmptyState icon="🎃" title="No oversized items available to stage." />
+            ) : (
+              <div className="flex flex-col gap-3">
+                {nonPackable.map((item) => (
+                  <PropCard key={item.id} item={item} isStaged={false} onStage={() => setConfirmItem(item)} />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         <div>
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-foreground">Already Staged</h2>
             <span className="text-sm text-default-500">
-              {stagedTotes.length} tote{stagedTotes.length !== 1 ? 's' : ''}
+              {stagedTotes.length + stagedNonPackable.length} item
+              {stagedTotes.length + stagedNonPackable.length !== 1 ? 's' : ''}
             </span>
           </div>
-          {stagedTotes.length === 0 ? (
-            <EmptyState icon="✅" title="No totes have been staged yet." />
+          {stagedTotes.length === 0 && stagedNonPackable.length === 0 ? (
+            <EmptyState icon="✅" title="Nothing has been staged yet." />
           ) : (
             <div className="flex flex-col gap-3">
               {stagedTotes.map((tote) => (
                 <ToteCard key={tote.id} tote={tote} isStaged />
+              ))}
+              {stagedNonPackable.map((item) => (
+                <PropCard key={item.id} item={item} isStaged />
               ))}
             </div>
           )}
@@ -225,6 +331,16 @@ export default function StagingPage() {
         isLoading={staging}
         onConfirm={handleStage}
         onClose={() => setConfirmTote(null)}
+      />
+
+      <ConfirmDialog
+        isOpen={!!confirmItem}
+        title={`Stage "${confirmItem?.short_name || confirmItem?.id || ''}"?`}
+        body="This will mark this Large & Oversized item as Staged, making it available to place or connect in the deployment."
+        confirmLabel="Stage Item"
+        isLoading={staging}
+        onConfirm={handleStageItem}
+        onClose={() => setConfirmItem(null)}
       />
     </>
   );

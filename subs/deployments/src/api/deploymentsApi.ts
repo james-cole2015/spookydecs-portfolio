@@ -275,6 +275,14 @@ export async function stageTote(deploymentId: string, body: unknown): Promise<an
   return await apiCall(`/deployments/${deploymentId}/stage`, 'POST', body);
 }
 
+/**
+ * Stage loose (non-packable / Large & Oversized) items that live in no storage unit.
+ * Same POST /stage route as stageTote, body-driven: item_ids present with no tote_id.
+ */
+export async function stageItems(deploymentId: string, itemIds: string[]): Promise<any> {
+  return await stageTote(deploymentId, { item_ids: itemIds });
+}
+
 export async function apiTeardownStart(deploymentId: string): Promise<any> {
   if (!auth().hasMinRole('builder')) throw new Error('Insufficient permissions');
   return await apiCall(`/deployments/${deploymentId}/teardown/start`, 'POST');
