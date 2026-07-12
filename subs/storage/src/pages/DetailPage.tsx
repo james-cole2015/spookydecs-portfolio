@@ -16,7 +16,6 @@ function statusChipColor(status: string): ChipColor {
     case 'Packed':
       return 'primary';
     case 'Staged':
-    case 'Open':
       return 'warning';
     case 'Out of Service':
       return 'danger';
