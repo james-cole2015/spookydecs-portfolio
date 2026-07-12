@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Card, CardBody, CardHeader, Chip, Image, Divider } from '@heroui/react';
-import { PackageCheck, Pencil, Trash2 } from 'lucide-react';
+import { PackageCheck, Pencil, Trash2, Warehouse } from 'lucide-react';
 import { storageAPI, photosAPI } from '../api/storageApi';
 import { getPlaceholderImage, seasonChipColor, type StorageUnit } from '../config/storageConfig';
 import { StatusChip } from '../components/StatusChip';
@@ -27,7 +27,7 @@ export default function DetailPage() {
   const [contents, setContents] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [confirm, setConfirm] = useState<null | 'delete' | 'pack' | { type: 'remove'; itemId: string }>(null);
+  const [confirm, setConfirm] = useState<null | 'delete' | 'pack' | 'store' | 'markPacked' | { type: 'remove'; itemId: string }>(null);
   const [busy, setBusy] = useState(false);
 
   const canWrite = hasMinRole('builder');
@@ -115,6 +115,36 @@ export default function DetailPage() {
     }
   }
 
+  async function doStore() {
+    if (!unit) return;
+    setBusy(true);
+    try {
+      await storageAPI.update(unit.id, { status: 'Stored' });
+      toast.showSuccess(`${unit.short_name} moved to Stored`);
+      setConfirm(null);
+      await load();
+    } catch (e: any) {
+      toast.showError(e?.message ?? 'Failed to store unit');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function doMarkPacked() {
+    if (!unit) return;
+    setBusy(true);
+    try {
+      await storageAPI.update(unit.id, { status: 'Packed' });
+      toast.showSuccess(`${unit.short_name} marked as packed`);
+      setConfirm(null);
+      await load();
+    } catch (e: any) {
+      toast.showError(e?.message ?? 'Failed to mark tote as packed');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function doRemove(itemId: string) {
     if (!unit) return;
     setBusy(true);
@@ -137,6 +167,9 @@ export default function DetailPage() {
   const images = (unit.images as Record<string, string> | undefined) ?? {};
   const hero = images.photo_url || images.thumb_cloudfront_url || getPlaceholderImage();
   const isSelf = unit.class_type === 'Self';
+  const isTote = unit.class_type === 'Tote';
+  const isStorable = unit.status === 'Packed';
+  const canMarkPacked = isTote && unit.status !== 'Packed' && unit.status !== 'Stored';
 
   return (
     <div>
@@ -163,6 +196,12 @@ export default function DetailPage() {
           <div className="flex flex-wrap gap-2">
             {isSelf && !unit.packed && canWrite && (
               <Button color="secondary" variant="flat" startContent={<PackageCheck size={18} />} onPress={() => setConfirm('pack')}>Pack</Button>
+            )}
+            {canMarkPacked && canWrite && (
+              <Button color="secondary" variant="flat" startContent={<PackageCheck size={18} />} onPress={() => setConfirm('markPacked')}>Mark as Packed</Button>
+            )}
+            {isStorable && canWrite && (
+              <Button color="primary" variant="flat" startContent={<Warehouse size={18} />} onPress={() => setConfirm('store')}>Store</Button>
             )}
             {canWrite && (
               <Button variant="flat" startContent={<Pencil size={18} />} onPress={() => navigate(`/storage/${unit.id}/edit`)}>Edit</Button>
@@ -256,6 +295,26 @@ export default function DetailPage() {
         confirmColor="secondary"
         isLoading={busy}
         onConfirm={doPack}
+        onClose={() => setConfirm(null)}
+      />
+      <ConfirmDialog
+        isOpen={confirm === 'markPacked'}
+        title="Mark as Packed"
+        body={<p>Mark <strong>{unit.short_name}</strong> as <strong>Packed</strong>? You can then Store it to make it available for deployment staging.</p>}
+        confirmLabel="Mark as Packed"
+        confirmColor="secondary"
+        isLoading={busy}
+        onConfirm={doMarkPacked}
+        onClose={() => setConfirm(null)}
+      />
+      <ConfirmDialog
+        isOpen={confirm === 'store'}
+        title="Store unit?"
+        body={<p>Move <strong>{unit.short_name}</strong> to <strong>Stored</strong>? It will then be available in the deployment staging area.</p>}
+        confirmLabel="Store"
+        confirmColor="primary"
+        isLoading={busy}
+        onConfirm={doStore}
         onClose={() => setConfirm(null)}
       />
       <ConfirmDialog

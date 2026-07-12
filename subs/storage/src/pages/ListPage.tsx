@@ -43,6 +43,7 @@ export default function ListPage() {
   const [stats, setStats] = useState<StorageStats | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<StorageUnit | null>(null);
   const [packTarget, setPackTarget] = useState<StorageUnit | null>(null);
+  const [storeTarget, setStoreTarget] = useState<StorageUnit | null>(null);
   const [busy, setBusy] = useState(false);
 
   const statsDrawer = useDisclosure();
@@ -136,6 +137,21 @@ export default function ListPage() {
     }
   }
 
+  async function confirmStore() {
+    if (!storeTarget) return;
+    setBusy(true);
+    try {
+      await storageAPI.update(storeTarget.id, { status: 'Stored' });
+      toast.showSuccess(`${storeTarget.short_name} moved to Stored`);
+      setStoreTarget(null);
+      await loadData();
+    } catch (e: any) {
+      toast.showError(e?.message ?? 'Failed to store storage unit');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const unpackedBadge = stats?.unpacked_items ?? 0;
 
   return (
@@ -190,6 +206,7 @@ export default function ListPage() {
               canDelete={canDelete}
               onDelete={setDeleteTarget}
               onSelfPack={setPackTarget}
+              onStore={setStoreTarget}
             />
           ))}
         </div>
@@ -254,6 +271,21 @@ export default function ListPage() {
         isLoading={busy}
         onConfirm={confirmSelfPack}
         onClose={() => setPackTarget(null)}
+      />
+
+      <ConfirmDialog
+        isOpen={Boolean(storeTarget)}
+        title="Store unit?"
+        body={
+          <p>
+            Move <strong>{storeTarget?.short_name}</strong> to <strong>Stored</strong>? It will then be available in the deployment staging area.
+          </p>
+        }
+        confirmLabel="Store"
+        confirmColor="primary"
+        isLoading={busy}
+        onConfirm={confirmStore}
+        onClose={() => setStoreTarget(null)}
       />
     </div>
   );

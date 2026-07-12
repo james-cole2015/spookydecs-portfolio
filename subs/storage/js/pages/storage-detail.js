@@ -88,9 +88,7 @@ async function loadStorageUnit(storageId) {
       storageUnit: currentStorageUnit,
       onEdit: handleEdit,
       onDelete: handleDelete,
-      onPack: handlePack,
-      onMarkPacked: handleMarkPacked,
-      onStore: handleStore
+      onPack: handlePack
     });
     detailView.render(document.getElementById('detail-container'));
 
@@ -212,74 +210,6 @@ function handlePack(unit) {
           } catch (error) {
             hideLoading();
             showError(error.message || 'Failed to pack storage unit');
-            return false;
-          }
-        }
-      }
-    ]
-  });
-}
-
-/**
- * Handle "Mark as Packed" for a tote — set status -> Packed
- */
-function handleMarkPacked(unit) {
-  showModal({
-    title: 'Mark as Packed',
-    content: `
-      <p>Mark <strong>${unit.short_name}</strong> as packed?</p>
-      <p>This sets the tote status to <strong>Packed</strong>. You can then Store it to make it available for deployment staging.</p>
-    `,
-    actions: [
-      { action: 'cancel', label: 'Cancel', className: 'btn-secondary' },
-      {
-        action: 'confirm',
-        label: 'Mark as Packed',
-        className: 'btn-primary',
-        handler: async () => {
-          try {
-            showLoading();
-            await storageAPI.update(unit.id, { status: 'Packed' });
-            hideLoading();
-            showSuccess(`${unit.short_name} marked as packed`);
-            await loadStorageUnit(unit.id);
-          } catch (error) {
-            hideLoading();
-            showError(error.message || 'Failed to mark tote as packed');
-            return false;
-          }
-        }
-      }
-    ]
-  });
-}
-
-/**
- * Handle "Store" for a Packed unit — advance status Packed -> Stored
- */
-function handleStore(unit) {
-  showModal({
-    title: 'Store Unit',
-    content: `
-      <p>Store <strong>${unit.short_name}</strong>?</p>
-      <p>This advances the unit to <strong>Stored</strong>, making it available in the deployment staging area.</p>
-    `,
-    actions: [
-      { action: 'cancel', label: 'Cancel', className: 'btn-secondary' },
-      {
-        action: 'confirm',
-        label: 'Store',
-        className: 'btn-primary',
-        handler: async () => {
-          try {
-            showLoading();
-            await storageAPI.update(unit.id, { status: 'Stored' });
-            hideLoading();
-            showSuccess(`${unit.short_name} moved to Stored`);
-            await loadStorageUnit(unit.id);
-          } catch (error) {
-            hideLoading();
-            showError(error.message || 'Failed to store unit');
             return false;
           }
         }

@@ -100,8 +100,7 @@ export async function renderStorageList() {
   storageCards = new StorageCards({
     data: [],
     onDelete: handleDelete,
-    onSelfPack: handleSelfPack,
-    onStore: handleStore
+    onSelfPack: handleSelfPack
   });
   
   // Load data
@@ -337,19 +336,6 @@ function handleSelfPack(unit) {
       }
     ]
   });
-}
-
-/**
- * Handle store for a Packed storage unit — advance Packed -> Stored
- */
-async function handleStore(unit) {
-  try {
-    await storageAPI.update(unit.id, { status: 'Stored' });
-    showSuccess(`${unit.short_name} moved to Stored`);
-    await loadData();
-  } catch (error) {
-    showError(error.message || 'Failed to store storage unit');
-  }
 }
 
 /**
