@@ -11,6 +11,8 @@ export class StorageDetailView {
     this.onEdit = options.onEdit || (() => {});
     this.onDelete = options.onDelete || (() => {});
     this.onPack = options.onPack || null;
+    this.onStore = options.onStore || null;
+    this.onMarkPacked = options.onMarkPacked || null;
     this.container = null;
   }
 
@@ -55,6 +57,16 @@ export class StorageDetailView {
             ${unit.class_type === 'Self' && !unit.packed && (unit.contents_count || 0) > 0 ? `
               <button class="btn btn-primary" id="btn-pack">
                 Pack
+              </button>
+            ` : ''}
+            ${classType === 'Tote' && unit.status !== 'Packed' && unit.status !== 'Stored' ? `
+              <button class="btn btn-primary" id="btn-mark-packed">
+                Mark as Packed
+              </button>
+            ` : ''}
+            ${unit.status === 'Packed' ? `
+              <button class="btn btn-primary" id="btn-store">
+                Store
               </button>
             ` : ''}
             <button class="btn btn-danger" id="btn-delete">
@@ -144,6 +156,16 @@ export class StorageDetailView {
     const packBtn = this.container.querySelector('#btn-pack');
     if (packBtn && this.onPack) {
       packBtn.addEventListener('click', () => this.onPack(this.storageUnit));
+    }
+
+    const markPackedBtn = this.container.querySelector('#btn-mark-packed');
+    if (markPackedBtn && this.onMarkPacked) {
+      markPackedBtn.addEventListener('click', () => this.onMarkPacked(this.storageUnit));
+    }
+
+    const storeBtn = this.container.querySelector('#btn-store');
+    if (storeBtn && this.onStore) {
+      storeBtn.addEventListener('click', () => this.onStore(this.storageUnit));
     }
 
     if (deleteBtn) {
