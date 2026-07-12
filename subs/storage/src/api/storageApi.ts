@@ -17,6 +17,31 @@ async function getApiEndpoint(): Promise<string> {
   return API_ENDPOINT;
 }
 
+const RETRY_ATTEMPTS = 3;
+const RETRY_BASE_MS = 300;
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * fetch with bounded retry/backoff on transient failures (network error, 429
+ * rate-limit, 5xx). Used for on-load GETs so a demo WAF per-IP block or a
+ * momentary blip self-heals instead of surfacing as a "Failed to fetch". Other
+ * 4xx (incl. 401 auth) pass straight through to handleResponse unchanged.
+ */
+async function fetchWithRetry(url: string, init?: RequestInit): Promise<Response> {
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < RETRY_ATTEMPTS; attempt++) {
+    if (attempt > 0) await sleep(RETRY_BASE_MS * 2 ** (attempt - 1));
+    try {
+      const res = await fetch(url, init);
+      if (res.ok || (res.status !== 429 && res.status < 500)) return res;
+      lastErr = new Error(`HTTP ${res.status}`);
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  throw lastErr;
+}
+
 async function handleResponse(response: Response): Promise<any> {
   if (response.status === 401) {
     await auth().redirectToLogin();
@@ -54,7 +79,7 @@ export const storageAPI = {
     const url = qs
       ? `${API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE}?${qs}`
       : `${API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE}`;
-    const response = await fetch(url, { headers: auth().buildHeaders() });
+    const response = await fetchWithRetry(url, { headers: auth().buildHeaders() });
     const data = await handleResponse(response);
     const units = data.success && data.data ? data.data.storage_units || [] : data.storage_units || [];
     return units.map(formatStorageUnit);
@@ -62,7 +87,7 @@ export const storageAPI = {
 
   async getById(id: string): Promise<StorageUnit | null> {
     const API_ENDPOINT = await getApiEndpoint();
-    const response = await fetch(`${API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_BY_ID(id)}`, {
+    const response = await fetchWithRetry(`${API_ENDPOINT}${STORAGE_CONFIG.API.STORAGE_BY_ID(id)}`, {
       headers: auth().buildHeaders(),
     });
     const data = await handleResponse(response);
