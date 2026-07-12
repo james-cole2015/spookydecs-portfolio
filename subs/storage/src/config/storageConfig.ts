@@ -161,6 +161,27 @@ export function seasonChipColor(season?: string): ChipColor {
   }
 }
 
+/**
+ * Single source of truth for the granular storage-status pill color
+ * (Empty/Partial/Packed/Stored/Staged/Out of Service). Shared by the card,
+ * list, and detail views so the status reads the same everywhere. The coarse
+ * `packed` boolean is still used for filtering and stats — this is display only.
+ */
+export function storageStatusColor(status?: string): ChipColor {
+  switch (status) {
+    case 'Stored':
+      return 'success';
+    case 'Packed':
+      return 'primary';
+    case 'Staged':
+      return 'warning';
+    case 'Out of Service':
+      return 'danger';
+    default:
+      return 'default';
+  }
+}
+
 /** Normalize old vs new storage-unit schemas (V1.4 renamed short_name→name, packed→status). */
 export function formatStorageUnit(unit: Record<string, any>): StorageUnit {
   const season = unit.season || unit.category;

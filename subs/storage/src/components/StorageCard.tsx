@@ -34,7 +34,7 @@ export function StorageCard({
             className="h-40 w-full object-cover"
           />
           <div className="absolute right-2 top-2 z-10 shadow">
-            <StatusChip packed={unit.packed} variant="solid" />
+            <StatusChip status={unit.status} variant="solid" />
           </div>
         </div>
         <CardBody className="gap-2">

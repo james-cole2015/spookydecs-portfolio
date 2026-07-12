@@ -3,26 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Card, CardBody, CardHeader, Chip, Image, Divider } from '@heroui/react';
 import { PackageCheck, Pencil, Trash2, Warehouse } from 'lucide-react';
 import { storageAPI, photosAPI } from '../api/storageApi';
-import { getPlaceholderImage, seasonChipColor, type ChipColor, type StorageUnit } from '../config/storageConfig';
+import { getPlaceholderImage, seasonChipColor, storageStatusColor, type StorageUnit } from '../config/storageConfig';
 import { Breadcrumbs, LoadingState, ErrorState, Typography, useAuth, PhotoGallery } from '@spookydecs/ui';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useToast } from '@spookydecs/ui';
-
-/** Color for the real storage-status pill (distinct from the coarse packed/unpacked chip). */
-function statusChipColor(status: string): ChipColor {
-  switch (status) {
-    case 'Stored':
-      return 'success';
-    case 'Packed':
-      return 'primary';
-    case 'Staged':
-      return 'warning';
-    case 'Out of Service':
-      return 'danger';
-    default:
-      return 'default';
-  }
-}
 
 interface ContentItem {
   id: string;
@@ -190,7 +174,7 @@ export default function DetailPage() {
                 <Chip size="sm" variant="flat">{String(unit.class_type)}</Chip>
                 {unit.location && <Chip size="sm" variant="flat">{String(unit.location)}</Chip>}
                 {unit.size && <Chip size="sm" variant="flat">{String(unit.size)}</Chip>}
-                <Chip size="sm" variant="flat" color={statusChipColor(status)}>{status}</Chip>
+                <Chip size="sm" variant="flat" color={storageStatusColor(status)}>{status}</Chip>
               </div>
             </div>
           </div>
