@@ -12,6 +12,7 @@ export class StorageCards {
     this.data = options.data || [];
     this.onDelete = options.onDelete || (() => {});
     this.onSelfPack = options.onSelfPack || null;
+    this.onStore = options.onStore || null;
     this.container = null;
   }
 
@@ -97,6 +98,11 @@ export class StorageCards {
         <button class="card-footer-btn btn-pack" data-action="pack" data-id="${unit.id}" ${this.isPackable(unit) ? '' : 'disabled'}>
           Pack
         </button>
+        ${this.isStorable(unit) ? `
+        <button class="card-footer-btn btn-store" data-action="store" data-id="${unit.id}">
+          Store
+        </button>
+        ` : ''}
       </div>
     `;
     
@@ -150,6 +156,14 @@ export class StorageCards {
         }
       });
     }
+
+    const storeBtn = card.querySelector('[data-action="store"]');
+    if (storeBtn && this.onStore) {
+      storeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.onStore(unit);
+      });
+    }
   }
 
   /**
@@ -160,6 +174,13 @@ export class StorageCards {
     if (unit.class_type === 'Tote') return true;
     if (unit.class_type === 'Self') return (unit.contents_count || 0) > 0;
     return false;
+  }
+
+  /**
+   * Whether a storage unit can be stored (advanced Packed -> Stored) from the card
+   */
+  isStorable(unit) {
+    return unit.status === 'Packed';
   }
 
   /**
