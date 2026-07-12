@@ -53,9 +53,8 @@ export function applyFilters(storage: StorageUnit[], filters: Record<string, str
   if (filters.season && filters.season !== 'All') filtered = filtered.filter((u) => u.season === filters.season);
   if (filters.location && filters.location !== 'All') filtered = filtered.filter((u) => u.location === filters.location);
   if (filters.class_type && filters.class_type !== 'All') filtered = filtered.filter((u) => u.class_type === filters.class_type);
-  if (filters.packed && filters.packed !== 'All') {
-    const isPacked = filters.packed === 'Packed';
-    filtered = filtered.filter((u) => u.packed === isPacked);
+  if (filters.status && filters.status !== 'All') {
+    filtered = filtered.filter((u) => (u.status ?? 'Empty') === filters.status);
   }
   if (filters.search && filters.search.trim() !== '') {
     const term = filters.search.toLowerCase().trim();
