@@ -18,14 +18,14 @@ import { StorageCard } from '../components/StorageCard';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useToast } from '@spookydecs/ui';
 
-const FILTER_KEYS = ['season', 'location', 'class_type', 'packed', 'search'];
+const FILTER_KEYS = ['season', 'location', 'class_type', 'status', 'search'];
 
 function readFilters(params: URLSearchParams): Filters {
   return {
     season: params.get('season') ?? 'All',
     location: params.get('location') ?? 'All',
     class_type: params.get('class_type') ?? 'All',
-    packed: params.get('packed') ?? 'All',
+    status: params.get('status') ?? 'All',
     search: params.get('search') ?? '',
   };
 }
@@ -150,7 +150,7 @@ export default function ListPage() {
         }
       />
 
-      <FilterBar filters={filters} show={['season', 'location', 'class_type', 'packed']} onChange={updateFilters} />
+      <FilterBar filters={filters} show={['season', 'location', 'class_type', 'status']} onChange={updateFilters} />
 
       <Typography type="body-sm" className="mb-3 text-default-500">
         {filtered.length === allStorage.length

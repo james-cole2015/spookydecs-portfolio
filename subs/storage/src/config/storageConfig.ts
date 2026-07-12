@@ -67,7 +67,7 @@ export const STORAGE_CONFIG = {
     season: ['All', 'Halloween', 'Christmas', 'Shared'],
     location: ['All', 'Shed', 'Attic', 'Crawl Space', 'Other'],
     class_type: ['All', 'Tote', 'Self'],
-    packed: ['All', 'Packed', 'Unpacked'],
+    status: ['All', 'Empty', 'Partial', 'Packed', 'Stored', 'Staged', 'Out of Service'],
     size: ['All', 'Small', 'Medium', 'Large', 'Extra Large'],
   } as Record<string, string[]>,
 

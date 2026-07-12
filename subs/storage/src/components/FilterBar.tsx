@@ -8,7 +8,7 @@ const LABELS: Record<string, string> = {
   season: 'Season',
   location: 'Location',
   class_type: 'Type',
-  packed: 'Packed',
+  status: 'Status',
   size: 'Size',
 };
 
