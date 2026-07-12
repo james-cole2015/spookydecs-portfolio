@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Card, CardBody, CardFooter, Chip, Button, Image, Divider } from '@heroui/react';
-import { Trash2, PackageCheck, Warehouse } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { getPlaceholderImage, seasonChipColor, type StorageUnit } from '../config/storageConfig';
 import { Typography } from '@spookydecs/ui';
 import { StatusChip } from './StatusChip';
@@ -8,23 +8,15 @@ import { StatusChip } from './StatusChip';
 export function StorageCard({
   unit,
   onDelete,
-  onSelfPack,
-  onStore,
-  canWrite,
   canDelete,
 }: {
   unit: StorageUnit;
   onDelete?: (u: StorageUnit) => void;
-  onSelfPack?: (u: StorageUnit) => void;
-  onStore?: (u: StorageUnit) => void;
-  canWrite: boolean;
   canDelete: boolean;
 }) {
   const navigate = useNavigate();
   const images = (unit.images as Record<string, string> | undefined) ?? {};
   const cover = images.photo_url || images.thumb_cloudfront_url || getPlaceholderImage();
-  const isSelf = unit.class_type === 'Self';
-  const isStorable = unit.status === 'Packed';
 
   return (
     <Card shadow="md" isHoverable className="bg-content1">
@@ -65,16 +57,6 @@ export function StorageCard({
           {typeof unit.contents_count === 'number' ? `${unit.contents_count} items` : ''}
         </Typography>
         <div className="flex gap-1">
-          {isSelf && !unit.packed && canWrite && onSelfPack && (
-            <Button size="sm" variant="flat" color="secondary" startContent={<PackageCheck size={16} />} onPress={() => onSelfPack(unit)}>
-              Pack
-            </Button>
-          )}
-          {isStorable && canWrite && onStore && (
-            <Button size="sm" variant="flat" color="primary" startContent={<Warehouse size={16} />} onPress={() => onStore(unit)}>
-              Store
-            </Button>
-          )}
           {canDelete && onDelete && (
             <Button size="sm" variant="light" color="danger" isIconOnly aria-label="Delete" onPress={() => onDelete(unit)}>
               <Trash2 size={16} />
