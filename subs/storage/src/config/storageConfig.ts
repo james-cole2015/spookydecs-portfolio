@@ -67,7 +67,7 @@ export const STORAGE_CONFIG = {
     season: ['All', 'Halloween', 'Christmas', 'Shared'],
     location: ['All', 'Shed', 'Attic', 'Crawl Space', 'Other'],
     class_type: ['All', 'Tote', 'Self'],
-    packed: ['All', 'Packed', 'Unpacked'],
+    status: ['All', 'Empty', 'Partial', 'Packed', 'Stored', 'Staged', 'Out of Service'],
     size: ['All', 'Small', 'Medium', 'Large', 'Extra Large'],
   } as Record<string, string[]>,
 
@@ -156,6 +156,27 @@ export function seasonChipColor(season?: string): ChipColor {
       return 'success';
     case 'Shared':
       return 'secondary';
+    default:
+      return 'default';
+  }
+}
+
+/**
+ * Single source of truth for the granular storage-status pill color
+ * (Empty/Partial/Packed/Stored/Staged/Out of Service). Shared by the card,
+ * list, and detail views so the status reads the same everywhere. The coarse
+ * `packed` boolean is still used for filtering and stats — this is display only.
+ */
+export function storageStatusColor(status?: string): ChipColor {
+  switch (status) {
+    case 'Stored':
+      return 'success';
+    case 'Packed':
+      return 'primary';
+    case 'Staged':
+      return 'warning';
+    case 'Out of Service':
+      return 'danger';
     default:
       return 'default';
   }

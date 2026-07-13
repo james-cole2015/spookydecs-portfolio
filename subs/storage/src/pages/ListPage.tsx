@@ -18,14 +18,14 @@ import { StorageCard } from '../components/StorageCard';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useToast } from '@spookydecs/ui';
 
-const FILTER_KEYS = ['season', 'location', 'class_type', 'packed', 'search'];
+const FILTER_KEYS = ['season', 'location', 'class_type', 'status', 'search'];
 
 function readFilters(params: URLSearchParams): Filters {
   return {
     season: params.get('season') ?? 'All',
     location: params.get('location') ?? 'All',
     class_type: params.get('class_type') ?? 'All',
-    packed: params.get('packed') ?? 'All',
+    status: params.get('status') ?? 'All',
     search: params.get('search') ?? '',
   };
 }
@@ -42,7 +42,6 @@ export default function ListPage() {
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<StorageStats | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<StorageUnit | null>(null);
-  const [packTarget, setPackTarget] = useState<StorageUnit | null>(null);
   const [busy, setBusy] = useState(false);
 
   const statsDrawer = useDisclosure();
@@ -121,21 +120,6 @@ export default function ListPage() {
     }
   }
 
-  async function confirmSelfPack() {
-    if (!packTarget) return;
-    setBusy(true);
-    try {
-      await storageAPI.update(packTarget.id, { packed: true });
-      toast.showSuccess(`${packTarget.short_name} marked as packed`);
-      setPackTarget(null);
-      await loadData();
-    } catch (e: any) {
-      toast.showError(e?.message ?? 'Failed to pack storage unit');
-    } finally {
-      setBusy(false);
-    }
-  }
-
   const unpackedBadge = stats?.unpacked_items ?? 0;
 
   return (
@@ -166,7 +150,7 @@ export default function ListPage() {
         }
       />
 
-      <FilterBar filters={filters} show={['season', 'location', 'class_type', 'packed']} onChange={updateFilters} />
+      <FilterBar filters={filters} show={['season', 'location', 'class_type', 'status']} onChange={updateFilters} />
 
       <Typography type="body-sm" className="mb-3 text-default-500">
         {filtered.length === allStorage.length
@@ -186,10 +170,8 @@ export default function ListPage() {
             <StorageCard
               key={unit.id}
               unit={unit}
-              canWrite={canWrite}
               canDelete={canDelete}
               onDelete={setDeleteTarget}
-              onSelfPack={setPackTarget}
             />
           ))}
         </div>
@@ -239,21 +221,6 @@ export default function ListPage() {
         isLoading={busy}
         onConfirm={confirmDelete}
         onClose={() => setDeleteTarget(null)}
-      />
-
-      <ConfirmDialog
-        isOpen={Boolean(packTarget)}
-        title="Confirm pack"
-        body={
-          <p>
-            Mark <strong>{packTarget?.short_name}</strong> and its item as packed?
-          </p>
-        }
-        confirmLabel="Mark as Packed"
-        confirmColor="secondary"
-        isLoading={busy}
-        onConfirm={confirmSelfPack}
-        onClose={() => setPackTarget(null)}
       />
     </div>
   );
