@@ -1,7 +1,8 @@
 # Caller workflow for the audit sub (#341; mirrors deploy-workbench.yml).
 #   push to development  -> deploy dev   (auto)
 #   push to main         -> deploy prod  (auto)
-#   demo / prod          -> manual workflow_dispatch only (keeps demo freezable)
+#   push to demo         -> deploy demo  (auto; #318 branch-promotion model)
+#   prod                 -> manual workflow_dispatch hatch (emergency prod deploy)
 #
 # Audit is a React + Vite app built via the @spookydecs/ui npm workspace
 # (#320/#330). build_workdir '.' runs from the repo root so workspace hoisting
@@ -12,7 +13,7 @@ name: Deploy Audit Sub
 
 on:
   push:
-    branches: [development, main]
+    branches: [development, main, demo]
     paths: ['subs/audit/**', 'packages/ui/**']
   workflow_dispatch:
     inputs:
@@ -20,8 +21,8 @@ on:
         description: 'Target env for manual deploy'
         required: true
         type: choice
-        options: [demo, prod]
-        default: demo
+        options: [prod]
+        default: prod
 
 # Required so the called reusable workflow can request id-token: write for OIDC.
 # (Repo default_workflow_permissions is "read", which would otherwise cap
@@ -53,12 +54,23 @@ jobs:
       artifact_dir: dist
     secrets: inherit
 
+  deploy-demo:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/demo'
+    uses: ./.github/workflows/_deploy-sub.yml
+    with:
+      sub: audit
+      deploy_env: demo
+      build_command: 'npm ci && npm run build -w @spookydecs/ui && npm run build:audit'
+      build_workdir: '.'
+      artifact_dir: dist
+    secrets: inherit
+
   deploy-manual:
     if: github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/_deploy-sub.yml
     with:
       sub: audit
-      deploy_env: ${{ inputs.deploy_env || 'demo' }}
+      deploy_env: ${{ inputs.deploy_env || 'prod' }}
       build_command: 'npm ci && npm run build -w @spookydecs/ui && npm run build:audit'
       build_workdir: '.'
       artifact_dir: dist
