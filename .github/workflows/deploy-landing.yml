@@ -1,7 +1,9 @@
 # Caller workflow for the public landing sub — demo.spookydecs.com (Nakatomi #364).
 #
 # The landing host exists ONLY in the demo env (single-env infra case), so unlike
-# the per-sub callers there are no dev/prod push jobs — just a manual demo dispatch.
+# the per-sub callers there are no dev/prod jobs — it deploys on push to the
+# `demo` branch (#318 branch-promotion model). There is no workflow_dispatch:
+# demo moves only via the branch.
 #
 # Build runs from the repo root (build_workdir '.') so @spookydecs/ui workspace
 # hoisting resolves; the ui lib is built first since dist/ is gitignored.
@@ -9,26 +11,21 @@
 name: Deploy Landing Sub
 
 on:
-  workflow_dispatch:
-    inputs:
-      deploy_env:
-        description: 'Target env (demo only — the landing host is single-env)'
-        required: true
-        type: choice
-        options: [demo]
-        default: demo
+  push:
+    branches: [demo]
+    paths: ['subs/landing/**', 'packages/ui/**']
 
 permissions:
   id-token: write
   contents: read
 
 jobs:
-  deploy-manual:
-    if: github.event_name == 'workflow_dispatch'
+  deploy-demo:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/demo'
     uses: ./.github/workflows/_deploy-sub.yml
     with:
       sub: landing
-      deploy_env: ${{ inputs.deploy_env || 'demo' }}
+      deploy_env: demo
       build_command: 'npm ci && npm run build -w @spookydecs/ui && npm run build:landing'
       build_workdir: '.'
       artifact_dir: dist
