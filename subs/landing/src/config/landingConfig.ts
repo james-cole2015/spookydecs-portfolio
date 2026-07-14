@@ -24,8 +24,8 @@ export const ENTER_DEMO_URL = `https://auth.spookydecs.com/?redirect=${encodeURI
  */
 export const MINT_SESSION_PATH = '/demo/session';
 
-/** Public demo gallery, linked from the preview strip. */
-export const DEMO_GALLERY_URL = 'https://demo-gallery.spookydecs.com';
+/** Public gallery, linked from the preview strip. */
+export const DEMO_GALLERY_URL = 'https://gallery.spookydecs.com';
 
 /** Public portfolio / architecture showcase (GitHub Pages — Portfolio/docs/). */
 export const PORTFOLIO_URL = 'https://james-cole2015.github.io/spookydecs-portfolio/';
