@@ -12,7 +12,12 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
       <HeroUIProvider>
         <ToastProvider placement="bottom-right" />
         <ConfigProvider>
-          <BrowserRouter basename="/tracker">
+          {/* No basename: tracker is served at the bare root
+              (dev-tracker.spookydecs.com). The subdomain is the namespace, so a
+              "/tracker" basename was redundant — and it rendered an empty tree at
+              "/" because the basename gate rejects the path before any route,
+              including the catch-all, can match (#385). */}
+          <BrowserRouter>
             <App />
           </BrowserRouter>
         </ConfigProvider>
