@@ -4,7 +4,7 @@
  * Task, Attachment) model the sd_tracker_handler DDB schema.
  */
 
-export type ChipColor = 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger';
+export type { ChipColor } from '@spookydecs/ui';
 
 // ── Enums ─────────────────────────────────────────────────────────────────
 export const ISSUE_STATES = ['backlog', 'ready', 'open', 'blocked', 'completed'] as const;
@@ -75,48 +75,8 @@ export interface Epic {
   [key: string]: unknown;
 }
 
-// ── Chip colours ─────────────────────────────────────────────────────────────
-export function stateChipColor(state?: string): ChipColor {
-  switch (state) {
-    case 'completed':
-      return 'success';
-    case 'open':
-      return 'primary';
-    case 'ready':
-      return 'secondary';
-    case 'blocked':
-      return 'danger';
-    case 'backlog':
-    default:
-      return 'default';
-  }
-}
-
-export function priorityChipColor(priority?: string): ChipColor {
-  switch (priority) {
-    case 'P0':
-      return 'danger';
-    case 'P1':
-      return 'warning';
-    case 'P2':
-    default:
-      return 'default';
-  }
-}
-
-export function effortChipColor(effort?: string): ChipColor {
-  switch (effort) {
-    case 'XL':
-    case 'L':
-      return 'warning';
-    case 'M':
-      return 'primary';
-    case 'S':
-    case 'XS':
-    default:
-      return 'default';
-  }
-}
+// Chip colours (state/priority/effort) now come from the shared @spookydecs/ui
+// source — import { stateChipColor, priorityChipColor, effortChipColor } from '@spookydecs/ui'.
 
 // ── Milestones (port of js/data/milestones.js) ───────────────────────────────
 export interface Milestone {

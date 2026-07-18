@@ -10,12 +10,16 @@ import {
   ModalBody,
   ModalFooter,
   Button,
-  Chip,
   Link,
 } from '@heroui/react';
-import { Typography } from '@spookydecs/ui';
+import { Typography, StatusChip } from '@spookydecs/ui';
 import { ExternalLink } from 'lucide-react';
-import { formatStatus, criticalityChipColor } from '../../lib/format';
+import {
+  formatStatus,
+  statusKey,
+  WORKBENCH_STATUS_COLORS,
+  WORKBENCH_CRITICALITY_COLORS,
+} from '../../lib/format';
 import type { CardPreview } from './cards';
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -44,9 +48,14 @@ export function CardPreviewModal({
             <ModalHeader className="pr-10">{preview?.title}</ModalHeader>
             <ModalBody className="gap-4 pb-2">
               {preview && (
-                <Chip size="sm" variant="flat" color={preview.statusColor} className="w-fit capitalize">
-                  {formatStatus(preview.status)}
-                </Chip>
+                <StatusChip
+                  value={statusKey(preview.status)}
+                  colorMap={WORKBENCH_STATUS_COLORS}
+                  label={formatStatus(preview.status)}
+                  size="sm"
+                  variant="flat"
+                  className="w-fit capitalize"
+                />
               )}
 
               {preview?.type === 'idea' && (
@@ -72,9 +81,14 @@ export function CardPreviewModal({
                   {preview.object && <Field label="Item">{preview.object}</Field>}
                   {preview.criticality && (
                     <Field label="Criticality">
-                      <Chip size="sm" variant="flat" color={criticalityChipColor(preview.criticality)} className="capitalize">
-                        {formatStatus(preview.criticality)}
-                      </Chip>
+                      <StatusChip
+                        value={statusKey(preview.criticality)}
+                        colorMap={WORKBENCH_CRITICALITY_COLORS}
+                        label={formatStatus(preview.criticality)}
+                        size="sm"
+                        variant="flat"
+                        className="capitalize"
+                      />
                     </Field>
                   )}
                   {preview.description && (

@@ -11,14 +11,13 @@ import {
   Spinner,
   Textarea,
 } from '@heroui/react';
-import { ErrorState, useToast, usePhotoUpload } from '@spookydecs/ui';
+import { ErrorState, useToast, usePhotoUpload, stateChipColor } from '@spookydecs/ui';
 import TrackerApi from '../api/trackerApi';
 import { asArray, asItem } from '../lib/unwrap';
 import {
   ISSUE_STATES,
   PRIORITIES,
   EFFORTS,
-  stateChipColor,
   type Attachment,
   type Epic,
   type Issue,

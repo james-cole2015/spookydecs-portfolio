@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardBody, Input, Select, SelectItem, Chip, Spinner } from '@heroui/react';
 import { Search } from 'lucide-react';
-import { EmptyState, ErrorState } from '@spookydecs/ui';
+import { EmptyState, ErrorState, stateChipColor } from '@spookydecs/ui';
 import TrackerApi from '../api/trackerApi';
 import { asArray } from '../lib/unwrap';
-import { stateChipColor, ISSUE_STATES, type Issue, type Epic } from '../config/trackerConfig';
+import { ISSUE_STATES, type Issue, type Epic } from '../config/trackerConfig';
 
 const STATE_OPTIONS = ['all', ...ISSUE_STATES];
 
