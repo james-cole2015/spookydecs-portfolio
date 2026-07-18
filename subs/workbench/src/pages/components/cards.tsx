@@ -20,7 +20,6 @@ export interface CardPreview {
   link?: string;
   notes?: string;
   // maintenance fields
-  scheduled?: string;
   criticality?: string;
   /** The item under maintenance — resolved name, falling back to the item id. */
   object?: string;
@@ -84,7 +83,6 @@ export function MaintenanceCard({
     status: record.status,
     statusColor: statusChipColor(record.status),
     href,
-    scheduled: record.date_scheduled,
     criticality: record.criticality,
     description: record.description,
     object,
@@ -104,16 +102,11 @@ export function MaintenanceCard({
             <span className="text-default-400">Item:</span> {object}
           </Typography>
         )}
-        {(record.date_scheduled || record.criticality) && (
+        {record.criticality && (
           <div className="flex flex-wrap items-center gap-2">
-            {record.date_scheduled && (
-              <Typography type="body-xs" className="text-default-500">Scheduled: {record.date_scheduled}</Typography>
-            )}
-            {record.criticality && (
-              <Chip size="sm" variant="flat" color={criticalityChipColor(record.criticality)} className="capitalize">
-                {formatStatus(record.criticality)}
-              </Chip>
-            )}
+            <Chip size="sm" variant="flat" color={criticalityChipColor(record.criticality)} className="capitalize">
+              {formatStatus(record.criticality)}
+            </Chip>
           </div>
         )}
       </CardBody>
