@@ -18,6 +18,7 @@ import {
   Typography,
   PhotoGallery,
   useToast,
+  ConfirmDialog,
 } from '@spookydecs/ui';
 import { recordsAPI, itemsAPI } from '../api/maintenanceApi';
 import {
@@ -33,7 +34,6 @@ import {
   type Item,
 } from '../config/maintenanceConfig';
 import CostsPanel from '../components/CostsPanel';
-import ConfirmDialog from '../components/ConfirmDialog';
 
 // Key/value field — HeroUI has no description-list primitive, so this mirrors the
 // house pattern (audit/storage): muted uppercase label + value on a fixed label
@@ -231,11 +231,16 @@ export default function RecordDetailPage() {
       <ConfirmDialog
         isOpen={deleteDisc.isOpen}
         title="Delete record?"
-        message={`Delete this ${record.record_type} record?\n\nTitle: ${record.title}\n\nThis action cannot be undone.`}
+        body={
+          <p className="whitespace-pre-line">
+            {`Delete this ${record.record_type} record?\n\nTitle: ${record.title}\n\nThis action cannot be undone.`}
+          </p>
+        }
         confirmLabel="Delete"
+        isDestructive
         isLoading={deleting}
         onConfirm={handleDelete}
-        onCancel={deleteDisc.onClose}
+        onClose={deleteDisc.onClose}
       />
     </div>
   );

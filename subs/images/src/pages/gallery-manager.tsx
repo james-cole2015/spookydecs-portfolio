@@ -29,11 +29,11 @@ import {
   useToast,
   usePhotoUpload,
   type UploadedPhoto,
+  ConfirmDialog,
 } from '@spookydecs/ui';
 import { deleteImage, fetchImages, patchImage, updateImage } from '../api/imagesApi';
 import { IMAGES_CONFIG, type GalleryData, type Photo } from '../config/imagesConfig';
 import { GalleryPhotoCard } from '../components/GalleryPhotoCard';
-import { ConfirmDialog } from '../components/ConfirmDialog';
 
 type Section = 'showcase' | 'progress' | 'community';
 
@@ -421,7 +421,7 @@ export default function GalleryManager() {
         title="Delete photo?"
         body={`Delete "${deleteTarget?.gallery_data?.display_name || deleteTarget?.photo_id}"? This cannot be undone.`}
         confirmLabel="Delete"
-        confirmColor="danger"
+        isDestructive
         isLoading={deleting}
         onConfirm={confirmDelete}
         onClose={() => setDeleteTarget(null)}

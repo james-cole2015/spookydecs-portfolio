@@ -24,6 +24,7 @@ import {
   ErrorState,
   useConfig,
   useToast,
+  ConfirmDialog,
 } from '@spookydecs/ui';
 import { InspectorAPI } from '../api/inspectorApi';
 import {
@@ -36,7 +37,6 @@ import {
   type ViolationStatus,
 } from '../config/inspectorConfig';
 import { ViolationsTable } from '../components/ViolationsTable';
-import { ConfirmDialog } from '../components/ConfirmDialog';
 import { exportViolationsCsv } from '../lib/csv';
 import { setNavContext } from '../lib/navContext';
 
@@ -306,7 +306,7 @@ export default function RuleDetail() {
         title="Deactivate Rule"
         body={`Are you sure you want to deactivate "${rule.rule_name}"? This will mark the rule as inactive.`}
         confirmLabel="Deactivate"
-        confirmColor="danger"
+        isDestructive
         isLoading={deactivating}
         onConfirm={confirmDeactivate}
         onClose={() => setDeactivateOpen(false)}

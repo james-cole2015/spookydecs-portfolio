@@ -17,10 +17,9 @@ import {
   SelectItem,
   Textarea,
 } from '@heroui/react';
-import { useToast } from '@spookydecs/ui';
+import { ConfirmDialog, useToast } from '@spookydecs/ui';
 import { IMAGES_CONFIG, validateCategory, type CategoryConfig, type Photo } from '../config/imagesConfig';
 import { deleteImage, suggestTags, updateImage, type MatchedItem } from '../api/imagesApi';
-import { ConfirmDialog } from './ConfirmDialog';
 
 /** Derive the category key from a photo's references + photo_type (verbatim port). */
 function deriveCategory(photo: Photo): string {
@@ -263,7 +262,7 @@ function ViewPanel({
         title="Delete image?"
         body="Are you sure you want to delete this image? This action cannot be undone."
         confirmLabel="Delete"
-        confirmColor="danger"
+        isDestructive
         isLoading={deleting}
         onConfirm={confirmDelete}
         onClose={() => setConfirmOpen(false)}

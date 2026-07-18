@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Card, CardBody, Chip, Link as HeroLink } from '@heroui/react';
-import { Breadcrumbs, ErrorState, LoadingState, PageHeader, useToast } from '@spookydecs/ui';
+import { Breadcrumbs, ConfirmDialog, ErrorState, LoadingState, PageHeader, useToast } from '@spookydecs/ui';
 import {
   getDeployment,
   getItem,
@@ -10,7 +10,6 @@ import {
   getItemsAdminUrl,
   fetchImageById,
 } from '../api/deploymentsApi';
-import { ConfirmDialog } from '../components/ConfirmDialog';
 import { StatusChip } from '../components/StatusChip';
 
 const ZONE_CODES = ['FY', 'BY', 'SY'];

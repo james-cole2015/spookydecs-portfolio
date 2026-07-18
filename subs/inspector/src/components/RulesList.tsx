@@ -17,7 +17,7 @@ import {
   TableRow,
   TableCell,
 } from '@heroui/react';
-import { useToast } from '@spookydecs/ui';
+import { ConfirmDialog, useToast } from '@spookydecs/ui';
 import { InspectorAPI } from '../api/inspectorApi';
 import {
   formatDateTime,
@@ -28,7 +28,6 @@ import {
   type Violation,
 } from '../config/inspectorConfig';
 import { exportViolationsCsv } from '../lib/csv';
-import { ConfirmDialog } from './ConfirmDialog';
 
 interface RulesListProps {
   rules: Rule[];
@@ -258,7 +257,7 @@ export function RulesList({ rules, violations, onReload }: RulesListProps) {
             : ''
         }
         confirmLabel="Deactivate"
-        confirmColor="danger"
+        isDestructive
         isLoading={deactivating}
         onConfirm={confirmDeactivate}
         onClose={() => setDeactivateTarget(null)}
