@@ -17,6 +17,8 @@ export interface IdeaRecord {
 
 export interface MaintenanceRecord {
   item_id: string;
+  /** Human-readable item name (short_name) resolved by the handler; may be '' if unresolved. */
+  item_name?: string;
   record_id: string;
   title?: string;
   status: string;

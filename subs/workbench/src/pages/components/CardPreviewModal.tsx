@@ -69,7 +69,7 @@ export function CardPreviewModal({
 
               {preview?.type === 'maintenance' && (
                 <>
-                  {preview.scheduled && <Field label="Scheduled">{preview.scheduled}</Field>}
+                  {preview.object && <Field label="Item">{preview.object}</Field>}
                   {preview.criticality && (
                     <Field label="Criticality">
                       <Chip size="sm" variant="flat" color={criticalityChipColor(preview.criticality)} className="capitalize">
