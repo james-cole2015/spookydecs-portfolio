@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Card, CardBody, Chip, Image, Select, SelectItem, Input } from '@heroui/react';
 import { Ruler } from 'lucide-react';
 import { itemsAPI, type ItemRecord } from '../api/storageApi';
-import { getPlaceholderImage, seasonChipColor } from '../config/storageConfig';
-import { Breadcrumbs, PageHeader, LoadingState, ErrorState, EmptyState, Typography, useConfig } from '@spookydecs/ui';
+import { getPlaceholderImage } from '../config/storageConfig';
+import { Breadcrumbs, PageHeader, LoadingState, ErrorState, EmptyState, Typography, useConfig, SeasonChip } from '@spookydecs/ui';
 
 function sd(item: ItemRecord): Record<string, unknown> {
   return (item.storage_data as Record<string, unknown>) ?? {};
@@ -107,7 +107,7 @@ export default function NonPackablePage() {
                     <Typography type="h6" as="div" className="truncate text-foreground">{(item.short_name as string) ?? 'Unnamed Item'}</Typography>
                     <Typography type="body-xs" as="div" className="truncate text-default-500">{item.id}</Typography>
                     <div className="mt-2 flex flex-wrap gap-1">
-                      <Chip size="sm" variant="flat" color={seasonChipColor(String(item.season))}>{String(item.season ?? '—')}</Chip>
+                      <SeasonChip value={String(item.season ?? '')} label={String(item.season ?? '—')} />
                       <Chip size="sm" variant="flat" classNames={isStored ? { base: 'bg-sky-500/20', content: 'text-sky-300' } : undefined} color={isStored ? undefined : 'default'}>
                         {isStored ? `Stored @ ${location ?? '?'}` : 'Not Stored'}
                       </Chip>

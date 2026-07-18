@@ -3,6 +3,7 @@
  * Constants, validation rules, form-field definitions, and the StorageUnit
  * normalizer (`formatStorageUnit`) that reconciles 3 schema versions.
  */
+import type { ChipColor } from '@spookydecs/ui';
 
 export type ClassType = 'Tote' | 'Self';
 export type Season = 'Halloween' | 'Christmas' | 'Shared';
@@ -145,42 +146,20 @@ export function getPackedLabel(packed: boolean): string {
   return packed ? '✅ Packed' : '⚪ Unpacked';
 }
 
-export type ChipColor = 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger';
-
-/** Single source of truth for season pill colors. Halloween=orange, Christmas=green, Shared=violet. */
-export function seasonChipColor(season?: string): ChipColor {
-  switch (season) {
-    case 'Halloween':
-      return 'warning';
-    case 'Christmas':
-      return 'success';
-    case 'Shared':
-      return 'secondary';
-    default:
-      return 'default';
-  }
-}
-
 /**
- * Single source of truth for the granular storage-status pill color
- * (Empty/Partial/Packed/Stored/Staged/Out of Service). Shared by the card,
- * list, and detail views so the status reads the same everywhere. The coarse
- * `packed` boolean is still used for filtering and stats — this is display only.
+ * Storage-status pill colors (Empty/Partial/Packed/Stored/Staged/Out of Service).
+ * A storage-domain dimension — not one of the canonical §5 cross-cutting maps —
+ * so it lives here as *data* passed to the shared `<StatusChip colorMap=…>`
+ * (design.md §5; issue #506). Season/state/priority/effort/role colors now come
+ * from `@spookydecs/ui`. The coarse `packed` boolean is still used for filtering
+ * and stats — this map is display only.
  */
-export function storageStatusColor(status?: string): ChipColor {
-  switch (status) {
-    case 'Stored':
-      return 'success';
-    case 'Packed':
-      return 'primary';
-    case 'Staged':
-      return 'warning';
-    case 'Out of Service':
-      return 'danger';
-    default:
-      return 'default';
-  }
-}
+export const STORAGE_STATUS_COLORS: Record<string, ChipColor> = {
+  Stored: 'success',
+  Packed: 'primary',
+  Staged: 'warning',
+  'Out of Service': 'danger',
+};
 
 /** Normalize old vs new storage-unit schemas (V1.4 renamed short_name→name, packed→status). */
 export function formatStorageUnit(unit: Record<string, any>): StorageUnit {
