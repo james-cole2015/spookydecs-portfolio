@@ -63,9 +63,9 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       port: 3000,
-      // App is mounted under BrowserRouter basename="/tracker" (preserves the
-      // vanilla deep-link URLs), so open the dev browser at /tracker, not /.
-      open: '/tracker',
+      // App mounts at the bare root (the subdomain is the namespace), so open
+      // the dev browser at / — matches how CloudFront serves it (#385).
+      open: '/',
       proxy: {
         '/devapi': {
           target: DEV_API,
