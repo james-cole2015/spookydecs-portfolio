@@ -5,13 +5,19 @@
  * replace the vanilla badge-status / badge-criticality CSS classes.
  */
 
-export type ChipColor = 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger';
+export type { ChipColor } from '@spookydecs/ui';
+import type { ChipColor } from '@spookydecs/ui';
 
 /** "in_progress" -> "In Progress". Mirrors seasonal-view.js formatStatus(). */
 export function formatStatus(value: string): string {
   return value
     .replace(/_/g, ' ')
     .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/** Normalize a status/criticality string to a color-map key (lowercase, underscored). */
+export function statusKey(value?: string): string {
+  return (value ?? '').toLowerCase().replace(/[\s-]+/g, '_');
 }
 
 /** "2025-10-31" -> "Oct 31, 2025"; empty/invalid -> "N/A". From utils.js. */
@@ -23,47 +29,33 @@ export function formatDate(dateString?: string): string {
 }
 
 /**
- * Status -> Chip color. Covers idea statuses (lowercased, spaces/dashes
- * normalized to underscores) and maintenance statuses (todo/in_progress/
- * completed). Replaces the vanilla getStatusColor() + badge-status-- classes.
+ * Status -> Chip color map (domain data, consumed via the shared `<StatusChip>`).
+ * Covers idea statuses and maintenance statuses (todo/in_progress/completed).
+ * Keys are the normalized form from `statusKey()`. Unknown statuses fall back to
+ * StatusChip's `default` (was `secondary` under the old helper).
  */
-export function statusChipColor(status?: string): ChipColor {
-  const key = (status ?? '').toLowerCase().replace(/[\s-]+/g, '_');
-  switch (key) {
-    case 'completed':
-    case 'complete':
-    case 'done':
-      return 'success';
-    case 'in_progress':
-    case 'in_review':
-      return 'primary';
-    case 'blocked':
-    case 'on_hold':
-      return 'warning';
-    case 'todo':
-    case 'not_started':
-    case 'backlog':
-      return 'default';
-    default:
-      return 'secondary';
-  }
-}
+export const WORKBENCH_STATUS_COLORS: Record<string, ChipColor> = {
+  completed: 'success',
+  complete: 'success',
+  done: 'success',
+  in_progress: 'primary',
+  in_review: 'primary',
+  blocked: 'warning',
+  on_hold: 'warning',
+  todo: 'default',
+  not_started: 'default',
+  backlog: 'default',
+};
 
 /**
- * Criticality -> Chip color. Mirrors the vanilla getPriorityColor() intent
- * (high=red, medium=amber, low=green). Replaces badge-criticality-- classes.
+ * Criticality -> Chip color map (domain data). Mirrors the vanilla
+ * getPriorityColor() intent (high=red, medium=amber, low=green). Keys are
+ * lowercased criticality values.
  */
-export function criticalityChipColor(criticality?: string): ChipColor {
-  switch ((criticality ?? '').toLowerCase()) {
-    case 'high':
-    case 'critical':
-      return 'danger';
-    case 'medium':
-    case 'moderate':
-      return 'warning';
-    case 'low':
-      return 'success';
-    default:
-      return 'default';
-  }
-}
+export const WORKBENCH_CRITICALITY_COLORS: Record<string, ChipColor> = {
+  high: 'danger',
+  critical: 'danger',
+  medium: 'warning',
+  moderate: 'warning',
+  low: 'success',
+};

@@ -126,24 +126,17 @@ export const IMAGES_CONFIG = {
   } as Record<string, FilterOption[]>,
 } as const;
 
-export type ChipColor = 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger';
-
 /**
- * Season pill color — single source of truth, matching the storage sub
- * (Halloween=orange/warning, Christmas=green/success, Shared=violet/secondary).
- * Case-insensitive since images stores lowercase season values.
+ * Canonicalize a stored season to the fleet-wide capitalized vocabulary
+ * ('halloween' → 'Halloween') so it maps through the shared `<SeasonChip>` /
+ * `seasonChipColor` from @spookydecs/ui. Images stores season lowercase in the
+ * backend; this normalizes at the display boundary. (The API-facing filter
+ * option values stay lowercase — normalizing the stored vocabulary is a
+ * separate backend migration.)
  */
-export function seasonChipColor(season?: string): ChipColor {
-  switch ((season || '').toLowerCase()) {
-    case 'halloween':
-      return 'warning';
-    case 'christmas':
-      return 'success';
-    case 'shared':
-      return 'secondary';
-    default:
-      return 'default';
-  }
+export function canonicalSeason(season?: string): string {
+  const s = (season || '').trim();
+  return s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : '';
 }
 
 /** Validate category and its required fields. */
