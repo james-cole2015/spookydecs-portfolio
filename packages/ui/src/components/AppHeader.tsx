@@ -65,7 +65,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Deployments', configKey: 'DEPLOY_ADMIN', Icon: Send },
   { label: 'Storage', configKey: 'STR_ADM_URL', Icon: Archive },
   { label: 'Maintenance', configKey: 'MAINT_URL', Icon: Wrench },
-  { label: 'Finance', configKey: 'finance_url', Icon: DollarSign },
+  { label: 'Finance', configKey: 'FINANCE_URL', Icon: DollarSign },
   { label: 'Inspector', configKey: 'INSPECT_URL', Icon: Search },
   { label: 'Images', configKey: 'IMAGES_URL', Icon: ImageIcon },
   { label: 'Gallery', configKey: 'GALLERY_ADM_URL', Icon: LayoutGrid },
