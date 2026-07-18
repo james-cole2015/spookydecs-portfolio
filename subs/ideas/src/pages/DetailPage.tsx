@@ -12,6 +12,7 @@ import {
   PhotoLightbox,
   useToast,
   type LightboxPhoto,
+  useConfirm,
 } from '@spookydecs/ui';
 import { getIdea, updateIdea, deleteIdea, previewIdeaCascade } from '../api/ideasApi';
 import { ITEMS_BASE_URL, SEASON_PLACEHOLDERS, type Idea } from '../config/ideasConfig';
@@ -20,7 +21,6 @@ import { SeasonChip, StatusChip } from '../components/chips';
 import { EnrichmentPanel } from '../components/EnrichmentPanel';
 import { CostsSection } from '../components/CostsSection';
 import { CostLogModal } from '../components/CostLogModal';
-import { useConfirm } from '../components/ConfirmDialog';
 
 export default function DetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -56,24 +56,19 @@ export default function DetailPage() {
   }, [id, navigate]);
 
   async function transition(newStatus: Idea['status'], title: string, message: string, dest?: string) {
-    await confirm({
-      title,
-      message,
-      confirmLabel: title,
-      onConfirm: async () => {
-        try {
-          await updateIdea({ ...(idea as Idea), status: newStatus });
-          toast.showSuccess(`Moved to ${newStatus}`);
-          if (dest) navigate(dest);
-          else {
-            const refreshed = await getIdea(id!);
-            if (refreshed) setIdea(refreshed);
-          }
-        } catch (err) {
-          toast.showError('Failed: ' + (err as Error).message);
-        }
-      },
-    });
+    const ok = await confirm({ title, body: message, confirmLabel: title });
+    if (!ok) return;
+    try {
+      await updateIdea({ ...(idea as Idea), status: newStatus });
+      toast.showSuccess(`Moved to ${newStatus}`);
+      if (dest) navigate(dest);
+      else {
+        const refreshed = await getIdea(id!);
+        if (refreshed) setIdea(refreshed);
+      }
+    } catch (err) {
+      toast.showError('Failed: ' + (err as Error).message);
+    }
   }
 
   async function handleDelete() {
@@ -91,21 +86,20 @@ export default function DetailPage() {
     } catch {
       /* preview is best-effort */
     }
-    await confirm({
+    const ok = await confirm({
       title: 'Delete Idea',
-      message: `Are you sure you want to delete "${idea.title}"?${extra} This cannot be undone.`,
+      body: `Are you sure you want to delete "${idea.title}"?${extra} This cannot be undone.`,
       confirmLabel: 'Delete',
-      danger: true,
-      onConfirm: async () => {
-        try {
-          await deleteIdea(idea.id);
-          toast.showSuccess('Idea deleted');
-          navigate('/list');
-        } catch (err) {
-          toast.showError('Failed to delete: ' + (err as Error).message);
-        }
-      },
+      isDestructive: true,
     });
+    if (!ok) return;
+    try {
+      await deleteIdea(idea.id);
+      toast.showSuccess('Idea deleted');
+      navigate('/list');
+    } catch (err) {
+      toast.showError('Failed to delete: ' + (err as Error).message);
+    }
   }
 
   if (loading) return <LoadingState />;

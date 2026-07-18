@@ -16,7 +16,7 @@ import {
   Code,
   Textarea,
 } from '@heroui/react';
-import { Breadcrumbs, LoadingState, ErrorState, useConfig, useToast } from '@spookydecs/ui';
+import { Breadcrumbs, LoadingState, ErrorState, useConfig, useToast, ConfirmDialog } from '@spookydecs/ui';
 import { InspectorAPI } from '../api/inspectorApi';
 import {
   formatDate,
@@ -26,7 +26,6 @@ import {
 import { ViolationReason } from '../components/ViolationReason';
 import { IGAnalysisCard } from '../components/IGAnalysisCard';
 import { DismissModal } from '../components/DismissModal';
-import { ConfirmDialog } from '../components/ConfirmDialog';
 import { getNavContext, type NavContext } from '../lib/navContext';
 
 const IG_POLL_INTERVAL = 3000;
@@ -452,7 +451,7 @@ export default function ViolationDetail() {
         title="Delete Violation"
         body="Are you sure you want to permanently delete this violation? This action cannot be undone."
         confirmLabel="Delete"
-        confirmColor="danger"
+        isDestructive
         isLoading={deleting}
         onConfirm={confirmDelete}
         onClose={() => setDeleteOpen(false)}

@@ -1,10 +1,9 @@
 // ItemsCards — grid of item cards (#332)
 import { Card, CardBody, CardFooter, Button, Chip } from '@heroui/react';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
-import { EmptyState, useToast, Typography } from '@spookydecs/ui';
+import { EmptyState, useToast, Typography, ConfirmDialog } from '@spookydecs/ui';
 import { type Item } from '../api/types';
 import { getPlaceholderIcon, getSeasonIcon, getStatusColor } from '../config/itemsConfig';
-import { ConfirmDialog } from './ConfirmDialog';
 import { useState } from 'react';
 
 interface Props {
@@ -119,12 +118,12 @@ export function ItemsCards({ items, onView, onEdit, onDelete, canWrite, canDelet
       <ConfirmDialog
         isOpen={!!deleteTarget}
         title="Delete Item"
-        message={`Delete "${deleteTarget?.short_name}"? This cannot be undone.`}
+        body={`Delete "${deleteTarget?.short_name}"? This cannot be undone.`}
         confirmLabel="Delete"
-        confirmColor="danger"
+        isDestructive
         isLoading={busy}
         onConfirm={confirmDelete}
-        onCancel={() => setDeleteTarget(null)}
+        onClose={() => setDeleteTarget(null)}
       />
     </>
   );

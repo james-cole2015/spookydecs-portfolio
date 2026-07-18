@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Card, CardBody, Chip } from '@heroui/react';
-import { Breadcrumbs, EmptyState, ErrorState, LoadingState, PageHeader, useToast } from '@spookydecs/ui';
+import { Breadcrumbs, ConfirmDialog, EmptyState, ErrorState, LoadingState, PageHeader, useToast } from '@spookydecs/ui';
 import { getDeployment, getStagingTotes, stageItems, stageTote } from '../api/deploymentsApi';
-import { ConfirmDialog } from '../components/ConfirmDialog';
 import type { Deployment } from '../config/deploymentsConfig';
 
 interface Tote {
