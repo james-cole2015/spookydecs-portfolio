@@ -10,13 +10,22 @@ import {
 } from '@heroui/react';
 import { Package, BarChart3, Luggage, Plus } from 'lucide-react';
 import { storageAPI, itemsAPI, photosAPI, type ItemRecord } from '../api/storageApi';
-import { type StorageUnit } from '../config/storageConfig';
+import STORAGE_CONFIG, { type StorageUnit } from '../config/storageConfig';
 import { applyFilters, calculateStats, type StorageStats } from '../lib/stats';
-import { Breadcrumbs, PageHeader, LoadingState, ErrorState, EmptyState, Typography, useAuth } from '@spookydecs/ui';
-import { FilterBar, type Filters } from '../components/FilterBar';
+import {
+  Breadcrumbs,
+  PageHeader,
+  LoadingState,
+  ErrorState,
+  EmptyState,
+  Typography,
+  useAuth,
+  FilterBar,
+  type Filters,
+  ConfirmDialog,
+  useToast,
+} from '@spookydecs/ui';
 import { StorageCard } from '../components/StorageCard';
-import { ConfirmDialog } from '../components/ConfirmDialog';
-import { useToast } from '@spookydecs/ui';
 
 const FILTER_KEYS = ['season', 'location', 'class_type', 'status', 'search'];
 
@@ -150,7 +159,12 @@ export default function ListPage() {
         }
       />
 
-      <FilterBar filters={filters} show={['season', 'location', 'class_type', 'status']} onChange={updateFilters} />
+      <FilterBar
+        filters={filters}
+        show={['season', 'location', 'class_type', 'status']}
+        options={STORAGE_CONFIG.FILTER_OPTIONS}
+        onChange={updateFilters}
+      />
 
       <Typography type="body-sm" className="mb-3 text-default-500">
         {filtered.length === allStorage.length
@@ -217,7 +231,7 @@ export default function ListPage() {
           </p>
         }
         confirmLabel="Delete"
-        confirmColor="danger"
+        isDestructive
         isLoading={busy}
         onConfirm={confirmDelete}
         onClose={() => setDeleteTarget(null)}
