@@ -69,6 +69,7 @@ export function CardPreviewModal({
 
               {preview?.type === 'maintenance' && (
                 <>
+                  {preview.object && <Field label="Item">{preview.object}</Field>}
                   {preview.scheduled && <Field label="Scheduled">{preview.scheduled}</Field>}
                   {preview.criticality && (
                     <Field label="Criticality">

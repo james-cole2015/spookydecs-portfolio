@@ -22,6 +22,8 @@ export interface CardPreview {
   // maintenance fields
   scheduled?: string;
   criticality?: string;
+  /** The item under maintenance — resolved name, falling back to the item id. */
+  object?: string;
 }
 
 const DESC_PREVIEW_LEN = 100;
@@ -75,6 +77,7 @@ export function MaintenanceCard({
   onSelect: (preview: CardPreview) => void;
 }) {
   const title = record.title || 'Untitled';
+  const object = record.item_name || record.item_id || '';
   const preview: CardPreview = {
     type: 'maintenance',
     title,
@@ -84,6 +87,7 @@ export function MaintenanceCard({
     scheduled: record.date_scheduled,
     criticality: record.criticality,
     description: record.description,
+    object,
   };
 
   return (
@@ -95,6 +99,11 @@ export function MaintenanceCard({
             {formatStatus(record.status)}
           </Chip>
         </div>
+        {object && (
+          <Typography type="body-xs" className="text-default-500">
+            <span className="text-default-400">Item:</span> {object}
+          </Typography>
+        )}
         {(record.date_scheduled || record.criticality) && (
           <div className="flex flex-wrap items-center gap-2">
             {record.date_scheduled && (
