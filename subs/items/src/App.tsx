@@ -12,18 +12,20 @@ const DetailPage   = lazy(() => import('./pages/DetailPage'));
 
 export default function App() {
   return (
-    <PageContainer>
+    <>
       <AppHeader pageTitle="Item Administration" />
-      <Suspense fallback={<LoadingState />}>
-        <Routes>
-          <Route path="/"         element={<LandingPage />} />
-          <Route path="/items"    element={<ListPage />} />
-          <Route path="/create"   element={<CreatePage />} />
-          <Route path="/:id/edit" element={<EditPage />} />
-          <Route path="/:id"      element={<DetailPage />} />
-          <Route path="*"         element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
-    </PageContainer>
+      <PageContainer>
+        <Suspense fallback={<LoadingState />}>
+          <Routes>
+            <Route path="/"         element={<LandingPage />} />
+            <Route path="/items"    element={<ListPage />} />
+            <Route path="/create"   element={<CreatePage />} />
+            <Route path="/:id/edit" element={<EditPage />} />
+            <Route path="/:id"      element={<DetailPage />} />
+            <Route path="*"         element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      </PageContainer>
+    </>
   );
 }

@@ -213,18 +213,6 @@ export function getStatusLabel(status: string): string {
   return labels[status] || status;
 }
 
-export function getStatusColor(status: string): string {
-  const colors: Record<string, string> = {
-    'pre-deployment': '#9CA3AF',
-    active_setup: '#3B82F6',
-    completed: '#10B981',
-    active_teardown: '#F59E0B',
-    archived: '#6B7280',
-  };
-
-  return colors[status] || '#9CA3AF';
-}
-
 /** Deployment status → HeroUI Chip color (domain map; consumed via the shared `<StatusChip>`). */
 export const DEPLOYMENT_STATUS_COLORS: Record<string, ChipColor> = {
   'pre-deployment': 'default',

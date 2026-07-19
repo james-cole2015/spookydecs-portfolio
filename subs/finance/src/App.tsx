@@ -19,21 +19,23 @@ const ItemCostsPage = lazy(() => import('./pages/ItemCostsPage'));
 // guard is no longer needed.
 export default function App() {
   return (
-    <PageContainer>
+    <>
       <AppHeader pageTitle="Finance" />
-      <Suspense fallback={<LoadingState />}>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/records" element={<RecordsPage />} />
-          <Route path="/receipts" element={<ReceiptsPage />} />
-          <Route path="/statistics" element={<StatisticsPage />} />
-          <Route path="/items" element={<ItemsPage />} />
-          <Route path="/new" element={<NewCostRecordPage />} />
-          <Route path="/costs/:costId" element={<CostDetailPage />} />
-          <Route path="/:itemId" element={<ItemCostsPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
-    </PageContainer>
+      <PageContainer>
+        <Suspense fallback={<LoadingState />}>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/records" element={<RecordsPage />} />
+            <Route path="/receipts" element={<ReceiptsPage />} />
+            <Route path="/statistics" element={<StatisticsPage />} />
+            <Route path="/items" element={<ItemsPage />} />
+            <Route path="/new" element={<NewCostRecordPage />} />
+            <Route path="/costs/:costId" element={<CostDetailPage />} />
+            <Route path="/:itemId" element={<ItemCostsPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      </PageContainer>
+    </>
   );
 }
