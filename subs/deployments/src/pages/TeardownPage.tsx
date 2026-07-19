@@ -15,7 +15,7 @@ import {
   Tab,
 } from '@heroui/react';
 import { Trash2 } from 'lucide-react';
-import { Breadcrumbs, EmptyState, ErrorState, LoadingState, PageHeader, useToast } from '@spookydecs/ui';
+import { Breadcrumbs, ConfirmDialog, EmptyState, ErrorState, LoadingState, PageHeader, useToast } from '@spookydecs/ui';
 import {
   getDeployment,
   searchItems,
@@ -23,7 +23,6 @@ import {
   apiTeardownItem,
   apiTeardownComplete,
 } from '../api/deploymentsApi';
-import { ConfirmDialog } from '../components/ConfirmDialog';
 import { StatusChip } from '../components/StatusChip';
 import type { Deployment } from '../config/deploymentsConfig';
 
@@ -243,7 +242,7 @@ export default function TeardownPage() {
         title="Complete Teardown?"
         body="This will archive the deployment and mark teardown as complete. This cannot be undone."
         confirmLabel="Yes, Complete Teardown"
-        confirmColor="danger"
+        isDestructive
         isLoading={completing}
         onConfirm={handleComplete}
         onClose={() => setCompleteOpen(false)}

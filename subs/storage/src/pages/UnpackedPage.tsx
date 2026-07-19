@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Card, CardBody, Chip, Image, Select, SelectItem, Input } from '@heroui/react';
 import { Search } from 'lucide-react';
 import { itemsAPI, type ItemRecord } from '../api/storageApi';
-import { getPlaceholderImage, seasonChipColor } from '../config/storageConfig';
-import { Breadcrumbs, PageHeader, LoadingState, ErrorState, EmptyState, Typography, useConfig } from '@spookydecs/ui';
+import { getPlaceholderImage } from '../config/storageConfig';
+import { Breadcrumbs, PageHeader, LoadingState, ErrorState, EmptyState, Typography, useConfig, SeasonChip } from '@spookydecs/ui';
 
 export default function UnpackedPage() {
   const config = useConfig();
@@ -87,7 +87,7 @@ export default function UnpackedPage() {
                     <Typography type="h6" as="div" className="truncate text-foreground">{(item.short_name as string) ?? 'Unnamed Item'}</Typography>
                     <Typography type="body-xs" as="div" className="truncate text-default-500">{item.id}</Typography>
                     <div className="mt-2 flex flex-wrap gap-1">
-                      <Chip size="sm" variant="flat" color={seasonChipColor(String(item.season))}>{String(item.season ?? '—')}</Chip>
+                      <SeasonChip value={String(item.season ?? '')} label={String(item.season ?? '—')} />
                       {item.class_type ? <Chip size="sm" variant="flat">{String(item.class_type)}</Chip> : null}
                     </div>
                   </div>

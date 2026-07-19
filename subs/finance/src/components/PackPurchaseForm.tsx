@@ -11,10 +11,9 @@ import {
   CardBody,
 } from '@heroui/react';
 import { Paperclip } from 'lucide-react';
-import { useToast, usePhotoUpload, rasterizePdfToImage } from '@spookydecs/ui';
+import { useToast, usePhotoUpload, rasterizePdfToImage, ConfirmDialog } from '@spookydecs/ui';
 import { createCost, getItems, updateImageAfterCostCreation } from '../api/financeApi';
 import { formatCurrency } from '../config/financeConfig';
-import { ConfirmDialog } from './ConfirmDialog';
 
 interface PickableItem {
   id: string;

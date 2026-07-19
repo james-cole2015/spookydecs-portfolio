@@ -18,7 +18,7 @@ import {
   useDisclosure,
 } from '@heroui/react';
 import { Pencil, Trash2, RefreshCw, ArrowRight } from 'lucide-react';
-import { Breadcrumbs, LoadingState, ErrorState, EmptyState, Typography, useToast } from '@spookydecs/ui';
+import { Breadcrumbs, LoadingState, ErrorState, EmptyState, Typography, useToast, ConfirmDialog } from '@spookydecs/ui';
 import { scheduleAPI, itemsAPI } from '../api/maintenanceApi';
 import {
   formatDate,
@@ -32,7 +32,6 @@ import {
   type MaintenanceRecord,
   type Item,
 } from '../config/maintenanceConfig';
-import ConfirmDialog from '../components/ConfirmDialog';
 
 function appliedTemplates(item: Item): string[] {
   const m = (item.maintenance as any) || {};
@@ -290,11 +289,16 @@ export default function ScheduleDetailPage() {
       <ConfirmDialog
         isOpen={deleteDisc.isOpen}
         title="Delete template?"
-        message={`Delete Template: ${schedule.title}?\n\nThis will remove the template, cancel ${pendingCount} pending record(s), and keep completed history.\n\nThis action cannot be undone.`}
+        body={
+          <p className="whitespace-pre-line">
+            {`Delete Template: ${schedule.title}?\n\nThis will remove the template, cancel ${pendingCount} pending record(s), and keep completed history.\n\nThis action cannot be undone.`}
+          </p>
+        }
         confirmLabel="Delete"
+        isDestructive
         isLoading={deleting}
         onConfirm={handleDelete}
-        onCancel={deleteDisc.onClose}
+        onClose={deleteDisc.onClose}
       />
     </div>
   );

@@ -5,8 +5,9 @@
  * regardless of caption/metadata height).
  */
 import { Button, Card, CardBody, CardFooter, Chip } from '@heroui/react';
+import { SeasonChip } from '@spookydecs/ui';
 import { useNavigate } from 'react-router-dom';
-import { seasonChipColor, type Photo } from '../config/imagesConfig';
+import { canonicalSeason, type Photo } from '../config/imagesConfig';
 
 function categoryLabel(photoType: string): string {
   return photoType.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase());
@@ -49,9 +50,7 @@ export function ImageCard({ photo }: { photo: Photo }) {
         <div className="truncate font-mono text-tiny text-default-500">{photo.photo_id}</div>
         <div className="flex flex-wrap items-center gap-1">
           {photo.season && (
-            <Chip size="sm" variant="flat" color={seasonChipColor(photo.season)}>
-              {photo.season}
-            </Chip>
+            <SeasonChip size="sm" variant="flat" value={canonicalSeason(photo.season)} />
           )}
           {photo.is_public && (
             <Chip size="sm" variant="flat" color="success">

@@ -1,14 +1,29 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { PageHeader, LoadingState, ErrorState, EmptyState, useToast } from '@spookydecs/ui';
-import { FileSearch } from 'lucide-react';
+import { Button } from '@heroui/react';
+import { PageHeader, LoadingState, ErrorState, EmptyState, FilterBar, useToast, type FilterOption } from '@spookydecs/ui';
+import { FileSearch, RotateCcw, Download } from 'lucide-react';
 import { getRecords, getAllTypes, getAllRecordsForExport, getEnvironment } from '../api/auditApi';
-import { recordsToCsv, downloadFile, DEFAULT_PAGE_SIZE } from '../lib/format';
+import { recordsToCsv, downloadFile, DEFAULT_PAGE_SIZE, ENTITY_TYPES, OPERATIONS } from '../lib/format';
 import type { AuditRecord } from '../types/audit';
-import { FilterBar } from './components/FilterBar';
 import { RecordsTable } from './components/RecordsTable';
 import { RecordDetailModal } from './components/RecordDetailModal';
 import { ExportFormatPrompt } from './components/ExportFormatPrompt';
+
+// Export-only toolbar (no search) rendered through the shared @spookydecs/ui
+// FilterBar (#429): two config-driven selects + a Reset/Export action slot.
+const AUDIT_FILTER_OPTIONS: Record<string, FilterOption[]> = {
+  entityType: [
+    { value: '', label: 'All types' },
+    ...Object.entries(ENTITY_TYPES).map(([k, v]) => ({ value: k, label: v.label })),
+  ],
+  operation: [
+    { value: '', label: 'All operations' },
+    ...Object.entries(OPERATIONS).map(([k, v]) => ({ value: k, label: v.label })),
+  ],
+};
+
+const AUDIT_FILTER_LABELS: Record<string, string> = { entityType: 'Type', operation: 'Operation' };
 
 export default function RecordListPage() {
   const toast = useToast();
@@ -66,14 +81,10 @@ export default function RecordListPage() {
     load(null);
   }, [load]);
 
-  function updateFilters(next: { entityType?: string; operation?: string }) {
+  function updateFilters(next: Record<string, string>) {
     const params = new URLSearchParams(searchParams);
-    if (next.entityType !== undefined) {
-      next.entityType ? params.set('entityType', next.entityType) : params.delete('entityType');
-    }
-    if (next.operation !== undefined) {
-      next.operation ? params.set('operation', next.operation) : params.delete('operation');
-    }
+    next.entityType ? params.set('entityType', next.entityType) : params.delete('entityType');
+    next.operation ? params.set('operation', next.operation) : params.delete('operation');
     setSearchParams(params);
   }
 
@@ -135,13 +146,34 @@ export default function RecordListPage() {
       />
 
       <FilterBar
-        entityType={entityType}
-        operation={operation}
-        exporting={exporting}
-        onEntityTypeChange={(v) => updateFilters({ entityType: v })}
-        onOperationChange={(v) => updateFilters({ operation: v })}
-        onReset={() => setSearchParams(new URLSearchParams())}
-        onExport={handleBulkExport}
+        search={false}
+        filters={{ entityType, operation }}
+        show={['entityType', 'operation']}
+        options={AUDIT_FILTER_OPTIONS}
+        labels={AUDIT_FILTER_LABELS}
+        onChange={updateFilters}
+        actions={
+          <>
+            <Button
+              size="sm"
+              variant="light"
+              onPress={() => setSearchParams(new URLSearchParams())}
+              startContent={<RotateCcw size={16} />}
+            >
+              Reset
+            </Button>
+            <Button
+              size="sm"
+              color="secondary"
+              variant="flat"
+              onPress={handleBulkExport}
+              isLoading={exporting}
+              startContent={!exporting && <Download size={16} />}
+            >
+              Export all
+            </Button>
+          </>
+        }
       />
 
       {loading ? (

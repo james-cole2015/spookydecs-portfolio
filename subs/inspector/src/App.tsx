@@ -11,17 +11,19 @@ const ItemDetail = lazy(() => import('./pages/ItemDetail'));
 
 export default function App() {
   return (
-    <PageContainer>
+    <>
       <AppHeader pageTitle="Inspector" />
-      <Suspense fallback={<LoadingState />}>
-        <Routes>
-          <Route path="/inspector" element={<Dashboard />} />
-          <Route path="/inspector/rules/:ruleId" element={<RuleDetail />} />
-          <Route path="/inspector/violations/:violationId" element={<ViolationDetail />} />
-          <Route path="/inspector/items/:itemId" element={<ItemDetail />} />
-          <Route path="*" element={<Navigate to="/inspector" replace />} />
-        </Routes>
-      </Suspense>
-    </PageContainer>
+      <PageContainer>
+        <Suspense fallback={<LoadingState />}>
+          <Routes>
+            <Route path="/inspector" element={<Dashboard />} />
+            <Route path="/inspector/rules/:ruleId" element={<RuleDetail />} />
+            <Route path="/inspector/violations/:violationId" element={<ViolationDetail />} />
+            <Route path="/inspector/items/:itemId" element={<ItemDetail />} />
+            <Route path="*" element={<Navigate to="/inspector" replace />} />
+          </Routes>
+        </Suspense>
+      </PageContainer>
+    </>
   );
 }

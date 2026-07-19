@@ -16,24 +16,26 @@ const UnpackedPage = lazy(() => import('./pages/UnpackedPage'));
 
 export default function App() {
   return (
-    <PageContainer>
+    <>
       <AppHeader pageTitle="Storage Management" />
-      <Suspense fallback={<LoadingState />}>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/storage" element={<ListPage />} />
-          <Route path="/new" element={<CreateWizardPage />} />
-          <Route path="/storage/create" element={<CreateWizardPage />} />
-          <Route path="/statistics" element={<StatisticsPage />} />
-          <Route path="/storage/non-packable" element={<NonPackablePage />} />
-          <Route path="/storage/unpacked" element={<UnpackedPage />} />
-          <Route path="/storage/pack" element={<PackWizardPage />} />
-          <Route path="/storage/pack/:id" element={<PackWizardPage />} />
-          <Route path="/storage/:id/edit" element={<EditPage />} />
-          <Route path="/storage/:id" element={<DetailPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
-    </PageContainer>
+      <PageContainer>
+        <Suspense fallback={<LoadingState />}>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/storage" element={<ListPage />} />
+            <Route path="/new" element={<CreateWizardPage />} />
+            <Route path="/storage/create" element={<CreateWizardPage />} />
+            <Route path="/statistics" element={<StatisticsPage />} />
+            <Route path="/storage/non-packable" element={<NonPackablePage />} />
+            <Route path="/storage/unpacked" element={<UnpackedPage />} />
+            <Route path="/storage/pack" element={<PackWizardPage />} />
+            <Route path="/storage/pack/:id" element={<PackWizardPage />} />
+            <Route path="/storage/:id/edit" element={<EditPage />} />
+            <Route path="/storage/:id" element={<DetailPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      </PageContainer>
+    </>
   );
 }

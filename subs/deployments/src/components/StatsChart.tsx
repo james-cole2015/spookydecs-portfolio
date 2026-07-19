@@ -1,4 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useTheme } from '@spookydecs/ui';
+import { resolveChartPalette, resolveChartChrome } from '../config/chartColors';
 
 /**
  * StatsChart — React wrapper around the CDN-loaded Chart.js global (#338 Decision 1).
@@ -8,21 +10,23 @@ import { useEffect, useRef } from 'react';
  * a `useEffect` and destroys it on unmount/data change — mirroring the playbook's
  * "React wraps CDN globals, it does not replace them" stance. The legend is
  * rendered declaratively below the canvas.
+ *
+ * Colors are resolved from the active HeroUI theme (see config/chartColors) at
+ * paint time — inside the effect — and the resolved slice colors are mirrored to
+ * state so the JSX legend dots track the canvas. `useTheme()` re-runs the effect
+ * on a ThemeSwitch toggle, re-reading the CSS vars for the new theme (#430 F5).
  */
 
 // Chart.js is provided at runtime by the CDN <script> in index.html.
 declare const Chart: any;
 
-export function StatsChart({
-  data,
-  colors,
-}: {
-  data: Record<string, number>;
-  colors: string[];
-}) {
+export function StatsChart({ data }: { data: Record<string, number> }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const { theme } = useTheme();
   const entries = Object.entries(data);
   const total = entries.reduce((sum, [, v]) => sum + v, 0);
+  // Resolved slice colors, mirrored to state so the legend dots match the canvas.
+  const [legendColors, setLegendColors] = useState<string[]>([]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -36,6 +40,13 @@ export function StatsChart({
     const labels = entries.map(([k]) => k);
     const values = entries.map(([, v]) => v);
 
+    // Resolve theme colors now (post-commit): the <html> theme class is already
+    // applied, so getComputedStyle reflects the current light/dark palette.
+    const palette = resolveChartPalette();
+    const chrome = resolveChartChrome();
+    const sliceColors = entries.map((_, i) => palette[i % palette.length]);
+    setLegendColors(sliceColors);
+
     const centerTextPlugin = {
       id: 'centerText',
       beforeDraw(chart: any) {
@@ -44,17 +55,13 @@ export function StatsChart({
         const centerX = width / 2;
         const centerY = height / 2;
         // Follow the active theme foreground so the center label reads in dark mode.
-        const fg =
-          getComputedStyle(document.documentElement)
-            .getPropertyValue('--heroui-foreground')
-            .trim() || '0 0% 11%';
         ctx.font = `700 1.75rem -apple-system, BlinkMacSystemFont, sans-serif`;
-        ctx.fillStyle = `hsl(${fg})`;
+        ctx.fillStyle = chrome.foreground;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(String(total), centerX, centerY - 10);
         ctx.font = `0.65rem -apple-system, BlinkMacSystemFont, sans-serif`;
-        ctx.fillStyle = '#9CA3AF';
+        ctx.fillStyle = chrome.sublabel;
         ctx.fillText('items', centerX, centerY + 12);
         ctx.restore();
       },
@@ -67,9 +74,9 @@ export function StatsChart({
         datasets: [
           {
             data: values,
-            backgroundColor: colors.slice(0, entries.length),
+            backgroundColor: sliceColors,
             borderWidth: 2,
-            borderColor: '#ffffff',
+            borderColor: chrome.border,
             hoverOffset: 4,
           },
         ],
@@ -95,7 +102,7 @@ export function StatsChart({
 
     return () => chart.destroy();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(data), colors.join(',')]);
+  }, [JSON.stringify(data), theme]);
 
   if (entries.length === 0) {
     return <div className="py-10 text-center text-sm text-default-500">No data available</div>;
@@ -114,7 +121,7 @@ export function StatsChart({
               <span className="flex items-center gap-2">
                 <span
                   className="inline-block h-3 w-3 rounded-full"
-                  style={{ background: colors[i % colors.length] }}
+                  style={{ background: legendColors[i % (legendColors.length || 1)] }}
                 />
                 {label}
               </span>

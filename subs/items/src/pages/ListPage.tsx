@@ -2,10 +2,17 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@heroui/react';
 import { Plus } from 'lucide-react';
-import { Breadcrumbs, PageHeader, LoadingState, ErrorState, useAuth, useToast } from '@spookydecs/ui';
+import { Breadcrumbs, PageHeader, LoadingState, ErrorState, FilterBar, useAuth, useToast } from '@spookydecs/ui';
 import { fetchAllItems } from '../api/itemsApi';
 import { type Item } from '../api/types';
-import { FilterBar, type Filters, FILTER_KEYS, readFilters } from '../components/FilterBar';
+import {
+  type Filters,
+  FILTER_KEYS,
+  FILTER_SELECT_KEYS,
+  FILTER_OPTIONS,
+  FILTER_LABELS,
+  readFilters,
+} from '../config/itemsConfig';
 import { ItemsCards } from '../components/ItemsCards';
 
 function applyFilters(items: Item[], f: Filters): Item[] {
@@ -57,7 +64,9 @@ export default function ListPage() {
 
   const filtered = useMemo(() => applyFilters(allItems, filters), [allItems, filters]);
 
-  function updateFilters(next: Filters) {
+  function updateFilters(next: Record<string, string>) {
+    // Cascade: changing class invalidates the (hidden) class_type sub-filter.
+    if (next.class !== filters.class) next.class_type = '';
     const params = new URLSearchParams();
     FILTER_KEYS.forEach((k) => {
       const v = next[k as keyof Filters];
@@ -80,7 +89,15 @@ export default function ListPage() {
           </Button>
         )}
       </div>
-      <FilterBar filters={filters} onChange={updateFilters} />
+      <FilterBar
+        filters={filters}
+        show={FILTER_SELECT_KEYS}
+        options={FILTER_OPTIONS}
+        labels={FILTER_LABELS}
+        onChange={updateFilters}
+        searchPlaceholder="Search by name or ID..."
+        searchDebounceMs={300}
+      />
       <ItemsCards
         items={filtered}
         onView={(id) => navigate(`/${id}`)}

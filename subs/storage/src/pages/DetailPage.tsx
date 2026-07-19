@@ -3,10 +3,19 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Card, CardBody, CardHeader, Chip, Image, Divider } from '@heroui/react';
 import { PackageCheck, Pencil, Trash2, Warehouse } from 'lucide-react';
 import { storageAPI, photosAPI } from '../api/storageApi';
-import { getPlaceholderImage, seasonChipColor, storageStatusColor, type StorageUnit } from '../config/storageConfig';
-import { Breadcrumbs, LoadingState, ErrorState, Typography, useAuth, PhotoGallery } from '@spookydecs/ui';
-import { ConfirmDialog } from '../components/ConfirmDialog';
-import { useToast } from '@spookydecs/ui';
+import { getPlaceholderImage, STORAGE_STATUS_COLORS, type StorageUnit } from '../config/storageConfig';
+import {
+  Breadcrumbs,
+  LoadingState,
+  ErrorState,
+  Typography,
+  useAuth,
+  PhotoGallery,
+  ConfirmDialog,
+  SeasonChip,
+  StatusChip,
+  useToast,
+} from '@spookydecs/ui';
 
 interface ContentItem {
   id: string;
@@ -170,11 +179,11 @@ export default function DetailPage() {
               <Typography type="h4" className="text-foreground">{unit.short_name}</Typography>
               <Typography type="body-sm" className="text-default-500">{unit.id}</Typography>
               <div className="mt-2 flex flex-wrap gap-1">
-                <Chip size="sm" variant="flat" color={seasonChipColor(String(unit.season))}>{String(unit.season ?? '—')}</Chip>
+                <SeasonChip value={String(unit.season ?? '')} label={String(unit.season ?? '—')} />
                 <Chip size="sm" variant="flat">{String(unit.class_type)}</Chip>
                 {unit.location && <Chip size="sm" variant="flat">{String(unit.location)}</Chip>}
                 {unit.size && <Chip size="sm" variant="flat">{String(unit.size)}</Chip>}
-                <Chip size="sm" variant="flat" color={storageStatusColor(status)}>{status}</Chip>
+                <StatusChip value={status} colorMap={STORAGE_STATUS_COLORS} />
               </div>
             </div>
           </div>
@@ -264,7 +273,7 @@ export default function DetailPage() {
         title="Delete storage unit?"
         body={<p>Delete <strong>{unit.short_name}</strong>? This cannot be undone.</p>}
         confirmLabel="Delete"
-        confirmColor="danger"
+        isDestructive
         isLoading={busy}
         onConfirm={doDelete}
         onClose={() => setConfirm(null)}
@@ -294,7 +303,7 @@ export default function DetailPage() {
         title="Remove item?"
         body={<p>Remove this item from <strong>{unit.short_name}</strong>? Its packing status resets to unpacked.</p>}
         confirmLabel="Remove"
-        confirmColor="danger"
+        isDestructive
         isLoading={busy}
         onConfirm={() => typeof confirm === 'object' && confirm?.type === 'remove' && doRemove(confirm.itemId)}
         onClose={() => setConfirm(null)}

@@ -126,24 +126,74 @@ export const IMAGES_CONFIG = {
   } as Record<string, FilterOption[]>,
 } as const;
 
-export type ChipColor = 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger';
+// ── List-view filter state (shared @spookydecs/ui FilterBar, #429) ──────────────
+// Relocated from the retired components/FilterPanel.tsx. `year` is a numeric input
+// rendered as a `custom` control in the bar; the rest are config-driven selects.
+
+export interface ImageUiFilters {
+  season: string;
+  photo_type: string;
+  year: string;
+  isPublic: string;
+  hasReferences: string;
+  search: string;
+  // Assignable to the shared FilterBar's Record<string,string> filter shape.
+  [key: string]: string;
+}
+
+export const EMPTY_FILTERS: ImageUiFilters = {
+  season: '',
+  photo_type: '',
+  year: '',
+  isPublic: '',
+  hasReferences: '',
+  search: '',
+};
+
+/** Select keys rendered in the bar, in order (year is a custom numeric control). */
+export const IMAGE_FILTER_SELECT_KEYS = ['season', 'photo_type', 'year', 'isPublic', 'hasReferences'];
+
+export const IMAGE_FILTER_LABELS: Record<string, string> = {
+  season: 'Season',
+  photo_type: 'Type',
+  year: 'Year',
+  isPublic: 'Visibility',
+  hasReferences: 'References',
+};
+
+/** Read the UI filter set from URL search params. */
+export function readFilters(params: URLSearchParams): ImageUiFilters {
+  return {
+    season: params.get('season') || '',
+    photo_type: params.get('photo_type') || '',
+    year: params.get('year') || '',
+    isPublic: params.get('isPublic') || '',
+    hasReferences: params.get('hasReferences') || '',
+    search: params.get('search') || '',
+  };
+}
+
+/** Serialize a filter set to URL search params, dropping empty values. */
+export function writeFilters(filters: ImageUiFilters): URLSearchParams {
+  const params = new URLSearchParams();
+  Object.keys(EMPTY_FILTERS).forEach((key) => {
+    const v = filters[key];
+    if (v) params.set(key, v);
+  });
+  return params;
+}
 
 /**
- * Season pill color — single source of truth, matching the storage sub
- * (Halloween=orange/warning, Christmas=green/success, Shared=violet/secondary).
- * Case-insensitive since images stores lowercase season values.
+ * Canonicalize a stored season to the fleet-wide capitalized vocabulary
+ * ('halloween' → 'Halloween') so it maps through the shared `<SeasonChip>` /
+ * `seasonChipColor` from @spookydecs/ui. Images stores season lowercase in the
+ * backend; this normalizes at the display boundary. (The API-facing filter
+ * option values stay lowercase — normalizing the stored vocabulary is a
+ * separate backend migration.)
  */
-export function seasonChipColor(season?: string): ChipColor {
-  switch ((season || '').toLowerCase()) {
-    case 'halloween':
-      return 'warning';
-    case 'christmas':
-      return 'success';
-    case 'shared':
-      return 'secondary';
-    default:
-      return 'default';
-  }
+export function canonicalSeason(season?: string): string {
+  const s = (season || '').trim();
+  return s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : '';
 }
 
 /** Validate category and its required fields. */

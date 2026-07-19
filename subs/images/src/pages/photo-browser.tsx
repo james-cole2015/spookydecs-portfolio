@@ -6,7 +6,7 @@
  */
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Button, Chip } from '@heroui/react';
+import { Button } from '@heroui/react';
 import {
   Breadcrumbs,
   PageHeader,
@@ -14,11 +14,12 @@ import {
   ErrorState,
   EmptyState,
   PhotoLightbox,
+  SeasonChip,
   type LightboxPhoto,
 } from '@spookydecs/ui';
 import { fetchImages } from '../api/imagesApi';
-import { isOrphaned, seasonChipColor, type Photo } from '../config/imagesConfig';
-import { FilterPanel, readFilters, writeFilters, type ImageUiFilters } from '../components/FilterPanel';
+import { isOrphaned, canonicalSeason, readFilters, writeFilters, type Photo, type ImageUiFilters } from '../config/imagesConfig';
+import { ImagesFilters } from '../components/ImagesFilters';
 
 function applyClientFilters(photos: Photo[], filters: ImageUiFilters): Photo[] {
   let out = photos.filter((p) => p.photo_type !== 'receipt');
@@ -102,7 +103,7 @@ export default function PhotoBrowser() {
         }
       />
 
-      <FilterPanel filters={filters} onChange={onChange} />
+      <ImagesFilters filters={filters} onChange={onChange} />
 
       {loading ? (
         <LoadingState label="Loading photos…" />
@@ -133,14 +134,12 @@ export default function PhotoBrowser() {
                     loading="lazy"
                     className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
-                  <Chip
+                  <SeasonChip
                     size="sm"
                     variant="solid"
-                    color={seasonChipColor(photo.season || 'shared')}
+                    value={canonicalSeason(photo.season || 'shared')}
                     className="absolute left-2 top-2"
-                  >
-                    {(photo.season || 'shared').toUpperCase()}
-                  </Chip>
+                  />
                 </div>
               );
             }}
