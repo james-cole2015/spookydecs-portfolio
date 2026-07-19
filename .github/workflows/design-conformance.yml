@@ -1,10 +1,15 @@
-# Design-conformance check (#504, winnetka).
+# Design-conformance check (#504, made blocking in #505; winnetka).
 #
-# Runs scripts/check_design_conformance.py --all on every PR into development or
-# main and surfaces the dated markdown report. WARN-FIRST: the checker step is
-# non-blocking (continue-on-error), so findings never block a merge yet — the
-# report is written to the job summary and uploaded as an artifact. #505 flips
-# this to a required/blocking gate once the baseline stays clean.
+# Runs scripts/check_design_conformance.py --all --strict on every PR into
+# development or main and surfaces the dated markdown report. BLOCKING (#505): the
+# checker step is no longer continue-on-error, and --strict promotes the app-shell
+# warn to a failure — a non-conformant PR fails this check. Paired with a required
+# status check on the protected branches, that blocks the merge.
+#
+# NOTE: no `paths:` filter — this runs on EVERY PR to development/main. That is
+# deliberate: a path-filtered *required* check never reports on PRs that miss the
+# filter, leaving them stuck "waiting for status". The checker takes seconds, so
+# always-on is cheap and keeps the required check honest.
 #
 # The React subs deploy via GHA but have no test/lint job today; this is the
 # first automated quality gate on the frontend.
@@ -13,13 +18,6 @@ name: Design Conformance
 on:
   pull_request:
     branches: [development, main]
-    paths:
-      - 'subs/**'
-      - 'packages/ui/**'
-      - 'scripts/check_design_conformance.py'
-      - 'scripts/scan_common.py'
-      - 'scripts/design-conformance.yaml'
-      - '.github/workflows/design-conformance.yml'
 
 permissions:
   contents: read
@@ -39,10 +37,9 @@ jobs:
       - name: Install PyYAML
         run: python3 -m pip install --quiet pyyaml
 
-      - name: Run design-conformance checker (--all)
+      - name: Run design-conformance checker (--all --strict)
         id: check
-        continue-on-error: true # warn-first: findings must not block the merge (#505 flips this)
-        run: python3 scripts/check_design_conformance.py --all
+        run: python3 scripts/check_design_conformance.py --all --strict
 
       - name: Publish report to job summary
         if: always()
