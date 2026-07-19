@@ -1,4 +1,5 @@
 // Items sub configuration — typed port of item-config.js (#332)
+import type { FilterOption } from '@spookydecs/ui';
 
 export const CLASS_HIERARCHY: Record<string, { types: string[]; icon: string }> = {
   Decoration: { types: ['Inflatable', 'Animatronic', 'Static Prop'], icon: '🎃' },
@@ -67,6 +68,59 @@ export const FIELD_METADATA: Record<string, FieldMeta> = {
   watts:         { label: 'Watts',         type: 'text',                    placeholder: '1800' },
   amps:          { label: 'Amps',          type: 'text',                    placeholder: '15' },
 };
+
+// ── List-view filters ──────────────────────────────────────────────────────
+// State + option config for the shared @spookydecs/ui FilterBar (#429). `class_type`
+// is a hidden filter carried in the URL (set by landing-page nav, cascaded off
+// `class`), not a rendered select — so it is absent from FILTER_SELECT_KEYS.
+
+export interface Filters {
+  search: string;
+  season: string;
+  class: string;
+  class_type: string;
+  status: string;
+  maintenance: string;
+  // Assignable to the shared FilterBar's Record<string,string> filter shape.
+  [key: string]: string;
+}
+
+export const FILTER_KEYS = ['search', 'season', 'class', 'class_type', 'status', 'maintenance'] as const;
+
+/** Select keys rendered in the bar, in order (first option per key is its "All" sentinel). */
+export const FILTER_SELECT_KEYS = ['status', 'season', 'class', 'maintenance'];
+
+export const FILTER_LABELS: Record<string, string> = {
+  status: 'Status',
+  season: 'Season',
+  class: 'Class',
+  maintenance: 'Maintenance',
+};
+
+export const FILTER_OPTIONS: Record<string, FilterOption[]> = {
+  status: [{ value: '', label: 'All Statuses' }, ...ITEM_STATUS.map((s) => ({ value: s.value, label: s.label }))],
+  season: [{ value: '', label: 'All Seasons' }, ...SEASONS.map((s) => ({ value: s.value, label: s.label, icon: s.icon }))],
+  class: [
+    { value: '', label: 'All Classes' },
+    ...Object.keys(CLASS_HIERARCHY).map((c) => ({ value: c, label: c, icon: CLASS_HIERARCHY[c].icon })),
+  ],
+  maintenance: [
+    { value: '', label: 'All' },
+    { value: 'needs_repair', label: 'Needs Repair' },
+    { value: 'non_operational', label: 'Non-Operational' },
+  ],
+};
+
+export function readFilters(params: URLSearchParams): Filters {
+  return {
+    search:      params.get('search')      ?? '',
+    season:      params.get('season')      ?? '',
+    class:       params.get('class')       ?? '',
+    class_type:  params.get('class_type')  ?? '',
+    status:      params.get('status')      ?? '',
+    maintenance: params.get('maintenance') ?? '',
+  };
+}
 
 export function getClassIcon(cls: string): string {
   return CLASS_HIERARCHY[cls]?.icon ?? '📦';

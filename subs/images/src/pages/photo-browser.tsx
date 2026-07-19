@@ -18,8 +18,8 @@ import {
   type LightboxPhoto,
 } from '@spookydecs/ui';
 import { fetchImages } from '../api/imagesApi';
-import { isOrphaned, canonicalSeason, type Photo } from '../config/imagesConfig';
-import { FilterPanel, readFilters, writeFilters, type ImageUiFilters } from '../components/FilterPanel';
+import { isOrphaned, canonicalSeason, readFilters, writeFilters, type Photo, type ImageUiFilters } from '../config/imagesConfig';
+import { ImagesFilters } from '../components/ImagesFilters';
 
 function applyClientFilters(photos: Photo[], filters: ImageUiFilters): Photo[] {
   let out = photos.filter((p) => p.photo_type !== 'receipt');
@@ -103,7 +103,7 @@ export default function PhotoBrowser() {
         }
       />
 
-      <FilterPanel filters={filters} onChange={onChange} />
+      <ImagesFilters filters={filters} onChange={onChange} />
 
       {loading ? (
         <LoadingState label="Loading photos…" />
