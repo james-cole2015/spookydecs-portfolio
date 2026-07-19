@@ -32,6 +32,22 @@ export { Breadcrumbs, PageContainer, PageHeader, LoadingState, ErrorState, Empty
 export type { Crumb } from './components/Layout';
 export { AppHeader } from './components/AppHeader';
 export type { AppHeaderProps } from './components/AppHeader';
+export {
+  StatusChip,
+  SeasonChip,
+  seasonChipColor,
+  stateChipColor,
+  priorityChipColor,
+  effortChipColor,
+  roleChipColor,
+} from './components/chips';
+export type { ChipColor } from './components/chips';
+export { ConfirmDialog } from './components/ConfirmDialog';
+export type { ConfirmDialogProps, ConfirmColor } from './components/ConfirmDialog';
+export { useConfirm } from './hooks/useConfirm';
+export type { UseConfirm, ConfirmOptions } from './hooks/useConfirm';
+export { FilterBar } from './components/FilterBar';
+export type { FilterBarProps, Filters, FilterOption } from './components/FilterBar';
 export { PhotoGallery } from './components/PhotoGallery';
 export type { PhotoGalleryProps, PhotoGalleryContext } from './components/PhotoGallery';
 export { PhotoLightbox } from './components/PhotoLightbox';

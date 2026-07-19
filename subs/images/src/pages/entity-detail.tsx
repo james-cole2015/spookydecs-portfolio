@@ -18,11 +18,12 @@ import {
   LoadingState,
   EmptyState,
   PhotoLightbox,
+  SeasonChip,
   useToast,
   type LightboxPhoto,
 } from '@spookydecs/ui';
 import { fetchImages, fetchIdeas, setPrimaryPhoto } from '../api/imagesApi';
-import { seasonChipColor, type Photo } from '../config/imagesConfig';
+import { canonicalSeason, type Photo } from '../config/imagesConfig';
 
 type EntityType = 'item' | 'storage' | 'idea';
 
@@ -216,9 +217,7 @@ export default function EntityDetail() {
             </Chip>
           )}
           {seasons.map((s) => (
-            <Chip key={s} size="sm" variant="flat" color={seasonChipColor(s)}>
-              {s}
-            </Chip>
+            <SeasonChip key={s} size="sm" variant="flat" value={canonicalSeason(s)} />
           ))}
         </div>
         <div className="mt-1 text-small text-default-500">{stats.join(' · ')}</div>
@@ -272,9 +271,7 @@ export default function EntityDetail() {
                       {ptLabel}
                     </Chip>
                   )}
-                  <Chip size="sm" variant="flat" color={seasonChipColor(photo.season)}>
-                    {photo.season || ''}
-                  </Chip>
+                  <SeasonChip size="sm" variant="flat" value={canonicalSeason(photo.season)} label={canonicalSeason(photo.season)} />
                   {photo.is_public && (
                     <Chip size="sm" variant="flat" color="success">
                       Public

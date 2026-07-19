@@ -1,16 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams, Link as RouterLink } from 'react-router-dom';
 import { Button, Chip, Input, Link, Spinner, Tabs, Tab, Textarea } from '@heroui/react';
-import { ErrorState, useToast } from '@spookydecs/ui';
+import { ErrorState, useToast, effortChipColor, priorityChipColor, stateChipColor } from '@spookydecs/ui';
 import TrackerApi from '../api/trackerApi';
 import { asArray } from '../lib/unwrap';
-import {
-  effortChipColor,
-  priorityChipColor,
-  stateChipColor,
-  type Epic,
-  type Issue,
-} from '../config/trackerConfig';
+import { type Epic, type Issue } from '../config/trackerConfig';
 
 const PRIORITY_TIERS: Array<Issue['priority'] | ''> = ['P0', 'P1', 'P2', ''];
 const PRIORITY_ORDER: Record<string, number> = { P0: 0, P1: 1, P2: 2 };

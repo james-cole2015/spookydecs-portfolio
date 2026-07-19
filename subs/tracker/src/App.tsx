@@ -35,22 +35,24 @@ export default function App() {
   if (access === 'denied') return null;
 
   return (
-    <PageContainer>
+    <>
       <AppHeader pageTitle="Tracker" />
-      {showNav && <TrackerNav />}
-      <Suspense fallback={<LoadingState />}>
-        <Routes>
-          {/* The 6 routes ported verbatim from the vanilla Navigo router (deep
-              links intact). There is no /timeline route in the source app. */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/priority" element={<PriorityListPage />} />
-          <Route path="/new-issue" element={<CreateIssuePage />} />
-          <Route path="/epics" element={<EpicsListPage />} />
-          <Route path="/epics/:slug" element={<EpicDetailPage />} />
-          <Route path="/epics/:slug/:issue" element={<IssueDetailPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
-    </PageContainer>
+      <PageContainer>
+        {showNav && <TrackerNav />}
+        <Suspense fallback={<LoadingState />}>
+          <Routes>
+            {/* The 6 routes ported verbatim from the vanilla Navigo router (deep
+                links intact). There is no /timeline route in the source app. */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/priority" element={<PriorityListPage />} />
+            <Route path="/new-issue" element={<CreateIssuePage />} />
+            <Route path="/epics" element={<EpicsListPage />} />
+            <Route path="/epics/:slug" element={<EpicDetailPage />} />
+            <Route path="/epics/:slug/:issue" element={<IssueDetailPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      </PageContainer>
+    </>
   );
 }

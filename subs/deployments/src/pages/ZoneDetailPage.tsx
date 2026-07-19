@@ -2,14 +2,13 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Card, CardBody } from '@heroui/react';
 import { Play, Square, ClipboardList, Zap } from 'lucide-react';
-import { Breadcrumbs, ErrorState, LoadingState, PageHeader, useToast } from '@spookydecs/ui';
+import { Breadcrumbs, ConfirmDialog, ErrorState, LoadingState, PageHeader, useToast } from '@spookydecs/ui';
 import {
   getDeployment,
   getZoneSessions,
   createSession,
   endSession,
 } from '../api/deploymentsApi';
-import { ConfirmDialog } from '../components/ConfirmDialog';
 import { SessionHistoryTable } from '../components/SessionHistoryTable';
 import { ZoneItemsDrawer } from '../components/ZoneItemsDrawer';
 import type { Session, Zone } from '../config/deploymentsConfig';
@@ -272,7 +271,7 @@ export default function ZoneDetailPage() {
         title="End Session"
         body="Are you sure you want to end this session?"
         confirmLabel="End Session"
-        confirmColor="danger"
+        isDestructive
         isLoading={busy}
         onConfirm={handleEndSession}
         onClose={() => setEndOpen(false)}

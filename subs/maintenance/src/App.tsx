@@ -23,34 +23,36 @@ const TemplateApplicationPage = lazy(() => import('./pages/TemplateApplicationPa
 // explicit `if (id === 'schedules') return` guards because it matched in order).
 export default function App() {
   return (
-    <PageContainer>
+    <>
       <AppHeader pageTitle="Maintenance" />
-      <Suspense fallback={<LoadingState />}>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/maintenance" element={<LandingPage />} />
-          <Route path="/records" element={<RecordsListPage />} />
-          <Route path="/items" element={<ItemsListPage />} />
-          <Route path="/create" element={<RecordFormPage />} />
+      <PageContainer>
+        <Suspense fallback={<LoadingState />}>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/maintenance" element={<LandingPage />} />
+            <Route path="/records" element={<RecordsListPage />} />
+            <Route path="/items" element={<ItemsListPage />} />
+            <Route path="/create" element={<RecordFormPage />} />
 
-          {/* Schedules subsystem */}
-          <Route path="/schedules" element={<SchedulesListPage />} />
-          <Route path="/schedules/new" element={<ScheduleFormPage />} />
-          <Route path="/schedules/apply" element={<TemplateApplicationPage />} />
-          <Route path="/schedules/:id" element={<ScheduleDetailPage />} />
-          <Route path="/schedules/:id/edit" element={<ScheduleFormPage />} />
-          <Route path="/schedules/:id/apply" element={<TemplateApplicationPage />} />
+            {/* Schedules subsystem */}
+            <Route path="/schedules" element={<SchedulesListPage />} />
+            <Route path="/schedules/new" element={<ScheduleFormPage />} />
+            <Route path="/schedules/apply" element={<TemplateApplicationPage />} />
+            <Route path="/schedules/:id" element={<ScheduleDetailPage />} />
+            <Route path="/schedules/:id/edit" element={<ScheduleFormPage />} />
+            <Route path="/schedules/:id/apply" element={<TemplateApplicationPage />} />
 
-          {/* Record + item deep links */}
-          <Route path="/:itemId/:recordId/perform-repair" element={<RepairFormPage />} />
-          <Route path="/:itemId/:recordId/perform-inspection" element={<InspectionFormPage />} />
-          <Route path="/:itemId/:recordId/edit" element={<RecordFormPage />} />
-          <Route path="/:itemId/:recordId" element={<RecordDetailPage />} />
-          <Route path="/:itemId" element={<ItemDetailPage />} />
+            {/* Record + item deep links */}
+            <Route path="/:itemId/:recordId/perform-repair" element={<RepairFormPage />} />
+            <Route path="/:itemId/:recordId/perform-inspection" element={<InspectionFormPage />} />
+            <Route path="/:itemId/:recordId/edit" element={<RecordFormPage />} />
+            <Route path="/:itemId/:recordId" element={<RecordDetailPage />} />
+            <Route path="/:itemId" element={<ItemDetailPage />} />
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
-    </PageContainer>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      </PageContainer>
+    </>
   );
 }

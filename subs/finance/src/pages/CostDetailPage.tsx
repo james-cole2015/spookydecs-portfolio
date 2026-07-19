@@ -11,10 +11,9 @@ import {
   Link as HeroLink,
 } from '@heroui/react';
 import { FileText, Paperclip, Pencil, Trash2 } from 'lucide-react';
-import { Breadcrumbs, PageHeader, Typography, useToast, usePhotoUpload } from '@spookydecs/ui';
+import { Breadcrumbs, PageHeader, Typography, useToast, usePhotoUpload, ConfirmDialog } from '@spookydecs/ui';
 import { deleteCost, getCostById, updateImageAfterCostCreation } from '../api/financeApi';
 import { formatCurrency, type CostRecord } from '../config/financeConfig';
-import { ConfirmDialog } from '../components/ConfirmDialog';
 
 const COST_TYPE_LABELS: Record<string, string> = {
   acquisition: 'Purchase',
@@ -312,7 +311,7 @@ export default function CostDetailPage() {
         title="Delete Cost Record"
         body="Are you sure you want to delete this cost record? This action cannot be undone."
         confirmLabel="Delete"
-        confirmColor="danger"
+        isDestructive
         isLoading={deleting}
         onConfirm={handleDelete}
         onClose={() => setConfirmOpen(false)}

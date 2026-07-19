@@ -3,16 +3,20 @@
  * surfaces a normalized CardPreview to its parent (which opens the preview
  * modal) — replacing the vanilla data-* attribute + click-delegation scheme.
  */
-import { Card, CardBody, Chip } from '@heroui/react';
-import { Typography } from '@spookydecs/ui';
+import { Card, CardBody } from '@heroui/react';
+import { Typography, StatusChip } from '@spookydecs/ui';
 import type { IdeaRecord, MaintenanceRecord } from '../../types/workbench';
-import { formatStatus, statusChipColor, criticalityChipColor, type ChipColor } from '../../lib/format';
+import {
+  formatStatus,
+  statusKey,
+  WORKBENCH_STATUS_COLORS,
+  WORKBENCH_CRITICALITY_COLORS,
+} from '../../lib/format';
 
 export interface CardPreview {
   type: 'idea' | 'maintenance';
   title: string;
   status: string;
-  statusColor: ChipColor;
   /** Deep link to the source record ("View Record ↗"). */
   href: string;
   // idea fields
@@ -40,7 +44,6 @@ export function IdeaCard({
     type: 'idea',
     title: idea.title,
     status: idea.status,
-    statusColor: statusChipColor(idea.status),
     href,
     description: idea.description,
     link: idea.link,
@@ -56,9 +59,14 @@ export function IdeaCard({
       <CardBody className="gap-2">
         <div className="flex items-start justify-between gap-2">
           <Typography type="body-sm" className="font-medium text-foreground">{idea.title}</Typography>
-          <Chip size="sm" variant="flat" color={preview.statusColor} className="shrink-0 capitalize">
-            {formatStatus(idea.status)}
-          </Chip>
+          <StatusChip
+            value={statusKey(idea.status)}
+            colorMap={WORKBENCH_STATUS_COLORS}
+            label={formatStatus(idea.status)}
+            size="sm"
+            variant="flat"
+            className="shrink-0 capitalize"
+          />
         </div>
         {truncated && <Typography type="body-xs" className="text-default-500">{truncated}</Typography>}
       </CardBody>
@@ -81,7 +89,6 @@ export function MaintenanceCard({
     type: 'maintenance',
     title,
     status: record.status,
-    statusColor: statusChipColor(record.status),
     href,
     criticality: record.criticality,
     description: record.description,
@@ -93,9 +100,14 @@ export function MaintenanceCard({
       <CardBody className="gap-2">
         <div className="flex items-start justify-between gap-2">
           <Typography type="body-sm" className="font-medium text-foreground">{title}</Typography>
-          <Chip size="sm" variant="flat" color={preview.statusColor} className="shrink-0 capitalize">
-            {formatStatus(record.status)}
-          </Chip>
+          <StatusChip
+            value={statusKey(record.status)}
+            colorMap={WORKBENCH_STATUS_COLORS}
+            label={formatStatus(record.status)}
+            size="sm"
+            variant="flat"
+            className="shrink-0 capitalize"
+          />
         </div>
         {object && (
           <Typography type="body-xs" className="text-default-500">
@@ -104,9 +116,14 @@ export function MaintenanceCard({
         )}
         {record.criticality && (
           <div className="flex flex-wrap items-center gap-2">
-            <Chip size="sm" variant="flat" color={criticalityChipColor(record.criticality)} className="capitalize">
-              {formatStatus(record.criticality)}
-            </Chip>
+            <StatusChip
+              value={statusKey(record.criticality)}
+              colorMap={WORKBENCH_CRITICALITY_COLORS}
+              label={formatStatus(record.criticality)}
+              size="sm"
+              variant="flat"
+              className="capitalize"
+            />
           </div>
         )}
       </CardBody>

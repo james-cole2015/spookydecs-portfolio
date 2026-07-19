@@ -5,6 +5,7 @@
  * types for the deployments data model are added on top so the React layer is
  * fully typed.
  */
+import type { ChipColor } from '@spookydecs/ui';
 
 export interface SeasonOption {
   value: string;
@@ -212,30 +213,13 @@ export function getStatusLabel(status: string): string {
   return labels[status] || status;
 }
 
-export function getStatusColor(status: string): string {
-  const colors: Record<string, string> = {
-    'pre-deployment': '#9CA3AF',
-    active_setup: '#3B82F6',
-    completed: '#10B981',
-    active_teardown: '#F59E0B',
-    archived: '#6B7280',
-  };
-
-  return colors[status] || '#9CA3AF';
-}
-
-/** Map a deployment status to a HeroUI Chip color. */
-export function getStatusChipColor(
-  status: string,
-): 'default' | 'primary' | 'success' | 'warning' | 'secondary' {
-  const map: Record<string, 'default' | 'primary' | 'success' | 'warning' | 'secondary'> = {
-    'pre-deployment': 'default',
-    active_setup: 'primary',
-    completed: 'success',
-    active_teardown: 'warning',
-    archived: 'secondary',
-  };
-  return map[status] || 'default';
-}
+/** Deployment status → HeroUI Chip color (domain map; consumed via the shared `<StatusChip>`). */
+export const DEPLOYMENT_STATUS_COLORS: Record<string, ChipColor> = {
+  'pre-deployment': 'default',
+  active_setup: 'primary',
+  completed: 'success',
+  active_teardown: 'warning',
+  archived: 'secondary',
+};
 
 export default DEPLOYMENT_CONFIG;

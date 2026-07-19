@@ -6,9 +6,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, Card, CardBody, Chip } from '@heroui/react';
-import { Breadcrumbs, PageHeader, LoadingState, ErrorState, EmptyState } from '@spookydecs/ui';
+import { Breadcrumbs, PageHeader, LoadingState, ErrorState, EmptyState, SeasonChip } from '@spookydecs/ui';
 import { fetchImages, fetchIdeas } from '../api/imagesApi';
-import { seasonChipColor, type Photo } from '../config/imagesConfig';
+import { canonicalSeason, type Photo } from '../config/imagesConfig';
 
 type EntityType = 'item' | 'storage' | 'idea';
 
@@ -180,9 +180,7 @@ export default function Entities() {
                     </div>
                     <div className="flex flex-wrap gap-1">
                       {[...entity.seasons].map((s) => (
-                        <Chip key={s} size="sm" variant="flat" color={seasonChipColor(s)}>
-                          {s}
-                        </Chip>
+                        <SeasonChip key={s} size="sm" variant="flat" value={canonicalSeason(s)} />
                       ))}
                     </div>
                   </CardBody>

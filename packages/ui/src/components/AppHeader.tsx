@@ -49,6 +49,7 @@ import { useConfig } from '../providers/ConfigProvider';
 import { useAuth } from '../hooks/useAuth';
 import { ThemeSwitch } from './ThemeSwitch';
 import { DemoResetBanner } from './DemoResetBanner';
+import { roleChipColor } from './chips';
 
 interface NavItem {
   label: string;
@@ -74,23 +75,6 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Admin', configKey: 'ADMIN_URL', Icon: Shield },
   { label: 'Workbench', configKey: 'WORKBENCH_URL', Icon: Hammer },
 ];
-
-type ChipColor = 'warning' | 'secondary' | 'success' | 'default';
-
-/** Mirrors the CDN role-pill palette (.user-role--admin/builder/user/demo). */
-function roleColor(role: string): ChipColor {
-  switch (role.toLowerCase()) {
-    case 'admin':
-      return 'warning';
-    case 'builder':
-      return 'secondary';
-    case 'user':
-    case 'viewer':
-      return 'success';
-    default:
-      return 'default';
-  }
-}
 
 /** Active when the link points at the host we're currently on (hostname compare). */
 function isActiveUrl(url: string): boolean {
@@ -208,7 +192,7 @@ export function AppHeader({
           <NavbarItem className="hidden items-center gap-2 sm:flex">
             <span className="text-small text-default-600">{name}</span>
             {role && (
-              <Chip size="sm" variant="flat" color={roleColor(role)} className="capitalize">
+              <Chip size="sm" variant="flat" color={roleChipColor(role)} className="capitalize">
                 {role}
               </Chip>
             )}
@@ -256,7 +240,7 @@ export function AppHeader({
           <NavbarMenuItem className="mt-2 flex items-center gap-2">
             <span className="text-small text-default-600">{name}</span>
             {role && (
-              <Chip size="sm" variant="flat" color={roleColor(role)} className="capitalize">
+              <Chip size="sm" variant="flat" color={roleChipColor(role)} className="capitalize">
                 {role}
               </Chip>
             )}

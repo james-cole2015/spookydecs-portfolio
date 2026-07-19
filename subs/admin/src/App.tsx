@@ -14,17 +14,19 @@ const SearchTextPage = lazy(() => import('./pages/SearchTextPage'));
 
 export default function App() {
   return (
-    <PageContainer>
+    <>
       <AppHeader pageTitle="Administration" />
-      <Suspense fallback={<LoadingState />}>
-        <Routes>
-          <Route path="/admin" element={<DashboardPage />} />
-          <Route path="/admin/dashboard" element={<DashboardPage />} />
-          <Route path="/admin/about" element={<AboutPage />} />
-          <Route path="/admin/search-text" element={<SearchTextPage />} />
-          <Route path="*" element={<Navigate to="/admin" replace />} />
-        </Routes>
-      </Suspense>
-    </PageContainer>
+      <PageContainer>
+        <Suspense fallback={<LoadingState />}>
+          <Routes>
+            <Route path="/admin" element={<DashboardPage />} />
+            <Route path="/admin/dashboard" element={<DashboardPage />} />
+            <Route path="/admin/about" element={<AboutPage />} />
+            <Route path="/admin/search-text" element={<SearchTextPage />} />
+            <Route path="*" element={<Navigate to="/admin" replace />} />
+          </Routes>
+        </Suspense>
+      </PageContainer>
+    </>
   );
 }

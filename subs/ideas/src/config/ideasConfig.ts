@@ -38,6 +38,19 @@ export const SORT_OPTIONS = [
 ] as const;
 export type SortValue = (typeof SORT_OPTIONS)[number]['value'];
 
+// List-view filters for the shared @spookydecs/ui FilterBar (#429). First option
+// per key is its "all/default" sentinel (status → 'all', sort → 'newest').
+import type { FilterOption } from '@spookydecs/ui';
+
+export const FILTER_SELECT_KEYS = ['status', 'sort'];
+
+export const FILTER_LABELS: Record<string, string> = { status: 'Status', sort: 'Sort' };
+
+export const FILTER_OPTIONS: Record<string, FilterOption[]> = {
+  status: [{ value: 'all', label: 'All Statuses' }, ...STATUSES.map((s) => ({ value: s, label: s }))],
+  sort: SORT_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
+};
+
 export const ITEMS_BASE_URL = 'https://items.spookydecs.com';
 
 // Cost-log modal option lists (ported from idea-detail-costs.js).

@@ -19,6 +19,7 @@ import {
   useToast,
   usePhotoUpload,
   type LightboxPhoto,
+  useConfirm,
 } from '@spookydecs/ui';
 import { getIdea, updateIdea, getIdeaPhotos } from '../api/ideasApi';
 import { PIPELINE_STAGES, ITEMS_BASE_URL, type Idea, type BuildSession } from '../config/ideasConfig';
@@ -27,7 +28,6 @@ import { CostsSection } from '../components/CostsSection';
 import { CostLogModal } from '../components/CostLogModal';
 import { InlineEdit } from '../components/InlineEdit';
 import { BuildCompleteWizard } from '../components/BuildCompleteWizard';
-import { useConfirm } from '../components/ConfirmDialog';
 
 const todayIso = () => new Date().toISOString().slice(0, 10);
 
@@ -108,21 +108,20 @@ export default function BuildDetailPage() {
 
   async function handleAbandon() {
     if (!idea) return;
-    await confirm({
+    const ok = await confirm({
       title: 'Abandon Build',
-      message: `Abandon "${idea.title}"? It will be moved to Abandoned status.`,
+      body: `Abandon "${idea.title}"? It will be moved to Abandoned status.`,
       confirmLabel: 'Abandon',
-      danger: true,
-      onConfirm: async () => {
-        try {
-          await updateIdea({ id: idea.id, season: idea.season, title: idea.title, status: 'Abandoned' });
-          toast.showSuccess('Build abandoned');
-          navigate('/');
-        } catch (err) {
-          toast.showError('Failed: ' + (err as Error).message);
-        }
-      },
+      isDestructive: true,
     });
+    if (!ok) return;
+    try {
+      await updateIdea({ id: idea.id, season: idea.season, title: idea.title, status: 'Abandoned' });
+      toast.showSuccess('Build abandoned');
+      navigate('/');
+    } catch (err) {
+      toast.showError('Failed: ' + (err as Error).message);
+    }
   }
 
   async function addBuildPhotos() {

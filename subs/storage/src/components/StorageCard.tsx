@@ -1,9 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { Card, CardBody, CardFooter, Chip, Button, Image, Divider } from '@heroui/react';
 import { Trash2 } from 'lucide-react';
-import { getPlaceholderImage, seasonChipColor, type StorageUnit } from '../config/storageConfig';
-import { Typography } from '@spookydecs/ui';
-import { StatusChip } from './StatusChip';
+import { getPlaceholderImage, STORAGE_STATUS_COLORS, type StorageUnit } from '../config/storageConfig';
+import { Typography, SeasonChip, StatusChip } from '@spookydecs/ui';
 
 export function StorageCard({
   unit,
@@ -34,7 +33,7 @@ export function StorageCard({
             className="h-40 w-full object-cover"
           />
           <div className="absolute right-2 top-2 z-10 shadow">
-            <StatusChip status={unit.status} variant="solid" />
+            <StatusChip value={unit.status} colorMap={STORAGE_STATUS_COLORS} emptyLabel="Empty" variant="solid" />
           </div>
         </div>
         <CardBody className="gap-2">
@@ -43,9 +42,7 @@ export function StorageCard({
             <Typography type="body-xs" as="div" className="truncate text-default-500">{unit.id}</Typography>
           </div>
           <div className="flex flex-wrap gap-1">
-            <Chip size="sm" variant="flat" color={seasonChipColor(String(unit.season))}>
-              {String(unit.season ?? '—')}
-            </Chip>
+            <SeasonChip value={String(unit.season ?? '')} label={String(unit.season ?? '—')} />
             <Chip size="sm" variant="flat">{String(unit.class_type)}</Chip>
             {unit.location && <Chip size="sm" variant="flat">{String(unit.location)}</Chip>}
           </div>

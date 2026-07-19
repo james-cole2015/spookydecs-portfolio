@@ -4,6 +4,12 @@
  *
  * Drives season/year/tags through useSearchParams (the page owns the URL). Tag
  * semantics are unchanged: a comma-separated list, any-match (OR) on the backend.
+ *
+ * Design-system note (#429): gallery deliberately keeps this LOCAL bar rather than
+ * adopting the shared @spookydecs/ui FilterBar — its popover + tag-chip management
+ * is a different interaction model (a sanctioned design.md §8 exception). Inner
+ * controls still track the shared look: size="sm" + variant="bordered" selects/
+ * inputs, and a secondary "Clear" affordance.
  */
 import { useEffect, useState } from 'react';
 import {
@@ -190,7 +196,7 @@ export function FilterBar({ filters, onChange }: Props) {
             )}
 
             <div className="flex w-full gap-2">
-              <Button size="sm" variant="flat" className="flex-1" onPress={clearDraft}>
+              <Button size="sm" variant="flat" color="secondary" className="flex-1" onPress={clearDraft}>
                 Clear
               </Button>
               <Button size="sm" color="primary" className="flex-1" onPress={apply}>

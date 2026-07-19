@@ -8,8 +8,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@heroui/react';
 import { Breadcrumbs, PageHeader, LoadingState, ErrorState, EmptyState } from '@spookydecs/ui';
 import { fetchImages } from '../api/imagesApi';
-import { isOrphaned, type Photo } from '../config/imagesConfig';
-import { FilterPanel, readFilters, writeFilters, type ImageUiFilters } from '../components/FilterPanel';
+import { isOrphaned, readFilters, writeFilters, type Photo, type ImageUiFilters } from '../config/imagesConfig';
+import { ImagesFilters } from '../components/ImagesFilters';
 import { ImageCard } from '../components/ImageCard';
 
 function applyClientFilters(images: Photo[], filters: ImageUiFilters): Photo[] {
@@ -91,7 +91,7 @@ export default function ImagesList() {
         }
       />
 
-      <FilterPanel filters={filters} onChange={onChange} />
+      <ImagesFilters filters={filters} onChange={onChange} />
 
       {loading ? (
         <LoadingState label="Loading images…" />
