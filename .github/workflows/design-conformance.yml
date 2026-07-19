@@ -1,0 +1,63 @@
+# Design-conformance check (#504, winnetka).
+#
+# Runs scripts/check_design_conformance.py --all on every PR into development or
+# main and surfaces the dated markdown report. WARN-FIRST: the checker step is
+# non-blocking (continue-on-error), so findings never block a merge yet — the
+# report is written to the job summary and uploaded as an artifact. #505 flips
+# this to a required/blocking gate once the baseline stays clean.
+#
+# The React subs deploy via GHA but have no test/lint job today; this is the
+# first automated quality gate on the frontend.
+name: Design Conformance
+
+on:
+  pull_request:
+    branches: [development, main]
+    paths:
+      - 'subs/**'
+      - 'packages/ui/**'
+      - 'scripts/check_design_conformance.py'
+      - 'scripts/scan_common.py'
+      - 'scripts/design-conformance.yaml'
+      - '.github/workflows/design-conformance.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  conformance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install PyYAML
+        run: python3 -m pip install --quiet pyyaml
+
+      - name: Run design-conformance checker (--all)
+        id: check
+        continue-on-error: true # warn-first: findings must not block the merge (#505 flips this)
+        run: python3 scripts/check_design_conformance.py --all
+
+      - name: Publish report to job summary
+        if: always()
+        run: |
+          report=$(ls -t app_docs/design-checks/design-check-all-*.md 2>/dev/null | head -1)
+          if [ -n "$report" ]; then
+            cat "$report" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No conformance report was produced." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: design-conformance-report
+          path: app_docs/design-checks/design-check-all-*.md
+          if-no-files-found: warn
