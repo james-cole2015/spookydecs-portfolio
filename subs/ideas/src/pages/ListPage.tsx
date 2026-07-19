@@ -3,11 +3,16 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@heroui/react';
 import { ArrowLeft, Plus } from 'lucide-react';
-import { LoadingState, ErrorState, EmptyState } from '@spookydecs/ui';
+import { LoadingState, ErrorState, EmptyState, FilterBar } from '@spookydecs/ui';
 import { listIdeas } from '../api/ideasApi';
-import { HIDDEN_FROM_LIST, type Idea } from '../config/ideasConfig';
+import {
+  HIDDEN_FROM_LIST,
+  FILTER_SELECT_KEYS,
+  FILTER_OPTIONS,
+  FILTER_LABELS,
+  type Idea,
+} from '../config/ideasConfig';
 import { IdeaCard } from '../components/IdeaCard';
-import { FilterBar } from '../components/FilterBar';
 
 export default function ListPage() {
   const navigate = useNavigate();
@@ -74,9 +79,15 @@ export default function ListPage() {
       </Button>
 
       <FilterBar
-        state={{ status, sort, search }}
-        onChange={(p) => patch(p as Record<string, string>)}
+        filters={{ status, sort, search }}
+        show={FILTER_SELECT_KEYS}
+        options={FILTER_OPTIONS}
+        labels={FILTER_LABELS}
+        onChange={patch}
+        searchPlaceholder="Search title, tags…"
+        searchDebounceMs={300}
         resultCount={filtered.length}
+        resultNoun="idea"
       />
 
       <div className="mt-6">

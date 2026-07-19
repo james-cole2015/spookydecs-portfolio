@@ -126,6 +126,63 @@ export const IMAGES_CONFIG = {
   } as Record<string, FilterOption[]>,
 } as const;
 
+// ── List-view filter state (shared @spookydecs/ui FilterBar, #429) ──────────────
+// Relocated from the retired components/FilterPanel.tsx. `year` is a numeric input
+// rendered as a `custom` control in the bar; the rest are config-driven selects.
+
+export interface ImageUiFilters {
+  season: string;
+  photo_type: string;
+  year: string;
+  isPublic: string;
+  hasReferences: string;
+  search: string;
+  // Assignable to the shared FilterBar's Record<string,string> filter shape.
+  [key: string]: string;
+}
+
+export const EMPTY_FILTERS: ImageUiFilters = {
+  season: '',
+  photo_type: '',
+  year: '',
+  isPublic: '',
+  hasReferences: '',
+  search: '',
+};
+
+/** Select keys rendered in the bar, in order (year is a custom numeric control). */
+export const IMAGE_FILTER_SELECT_KEYS = ['season', 'photo_type', 'year', 'isPublic', 'hasReferences'];
+
+export const IMAGE_FILTER_LABELS: Record<string, string> = {
+  season: 'Season',
+  photo_type: 'Type',
+  year: 'Year',
+  isPublic: 'Visibility',
+  hasReferences: 'References',
+};
+
+/** Read the UI filter set from URL search params. */
+export function readFilters(params: URLSearchParams): ImageUiFilters {
+  return {
+    season: params.get('season') || '',
+    photo_type: params.get('photo_type') || '',
+    year: params.get('year') || '',
+    isPublic: params.get('isPublic') || '',
+    hasReferences: params.get('hasReferences') || '',
+    search: params.get('search') || '',
+  };
+}
+
+/** Serialize a filter set to URL search params, dropping empty values. */
+export function writeFilters(filters: ImageUiFilters): URLSearchParams {
+  const params = new URLSearchParams();
+  Object.keys(EMPTY_FILTERS).forEach((key) => {
+    const v = filters[key];
+    if (v) params.set(key, v);
+  });
+  return params;
+}
+
 /**
  * Canonicalize a stored season to the fleet-wide capitalized vocabulary
  * ('halloween' → 'Halloween') so it maps through the shared `<SeasonChip>` /

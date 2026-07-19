@@ -47,7 +47,7 @@ export type { ConfirmDialogProps, ConfirmColor } from './components/ConfirmDialo
 export { useConfirm } from './hooks/useConfirm';
 export type { UseConfirm, ConfirmOptions } from './hooks/useConfirm';
 export { FilterBar } from './components/FilterBar';
-export type { FilterBarProps, Filters } from './components/FilterBar';
+export type { FilterBarProps, Filters, FilterOption } from './components/FilterBar';
 export { PhotoGallery } from './components/PhotoGallery';
 export type { PhotoGalleryProps, PhotoGalleryContext } from './components/PhotoGallery';
 export { PhotoLightbox } from './components/PhotoLightbox';
