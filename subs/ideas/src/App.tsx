@@ -13,24 +13,26 @@ const BuildDetailPage = lazy(() => import('./pages/BuildDetailPage'));
 
 export default function App() {
   return (
-    <PageContainer>
+    <>
       <AppHeader pageTitle="Ideas" />
-      <Suspense fallback={<LoadingState />}>
-        {/* URLs preserved verbatim from the vanilla Navigo router. React Router v6
-            ranks static segments above the dynamic `/:id`, so `/list`, `/create`
-            and `/workbench` win automatically; `/workbench/:id` and `/:id/edit`
-            are declared explicitly for clarity and deep-link parity. */}
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/list" element={<ListPage />} />
-          <Route path="/create" element={<FormPage />} />
-          <Route path="/workbench" element={<WorkbenchPage />} />
-          <Route path="/workbench/:id" element={<BuildDetailPage />} />
-          <Route path="/:id/edit" element={<FormPage />} />
-          <Route path="/:id" element={<DetailPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
-    </PageContainer>
+      <PageContainer>
+        <Suspense fallback={<LoadingState />}>
+          {/* URLs preserved verbatim from the vanilla Navigo router. React Router v6
+              ranks static segments above the dynamic `/:id`, so `/list`, `/create`
+              and `/workbench` win automatically; `/workbench/:id` and `/:id/edit`
+              are declared explicitly for clarity and deep-link parity. */}
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/list" element={<ListPage />} />
+            <Route path="/create" element={<FormPage />} />
+            <Route path="/workbench" element={<WorkbenchPage />} />
+            <Route path="/workbench/:id" element={<BuildDetailPage />} />
+            <Route path="/:id/edit" element={<FormPage />} />
+            <Route path="/:id" element={<DetailPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      </PageContainer>
+    </>
   );
 }

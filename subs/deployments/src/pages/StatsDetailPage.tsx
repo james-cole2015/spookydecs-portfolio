@@ -8,8 +8,6 @@ import { StatusChip } from '../components/StatusChip';
 import type { Deployment, Zone } from '../config/deploymentsConfig';
 
 const ZONE_ICON: Record<string, string> = { FY: '🏡', BY: '🌳', SY: '🏠' };
-const CLASS_COLORS = ['#60A5FA', '#34D399', '#F59E0B', '#F87171', '#A78BFA'];
-const TYPE_COLORS = ['#60A5FA', '#34D399', '#F59E0B', '#F87171', '#A78BFA', '#FB923C'];
 
 function durationMinutes(start?: string, end?: string): number | null {
   if (!start || !end) return null;
@@ -189,13 +187,13 @@ export default function StatsDetailPage() {
         <Card>
           <CardBody className="gap-2">
             <h3 className="text-base font-semibold text-foreground">By Class</h3>
-            <StatsChart data={stats.by_class || {}} colors={CLASS_COLORS} />
+            <StatsChart data={stats.by_class || {}} />
           </CardBody>
         </Card>
         <Card>
           <CardBody className="gap-2">
             <h3 className="text-base font-semibold text-foreground">By Class Type</h3>
-            <StatsChart data={stats.by_class_type || {}} colors={TYPE_COLORS} />
+            <StatsChart data={stats.by_class_type || {}} />
           </CardBody>
         </Card>
       </div>
