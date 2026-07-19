@@ -39,6 +39,12 @@ CLAUDE.md
 scripts/backfill_tasks.py
 scripts/seed_epics.py
 scripts/*
+# Design-conformance checker + its shared scaffolding and manifest are the one
+# exception to the local-only scripts/ convention: the design-conformance.yml
+# GHA workflow (#504) runs them on every PR, so they must be tracked.
+!scripts/scan_common.py
+!scripts/check_design_conformance.py
+!scripts/design-conformance.yaml
 lambda_creation_log.txt
 fail-log.txt
 
