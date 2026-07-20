@@ -17,13 +17,19 @@
  *   - `uploadFiles(files,opts)` → drives the headless service directly (no UI),
  *                               resolves with the uploaded photos or throws on
  *                               failure. Mirrors the ideas cost-log receipt upload.
+ *   - `openWithEditor(opts)`  → native file picker → shared `ImageEditorModal`
+ *                               (crop/rotate/brightness, #482) → the same headless
+ *                               `uploadFiles`. Drop-in replacement for `open()` that
+ *                               adds a pre-upload edit step; mount the returned
+ *                               `editor` element once in the tree.
  *
  * Both translate a single `entityId` to the per-context id field the CDN components
  * expect (`item-id`/`idea_id`/…). Non-standard contexts (e.g. `receipt`, which has
  * no id of its own and rides on `idea_id`) can override via `idField` or pass
  * additional `metadata`.
  */
-import { useMemo } from 'react';
+import { useCallback, useMemo, type ReactElement } from 'react';
+import { useImageEditor } from './useImageEditor';
 
 /** A photo record as returned by the CDN upload pipeline (`/confirm`). */
 export interface UploadedPhoto {
@@ -68,14 +74,19 @@ export interface PhotoUploadOptions {
   year?: number;
   /** Extra metadata merged into the upload (passthrough for edge-case contexts). */
   metadata?: Record<string, string | number | boolean>;
+  /**
+   * Mark uploads public (gallery context) — emitted as `is_public` in the upload
+   * metadata, which the CDN service forwards to `/presign` and `/confirm`. Default false.
+   * Available on every entry point (modal, headless, and editor) so the headless/editor
+   * paths honor public too (#482 makes this live; #481 forwards it in the CDN modal).
+   */
+  isPublic?: boolean;
 }
 
 /** Options specific to the modal flow (`open`). */
 export interface OpenPhotoUploadOptions extends PhotoUploadOptions {
   /** Max photos the modal will accept. Defaults to the modal's own default (10). */
   maxPhotos?: number;
-  /** Mark uploads public (gallery context). Default false. */
-  isPublic?: boolean;
 }
 
 /** Minimal structural type for the CDN `<photo-upload-service>` custom element. */
@@ -100,25 +111,37 @@ export interface UsePhotoUpload {
     files: File[] | FileList,
     opts: PhotoUploadOptions,
   ) => Promise<UploadedPhoto[]>;
+  /**
+   * Open a native file picker, run the chosen images through the shared pre-upload
+   * editor (`ImageEditorModal`), then upload the edited files via `uploadFiles`.
+   * Drop-in return shape identical to `open()`; resolves `[]` if nothing is picked.
+   * Mount `editor` once in the component tree for the modal to render.
+   */
+  openWithEditor: (opts: PhotoUploadOptions) => Promise<UploadedPhoto[]>;
+  /** The pre-upload editor element to mount once (paired with `openWithEditor`). */
+  editor: ReactElement;
 }
 
 export function usePhotoUpload(): UsePhotoUpload {
-  return useMemo<UsePhotoUpload>(() => {
-    /** Build the metadata object both entry points share. */
-    const buildMetadata = (opts: PhotoUploadOptions): Record<string, unknown> => {
-      const idKey = resolveIdKey(opts.context, opts.idField);
-      return {
-        context: opts.context,
-        photo_type: opts.photo_type ?? opts.context,
-        season: opts.season || 'shared',
-        year: opts.year ?? new Date().getFullYear(),
-        ...(opts.category ? { category: opts.category } : {}),
-        ...(idKey && opts.entityId ? { [idKey]: opts.entityId } : {}),
-        ...(opts.metadata ?? {}),
-      };
-    };
+  const { editFiles, editor } = useImageEditor();
 
-    const open = (opts: OpenPhotoUploadOptions): Promise<UploadedPhoto[]> =>
+  /** Build the metadata object every entry point shares. */
+  const buildMetadata = useCallback((opts: PhotoUploadOptions): Record<string, unknown> => {
+    const idKey = resolveIdKey(opts.context, opts.idField);
+    return {
+      context: opts.context,
+      photo_type: opts.photo_type ?? opts.context,
+      season: opts.season || 'shared',
+      year: opts.year ?? new Date().getFullYear(),
+      ...(opts.category ? { category: opts.category } : {}),
+      ...(opts.isPublic ? { is_public: true } : {}),
+      ...(idKey && opts.entityId ? { [idKey]: opts.entityId } : {}),
+      ...(opts.metadata ?? {}),
+    };
+  }, []);
+
+  const open = useCallback(
+    (opts: OpenPhotoUploadOptions): Promise<UploadedPhoto[]> =>
       new Promise((resolve) => {
         const modal = document.createElement('photo-upload-modal');
         const meta = buildMetadata(opts);
@@ -127,7 +150,6 @@ export function usePhotoUpload(): UsePhotoUpload {
           modal.setAttribute(key.replace(/_/g, '-'), String(value));
         }
         if (opts.maxPhotos != null) modal.setAttribute('max-photos', String(opts.maxPhotos));
-        if (opts.isPublic) modal.setAttribute('is-public', 'true');
 
         const cleanup = () => {
           modal.removeEventListener('upload-complete', onComplete);
@@ -146,12 +168,12 @@ export function usePhotoUpload(): UsePhotoUpload {
         modal.addEventListener('upload-complete', onComplete);
         modal.addEventListener('upload-cancel', onCancel);
         document.body.appendChild(modal);
-      });
+      }),
+    [buildMetadata],
+  );
 
-    const uploadFiles = async (
-      files: File[] | FileList,
-      opts: PhotoUploadOptions,
-    ): Promise<UploadedPhoto[]> => {
+  const uploadFiles = useCallback(
+    async (files: File[] | FileList, opts: PhotoUploadOptions): Promise<UploadedPhoto[]> => {
       if (!files || (files as File[]).length === 0) return [];
       const service = document.createElement('photo-upload-service') as PhotoUploadServiceElement;
       try {
@@ -161,8 +183,45 @@ export function usePhotoUpload(): UsePhotoUpload {
       } finally {
         service.remove();
       }
-    };
+    },
+    [buildMetadata],
+  );
 
-    return { open, uploadFiles };
-  }, []);
+  const openWithEditor = useCallback(
+    async (opts: PhotoUploadOptions): Promise<UploadedPhoto[]> => {
+      const picked = await pickImageFiles();
+      if (picked.length === 0) return [];
+      const edited = await editFiles(picked);
+      return uploadFiles(edited, opts);
+    },
+    [editFiles, uploadFiles],
+  );
+
+  return useMemo(
+    () => ({ open, uploadFiles, openWithEditor, editor }),
+    [open, uploadFiles, openWithEditor, editor],
+  );
+}
+
+/** Open a transient native file picker and resolve with the chosen image files. */
+function pickImageFiles(): Promise<File[]> {
+  return new Promise((resolve) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.multiple = true;
+    input.style.display = 'none';
+    const cleanup = () => input.remove();
+    input.addEventListener('change', () => {
+      const files = Array.from(input.files ?? []);
+      cleanup();
+      resolve(files);
+    });
+    input.addEventListener('cancel', () => {
+      cleanup();
+      resolve([]);
+    });
+    document.body.appendChild(input);
+    input.click();
+  });
 }
