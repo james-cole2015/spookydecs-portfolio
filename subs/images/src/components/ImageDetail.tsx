@@ -103,6 +103,8 @@ export function ImageDetail({
       if (!updated) return; // 401 → redirected
 
       onPhotoUpdated?.(updated);
+      // Drop back to the detail view so the refreshed (cache-busted) image is shown.
+      navigate(viewPath);
       toast.showSuccess('Image updated. The thumbnail may take a few seconds to refresh.');
     } catch (e: any) {
       toast.showError(e?.message ?? 'Failed to update image');
