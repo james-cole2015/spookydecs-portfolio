@@ -53,7 +53,7 @@ export default function RecordFormPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const toast = useToast();
-  const { open: openPhotoUpload } = usePhotoUpload();
+  const { openWithEditor: openPhotoUpload, editor: photoEditor } = usePhotoUpload();
   const isEdit = !!recordId;
   const prefilledItemId = routeItemId || searchParams.get('item_id') || '';
 
@@ -209,7 +209,6 @@ export default function RecordFormPage() {
       photo_type: recordType || 'maintenance',
       season: (selectedItem?.season as string) || 'shared',
       entityId: recordId,
-      maxPhotos: 3,
     });
     const ids = photos.map((p) => p.photo_id);
     if (ids.length > 0) {
@@ -467,6 +466,7 @@ export default function RecordFormPage() {
           </Button>
         </div>
       </form>
+      {photoEditor}
     </div>
   );
 }

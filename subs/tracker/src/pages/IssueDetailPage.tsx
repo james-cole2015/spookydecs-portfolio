@@ -163,13 +163,12 @@ export default function IssueDetailPage() {
 
   const uploadScreenshot = async () => {
     if (!issue) return;
-    const uploaded = await photoUpload.open({
+    const uploaded = await photoUpload.openWithEditor({
       context: 'tracker',
       idField: 'record_id',
       entityId: String(issue.issue_number),
       photo_type: 'screenshot',
       season: 'shared',
-      maxPhotos: 5,
     });
     if (!uploaded.length) return;
     const photos = uploaded.map((p) => ({
@@ -494,6 +493,7 @@ export default function IssueDetailPage() {
           )}
         </div>
       </div>
+      {photoUpload.editor}
     </div>
   );
 }
