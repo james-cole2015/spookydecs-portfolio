@@ -4,7 +4,7 @@
  * modes, tag pills, Claude-Vision suggest-tags, entity reference links, gallery
  * metadata, category-driven dynamic fields, and form collection.
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Button,
@@ -81,6 +81,16 @@ export function ImageDetail({
   const [editWarnOpen, setEditWarnOpen] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
   const [processing, setProcessing] = useState(false);
+  // Show the just-edited bytes immediately from memory: CloudFront ignores the ?v= query in
+  // its cache key, so the CDN can serve stale bytes for a few seconds after the invalidation.
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  // Revoke the object URL when it's replaced or the component unmounts.
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
 
   async function handleEditApply(blob: Blob) {
     setEditorOpen(false);
@@ -103,9 +113,9 @@ export function ImageDetail({
       if (!updated) return; // 401 → redirected
 
       onPhotoUpdated?.(updated);
-      // Drop back to the detail view so the refreshed (cache-busted) image is shown.
-      navigate(viewPath);
-      toast.showSuccess('Image updated. The thumbnail may take a few seconds to refresh.');
+      // Render the edited bytes instantly from the local blob, independent of CDN propagation.
+      setPreviewUrl(URL.createObjectURL(blob));
+      toast.showSuccess('Image updated. The CDN copy refreshes within a few seconds.');
     } catch (e: any) {
       toast.showError(e?.message ?? 'Failed to update image');
     } finally {
@@ -118,7 +128,7 @@ export function ImageDetail({
       <div className="group relative">
         <a href={photo.cloudfront_url} target="_blank" rel="noopener noreferrer">
           <img
-            src={photo.cloudfront_url}
+            src={previewUrl ?? photo.cloudfront_url}
             alt={photo.caption || 'Image'}
             className="w-full rounded-large object-contain"
           />
