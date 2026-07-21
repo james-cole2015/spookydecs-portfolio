@@ -33,6 +33,7 @@
   "dependencies": {
     "pdfjs-dist": "^4.10.38",
     "photoswipe": "^5.4.4",
+    "react-easy-crop": "^5.5.7",
     "react-photoswipe-gallery": "^4.1.2"
   },
   "peerDependencies": {

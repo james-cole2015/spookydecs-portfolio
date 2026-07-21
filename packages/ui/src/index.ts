@@ -6,6 +6,12 @@ export { useToast } from './hooks/useToast';
 export type { ToastApi } from './hooks/useToast';
 export { usePhotoUpload } from './hooks/usePhotoUpload';
 export type { UsePhotoUpload, PhotoUploadOptions, OpenPhotoUploadOptions, UploadedPhoto } from './hooks/usePhotoUpload';
+export { useImageEditor } from './hooks/useImageEditor';
+export type { UseImageEditor } from './hooks/useImageEditor';
+export { ImageEditorModal } from './components/ImageEditorModal';
+export type { ImageEditorModalProps } from './components/ImageEditorModal';
+export { getEditedImage, createImage } from './lib/imageCanvas';
+export type { ImageSource, ImageTransforms, CropPixels } from './lib/imageCanvas';
 export { useReceiptExtractor } from './hooks/useReceiptExtractor';
 export type {
   UseReceiptExtractor,
