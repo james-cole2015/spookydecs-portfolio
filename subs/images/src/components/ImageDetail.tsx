@@ -77,9 +77,43 @@ export function ImageDetail({
   const fromSuffix = from ? `?from=${from}` : '';
   const viewPath = `/images/${photo.photo_id}${fromSuffix}`;
 
+  // In-place image re-edit (#483) — offered on the edit page via an overlay on the image.
+  const [editWarnOpen, setEditWarnOpen] = useState(false);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [processing, setProcessing] = useState(false);
+
+  async function handleEditApply(blob: Blob) {
+    setEditorOpen(false);
+    setProcessing(true);
+    try {
+      const presigned = await presignReplace(photo.photo_id, {
+        content_type: blob.type,
+        file_size: blob.size,
+      });
+      if (!presigned) return; // 401 → redirected
+
+      const putRes = await fetch(presigned.presigned_url, {
+        method: 'PUT',
+        body: blob,
+        headers: { 'Content-Type': blob.type },
+      });
+      if (!putRes.ok) throw new Error(`Upload failed: HTTP ${putRes.status}`);
+
+      const updated = await reprocess(photo.photo_id);
+      if (!updated) return; // 401 → redirected
+
+      onPhotoUpdated?.(updated);
+      toast.showSuccess('Image updated. The thumbnail may take a few seconds to refresh.');
+    } catch (e: any) {
+      toast.showError(e?.message ?? 'Failed to update image');
+    } finally {
+      setProcessing(false);
+    }
+  }
+
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-      <div>
+      <div className="group relative">
         <a href={photo.cloudfront_url} target="_blank" rel="noopener noreferrer">
           <img
             src={photo.cloudfront_url}
@@ -87,6 +121,19 @@ export function ImageDetail({
             className="w-full rounded-large object-contain"
           />
         </a>
+        {editMode && (
+          <Button
+            size="sm"
+            color="secondary"
+            variant="solid"
+            startContent={<span aria-hidden>✎</span>}
+            isLoading={processing}
+            onPress={() => setEditWarnOpen(true)}
+            className="absolute right-3 top-3 opacity-90 shadow-md transition-opacity group-hover:opacity-100"
+          >
+            Edit Image
+          </Button>
+        )}
       </div>
       {editMode ? (
         <EditForm photo={photo} viewPath={viewPath} fromSuffix={fromSuffix} />
@@ -98,12 +145,32 @@ export function ImageDetail({
           fromSuffix={fromSuffix}
           onDeleted={() => navigate('/images/list')}
           onEdit={() => navigate(`/images/${photo.photo_id}/edit${fromSuffix}`)}
-          onPhotoUpdated={onPhotoUpdated}
           toastError={(m) => toast.showError(m)}
           toastSuccess={(m) => toast.showSuccess(m)}
           navigate={navigate}
         />
       )}
+
+      <ConfirmDialog
+        isOpen={editWarnOpen}
+        title="Edit this image?"
+        body="Editing permanently replaces the original image — the current version cannot be recovered. The photo's ID and all its links are kept."
+        confirmLabel="Continue"
+        isDestructive
+        onConfirm={() => {
+          setEditWarnOpen(false);
+          setEditorOpen(true);
+        }}
+        onClose={() => setEditWarnOpen(false)}
+      />
+
+      <ImageEditorModal
+        isOpen={editorOpen}
+        source={editorOpen ? photo.cloudfront_url : null}
+        onApply={handleEditApply}
+        onSkip={() => setEditorOpen(false)}
+        onClose={() => setEditorOpen(false)}
+      />
     </div>
   );
 }
@@ -118,7 +185,6 @@ function ViewPanel({
   maintUrl,
   onDeleted,
   onEdit,
-  onPhotoUpdated,
   toastError,
   toastSuccess,
   navigate,
@@ -129,16 +195,12 @@ function ViewPanel({
   fromSuffix: string;
   onDeleted: () => void;
   onEdit: () => void;
-  onPhotoUpdated?: (updated: Photo) => void;
   toastError: (m: string) => void;
   toastSuccess: (m: string) => void;
   navigate: ReturnType<typeof useNavigate>;
 }) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [editWarnOpen, setEditWarnOpen] = useState(false);
-  const [editorOpen, setEditorOpen] = useState(false);
-  const [processing, setProcessing] = useState(false);
 
   const category = deriveCategory(photo);
   const categoryConfig = IMAGES_CONFIG.CATEGORIES[category] || { label: 'Unknown', photoType: '', requiredFields: [] };
@@ -171,36 +233,6 @@ function ViewPanel({
     }
   }
 
-  // In-place re-edit (#483): overwrite the existing s3_key with edited bytes, keeping photo_id.
-  async function handleEditApply(blob: Blob) {
-    setEditorOpen(false);
-    setProcessing(true);
-    try {
-      const presigned = await presignReplace(photo.photo_id, {
-        content_type: blob.type,
-        file_size: blob.size,
-      });
-      if (!presigned) return; // 401 → redirected
-
-      const putRes = await fetch(presigned.presigned_url, {
-        method: 'PUT',
-        body: blob,
-        headers: { 'Content-Type': blob.type },
-      });
-      if (!putRes.ok) throw new Error(`Upload failed: HTTP ${putRes.status}`);
-
-      const updated = await reprocess(photo.photo_id);
-      if (!updated) return; // 401 → redirected
-
-      onPhotoUpdated?.(updated);
-      toastSuccess('Image updated. The thumbnail may take a few seconds to refresh.');
-    } catch (e: any) {
-      toastError(e?.message ?? 'Failed to update image');
-    } finally {
-      setProcessing(false);
-    }
-  }
-
   return (
     <Card>
       <CardBody className="flex flex-col gap-4">
@@ -209,15 +241,6 @@ function ViewPanel({
           <div className="flex gap-2">
             <Button size="sm" variant="flat" as="a" href={photo.cloudfront_url} target="_blank">
               View Full Size
-            </Button>
-            <Button
-              size="sm"
-              color="secondary"
-              variant="flat"
-              isLoading={processing}
-              onPress={() => setEditWarnOpen(true)}
-            >
-              Edit Image
             </Button>
             <Button size="sm" color="primary" onPress={onEdit}>
               Edit
@@ -320,27 +343,6 @@ function ViewPanel({
         isLoading={deleting}
         onConfirm={confirmDelete}
         onClose={() => setConfirmOpen(false)}
-      />
-
-      <ConfirmDialog
-        isOpen={editWarnOpen}
-        title="Edit this image?"
-        body="Editing permanently replaces the original image — the current version cannot be recovered. The photo's ID and all its links are kept."
-        confirmLabel="Continue"
-        isDestructive
-        onConfirm={() => {
-          setEditWarnOpen(false);
-          setEditorOpen(true);
-        }}
-        onClose={() => setEditWarnOpen(false)}
-      />
-
-      <ImageEditorModal
-        isOpen={editorOpen}
-        source={editorOpen ? photo.cloudfront_url : null}
-        onApply={handleEditApply}
-        onSkip={() => setEditorOpen(false)}
-        onClose={() => setEditorOpen(false)}
       />
     </Card>
   );
