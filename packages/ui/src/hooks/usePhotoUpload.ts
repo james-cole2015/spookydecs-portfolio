@@ -28,8 +28,9 @@
  * no id of its own and rides on `idea_id`) can override via `idField` or pass
  * additional `metadata`.
  */
-import { useCallback, useMemo, type ReactElement } from 'react';
+import { createElement, Fragment, useCallback, useMemo, type ReactElement } from 'react';
 import { useImageEditor } from './useImageEditor';
+import { useFilePicker } from './useFilePicker';
 
 /** A photo record as returned by the CDN upload pipeline (`/confirm`). */
 export interface UploadedPhoto {
@@ -112,18 +113,19 @@ export interface UsePhotoUpload {
     opts: PhotoUploadOptions,
   ) => Promise<UploadedPhoto[]>;
   /**
-   * Open a native file picker, run the chosen images through the shared pre-upload
-   * editor (`ImageEditorModal`), then upload the edited files via `uploadFiles`.
-   * Drop-in return shape identical to `open()`; resolves `[]` if nothing is picked.
-   * Mount `editor` once in the component tree for the modal to render.
+   * Open the shared dropzone (drag-and-drop / browse), run the chosen images through
+   * the shared pre-upload editor (`ImageEditorModal`), then upload the edited files via
+   * `uploadFiles`. Drop-in return shape identical to `open()`; resolves `[]` if nothing
+   * is picked. Mount `editor` once in the component tree for the modals to render.
    */
   openWithEditor: (opts: PhotoUploadOptions) => Promise<UploadedPhoto[]>;
-  /** The pre-upload editor element to mount once (paired with `openWithEditor`). */
+  /** The dropzone + editor elements to mount once (paired with `openWithEditor`). */
   editor: ReactElement;
 }
 
 export function usePhotoUpload(): UsePhotoUpload {
-  const { editFiles, editor } = useImageEditor();
+  const { editFiles, editor: editorModal } = useImageEditor();
+  const { pickFiles, picker } = useFilePicker();
 
   /** Build the metadata object every entry point shares. */
   const buildMetadata = useCallback((opts: PhotoUploadOptions): Record<string, unknown> => {
@@ -189,39 +191,22 @@ export function usePhotoUpload(): UsePhotoUpload {
 
   const openWithEditor = useCallback(
     async (opts: PhotoUploadOptions): Promise<UploadedPhoto[]> => {
-      const picked = await pickImageFiles();
+      const picked = await pickFiles();
       if (picked.length === 0) return [];
       const edited = await editFiles(picked);
       return uploadFiles(edited, opts);
     },
-    [editFiles, uploadFiles],
+    [pickFiles, editFiles, uploadFiles],
+  );
+
+  // One element mounts both the dropzone and the per-file editor modal.
+  const editor = useMemo(
+    () => createElement(Fragment, null, picker, editorModal),
+    [picker, editorModal],
   );
 
   return useMemo(
     () => ({ open, uploadFiles, openWithEditor, editor }),
     [open, uploadFiles, openWithEditor, editor],
   );
-}
-
-/** Open a transient native file picker and resolve with the chosen image files. */
-function pickImageFiles(): Promise<File[]> {
-  return new Promise((resolve) => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.multiple = true;
-    input.style.display = 'none';
-    const cleanup = () => input.remove();
-    input.addEventListener('change', () => {
-      const files = Array.from(input.files ?? []);
-      cleanup();
-      resolve(files);
-    });
-    input.addEventListener('cancel', () => {
-      cleanup();
-      resolve([]);
-    });
-    document.body.appendChild(input);
-    input.click();
-  });
 }
