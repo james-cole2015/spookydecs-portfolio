@@ -120,6 +120,66 @@ export async function updateImage(
   return (data.data || data).photo as Photo;
 }
 
+export interface PresignReplaceResult {
+  presigned_url: string;
+  s3_key: string;
+  content_type: string;
+}
+
+/**
+ * Presign a PUT against a photo's EXISTING s3_key so its bytes can be overwritten in place
+ * (post-upload re-edit, #483). The record and photo_id are preserved.
+ */
+export async function presignReplace(
+  photoId: string,
+  body: { content_type: string; file_size: number },
+): Promise<PresignReplaceResult | null> {
+  const apiBase = await getApiBase();
+  const response = await fetch(`${apiBase}/${photoId}/presign-replace`, {
+    method: 'POST',
+    headers: auth().buildHeaders(),
+    body: JSON.stringify(body),
+  });
+
+  if (response.status === 401) {
+    await auth().redirectToLogin();
+    return null;
+  }
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || `Failed to presign replace: HTTP ${response.status}`);
+  }
+
+  const d = await response.json();
+  return (d.data ?? d) as PresignReplaceResult;
+}
+
+/**
+ * After overwriting the object, invalidate the CDN and cache-bust the stored URLs (#483).
+ * Returns the updated Photo (bumped updated_at + ?v= on cloudfront/thumb URLs).
+ */
+export async function reprocess(photoId: string): Promise<Photo | null> {
+  const apiBase = await getApiBase();
+  const response = await fetch(`${apiBase}/${photoId}/reprocess`, {
+    method: 'POST',
+    headers: auth().buildHeaders(),
+  });
+
+  if (response.status === 401) {
+    await auth().redirectToLogin();
+    return null;
+  }
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || `Failed to reprocess image: HTTP ${response.status}`);
+  }
+
+  const d = await response.json();
+  return (d.data ?? d) as Photo;
+}
+
 export async function patchImage(
   photoId: string,
   updates: Record<string, unknown>,
