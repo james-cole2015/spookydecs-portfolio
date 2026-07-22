@@ -1,6 +1,6 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { PageContainer, LoadingState, AppHeader, useAuth } from '@spookydecs/ui';
+import { PageContainer, LoadingState, AppHeader } from '@spookydecs/ui';
 import TrackerNav from './components/TrackerNav';
 
 // Lazy-load pages so each route is its own chunk (playbook pattern: mirrors the
@@ -18,22 +18,8 @@ export default function App() {
   // vanilla app, so suppress TrackerNav there.
   const showNav = pathname !== '/';
 
-  // Env-access gate — ports the vanilla app.js boot check
-  // (`SpookyAuth.enforceEnvAccess()`). tracker is a dev-only internal admin tool,
-  // so this keeps it locked to the matching environment. enforceEnvAccess()
-  // redirects internally and returns false on mismatch; render nothing while the
-  // redirect navigates away. Runs under ConfigProvider (config already resolved).
-  const [access, setAccess] = useState<'checking' | 'granted' | 'denied'>('checking');
-  const { enforceEnvAccess } = useAuth();
-
-  useEffect(() => {
-    const ok = enforceEnvAccess();
-    setAccess(ok ? 'granted' : 'denied');
-  }, [enforceEnvAccess]);
-
-  if (access === 'checking') return <LoadingState label="Checking access…" />;
-  if (access === 'denied') return null;
-
+  // Access gating (token presence + env claim) is handled by the shared AuthGate
+  // in main.tsx (#513), before this component ever mounts.
   return (
     <>
       <AppHeader pageTitle="Tracker" />

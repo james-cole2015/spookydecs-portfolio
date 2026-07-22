@@ -42,6 +42,7 @@ export { Breadcrumbs, PageContainer, PageHeader, LoadingState, ErrorState, Empty
 export type { Crumb } from './components/Layout';
 export { AppHeader } from './components/AppHeader';
 export type { AppHeaderProps } from './components/AppHeader';
+export { AuthGate } from './components/AuthGate';
 export {
   StatusChip,
   SeasonChip,

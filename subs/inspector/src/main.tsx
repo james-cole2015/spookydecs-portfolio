@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { HeroUIProvider, ToastProvider } from '@heroui/react';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
-import { ConfigProvider, ThemeProvider } from '@spookydecs/ui';
+import { AuthGate, ConfigProvider, ThemeProvider } from '@spookydecs/ui';
 import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
@@ -12,9 +12,11 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
       <HeroUIProvider>
         <ToastProvider placement="bottom-right" />
         <ConfigProvider>
-          <BrowserRouter>
-            <App />
-          </BrowserRouter>
+          <AuthGate>
+            <BrowserRouter>
+              <App />
+            </BrowserRouter>
+          </AuthGate>
         </ConfigProvider>
       </HeroUIProvider>
     </ThemeProvider>
