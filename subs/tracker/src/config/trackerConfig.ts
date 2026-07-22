@@ -120,6 +120,8 @@ export const MILESTONES: Milestone[] = [
   { name: "Macy's", status: 'not_planned' },
   { name: 'Christmastown', status: 'not_planned' },
   { name: 'The Express', status: 'not_planned' },
+  { name: 'Griswold', status: 'not_planned' },
+  { name: 'Zuzu', status: 'not_planned' },
 ];
 
 export function getAllMilestones(): Milestone[] {

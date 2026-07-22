@@ -8,6 +8,7 @@ import TrackerNav from './components/TrackerNav';
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const PriorityListPage = lazy(() => import('./pages/PriorityListPage'));
 const EpicsListPage = lazy(() => import('./pages/EpicsListPage'));
+const TimelinePage = lazy(() => import('./pages/TimelinePage'));
 const EpicDetailPage = lazy(() => import('./pages/EpicDetailPage'));
 const IssueDetailPage = lazy(() => import('./pages/IssueDetailPage'));
 const CreateIssuePage = lazy(() => import('./pages/CreateIssuePage'));
@@ -27,11 +28,12 @@ export default function App() {
         {showNav && <TrackerNav />}
         <Suspense fallback={<LoadingState />}>
           <Routes>
-            {/* The 6 routes ported verbatim from the vanilla Navigo router (deep
-                links intact). There is no /timeline route in the source app. */}
+            {/* Routes ported from the vanilla Navigo router (deep links intact),
+                plus /timeline — the epic-sequencing view added in #514. */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/priority" element={<PriorityListPage />} />
             <Route path="/new-issue" element={<CreateIssuePage />} />
+            <Route path="/timeline" element={<TimelinePage />} />
             <Route path="/epics" element={<EpicsListPage />} />
             <Route path="/epics/:slug" element={<EpicDetailPage />} />
             <Route path="/epics/:slug/:issue" element={<IssueDetailPage />} />
