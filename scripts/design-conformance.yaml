@@ -1,0 +1,41 @@
+# Design-conformance exceptions manifest
+# -----------------------------------------------------------------------------
+# Per-sub allowlist consumed by scripts/check_design_conformance.py. Each key is
+# a sub name; its value is the list of conformance check-ids that are SUPPRESSED
+# for that sub (findings of those ids are dropped, not emitted). The sentinel
+# `all` skips the sub entirely.
+#
+# This file mirrors the SANCTIONED exceptions in design.md §8 only. The §7
+# conformance matrix's `✕` drift marks are NOT exceptions — they are findings the
+# checker is meant to surface, so they do not belong here. Adding an entry is a
+# data edit that must correspond to a justified §8 exception; adding a *code* path
+# is never the way to grant an exception.
+#
+# Canonical check-ids (must match check_design_conformance.py):
+#   root-tokens     F7 — no per-sub :root token block (src/ .css/.ts/.tsx)
+#   hardcoded-hex   F5 — no hardcoded hex in .tsx
+#   chip-helpers    F1 — no local *ChipColor helper definitions
+#   confirm-dialog  F2 — no local ConfirmDialog copy
+#   filter-bar      F3 — no local FilterBar / FilterPanel copy
+#   app-shell       F4 — AppHeader must not nest inside PageContainer (warn)
+#   season-casing   §5 — canonical season casing (Halloween / Christmas / Shared)
+# -----------------------------------------------------------------------------
+
+# §8: public-facing showcase — custom GalleryHeader (no auth nav) with no
+# PageContainer well, and a local popover/tag-chip FilterBar whose interaction
+# model the shared horizontal bar does not cover.
+gallery:
+  - app-shell
+  - filter-bar
+
+# §8: standalone Cognito auth flow, intentionally not migrated to React/HeroUI —
+# outside the design system entirely.
+auth:
+  - all
+
+# §8 (added by #503): seasonal theming defines :root token blocks in
+# src/season/seasons.css (data-season variants). This is the one legitimate
+# per-sub :root — it drives the public landing page's Halloween/Christmas/plain
+# theming, not an ad-hoc token override.
+landing:
+  - root-tokens

@@ -84,6 +84,7 @@ export default function ImageDetailPage({ editMode = false }: { editMode?: boole
         financeUrl={config.FINANCE_URL || ''}
         maintUrl={config.MAINT_URL || ''}
         from={from}
+        onPhotoUpdated={setPhoto}
       />
     </div>
   );

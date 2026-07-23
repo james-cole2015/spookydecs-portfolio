@@ -163,13 +163,12 @@ export default function IssueDetailPage() {
 
   const uploadScreenshot = async () => {
     if (!issue) return;
-    const uploaded = await photoUpload.open({
+    const uploaded = await photoUpload.openWithEditor({
       context: 'tracker',
       idField: 'record_id',
       entityId: String(issue.issue_number),
       photo_type: 'screenshot',
       season: 'shared',
-      maxPhotos: 5,
     });
     if (!uploaded.length) return;
     const photos = uploaded.map((p) => ({
@@ -463,6 +462,50 @@ export default function IssueDetailPage() {
           </div>
 
           <section>
+            <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-default-500">Blocked By</h2>
+            <InlineEdit
+              value={(issue.blocked_by || []).join('\n')}
+              onSave={(v) =>
+                patchIssue({
+                  blocked_by: v
+                    .split(/[\n,]/)
+                    .map((s) => s.trim().replace(/^#/, ''))
+                    .filter(Boolean),
+                })
+              }
+              multiline
+              rows={3}
+              emptyText="No blockers."
+              renderDisplay={() =>
+                (issue.blocked_by || []).length ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {(issue.blocked_by || []).map((n) =>
+                      currentEpic ? (
+                        <Link
+                          key={n}
+                          as={RouterLink}
+                          to={`/epics/${encodeURIComponent(currentEpic)}/${n}`}
+                          size="sm"
+                        >
+                          <Chip size="sm" variant="flat" color="warning">
+                            #{n}
+                          </Chip>
+                        </Link>
+                      ) : (
+                        <Chip key={n} size="sm" variant="flat" color="warning">
+                          #{n}
+                        </Chip>
+                      ),
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-sm text-default-400">No blockers.</span>
+                )
+              }
+            />
+          </section>
+
+          <section>
             <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-default-500">Acceptance Criteria</h2>
             <InlineEdit
               value={(issue.acceptance_criteria || []).join('\n')}
@@ -494,6 +537,7 @@ export default function IssueDetailPage() {
           )}
         </div>
       </div>
+      {photoUpload.editor}
     </div>
   );
 }

@@ -24,6 +24,7 @@ export default function CreateIssuePage() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [parentEpic, setParentEpic] = useState('');
+  const [blockedBy, setBlockedBy] = useState('');
   const [tasks, setTasks] = useState<TaskRow[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -60,8 +61,17 @@ export default function CreateIssuePage() {
 
     setSubmitting(true);
     try {
+      const bb = blockedBy
+        .split(/[,\n]/)
+        .map((s) => s.trim().replace(/^#/, ''))
+        .filter(Boolean);
       const created = asItem<Issue>(
-        await TrackerApi.issues.create({ title: title.trim(), description: description.trim(), parent_epic: parentEpic }),
+        await TrackerApi.issues.create({
+          title: title.trim(),
+          description: description.trim(),
+          parent_epic: parentEpic,
+          ...(bb.length ? { blocked_by: bb } : {}),
+        }),
       );
       const issueNumber = created?.issue_number;
 
@@ -119,6 +129,14 @@ export default function CreateIssuePage() {
             <SelectItem key={epicValue(epic)}>{epic.title || epicValue(epic)}</SelectItem>
           ))}
         </Select>
+
+        <Input
+          label="Blocked by"
+          placeholder="Comma-separated issue numbers, e.g. 41, 43"
+          value={blockedBy}
+          onValueChange={setBlockedBy}
+          variant="bordered"
+        />
 
         <div className="flex flex-col gap-2">
           <span className="text-sm text-default-600">

@@ -6,6 +6,16 @@ export { useToast } from './hooks/useToast';
 export type { ToastApi } from './hooks/useToast';
 export { usePhotoUpload } from './hooks/usePhotoUpload';
 export type { UsePhotoUpload, PhotoUploadOptions, OpenPhotoUploadOptions, UploadedPhoto } from './hooks/usePhotoUpload';
+export { useImageEditor } from './hooks/useImageEditor';
+export type { UseImageEditor } from './hooks/useImageEditor';
+export { useFilePicker } from './hooks/useFilePicker';
+export type { UseFilePicker } from './hooks/useFilePicker';
+export { ImageEditorModal } from './components/ImageEditorModal';
+export type { ImageEditorModalProps } from './components/ImageEditorModal';
+export { FileDropModal } from './components/FileDropModal';
+export type { FileDropModalProps } from './components/FileDropModal';
+export { getEditedImage, createImage } from './lib/imageCanvas';
+export type { ImageSource, ImageTransforms, CropPixels } from './lib/imageCanvas';
 export { useReceiptExtractor } from './hooks/useReceiptExtractor';
 export type {
   UseReceiptExtractor,
@@ -32,6 +42,7 @@ export { Breadcrumbs, PageContainer, PageHeader, LoadingState, ErrorState, Empty
 export type { Crumb } from './components/Layout';
 export { AppHeader } from './components/AppHeader';
 export type { AppHeaderProps } from './components/AppHeader';
+export { AuthGate } from './components/AuthGate';
 export {
   StatusChip,
   SeasonChip,

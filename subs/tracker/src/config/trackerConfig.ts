@@ -55,6 +55,7 @@ export interface Issue {
   tags?: string[];
   tasks?: Record<string, Task>;
   acceptance_criteria?: string[];
+  blocked_by?: string[];
   notes?: string[];
   resolution?: string;
   priority_rank?: number;
@@ -120,6 +121,8 @@ export const MILESTONES: Milestone[] = [
   { name: "Macy's", status: 'not_planned' },
   { name: 'Christmastown', status: 'not_planned' },
   { name: 'The Express', status: 'not_planned' },
+  { name: 'Griswold', status: 'not_planned' },
+  { name: 'Zuzu', status: 'not_planned' },
 ];
 
 export function getAllMilestones(): Milestone[] {

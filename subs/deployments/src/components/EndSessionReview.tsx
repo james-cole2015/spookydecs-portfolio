@@ -101,13 +101,12 @@ export function EndSessionReview({
   }, [isOpen]);
 
   async function handleAddPhoto(connectionId: string, itemId: string) {
-    const photos = await photoUpload.open({
+    const photos = await photoUpload.openWithEditor({
       context: 'deployment',
       photo_type: 'deployment',
       season: deployment.season as string,
       year: Number(deployment.year),
       entityId: itemId,
-      maxPhotos: 5,
       metadata: { 'deployment-id': deployment.deployment_id },
     });
     if (photos.length > 0) {
@@ -120,13 +119,12 @@ export function EndSessionReview({
   }
 
   async function handleAddPlacementPhoto(placementId: string, itemId: string) {
-    const photos = await photoUpload.open({
+    const photos = await photoUpload.openWithEditor({
       context: 'deployment',
       photo_type: 'deployment',
       season: deployment.season as string,
       year: Number(deployment.year),
       entityId: itemId,
-      maxPhotos: 5,
       metadata: { 'deployment-id': deployment.deployment_id },
     });
     if (photos.length > 0) {
@@ -156,6 +154,7 @@ export function EndSessionReview({
   const missingPhotos = totalConnections - connectionsWithPhotos;
 
   return (
+    <>
     <Modal isOpen={isOpen} onClose={onClose} backdrop="blur" size="2xl" scrollBehavior="inside">
       <ModalContent>
         <ModalHeader>End Session — Review &amp; Add Photos</ModalHeader>
@@ -335,5 +334,7 @@ export function EndSessionReview({
         </ModalFooter>
       </ModalContent>
     </Modal>
+    {photoUpload.editor}
+    </>
   );
 }

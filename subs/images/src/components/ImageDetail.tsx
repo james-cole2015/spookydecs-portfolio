@@ -4,7 +4,7 @@
  * modes, tag pills, Claude-Vision suggest-tags, entity reference links, gallery
  * metadata, category-driven dynamic fields, and form collection.
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Button,
@@ -17,9 +17,9 @@ import {
   SelectItem,
   Textarea,
 } from '@heroui/react';
-import { ConfirmDialog, useToast } from '@spookydecs/ui';
+import { ConfirmDialog, ImageEditorModal, useToast } from '@spookydecs/ui';
 import { IMAGES_CONFIG, validateCategory, type CategoryConfig, type Photo } from '../config/imagesConfig';
-import { deleteImage, suggestTags, updateImage, type MatchedItem } from '../api/imagesApi';
+import { deleteImage, presignReplace, reprocess, suggestTags, updateImage, type MatchedItem } from '../api/imagesApi';
 
 /** Derive the category key from a photo's references + photo_type (verbatim port). */
 function deriveCategory(photo: Photo): string {
@@ -60,24 +60,92 @@ interface ImageDetailProps {
   financeUrl?: string;
   maintUrl?: string;
   from?: string;
+  /** Called after an in-place re-edit so the page can refresh its photo state (#483). */
+  onPhotoUpdated?: (updated: Photo) => void;
 }
 
-export function ImageDetail({ photo, editMode, financeUrl = '', maintUrl = '', from = '' }: ImageDetailProps) {
+export function ImageDetail({
+  photo,
+  editMode,
+  financeUrl = '',
+  maintUrl = '',
+  from = '',
+  onPhotoUpdated,
+}: ImageDetailProps) {
   const navigate = useNavigate();
   const toast = useToast();
   const fromSuffix = from ? `?from=${from}` : '';
   const viewPath = `/images/${photo.photo_id}${fromSuffix}`;
 
+  // In-place image re-edit (#483) — offered on the edit page via an overlay on the image.
+  const [editWarnOpen, setEditWarnOpen] = useState(false);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  // Show the just-edited bytes immediately from memory: CloudFront ignores the ?v= query in
+  // its cache key, so the CDN can serve stale bytes for a few seconds after the invalidation.
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  // Revoke the object URL when it's replaced or the component unmounts.
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
+  async function handleEditApply(blob: Blob) {
+    setEditorOpen(false);
+    setProcessing(true);
+    try {
+      const presigned = await presignReplace(photo.photo_id, {
+        content_type: blob.type,
+        file_size: blob.size,
+      });
+      if (!presigned) return; // 401 → redirected
+
+      const putRes = await fetch(presigned.presigned_url, {
+        method: 'PUT',
+        body: blob,
+        headers: { 'Content-Type': blob.type },
+      });
+      if (!putRes.ok) throw new Error(`Upload failed: HTTP ${putRes.status}`);
+
+      const updated = await reprocess(photo.photo_id);
+      if (!updated) return; // 401 → redirected
+
+      onPhotoUpdated?.(updated);
+      // Render the edited bytes instantly from the local blob, independent of CDN propagation.
+      setPreviewUrl(URL.createObjectURL(blob));
+      toast.showSuccess('Image updated. The CDN copy refreshes within a few seconds.');
+    } catch (e: any) {
+      toast.showError(e?.message ?? 'Failed to update image');
+    } finally {
+      setProcessing(false);
+    }
+  }
+
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-      <div>
+      <div className="group relative">
         <a href={photo.cloudfront_url} target="_blank" rel="noopener noreferrer">
           <img
-            src={photo.cloudfront_url}
+            src={previewUrl ?? photo.cloudfront_url}
             alt={photo.caption || 'Image'}
             className="w-full rounded-large object-contain"
           />
         </a>
+        {editMode && (
+          <Button
+            size="sm"
+            color="secondary"
+            variant="solid"
+            startContent={<span aria-hidden>✎</span>}
+            isLoading={processing}
+            onPress={() => setEditWarnOpen(true)}
+            className="absolute right-3 top-3 opacity-90 shadow-md transition-opacity group-hover:opacity-100"
+          >
+            Edit Image
+          </Button>
+        )}
       </div>
       {editMode ? (
         <EditForm photo={photo} viewPath={viewPath} fromSuffix={fromSuffix} />
@@ -94,6 +162,27 @@ export function ImageDetail({ photo, editMode, financeUrl = '', maintUrl = '', f
           navigate={navigate}
         />
       )}
+
+      <ConfirmDialog
+        isOpen={editWarnOpen}
+        title="Edit this image?"
+        body="Editing permanently replaces the original image — the current version cannot be recovered. The photo's ID and all its links are kept."
+        confirmLabel="Continue"
+        isDestructive
+        onConfirm={() => {
+          setEditWarnOpen(false);
+          setEditorOpen(true);
+        }}
+        onClose={() => setEditWarnOpen(false)}
+      />
+
+      <ImageEditorModal
+        isOpen={editorOpen}
+        source={editorOpen ? photo.cloudfront_url : null}
+        onApply={handleEditApply}
+        onSkip={() => setEditorOpen(false)}
+        onClose={() => setEditorOpen(false)}
+      />
     </div>
   );
 }

@@ -35,7 +35,7 @@ export default function BuildDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const toast = useToast();
-  const { open } = usePhotoUpload();
+  const { openWithEditor, editor } = usePhotoUpload();
   const { confirm, dialog } = useConfirm();
 
   const [idea, setIdea] = useState<Idea | null>(null);
@@ -126,7 +126,7 @@ export default function BuildDetailPage() {
 
   async function addBuildPhotos() {
     if (!idea) return;
-    const uploaded = await open({
+    const uploaded = await openWithEditor({
       context: 'idea',
       photo_type: 'build',
       entityId: idea.id,
@@ -374,6 +374,7 @@ export default function BuildDetailPage() {
         onSaved={() => setCostRefresh((n) => n + 1)}
       />
       <BuildCompleteWizard idea={idea} isOpen={wizardOpen} onClose={() => navigate('/')} />
+      {editor}
     </div>
   );
 }

@@ -19,6 +19,7 @@ import {
   ModalHeader,
   Select,
   SelectItem,
+  Switch,
 } from '@heroui/react';
 import {
   Breadcrumbs,
@@ -68,7 +69,7 @@ function sortGallery(photos: Photo[]): Photo[] {
 export default function GalleryManager() {
   const navigate = useNavigate();
   const toast = useToast();
-  const { open } = usePhotoUpload();
+  const { openWithEditor, editor } = usePhotoUpload();
 
   const [section, setSection] = useState<Section>('showcase');
   const [season, setSeason] = useState('');
@@ -84,6 +85,8 @@ export default function GalleryManager() {
   const [uploadPromptOpen, setUploadPromptOpen] = useState(false);
   const [promptSeason, setPromptSeason] = useState('');
   const [promptYear, setPromptYear] = useState(String(new Date().getFullYear()));
+  // Gallery uploads default Private; the switch opts a photo into the public gallery site.
+  const [promptPublic, setPromptPublic] = useState(false);
 
   // Post-upload (display name / location) step state.
   const [postUpload, setPostUpload] = useState<UploadedPhoto[] | null>(null);
@@ -161,12 +164,13 @@ export default function GalleryManager() {
     setUploadPromptOpen(false);
     const sectionConfig = IMAGES_CONFIG.CATEGORIES[`gallery_${section}`];
     try {
-      const uploaded = await open({
+      const uploaded = await openWithEditor({
         context: 'gallery',
         photo_type: sectionConfig.photoType,
         category: `gallery_${section}`,
         season: promptSeason,
         year: parseInt(promptYear, 10) || new Date().getFullYear(),
+        isPublic: promptPublic,
       });
       if (uploaded.length > 0) {
         toast.showSuccess(`${uploaded.length} photo(s) uploaded`);
@@ -206,6 +210,7 @@ export default function GalleryManager() {
               onPress={() => {
                 setPromptSeason(season || '');
                 setPromptYear(year || String(new Date().getFullYear()));
+                setPromptPublic(false);
                 setUploadPromptOpen(true);
               }}
             >
@@ -353,6 +358,20 @@ export default function GalleryManager() {
                 <SelectItem key={y}>{y}</SelectItem>
               ))}
             </Select>
+            <div className="flex flex-col gap-1">
+              <Switch isSelected={promptPublic} onValueChange={setPromptPublic}>
+                Public
+              </Switch>
+              {promptPublic ? (
+                <p className="text-tiny text-warning">
+                  This photo will be published to the public gallery at gallery.spookydecs.com.
+                </p>
+              ) : (
+                <p className="text-tiny text-default-500">
+                  Private — visible only in the admin gallery.
+                </p>
+              )}
+            </div>
           </ModalBody>
           <ModalFooter>
             <Button variant="light" onPress={() => setUploadPromptOpen(false)}>
@@ -426,6 +445,9 @@ export default function GalleryManager() {
         onConfirm={confirmDelete}
         onClose={() => setDeleteTarget(null)}
       />
+
+      {/* Step 2 — shared pre-upload editor (crop/rotate/brightness), one modal per file. */}
+      {editor}
     </div>
   );
 }

@@ -652,6 +652,12 @@
           <p class="highlight-desc">Every sub now runs on React + Vite + HeroUI in TypeScript, all sharing a single <code class="text-brand/70 text-xs">@spookydecs/ui</code> workspace package — the design system (theme, typography, layout, toasts, app header, photo gallery, receipt extractor) extracted into one published library instead of copied per sub. The migration off bespoke vanilla JS is complete; not a single vanilla sub remains.</p>
         </div>
 
+        <div class="highlight-card">
+          <div class="highlight-icon">📐</div>
+          <h4 class="highlight-title">Enforced Design-System Conformance</h4>
+          <p class="highlight-desc">A custom static-analysis check encodes the design spec's mechanical rules — no local chip helpers, no hardcoded hex, no per-sub token blocks, canonical season casing — with a per-sub exceptions manifest. It runs on every PR as a required, blocking GitHub Actions status check, so design-system drift fails CI instead of accumulating.</p>
+        </div>
+
       </div>
     </div>
   </section>
