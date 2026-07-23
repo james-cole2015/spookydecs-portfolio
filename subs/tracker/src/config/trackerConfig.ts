@@ -55,6 +55,7 @@ export interface Issue {
   tags?: string[];
   tasks?: Record<string, Task>;
   acceptance_criteria?: string[];
+  blocked_by?: string[];
   notes?: string[];
   resolution?: string;
   priority_rank?: number;
