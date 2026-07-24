@@ -112,7 +112,7 @@ export default function ViolationDetail() {
         if (ids && idx !== -1) {
           const nextId = ids[idx + 1] || ids[idx - 1];
           if (nextId) {
-            navigate(`/inspector/violations/${nextId}`);
+            navigate(`/violations/${nextId}`);
             return;
           }
         }
@@ -169,7 +169,7 @@ export default function ViolationDetail() {
       .catch(() => {});
   }
 
-  const crumbs = [{ label: 'Inspector', to: '/inspector' }, { label: 'Violation' }];
+  const crumbs = [{ label: 'Inspector', to: '/' }, { label: 'Violation' }];
 
   if (loading) {
     return (
@@ -215,7 +215,7 @@ export default function ViolationDetail() {
               size="sm"
               variant="flat"
               isDisabled={!hasPrev}
-              onPress={() => navigate(`/inspector/violations/${ids[navIdx - 1]}`)}
+              onPress={() => navigate(`/violations/${ids[navIdx - 1]}`)}
             >
               ← Prev
             </Button>
@@ -226,7 +226,7 @@ export default function ViolationDetail() {
               size="sm"
               variant="flat"
               isDisabled={!hasNext}
-              onPress={() => navigate(`/inspector/violations/${ids[navIdx + 1]}`)}
+              onPress={() => navigate(`/violations/${ids[navIdx + 1]}`)}
             >
               Next →
             </Button>
@@ -318,7 +318,7 @@ export default function ViolationDetail() {
                 <>
                   <dt className="text-default-500">Quick Links:</dt>
                   <dd className="flex flex-wrap gap-3">
-                    <Link href={`/inspector/items/${violation.entity_id}`} isExternal size="sm">
+                    <Link href={`/items/${violation.entity_id}`} isExternal size="sm">
                       Inspector Detail ↗
                     </Link>
                     {itemsAdminUrl && (

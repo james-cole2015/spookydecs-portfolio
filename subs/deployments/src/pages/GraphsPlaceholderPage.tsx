@@ -7,7 +7,7 @@ export default function GraphsPlaceholderPage() {
   return (
     <div className="flex flex-col items-center gap-4">
       <EmptyState icon="📊" title="Deployment Graphs" message="Coming soon…" />
-      <Button variant="flat" onPress={() => navigate('/deployments')}>
+      <Button variant="flat" onPress={() => navigate('/')}>
         ← Back to Deployments
       </Button>
     </div>

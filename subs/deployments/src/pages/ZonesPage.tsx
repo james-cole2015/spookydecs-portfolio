@@ -73,7 +73,7 @@ export default function ZonesPage() {
   }, [deploymentId]);
 
   if (loading) return <LoadingState label="Loading deployment zones…" />;
-  if (error) return <ErrorState message={error} onRetry={() => navigate('/deployments')} />;
+  if (error) return <ErrorState message={error} onRetry={() => navigate('/')} />;
 
   const status = deployment?.status || 'unknown';
   const teardownEnabled = ['completed', 'active_teardown', 'archived'].includes(status);
@@ -90,7 +90,7 @@ export default function ZonesPage() {
       description: 'Prepare totes and items for deployment',
       action: 'Stage Items',
       enabled: true,
-      to: `/deployments/builder/${deploymentId}/staging`,
+      to: `/builder/${deploymentId}/staging`,
     },
     {
       key: 'complete',
@@ -99,7 +99,7 @@ export default function ZonesPage() {
       description: 'Finalize all records, mark items as deployed, and lock the deployment.',
       action: 'Review & Complete',
       enabled: true,
-      to: `/deployments/builder/${deploymentId}/zones/complete`,
+      to: `/builder/${deploymentId}/zones/complete`,
     },
     {
       key: 'teardown',
@@ -108,7 +108,7 @@ export default function ZonesPage() {
       description: 'Begin removing items after the season ends and return them to storage.',
       action: teardownEnabled ? 'Start Teardown' : 'Available after completion',
       enabled: teardownEnabled,
-      to: `/deployments/builder/${deploymentId}/teardown`,
+      to: `/builder/${deploymentId}/teardown`,
     },
   ];
 
@@ -116,7 +116,7 @@ export default function ZonesPage() {
     <>
       <Breadcrumbs
         crumbs={[
-          { label: 'Deployments', to: '/deployments' },
+          { label: 'Deployments', to: '/' },
           { label: deployment?.deployment_id || deploymentId },
         ]}
       />
@@ -170,7 +170,7 @@ export default function ZonesPage() {
               isPressable
               isHoverable
               onPress={() =>
-                navigate(`/deployments/builder/${deploymentId}/zones/${zone.zone_code}`)
+                navigate(`/builder/${deploymentId}/zones/${zone.zone_code}`)
               }
               className="h-full"
             >

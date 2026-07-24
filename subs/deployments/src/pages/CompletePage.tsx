@@ -181,7 +181,7 @@ export default function CompletePage() {
       if (data.items_failed > 0) msg += ` (${data.items_failed} item(s) failed to update — check logs.)`;
       toast.showSuccess(msg);
       setConfirmOpen(false);
-      setTimeout(() => navigate(`/deployments/builder/${deploymentId}/zones`), 1500);
+      setTimeout(() => navigate(`/builder/${deploymentId}/zones`), 1500);
     } catch (e: any) {
       console.error('[Complete] Error:', e);
       let msg = `Failed to complete deployment: ${e?.message}`;
@@ -195,7 +195,7 @@ export default function CompletePage() {
 
   if (loading) return <LoadingState label="Loading deployment review…" />;
   if (error || !metadata)
-    return <ErrorState message={error || 'Failed to load'} onRetry={() => navigate(`/deployments/builder/${deploymentId}/zones`)} />;
+    return <ErrorState message={error || 'Failed to load'} onRetry={() => navigate(`/builder/${deploymentId}/zones`)} />;
 
   const stats = metadata.statistics || {};
   const totalItems = zones.reduce((sum, z) => sum + ((z as any).items_deployed?.length || z.items?.length || 0), 0);
@@ -205,8 +205,8 @@ export default function CompletePage() {
     <>
       <Breadcrumbs
         crumbs={[
-          { label: 'Deployments', to: '/deployments' },
-          { label: `${metadata.season} ${metadata.year}`, to: `/deployments/builder/${deploymentId}/zones` },
+          { label: 'Deployments', to: '/' },
+          { label: `${metadata.season} ${metadata.year}`, to: `/builder/${deploymentId}/zones` },
           { label: 'Complete Deployment' },
         ]}
       />
@@ -266,7 +266,7 @@ export default function CompletePage() {
                     return (
                       <HeroLink
                         key={s.session_id}
-                        href={`/deployments/builder/${deploymentId}/zones/${zone.zone_code}/sessions/${s.session_id}`}
+                        href={`/builder/${deploymentId}/zones/${zone.zone_code}/sessions/${s.session_id}`}
                         size="sm"
                         className="rounded-medium bg-default-100 px-2 py-1 text-secondary"
                       >
@@ -328,7 +328,7 @@ export default function CompletePage() {
 
       <Card className="sticky bottom-4">
         <CardBody className="flex-row flex-wrap items-center justify-between gap-4">
-          <Button variant="flat" onPress={() => navigate(`/deployments/builder/${deploymentId}/zones`)}>
+          <Button variant="flat" onPress={() => navigate(`/builder/${deploymentId}/zones`)}>
             ← Back to Zones
           </Button>
           <div className="flex flex-1 flex-wrap items-center justify-end gap-3">

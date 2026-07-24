@@ -77,7 +77,7 @@ export default function StatsDetailPage() {
 
   if (loading) return <LoadingState label="Loading deployment details…" />;
   if (error || !deployment)
-    return <ErrorState message={error || 'Failed to load'} onRetry={() => navigate('/deployments/stats')} />;
+    return <ErrorState message={error || 'Failed to load'} onRetry={() => navigate('/stats')} />;
 
   const d: any = deployment;
   const stats = d.statistics || {};
@@ -109,8 +109,8 @@ export default function StatsDetailPage() {
     <>
       <Breadcrumbs
         crumbs={[
-          { label: 'Deployments', to: '/deployments' },
-          { label: 'Stats', to: '/deployments/stats' },
+          { label: 'Deployments', to: '/' },
+          { label: 'Stats', to: '/stats' },
           { label: d.deployment_id },
         ]}
       />

@@ -14,10 +14,11 @@ export default function App() {
       <AppHeader pageTitle="Audit" />
       <PageContainer>
         <Suspense fallback={<LoadingState />}>
+          {/* Bare-root routing (#487): the audit subdomain is the namespace, so the
+              route is root-relative with no /audit prefix. */}
           <Routes>
-            <Route path="/audit" element={<RecordListPage />} />
-            {/* Preserve the /audit entry path; anything else returns to it. */}
-            <Route path="*" element={<Navigate to="/audit" replace />} />
+            <Route path="/" element={<RecordListPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
       </PageContainer>

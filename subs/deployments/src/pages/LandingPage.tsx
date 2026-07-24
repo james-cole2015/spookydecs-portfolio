@@ -21,7 +21,7 @@ const CARDS: OptionCard[] = [
     description:
       'Create and manage seasonal deployments by selecting items and organizing them into zones. Track deployment sessions and manage item placement throughout your display.',
     active: true,
-    route: '/deployments/builder',
+    route: '/builder',
   },
   {
     id: 'historical',
@@ -30,7 +30,7 @@ const CARDS: OptionCard[] = [
     description:
       'Browse past deployments and review how your displays have evolved over time. Filter by season and year to find specific deployment records.',
     active: true,
-    route: '/deployments/historical',
+    route: '/historical',
   },
   {
     id: 'graphs',
@@ -39,7 +39,7 @@ const CARDS: OptionCard[] = [
     description:
       'Visualize deployment trends and patterns with interactive charts. Analyze item usage, deployment timelines, and seasonal comparisons.',
     active: false,
-    route: '/deployments/graphs',
+    route: '/graphs',
   },
   {
     id: 'stats',
@@ -48,7 +48,7 @@ const CARDS: OptionCard[] = [
     description:
       'View comprehensive statistics about your deployments including average times, item counts, and performance metrics across all seasons.',
     active: true,
-    route: '/deployments/stats',
+    route: '/stats',
   },
 ];
 

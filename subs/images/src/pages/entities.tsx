@@ -110,7 +110,7 @@ export default function Entities() {
 
   return (
     <div>
-      <Breadcrumbs crumbs={[{ label: 'Images', to: '/images' }, { label: 'Entities' }]} />
+      <Breadcrumbs crumbs={[{ label: 'Images', to: '/' }, { label: 'Entities' }]} />
       <PageHeader
         title="Entities"
         actions={
@@ -151,7 +151,7 @@ export default function Entities() {
                 <Card
                   key={`${entity.type}-${entity.id}`}
                   isPressable
-                  onPress={() => navigate(`/images/entities/${entity.id}?type=${entity.type}`)}
+                  onPress={() => navigate(`/entities/${entity.id}?type=${entity.type}`)}
                   className="h-full"
                 >
                   <div className="aspect-square w-full overflow-hidden bg-content2">

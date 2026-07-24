@@ -117,7 +117,7 @@ export default function AboutPage() {
         <Typography type="h5" className="text-foreground">
           Ready to explore?
         </Typography>
-        <Button color="secondary" onPress={() => navigate('/admin')}>
+        <Button color="secondary" onPress={() => navigate('/')}>
           Return to Dashboard
         </Button>
       </div>

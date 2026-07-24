@@ -63,7 +63,7 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 3000,
       // Open straight to /admin (routes carry the prefix; bare root just redirects).
-      open: '/admin',
+      open: true,
       proxy: {
         '/devapi': {
           target: DEV_API,
