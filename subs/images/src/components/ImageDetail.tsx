@@ -75,7 +75,7 @@ export function ImageDetail({
   const navigate = useNavigate();
   const toast = useToast();
   const fromSuffix = from ? `?from=${from}` : '';
-  const viewPath = `/images/${photo.photo_id}${fromSuffix}`;
+  const viewPath = `/${photo.photo_id}${fromSuffix}`;
 
   // In-place image re-edit (#483) — offered on the edit page via an overlay on the image.
   const [editWarnOpen, setEditWarnOpen] = useState(false);
@@ -155,8 +155,8 @@ export function ImageDetail({
           financeUrl={financeUrl}
           maintUrl={maintUrl}
           fromSuffix={fromSuffix}
-          onDeleted={() => navigate('/images/list')}
-          onEdit={() => navigate(`/images/${photo.photo_id}/edit${fromSuffix}`)}
+          onDeleted={() => navigate('/list')}
+          onEdit={() => navigate(`/${photo.photo_id}/edit${fromSuffix}`)}
           toastError={(m) => toast.showError(m)}
           toastSuccess={(m) => toast.showSuccess(m)}
           navigate={navigate}
@@ -222,7 +222,7 @@ function ViewPanel({
     <button
       key={`${type}-${id}`}
       className="text-secondary underline-offset-2 hover:underline"
-      onClick={() => navigate(`/images/entities/${id}?type=${type}`)}
+      onClick={() => navigate(`/entities/${id}?type=${type}`)}
     >
       {label || id}
     </button>

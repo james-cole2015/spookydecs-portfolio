@@ -80,7 +80,7 @@ export default function ZoneDetailPage() {
     setBusy(true);
     try {
       await createSession(deploymentId, { zone_code: zoneCode });
-      navigate(`/deployments/builder/${deploymentId}/zones/${zoneCode}/session`);
+      navigate(`/builder/${deploymentId}/zones/${zoneCode}/session`);
     } catch (e: any) {
       console.error('[ZoneDetail] Error creating session:', e);
       toast.showError(e?.message || 'Failed to start session');
@@ -111,7 +111,7 @@ export default function ZoneDetailPage() {
     return (
       <ErrorState
         message={error || 'Zone not found'}
-        onRetry={() => navigate(`/deployments/builder/${deploymentId}/zones`)}
+        onRetry={() => navigate(`/builder/${deploymentId}/zones`)}
       />
     );
 
@@ -129,8 +129,8 @@ export default function ZoneDetailPage() {
     <>
       <Breadcrumbs
         crumbs={[
-          { label: 'Deployments', to: '/deployments' },
-          { label: deployment.deployment_id, to: `/deployments/builder/${deploymentId}/zones` },
+          { label: 'Deployments', to: '/' },
+          { label: deployment.deployment_id, to: `/builder/${deploymentId}/zones` },
           { label: zone.zone_name },
         ]}
       />
@@ -161,7 +161,7 @@ export default function ZoneDetailPage() {
                 color="primary"
                 startContent={<Play size={16} />}
                 onPress={() =>
-                  navigate(`/deployments/builder/${deploymentId}/zones/${zoneCode}/session`)
+                  navigate(`/builder/${deploymentId}/zones/${zoneCode}/session`)
                 }
               >
                 Resume Session
@@ -234,7 +234,7 @@ export default function ZoneDetailPage() {
         sessions={sessions}
         onSessionClick={(session) =>
           navigate(
-            `/deployments/builder/${deploymentId}/zones/${zoneCode}/sessions/${session.session_id}`,
+            `/builder/${deploymentId}/zones/${zoneCode}/sessions/${session.session_id}`,
           )
         }
       />

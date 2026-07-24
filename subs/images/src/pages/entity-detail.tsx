@@ -133,8 +133,8 @@ export default function EntityDetail() {
       <div>
         <Breadcrumbs
           crumbs={[
-            { label: 'Images', to: '/images' },
-            { label: 'Entities', to: '/images/entities' },
+            { label: 'Images', to: '/' },
+            { label: 'Entities', to: '/entities' },
             { label: entityId },
           ]}
         />
@@ -148,14 +148,14 @@ export default function EntityDetail() {
       <div>
         <Breadcrumbs
           crumbs={[
-            { label: 'Images', to: '/images' },
-            { label: 'Entities', to: '/images/entities' },
+            { label: 'Images', to: '/' },
+            { label: 'Entities', to: '/entities' },
             { label: entityId },
           ]}
         />
         <EmptyState icon="🖼️" title="No photos" message={`No photos found for ${entityId}.`} />
         <div className="flex justify-center">
-          <Button variant="flat" onPress={() => navigate('/images/entities')}>
+          <Button variant="flat" onPress={() => navigate('/entities')}>
             Back to Entities
           </Button>
         </div>
@@ -198,8 +198,8 @@ export default function EntityDetail() {
     <div>
       <Breadcrumbs
         crumbs={[
-          { label: 'Images', to: '/images' },
-          { label: 'Entities', to: '/images/entities' },
+          { label: 'Images', to: '/' },
+          { label: 'Entities', to: '/entities' },
           { label: entityTitle || entityId },
         ]}
       />
@@ -283,7 +283,7 @@ export default function EntityDetail() {
                   <Button
                     size="sm"
                     variant="flat"
-                    onPress={() => navigate(`/images/${photo.photo_id}?from=entity`)}
+                    onPress={() => navigate(`/${photo.photo_id}?from=entity`)}
                   >
                     View Record
                   </Button>

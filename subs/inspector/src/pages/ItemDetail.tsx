@@ -37,7 +37,7 @@ export default function ItemDetail() {
 
   const shortName =
     violations.length > 0 ? violations[0].violation_details?.item_short_name || itemId : itemId;
-  const crumbs = [{ label: 'Inspector', to: '/inspector' }, { label: shortName }];
+  const crumbs = [{ label: 'Inspector', to: '/' }, { label: shortName }];
 
   if (loading) {
     return (

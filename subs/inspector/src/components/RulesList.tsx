@@ -154,7 +154,7 @@ export function RulesList({ rules, violations, onReload }: RulesListProps) {
                         <Button
                           size="sm"
                           variant="flat"
-                          onPress={() => navigate(`/inspector/rules/${rule.rule_id}`)}
+                          onPress={() => navigate(`/rules/${rule.rule_id}`)}
                         >
                           View Details
                         </Button>
@@ -218,7 +218,7 @@ export function RulesList({ rules, violations, onReload }: RulesListProps) {
                                       size="sm"
                                       variant="flat"
                                       onPress={() =>
-                                        navigate(`/inspector/violations/${v.violation_id}`)
+                                        navigate(`/violations/${v.violation_id}`)
                                       }
                                     >
                                       View
@@ -232,7 +232,7 @@ export function RulesList({ rules, violations, onReload }: RulesListProps) {
                             <Button
                               size="sm"
                               variant="light"
-                              onPress={() => navigate(`/inspector/rules/${rule.rule_id}`)}
+                              onPress={() => navigate(`/rules/${rule.rule_id}`)}
                             >
                               See More Violations ({open.length - 5} more)
                             </Button>

@@ -92,7 +92,7 @@ export function ItemViolationsView({ violations }: { violations: Violation[] }) 
                         <Button
                           size="sm"
                           variant="flat"
-                          onPress={() => navigate(`/inspector/violations/${v.violation_id}`)}
+                          onPress={() => navigate(`/violations/${v.violation_id}`)}
                         >
                           View
                         </Button>

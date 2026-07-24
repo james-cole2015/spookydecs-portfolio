@@ -28,7 +28,7 @@ export function ImageCard({ photo }: { photo: Photo }) {
     <Card className="flex h-full flex-col overflow-hidden">
       <div
         className="relative aspect-square w-full cursor-pointer overflow-hidden bg-content2"
-        onClick={() => navigate(`/images/${photo.photo_id}`)}
+        onClick={() => navigate(`/${photo.photo_id}`)}
       >
         <img
           src={photo.thumb_cloudfront_url || photo.cloudfront_url}
@@ -66,10 +66,10 @@ export function ImageCard({ photo }: { photo: Photo }) {
       </CardBody>
 
       <CardFooter className="gap-2 pt-0">
-        <Button size="sm" variant="flat" onPress={() => navigate(`/images/${photo.photo_id}`)}>
+        <Button size="sm" variant="flat" onPress={() => navigate(`/${photo.photo_id}`)}>
           View
         </Button>
-        <Button size="sm" color="primary" onPress={() => navigate(`/images/${photo.photo_id}/edit`)}>
+        <Button size="sm" color="primary" onPress={() => navigate(`/${photo.photo_id}/edit`)}>
           Edit
         </Button>
       </CardFooter>

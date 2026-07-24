@@ -149,7 +149,7 @@ export default function ConnectionDetailPage() {
     return (
       <ErrorState
         message={error || 'Connection not found'}
-        onRetry={() => navigate(`/deployments/builder/${deploymentId}/zones`)}
+        onRetry={() => navigate(`/builder/${deploymentId}/zones`)}
       />
     );
 
@@ -160,11 +160,11 @@ export default function ConnectionDetailPage() {
     <>
       <Breadcrumbs
         crumbs={[
-          { label: 'Zones', to: `/deployments/builder/${deploymentId}/zones` },
-          { label: zone.zone_name, to: `/deployments/builder/${deploymentId}/zones/${zone.zone_code}` },
+          { label: 'Zones', to: `/builder/${deploymentId}/zones` },
+          { label: zone.zone_name, to: `/builder/${deploymentId}/zones/${zone.zone_code}` },
           {
             label: `Session ${truncateId(c.session_id)}`,
-            to: `/deployments/builder/${deploymentId}/zones/${zone.zone_code}/sessions/${c.session_id}`,
+            to: `/builder/${deploymentId}/zones/${zone.zone_code}/sessions/${c.session_id}`,
           },
           { label: `Connection ${truncateId(c.connection_id)}` },
         ]}

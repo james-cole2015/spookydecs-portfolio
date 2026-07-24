@@ -76,15 +76,15 @@ export default function ImagesList() {
 
   return (
     <div>
-      <Breadcrumbs crumbs={[{ label: 'Images', to: '/images' }, { label: 'Image Admin' }]} />
+      <Breadcrumbs crumbs={[{ label: 'Images', to: '/' }, { label: 'Image Admin' }]} />
       <PageHeader
         title="Images"
         actions={
           <>
-            <Button variant="flat" onPress={() => navigate('/images/gallery')}>
+            <Button variant="flat" onPress={() => navigate('/gallery')}>
               🎨 Gallery Manager
             </Button>
-            <Button variant="flat" onPress={() => navigate('/images/browse')}>
+            <Button variant="flat" onPress={() => navigate('/browse')}>
               Browse Photos
             </Button>
           </>

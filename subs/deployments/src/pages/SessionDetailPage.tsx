@@ -80,7 +80,7 @@ export default function SessionDetailPage() {
     return (
       <ErrorState
         message={error || 'Session not found'}
-        onRetry={() => navigate(`/deployments/builder/${deploymentId}/zones/${zoneCode}`)}
+        onRetry={() => navigate(`/builder/${deploymentId}/zones/${zoneCode}`)}
       />
     );
 
@@ -94,8 +94,8 @@ export default function SessionDetailPage() {
     <>
       <Breadcrumbs
         crumbs={[
-          { label: 'Zones', to: `/deployments/builder/${deploymentId}/zones` },
-          { label: zone.zone_name, to: `/deployments/builder/${deploymentId}/zones/${zoneCode}` },
+          { label: 'Zones', to: `/builder/${deploymentId}/zones` },
+          { label: zone.zone_name, to: `/builder/${deploymentId}/zones/${zoneCode}` },
           { label: `Session ${truncateSessionId(session.session_id)}` },
         ]}
       />
@@ -159,7 +159,7 @@ export default function SessionDetailPage() {
           {connectionIds.map((connId) => (
             <a
               key={connId}
-              href={`/deployments/builder/${deploymentId}/${session.session_id}/${connId}`}
+              href={`/builder/${deploymentId}/${session.session_id}/${connId}`}
               className="flex items-center gap-3 rounded-medium border border-default-200 p-3 hover:border-secondary"
             >
               <span className="text-xl">🔌</span>

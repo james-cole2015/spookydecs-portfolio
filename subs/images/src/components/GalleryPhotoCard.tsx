@@ -89,7 +89,7 @@ export function GalleryPhotoCard({ photo, onUpdate, onDelete }: Props) {
             size="sm"
             variant="flat"
             startContent={<Pencil size={14} />}
-            onPress={() => navigate(`/images/${photo.photo_id}/edit?from=gallery`)}
+            onPress={() => navigate(`/${photo.photo_id}/edit?from=gallery`)}
           >
             Edit
           </Button>
