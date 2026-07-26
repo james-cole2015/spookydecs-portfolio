@@ -200,7 +200,7 @@ export default function GalleryManager() {
 
   return (
     <div>
-      <Breadcrumbs crumbs={[{ label: 'Images', to: '/images' }, { label: 'Gallery Manager' }]} />
+      <Breadcrumbs crumbs={[{ label: 'Images', to: '/' }, { label: 'Gallery Manager' }]} />
       <PageHeader
         title="Gallery Management"
         actions={
@@ -216,7 +216,7 @@ export default function GalleryManager() {
             >
               Upload Photo
             </Button>
-            <Button variant="flat" onPress={() => navigate('/images/list')}>
+            <Button variant="flat" onPress={() => navigate('/list')}>
               ← Back to Admin
             </Button>
           </>

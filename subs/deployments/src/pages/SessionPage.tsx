@@ -249,7 +249,7 @@ export default function SessionPage() {
     }
     const response = await endSession(deploymentId, session!.session_id, { notes });
     if (!response?.success) throw new Error('Failed to end session');
-    navigate(`/deployments/builder/${deploymentId}/zones/${zoneCode}`);
+    navigate(`/builder/${deploymentId}/zones/${zoneCode}`);
   }
 
   if (loading) return <LoadingState label="Loading session…" />;
@@ -260,12 +260,12 @@ export default function SessionPage() {
     <>
       <Breadcrumbs
         crumbs={[
-          { label: 'Deployments', to: '/deployments' },
+          { label: 'Deployments', to: '/' },
           {
             label: `${deployment.season} ${deployment.year}`,
-            to: `/deployments/builder/${deploymentId}/zones`,
+            to: `/builder/${deploymentId}/zones`,
           },
-          { label: zone.zone_name, to: `/deployments/builder/${deploymentId}/zones/${zoneCode}` },
+          { label: zone.zone_name, to: `/builder/${deploymentId}/zones/${zoneCode}` },
           { label: 'Active Session' },
         ]}
       />

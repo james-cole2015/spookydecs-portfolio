@@ -127,7 +127,7 @@ export default function RuleDetail() {
     try {
       await InspectorAPI.deleteRule(rule.rule_id);
       toast.showSuccess('Rule deactivated successfully');
-      setTimeout(() => navigate('/inspector'), 800);
+      setTimeout(() => navigate('/'), 800);
     } catch (e) {
       toast.showError(`Failed to deactivate rule: ${(e as Error).message}`);
       setDeactivating(false);
@@ -139,7 +139,7 @@ export default function RuleDetail() {
     if (rule) setNavContext(tabViolations, tab, rule.rule_id);
   }
 
-  const crumbs = [{ label: 'Inspector', to: '/inspector' }, { label: rule?.rule_name || 'Rule' }];
+  const crumbs = [{ label: 'Inspector', to: '/' }, { label: rule?.rule_name || 'Rule' }];
 
   if (loading) {
     return (

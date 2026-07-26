@@ -106,7 +106,7 @@ export default function StatsPage() {
 
   return (
     <>
-      <Breadcrumbs crumbs={[{ label: 'Deployments', to: '/deployments' }, { label: 'Stats' }]} />
+      <Breadcrumbs crumbs={[{ label: 'Deployments', to: '/' }, { label: 'Stats' }]} />
       <PageHeader
         title="📊 Deployment Stats"
         subtitle="Performance metrics and history across all deployments"
@@ -159,7 +159,7 @@ export default function StatsPage() {
         <Table
           aria-label="Deployments"
           selectionMode="single"
-          onRowAction={(key) => navigate(`/deployments/stats/${key}`)}
+          onRowAction={(key) => navigate(`/stats/${key}`)}
         >
           <TableHeader>
             <TableColumn>DEPLOYMENT</TableColumn>

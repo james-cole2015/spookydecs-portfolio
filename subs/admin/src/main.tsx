@@ -16,8 +16,8 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
               claim before mounting the app (shared AuthGate, #513). */}
           <AuthGate>
             {/* No basename: admin is served at the bare root (admin.spookydecs.com)
-                and the routes carry the /admin prefix themselves (see App.tsx), so
-                bare root falls through the catch-all to the dashboard. */}
+                with root-relative routes and no /admin prefix (bare-root standard,
+                #487). Bare root renders the dashboard directly. */}
             <BrowserRouter>
               <App />
             </BrowserRouter>

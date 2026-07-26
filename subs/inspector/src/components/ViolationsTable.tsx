@@ -63,7 +63,7 @@ export function ViolationsTable({
 
   function open(v: Violation) {
     if (onOpenViolation) onOpenViolation(v.violation_id, active, tab);
-    navigate(`/inspector/violations/${v.violation_id}`);
+    navigate(`/violations/${v.violation_id}`);
   }
 
   function itemCell(v: Violation) {
@@ -71,7 +71,7 @@ export function ViolationsTable({
     if (v.entity_type !== 'Item') return name;
     return (
       <span className="flex items-center gap-2">
-        <Link href={`/inspector/items/${v.entity_id}`} size="sm" className="cursor-pointer">
+        <Link href={`/items/${v.entity_id}`} size="sm" className="cursor-pointer">
           {name}
         </Link>
         {itemsAdminUrl && (

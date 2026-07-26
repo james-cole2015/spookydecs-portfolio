@@ -19,28 +19,28 @@ const CARDS: OptionCard[] = [
     title: 'Images',
     description:
       'Browse and manage your photo library. Filter by season, type, and more. View metadata, references, and manage individual image records.',
-    route: '/images/list',
+    route: '/list',
   },
   {
     icon: '🎨',
     title: 'Gallery Manager',
     description:
       'Organize your photos into galleries. Arrange, reorder, and curate image collections for display.',
-    route: '/images/gallery',
+    route: '/gallery',
   },
   {
     icon: '📷',
     title: 'Photo Browser',
     description:
       'Explore your photo collection visually. Browse and search photos in an immersive layout.',
-    route: '/images/browse',
+    route: '/browse',
   },
   {
     icon: '📦',
     title: 'Entities',
     description:
       'Browse photos organized by item or storage entity. View all photos for a given decoration or storage unit.',
-    route: '/images/entities',
+    route: '/entities',
   },
 ];
 

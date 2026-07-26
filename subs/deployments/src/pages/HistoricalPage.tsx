@@ -238,7 +238,7 @@ export default function HistoricalPage() {
 
   return (
     <>
-      <Breadcrumbs crumbs={[{ label: 'Deployments', to: '/deployments' }, { label: 'Historical' }]} />
+      <Breadcrumbs crumbs={[{ label: 'Deployments', to: '/' }, { label: 'Historical' }]} />
       <PageHeader title="Historical Deployments" />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
@@ -257,7 +257,7 @@ export default function HistoricalPage() {
                 return (
                   <button
                     key={d.deployment_id}
-                    onClick={() => navigate(`/deployments/historical/${d.deployment_id}`)}
+                    onClick={() => navigate(`/historical/${d.deployment_id}`)}
                     className={`rounded-medium border p-3 text-left ${
                       isActive ? 'border-secondary bg-secondary-50/40' : 'border-default-200 hover:border-default-400'
                     }`}

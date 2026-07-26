@@ -30,7 +30,7 @@ function ConnectionsDetail({ session }: { session: Session }) {
         {connections.map((conn: any) => (
           <a
             key={conn.connection_id}
-            href={`/deployments/builder/${session.deployment_id || ''}/${session.session_id}/${conn.connection_id}`}
+            href={`/builder/${session.deployment_id || ''}/${session.session_id}/${conn.connection_id}`}
             className="col-span-full grid grid-cols-subgrid items-center rounded-medium border border-default-200 bg-content1 p-2 hover:border-secondary"
           >
             <div className="col-start-2 min-w-0 text-right">

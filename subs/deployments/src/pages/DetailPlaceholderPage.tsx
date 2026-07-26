@@ -8,7 +8,7 @@ export default function DetailPlaceholderPage() {
   return (
     <div className="flex flex-col items-center gap-4">
       <EmptyState icon="📦" title="Deployment Detail" message={`Viewing: ${id}`} />
-      <Button variant="flat" onPress={() => navigate('/deployments')}>
+      <Button variant="flat" onPress={() => navigate('/')}>
         ← Back to Deployments
       </Button>
     </div>

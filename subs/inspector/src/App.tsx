@@ -15,12 +15,14 @@ export default function App() {
       <AppHeader pageTitle="Inspector" />
       <PageContainer>
         <Suspense fallback={<LoadingState />}>
+          {/* Bare-root routing (#487): the inspector subdomain is the namespace, so
+              routes are root-relative with no /inspector prefix. */}
           <Routes>
-            <Route path="/inspector" element={<Dashboard />} />
-            <Route path="/inspector/rules/:ruleId" element={<RuleDetail />} />
-            <Route path="/inspector/violations/:violationId" element={<ViolationDetail />} />
-            <Route path="/inspector/items/:itemId" element={<ItemDetail />} />
-            <Route path="*" element={<Navigate to="/inspector" replace />} />
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/rules/:ruleId" element={<RuleDetail />} />
+            <Route path="/violations/:violationId" element={<ViolationDetail />} />
+            <Route path="/items/:itemId" element={<ItemDetail />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
       </PageContainer>

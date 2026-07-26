@@ -20,20 +20,19 @@ export default function App() {
       <PageContainer>
         <Suspense fallback={<LoadingState />}>
           <Routes>
-            {/* All routes carry the /images prefix verbatim from the vanilla Navigo
-                router — the sub is served at the images subdomain root, but the
-                paths preserve /images so existing deep links keep working. */}
-            <Route path="/images" element={<LandingPage />} />
-            <Route path="/images/list" element={<ImagesListPage />} />
-            <Route path="/images/gallery" element={<GalleryManagerPage />} />
-            <Route path="/images/browse" element={<PhotoBrowserPage />} />
-            <Route path="/images/items" element={<ItemsPage />} />
-            <Route path="/images/entities" element={<EntitiesPage />} />
-            <Route path="/images/entities/:id" element={<EntityDetailPage />} />
-            <Route path="/images/:photoId/edit" element={<ImageDetailPage editMode />} />
-            <Route path="/images/:photoId" element={<ImageDetailPage />} />
-            {/* Root + anything else → landing (preserves the old "/" entry point). */}
-            <Route path="*" element={<Navigate to="/images" replace />} />
+            {/* Bare-root routing (#487): the images subdomain is the namespace, so
+                routes are root-relative with no /images prefix. */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/list" element={<ImagesListPage />} />
+            <Route path="/gallery" element={<GalleryManagerPage />} />
+            <Route path="/browse" element={<PhotoBrowserPage />} />
+            <Route path="/items" element={<ItemsPage />} />
+            <Route path="/entities" element={<EntitiesPage />} />
+            <Route path="/entities/:id" element={<EntityDetailPage />} />
+            <Route path="/:photoId/edit" element={<ImageDetailPage editMode />} />
+            <Route path="/:photoId" element={<ImageDetailPage />} />
+            {/* Anything else → landing. */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
       </PageContainer>
