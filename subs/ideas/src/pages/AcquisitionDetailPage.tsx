@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Card, CardBody, CardHeader, Chip, Link } from '@heroui/react';
-import { ArrowLeft, Pencil, Trash2, ArrowRight } from 'lucide-react';
+import { Pencil, Trash2, ArrowRight } from 'lucide-react';
 import {
   LoadingState,
   ErrorState,
@@ -156,7 +156,7 @@ export default function AcquisitionDetailPage() {
         )}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-2xl font-semibold text-foreground">{a.title}</h1>
-          {writable && (
+          {writable && !isPurchased && (
             <div className="flex flex-wrap gap-2">
               <Button
                 size="sm"
@@ -194,17 +194,15 @@ export default function AcquisitionDetailPage() {
                   ← Back to Considering
                 </Button>
               )}
-              {!isPurchased && (
-                <Button
-                  size="sm"
-                  color="danger"
-                  variant="flat"
-                  startContent={<Trash2 size={15} />}
-                  onPress={handleDelete}
-                >
-                  Delete
-                </Button>
-              )}
+              <Button
+                size="sm"
+                color="danger"
+                variant="flat"
+                startContent={<Trash2 size={15} />}
+                onPress={handleDelete}
+              >
+                Delete
+              </Button>
             </div>
           )}
         </div>

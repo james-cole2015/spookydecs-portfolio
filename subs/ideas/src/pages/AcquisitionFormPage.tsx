@@ -147,6 +147,13 @@ export default function AcquisitionFormPage() {
       </div>
     );
 
+  // Purchased is wizard-owned (W5) and never in USER_STATUSES. If a Purchased
+  // record is reached here (e.g. a direct /edit URL — the detail page hides its
+  // Edit button for Purchased), show the status as a disabled option so the
+  // Select never renders blank and can't silently downgrade the record.
+  const isPurchasedRecord = existing?.status === 'Purchased';
+  const statusOptions: string[] = isPurchasedRecord ? ['Purchased'] : [...USER_STATUSES];
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-6">
       <Button
@@ -203,9 +210,14 @@ export default function AcquisitionFormPage() {
                     selectedKeys={field.value ? [field.value] : []}
                     onChange={(e) => e.target.value && field.onChange(e.target.value)}
                     disallowEmptySelection
-                    description="Purchasing arrives with the purchase wizard (W5)."
+                    isDisabled={isPurchasedRecord}
+                    description={
+                      isPurchasedRecord
+                        ? 'Purchased records are managed by the purchase wizard (W5).'
+                        : 'Purchasing arrives with the purchase wizard (W5).'
+                    }
                   >
-                    {USER_STATUSES.map((s) => (
+                    {statusOptions.map((s) => (
                       <SelectItem key={s}>{s}</SelectItem>
                     ))}
                   </Select>
