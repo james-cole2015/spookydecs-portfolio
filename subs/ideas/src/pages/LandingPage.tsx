@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardBody, Chip } from '@heroui/react';
-import { Plus, Hammer, Sparkles } from 'lucide-react';
+import { Plus, Hammer, Sparkles, ShoppingCart } from 'lucide-react';
 import { PageHeader, ErrorState } from '@spookydecs/ui';
 import { listIdeas } from '../api/ideasApi';
 import { SEASONS } from '../config/ideasConfig';
@@ -122,6 +122,13 @@ export default function LandingPage() {
           desc={buildsDesc}
           badge={pipelineTotal > 0 ? pipelineTotal : undefined}
           onPress={() => navigate('/workbench')}
+        />
+        <ActionCard
+          icon={<ShoppingCart size={20} />}
+          label="Buy"
+          title="Acquisitions"
+          desc="Track prospective purchases from consideration through buy."
+          onPress={() => navigate('/acquisitions')}
         />
         <ActionCard
           icon={<Sparkles size={20} />}
