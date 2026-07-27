@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Card, CardBody, CardHeader, Chip, Link } from '@heroui/react';
-import { Pencil, Trash2, ArrowRight } from 'lucide-react';
+import { Pencil, Trash2, ArrowRight, ShoppingCart } from 'lucide-react';
 import {
   LoadingState,
   ErrorState,
@@ -25,6 +25,7 @@ import {
   type AcquisitionStatus,
 } from '../config/acquisitionsConfig';
 import { formatDate, heroImageUrl } from '../lib/format';
+import { AcquisitionPurchaseWizard } from '../components/AcquisitionPurchaseWizard';
 
 function canWrite() {
   return window.SpookyAuth.hasMinRole('builder');
@@ -40,6 +41,12 @@ export default function AcquisitionDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [notFound, setNotFound] = useState(false);
+  const [purchaseOpen, setPurchaseOpen] = useState(false);
+
+  async function refresh() {
+    const refreshed = await getAcquisition(id!);
+    if (refreshed) setAcquisition(refreshed);
+  }
 
   useEffect(() => {
     setLoading(true);
@@ -64,8 +71,7 @@ export default function AcquisitionDetailPage() {
     try {
       await updateAcquisition({ ...acquisition, status: newStatus });
       toast.showSuccess(`Moved to ${newStatus}`);
-      const refreshed = await getAcquisition(id!);
-      if (refreshed) setAcquisition(refreshed);
+      await refresh();
     } catch (err) {
       toast.showError('Failed: ' + (err as Error).message);
     }
@@ -206,14 +212,34 @@ export default function AcquisitionDetailPage() {
             </div>
           )}
         </div>
-        {/* Reserved slot: the W5 purchase wizard (#496) mounts its entry here. */}
+        {/* W5 purchase wizard (#496): turns a Considering acquisition into item(s) + a
+            finance cost. Gated to builder/admin on a non-purchased acquisition. */}
         {writable && !isPurchased && (
-          <div className="rounded-medium border border-dashed border-default-300 px-4 py-2 text-tiny text-default-400">
-            Purchasing arrives with the purchase wizard (W5) — it will create the linked item and
-            finance cost.
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-medium bg-primary/5 px-4 py-3">
+            <span className="text-small text-default-500">
+              Purchase this acquisition to create the linked item and finance cost.
+            </span>
+            <Button
+              color="primary"
+              startContent={<ShoppingCart size={16} />}
+              onPress={() => setPurchaseOpen(true)}
+            >
+              Purchase
+            </Button>
           </div>
         )}
       </div>
+
+      {writable && !isPurchased && (
+        <AcquisitionPurchaseWizard
+          acquisition={a}
+          isOpen={purchaseOpen}
+          onClose={() => {
+            setPurchaseOpen(false);
+            void refresh();
+          }}
+        />
+      )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_280px]">
         {/* Main column */}
