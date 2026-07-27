@@ -66,6 +66,19 @@ export const FILTER_OPTIONS: Record<string, FilterOption[]> = {
 // Reuse the ideas sub's season placeholder SVGs (same-sub, keyed lowercase).
 export { SEASON_PLACEHOLDERS } from './ideasConfig';
 
+// Reuse the build wizard's class/type cascade for the purchase wizard (#496) — same
+// item taxonomy, same source of truth (ported from build-detail.js). Same-sub import.
+export { CLASS_TYPES } from './ideasConfig';
+
+// Item class -> finance cost category. The purchase wizard passes this as the event's
+// `category`, which the #495 consumer writes onto the acquisition cost record (it
+// otherwise defaults to 'decoration'). Categories are the finance COST_CATEGORIES.
+export const CLASS_TO_CATEGORY: Record<string, string> = {
+  Decoration: 'decoration',
+  Light: 'light',
+  Accessory: 'accessory',
+};
+
 export const ITEMS_BASE_URL = 'https://items.spookydecs.com';
 
 // --- Domain type ----------------------------------------------------------
