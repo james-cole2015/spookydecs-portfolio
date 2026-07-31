@@ -99,6 +99,19 @@ export async function updateAcquisition(
   return await handleResponse(response);
 }
 
+// POST /acquisitions/{id}/enrich — kick off Renfield (202, in_progress). Gated to
+// builder/admin for parity with the other mutating calls (backend gates the same).
+// Terminal status + target_attributes land on the record; poll via getAcquisition.
+export async function startEnrichment(id: string): Promise<any> {
+  if (!auth().hasMinRole('builder')) throw new Error('Insufficient permissions');
+  const endpoint = await getEndpoint();
+  const response = await fetch(`${endpoint}/${encodeURIComponent(id)}/enrich`, {
+    method: 'POST',
+    headers: auth().buildHeaders(),
+  });
+  return await handleResponse(response);
+}
+
 // DELETE by id — plain delete (no /cascade route; no linked costs/photos in W3). Gated.
 export async function deleteAcquisition(id: string): Promise<any> {
   if (!auth().hasMinRole('builder')) throw new Error('Insufficient permissions');
