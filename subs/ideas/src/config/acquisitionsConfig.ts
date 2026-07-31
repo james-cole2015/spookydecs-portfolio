@@ -9,6 +9,17 @@ import type { ChipColor, FilterOption } from '@spookydecs/ui';
 export const SEASONS = ['Halloween', 'Christmas', 'Shared'] as const;
 export type Season = (typeof SEASONS)[number];
 
+// Quick-add (#526) placeholders. POST /acquisitions hard-requires a non-blank title
+// and an enum season, but a URL-only quick-add has neither yet — so the create-stub
+// posts these throwaways and Renfield's enrich write-back overwrites them:
+//   - PENDING_TITLE: a recognizable sentinel the worker replaces with the real product
+//     name; the detail page renders a "Renfield is naming this…" state while it stands.
+//   - STUB_SEASON: a throwaway to satisfy POST validation; ALWAYS overwritten by the
+//     worker (to a real inferred enum, or to "" = unresolved). Deliberately NOT `Shared`
+//     — Shared is a legitimate season, not the ambiguity fallback (resolve-or-flag).
+export const PENDING_TITLE = 'New acquisition…';
+export const STUB_SEASON: Season = 'Halloween';
+
 export const STATUSES = ['Considering', 'Purchased', 'Passed'] as const;
 export type AcquisitionStatus = (typeof STATUSES)[number];
 
