@@ -83,6 +83,23 @@ export const ITEMS_BASE_URL = 'https://items.spookydecs.com';
 
 // --- Domain type ----------------------------------------------------------
 
+// Renfield enrichment status/provenance map (contract §3.1) — always written by an
+// enrich run. Terminal statuses (poller stops): complete, partial, out_of_scope, failed.
+export type EnrichmentStatus =
+  | 'in_progress'
+  | 'complete'
+  | 'partial'
+  | 'out_of_scope'
+  | 'failed';
+
+export interface AcquisitionEnrichment {
+  status: EnrichmentStatus;
+  started_at: string;
+  completed_at?: string | null;
+  reason?: string; // out_of_scope explanation; "" otherwise
+  error?: string | null; // exception string on failed; null otherwise
+}
+
 export interface Acquisition {
   acquisition_id: string;
   title: string;
@@ -101,6 +118,12 @@ export interface Acquisition {
   // editable in the W3 CRUD form.
   item_id?: string;
   purchased_at?: string;
+  // Renfield enrichment seams (W7/#498 writeback; W8/#499 UI). `enrichment` is the
+  // status/provenance map; `target_attributes` is the normalized item prefill the
+  // purchase wizard reads (written only on an in-scope run). Kept a loose record —
+  // the wizard already treats it as one (contract §3.2).
+  enrichment?: AcquisitionEnrichment;
+  target_attributes?: Record<string, unknown>;
   createdAt?: string;
   updatedAt?: string;
   createdBy?: string;

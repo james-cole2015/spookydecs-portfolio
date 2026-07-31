@@ -15,6 +15,7 @@ import {
   StatusChip,
   useToast,
   useConfirm,
+  useAuth,
 } from '@spookydecs/ui';
 import { getAcquisition, updateAcquisition, deleteAcquisition } from '../api/acquisitionsApi';
 import {
@@ -26,16 +27,14 @@ import {
 } from '../config/acquisitionsConfig';
 import { formatDate, heroImageUrl } from '../lib/format';
 import { AcquisitionPurchaseWizard } from '../components/AcquisitionPurchaseWizard';
-
-function canWrite() {
-  return window.SpookyAuth.hasMinRole('builder');
-}
+import { AcquisitionEnrichPanel } from '../components/AcquisitionEnrichPanel';
 
 export default function AcquisitionDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const toast = useToast();
   const { confirm, dialog } = useConfirm();
+  const { hasMinRole } = useAuth();
 
   const [acquisition, setAcquisition] = useState<Acquisition | null>(null);
   const [loading, setLoading] = useState(true);
@@ -119,7 +118,7 @@ export default function AcquisitionDetailPage() {
     );
 
   const a = acquisition;
-  const writable = canWrite();
+  const writable = hasMinRole('builder');
   const isPurchased = a.status === 'Purchased';
   const hero = heroImageUrl(a.image ? [a.image] : undefined, a.url);
   const placeholder =
@@ -228,10 +227,25 @@ export default function AcquisitionDetailPage() {
             </Button>
           </div>
         )}
+        {/* W8 enrichment (#499): Ask Renfield to classify the acquisition and pre-fill the
+            purchase wizard. Pre-purchase only; onUpdate refreshes page state so the wizard
+            sees target_attributes. */}
+        {writable && !isPurchased && (
+          <AcquisitionEnrichPanel
+            acquisition={a}
+            onUpdate={setAcquisition}
+            onPurchase={() => setPurchaseOpen(true)}
+          />
+        )}
       </div>
 
       {writable && !isPurchased && (
         <AcquisitionPurchaseWizard
+          // Remount when enrichment lands so the wizard's mount-only prefill initializers
+          // re-read target_attributes (#499 — otherwise the already-mounted wizard is stale).
+          // completed_at changes on every terminal enrich run (incl. re-fetch); updatedAt is
+          // the fallback for records that were never enriched.
+          key={a.enrichment?.completed_at ?? a.updatedAt ?? a.acquisition_id}
           acquisition={a}
           isOpen={purchaseOpen}
           onClose={() => {
