@@ -28,26 +28,27 @@ function isTerminal(status?: string): boolean {
   return status != null && TERMINAL.has(status);
 }
 
-// Compact key→value rows from target_attributes for the complete/partial summary.
-function summaryRows(ta: Record<string, unknown> | undefined): Array<[string, string]> {
-  if (!ta) return [];
-  const rows: Array<[string, string]> = [];
-  const push = (label: string, v: unknown) => {
-    if (v == null || v === '') return;
-    rows.push([label, String(v)]);
-  };
-  const cls = [ta.class, ta.class_type].filter(Boolean).join(' · ');
-  if (cls) rows.push(['Class', cls]);
+// A field row for the complete/partial read-out: value present, or explicitly "not
+// found" so the user can see what Renfield missed (not just what it got). `value`
+// is '' when Renfield returned nothing for that field.
+type FieldRow = { label: string; value: string };
+
+// Build the full expected-field list from target_attributes — every field Renfield
+// targets, whether or not it came back populated. Class/Type/Price/Manufacturer plus
+// any class-specific specs. Description is rendered separately (it's long-form).
+function fieldRows(ta: Record<string, unknown> | undefined): FieldRow[] {
+  const t = ta || {};
+  const rows: FieldRow[] = [];
+  rows.push({ label: 'Class', value: [t.class, t.class_type].filter(Boolean).join(' · ') });
   // Price may be a legacy display string ("$149.99") on records enriched before the
   // worker's _coerce_price fix — sanitize before formatting so we never render "$NaN".
-  const priceNum =
-    ta.price == null ? NaN : Number(String(ta.price).replace(/[^0-9.-]/g, ''));
-  push('Price', Number.isFinite(priceNum) ? `$${priceNum.toFixed(2)}` : undefined);
-  push('Manufacturer', ta.manufacturer);
-  const specs = ta.specs as Record<string, unknown> | undefined;
+  const priceNum = t.price == null ? NaN : Number(String(t.price).replace(/[^0-9.-]/g, ''));
+  rows.push({ label: 'Price', value: Number.isFinite(priceNum) ? `$${priceNum.toFixed(2)}` : '' });
+  rows.push({ label: 'Manufacturer', value: t.manufacturer ? String(t.manufacturer) : '' });
+  const specs = t.specs as Record<string, unknown> | undefined;
   if (specs && typeof specs === 'object') {
     for (const [k, v] of Object.entries(specs)) {
-      if (v != null && v !== '') rows.push([titleCase(k), String(v)]);
+      if (v != null && v !== '') rows.push({ label: titleCase(k), value: String(v) });
     }
   }
   return rows;
@@ -130,7 +131,12 @@ export function AcquisitionEnrichPanel({
   }
 
   const status = enrichment?.status;
-  const rows = status === 'complete' || status === 'partial' ? summaryRows(acquisition.target_attributes) : [];
+  const showResult = status === 'complete' || status === 'partial';
+  const ta = acquisition.target_attributes as Record<string, unknown> | undefined;
+  const rows = showResult ? fieldRows(ta) : [];
+  const description = showResult && ta?.description ? String(ta.description) : '';
+  const foundCount = rows.filter((r) => r.value).length + (description ? 1 : 0);
+  const totalCount = rows.length + 1; // +1 for Description
 
   const header = (
     <div className="flex items-center justify-between">
@@ -205,13 +211,15 @@ export function AcquisitionEnrichPanel({
             </>
           )}
 
-          {(status === 'complete' || status === 'partial') && (
+          {showResult && (
             <>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-3">
                 <p className="text-small text-default-500">
+                  Renfield found <span className="font-medium text-foreground">{foundCount}</span> of{' '}
+                  {totalCount} fields.
                   {status === 'partial'
-                    ? 'Renfield classified what it could — review and fill in the rest in the wizard.'
-                    : 'Renfield classified this acquisition. Prefill is ready.'}
+                    ? ' Fill in the rest in the purchase wizard.'
+                    : ' Prefill is ready.'}
                 </p>
                 <Button
                   size="sm"
@@ -224,16 +232,26 @@ export function AcquisitionEnrichPanel({
                   Re-fetch
                 </Button>
               </div>
-              {rows.length > 0 && (
-                <dl className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 rounded-medium bg-default-100 px-4 py-3 text-small">
-                  {rows.map(([label, value]) => (
-                    <div key={label} className="contents">
-                      <dt className="text-default-400">{label}</dt>
+              <dl className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1.5 rounded-medium bg-default-100 px-4 py-3 text-small">
+                {rows.map(({ label, value }) => (
+                  <div key={label} className="contents">
+                    <dt className="text-default-400">{label}</dt>
+                    {value ? (
                       <dd className="text-foreground">{value}</dd>
-                    </div>
-                  ))}
-                </dl>
-              )}
+                    ) : (
+                      <dd className="italic text-default-300">Not found</dd>
+                    )}
+                  </div>
+                ))}
+                <div className="contents">
+                  <dt className="text-default-400">Description</dt>
+                  {description ? (
+                    <dd className="text-foreground">{description}</dd>
+                  ) : (
+                    <dd className="italic text-default-300">Not found</dd>
+                  )}
+                </div>
+              </dl>
               <Button
                 color="primary"
                 startContent={<ShoppingCart size={16} />}

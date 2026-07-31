@@ -151,6 +151,16 @@ export default function AcquisitionDetailPage() {
     setPurchaseOpen(true);
   }
 
+  // Renfield's findings live in target_attributes; the record's own price/description
+  // may be empty (quick-add). Fall back to the enriched values so the page isn't
+  // misleadingly blank, and flag when the shown value came from Renfield (#526).
+  const ta = (a.target_attributes as Record<string, unknown> | undefined) || {};
+  const taPriceNum = ta.price == null ? NaN : Number(String(ta.price).replace(/[^0-9.-]/g, ''));
+  const displayPrice =
+    a.price != null ? Number(a.price) : Number.isFinite(taPriceNum) ? taPriceNum : null;
+  const displayDescription = a.description || (ta.description ? String(ta.description) : '');
+  const descFromRenfield = !a.description && !!ta.description;
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-6">
       {dialog}
@@ -321,10 +331,19 @@ export default function AcquisitionDetailPage() {
         {/* Main column */}
         <div className="flex flex-col gap-6">
           <Card>
-            <CardHeader className="font-semibold">Description</CardHeader>
+            <CardHeader className="flex items-center justify-between font-semibold">
+              Description
+              {descFromRenfield && (
+                <Chip size="sm" variant="flat" color="secondary">
+                  Suggested by Renfield
+                </Chip>
+              )}
+            </CardHeader>
             <CardBody>
-              <p className={`text-small ${a.description ? 'text-foreground/80' : 'text-default-400'}`}>
-                {a.description || 'No description provided.'}
+              <p
+                className={`text-small ${displayDescription ? 'text-foreground/80' : 'text-default-400'}`}
+              >
+                {displayDescription || 'No description provided.'}
               </p>
             </CardBody>
           </Card>
@@ -343,7 +362,7 @@ export default function AcquisitionDetailPage() {
             <CardBody className="gap-2">
               <CatalogField
                 label="Price"
-                value={a.price != null ? `$${Number(a.price).toFixed(2)}` : undefined}
+                value={displayPrice != null ? `$${displayPrice.toFixed(2)}` : undefined}
               />
               <CatalogField label="Quantity" value={a.quantity != null ? String(a.quantity) : undefined} />
               <CatalogField label="Retailer" value={a.retailer} />
