@@ -38,7 +38,11 @@ function summaryRows(ta: Record<string, unknown> | undefined): Array<[string, st
   };
   const cls = [ta.class, ta.class_type].filter(Boolean).join(' · ');
   if (cls) rows.push(['Class', cls]);
-  push('Price', ta.price != null ? `$${Number(ta.price).toFixed(2)}` : undefined);
+  // Price may be a legacy display string ("$149.99") on records enriched before the
+  // worker's _coerce_price fix — sanitize before formatting so we never render "$NaN".
+  const priceNum =
+    ta.price == null ? NaN : Number(String(ta.price).replace(/[^0-9.-]/g, ''));
+  push('Price', Number.isFinite(priceNum) ? `$${priceNum.toFixed(2)}` : undefined);
   push('Manufacturer', ta.manufacturer);
   const specs = ta.specs as Record<string, unknown> | undefined;
   if (specs && typeof specs === 'object') {
