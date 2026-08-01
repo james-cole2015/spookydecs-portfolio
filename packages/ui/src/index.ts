@@ -12,6 +12,8 @@ export { useFilePicker } from './hooks/useFilePicker';
 export type { UseFilePicker } from './hooks/useFilePicker';
 export { ImageEditorModal } from './components/ImageEditorModal';
 export type { ImageEditorModalProps } from './components/ImageEditorModal';
+export { LibraryImageEditor } from './components/LibraryImageEditor';
+export type { LibraryImageEditorProps } from './components/LibraryImageEditor';
 export { FileDropModal } from './components/FileDropModal';
 export type { FileDropModalProps } from './components/FileDropModal';
 export { getEditedImage, createImage } from './lib/imageCanvas';
