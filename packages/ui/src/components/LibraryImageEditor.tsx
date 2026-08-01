@@ -13,6 +13,10 @@
  * Filerobot (and its heavy `konva` dependency) is lazy-loaded via `React.lazy`, so
  * it lands in a separate chunk fetched only when the editor opens — never in the
  * images entry bundle (same precedent as `rasterizePdf.ts`'s dynamic import).
+ *
+ * Dependency note: Filerobot auto-pulls `react-konva`, whose latest line targets
+ * React 19. This workspace is React 18, so `react-konva`/`konva` are pinned to the
+ * React-18 line via explicit `packages/ui` deps plus a root `overrides` entry.
  */
 import { lazy, Suspense } from 'react';
 // Type-only import: fully erased at compile time, so it does NOT create a runtime
