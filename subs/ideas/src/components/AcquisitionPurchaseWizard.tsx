@@ -32,6 +32,7 @@ import {
   Checkbox,
   Link,
 } from '@heroui/react';
+import { Wand2 } from 'lucide-react';
 import { usePhotoUpload } from '@spookydecs/ui';
 import { createItem } from '../api/ideasApi';
 import { updateAcquisition } from '../api/acquisitionsApi';
@@ -112,6 +113,15 @@ export function AcquisitionPurchaseWizard({
     const v = ta[k];
     return v == null ? '' : String(v);
   };
+  // Numeric fields (price) may arrive as a display string ("$149.99") on older
+  // records enriched before the worker's _coerce_price fix — sanitize to a bare
+  // number so the wizard's numeric Input and parsePrice() bind cleanly.
+  const taNum = (k: string): string => {
+    const v = ta[k];
+    if (v == null || v === '') return '';
+    const m = String(v).replace(/,/g, '').match(/-?\d+(?:\.\d+)?/);
+    return m ? m[0] : '';
+  };
 
   const [step, setStep] = useState(1);
   const [units, setUnits] = useState('1');
@@ -128,9 +138,13 @@ export function AcquisitionPurchaseWizard({
   const [hasPowerInlet, setHasPowerInlet] = useState(true);
   const [generalNotes, setGeneralNotes] = useState('');
 
-  // Purchase details
-  const [price, setPrice] = useState(acquisition.price != null ? String(acquisition.price) : '');
-  const [retailer, setRetailer] = useState(acquisition.retailer || '');
+  // Purchase details. Price prefers the record's own price, then Renfield's enriched
+  // target_attributes.price (the common quick-add case — the record has no top-level
+  // price yet). Both paths sanitize a possible "$" display string.
+  const [price, setPrice] = useState(
+    acquisition.price != null ? String(acquisition.price) : taNum('price'),
+  );
+  const [retailer, setRetailer] = useState(acquisition.retailer || taStr('retailer'));
   const [manufacturer, setManufacturer] = useState(taStr('manufacturer'));
   const [purchaseDate, setPurchaseDate] = useState(todayIso());
   const [receipt, setReceipt] = useState<File | null>(null);
@@ -142,6 +156,27 @@ export function AcquisitionPurchaseWizard({
   const [createdItemIds, setCreatedItemIds] = useState<string[]>([]);
 
   const fields = useMemo(() => specFields(cls, classType), [cls, classType]);
+
+  // "What Renfield found" summary for step 1. Reactive to the current field values
+  // (not just the initial prefill) so it doubles as a live completeness meter — the
+  // "still needs" list shrinks as the user fills gaps. Only shown when the record was
+  // enriched (complete/partial); an un-enriched manual purchase gets no banner.
+  const enrichStatus = acquisition.enrichment?.status;
+  const isEnriched = enrichStatus === 'complete' || enrichStatus === 'partial';
+  const fieldChecks = useMemo<Array<[string, boolean]>>(() => {
+    const checks: Array<[string, boolean]> = [
+      ['Item name', !!shortName.trim()],
+      ['Class', !!cls],
+      ['Type', !!classType],
+      ['Price', !!price && Number(price) > 0],
+      ['Retailer', !!retailer.trim()],
+      ['Manufacturer', !!manufacturer.trim()],
+    ];
+    for (const f of fields) checks.push([f.label, !!spec[f.key]?.trim()]);
+    return checks;
+  }, [shortName, cls, classType, price, retailer, manufacturer, spec, fields]);
+  const foundCount = fieldChecks.filter(([, v]) => v).length;
+  const missingLabels = fieldChecks.filter(([, v]) => !v).map(([l]) => l);
 
   function parseUnits(): number | null {
     const n = Number(units);
@@ -340,6 +375,23 @@ export function AcquisitionPurchaseWizard({
         <ModalBody className="gap-4">
           {step === 1 && (
             <>
+              {isEnriched && (
+                <div className="rounded-medium bg-secondary/10 px-4 py-3">
+                  <div className="flex items-center gap-2 text-small font-medium text-secondary-600">
+                    <Wand2 size={15} />
+                    Renfield prefilled {foundCount} of {fieldChecks.length} fields
+                  </div>
+                  {missingLabels.length > 0 ? (
+                    <p className="mt-1 text-tiny text-default-500">
+                      Still needs: {missingLabels.join(', ')} — fill in below.
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-tiny text-default-500">
+                      Everything’s filled in — review and continue.
+                    </p>
+                  )}
+                </div>
+              )}
               <h3 className="text-medium font-semibold">Item Record</h3>
               <div className="flex gap-3">
                 <Input

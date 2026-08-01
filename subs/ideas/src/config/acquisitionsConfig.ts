@@ -9,6 +9,17 @@ import type { ChipColor, FilterOption } from '@spookydecs/ui';
 export const SEASONS = ['Halloween', 'Christmas', 'Shared'] as const;
 export type Season = (typeof SEASONS)[number];
 
+// Quick-add (#526) placeholders. POST /acquisitions hard-requires a non-blank title
+// and an enum season, but a URL-only quick-add has neither yet — so the create-stub
+// posts these throwaways and Renfield's enrich write-back overwrites them:
+//   - PENDING_TITLE: a recognizable sentinel the worker replaces with the real product
+//     name; the detail page renders a "Renfield is naming this…" state while it stands.
+//   - STUB_SEASON: a throwaway to satisfy POST validation; ALWAYS overwritten by the
+//     worker (to a real inferred enum, or to "" = unresolved). Deliberately NOT `Shared`
+//     — Shared is a legitimate season, not the ambiguity fallback (resolve-or-flag).
+export const PENDING_TITLE = 'New acquisition…';
+export const STUB_SEASON: Season = 'Halloween';
+
 export const STATUSES = ['Considering', 'Purchased', 'Passed'] as const;
 export type AcquisitionStatus = (typeof STATUSES)[number];
 
@@ -83,6 +94,23 @@ export const ITEMS_BASE_URL = 'https://items.spookydecs.com';
 
 // --- Domain type ----------------------------------------------------------
 
+// Renfield enrichment status/provenance map (contract §3.1) — always written by an
+// enrich run. Terminal statuses (poller stops): complete, partial, out_of_scope, failed.
+export type EnrichmentStatus =
+  | 'in_progress'
+  | 'complete'
+  | 'partial'
+  | 'out_of_scope'
+  | 'failed';
+
+export interface AcquisitionEnrichment {
+  status: EnrichmentStatus;
+  started_at: string;
+  completed_at?: string | null;
+  reason?: string; // out_of_scope explanation; "" otherwise
+  error?: string | null; // exception string on failed; null otherwise
+}
+
 export interface Acquisition {
   acquisition_id: string;
   title: string;
@@ -101,6 +129,12 @@ export interface Acquisition {
   // editable in the W3 CRUD form.
   item_id?: string;
   purchased_at?: string;
+  // Renfield enrichment seams (W7/#498 writeback; W8/#499 UI). `enrichment` is the
+  // status/provenance map; `target_attributes` is the normalized item prefill the
+  // purchase wizard reads (written only on an in-scope run). Kept a loose record —
+  // the wizard already treats it as one (contract §3.2).
+  enrichment?: AcquisitionEnrichment;
+  target_attributes?: Record<string, unknown>;
   createdAt?: string;
   updatedAt?: string;
   createdBy?: string;

@@ -17,7 +17,7 @@ import {
   SelectItem,
   Textarea,
 } from '@heroui/react';
-import { ConfirmDialog, ImageEditorModal, useToast } from '@spookydecs/ui';
+import { ConfirmDialog, LibraryImageEditor, useToast } from '@spookydecs/ui';
 import { IMAGES_CONFIG, validateCategory, type CategoryConfig, type Photo } from '../config/imagesConfig';
 import { deleteImage, presignReplace, reprocess, suggestTags, updateImage, type MatchedItem } from '../api/imagesApi';
 
@@ -176,11 +176,10 @@ export function ImageDetail({
         onClose={() => setEditWarnOpen(false)}
       />
 
-      <ImageEditorModal
+      <LibraryImageEditor
         isOpen={editorOpen}
         source={editorOpen ? photo.cloudfront_url : null}
         onApply={handleEditApply}
-        onSkip={() => setEditorOpen(false)}
         onClose={() => setEditorOpen(false)}
       />
     </div>

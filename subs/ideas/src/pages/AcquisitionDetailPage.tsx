@@ -15,27 +15,27 @@ import {
   StatusChip,
   useToast,
   useConfirm,
+  useAuth,
 } from '@spookydecs/ui';
 import { getAcquisition, updateAcquisition, deleteAcquisition } from '../api/acquisitionsApi';
 import {
   ACQ_STATUS_COLOR,
   ITEMS_BASE_URL,
   SEASON_PLACEHOLDERS,
+  PENDING_TITLE,
   type Acquisition,
   type AcquisitionStatus,
 } from '../config/acquisitionsConfig';
 import { formatDate, heroImageUrl } from '../lib/format';
 import { AcquisitionPurchaseWizard } from '../components/AcquisitionPurchaseWizard';
-
-function canWrite() {
-  return window.SpookyAuth.hasMinRole('builder');
-}
+import { AcquisitionEnrichPanel } from '../components/AcquisitionEnrichPanel';
 
 export default function AcquisitionDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const toast = useToast();
   const { confirm, dialog } = useConfirm();
+  const { hasMinRole } = useAuth();
 
   const [acquisition, setAcquisition] = useState<Acquisition | null>(null);
   const [loading, setLoading] = useState(true);
@@ -119,22 +119,60 @@ export default function AcquisitionDetailPage() {
     );
 
   const a = acquisition;
-  const writable = canWrite();
+  const writable = hasMinRole('builder');
   const isPurchased = a.status === 'Purchased';
   const hero = heroImageUrl(a.image ? [a.image] : undefined, a.url);
   const placeholder =
     SEASON_PLACEHOLDERS[(a.season || 'shared').toLowerCase()] || SEASON_PLACEHOLDERS.shared;
 
+  // Quick-add (#526) states. While Renfield runs on a URL-only stub, the title is still
+  // the PENDING_TITLE sentinel — render a friendly pending label instead of the raw
+  // placeholder (and a fallback for the rare terminal-but-unnamed case, e.g. a `failed`
+  // run that couldn't derive a hostname).
+  const isNaming =
+    a.title === PENDING_TITLE && a.enrichment?.status === 'in_progress';
+  const displayTitle =
+    a.title === PENDING_TITLE
+      ? isNaming
+        ? 'Renfield is naming this…'
+        : 'Untitled acquisition'
+      : a.title;
+  // Empty season is the worker's UNRESOLVED marker — the user must set it (via Edit)
+  // before Purchase, because item-create at purchase requires a real enum season.
+  const seasonUnresolved = !a.season;
+
+  // Single purchase-open guard so BOTH the Purchase card button and the enrich panel's
+  // "Purchase (prefilled)" button honor the season gate (#526).
+  function openPurchase() {
+    if (seasonUnresolved) {
+      toast.showError('Set the acquisition’s season before purchasing.');
+      return;
+    }
+    setPurchaseOpen(true);
+  }
+
+  // Renfield's findings live in target_attributes; the record's own price/description
+  // may be empty (quick-add). Fall back to the enriched values so the page isn't
+  // misleadingly blank, and flag when the shown value came from Renfield (#526).
+  const ta = (a.target_attributes as Record<string, unknown> | undefined) || {};
+  const taPriceNum = ta.price == null ? NaN : Number(String(ta.price).replace(/[^0-9.-]/g, ''));
+  const displayPrice =
+    a.price != null ? Number(a.price) : Number.isFinite(taPriceNum) ? taPriceNum : null;
+  const displayRetailer = a.retailer || (ta.retailer ? String(ta.retailer) : '');
+  const displayDescription = a.description || (ta.description ? String(ta.description) : '');
+  const descFromRenfield = !a.description && !!ta.description;
+  const isEnriched = a.enrichment?.status === 'complete' || a.enrichment?.status === 'partial';
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-6">
       {dialog}
-      <Breadcrumbs crumbs={[{ label: 'Acquisitions', to: '/acquisitions' }, { label: a.title }]} />
+      <Breadcrumbs crumbs={[{ label: 'Acquisitions', to: '/acquisitions' }, { label: displayTitle }]} />
 
       {/* Featured media */}
       <Card className="mb-4 overflow-hidden">
         <div className="aspect-video w-full bg-default-100">
           {hero ? (
-            <img src={hero} alt={a.title} className="h-full w-full object-cover" />
+            <img src={hero} alt={displayTitle} className="h-full w-full object-cover" />
           ) : (
             <div
               className="flex h-full w-full items-center justify-center p-12 text-default-300 [&_svg]:h-24 [&_svg]:w-24"
@@ -147,7 +185,18 @@ export default function AcquisitionDetailPage() {
       {/* Header */}
       <div className="mb-6 flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <SeasonChip value={a.season} size="md" />
+          {seasonUnresolved ? (
+            <Chip
+              color="warning"
+              variant="flat"
+              size="md"
+              startContent={<span className="px-0.5">⚠</span>}
+            >
+              Season needs review
+            </Chip>
+          ) : (
+            <SeasonChip value={a.season} size="md" />
+          )}
           <StatusChip value={a.status} colorMap={ACQ_STATUS_COLOR} size="md" />
         </div>
         {isPurchased && (
@@ -161,7 +210,11 @@ export default function AcquisitionDetailPage() {
           </div>
         )}
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-2xl font-semibold text-foreground">{a.title}</h1>
+          <h1
+            className={`text-2xl font-semibold ${isNaming ? 'italic text-default-400' : 'text-foreground'}`}
+          >
+            {displayTitle}
+          </h1>
           {writable && !isPurchased && (
             <div className="flex flex-wrap gap-2">
               <Button
@@ -213,25 +266,58 @@ export default function AcquisitionDetailPage() {
           )}
         </div>
         {/* W5 purchase wizard (#496): turns a Considering acquisition into item(s) + a
-            finance cost. Gated to builder/admin on a non-purchased acquisition. */}
+            finance cost. Gated to builder/admin on a non-purchased acquisition. Also
+            gated on a resolved season (#526) — item-create needs a real enum season, so
+            an unresolved (quick-add) record must be named/seasoned via Edit first. */}
         {writable && !isPurchased && (
           <div className="flex flex-wrap items-center justify-between gap-2 rounded-medium bg-primary/5 px-4 py-3">
-            <span className="text-small text-default-500">
-              Purchase this acquisition to create the linked item and finance cost.
-            </span>
-            <Button
-              color="primary"
-              startContent={<ShoppingCart size={16} />}
-              onPress={() => setPurchaseOpen(true)}
-            >
-              Purchase
-            </Button>
+            {seasonUnresolved ? (
+              <>
+                <span className="text-small text-warning-600">
+                  Set this acquisition's season before purchasing — Renfield couldn't determine it.
+                </span>
+                <Button
+                  color="warning"
+                  variant="flat"
+                  startContent={<Pencil size={15} />}
+                  onPress={() => navigate(`/acquisitions/${a.acquisition_id}/edit`)}
+                >
+                  Set Season
+                </Button>
+              </>
+            ) : (
+              <>
+                <span className="text-small text-default-500">
+                  {isEnriched
+                    ? 'Renfield prefilled this — review and confirm to create the linked item and finance cost.'
+                    : 'Purchase this acquisition to create the linked item and finance cost.'}
+                </span>
+                <Button
+                  color="primary"
+                  startContent={<ShoppingCart size={16} />}
+                  onPress={openPurchase}
+                >
+                  {isEnriched ? 'Purchase (prefilled)' : 'Purchase'}
+                </Button>
+              </>
+            )}
           </div>
+        )}
+        {/* W8 enrichment (#499): Ask Renfield to classify the acquisition and pre-fill the
+            purchase wizard. Pre-purchase only; onUpdate refreshes page state so the wizard
+            sees target_attributes. */}
+        {writable && !isPurchased && (
+          <AcquisitionEnrichPanel acquisition={a} onUpdate={setAcquisition} />
         )}
       </div>
 
       {writable && !isPurchased && (
         <AcquisitionPurchaseWizard
+          // Remount when enrichment lands so the wizard's mount-only prefill initializers
+          // re-read target_attributes (#499 — otherwise the already-mounted wizard is stale).
+          // completed_at changes on every terminal enrich run (incl. re-fetch); updatedAt is
+          // the fallback for records that were never enriched.
+          key={a.enrichment?.completed_at ?? a.updatedAt ?? a.acquisition_id}
           acquisition={a}
           isOpen={purchaseOpen}
           onClose={() => {
@@ -245,10 +331,19 @@ export default function AcquisitionDetailPage() {
         {/* Main column */}
         <div className="flex flex-col gap-6">
           <Card>
-            <CardHeader className="font-semibold">Description</CardHeader>
+            <CardHeader className="flex items-center justify-between font-semibold">
+              Description
+              {descFromRenfield && (
+                <Chip size="sm" variant="flat" color="secondary">
+                  Suggested by Renfield
+                </Chip>
+              )}
+            </CardHeader>
             <CardBody>
-              <p className={`text-small ${a.description ? 'text-foreground/80' : 'text-default-400'}`}>
-                {a.description || 'No description provided.'}
+              <p
+                className={`text-small ${displayDescription ? 'text-foreground/80' : 'text-default-400'}`}
+              >
+                {displayDescription || 'No description provided.'}
               </p>
             </CardBody>
           </Card>
@@ -267,10 +362,10 @@ export default function AcquisitionDetailPage() {
             <CardBody className="gap-2">
               <CatalogField
                 label="Price"
-                value={a.price != null ? `$${Number(a.price).toFixed(2)}` : undefined}
+                value={displayPrice != null ? `$${displayPrice.toFixed(2)}` : undefined}
               />
               <CatalogField label="Quantity" value={a.quantity != null ? String(a.quantity) : undefined} />
-              <CatalogField label="Retailer" value={a.retailer} />
+              <CatalogField label="Retailer" value={displayRetailer || undefined} />
               <CatalogField label="Priority" value={a.priority} />
               <div className="flex justify-between text-small">
                 <span className="text-default-500">Product URL</span>
@@ -291,7 +386,7 @@ export default function AcquisitionDetailPage() {
           <Card>
             <CardHeader className="font-semibold">Info</CardHeader>
             <CardBody className="gap-3 text-small">
-              <SidebarField label="Season" value={a.season} />
+              <SidebarField label="Season" value={a.season || 'Needs review'} />
               <SidebarField label="Status" value={a.status} />
               <div className="flex flex-col gap-1">
                 <span className="text-default-500">Tags</span>

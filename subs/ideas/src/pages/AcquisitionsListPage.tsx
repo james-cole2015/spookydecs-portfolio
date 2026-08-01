@@ -5,9 +5,9 @@
 // able to reveal them via the filter — the crux difference from ideas.)
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Button } from '@heroui/react';
-import { ArrowLeft, Plus } from 'lucide-react';
-import { LoadingState, ErrorState, EmptyState, FilterBar } from '@spookydecs/ui';
+import { Button, Tooltip } from '@heroui/react';
+import { ArrowLeft, Plus, Sparkles } from 'lucide-react';
+import { LoadingState, ErrorState, EmptyState, FilterBar, useAuth } from '@spookydecs/ui';
 import { listAcquisitions } from '../api/acquisitionsApi';
 import {
   TERMINAL_STATUSES,
@@ -18,12 +18,16 @@ import {
   type AcquisitionStatus,
 } from '../config/acquisitionsConfig';
 import { AcquisitionCard } from '../components/AcquisitionCard';
+import { QuickAddAcquisitionModal } from '../components/QuickAddAcquisitionModal';
 
 export default function AcquisitionsListPage() {
   const navigate = useNavigate();
+  const { hasMinRole } = useAuth();
   const [params, setParams] = useSearchParams();
   const [acquisitions, setAcquisitions] = useState<Acquisition[] | null>(null);
   const [error, setError] = useState('');
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const canCreate = hasMinRole('builder');
 
   const season = params.get('season') || 'all';
   const status = params.get('status') || 'active';
@@ -124,17 +128,41 @@ export default function AcquisitionsListPage() {
         )}
       </div>
 
-      <Button
-        isIconOnly
-        color="primary"
-        radius="full"
-        size="lg"
-        aria-label="Add acquisition"
-        onPress={() => navigate('/acquisitions/create')}
-        className="fixed bottom-6 right-6 z-20 shadow-lg"
-      >
-        <Plus size={24} />
-      </Button>
+      {/* Two stacked FABs (#526): quick-add (Renfield, primary/emphasized) on top,
+          manual create (muted) below. Builder-gated — the API rejects non-builders,
+          but hiding the actions keeps the UX honest. */}
+      {canCreate && (
+        <div className="fixed bottom-6 right-6 z-20 flex flex-col items-center gap-3">
+          <Tooltip content="Quick add from a URL — Renfield fills in the rest" placement="left">
+            <Button
+              isIconOnly
+              color="primary"
+              radius="full"
+              size="lg"
+              aria-label="Quick add acquisition from URL"
+              onPress={() => setQuickAddOpen(true)}
+              className="shadow-lg"
+            >
+              <Sparkles size={24} />
+            </Button>
+          </Tooltip>
+          <Tooltip content="Add manually" placement="left">
+            <Button
+              isIconOnly
+              variant="flat"
+              radius="full"
+              size="md"
+              aria-label="Add acquisition manually"
+              onPress={() => navigate('/acquisitions/create')}
+              className="shadow"
+            >
+              <Plus size={20} />
+            </Button>
+          </Tooltip>
+        </div>
+      )}
+
+      <QuickAddAcquisitionModal isOpen={quickAddOpen} onClose={() => setQuickAddOpen(false)} />
     </div>
   );
 }
