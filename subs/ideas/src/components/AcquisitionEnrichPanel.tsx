@@ -73,6 +73,12 @@ export function AcquisitionEnrichPanel({
   );
   const [starting, setStarting] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
+  // Controlled accordion: open while mounting mid-flight (in_progress), else collapsed —
+  // so revisiting an already-enriched record starts closed and a fresh run opens on trigger.
+  const [expandedKeys, setExpandedKeys] = useState<Set<string>>(() =>
+    acquisition.enrichment?.status === 'in_progress' ? new Set(['renfield']) : new Set(),
+  );
+  const prevStatusRef = useRef<string | undefined>(acquisition.enrichment?.status);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const hasUrl = Boolean(acquisition.url?.trim());
 
@@ -114,10 +120,22 @@ export function AcquisitionEnrichPanel({
     return stopPolling;
   }, [acquisition.enrichment?.status, startPolling, stopPolling]);
 
+  // Auto-collapse once Renfield finishes: on the in_progress → terminal transition, close
+  // the panel (the findings live on the detail page below). Gated on the transition so a
+  // user re-opening a completed panel isn't snapped shut on the next render.
+  useEffect(() => {
+    const s = enrichment?.status;
+    if (isTerminal(s) && !isTerminal(prevStatusRef.current)) {
+      setExpandedKeys(new Set());
+    }
+    prevStatusRef.current = s;
+  }, [enrichment?.status]);
+
   async function handleEnrich() {
     if (!hasUrl) return;
     setStarting(true);
     setTimedOut(false);
+    setExpandedKeys(new Set(['renfield'])); // open so the user sees the in-progress state
     try {
       await startEnrichment(id);
       setEnrichment({ status: 'in_progress', started_at: new Date().toISOString() });
@@ -172,7 +190,11 @@ export function AcquisitionEnrichPanel({
   );
 
   return (
-    <Accordion variant="bordered" defaultExpandedKeys={status ? ['renfield'] : []}>
+    <Accordion
+      variant="bordered"
+      selectedKeys={expandedKeys}
+      onSelectionChange={(keys) => setExpandedKeys(keys as Set<string>)}
+    >
       <AccordionItem key="renfield" aria-label="Ask Renfield" title={header}>
         <div className="flex flex-col gap-4 pb-2">
           {!status && (
