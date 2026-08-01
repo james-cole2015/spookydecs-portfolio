@@ -14,7 +14,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Accordion, AccordionItem, Button, Chip, Spinner } from '@heroui/react';
-import { Wand2, RefreshCw, ShoppingCart, Info } from 'lucide-react';
+import { Wand2, RefreshCw, Info } from 'lucide-react';
 import { useToast } from '@spookydecs/ui';
 import { getAcquisition, startEnrichment } from '../api/acquisitionsApi';
 import type { Acquisition, AcquisitionEnrichment } from '../config/acquisitionsConfig';
@@ -44,6 +44,7 @@ function fieldRows(ta: Record<string, unknown> | undefined): FieldRow[] {
   // worker's _coerce_price fix — sanitize before formatting so we never render "$NaN".
   const priceNum = t.price == null ? NaN : Number(String(t.price).replace(/[^0-9.-]/g, ''));
   rows.push({ label: 'Price', value: Number.isFinite(priceNum) ? `$${priceNum.toFixed(2)}` : '' });
+  rows.push({ label: 'Retailer', value: t.retailer ? String(t.retailer) : '' });
   rows.push({ label: 'Manufacturer', value: t.manufacturer ? String(t.manufacturer) : '' });
   const specs = t.specs as Record<string, unknown> | undefined;
   if (specs && typeof specs === 'object') {
@@ -61,11 +62,9 @@ function titleCase(raw: string): string {
 export function AcquisitionEnrichPanel({
   acquisition,
   onUpdate,
-  onPurchase,
 }: {
   acquisition: Acquisition;
   onUpdate: (a: Acquisition) => void;
-  onPurchase: () => void;
 }) {
   const toast = useToast();
   const id = acquisition.acquisition_id;
@@ -232,34 +231,42 @@ export function AcquisitionEnrichPanel({
                   Re-fetch
                 </Button>
               </div>
-              <dl className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1.5 rounded-medium bg-default-100 px-4 py-3 text-small">
-                {rows.map(({ label, value }) => (
-                  <div key={label} className="contents">
-                    <dt className="text-default-400">{label}</dt>
-                    {value ? (
-                      <dd className="text-foreground">{value}</dd>
+              <div className="flex gap-3">
+                {acquisition.image && (
+                  <img
+                    src={acquisition.image}
+                    alt="Product"
+                    className="h-24 w-24 shrink-0 rounded-medium border border-default-200 object-cover"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                )}
+                <dl className="grid flex-1 grid-cols-[max-content_1fr] gap-x-4 gap-y-1.5 rounded-medium bg-default-100 px-4 py-3 text-small">
+                  {rows.map(({ label, value }) => (
+                    <div key={label} className="contents">
+                      <dt className="text-default-400">{label}</dt>
+                      {value ? (
+                        <dd className="text-foreground">{value}</dd>
+                      ) : (
+                        <dd className="italic text-default-300">Not found</dd>
+                      )}
+                    </div>
+                  ))}
+                  <div className="contents">
+                    <dt className="text-default-400">Description</dt>
+                    {description ? (
+                      <dd className="text-foreground">{description}</dd>
                     ) : (
                       <dd className="italic text-default-300">Not found</dd>
                     )}
                   </div>
-                ))}
-                <div className="contents">
-                  <dt className="text-default-400">Description</dt>
-                  {description ? (
-                    <dd className="text-foreground">{description}</dd>
-                  ) : (
-                    <dd className="italic text-default-300">Not found</dd>
-                  )}
-                </div>
-              </dl>
-              <Button
-                color="primary"
-                startContent={<ShoppingCart size={16} />}
-                onPress={onPurchase}
-                className="w-fit"
-              >
-                Purchase (prefilled)
-              </Button>
+                </dl>
+              </div>
+              <p className="text-tiny text-default-400">
+                Use <span className="font-medium text-default-500">Purchase</span> below to review
+                and confirm these details.
+              </p>
             </>
           )}
 

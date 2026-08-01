@@ -144,7 +144,7 @@ export function AcquisitionPurchaseWizard({
   const [price, setPrice] = useState(
     acquisition.price != null ? String(acquisition.price) : taNum('price'),
   );
-  const [retailer, setRetailer] = useState(acquisition.retailer || '');
+  const [retailer, setRetailer] = useState(acquisition.retailer || taStr('retailer'));
   const [manufacturer, setManufacturer] = useState(taStr('manufacturer'));
   const [purchaseDate, setPurchaseDate] = useState(todayIso());
   const [receipt, setReceipt] = useState<File | null>(null);
@@ -169,11 +169,12 @@ export function AcquisitionPurchaseWizard({
       ['Class', !!cls],
       ['Type', !!classType],
       ['Price', !!price && Number(price) > 0],
+      ['Retailer', !!retailer.trim()],
       ['Manufacturer', !!manufacturer.trim()],
     ];
     for (const f of fields) checks.push([f.label, !!spec[f.key]?.trim()]);
     return checks;
-  }, [shortName, cls, classType, price, manufacturer, spec, fields]);
+  }, [shortName, cls, classType, price, retailer, manufacturer, spec, fields]);
   const foundCount = fieldChecks.filter(([, v]) => v).length;
   const missingLabels = fieldChecks.filter(([, v]) => !v).map(([l]) => l);
 

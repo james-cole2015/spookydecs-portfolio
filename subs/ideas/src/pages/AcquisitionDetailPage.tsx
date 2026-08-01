@@ -158,8 +158,10 @@ export default function AcquisitionDetailPage() {
   const taPriceNum = ta.price == null ? NaN : Number(String(ta.price).replace(/[^0-9.-]/g, ''));
   const displayPrice =
     a.price != null ? Number(a.price) : Number.isFinite(taPriceNum) ? taPriceNum : null;
+  const displayRetailer = a.retailer || (ta.retailer ? String(ta.retailer) : '');
   const displayDescription = a.description || (ta.description ? String(ta.description) : '');
   const descFromRenfield = !a.description && !!ta.description;
+  const isEnriched = a.enrichment?.status === 'complete' || a.enrichment?.status === 'partial';
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-6">
@@ -286,14 +288,16 @@ export default function AcquisitionDetailPage() {
             ) : (
               <>
                 <span className="text-small text-default-500">
-                  Purchase this acquisition to create the linked item and finance cost.
+                  {isEnriched
+                    ? 'Renfield prefilled this — review and confirm to create the linked item and finance cost.'
+                    : 'Purchase this acquisition to create the linked item and finance cost.'}
                 </span>
                 <Button
                   color="primary"
                   startContent={<ShoppingCart size={16} />}
-                  onPress={() => setPurchaseOpen(true)}
+                  onPress={openPurchase}
                 >
-                  Purchase
+                  {isEnriched ? 'Purchase (prefilled)' : 'Purchase'}
                 </Button>
               </>
             )}
@@ -303,11 +307,7 @@ export default function AcquisitionDetailPage() {
             purchase wizard. Pre-purchase only; onUpdate refreshes page state so the wizard
             sees target_attributes. */}
         {writable && !isPurchased && (
-          <AcquisitionEnrichPanel
-            acquisition={a}
-            onUpdate={setAcquisition}
-            onPurchase={openPurchase}
-          />
+          <AcquisitionEnrichPanel acquisition={a} onUpdate={setAcquisition} />
         )}
       </div>
 
@@ -365,7 +365,7 @@ export default function AcquisitionDetailPage() {
                 value={displayPrice != null ? `$${displayPrice.toFixed(2)}` : undefined}
               />
               <CatalogField label="Quantity" value={a.quantity != null ? String(a.quantity) : undefined} />
-              <CatalogField label="Retailer" value={a.retailer} />
+              <CatalogField label="Retailer" value={displayRetailer || undefined} />
               <CatalogField label="Priority" value={a.priority} />
               <div className="flex justify-between text-small">
                 <span className="text-default-500">Product URL</span>
