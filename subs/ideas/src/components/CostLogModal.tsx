@@ -119,7 +119,7 @@ export function CostLogModal({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} size="lg" scrollBehavior="inside">
+    <Modal isOpen={isOpen} onClose={handleClose} size="lg" placement="center" scrollBehavior="inside">
       <ModalContent>
         <ModalHeader>Log Cost</ModalHeader>
         <ModalBody className="gap-4">
