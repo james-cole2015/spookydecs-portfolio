@@ -84,7 +84,7 @@ export function QuickAddAcquisitionModal({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} size="lg">
+    <Modal isOpen={isOpen} onClose={handleClose} size="lg" placement="center">
       <ModalContent>
         <ModalHeader className="flex flex-col gap-1">
           Quick Add

@@ -347,6 +347,7 @@ export function AcquisitionPurchaseWizard({
       isOpen={isOpen}
       onClose={() => step !== 4 && onClose()}
       size="lg"
+      placement="center"
       scrollBehavior="inside"
       isDismissable={step !== 4}
     >
