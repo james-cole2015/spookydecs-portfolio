@@ -27,47 +27,48 @@ export default function App() {
       <AppHeader pageTitle="Deployments" />
       <PageContainer>
         <Suspense fallback={<LoadingState />}>
-          {/* react-router v6 ranks routes by specificity, so registration order
-              does not matter — `/deployments/:id` will not shadow the static
-              and nested builder routes the way the vanilla Navigo router required. */}
+          {/* Bare-root routing (#487): the subdomain is the namespace, so routes are
+              root-relative with no `/deployments` prefix. react-router v6 ranks routes
+              by specificity, so registration order does not matter — `/:id` will not
+              shadow the static and nested builder routes. */}
           <Routes>
-            <Route path="/deployments" element={<LandingPage />} />
-            <Route path="/deployments/builder" element={<BuilderPage />} />
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/builder" element={<BuilderPage />} />
 
             {/* Builder → zones → session → staging/teardown flow */}
-            <Route path="/deployments/builder/:id/staging" element={<StagingPage />} />
-            <Route path="/deployments/builder/:id/teardown" element={<TeardownPage />} />
-            <Route path="/deployments/builder/:id/zones/complete" element={<CompletePage />} />
+            <Route path="/builder/:id/staging" element={<StagingPage />} />
+            <Route path="/builder/:id/teardown" element={<TeardownPage />} />
+            <Route path="/builder/:id/zones/complete" element={<CompletePage />} />
             <Route
-              path="/deployments/builder/:id/zones/:zone/sessions/:sessionId"
+              path="/builder/:id/zones/:zone/sessions/:sessionId"
               element={<SessionDetailPage />}
             />
             <Route
-              path="/deployments/builder/:id/zones/:zone/session"
+              path="/builder/:id/zones/:zone/session"
               element={<SessionPage />}
             />
-            <Route path="/deployments/builder/:id/zones/:zone" element={<ZoneDetailPage />} />
-            <Route path="/deployments/builder/:id/zones" element={<ZonesPage />} />
+            <Route path="/builder/:id/zones/:zone" element={<ZoneDetailPage />} />
+            <Route path="/builder/:id/zones" element={<ZonesPage />} />
             <Route
-              path="/deployments/builder/:deploymentId/:sessionId/:connectionId"
+              path="/builder/:deploymentId/:sessionId/:connectionId"
               element={<ConnectionDetailPage />}
             />
 
             {/* Historical */}
-            <Route path="/deployments/historical/:id" element={<HistoricalDetailPage />} />
-            <Route path="/deployments/historical" element={<HistoricalPage />} />
+            <Route path="/historical/:id" element={<HistoricalDetailPage />} />
+            <Route path="/historical" element={<HistoricalPage />} />
 
             {/* Stats */}
-            <Route path="/deployments/stats/:id" element={<StatsDetailPage />} />
-            <Route path="/deployments/stats" element={<StatsPage />} />
+            <Route path="/stats/:id" element={<StatsDetailPage />} />
+            <Route path="/stats" element={<StatsPage />} />
 
             {/* Graphs placeholder */}
-            <Route path="/deployments/graphs" element={<GraphsPlaceholderPage />} />
+            <Route path="/graphs" element={<GraphsPlaceholderPage />} />
 
             {/* Generic detail placeholder (least specific) */}
-            <Route path="/deployments/:id" element={<DetailPlaceholderPage />} />
+            <Route path="/:id" element={<DetailPlaceholderPage />} />
 
-            <Route path="*" element={<Navigate to="/deployments" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
       </PageContainer>

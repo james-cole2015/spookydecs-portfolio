@@ -1,0 +1,440 @@
+// Acquisition detail — hero, catalog fields, notes, timestamps, and gated
+// edit/delete + Considering↔Passed transitions. A trimmed fork of the ideas
+// DetailPage (no enrichment/costs/photo-gallery). The "Purchase" action is
+// reserved for the W5 wizard (#496) — this page shows only a noted placeholder.
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Button, Card, CardBody, CardHeader, Chip, Link } from '@heroui/react';
+import { Pencil, Trash2, ArrowRight, ShoppingCart } from 'lucide-react';
+import {
+  LoadingState,
+  ErrorState,
+  EmptyState,
+  Breadcrumbs,
+  SeasonChip,
+  StatusChip,
+  useToast,
+  useConfirm,
+  useAuth,
+} from '@spookydecs/ui';
+import { getAcquisition, updateAcquisition, deleteAcquisition } from '../api/acquisitionsApi';
+import {
+  ACQ_STATUS_COLOR,
+  ITEMS_BASE_URL,
+  SEASON_PLACEHOLDERS,
+  PENDING_TITLE,
+  type Acquisition,
+  type AcquisitionStatus,
+} from '../config/acquisitionsConfig';
+import { formatDate, heroImageUrl } from '../lib/format';
+import { AcquisitionPurchaseWizard } from '../components/AcquisitionPurchaseWizard';
+import { AcquisitionEnrichPanel } from '../components/AcquisitionEnrichPanel';
+
+export default function AcquisitionDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const toast = useToast();
+  const { confirm, dialog } = useConfirm();
+  const { hasMinRole } = useAuth();
+
+  const [acquisition, setAcquisition] = useState<Acquisition | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [notFound, setNotFound] = useState(false);
+  const [purchaseOpen, setPurchaseOpen] = useState(false);
+
+  async function refresh() {
+    const refreshed = await getAcquisition(id!);
+    if (refreshed) setAcquisition(refreshed);
+  }
+
+  useEffect(() => {
+    setLoading(true);
+    setError('');
+    setNotFound(false);
+    getAcquisition(id!)
+      .then((fetched) => {
+        if (!fetched) {
+          setNotFound(true);
+          return;
+        }
+        setAcquisition(fetched);
+      })
+      .catch((err) => setError((err as Error).message))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  async function transition(newStatus: AcquisitionStatus, title: string, message: string) {
+    if (!acquisition) return;
+    const ok = await confirm({ title, body: message, confirmLabel: title });
+    if (!ok) return;
+    try {
+      await updateAcquisition({ ...acquisition, status: newStatus });
+      toast.showSuccess(`Moved to ${newStatus}`);
+      await refresh();
+    } catch (err) {
+      toast.showError('Failed: ' + (err as Error).message);
+    }
+  }
+
+  async function handleDelete() {
+    if (!acquisition) return;
+    const ok = await confirm({
+      title: 'Delete Acquisition',
+      body: `Are you sure you want to delete "${acquisition.title}"? This cannot be undone.`,
+      confirmLabel: 'Delete',
+      isDestructive: true,
+    });
+    if (!ok) return;
+    try {
+      await deleteAcquisition(acquisition.acquisition_id);
+      toast.showSuccess('Acquisition deleted');
+      navigate('/acquisitions');
+    } catch (err) {
+      toast.showError('Failed to delete: ' + (err as Error).message);
+    }
+  }
+
+  if (loading) return <LoadingState />;
+  if (error)
+    return (
+      <div className="mx-auto max-w-5xl px-4 py-6">
+        <ErrorState message={error} onRetry={() => window.location.reload()} />
+      </div>
+    );
+  if (notFound || !acquisition)
+    return (
+      <div className="mx-auto max-w-5xl px-4 py-6">
+        <EmptyState
+          icon="🛒"
+          title="Acquisition Not Found"
+          message={`No acquisition with ID ${id} could be found.`}
+        />
+        <div className="mt-4 flex justify-center">
+          <Button color="primary" onPress={() => navigate('/acquisitions')}>
+            Back to Acquisitions
+          </Button>
+        </div>
+      </div>
+    );
+
+  const a = acquisition;
+  const writable = hasMinRole('builder');
+  const isPurchased = a.status === 'Purchased';
+  const hero = heroImageUrl(a.image ? [a.image] : undefined, a.url);
+  const placeholder =
+    SEASON_PLACEHOLDERS[(a.season || 'shared').toLowerCase()] || SEASON_PLACEHOLDERS.shared;
+
+  // Quick-add (#526) states. While Renfield runs on a URL-only stub, the title is still
+  // the PENDING_TITLE sentinel — render a friendly pending label instead of the raw
+  // placeholder (and a fallback for the rare terminal-but-unnamed case, e.g. a `failed`
+  // run that couldn't derive a hostname).
+  const isNaming =
+    a.title === PENDING_TITLE && a.enrichment?.status === 'in_progress';
+  const displayTitle =
+    a.title === PENDING_TITLE
+      ? isNaming
+        ? 'Renfield is naming this…'
+        : 'Untitled acquisition'
+      : a.title;
+  // Empty season is the worker's UNRESOLVED marker — the user must set it (via Edit)
+  // before Purchase, because item-create at purchase requires a real enum season.
+  const seasonUnresolved = !a.season;
+
+  // Single purchase-open guard so BOTH the Purchase card button and the enrich panel's
+  // "Purchase (prefilled)" button honor the season gate (#526).
+  function openPurchase() {
+    if (seasonUnresolved) {
+      toast.showError('Set the acquisition’s season before purchasing.');
+      return;
+    }
+    setPurchaseOpen(true);
+  }
+
+  // Renfield's findings live in target_attributes; the record's own price/description
+  // may be empty (quick-add). Fall back to the enriched values so the page isn't
+  // misleadingly blank, and flag when the shown value came from Renfield (#526).
+  const ta = (a.target_attributes as Record<string, unknown> | undefined) || {};
+  const taPriceNum = ta.price == null ? NaN : Number(String(ta.price).replace(/[^0-9.-]/g, ''));
+  const displayPrice =
+    a.price != null ? Number(a.price) : Number.isFinite(taPriceNum) ? taPriceNum : null;
+  const displayRetailer = a.retailer || (ta.retailer ? String(ta.retailer) : '');
+  const displayDescription = a.description || (ta.description ? String(ta.description) : '');
+  const descFromRenfield = !a.description && !!ta.description;
+  const isEnriched = a.enrichment?.status === 'complete' || a.enrichment?.status === 'partial';
+
+  return (
+    <div className="mx-auto max-w-5xl px-4 py-6">
+      {dialog}
+      <Breadcrumbs crumbs={[{ label: 'Acquisitions', to: '/acquisitions' }, { label: displayTitle }]} />
+
+      {/* Featured media */}
+      <Card className="mb-4 overflow-hidden">
+        <div className="aspect-video w-full bg-default-100">
+          {hero ? (
+            <img src={hero} alt={displayTitle} className="h-full w-full object-cover" />
+          ) : (
+            <div
+              className="flex h-full w-full items-center justify-center p-12 text-default-300 [&_svg]:h-24 [&_svg]:w-24"
+              dangerouslySetInnerHTML={{ __html: placeholder }}
+            />
+          )}
+        </div>
+      </Card>
+
+      {/* Header */}
+      <div className="mb-6 flex flex-col gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {seasonUnresolved ? (
+            <Chip
+              color="warning"
+              variant="flat"
+              size="md"
+              startContent={<span className="px-0.5">⚠</span>}
+            >
+              Season needs review
+            </Chip>
+          ) : (
+            <SeasonChip value={a.season} size="md" />
+          )}
+          <StatusChip value={a.status} colorMap={ACQ_STATUS_COLOR} size="md" />
+        </div>
+        {isPurchased && (
+          <div className="flex flex-wrap items-center gap-2 rounded-medium bg-success/10 px-4 py-2 text-small text-success">
+            ✓ Purchased{a.purchased_at ? ` on ${formatDate(a.purchased_at)}` : ''}.
+            {a.item_id && (
+              <Link href={`${ITEMS_BASE_URL}/items/${a.item_id}`} isExternal size="sm">
+                View Item →
+              </Link>
+            )}
+          </div>
+        )}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1
+            className={`text-2xl font-semibold ${isNaming ? 'italic text-default-400' : 'text-foreground'}`}
+          >
+            {displayTitle}
+          </h1>
+          {writable && !isPurchased && (
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                variant="flat"
+                startContent={<Pencil size={15} />}
+                onPress={() => navigate(`/acquisitions/${a.acquisition_id}/edit`)}
+              >
+                Edit
+              </Button>
+              {/* Considering ↔ Passed only. Purchased is owned by the W5 wizard. */}
+              {a.status === 'Considering' && (
+                <Button
+                  size="sm"
+                  variant="flat"
+                  endContent={<ArrowRight size={15} />}
+                  onPress={() =>
+                    transition('Passed', 'Mark Passed', `Mark "${a.title}" as Passed?`)
+                  }
+                >
+                  Mark Passed
+                </Button>
+              )}
+              {a.status === 'Passed' && (
+                <Button
+                  size="sm"
+                  variant="flat"
+                  onPress={() =>
+                    transition(
+                      'Considering',
+                      'Back to Considering',
+                      `Move "${a.title}" back to Considering?`,
+                    )
+                  }
+                >
+                  ← Back to Considering
+                </Button>
+              )}
+              <Button
+                size="sm"
+                color="danger"
+                variant="flat"
+                startContent={<Trash2 size={15} />}
+                onPress={handleDelete}
+              >
+                Delete
+              </Button>
+            </div>
+          )}
+        </div>
+        {/* W5 purchase wizard (#496): turns a Considering acquisition into item(s) + a
+            finance cost. Gated to builder/admin on a non-purchased acquisition. Also
+            gated on a resolved season (#526) — item-create needs a real enum season, so
+            an unresolved (quick-add) record must be named/seasoned via Edit first. */}
+        {writable && !isPurchased && (
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-medium bg-primary/5 px-4 py-3">
+            {seasonUnresolved ? (
+              <>
+                <span className="text-small text-warning-600">
+                  Set this acquisition's season before purchasing — Renfield couldn't determine it.
+                </span>
+                <Button
+                  color="warning"
+                  variant="flat"
+                  startContent={<Pencil size={15} />}
+                  onPress={() => navigate(`/acquisitions/${a.acquisition_id}/edit`)}
+                >
+                  Set Season
+                </Button>
+              </>
+            ) : (
+              <>
+                <span className="text-small text-default-500">
+                  {isEnriched
+                    ? 'Renfield prefilled this — review and confirm to create the linked item and finance cost.'
+                    : 'Purchase this acquisition to create the linked item and finance cost.'}
+                </span>
+                <Button
+                  color="primary"
+                  startContent={<ShoppingCart size={16} />}
+                  onPress={openPurchase}
+                >
+                  {isEnriched ? 'Purchase (prefilled)' : 'Purchase'}
+                </Button>
+              </>
+            )}
+          </div>
+        )}
+        {/* W8 enrichment (#499): Ask Renfield to classify the acquisition and pre-fill the
+            purchase wizard. Pre-purchase only; onUpdate refreshes page state so the wizard
+            sees target_attributes. */}
+        {writable && !isPurchased && (
+          <AcquisitionEnrichPanel acquisition={a} onUpdate={setAcquisition} />
+        )}
+      </div>
+
+      {writable && !isPurchased && (
+        <AcquisitionPurchaseWizard
+          // Remount when enrichment lands so the wizard's mount-only prefill initializers
+          // re-read target_attributes (#499 — otherwise the already-mounted wizard is stale).
+          // completed_at changes on every terminal enrich run (incl. re-fetch); updatedAt is
+          // the fallback for records that were never enriched.
+          key={a.enrichment?.completed_at ?? a.updatedAt ?? a.acquisition_id}
+          acquisition={a}
+          isOpen={purchaseOpen}
+          onClose={() => {
+            setPurchaseOpen(false);
+            void refresh();
+          }}
+        />
+      )}
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_280px]">
+        {/* Main column */}
+        <div className="flex flex-col gap-6">
+          <Card>
+            <CardHeader className="flex items-center justify-between font-semibold">
+              Description
+              {descFromRenfield && (
+                <Chip size="sm" variant="flat" color="secondary">
+                  Suggested by Renfield
+                </Chip>
+              )}
+            </CardHeader>
+            <CardBody>
+              <p
+                className={`text-small ${displayDescription ? 'text-foreground/80' : 'text-default-400'}`}
+              >
+                {displayDescription || 'No description provided.'}
+              </p>
+            </CardBody>
+          </Card>
+
+          {a.notes && (
+            <Card>
+              <CardHeader className="font-semibold">Notes</CardHeader>
+              <CardBody>
+                <p className="whitespace-pre-wrap text-small text-foreground/80">{a.notes}</p>
+              </CardBody>
+            </Card>
+          )}
+
+          <Card>
+            <CardHeader className="font-semibold">Catalog</CardHeader>
+            <CardBody className="gap-2">
+              <CatalogField
+                label="Price"
+                value={displayPrice != null ? `$${displayPrice.toFixed(2)}` : undefined}
+              />
+              <CatalogField label="Quantity" value={a.quantity != null ? String(a.quantity) : undefined} />
+              <CatalogField label="Retailer" value={displayRetailer || undefined} />
+              <CatalogField label="Priority" value={a.priority} />
+              <div className="flex justify-between text-small">
+                <span className="text-default-500">Product URL</span>
+                {a.url ? (
+                  <Link href={a.url} isExternal size="sm" className="break-all">
+                    {a.url}
+                  </Link>
+                ) : (
+                  <span className="text-default-400">—</span>
+                )}
+              </div>
+            </CardBody>
+          </Card>
+        </div>
+
+        {/* Sidebar */}
+        <div className="flex flex-col gap-6">
+          <Card>
+            <CardHeader className="font-semibold">Info</CardHeader>
+            <CardBody className="gap-3 text-small">
+              <SidebarField label="Season" value={a.season || 'Needs review'} />
+              <SidebarField label="Status" value={a.status} />
+              <div className="flex flex-col gap-1">
+                <span className="text-default-500">Tags</span>
+                {a.tags?.length ? (
+                  <div className="flex flex-wrap gap-1">
+                    {a.tags.map((t) => (
+                      <Chip key={t} size="sm" variant="flat">
+                        {t}
+                      </Chip>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-default-400">None</span>
+                )}
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-default-500">ID</span>
+                <span className="break-all text-tiny text-default-400">{a.acquisition_id}</span>
+              </div>
+            </CardBody>
+          </Card>
+
+          {(a.createdAt || a.updatedAt) && (
+            <div className="px-1 text-tiny text-default-400">
+              {a.createdAt && <div>Created: {formatDate(a.createdAt)}</div>}
+              {a.updatedAt && <div>Updated: {formatDate(a.updatedAt)}</div>}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CatalogField({ label, value }: { label: string; value?: string }) {
+  return (
+    <div className="flex justify-between text-small">
+      <span className="text-default-500">{label}</span>
+      <span className={value ? 'text-foreground/80' : 'text-default-400'}>{value || '—'}</span>
+    </div>
+  );
+}
+
+function SidebarField({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between">
+      <span className="text-default-500">{label}</span>
+      <span className="text-foreground/80">{value}</span>
+    </div>
+  );
+}

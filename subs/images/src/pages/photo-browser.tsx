@@ -93,11 +93,11 @@ export default function PhotoBrowser() {
 
   return (
     <div>
-      <Breadcrumbs crumbs={[{ label: 'Images', to: '/images' }, { label: 'Photo Browser' }]} />
+      <Breadcrumbs crumbs={[{ label: 'Images', to: '/' }, { label: 'Photo Browser' }]} />
       <PageHeader
         title="Browse Photos"
         actions={
-          <Button variant="flat" onPress={() => navigate('/images/list')}>
+          <Button variant="flat" onPress={() => navigate('/list')}>
             Back to Admin
           </Button>
         }

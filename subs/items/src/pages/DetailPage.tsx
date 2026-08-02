@@ -160,7 +160,7 @@ export default function DetailPage() {
   const toteId   = storage.tote_id;
 
   async function handleUploadPhoto() {
-    const uploaded = await photoUpload.open({
+    const uploaded = await photoUpload.openWithEditor({
       context: 'item',
       entityId: item!.id,
       season: item!.season?.toLowerCase() ?? 'shared',
@@ -610,6 +610,9 @@ export default function DetailPage() {
           </Button>
         </div>
       )}
+
+      {/* Pre-upload photo editor (shared) */}
+      {photoUpload.editor}
 
       {/* ── Back to top ───────────────────────────────────────────────────── */}
       {showBackToTop && (

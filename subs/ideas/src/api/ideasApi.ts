@@ -13,8 +13,11 @@ function auth() {
 
 async function handleResponse(response: Response): Promise<any> {
   if (response.status === 401) {
+    // Mid-session token expiry — bounce to login, then throw so callers surface an
+    // error rather than silently collapsing to []. AuthGate blocks unauthenticated
+    // visitors at boot, so reaching here means a valid session went stale (#513).
     await auth().redirectToLogin();
-    return null;
+    throw new Error('Your session has expired. Redirecting to login…');
   }
 
   const contentType = response.headers.get('content-type');

@@ -2,8 +2,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardBody, Chip } from '@heroui/react';
-import { Plus, Hammer, Sparkles } from 'lucide-react';
-import { PageHeader } from '@spookydecs/ui';
+import { Plus, Hammer, Sparkles, ShoppingCart } from 'lucide-react';
+import { PageHeader, ErrorState } from '@spookydecs/ui';
 import { listIdeas } from '../api/ideasApi';
 import { SEASONS } from '../config/ideasConfig';
 import { SeasonChip } from '../components/chips';
@@ -25,8 +25,10 @@ const EMPTY: Counts = {
 export default function LandingPage() {
   const navigate = useNavigate();
   const [counts, setCounts] = useState<Counts>(EMPTY);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const load = () => {
+    setError(null);
     listIdeas()
       .then((ideas) => {
         const next: Counts = {
@@ -46,8 +48,12 @@ export default function LandingPage() {
         next.planningTotal = ideas.filter((i) => i.status === 'Planning').length;
         setCounts(next);
       })
-      .catch(() => setCounts(EMPTY));
-  }, []);
+      // Surface a real backend failure instead of silently showing empty counts —
+      // an invisible error (e.g. the IAM bug behind #513) reads as a blank landing.
+      .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load ideas.'));
+  };
+
+  useEffect(load, []);
 
   const { workbenchTotal: building, planningTotal: planning } = counts;
   const pipelineTotal = building + planning;
@@ -60,6 +66,14 @@ export default function LandingPage() {
     buildsDesc = `${planning} idea${planning !== 1 ? 's' : ''} in planning.`;
   } else {
     buildsDesc = 'Nothing in the pipeline right now.';
+  }
+
+  if (error) {
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-6">
+        <ErrorState message={error} onRetry={load} />
+      </div>
+    );
   }
 
   return (
@@ -108,6 +122,13 @@ export default function LandingPage() {
           desc={buildsDesc}
           badge={pipelineTotal > 0 ? pipelineTotal : undefined}
           onPress={() => navigate('/workbench')}
+        />
+        <ActionCard
+          icon={<ShoppingCart size={20} />}
+          label="Buy"
+          title="Acquisitions"
+          desc="Track prospective purchases from consideration through buy."
+          onPress={() => navigate('/acquisitions')}
         />
         <ActionCard
           icon={<Sparkles size={20} />}

@@ -13,14 +13,17 @@
  * lightbox block. Theme-aware by virtue of being HeroUI-composed (the CDN
  * gallery renders a fixed light palette).
  *
- * Upload stays a CDN concern: "Add Photos" delegates to the existing CDN
- * `<photo-upload-modal>` imperatively (same pattern storage already ships) and
- * refreshes on `upload-complete`. No native upload UI is built here.
+ * Upload runs through the shared `usePhotoUpload().openWithEditor` (#482): "Add
+ * Photos" opens a native picker → the shared pre-upload editor (crop/rotate/
+ * brightness) → the headless CDN `<photo-upload-service>`, then refreshes. This
+ * gives every gallery consumer the editor in one place, using the hook's canonical
+ * context→id mapping (e.g. maintenance → `record_id`).
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Chip, Image, Modal, ModalContent, Spinner } from '@heroui/react';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useConfig } from '../providers/ConfigProvider';
+import { usePhotoUpload } from '../hooks/usePhotoUpload';
 
 /** The entity contexts the gallery understands (mirrors the CDN CONTEXT_MAP). */
 export type PhotoGalleryContext = 'item' | 'storage' | 'idea' | 'maintenance' | 'deployment';
@@ -70,6 +73,7 @@ export function PhotoGallery({
 }: PhotoGalleryProps) {
   const config = useConfig();
   const apiEndpoint = config.API_ENDPOINT;
+  const { openWithEditor, editor } = usePhotoUpload();
 
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -183,29 +187,19 @@ export function PhotoGallery({
   }
 
   /**
-   * Delegate to the CDN `<photo-upload-modal>` (loaded via <script> in the sub's
-   * index.html), forwarding the same attributes the CDN gallery does and
-   * reloading on `upload-complete`. No native upload UI is built here.
+   * Open the shared pre-upload editor via `openWithEditor` (native picker → edit →
+   * headless CDN upload), then refresh the grid. The hook builds the upload metadata
+   * (including the canonical context→id key), so no per-context attribute wiring here.
    */
-  function openUploadModal() {
-    const remaining = Number.isFinite(maxPhotos) ? maxPhotos - photos.length : 10;
-    if (remaining <= 0) return;
-    const map = CONTEXT_MAP[context];
-
-    const modal = document.createElement('photo-upload-modal');
-    modal.setAttribute('context', context);
-    modal.setAttribute('photo-type', photoType ?? context);
-    modal.setAttribute('season', season || 'shared');
-    if (map && entityId) modal.setAttribute(`${context}-id`, entityId);
-    if (Number.isFinite(maxPhotos)) modal.setAttribute('max-photos', String(remaining));
-
-    const onComplete = () => {
-      modal.removeEventListener('upload-complete', onComplete);
-      modal.remove();
-      void reload();
-    };
-    modal.addEventListener('upload-complete', onComplete);
-    document.body.appendChild(modal);
+  async function openUploadModal() {
+    if (Number.isFinite(maxPhotos) && photos.length >= maxPhotos) return;
+    const uploaded = await openWithEditor({
+      context,
+      entityId,
+      season: season || 'shared',
+      photo_type: photoType ?? context,
+    });
+    if (uploaded.length > 0) void reload();
   }
 
   if (loading) {
@@ -364,6 +358,9 @@ export function PhotoGallery({
           }}
         </ModalContent>
       </Modal>
+
+      {/* Shared pre-upload editor (mounted for openWithEditor). */}
+      {editor}
     </div>
   );
 }

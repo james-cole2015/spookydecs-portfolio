@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Card, CardBody, CardHeader } from '@heroui/react';
-import { List, Diamond, Plus, type LucideIcon } from 'lucide-react';
+import { List, Diamond, Plus, GanttChartSquare, type LucideIcon } from 'lucide-react';
 import { PageHeader, Typography } from '@spookydecs/ui';
 
 interface HubCard {
@@ -15,6 +15,7 @@ interface HubCard {
 const CARDS: HubCard[] = [
   { id: 'issues', icon: List, title: 'Issues', description: 'Browse all issues across epics.', route: '/priority' },
   { id: 'epics', icon: Diamond, title: 'Epics', description: 'Browse and manage epics with progress tracking.', route: '/epics' },
+  { id: 'timeline', icon: GanttChartSquare, title: 'Timeline', description: 'See epics in sequence and drill into their issues.', route: '/timeline' },
   { id: 'create', icon: Plus, title: 'Create Issue', description: 'Log a new issue and assign it to an epic.', route: '/new-issue' },
 ];
 

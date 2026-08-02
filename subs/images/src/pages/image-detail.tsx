@@ -13,8 +13,8 @@ import type { Photo } from '../config/imagesConfig';
 import { ImageDetail } from '../components/ImageDetail';
 
 const PARENT_CRUMBS: Record<string, Crumb> = {
-  gallery: { label: 'Gallery Manager', to: '/images/gallery' },
-  entity: { label: 'Entities', to: '/images/entities' },
+  gallery: { label: 'Gallery Manager', to: '/gallery' },
+  entity: { label: 'Entities', to: '/entities' },
 };
 
 export default function ImageDetailPage({ editMode = false }: { editMode?: boolean }) {
@@ -24,7 +24,7 @@ export default function ImageDetailPage({ editMode = false }: { editMode?: boole
   const config = useConfig() as Record<string, string>;
 
   const from = searchParams.get('from') || '';
-  const parent = PARENT_CRUMBS[from] ?? { label: 'Image Admin', to: '/images/list' };
+  const parent = PARENT_CRUMBS[from] ?? { label: 'Image Admin', to: '/list' };
 
   const [photo, setPhoto] = useState<Photo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -65,11 +65,11 @@ export default function ImageDetailPage({ editMode = false }: { editMode?: boole
   }
 
   const crumbs: Crumb[] = [
-    { label: 'Images', to: '/images' },
+    { label: 'Images', to: '/' },
     parent,
     ...(editMode
       ? [
-          { label: photo.photo_id, to: `/images/${photo.photo_id}${from ? `?from=${from}` : ''}` },
+          { label: photo.photo_id, to: `/${photo.photo_id}${from ? `?from=${from}` : ''}` },
           { label: 'Edit' },
         ]
       : [{ label: photo.photo_id }]),
@@ -84,6 +84,7 @@ export default function ImageDetailPage({ editMode = false }: { editMode?: boole
         financeUrl={config.FINANCE_URL || ''}
         maintUrl={config.MAINT_URL || ''}
         from={from}
+        onPhotoUpdated={setPhoto}
       />
     </div>
   );

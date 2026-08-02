@@ -147,7 +147,7 @@ export default function TeardownPage() {
     setCompleting(true);
     try {
       await apiTeardownComplete(deploymentId);
-      navigate('/deployments');
+      navigate('/');
     } catch (e: any) {
       toast.showError('Failed to complete teardown: ' + (e?.message || ''));
       setCompleteOpen(false);
@@ -157,14 +157,14 @@ export default function TeardownPage() {
 
   if (loading) return <LoadingState label="Loading teardown…" />;
   if (error || !deployment)
-    return <ErrorState message={error || 'Failed to load'} onRetry={() => navigate(`/deployments/builder/${deploymentId}/zones`)} />;
+    return <ErrorState message={error || 'Failed to load'} onRetry={() => navigate(`/builder/${deploymentId}/zones`)} />;
 
   return (
     <>
       <Breadcrumbs
         crumbs={[
-          { label: 'Deployments', to: '/deployments' },
-          { label: deployment.deployment_id, to: `/deployments/builder/${deploymentId}/zones` },
+          { label: 'Deployments', to: '/' },
+          { label: deployment.deployment_id, to: `/builder/${deploymentId}/zones` },
           { label: 'Teardown' },
         ]}
       />

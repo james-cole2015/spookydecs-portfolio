@@ -240,7 +240,7 @@ export default function StagingPage() {
   }
 
   if (loading) return <LoadingState label="Loading staging area…" />;
-  if (error) return <ErrorState message={error} onRetry={() => navigate(`/deployments/builder/${deploymentId}/zones`)} />;
+  if (error) return <ErrorState message={error} onRetry={() => navigate(`/builder/${deploymentId}/zones`)} />;
 
   const seasonLabel = `${deployment?.season || ''} ${deployment?.year || ''}`.trim();
 
@@ -248,8 +248,8 @@ export default function StagingPage() {
     <>
       <Breadcrumbs
         crumbs={[
-          { label: 'Deployments', to: '/deployments' },
-          { label: seasonLabel || deploymentId, to: `/deployments/builder/${deploymentId}/zones` },
+          { label: 'Deployments', to: '/' },
+          { label: seasonLabel || deploymentId, to: `/builder/${deploymentId}/zones` },
           { label: 'Staging' },
         ]}
       />

@@ -121,7 +121,7 @@ export const SUBDOMAINS: Subdomain[] = [
     id: 'iris-admin',
     title: 'Iris Admin',
     description: 'Edit item search text and trigger vector index rebuilds for Iris.',
-    internalRoute: '/admin/search-text',
+    internalRoute: '/search-text',
   },
 ];
 

@@ -132,7 +132,7 @@ export default function SearchTextPage() {
         title="Iris Search Text"
         subtitle="Manage vector indexes for Iris semantic search and gallery AI tagging. Edit an item's search text to tune how Iris finds and understands it."
         actions={
-          <Button variant="light" startContent={<ArrowLeft size={16} />} onPress={() => navigate('/admin')}>
+          <Button variant="light" startContent={<ArrowLeft size={16} />} onPress={() => navigate('/')}>
             Back to Dashboard
           </Button>
         }

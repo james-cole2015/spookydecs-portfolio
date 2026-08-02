@@ -1,36 +1,24 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { PageContainer, LoadingState, AppHeader, useAuth } from '@spookydecs/ui';
+import { PageContainer, LoadingState, AppHeader } from '@spookydecs/ui';
 
 // The audit viewer is one lazy chunk — mirrors storage/workbench App.tsx. The
 // header hosts the theme switch (#348), so there is no per-page ThemeSwitch here.
 const RecordListPage = lazy(() => import('./pages/RecordListPage'));
 
 export default function App() {
-  // Staff-only access gate (audit-specific; workbench has none). enforceEnvAccess()
-  // redirects internally when the user lacks access and returns false — in that
-  // case render nothing while the redirect navigates away. Runs under
-  // ConfigProvider, so the runtime config is already resolved here.
-  const [access, setAccess] = useState<'checking' | 'granted' | 'denied'>('checking');
-  const { enforceEnvAccess } = useAuth();
-
-  useEffect(() => {
-    const ok = enforceEnvAccess();
-    setAccess(ok ? 'granted' : 'denied');
-  }, [enforceEnvAccess]);
-
-  if (access === 'checking') return <LoadingState label="Checking access…" />;
-  if (access === 'denied') return null;
-
+  // Access gating (token presence + env claim) is handled by the shared AuthGate
+  // in main.tsx (#513), before this component ever mounts.
   return (
     <>
       <AppHeader pageTitle="Audit" />
       <PageContainer>
         <Suspense fallback={<LoadingState />}>
+          {/* Bare-root routing (#487): the audit subdomain is the namespace, so the
+              route is root-relative with no /audit prefix. */}
           <Routes>
-            <Route path="/audit" element={<RecordListPage />} />
-            {/* Preserve the /audit entry path; anything else returns to it. */}
-            <Route path="*" element={<Navigate to="/audit" replace />} />
+            <Route path="/" element={<RecordListPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
       </PageContainer>
