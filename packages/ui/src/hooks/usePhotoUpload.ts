@@ -24,7 +24,7 @@
  *                               `editor` element once in the tree.
  *
  * Both translate a single `entityId` to the per-context id field the CDN components
- * expect (`item-id`/`idea_id`/…). Non-standard contexts (e.g. `receipt`, which has
+ * expect (`item_ids` array/`idea_id`/…). Non-standard contexts (e.g. `receipt`, which has
  * no id of its own and rides on `idea_id`) can override via `idField` or pass
  * additional `metadata`.
  */
@@ -41,9 +41,14 @@ export interface UploadedPhoto {
   [key: string]: unknown;
 }
 
-/** Standard entity contexts → the id field the CDN components key on (snake_case). */
+/**
+ * Standard entity contexts → the id field the CDN components key on (snake_case).
+ * The `item` context is special: the CDN presign/confirm bodies key items on a
+ * plural **array** (`item_ids`), not a singular id like the other contexts — a
+ * single `entityId` is wrapped into a one-element array in `buildMetadata`.
+ */
 const CONTEXT_ID_KEY: Record<string, string> = {
-  item: 'item_id',
+  item: 'item_ids',
   storage: 'storage_id',
   idea: 'idea_id',
   deployment: 'deployment_id',
@@ -137,7 +142,11 @@ export function usePhotoUpload(): UsePhotoUpload {
       year: opts.year ?? new Date().getFullYear(),
       ...(opts.category ? { category: opts.category } : {}),
       ...(opts.isPublic ? { is_public: true } : {}),
-      ...(idKey && opts.entityId ? { [idKey]: opts.entityId } : {}),
+      // `item_ids` is a plural array in the CDN contract; every other context is a
+      // singular id. Wrap the single entityId into an array only for the array key.
+      ...(idKey && opts.entityId
+        ? { [idKey]: idKey === 'item_ids' ? [opts.entityId] : opts.entityId }
+        : {}),
       ...(opts.metadata ?? {}),
     };
   }, []);
