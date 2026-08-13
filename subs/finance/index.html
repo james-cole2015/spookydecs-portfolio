@@ -35,9 +35,8 @@
 
     <!-- Shared CDN web components (coexist with React) -->
     <!-- Header is now the native React <AppHeader> from @spookydecs/ui (#348) — CDN spookydecs-header dropped here. -->
-    <!-- Upload stays a CDN concern: CostDetailView + PackPurchaseForm delegate to <photo-upload-modal>/<photo-upload-service> via usePhotoUpload. -->
+    <!-- Upload transport stays a CDN concern: CostDetailPage + PackPurchaseForm drive <photo-upload-service> via usePhotoUpload. -->
     <script src="https://assets.spookydecs.com/components/photo-upload-service.js"></script>
-    <script src="https://assets.spookydecs.com/components/photo-upload-modal.js"></script>
     <!-- Receipt extraction is now the @spookydecs/ui <ReceiptExtractorModal> primitive (#382) — CDN receipt-extractor-widget.js dropped here. -->
 </head>
 <body>

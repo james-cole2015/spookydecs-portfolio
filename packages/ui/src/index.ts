@@ -5,7 +5,7 @@ export type { UseAuth } from './hooks/useAuth';
 export { useToast } from './hooks/useToast';
 export type { ToastApi } from './hooks/useToast';
 export { usePhotoUpload } from './hooks/usePhotoUpload';
-export type { UsePhotoUpload, PhotoUploadOptions, OpenPhotoUploadOptions, UploadedPhoto } from './hooks/usePhotoUpload';
+export type { UsePhotoUpload, PhotoUploadOptions, UploadedPhoto } from './hooks/usePhotoUpload';
 export { useImageEditor } from './hooks/useImageEditor';
 export type { UseImageEditor } from './hooks/useImageEditor';
 export { useFilePicker } from './hooks/useFilePicker';
