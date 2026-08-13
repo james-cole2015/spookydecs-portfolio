@@ -35,9 +35,8 @@
 
     <!-- Shared CDN web components (coexist with React) -->
     <!-- Header is now the native React <AppHeader> from @spookydecs/ui — CDN spookydecs-header dropped. -->
-    <!-- Upload stays a CDN concern: the shared usePhotoUpload (#380) hook drives <photo-upload-modal>/<photo-upload-service>. -->
+    <!-- Upload transport stays a CDN concern: usePhotoUpload (#380) drives <photo-upload-service>. -->
     <script src="https://assets.spookydecs.com/components/photo-upload-service.js"></script>
-    <script src="https://assets.spookydecs.com/components/photo-upload-modal.js"></script>
 </head>
 <body>
     <!-- React mount point (header renders inside the React tree via <AppHeader>) -->

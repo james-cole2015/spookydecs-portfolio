@@ -6,21 +6,24 @@
  * glue (e.g. storage's `openPhotoUploadModal`) so subs stop re-writing the same
  * wrapper around the CDN `<photo-upload-modal>` / `<photo-upload-service>`.
  *
- * Upload stays a **CDN concern** — the `photo-upload-modal.js` + `photo-upload-service.js`
- * scripts remain loaded via <script> in each consumer's index.html. This hook only
- * standardizes the React glue; it does not reimplement the upload pipeline.
+ * The transport stays a **CDN concern** — `photo-upload-service.js` remains loaded via
+ * <script> in each consumer's index.html and still does presign → S3 PUT → confirm.
+ * This hook only standardizes the React glue; it does not reimplement the pipeline.
+ *
+ * The picking UI, by contrast, is now fully React. `open()` — which mounted the CDN
+ * `<photo-upload-modal>` — was **removed in #548** once the last two call sites
+ * (finance CostDetailPage, storage CreateWizardPage) moved to `openWithEditor`.
+ * That modal owned its own file input and ran `validateFile()` internally, so files
+ * never passed through `normalizeUploadFiles` and HEIC uploads failed there (#533).
  *
  * Two entry points cover the two real call shapes:
- *   - `open(opts)`            → mounts the modal UI, resolves with the uploaded photos
- *                               (or [] if the user cancels). Mirrors the storage
- *                               create-wizard flow.
  *   - `uploadFiles(files,opts)` → drives the headless service directly (no UI),
  *                               resolves with the uploaded photos or throws on
  *                               failure. Mirrors the ideas cost-log receipt upload.
- *   - `openWithEditor(opts)`  → native file picker → shared `ImageEditorModal`
- *                               (crop/rotate/brightness, #482) → the same headless
- *                               `uploadFiles`. Drop-in replacement for `open()` that
- *                               adds a pre-upload edit step; mount the returned
+ *   - `openWithEditor(opts)`  → shared `FileDropModal` (drag-drop + browse, honors
+ *                               `maxPhotos`) → HEIC normalization → shared
+ *                               `ImageEditorModal` (crop/rotate/brightness, #482) →
+ *                               the same headless `uploadFiles`. Mount the returned
  *                               `editor` element once in the tree.
  *
  * Both translate a single `entityId` to the per-context id field the CDN components
@@ -88,11 +91,11 @@ export interface PhotoUploadOptions {
    * paths honor public too (#482 makes this live; #481 forwards it in the CDN modal).
    */
   isPublic?: boolean;
-}
-
-/** Options specific to the modal flow (`open`). */
-export interface OpenPhotoUploadOptions extends PhotoUploadOptions {
-  /** Max photos the modal will accept. Defaults to the modal's own default (10). */
+  /**
+   * Max photos the picker will accept. Omit for unlimited. Honored by
+   * `openWithEditor` (passed to the shared `FileDropModal`); ignored by
+   * `uploadFiles`, whose caller supplies the files directly.
+   */
   maxPhotos?: number;
 }
 
@@ -105,11 +108,6 @@ interface PhotoUploadServiceElement extends HTMLElement {
 }
 
 export interface UsePhotoUpload {
-  /**
-   * Mount the CDN `<photo-upload-modal>` and resolve with the uploaded photos
-   * once the user completes the flow, or `[]` if they cancel.
-   */
-  open: (opts: OpenPhotoUploadOptions) => Promise<UploadedPhoto[]>;
   /**
    * Drive the headless CDN `<photo-upload-service>` directly (no UI) and resolve
    * with the uploaded photos. Rejects if the service reports failure.
@@ -152,38 +150,6 @@ export function usePhotoUpload(): UsePhotoUpload {
     };
   }, []);
 
-  const open = useCallback(
-    (opts: OpenPhotoUploadOptions): Promise<UploadedPhoto[]> =>
-      new Promise((resolve) => {
-        const modal = document.createElement('photo-upload-modal');
-        const meta = buildMetadata(opts);
-        // The modal reads hyphenated attributes; translate snake_case keys.
-        for (const [key, value] of Object.entries(meta)) {
-          modal.setAttribute(key.replace(/_/g, '-'), String(value));
-        }
-        if (opts.maxPhotos != null) modal.setAttribute('max-photos', String(opts.maxPhotos));
-
-        const cleanup = () => {
-          modal.removeEventListener('upload-complete', onComplete);
-          modal.removeEventListener('upload-cancel', onCancel);
-          modal.remove();
-        };
-        const onComplete = (e: Event) => {
-          const detail = (e as CustomEvent).detail ?? {};
-          cleanup();
-          resolve((detail.photos as UploadedPhoto[]) ?? []);
-        };
-        const onCancel = () => {
-          cleanup();
-          resolve([]);
-        };
-        modal.addEventListener('upload-complete', onComplete);
-        modal.addEventListener('upload-cancel', onCancel);
-        document.body.appendChild(modal);
-      }),
-    [buildMetadata],
-  );
-
   const uploadFiles = useCallback(
     async (files: File[] | FileList, opts: PhotoUploadOptions): Promise<UploadedPhoto[]> => {
       if (!files || (files as File[]).length === 0) return [];
@@ -204,7 +170,7 @@ export function usePhotoUpload(): UsePhotoUpload {
 
   const openWithEditor = useCallback(
     async (opts: PhotoUploadOptions): Promise<UploadedPhoto[]> => {
-      const picked = await pickFiles();
+      const picked = await pickFiles(opts.maxPhotos);
       if (picked.length === 0) return [];
       // Convert before editing — the browser can't decode HEIC to canvas, so the
       // crop/rotate editor needs a JPEG to work with.
@@ -222,7 +188,7 @@ export function usePhotoUpload(): UsePhotoUpload {
   );
 
   return useMemo(
-    () => ({ open, uploadFiles, openWithEditor, editor }),
-    [open, uploadFiles, openWithEditor, editor],
+    () => ({ uploadFiles, openWithEditor, editor }),
+    [uploadFiles, openWithEditor, editor],
   );
 }

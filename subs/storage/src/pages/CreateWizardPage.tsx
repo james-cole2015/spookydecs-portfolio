@@ -7,8 +7,7 @@ import { storageAPI, photosAPI } from '../api/storageApi';
 import STORAGE_CONFIG from '../config/storageConfig';
 import { Breadcrumbs, PageHeader, Typography, useAuth } from '@spookydecs/ui';
 import { StorageForm, validateForm, type FormData } from '../components/StorageForm';
-import { openPhotoUploadModal } from '../lib/photoUpload';
-import { useToast } from '@spookydecs/ui';
+import { useToast, usePhotoUpload } from '@spookydecs/ui';
 
 type ClassType = 'Tote' | 'Self';
 
@@ -16,6 +15,7 @@ export default function CreateWizardPage() {
   const navigate = useNavigate();
   const toast = useToast();
   const { hasMinRole } = useAuth();
+  const { openWithEditor, editor: photoEditor } = usePhotoUpload();
 
   const [step, setStep] = useState(1);
   const [type, setType] = useState<ClassType | null>(null);
@@ -98,10 +98,23 @@ export default function CreateWizardPage() {
   }
 
   async function handleUpload() {
-    const ids = await openPhotoUploadModal(data.season ?? '');
-    if (ids.length > 0) {
-      setPhotoIds(ids);
+    // No entityId yet — the unit is created in `submit()`, which then links
+    // photoIds[0] as the primary photo. Season stays lowercase: that's the
+    // photo-service bucket key, not a display chip.
+    try {
+      const photos = await openWithEditor({
+        context: 'storage',
+        photo_type: 'storage',
+        season: (data.season ?? '').toLowerCase(),
+        maxPhotos: 5,
+      });
+      if (photos.length === 0) return;
+      setPhotoIds(photos.map((p) => p.photo_id));
       toast.showSuccess('Photo uploaded');
+    } catch (err: any) {
+      // The headless path rejects on failure (the CDN modal used to swallow it).
+      console.error('Photo upload failed:', err);
+      toast.showError(err?.message ?? 'Photo upload failed');
     }
   }
 
@@ -185,6 +198,8 @@ export default function CreateWizardPage() {
           </CardBody>
         </Card>
       )}
+
+      {photoEditor}
     </div>
   );
 }

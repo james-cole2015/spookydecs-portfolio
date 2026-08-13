@@ -34,9 +34,8 @@
 
     <!-- Shared CDN web components (coexist with React) -->
     <!-- Header is now the native React <AppHeader> from @spookydecs/ui (#348) — CDN spookydecs-header dropped here. -->
-    <!-- Upload stays a CDN concern: EndSessionReview delegates to <photo-upload-modal> via usePhotoUpload (#338). -->
+    <!-- Upload transport stays a CDN concern: EndSessionReview drives <photo-upload-service> via usePhotoUpload (#338). -->
     <script src="https://assets.spookydecs.com/components/photo-upload-service.js"></script>
-    <script src="https://assets.spookydecs.com/components/photo-upload-modal.js"></script>
 </head>
 <body>
     <!-- Deployed via GitHub Actions (_deploy-sub.yml / deploy-deployments.yml, #338) -->
