@@ -35,6 +35,7 @@ export { ReceiptExtractorModal } from './components/ReceiptExtractorModal';
 export type { ReceiptExtractorModalProps } from './components/ReceiptExtractorModal';
 export { rasterizePdfToImage } from './lib/rasterizePdf';
 export type { RasterizePdfOptions } from './lib/rasterizePdf';
+export { normalizeUploadFiles, isHeicFile } from './lib/normalizeUpload';
 export { ThemeProvider, useTheme } from './providers/ThemeProvider';
 export type { Theme } from './providers/ThemeProvider';
 export { ThemeSwitch } from './components/ThemeSwitch';
