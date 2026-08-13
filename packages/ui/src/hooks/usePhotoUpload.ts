@@ -31,6 +31,7 @@
 import { createElement, Fragment, useCallback, useMemo, type ReactElement } from 'react';
 import { useImageEditor } from './useImageEditor';
 import { useFilePicker } from './useFilePicker';
+import { normalizeUploadFiles } from '../lib/normalizeUpload';
 
 /** A photo record as returned by the CDN upload pipeline (`/confirm`). */
 export interface UploadedPhoto {
@@ -186,9 +187,12 @@ export function usePhotoUpload(): UsePhotoUpload {
   const uploadFiles = useCallback(
     async (files: File[] | FileList, opts: PhotoUploadOptions): Promise<UploadedPhoto[]> => {
       if (!files || (files as File[]).length === 0) return [];
+      // HEIC → JPEG before the CDN service's MIME allowlist sees it (#533). No-op
+      // for the editor path, whose files are already re-encoded JPEGs.
+      const normalized = await normalizeUploadFiles(files);
       const service = document.createElement('photo-upload-service') as PhotoUploadServiceElement;
       try {
-        const result = await service.upload(files, buildMetadata(opts));
+        const result = await service.upload(normalized, buildMetadata(opts));
         if (!result?.success) throw new Error('Photo upload service returned failure');
         return result.photos ?? [];
       } finally {
@@ -202,7 +206,10 @@ export function usePhotoUpload(): UsePhotoUpload {
     async (opts: PhotoUploadOptions): Promise<UploadedPhoto[]> => {
       const picked = await pickFiles();
       if (picked.length === 0) return [];
-      const edited = await editFiles(picked);
+      // Convert before editing — the browser can't decode HEIC to canvas, so the
+      // crop/rotate editor needs a JPEG to work with.
+      const normalized = await normalizeUploadFiles(picked);
+      const edited = await editFiles(normalized);
       return uploadFiles(edited, opts);
     },
     [pickFiles, editFiles, uploadFiles],
