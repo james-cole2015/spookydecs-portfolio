@@ -9,9 +9,20 @@
  * editor and before the service — fixes every React sub's upload path at once with
  * no backend change.
  *
- * `heic2any` (~1.4 MB of libheif) is **lazy-loaded** via dynamic import so it only
- * enters the load path when a HEIC is actually chosen. Same pattern as
- * `rasterizePdf.ts` does for pdf.js.
+ * The decoder (~3 MB) is **lazy-loaded** via dynamic import so it only enters the
+ * load path when a HEIC is actually chosen. Same pattern as `rasterizePdf.ts`
+ * does for pdf.js.
+ *
+ * Uses `heic-to` (libheif-js 1.19.x) rather than `heic2any`, which was last
+ * published in 2023 and bundles a libheif that rejects newer iPhone captures —
+ * 10-bit HDR and iOS 16+ encodings threw `ERR_LIBHEIF format not supported` on
+ * some files while converting others fine (#549).
+ *
+ * Note the shipped build is **wasm2js**, not real wasm: it carries a JS shim of the
+ * `WebAssembly` namespace and never calls the real API. So there is no `.wasm` asset
+ * to emit or serve (the `libheif.wasm` fetch inside it is dead fallback glue), and it
+ * needs no CSP `wasm-unsafe-eval` or CloudFront MIME setup. The trade is a larger,
+ * slower-decoding JS payload — acceptable for an occasional one-photo conversion.
  */
 
 const HEIC_MIME = /^image\/(heic|heif)(-sequence)?$/i;
@@ -33,14 +44,12 @@ export function isHeicFile(file: File): boolean {
 async function convertHeicToJpeg(file: File): Promise<File> {
   let blob: Blob;
   try {
-    const heic2any = (await import('heic2any')).default;
-    const converted = await heic2any({
+    const { heicTo } = await import('heic-to');
+    blob = await heicTo({
       blob: file,
-      toType: 'image/jpeg',
+      type: 'image/jpeg',
       quality: HEIC_JPEG_QUALITY,
     });
-    // heic2any returns Blob | Blob[] (an array for multi-image HEIC sequences).
-    blob = Array.isArray(converted) ? converted[0] : converted;
   } catch (err) {
     console.error('HEIC conversion failed', err);
     throw new Error(
