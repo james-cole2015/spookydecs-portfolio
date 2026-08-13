@@ -31,7 +31,7 @@
     "build": "vite build && tsc --emitDeclarationOnly --declaration --declarationDir dist"
   },
   "dependencies": {
-    "heic2any": "^0.0.4",
+    "heic-to": "^1.5.2",
     "konva": "^9.3.6",
     "pdfjs-dist": "^4.10.38",
     "photoswipe": "^5.4.4",
