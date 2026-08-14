@@ -296,31 +296,6 @@ export async function uploadAndProcessReceipt(
   return await handleResponse(processResponse);
 }
 
-// Update audit log with user modifications
-export async function updateAuditLog(
-  extractionId: string,
-  finalData: Record<string, any>,
-  modifications: Record<string, any>,
-): Promise<any> {
-  const API_ENDPOINT = await getEndpoint();
-
-  try {
-    const response = await fetch(`${API_ENDPOINT}/audit/ai-audit/finance/${extractionId}`, {
-      method: 'PUT',
-      headers: buildHeaders(),
-      body: JSON.stringify({
-        final_data: finalData,
-        modifications: modifications,
-        user_modified: Object.keys(modifications).length > 0,
-      }),
-    });
-    return await handleResponse(response);
-  } catch (error) {
-    console.error('Error updating audit log:', error);
-    return null;
-  }
-}
-
 // Update image record after cost is created
 export async function updateImageAfterCostCreation(
   imageId: string,
