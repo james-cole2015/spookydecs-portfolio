@@ -1,16 +1,28 @@
+Route → Lambda mapping for the /workbench/seasons* API (verified against
+API Gateway miinu7boec, 2026-08-11).
+
+NOTE: the "seasons" feature was provisioned but never finished — the frontend
+calls none of these routes and the sd_workbench_records_* tables hold 0 rows.
+The three sync routes and their handler (workbench-sync) were retired in #529.
+The nine routes below remain wired to the live sd_workbench_handler, which has
+no router and returns its summary payload for any GET.
+
 ┌─────────────────────────────────────────────────────────────┬──────────────────────────────┐
 │ API Endpoint                                                │ Lambda Function              │
 ├─────────────────────────────────────────────────────────────┼──────────────────────────────┤
-│ GET    /workbench/seasons                                   │ workbench-handler            │
-│ POST   /workbench/seasons                                   │ workbench-handler            │
-│ GET    /workbench/seasons/{season_id}                       │ workbench-handler            │
-│ PATCH  /workbench/seasons/{season_id}                       │ workbench-handler            │
-│ GET    /workbench/seasons/{season_id}/items                 │ workbench-handler            │
-│ POST   /workbench/seasons/{season_id}/items                 │ workbench-handler            │
-│ GET    /workbench/seasons/{season_id}/items/{item_id}       │ workbench-handler            │
-│ PATCH  /workbench/seasons/{season_id}/items/{item_id}       │ workbench-handler            │
-│ DELETE /workbench/seasons/{season_id}/items/{item_id}       │ workbench-handler            │
-├─────────────────────────────────────────────────────────────┼──────────────────────────────┤
-│ POST   /workbench/seasons/{season_id}/import                │ workbench-import-sync        │
-│ POST   /workbench/seasons/{season_id}/items/{item_id}/sync-back │ workbench-import-sync   │
+│ GET    /workbench/seasons                                   │ sd_workbench_handler         │
+│ POST   /workbench/seasons                                   │ sd_workbench_handler         │
+│ GET    /workbench/seasons/{season_id}                       │ sd_workbench_handler         │
+│ PATCH  /workbench/seasons/{season_id}                       │ sd_workbench_handler         │
+│ GET    /workbench/seasons/{season_id}/items                 │ sd_workbench_handler         │
+│ POST   /workbench/seasons/{season_id}/items                 │ sd_workbench_handler         │
+│ PATCH  /workbench/seasons/{season_id}/items                 │ sd_workbench_handler         │
+│ GET    /workbench/seasons/{season_id}/items/{item_id}       │ sd_workbench_handler         │
+│ PATCH  /workbench/seasons/{season_id}/items/{item_id}       │ sd_workbench_handler         │
+│ DELETE /workbench/seasons/{season_id}/items/{item_id}       │ sd_workbench_handler         │
 └─────────────────────────────────────────────────────────────┴──────────────────────────────┘
+
+Retired in #529 (function + routes deleted):
+  POST /workbench/seasons/{season_id}/import                    → workbench-sync
+  POST /workbench/seasons/{season_id}/items/{item_id}/sync-back → workbench-sync
+  POST /workbench/seasons/{season_id}/items/end-season          → workbench-sync

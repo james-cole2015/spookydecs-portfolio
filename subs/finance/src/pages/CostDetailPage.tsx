@@ -53,7 +53,7 @@ export default function CostDetailPage() {
   const { costId } = useParams<{ costId: string }>();
   const navigate = useNavigate();
   const toast = useToast();
-  const { open: openUpload } = usePhotoUpload();
+  const { openWithEditor, editor: photoEditor } = usePhotoUpload();
 
   const [cost, setCost] = useState<CostRecord | null>(null);
   const [loading, setLoading] = useState(true);
@@ -80,7 +80,7 @@ export default function CostDetailPage() {
   const handleAddReceipt = async () => {
     if (!cost) return;
     try {
-      const photos = await openUpload({ context: 'receipt', photo_type: 'receipt', season: 'shared', maxPhotos: 1 });
+      const photos = await openWithEditor({ context: 'receipt', photo_type: 'receipt', season: 'shared', maxPhotos: 1 });
       const photoId = photos[0]?.photo_id;
       if (!photoId) return;
       await updateImageAfterCostCreation(photoId, cost.cost_id);
@@ -316,6 +316,8 @@ export default function CostDetailPage() {
         onConfirm={handleDelete}
         onClose={() => setConfirmOpen(false)}
       />
+
+      {photoEditor}
     </div>
   );
 }

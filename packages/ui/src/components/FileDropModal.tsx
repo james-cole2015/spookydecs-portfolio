@@ -28,7 +28,10 @@ export interface FileDropModalProps {
   onCancel: () => void;
 }
 
-const isImage = (f: File) => f.type.startsWith('image/');
+// HEIC/HEIF is matched by extension too: dragging out of macOS Photos can deliver a
+// File with an empty `type`, which would otherwise be silently dropped here before
+// `normalizeUploadFiles` gets the chance to transcode it to JPEG (#533).
+const isImage = (f: File) => f.type.startsWith('image/') || /\.(heic|heif)$/i.test(f.name);
 
 export function FileDropModal({ isOpen, maxFiles, onConfirm, onCancel }: FileDropModalProps) {
   const [files, setFiles] = useState<File[]>([]);
@@ -97,7 +100,7 @@ export function FileDropModal({ isOpen, maxFiles, onConfirm, onCancel }: FileDro
           <input
             ref={inputRef}
             type="file"
-            accept="image/*"
+            accept="image/*,.heic,.heif"
             multiple={maxFiles !== 1}
             hidden
             onChange={(e) => {

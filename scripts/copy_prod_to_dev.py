@@ -50,6 +50,7 @@ TABLES = [
     ('sd_maintenance_schedules_prod',  'sd_maintenance_schedules_dev',  'schedule_id',   None,                 None),
     ('sd_deployments_records_prod',    'sd_deployments_records_dev',    'deployment_id', 'deployment_item_id', None),
     ('sd_ideas_records_prod',          'sd_ideas_records_dev',          'id',            None,                 None),
+    ('sd_acquisitions_records_prod',   'sd_acquisitions_records_dev',   'acquisition_id', None,                None),
     ('sd_finance_records_prod',        'sd_finance_records_dev',        'cost_id',       'cost_date',          'finance'),
     ('sd_workbench_records_prod',      'sd_workbench_records_dev',      'season_id',     'workbench_item_id',  None),
     ('sd_inspector_rules_prod',        'sd_inspector_rules_dev',        'rule_id',       None,                 None),
