@@ -377,13 +377,67 @@ export function formatDueDate(dueDate: Date | string, status?: string): string {
   return formatted;
 }
 
+// ============================================
+// SEASON BUCKETS
+// ============================================
+//
+// A season bucket is a "{year} {type}" string (e.g. "2026 Halloween") stored on
+// record.date_scheduled. The three types partition the calendar year into
+// prep-aligned windows — the period during which that season's work is done, not
+// the period the season is celebrated:
+//
+//   Off-Season  Jan 1 – Jul 31   (months 0–6)
+//   Halloween   Aug 1 – Oct 31   (months 7–9)   — Aug 1 matches getSeasonalDueDate()
+//   Christmas   Nov 1 – Dec 31   (months 10–11)
+//
+// Note this deliberately differs from the workbench sub's getDefaultSeason()
+// (Oct/Nov → Halloween, Dec/Jan → Christmas), which is a display default for a
+// monitoring dashboard rather than a work-scheduling window.
+
+/** Bucket type ordering within a year — also the display order. */
+export const SEASON_TYPE_ORDER: Record<string, number> = {
+  'Off-Season': 0,
+  Halloween: 1,
+  Christmas: 2,
+};
+
+/** The season bucket a given calendar date falls in. */
+export function getBucketForDate(date: Date = new Date()): string {
+  const month = date.getMonth();
+  const type = month >= 10 ? 'Christmas' : month >= 7 ? 'Halloween' : 'Off-Season';
+  return `${date.getFullYear()} ${type}`;
+}
+
+/** The season bucket we are currently in, per today's calendar date. */
+export function getCurrentBucket(): string {
+  return getBucketForDate(new Date());
+}
+
+/**
+ * Sortable rank for a season bucket, so buckets can be compared across years.
+ * Returns null when the value is absent or can't be placed on the timeline —
+ * callers should treat null as "not scheduled" rather than coercing it.
+ * Legacy ISO date_scheduled values (pre-bucket records) are ranked by the bucket
+ * their date falls in.
+ */
+export function bucketRank(value?: string): number | null {
+  if (!value) return null;
+  const [yearPart, ...typeParts] = value.split(' ');
+  const year = parseInt(yearPart, 10);
+  const type = typeParts.join(' ');
+  if (!isNaN(year) && type in SEASON_TYPE_ORDER) return year * 3 + SEASON_TYPE_ORDER[type];
+
+  const parsed = new Date(value);
+  if (!isNaN(parsed.getTime())) return bucketRank(getBucketForDate(parsed));
+  return null;
+}
+
 /**
  * Ordered season bucket options: historical buckets (from existing records)
  * followed by the standard window of current year through current year + 2.
  */
 export function generateSeasonBuckets(existingBuckets: string[] = []): string[] {
   const currentYear = new Date().getFullYear();
-  const typeOrder: Record<string, number> = { 'Off-Season': 0, Halloween: 1, Christmas: 2 };
   const standardBuckets: string[] = [];
 
   for (let year = currentYear; year <= currentYear + 2; year++) {
@@ -393,14 +447,7 @@ export function generateSeasonBuckets(existingBuckets: string[] = []): string[] 
   const standardSet = new Set(standardBuckets);
   const historical = [...new Set(existingBuckets.filter((b) => b && !standardSet.has(b)))];
 
-  historical.sort((a, b) => {
-    const [aYear, ...aTypeParts] = a.split(' ');
-    const [bYear, ...bTypeParts] = b.split(' ');
-    const aType = aTypeParts.join(' ');
-    const bType = bTypeParts.join(' ');
-    if (aYear !== bYear) return parseInt(aYear) - parseInt(bYear);
-    return (typeOrder[aType] ?? 99) - (typeOrder[bType] ?? 99);
-  });
+  historical.sort((a, b) => (bucketRank(a) ?? Infinity) - (bucketRank(b) ?? Infinity));
 
   return [...historical, ...standardBuckets];
 }
