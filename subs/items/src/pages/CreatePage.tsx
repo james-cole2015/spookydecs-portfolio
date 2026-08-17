@@ -1,6 +1,6 @@
 // 4-step item creation wizard (#332)
 // Step 1: Class → Step 2: Class Type → Step 3: Details → Step 4: Review + Save
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Button, Card, CardBody, Divider } from '@heroui/react';
@@ -20,10 +20,19 @@ export default function CreatePage() {
   const { hasMinRole } = useAuth();
   const [step, setStep] = useState<Step>(1);
   const [saving, setSaving] = useState(false);
+  const reviewRef = useRef<HTMLDivElement>(null);
 
   const { register, watch, setValue, handleSubmit, getValues, formState: { errors } } = useForm<ItemFormValues>({
     defaultValues: DEFAULT_VALUES,
   });
+
+  // The wizard is cumulative — every completed step stays on the page, so opening
+  // Review just appends a card below the fold and leaves the user mid-page (#450).
+  useEffect(() => {
+    if (step === 4) {
+      reviewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [step]);
 
   const selectedClass     = watch('class');
   const selectedClassType = watch('class_type');
@@ -182,7 +191,7 @@ export default function CreatePage() {
 
         {/* Step 4 — Review + Save */}
         {step >= 4 && (
-          <Card className="mb-4">
+          <Card ref={reviewRef} className="mb-4 scroll-mt-4">
             <CardBody>
               <Typography type="h6" className="mb-3">4. Review & Confirm</Typography>
               <ReviewSummary values={getValues()} />
