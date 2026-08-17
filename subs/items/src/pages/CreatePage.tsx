@@ -20,17 +20,18 @@ export default function CreatePage() {
   const { hasMinRole } = useAuth();
   const [step, setStep] = useState<Step>(1);
   const [saving, setSaving] = useState(false);
-  const reviewRef = useRef<HTMLDivElement>(null);
+  const stepRefs = useRef<Partial<Record<Step, HTMLDivElement | null>>>({});
 
   const { register, watch, setValue, handleSubmit, getValues, formState: { errors } } = useForm<ItemFormValues>({
     defaultValues: DEFAULT_VALUES,
   });
 
-  // The wizard is cumulative — every completed step stays on the page, so opening
-  // Review just appends a card below the fold and leaves the user mid-page (#450).
+  // The wizard is cumulative — every completed step stays on the page, so advancing
+  // just appends a card below the fold and leaves the user mid-page (#450). Bring the
+  // newly-opened step into view. Step 1 is the landing state, so it never scrolls.
   useEffect(() => {
-    if (step === 4) {
-      reviewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (step > 1) {
+      stepRefs.current[step]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, [step]);
 
@@ -131,7 +132,7 @@ export default function CreatePage() {
 
         {/* Step 2 — Select Class Type */}
         {step >= 2 && selectedClass && (
-          <Card className="mb-4">
+          <Card ref={(el: HTMLDivElement | null) => { stepRefs.current[2] = el; }} className="mb-4 scroll-mt-4">
             <CardBody>
               <Typography type="h6" className="mb-3">2. Select {selectedClass} Type</Typography>
               <div className="grid grid-cols-3 gap-3">
@@ -153,7 +154,7 @@ export default function CreatePage() {
 
         {/* Step 3 — Details */}
         {step >= 3 && selectedClassType && (
-          <Card className="mb-4">
+          <Card ref={(el: HTMLDivElement | null) => { stepRefs.current[3] = el; }} className="mb-4 scroll-mt-4">
             <CardBody className="flex flex-col gap-6">
               <div>
                 <Typography type="h6" className="mb-3">3. Basic Information</Typography>
@@ -191,7 +192,7 @@ export default function CreatePage() {
 
         {/* Step 4 — Review + Save */}
         {step >= 4 && (
-          <Card ref={reviewRef} className="mb-4 scroll-mt-4">
+          <Card ref={(el: HTMLDivElement | null) => { stepRefs.current[4] = el; }} className="mb-4 scroll-mt-4">
             <CardBody>
               <Typography type="h6" className="mb-3">4. Review & Confirm</Typography>
               <ReviewSummary values={getValues()} />
