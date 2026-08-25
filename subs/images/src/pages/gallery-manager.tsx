@@ -335,7 +335,7 @@ export default function GalleryManager() {
       )}
 
       {/* Step 1 — season/year prompt before opening the shared upload modal. */}
-      <Modal isOpen={uploadPromptOpen} onClose={() => setUploadPromptOpen(false)}>
+      <Modal isOpen={uploadPromptOpen} onClose={() => setUploadPromptOpen(false)} placement="center">
         <ModalContent>
           <ModalHeader>Upload Photo</ModalHeader>
           <ModalBody className="gap-4">
@@ -385,7 +385,7 @@ export default function GalleryManager() {
       </Modal>
 
       {/* Step 3 — optional per-photo display name + location. */}
-      <Modal isOpen={!!postUpload} onClose={() => setPostUpload(null)} size="2xl" scrollBehavior="inside">
+      <Modal isOpen={!!postUpload} onClose={() => setPostUpload(null)} size="2xl" placement="center" scrollBehavior="inside">
         <ModalContent>
           <ModalHeader>Set Photo Details</ModalHeader>
           <ModalBody>

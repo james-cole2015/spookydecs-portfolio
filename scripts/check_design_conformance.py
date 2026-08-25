@@ -14,13 +14,14 @@ check_sub_migration.py; both share scan_common.py for the file walk, Report
 model, report writer, and CLI/exit-code contract.
 
 Rules (check-id — design.md source — level):
-    root-tokens     F7  fail   no per-sub :root token block (src/ css/ts/tsx)
-    hardcoded-hex   F5  fail   no hardcoded hex color in .tsx
-    chip-helpers    F1  fail   no local *ChipColor helper definitions
-    confirm-dialog  F2  fail   no local ConfirmDialog copy
-    filter-bar      F3  fail   no local FilterBar / FilterPanel copy
-    app-shell       F4  warn   AppHeader must not nest inside PageContainer
-    season-casing   §5  fail   canonical season casing (Halloween/Christmas/Shared)
+    root-tokens      F7  fail   no per-sub :root token block (src/ css/ts/tsx)
+    hardcoded-hex    F5  fail   no hardcoded hex color in .tsx
+    chip-helpers     F1  fail   no local *ChipColor helper definitions
+    confirm-dialog   F2  fail   no local ConfirmDialog copy
+    filter-bar       F3  fail   no local FilterBar / FilterPanel copy
+    app-shell        F4  warn   AppHeader must not nest inside PageContainer
+    season-casing    §5  fail   canonical season casing (Halloween/Christmas/Shared)
+    modal-placement  --  fail   every <Modal> sets an explicit placement (#532 mobile fix)
 
 Sanctioned exceptions live in scripts/design-conformance.yaml (a per-sub allowlist
 keyed by check-id; `all` skips the sub). It mirrors design.md §8 — adding an
@@ -72,6 +73,7 @@ CONFIRM_DIALOG = "confirm-dialog"
 FILTER_BAR = "filter-bar"
 APP_SHELL = "app-shell"
 SEASON_CASING = "season-casing"
+MODAL_PLACEMENT = "modal-placement"
 
 CHECK_TITLES = {
     ROOT_TOKENS: "F7 · no per-sub :root token block",
@@ -81,6 +83,7 @@ CHECK_TITLES = {
     FILTER_BAR: "F3 · no local FilterBar/FilterPanel copy",
     APP_SHELL: "F4 · AppHeader outside PageContainer",
     SEASON_CASING: "§5 · canonical season casing",
+    MODAL_PLACEMENT: "<Modal> requires explicit placement",
 }
 
 # design.md §5 canonical season vocabulary.
@@ -129,6 +132,13 @@ CHIP_CTX_RE = re.compile(r"Chip|chipColor|ChipColor", re.IGNORECASE)
 SEASON_ROUTING_CTX_RE = re.compile(
     r"PhotoGallery|photoType|\.toLowerCase\(\)|SeasonProvider|data-season|Placeholder"
 )
+
+# #532: every <Modal> must set an explicit `placement` — HeroUI's default
+# ('auto') bottom-sheets on mobile viewports instead of centering. Captures
+# the full opening tag (attrs may span multiple lines) up to its closing `>`;
+# "=>" is matched as a unit first so an inline arrow-function attribute value
+# (e.g. onOpenChange={(open) => {...}}) doesn't prematurely close the tag.
+MODAL_TAG_RE = re.compile(r"<Modal\b(?:=>|[^<>])*?>")
 
 
 def _src_css_files(sub_dir: Path) -> list[Path]:
@@ -328,6 +338,22 @@ def _check_season_casing(ts_sources: list[Source], report: DesignReport) -> None
                 )
 
 
+def _check_modal_placement(ts_sources: list[Source], report: DesignReport) -> None:
+    for s in ts_sources:
+        if s.suffix != ".tsx":
+            continue
+        for m in MODAL_TAG_RE.finditer(s.text):
+            tag = m.group(0)
+            if "placement=" in tag:
+                continue
+            lineno = s.text.count("\n", 0, m.start()) + 1
+            report.flag(
+                MODAL_PLACEMENT, "fail",
+                f"<Modal> with no explicit placement at {s.path.relative_to(ROOT)}:{lineno} — "
+                f"set placement=\"center\" so it doesn't bottom-sheet on mobile (#532).",
+            )
+
+
 # ---------------------------------------------------------------------------
 # Manifest + analysis
 # ---------------------------------------------------------------------------
@@ -376,6 +402,7 @@ def analyze(sub: str, manifest: dict[str, list[str]], strict: bool = False) -> D
     _check_filter_bar(ts_sources, report)
     _check_app_shell(ts_sources, report)
     _check_season_casing(ts_sources, report)
+    _check_modal_placement(ts_sources, report)
 
     _apply_manifest(report, suppressed)
     return report

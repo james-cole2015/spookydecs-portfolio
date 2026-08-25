@@ -155,7 +155,7 @@ export function EndSessionReview({
 
   return (
     <>
-    <Modal isOpen={isOpen} onClose={onClose} backdrop="blur" size="2xl" scrollBehavior="inside">
+    <Modal isOpen={isOpen} onClose={onClose} backdrop="blur" size="2xl" placement="center" scrollBehavior="inside">
       <ModalContent>
         <ModalHeader>End Session — Review &amp; Add Photos</ModalHeader>
         <ModalBody>

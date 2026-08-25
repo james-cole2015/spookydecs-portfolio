@@ -206,7 +206,7 @@ export function ConnectionModal({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} backdrop="blur" size="lg" scrollBehavior="inside">
+    <Modal isOpen={isOpen} onClose={onClose} backdrop="blur" size="lg" placement="center" scrollBehavior="inside">
       <ModalContent>
         <ModalHeader>
           {step === 'destination'

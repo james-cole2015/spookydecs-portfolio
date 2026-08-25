@@ -44,7 +44,7 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   const color: ConfirmColor = confirmColor ?? (isDestructive ? 'danger' : 'primary');
   return (
-    <Modal isOpen={isOpen} onClose={onClose} backdrop="blur">
+    <Modal isOpen={isOpen} onClose={onClose} backdrop="blur" placement="center">
       <ModalContent>
         <ModalHeader>{title}</ModalHeader>
         <ModalBody className="text-foreground/80">{body}</ModalBody>

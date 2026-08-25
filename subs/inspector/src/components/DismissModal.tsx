@@ -65,7 +65,7 @@ export function DismissModal({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} backdrop="blur" size="lg">
+    <Modal isOpen={isOpen} onClose={handleClose} backdrop="blur" size="lg" placement="center">
       <ModalContent>
         <ModalHeader>Dismiss Violation</ModalHeader>
         <ModalBody className="space-y-4">

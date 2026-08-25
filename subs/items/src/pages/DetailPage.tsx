@@ -580,7 +580,7 @@ export default function DetailPage() {
       </section>
 
       {/* ── Cascade delete modal ───────────────────────────────────────────── */}
-      <Modal isOpen={showCascade} onClose={() => setShowCascade(false)}>
+      <Modal isOpen={showCascade} onClose={() => setShowCascade(false)} placement="center">
         <ModalContent>
           <ModalHeader>Delete Item — Cascade Preview</ModalHeader>
           <ModalBody>

@@ -504,7 +504,7 @@ export default function SessionPage() {
       />
 
       {/* Remove-connection reason modal (replaces the vanilla prompt()) */}
-      <Modal isOpen={!!removeTarget} onClose={() => setRemoveTarget(null)} backdrop="blur">
+      <Modal isOpen={!!removeTarget} onClose={() => setRemoveTarget(null)} backdrop="blur" placement="center">
         <ModalContent>
           <ModalHeader>Remove Item</ModalHeader>
           <ModalBody>

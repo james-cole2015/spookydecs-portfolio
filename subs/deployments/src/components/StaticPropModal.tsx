@@ -141,7 +141,7 @@ export function StaticPropModal({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} backdrop="blur" size="lg" scrollBehavior="inside">
+    <Modal isOpen={isOpen} onClose={onClose} backdrop="blur" size="lg" placement="center" scrollBehavior="inside">
       <ModalContent>
         <ModalHeader>Deploy Static Prop</ModalHeader>
         <ModalBody>
