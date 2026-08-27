@@ -355,6 +355,28 @@ async function confirmProdDestructive() {
 }
 
 // ---------------------------------------------------------------------------
+// getAvailablePorts helpers (#553) — the endpoint's `items` list only ever contains
+// the zone's receptacle (always present, never depends on inventory) plus whatever
+// items are already wired into that zone's connection graph. On a fresh zone the
+// receptacle is the ONLY entry, so it is also the only meaningful source of a "real"
+// port for the gate to plug into — this mirrors how the real yard setup works
+// (plug the first cord into the wall outlet) and is why the zone blocks below source
+// every connection's `from_item_id`/`from_port` from this endpoint instead of a
+// hardcoded item/port string.
+// ---------------------------------------------------------------------------
+
+async function fetchPorts(zoneCode) {
+  const res = await api('GET', `/deployments/${DEPLOYMENT_ID}/zones/${zoneCode}/ports`);
+  assertStatus(res, 200, `GET /zones/${zoneCode}/ports`);
+  return res.data ?? res.body;
+}
+
+function receptacleEntry(portsData, zoneCode) {
+  const receptacleId = ZONES.find((z) => z.zone_code === zoneCode)?.receptacle_id;
+  return (portsData?.items || []).find((i) => i.item_id === receptacleId);
+}
+
+// ---------------------------------------------------------------------------
 // The gate
 // ---------------------------------------------------------------------------
 
@@ -382,8 +404,59 @@ async function main() {
     connectionItemId: null,
     placementItemId: null,
     connFromPort: null,
+    connFromItemId: null,
     connZone: 'FY',
   };
+
+  // ── Multi-zone connection fixture pool (#553) ─────────────────────────────
+  // Every zone block and the resume-partial phase only ever needs a `to_item_id` —
+  // the `from` side is always the zone's receptacle (see getAvailablePorts helpers
+  // above), so the pool below only has to supply plain staged items, not powered ones.
+  // Drawn first from the primary tote staged in phase 5; if that tote runs short,
+  // `topUpPool` stages one more idle tote in full so multi-zone/resume coverage
+  // degrades to N/A (via FixtureMissing) only when dev truly has nothing left to give.
+  let primaryToteId = null;
+  const toppedUpToteIds = [];
+  const stagedPool = [];
+  const consumedFromPool = new Set();
+
+  async function topUpPool(staging) {
+    const usedToteIds = new Set([primaryToteId, ...toppedUpToteIds].filter(Boolean));
+    const candidate = (staging.totes || []).find(
+      (t) => !usedToteIds.has(t.id) && (t.contents || []).length > 0
+    );
+    if (!candidate) return false;
+    const contents = (candidate.contents || [])
+      .map((c) => (typeof c === 'string' ? c : c.id)).filter(Boolean);
+    if (contents.length === 0) return false;
+
+    rememberTote(candidate.id);
+    for (const id of contents) await remember(id);
+    const res = await api('POST', `/deployments/${DEPLOYMENT_ID}/stage`, {
+      tote_id: candidate.id, item_ids: contents,
+    });
+    if (res.status !== 200) return false;
+
+    toppedUpToteIds.push(candidate.id);
+    stagedPool.push(...contents);
+    console.log(`${C.dim}        (topped up connection pool with tote ${candidate.id}, +${contents.length} item(s))${C.reset}`);
+    return true;
+  }
+
+  async function drawPlainItem(staging, why) {
+    for (const id of stagedPool) {
+      if (consumedFromPool.has(id)) continue;
+      let st;
+      try { st = await itemStatus(id); } catch { continue; }
+      if (st !== 'Staged') continue;
+      consumedFromPool.add(id);
+      return { id };
+    }
+    if (await topUpPool(staging)) return drawPlainItem(staging, why);
+    throw new FixtureMissing(
+      `no spare staged item available for ${why} — tried topping up totes, dev has nothing left`
+    );
+  }
 
   try {
     // ── 0 ────────────────────────────────────────────────────────────────────
@@ -503,6 +576,8 @@ async function main() {
       }
       assertEq(res.data.items_remaining_count, unselected.length, 'items_remaining_count');
 
+      primaryToteId = tote.id;
+      stagedPool.push(...selected);
       return selected;
     }, { critical: true });
 
@@ -512,7 +587,8 @@ async function main() {
       if (!candidate) {
         throw new FixtureMissing(
           `no idle non-packable items for ${ARGS.season} — the #460 loose-staging path is unverified. ` +
-          `Seed one (storage_data.packable === false) before the gate.`);
+          `Seed one (storage_data.packable === false) before the gate.`
+        );
       }
       await remember(candidate.id);
       const res = await api('POST', `/deployments/${DEPLOYMENT_ID}/stage`, { item_ids: [candidate.id] });
@@ -548,30 +624,32 @@ async function main() {
       assertStatus(res, 409, 'concurrent session in another zone');
     });
 
+    // ── 8.5 ──────────────────────────────────────────────────────────────────
+    const fyPorts = await phase(8.5, 'getAvailablePorts [FY] — receptacle offers a usable port', async () => {
+      const data = await fetchPorts(S.connZone);
+      const entry = receptacleEntry(data, S.connZone);
+      assert(entry, `receptacle missing from getAvailablePorts items [${S.connZone}] — empty picker in the UI`);
+      assert(entry.available_count > 0, `receptacle has no available ports [${S.connZone}]`);
+      assert(Array.isArray(entry.available_ports) && entry.available_ports.length > 0,
+        `receptacle available_ports empty despite available_count > 0 [${S.connZone}]`);
+      return entry;
+    }, { critical: true });
+
     // ── 9 ────────────────────────────────────────────────────────────────────
     await phase(9, 'Connection path — powered item Staged → PreDeployment', async () => {
-      // Semantics: `from` is the power SOURCE (supplies a female port), `to` is the
+      // Semantics: `from` is the power SOURCE — the zone's receptacle, sourced from
+      // getAvailablePorts (phase 8.5) rather than hardcoded, per #553. `to` is the
       // item being plugged in. create_connection advances `to_item_id` — the thing
       // physically set up in the zone — not the source.
-      let from = null;
-      const others = [];
-      for (const id of stagedItems) {
-        const res = await api('GET', `/items/${id}`);
-        const item = res.data ?? res.body;
-        if (item?.status !== 'Staged') continue;
-        if (!from && Number(item?.female_ends || 0) > 0) from = item;
-        else others.push(item);
-      }
-      assert(from, 'no staged item with female_ends > 0 — connection path unverified');
-      const to = others[0];
-      assert(to, 'no second staged item to plug in — connection path unverified');
+      const to = await drawPlainItem(staging, 'FY primary connection (to)');
 
-      S.connFromPort = 'female_1';
+      S.connFromItemId = fyPorts.item_id;
+      S.connFromPort = fyPorts.available_ports[0];
       const res = await api('POST', `/deployments/${DEPLOYMENT_ID}/connections`, {
         session_id: S.sessionId,
         session_deployment_item_id: S.sessionRecordId,
         zone_code: S.connZone,
-        from_item_id: from.id,
+        from_item_id: S.connFromItemId,
         from_port: S.connFromPort,
         to_item_id: to.id,
         to_port: 'male_1',
@@ -579,8 +657,16 @@ async function main() {
       });
       assert(res.status === 200 || res.status === 201, `POST /connections: ${res.status} ${JSON.stringify(res.body)?.slice(0, 200)}`);
       S.connectionItemId = to.id;
-      S.connFromItemId = from.id;
       assertEq(await itemStatus(to.id), 'PreDeployment', `connected item ${to.id} status`);
+    });
+
+    // ── 9.5 ──────────────────────────────────────────────────────────────────
+    await phase(9.5, 'getAvailablePorts [FY] — consumed port now excluded', async () => {
+      const data = await fetchPorts(S.connZone);
+      const entry = receptacleEntry(data, S.connZone);
+      assert(entry, `receptacle missing from getAvailablePorts items after connecting [${S.connZone}]`);
+      assert(!entry.available_ports.includes(S.connFromPort),
+        `consumed port ${S.connFromPort} still listed as available — getAvailablePorts not reflecting live connection state`);
     });
 
     // ── 10 ───────────────────────────────────────────────────────────────────
@@ -632,36 +718,29 @@ async function main() {
     // removed_in_session null and getRemovedConnections would never find it.
 
     // ── 12.1 ─────────────────────────────────────────────────────────────────
-    const removalPair = await phase(12.1, 'Removal fixture — second connection candidate', async () => {
-      const used = new Set([S.connFromItemId, S.connectionItemId, S.placementItemId].filter(Boolean));
-      const candidates = [];
-      for (const id of stagedItems) {
-        if (used.has(id)) continue;
-        const res = await api('GET', `/items/${id}`);
-        const item = res.data ?? res.body;
-        if (item?.status === 'Staged') candidates.push(item);
-      }
-      const from2 = candidates.find((i) => Number(i.female_ends || 0) > 0);
-      const to2 = candidates.find((i) => i.id !== from2?.id);
-      if (!from2 || !to2) {
+    const removalFixture = await phase(12.1, 'Removal fixture — second connection candidate (receptacle port 2, #553)', async () => {
+      const data = await fetchPorts(S.connZone);
+      const entry = receptacleEntry(data, S.connZone);
+      assert(entry, `receptacle missing from getAvailablePorts items [${S.connZone}]`);
+      if (entry.available_count === 0) {
         throw new FixtureMissing(
-          'not enough spare staged items with a free female port to build a second ' +
-          'connection — the removal path (#552) is unverified this run.'
+          `receptacle has no free port left for the removal fixture [${S.connZone}] — the removal path (#552) is unverified this run.`
         );
       }
-      return { from2, to2 };
+      const to2 = await drawPlainItem(staging, 'removal fixture connection (to)');
+      return { fromPort: entry.available_ports[0], to2 };
     });
 
     // ── 12.2 ─────────────────────────────────────────────────────────────────
     const removalConn = await phase(12.2, 'Removal fixture — create second connection', async () => {
-      if (!removalPair) throw new FixtureMissing('no removal fixture (see 12.1)');
-      const { from2, to2 } = removalPair;
+      if (!removalFixture) throw new FixtureMissing('no removal fixture (see 12.1)');
+      const { fromPort, to2 } = removalFixture;
       const res = await api('POST', `/deployments/${DEPLOYMENT_ID}/connections`, {
         session_id: S.sessionId,
         session_deployment_item_id: S.sessionRecordId,
         zone_code: S.connZone,
-        from_item_id: from2.id,
-        from_port: 'female_1',
+        from_item_id: S.connFromItemId,
+        from_port: fromPort,
         to_item_id: to2.id,
         to_port: 'male_1',
         notes: 'pre-season gate — removal fixture (#552)',
@@ -701,7 +780,8 @@ async function main() {
       assert(!stillThere, `${removalConn.connectionId} still returned after DELETE — hard delete did not take`);
       // No restore path for a hard delete — same precedent as sentinel deletion (README §7).
       // The fixture item's own status is still covered by the existing ledger (remember()'d
-      // as part of the phase-5 tote contents).
+      // as part of the phase-5 tote contents). Deleting it also frees the receptacle's
+      // second port back up — the resume-partial phase (21, #553) relies on that.
     });
 
     // ── 13 ───────────────────────────────────────────────────────────────────
@@ -733,6 +813,155 @@ async function main() {
           `removed item ${removalConn.toItemId} STILL in items_deployed — #552 regression: ` +
           `end_session did not exclude a removal-type connection`);
       }
+    }, { critical: true });
+
+    // ── Multi-zone coverage (#553) ─────────────────────────────────────────
+    // Sessions are cross-zone exclusive (find_any_active_session ignores zone_code), so
+    // BY can only open once FY's session above has ended, and SY only once BY's has.
+    // items_deployed accumulates per zone as blocks run — deployedSoFar is used to prove
+    // a zone's rebuild doesn't leak another zone's items into its own items_deployed.
+    const deployedSoFar = [S.connectionItemId, S.placementItemId].filter(Boolean);
+
+    /**
+     * Runs one zone's session → getAvailablePorts → connect → end_session cycle.
+     * `otherZone` is attempted (and must 409) while this zone's session is open, proving
+     * the exclusivity guard holds regardless of which zone currently owns the session —
+     * phase 8 above already proved it once from FY; this proves it again from a second
+     * zone so the guard isn't just incidentally correct for one pairing.
+     */
+    async function runZoneBlock(zoneCode, phaseBase, otherZone) {
+      const local = {};
+
+      await phase(phaseBase + 0.1, `Session open [${zoneCode}] — deployment remains active_setup`, async () => {
+        const res = await api('POST', `/deployments/${DEPLOYMENT_ID}/sessions`, { zone_code: zoneCode });
+        assert(res.status === 200 || res.status === 201, `POST /sessions [${zoneCode}]: got ${res.status}`);
+        local.sessionId = res.data.session_id;
+        assert(local.sessionId, `session_id missing from create_session response [${zoneCode}]`);
+        local.sessionRecordId = res.data.deployment_item_id
+          || `SESSION-${String(local.sessionId).replace(/^session-/, '')}`;
+
+        const dep = await api('GET', `/deployments/${DEPLOYMENT_ID}`);
+        assertEq(dep.data.status ?? dep.data.metadata?.status, 'active_setup',
+          `deployment status while [${zoneCode}] session open`);
+      }, { critical: true });
+
+      await phase(phaseBase + 0.2, `Session exclusivity [${zoneCode}] — session in ${otherZone} rejected`, async () => {
+        const res = await api('POST', `/deployments/${DEPLOYMENT_ID}/sessions`, { zone_code: otherZone });
+        assertStatus(res, 409, `concurrent session in ${otherZone} while [${zoneCode}] open`);
+      });
+
+      const ports = await phase(phaseBase + 0.3, `getAvailablePorts [${zoneCode}] — receptacle offers a usable port`, async () => {
+        const data = await fetchPorts(zoneCode);
+        const entry = receptacleEntry(data, zoneCode);
+        assert(entry, `receptacle missing from getAvailablePorts items [${zoneCode}]`);
+        assert(entry.available_count > 0, `receptacle has no available ports [${zoneCode}]`);
+        return entry;
+      }, { critical: true });
+
+      const toItem = await phase(phaseBase + 0.4, `Connection path [${zoneCode}] — item Staged → PreDeployment`, async () => {
+        const to = await drawPlainItem(staging, `${zoneCode} connection (to)`);
+        local.connFromItemId = ports.item_id;
+        local.connFromPort = ports.available_ports[0];
+        const res = await api('POST', `/deployments/${DEPLOYMENT_ID}/connections`, {
+          session_id: local.sessionId,
+          session_deployment_item_id: local.sessionRecordId,
+          zone_code: zoneCode,
+          from_item_id: local.connFromItemId,
+          from_port: local.connFromPort,
+          to_item_id: to.id,
+          to_port: 'male_1',
+          notes: 'pre-season gate — multi-zone (#553)',
+        });
+        assert(res.status === 200 || res.status === 201, `POST /connections [${zoneCode}]: ${res.status}`);
+        assertEq(await itemStatus(to.id), 'PreDeployment', `connected item ${to.id} status [${zoneCode}]`);
+        return to;
+      });
+
+      await phase(phaseBase + 0.5, `End session [${zoneCode}] — zone.items_deployed asserted independently`, async () => {
+        const res = await api('PUT', `/deployments/${DEPLOYMENT_ID}/sessions/${local.sessionId}`, {
+          notes: 'pre-season gate — multi-zone (#553)',
+        });
+        assertStatus(res, 200, `PUT /sessions/{sid} [${zoneCode}]`);
+
+        const dep = await api('GET', `/deployments/${DEPLOYMENT_ID}?include=zones`);
+        const zone = (dep.data.zones || []).find((z) => z.zone_code === zoneCode);
+        assert(zone, `zone ${zoneCode} missing from include=zones`);
+        const deployed = zone.items_deployed || [];
+
+        if (toItem) {
+          assert(deployed.includes(toItem.id),
+            `connected item ${toItem.id} absent from items_deployed [${zoneCode}]`);
+        }
+        // Independence (task 2): this zone's rebuild must not leak items connected in a
+        // DIFFERENT zone — end_session's query is zone_code-scoped, so a leak here would
+        // mean that scoping regressed.
+        for (const foreignId of deployedSoFar) {
+          assert(!deployed.includes(foreignId),
+            `zone ${zoneCode} items_deployed leaked item ${foreignId} from a different zone`);
+        }
+      }, { critical: true });
+
+      if (toItem) deployedSoFar.push(toItem.id);
+    }
+
+    // ── 19.x ─────────────────────────────────────────────────────────────────
+    await runZoneBlock('BY', 19, 'SY');
+
+    // ── 20.x ─────────────────────────────────────────────────────────────────
+    await runZoneBlock('SY', 20, 'FY');
+
+    // ── 21 ───────────────────────────────────────────────────────────────────
+    await phase(21, 'Resume-partial [FY] — reopen session on active_setup, extend without losing prior items_deployed', async () => {
+      const before = await api('GET', `/deployments/${DEPLOYMENT_ID}?include=zones`);
+      const beforeZone = (before.data.zones || []).find((z) => z.zone_code === 'FY');
+      assert(beforeZone, 'FY zone missing from include=zones before resume');
+      const priorDeployed = new Set(beforeZone.items_deployed || []);
+      assert(priorDeployed.size > 0, 'FY zone has no prior items_deployed to verify resume against');
+
+      const res = await api('POST', `/deployments/${DEPLOYMENT_ID}/sessions`, { zone_code: 'FY' });
+      assert(res.status === 200 || res.status === 201, `POST /sessions (resume) [FY]: got ${res.status}`);
+      const resumeSessionId = res.data.session_id;
+      const resumeSessionRecordId = res.data.deployment_item_id
+        || `SESSION-${String(resumeSessionId).replace(/^session-/, '')}`;
+
+      // Reopening a zone whose deployment is already active_setup must not re-fire the
+      // pre-deployment → active_setup transition — create_session's guard is idempotent.
+      const dep = await api('GET', `/deployments/${DEPLOYMENT_ID}`);
+      assertEq(dep.data.status ?? dep.data.metadata?.status, 'active_setup',
+        'deployment status unchanged on resume — must already be active_setup');
+
+      const portsData = await fetchPorts('FY');
+      const entry = receptacleEntry(portsData, 'FY');
+      assert(entry && entry.available_count > 0,
+        'receptacle has no free port for the resume connection — expected the removal-fixture port (12.5) to be free again');
+
+      const to = await drawPlainItem(staging, 'resume-partial connection (to)');
+      const res2 = await api('POST', `/deployments/${DEPLOYMENT_ID}/connections`, {
+        session_id: resumeSessionId,
+        session_deployment_item_id: resumeSessionRecordId,
+        zone_code: 'FY',
+        from_item_id: entry.item_id,
+        from_port: entry.available_ports[0],
+        to_item_id: to.id,
+        to_port: 'male_1',
+        notes: 'pre-season gate — resume-partial (#553)',
+      });
+      assert(res2.status === 200 || res2.status === 201, `POST /connections (resume): ${res2.status}`);
+      assertEq(await itemStatus(to.id), 'PreDeployment', `resume-connected item ${to.id} status`);
+
+      const endRes = await api('PUT', `/deployments/${DEPLOYMENT_ID}/sessions/${resumeSessionId}`, {
+        notes: 'pre-season gate — resume-partial',
+      });
+      assertStatus(endRes, 200, 'PUT /sessions/{sid} (resume)');
+
+      const after = await api('GET', `/deployments/${DEPLOYMENT_ID}?include=zones`);
+      const afterZone = (after.data.zones || []).find((z) => z.zone_code === 'FY');
+      const nowDeployed = new Set(afterZone.items_deployed || []);
+      for (const id of priorDeployed) {
+        assert(nowDeployed.has(id),
+          `resume rebuild DROPPED a prior item ${id} from FY items_deployed — end_session is not cumulative across sessions`);
+      }
+      assert(nowDeployed.has(to.id), `resume-connected item ${to.id} absent from FY items_deployed after resume`);
     }, { critical: true });
 
     // ── 14 ───────────────────────────────────────────────────────────────────
@@ -812,8 +1041,8 @@ async function main() {
 
 /**
  * States exactly what ran: the deployment/item state machine transitions, on ARGS.stage,
- * including connection removal. Does NOT claim "Season-ready" — that would imply coverage
- * (browser/UI behavior, cross-zone concurrency, prod route/schema parity) this suite
+ * across all three zones plus a resume-partial cycle. Does NOT claim "Season-ready" —
+ * that would imply coverage (browser/UI behavior, prod route/schema parity) this suite
  * explicitly disclaims. See sub_tests/deployments.md §8 for the known-gaps list.
  */
 function summarizeLifecycle() {
@@ -839,11 +1068,12 @@ function summarizeLifecycle() {
   console.log(
     `\n${C.green}  Verified: ${ARGS.season} deployment state machine (create → stage → ` +
     `session → connect/place → remove → complete → teardown → archive) transitions ` +
-    `correctly on ${ARGS.stage}, including connection removal coverage.${C.reset}`
+    `correctly on ${ARGS.stage}, across all three zones (FY/BY/SY), including connection ` +
+    `removal and a resume-partial cycle.${C.reset}`
   );
   console.log(
-    `${C.dim}  This does not verify: browser/UI behavior, cross-zone concurrency, or ` +
-    `prod route/schema parity — run --conformance for that, see sub_tests/deployments.md §8.${C.reset}\n`
+    `${C.dim}  This does not verify: browser/UI behavior or prod route/schema parity — ` +
+    `run --conformance for that, see sub_tests/deployments.md §8.${C.reset}\n`
   );
   process.exit(0);
 }
