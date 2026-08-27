@@ -50,7 +50,10 @@ const FIXTURE_EXEMPT = {
 class FixtureMissing extends Error {}
 
 function parseArgs(argv) {
-  const args = { season: null, stage: 'dev', verbose: false, keep: false, cleanupOnly: false, forceProd: false };
+  const args = {
+    season: null, stage: 'dev', verbose: false, keep: false, cleanupOnly: false,
+    forceProd: false, conformance: false, offSeason: false, yes: false,
+  };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--season') args.season = argv[++i];
@@ -59,20 +62,39 @@ function parseArgs(argv) {
     else if (a === '--keep') args.keep = true;
     else if (a === '--cleanup-only') args.cleanupOnly = true;
     else if (a === '--force-prod') args.forceProd = true;
+    else if (a === '--conformance') args.conformance = true;
+    else if (a === '--off-season') args.offSeason = true;
+    else if (a === '--yes') args.yes = true;
     else die(`Unknown argument: ${a}`);
   }
-  if (!SEASON_CODES[args.season]) die('--season must be Halloween or Christmas');
-  if (args.stage === 'prod' && !args.forceProd) {
-    die('Refusing to run against prod. This harness mutates real item records.');
-  }
   if (!['dev', 'demo', 'prod'].includes(args.stage)) die(`--stage must be dev|demo|prod`);
+  // --season is required for the destructive lifecycle (it selects the sentinel ID) but
+  // optional for --conformance, which is season-independent — routes/GSIs/status vocabulary
+  // don't vary by season, and /stage shape sampling just picks the most recent historical
+  // deployment on the target stage when no season is given.
+  if (args.season && !SEASON_CODES[args.season]) die('--season must be Halloween or Christmas');
+  if (!args.conformance && !SEASON_CODES[args.season]) {
+    die('--season must be Halloween or Christmas');
+  }
+  // Conformance mode is read-only and safe against any stage, including prod, at any time
+  // of year — it bypasses the destructive-lifecycle gate below entirely.
+  if (args.stage === 'prod' && !args.conformance) {
+    if (!args.forceProd || !args.offSeason) {
+      die(
+        'Refusing to run the destructive lifecycle against prod. This creates a real ' +
+        'DEP-{HAL|CHR}-2030 record and mutates real item statuses. Pass BOTH --force-prod ' +
+        'and --off-season if you are certain no season is active, or use --conformance for ' +
+        'a safe, read-only prod check instead.'
+      );
+    }
+  }
   return args;
 }
 
 const ARGS = parseArgs(process.argv.slice(2));
 const TOKEN = process.env.SD_TOKEN;
 const BASE = `${API_HOST}/${ARGS.stage}`;
-const DEPLOYMENT_ID = `DEP-${SEASON_CODES[ARGS.season]}-${SENTINEL_YEAR}`;
+const DEPLOYMENT_ID = ARGS.season ? `DEP-${SEASON_CODES[ARGS.season]}-${SENTINEL_YEAR}` : null;
 
 function die(msg) {
   console.error(`\n  ${msg}\n`);
@@ -89,45 +111,56 @@ const C = {
 };
 
 const results = [];
-let aborted = false;
 
 /**
- * A phase is a named group of assertions. A thrown error fails the phase; if the
- * phase is `critical`, the remaining phases are skipped (the state machine can't
- * proceed from a broken transition) but cleanup still runs.
+ * Builds a phase runner bound to its own results array and abort flag, so the lifecycle
+ * gate and conformance mode can each track pass/fail/na/skip independently without one
+ * mode's abort affecting the other. `phase()` below is the lifecycle-mode instance,
+ * threaded through `FIXTURE_EXEMPT` lookups exactly as before.
  */
-async function phase(n, name, fn, { critical = false } = {}) {
-  if (aborted) {
-    results.push({ n, name, status: 'skip' });
-    console.log(`${C.dim}  ${String(n).padStart(2)}  SKIP  ${name}${C.reset}`);
-    return null;
-  }
-  const started = Date.now();
-  try {
-    const value = await fn();
-    const ms = Date.now() - started;
-    results.push({ n, name, status: 'pass', ms });
-    console.log(`${C.green}  ${String(n).padStart(2)}  PASS${C.reset}  ${name} ${C.dim}(${ms}ms)${C.reset}`);
-    return value;
-  } catch (err) {
-    const ms = Date.now() - started;
-    const exempt = FIXTURE_EXEMPT[ARGS.season]?.[n];
-    if (err instanceof FixtureMissing && exempt) {
-      results.push({ n, name, status: 'na', ms, error: exempt });
-      console.log(`${C.yellow}  ${String(n).padStart(2)}  N/A ${C.reset}  ${name}`);
-      console.log(`${C.yellow}          ${exempt}${C.reset}`);
+function makePhaseRunner(resultsArray, { exemptions = {} } = {}) {
+  const state = { aborted: false };
+  return async function runPhase(n, name, fn, { critical = false } = {}) {
+    if (state.aborted) {
+      resultsArray.push({ n, name, status: 'skip' });
+      console.log(`${C.dim}  ${String(n).padStart(2)}  SKIP  ${name}${C.reset}`);
       return null;
     }
-    results.push({ n, name, status: 'fail', ms, error: err.message });
-    console.log(`${C.red}  ${String(n).padStart(2)}  FAIL${C.reset}  ${name} ${C.dim}(${ms}ms)${C.reset}`);
-    console.log(`${C.red}          ${err.message}${C.reset}`);
-    if (critical) {
-      aborted = true;
-      console.log(`${C.yellow}          critical phase — remaining phases skipped${C.reset}`);
+    const started = Date.now();
+    try {
+      const value = await fn();
+      const ms = Date.now() - started;
+      resultsArray.push({ n, name, status: 'pass', ms });
+      console.log(`${C.green}  ${String(n).padStart(2)}  PASS${C.reset}  ${name} ${C.dim}(${ms}ms)${C.reset}`);
+      return value;
+    } catch (err) {
+      const ms = Date.now() - started;
+      const exempt = exemptions[n];
+      if (err instanceof FixtureMissing && exempt) {
+        resultsArray.push({ n, name, status: 'na', ms, error: exempt });
+        console.log(`${C.yellow}  ${String(n).padStart(2)}  N/A ${C.reset}  ${name}`);
+        console.log(`${C.yellow}          ${exempt}${C.reset}`);
+        return null;
+      }
+      if (err instanceof FixtureMissing) {
+        resultsArray.push({ n, name, status: 'na', ms, error: err.message });
+        console.log(`${C.yellow}  ${String(n).padStart(2)}  N/A ${C.reset}  ${name}`);
+        console.log(`${C.yellow}          ${err.message}${C.reset}`);
+        return null;
+      }
+      resultsArray.push({ n, name, status: 'fail', ms, error: err.message });
+      console.log(`${C.red}  ${String(n).padStart(2)}  FAIL${C.reset}  ${name} ${C.dim}(${ms}ms)${C.reset}`);
+      console.log(`${C.red}          ${err.message}${C.reset}`);
+      if (critical) {
+        state.aborted = true;
+        console.log(`${C.yellow}          critical phase — remaining phases skipped${C.reset}`);
+      }
+      return null;
     }
-    return null;
-  }
+  };
 }
+
+const phase = makePhaseRunner(results, { exemptions: FIXTURE_EXEMPT[ARGS.season] || {} });
 
 function assert(cond, msg) {
   if (!cond) throw new Error(msg);
@@ -147,22 +180,35 @@ function assertStatus(res, expected, what) {
 // API client
 // ---------------------------------------------------------------------------
 
-async function api(method, path, body) {
-  const res = await fetch(`${BASE}${path}`, {
+function authHeaders() {
+  return { 'Content-Type': 'application/json', Authorization: `Bearer ${TOKEN}` };
+}
+
+/**
+ * `stage` defaults to ARGS.stage but can be overridden (e.g. 'dev') so conformance mode
+ * can compare two stages from a single process without a second harness invocation.
+ */
+async function api(method, path, body, { stage = ARGS.stage } = {}) {
+  const base = stage === ARGS.stage ? BASE : `${API_HOST}/${stage}`;
+  const res = await fetch(`${base}${path}`, {
     method,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${TOKEN}`,
-    },
+    headers: authHeaders(),
     ...(body ? { body: JSON.stringify(body) } : {}),
   });
   const text = await res.text();
   let parsed;
   try { parsed = text ? JSON.parse(text) : null; } catch { parsed = text; }
   if (ARGS.verbose) {
-    console.log(`${C.dim}        → ${method} ${path} [${res.status}]${C.reset}`);
+    console.log(`${C.dim}        → ${method} ${path} [${res.status}] (${stage})${C.reset}`);
   }
   return { status: res.status, body: parsed, data: parsed?.data };
+}
+
+/** API Gateway via AWS CLI — read-only `get-stage`/`get-deployment` describe calls only. */
+function apigw(args) {
+  const out = spawnSync('aws', ['apigateway', ...args, '--region', AWS_REGION], { encoding: 'utf8' });
+  if (out.status !== 0) throw new Error(`aws apigateway ${args[0]} failed: ${(out.stderr || '').trim().slice(0, 200)}`);
+  return out.stdout ? JSON.parse(out.stdout || '{}') : {};
 }
 
 /** Read an item's current status straight from the items API (source of truth). */
@@ -290,12 +336,37 @@ async function cleanup() {
   return failed.length === 0 && deleted;
 }
 
+/**
+ * Interactive gate on top of the `--force-prod`/`--off-season` flags (AC3): typing the
+ * two flags is a copy-paste away from an accident, so the destructive lifecycle also
+ * requires the operator to type an exact phrase back. `--yes` is the explicit,
+ * separately-flagged bypass for scripted/off-season-batch use (CI has no TTY to prompt).
+ */
+async function confirmProdDestructive() {
+  if (ARGS.stage !== 'prod' || ARGS.conformance || ARGS.yes) return;
+  const { createInterface } = await import('node:readline/promises');
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  const requiredPhrase = `DESTROY PROD ${ARGS.season}`;
+  console.log(`\n${C.red}  About to run the DESTRUCTIVE lifecycle against PROD.${C.reset}`);
+  console.log(`${C.yellow}  This creates ${DEPLOYMENT_ID} and mutates real item statuses.${C.reset}`);
+  const answer = await rl.question(`  Type "${requiredPhrase}" to continue: `);
+  rl.close();
+  if (answer.trim() !== requiredPhrase) die('Confirmation phrase did not match. Aborting.');
+}
+
 // ---------------------------------------------------------------------------
 // The gate
 // ---------------------------------------------------------------------------
 
 async function main() {
   if (!TOKEN) die('SD_TOKEN is not set. Copy the `spookydecs_auth` cookie value from devtools.');
+
+  if (ARGS.conformance) {
+    const ok = await runConformance();
+    process.exit(ok ? 0 : 1);
+  }
+
+  await confirmProdDestructive();
 
   console.log(`\n${C.cyan}  Deployments pre-season gate${C.reset}`);
   console.log(`  season ${ARGS.season}  ·  stage ${ARGS.stage}  ·  sentinel ${DEPLOYMENT_ID}\n`);
@@ -554,8 +625,87 @@ async function main() {
       assertStatus(res, 409, 'complete with active session');
     });
 
+    // Removal fixture (12.1-12.5, #552) — inserted BEFORE end_session (13), while S.sessionId
+    // is still genuinely active. This is load-bearing: update_connection only sets
+    // removed_in_session (what getRemovedConnections filters on) when find_active_session
+    // finds the session open at PATCH time. Doing this after phase 13 would leave
+    // removed_in_session null and getRemovedConnections would never find it.
+
+    // ── 12.1 ─────────────────────────────────────────────────────────────────
+    const removalPair = await phase(12.1, 'Removal fixture — second connection candidate', async () => {
+      const used = new Set([S.connFromItemId, S.connectionItemId, S.placementItemId].filter(Boolean));
+      const candidates = [];
+      for (const id of stagedItems) {
+        if (used.has(id)) continue;
+        const res = await api('GET', `/items/${id}`);
+        const item = res.data ?? res.body;
+        if (item?.status === 'Staged') candidates.push(item);
+      }
+      const from2 = candidates.find((i) => Number(i.female_ends || 0) > 0);
+      const to2 = candidates.find((i) => i.id !== from2?.id);
+      if (!from2 || !to2) {
+        throw new FixtureMissing(
+          'not enough spare staged items with a free female port to build a second ' +
+          'connection — the removal path (#552) is unverified this run.'
+        );
+      }
+      return { from2, to2 };
+    });
+
+    // ── 12.2 ─────────────────────────────────────────────────────────────────
+    const removalConn = await phase(12.2, 'Removal fixture — create second connection', async () => {
+      if (!removalPair) throw new FixtureMissing('no removal fixture (see 12.1)');
+      const { from2, to2 } = removalPair;
+      const res = await api('POST', `/deployments/${DEPLOYMENT_ID}/connections`, {
+        session_id: S.sessionId,
+        session_deployment_item_id: S.sessionRecordId,
+        zone_code: S.connZone,
+        from_item_id: from2.id,
+        from_port: 'female_1',
+        to_item_id: to2.id,
+        to_port: 'male_1',
+        notes: 'pre-season gate — removal fixture (#552)',
+      });
+      assert(res.status === 200 || res.status === 201, `POST /connections (removal fixture): ${res.status}`);
+      assertEq(await itemStatus(to2.id), 'PreDeployment', `removal-candidate ${to2.id} status`);
+      return { connectionId: res.data.connection_id, toItemId: to2.id };
+    });
+
+    // ── 12.3 ─────────────────────────────────────────────────────────────────
+    await phase(12.3, 'PATCH connection → removal (connection_type=removal)', async () => {
+      if (!removalConn) throw new FixtureMissing('no removal fixture (see 12.1/12.2)');
+      const res = await api('PATCH', `/deployments/${DEPLOYMENT_ID}/connections/${removalConn.connectionId}`, {
+        removal_reason: 'pre-season gate — connection removal coverage (#552)',
+      });
+      assertStatus(res, 200, 'PATCH /connections/{cid}');
+      assertEq(res.data.connection_type, 'removal', 'connection_type after PATCH');
+    });
+
+    // ── 12.4 ─────────────────────────────────────────────────────────────────
+    await phase(12.4, 'getRemovedConnections — GET .../connections?type=removal (AC5)', async () => {
+      if (!removalConn) throw new FixtureMissing('no removal fixture (see 12.1/12.2)');
+      const res = await api('GET', `/deployments/${DEPLOYMENT_ID}/sessions/${S.sessionId}/connections?type=removal`);
+      assertStatus(res, 200, 'GET .../connections?type=removal');
+      const found = (res.data || []).find((c) => c.connection_id === removalConn.connectionId);
+      assert(found, `removed connection ${removalConn.connectionId} not returned by getRemovedConnections`);
+      assertEq(found.connection_type, 'removal', 'connection_type in getRemovedConnections result');
+    });
+
+    // ── 12.5 ─────────────────────────────────────────────────────────────────
+    await phase(12.5, 'DELETE — hard remove the fixture connection', async () => {
+      if (!removalConn) throw new FixtureMissing('no removal fixture (see 12.1/12.2)');
+      const res = await api('DELETE', `/deployments/${DEPLOYMENT_ID}/connections/${removalConn.connectionId}`);
+      assertStatus(res, 200, 'DELETE /connections/{cid}');
+      const recheck = await api('GET', `/deployments/${DEPLOYMENT_ID}/sessions/${S.sessionId}/connections?type=removal`);
+      const stillThere = (recheck.data || []).some((c) => c.connection_id === removalConn.connectionId);
+      assert(!stillThere, `${removalConn.connectionId} still returned after DELETE — hard delete did not take`);
+      // No restore path for a hard delete — same precedent as sentinel deletion (README §7).
+      // The fixture item's own status is still covered by the existing ledger (remember()'d
+      // as part of the phase-5 tote contents).
+    });
+
     // ── 13 ───────────────────────────────────────────────────────────────────
-    await phase(13, 'End session — zone.items_deployed unions connections + placements', async () => {
+    await phase(13, 'End session — zone.items_deployed unions connections + placements, excludes removals', async () => {
       const res = await api('PUT', `/deployments/${DEPLOYMENT_ID}/sessions/${S.sessionId}`, {
         notes: 'pre-season gate',
       });
@@ -573,6 +723,15 @@ async function main() {
       if (S.placementItemId) {
         assert(deployed.includes(S.placementItemId),
           `placed prop ${S.placementItemId} absent from items_deployed — the #457 union regressed`);
+      }
+      // AC4: the removal-fixture item must have DROPPED OUT of items_deployed after
+      // end_session's rebuild, since its connection is now connection_type='removal'
+      // (the DELETE in 12.5 removes the record entirely, so this also covers the case
+      // where the removed connection no longer exists at all — either way, absent).
+      if (removalConn) {
+        assert(!deployed.includes(removalConn.toItemId),
+          `removed item ${removalConn.toItemId} STILL in items_deployed — #552 regression: ` +
+          `end_session did not exclude a removal-type connection`);
       }
     }, { critical: true });
 
@@ -647,11 +806,17 @@ async function main() {
     } else {
       await cleanup();
     }
-    summarize();
+    summarizeLifecycle();
   }
 }
 
-function summarize() {
+/**
+ * States exactly what ran: the deployment/item state machine transitions, on ARGS.stage,
+ * including connection removal. Does NOT claim "Season-ready" — that would imply coverage
+ * (browser/UI behavior, cross-zone concurrency, prod route/schema parity) this suite
+ * explicitly disclaims. See sub_tests/deployments.md §8 for the known-gaps list.
+ */
+function summarizeLifecycle() {
   const pass = results.filter((r) => r.status === 'pass').length;
   const fail = results.filter((r) => r.status === 'fail');
   const skip = results.filter((r) => r.status === 'skip').length;
@@ -671,8 +836,202 @@ function summarize() {
     console.log('');
     process.exit(1);
   }
-  console.log(`\n${C.green}  Season-ready: full ${ARGS.season} lifecycle verified on ${ARGS.stage}.${C.reset}\n`);
+  console.log(
+    `\n${C.green}  Verified: ${ARGS.season} deployment state machine (create → stage → ` +
+    `session → connect/place → remove → complete → teardown → archive) transitions ` +
+    `correctly on ${ARGS.stage}, including connection removal coverage.${C.reset}`
+  );
+  console.log(
+    `${C.dim}  This does not verify: browser/UI behavior, cross-zone concurrency, or ` +
+    `prod route/schema parity — run --conformance for that, see sub_tests/deployments.md §8.${C.reset}\n`
+  );
   process.exit(0);
+}
+
+// ---------------------------------------------------------------------------
+// Conformance mode — read-only, safe against prod at any time (AC1/AC2/AC3)
+// ---------------------------------------------------------------------------
+
+const STATUS_VOCAB = ['pre-deployment', 'active_setup', 'completed', 'active_teardown', 'archived'];
+
+/** Flattened `METHOD path` set for a stage's currently-deployed API Gateway snapshot. */
+function deployedRouteSet(stage) {
+  const restApiId = 'miinu7boec';
+  const { deploymentId } = apigw(['get-stage', '--rest-api-id', restApiId, '--stage-name', stage]);
+  if (!deploymentId) throw new Error(`no deploymentId for stage ${stage}`);
+  const { apiSummary } = apigw([
+    'get-deployment', '--rest-api-id', restApiId, '--deployment-id', deploymentId, '--embed', 'apisummary',
+  ]);
+  const out = new Set();
+  for (const [path, methods] of Object.entries(apiSummary || {})) {
+    for (const method of Object.keys(methods || {})) out.add(`${method} ${path}`);
+  }
+  return out;
+}
+
+/**
+ * Reproduces the #551 discovery mechanism: dev's `/deployments/{id}` resource had
+ * PUT/DELETE implemented by the Lambda but missing from dev's *deployed stage snapshot*.
+ * `get-resources` alone would not have caught this — it reflects the resource/method tree,
+ * not what's actually live on a given stage. `get-stage` + `get-deployment --embed
+ * apisummary` reads the real deployed snapshot per stage. Entirely read-only (describe-class
+ * calls).
+ */
+function checkRoutes() {
+  const devRoutes = deployedRouteSet('dev');
+  const targetRoutes = deployedRouteSet(ARGS.stage);
+  const missing = [...devRoutes].filter((r) => !targetRoutes.has(r)).sort();
+  const extra = [...targetRoutes].filter((r) => !devRoutes.has(r)).sort();
+  if (missing.length || extra.length) {
+    throw new Error(
+      `route drift vs dev — missing on ${ARGS.stage}: [${missing.join(', ') || 'none'}]; ` +
+      `extra on ${ARGS.stage}: [${extra.join(', ') || 'none'}]`
+    );
+  }
+}
+
+/** Sorted `IndexName:attr(KeyType),...` signature for a stage's deployments table GSIs. */
+function gsiSignature(stage) {
+  const d = ddb(['describe-table', '--table-name', `sd_deployments_records_${stage}`]);
+  return (d.Table?.GlobalSecondaryIndexes || [])
+    .map((g) => `${g.IndexName}:${(g.KeySchema || []).map((k) => `${k.AttributeName}(${k.KeyType})`).join(',')}`)
+    .sort();
+}
+
+function checkGsis() {
+  const dev = gsiSignature('dev');
+  const target = gsiSignature(ARGS.stage);
+  assertEq(target.join('|'), dev.join('|'), `GSI signature dev vs ${ARGS.stage}`);
+}
+
+/**
+ * Observes real `status` values on the target stage (active + historical deployments) and
+ * asserts they're a SUBSET of the known vocabulary — not equality, since an off-season prod
+ * may show only `archived` (or, before any deployment has ever run there, nothing at all).
+ */
+async function checkStatusVocabulary() {
+  const active = await api('GET', '/deployments', null, { stage: ARGS.stage });
+  assertStatus(active, 200, `GET /deployments (${ARGS.stage})`);
+  const hist = await api('GET', '/deployments/historical', null, { stage: ARGS.stage });
+  assertStatus(hist, 200, `GET /deployments/historical (${ARGS.stage})`);
+
+  const all = [...(active.data || []), ...(hist.data || [])];
+  const observed = new Set(all.map((d) => d.status ?? d.metadata?.status).filter(Boolean));
+
+  const unknown = [...observed].filter((s) => !STATUS_VOCAB.includes(s));
+  assert(unknown.length === 0,
+    `${ARGS.stage} has status value(s) outside the known vocabulary: ${unknown.join(', ')}`);
+
+  if (observed.size === 0) {
+    throw new FixtureMissing(`no deployments (live or archived) exist on ${ARGS.stage} — vocabulary unobservable this run`);
+  }
+}
+
+/**
+ * Samples a real historical deployment's `/stage` response shape on the target stage.
+ * Read-only regardless of the deployment's status — an archived deployment's `/stage`
+ * legitimately returns empty arrays, but the response KEYS are what's being asserted.
+ * No sentinel is created; falls back to N/A if the target stage has no historical deployments.
+ */
+async function checkStageShape() {
+  const hist = await api('GET', '/deployments/historical', null, { stage: ARGS.stage });
+  assertStatus(hist, 200, `GET /deployments/historical (${ARGS.stage})`);
+  const sample = (hist.data || [])[0];
+  if (!sample) {
+    throw new FixtureMissing(`no historical deployment on ${ARGS.stage} to sample /stage shape from`);
+  }
+  const res = await api('GET', `/deployments/${sample.deployment_id}/stage`, null, { stage: ARGS.stage });
+  assertStatus(res, 200, `GET /stage on ${sample.deployment_id} (${ARGS.stage})`);
+  for (const key of ['totes', 'staged_totes', 'non_packable_items', 'staged_non_packable', 'season']) {
+    assert(key in (res.data || {}), `/stage response on ${ARGS.stage} missing key: ${key}`);
+  }
+}
+
+/** Item count for the sentinel's deployment_id partition — 0 both times means no writes. */
+function sentinelPartitionCount(stage, seasonCode) {
+  const d = ddb([
+    'query', '--table-name', `sd_deployments_records_${stage}`,
+    '--key-condition-expression', 'deployment_id = :d',
+    '--expression-attribute-values', JSON.stringify({ ':d': { S: `DEP-${seasonCode}-${SENTINEL_YEAR}` } }),
+    '--select', 'COUNT',
+  ]);
+  return d.Count ?? 0;
+}
+
+/**
+ * AC1's zero-writes proof. `describe-table`'s ItemCount is an eventually-consistent
+ * estimate AWS refreshes roughly every 6 hours — not reliable for a same-run before/after
+ * diff, so it's logged as supplementary context only. The actual pass/fail assertion is a
+ * cheap, accurate `Query ... Select=COUNT` scoped to BOTH sentinel partitions (Halloween
+ * and Christmas — conformance doesn't require --season), since that directly answers
+ * "did this run write the one partition it could plausibly touch."
+ */
+function sentinelCountsSnapshot(stage) {
+  return Object.fromEntries(
+    Object.values(SEASON_CODES).map((code) => [code, sentinelPartitionCount(stage, code)])
+  );
+}
+
+async function runConformance() {
+  console.log(`\n${C.cyan}  Deployments conformance check — dev vs ${ARGS.stage}${C.reset}\n`);
+
+  const before = sentinelCountsSnapshot(ARGS.stage);
+  const beforeItemCount = ddb(['describe-table', '--table-name', `sd_deployments_records_${ARGS.stage}`]).Table?.ItemCount;
+
+  const cResults = [];
+  const cPhase = makePhaseRunner(cResults);
+
+  await cPhase('routes', 'API Gateway route parity (dev vs target, deployed snapshot)', () => checkRoutes());
+  await cPhase('gsi', 'DynamoDB table + GSI parity (dev vs target)', () => checkGsis());
+  await cPhase('status', 'Status vocabulary parity (observed ⊆ known vocabulary)', () => checkStatusVocabulary());
+  await cPhase('stage-shape', '/stage response shape parity (sampled from a real historical deployment)', () => checkStageShape());
+
+  const after = sentinelCountsSnapshot(ARGS.stage);
+  const afterItemCount = ddb(['describe-table', '--table-name', `sd_deployments_records_${ARGS.stage}`]).Table?.ItemCount;
+  await cPhase('zero-write', 'Zero writes performed (sentinel partition count unchanged)', () => {
+    assertEq(JSON.stringify(after), JSON.stringify(before), `sentinel partition counts on ${ARGS.stage}`);
+  });
+  console.log(`${C.dim}  (informational) whole-table ItemCount on ${ARGS.stage}: ${beforeItemCount} → ${afterItemCount} ` +
+    `— AWS-estimated, refreshed ~every 6h, not asserted on${C.reset}`);
+
+  return summarizeConformance(cResults);
+}
+
+/**
+ * States exactly what ran: read-only structural parity between dev and ARGS.stage. Does
+ * NOT claim the write-path state machine works on ARGS.stage — only --stage dev/demo runs
+ * (the destructive lifecycle) prove that. Matches AC6: no claim beyond the evidence.
+ */
+function summarizeConformance(cResults) {
+  const pass = cResults.filter((r) => r.status === 'pass').length;
+  const fail = cResults.filter((r) => r.status === 'fail');
+  const na = cResults.filter((r) => r.status === 'na');
+
+  console.log(`\n${C.cyan}  Conformance summary${C.reset}`);
+  console.log(`    ${C.green}${pass} passed${C.reset}  ${fail.length ? C.red : C.dim}${fail.length} failed${C.reset}  ${na.length ? C.yellow : C.dim}${na.length} n/a${C.reset}`);
+
+  if (na.length) {
+    console.log(`\n${C.yellow}  Not checked — no fixture to sample on ${ARGS.stage}:${C.reset}`);
+    for (const r of na) console.log(`${C.yellow}    ${r.name}${C.reset}`);
+  }
+
+  if (fail.length) {
+    console.log(`\n${C.red}  DRIFT DETECTED between dev and ${ARGS.stage} — do not assume ${ARGS.stage} matches dev.${C.reset}`);
+    for (const f of fail) console.log(`${C.red}    ${f.name}: ${f.error}${C.reset}`);
+    console.log('');
+    return false;
+  }
+
+  console.log(
+    `\n${C.green}  Verified (read-only, zero writes): routes, GSIs, status vocabulary, and ` +
+    `/stage response shape on ${ARGS.stage} match dev` +
+    `${na.length ? ` (${na.length} check(s) N/A — no fixture to sample, see above)` : ''}.${C.reset}`
+  );
+  console.log(
+    `${C.dim}  This does NOT verify the write-path state machine on ${ARGS.stage} — run the ` +
+    `destructive lifecycle gate on dev/demo for that.${C.reset}\n`
+  );
+  return true;
 }
 
 main().catch((err) => {
