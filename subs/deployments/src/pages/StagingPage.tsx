@@ -37,7 +37,7 @@ function PropCard({
   onStage?: () => void;
 }) {
   return (
-    <Card className={isStaged ? 'opacity-90' : ''}>
+    <Card className={isStaged ? 'opacity-90' : ''} data-testid={`item-card-${item.id}`}>
       <CardBody className="gap-2">
         <div className="flex items-start justify-between gap-2">
           <div>
@@ -88,7 +88,7 @@ function ToteCard({
   const [expanded, setExpanded] = useState(false);
   const itemCount = tote.contents_count || 0;
   return (
-    <Card className={isStaged ? 'opacity-90' : ''}>
+    <Card className={isStaged ? 'opacity-90' : ''} data-testid={`tote-card-${tote.id}`}>
       <CardBody className="gap-2">
         <div className="flex items-start justify-between gap-2">
           <div>
@@ -327,6 +327,7 @@ export default function StagingPage() {
           (confirmTote?.contents?.length || 0) !== 1 ? 's' : ''
         } as Staged and open the tote.`}
         confirmLabel="Stage Tote"
+        confirmTestId="staging-confirm-tote"
         isLoading={staging}
         onConfirm={handleStage}
         onClose={() => setConfirmTote(null)}
@@ -337,6 +338,7 @@ export default function StagingPage() {
         title={`Stage "${confirmItem?.short_name || confirmItem?.id || ''}"?`}
         body="This will mark this Large & Oversized item as Staged, making it available to place or connect in the deployment."
         confirmLabel="Stage Item"
+        confirmTestId="staging-confirm-item"
         isLoading={staging}
         onConfirm={handleStageItem}
         onClose={() => setConfirmItem(null)}
