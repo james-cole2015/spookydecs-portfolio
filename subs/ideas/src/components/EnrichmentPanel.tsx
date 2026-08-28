@@ -2,10 +2,18 @@
  * EnrichmentPanel — the "Ask Igor" UI (#334 task 9).
  *
  * Trigger → POST /ideas/{id}/enrich (202, optimistic in_progress) → poll
- * GET /ideas/{id} every 4s (≈75-tick / 5-min cap) → render the agent_enrichment
- * contract (photos, purchase_links, materials, instructions, estimated_cost,
- * tags) with loading / partial / failed states. The polling interval is cleaned
- * up on unmount and when the status leaves in_progress.
+ * GET /ideas/{id} to render the agent_enrichment contract (photos,
+ * purchase_links, materials, instructions, estimated_cost, tags) with
+ * loading / partial / failed states.
+ *
+ * Polling is elapsed-time based (from agent_enrichment.started_at), not tick
+ * counted, so a remount mid-flight resumes in the correct phase: a fast 4s
+ * cadence for the first POLL_FAST_PHASE_MS (covers the common case), then a
+ * sparser POLL_SLOW_INTERVAL_MS cadence out to POLL_CEILING_MS — sized just
+ * past the backend worker's 900s Lambda timeout, since nothing can still be
+ * running past that (#396). Past the ceiling, automatic polling stops and a
+ * manual "Check now" button takes over — the backend's single atomic
+ * agent_enrichment write means one fresh GET either has the answer or not.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Accordion, AccordionItem, Button, Chip, Spinner } from '@heroui/react';
@@ -14,8 +22,10 @@ import { PhotoLightbox, useToast, type LightboxPhoto } from '@spookydecs/ui';
 import { getIdea, startEnrichment } from '../api/ideasApi';
 import type { AgentEnrichment, EnrichmentLink, EnrichmentStep } from '../config/ideasConfig';
 
-const POLL_INTERVAL_MS = 4000;
-const POLL_MAX_TICKS = 75; // ~5 min
+const POLL_FAST_INTERVAL_MS = 4000;
+const POLL_FAST_PHASE_MS = 2 * 60 * 1000; // 2 min
+const POLL_SLOW_INTERVAL_MS = 20 * 1000;
+const POLL_CEILING_MS = 930 * 1000; // just past the worker's 900s Lambda timeout
 
 const SUB_AGENT_ROWS = [
   { key: 'photos', label: 'Photos' },
@@ -224,59 +234,88 @@ export function EnrichmentPanel({
   const toast = useToast();
   const [ae, setAe] = useState<AgentEnrichment | undefined>(initial);
   const [starting, setStarting] = useState(false);
-  const [timedOut, setTimedOut] = useState(false);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [pastCeiling, setPastCeiling] = useState(false);
+  const [checkingNow, setCheckingNow] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const stopPolling = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
     }
   }, []);
 
-  const startPolling = useCallback(() => {
-    stopPolling();
-    let ticks = 0;
-    intervalRef.current = setInterval(async () => {
-      ticks++;
-      if (ticks >= POLL_MAX_TICKS) {
-        stopPolling();
-        setTimedOut(true);
-        return;
-      }
-      try {
-        const refreshed = await getIdea(ideaId);
-        const next = refreshed?.agent_enrichment;
-        if (!next) return;
-        setAe(next);
-        if (next.status !== 'in_progress') stopPolling();
-      } catch {
-        /* silent — retry next tick */
-      }
-    }, POLL_INTERVAL_MS);
-  }, [ideaId, stopPolling]);
+  const checkNow = useCallback(async () => {
+    try {
+      const refreshed = await getIdea(ideaId);
+      const next = refreshed?.agent_enrichment;
+      if (next) setAe(next);
+      return next;
+    } catch {
+      return undefined;
+    }
+  }, [ideaId]);
 
-  // Resume polling if we mount mid-flight; always clean up on unmount.
+  const startPolling = useCallback(
+    (startedAt: string) => {
+      stopPolling();
+      setPastCeiling(false);
+      const startedMs = new Date(startedAt).getTime();
+
+      const tick = async () => {
+        const elapsed = Date.now() - startedMs;
+        if (elapsed >= POLL_CEILING_MS) {
+          stopPolling();
+          setPastCeiling(true);
+          return;
+        }
+        const next = await checkNow();
+        if (next && next.status !== 'in_progress') {
+          stopPolling();
+          return;
+        }
+        const interval = elapsed < POLL_FAST_PHASE_MS ? POLL_FAST_INTERVAL_MS : POLL_SLOW_INTERVAL_MS;
+        timeoutRef.current = setTimeout(tick, interval);
+      };
+
+      timeoutRef.current = setTimeout(tick, POLL_FAST_INTERVAL_MS);
+    },
+    [checkNow, stopPolling],
+  );
+
+  // Resume polling if we mount mid-flight (from the record's own started_at,
+  // so we land in the correct phase); always clean up on unmount.
   useEffect(() => {
-    if (initial?.status === 'in_progress') startPolling();
+    if (initial?.status === 'in_progress' && initial.started_at) startPolling(initial.started_at);
     return stopPolling;
-  }, [initial?.status, startPolling, stopPolling]);
+  }, [initial?.status, initial?.started_at, startPolling, stopPolling]);
 
   async function handleEnrich() {
     setStarting(true);
-    setTimedOut(false);
+    setPastCeiling(false);
     try {
       await startEnrichment(ideaId);
+      const startedAt = new Date().toISOString();
       setAe({
         status: 'in_progress',
-        started_at: new Date().toISOString(),
+        started_at: startedAt,
         sub_agents: { photos: 'pending', purchase_links: 'pending', research: 'pending' },
       });
-      startPolling();
+      startPolling(startedAt);
     } catch (err) {
       toast.showError((err as Error).message || 'Igor failed to start');
     } finally {
       setStarting(false);
+    }
+  }
+
+  async function handleCheckNow() {
+    setCheckingNow(true);
+    try {
+      const next = await checkNow();
+      if (next && next.status !== 'in_progress') setPastCeiling(false);
+    } finally {
+      setCheckingNow(false);
     }
   }
 
@@ -336,10 +375,21 @@ export function EnrichmentPanel({
           {status === 'in_progress' && (
             <>
               <SubAgentPanel subAgents={ae?.sub_agents} />
-              {timedOut && (
-                <p className="text-small text-default-400">
-                  Igor is still researching — refresh to check the latest status.
-                </p>
+              {pastCeiling && (
+                <div className="flex items-center gap-2">
+                  <p className="text-small text-default-400">
+                    Igor is taking longer than usual — this can happen on a big fan-out.
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="light"
+                    startContent={<RefreshCw size={14} />}
+                    onPress={handleCheckNow}
+                    isLoading={checkingNow}
+                  >
+                    Check now
+                  </Button>
+                </div>
               )}
             </>
           )}
