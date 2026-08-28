@@ -28,6 +28,10 @@ export interface ConfirmDialogProps {
   isLoading?: boolean;
   onConfirm: () => void;
   onClose: () => void;
+  /** Optional `data-testid` on the confirm button — the confirm label often
+   *  matches the trigger button's text (e.g. "Stage Tote"), so a testid is
+   *  the only reliable way for e2e tests to target the dialog's own button. */
+  confirmTestId?: string;
 }
 
 export function ConfirmDialog({
@@ -41,6 +45,7 @@ export function ConfirmDialog({
   isLoading = false,
   onConfirm,
   onClose,
+  confirmTestId,
 }: ConfirmDialogProps) {
   const color: ConfirmColor = confirmColor ?? (isDestructive ? 'danger' : 'primary');
   return (
@@ -52,7 +57,7 @@ export function ConfirmDialog({
           <Button variant="light" onPress={onClose}>
             {cancelLabel}
           </Button>
-          <Button color={color} onPress={onConfirm} isLoading={isLoading}>
+          <Button color={color} onPress={onConfirm} isLoading={isLoading} data-testid={confirmTestId}>
             {confirmLabel}
           </Button>
         </ModalFooter>

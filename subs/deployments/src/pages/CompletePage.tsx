@@ -335,7 +335,11 @@ export default function CompletePage() {
             <p className="text-sm text-default-500">
               This will mark all deployed items as <strong>Deployed</strong> and lock the deployment.
             </p>
-            <Button color="primary" onPress={() => setConfirmOpen(true)}>
+            <Button
+              color="primary"
+              onPress={() => setConfirmOpen(true)}
+              data-testid="complete-trigger"
+            >
               Confirm &amp; Complete Deployment
             </Button>
           </div>
@@ -347,6 +351,7 @@ export default function CompletePage() {
         title="Complete Deployment?"
         body="This will mark all deployed items as Deployed and lock the deployment."
         confirmLabel="Confirm & Complete"
+        confirmTestId="complete-confirm"
         isLoading={confirming}
         onConfirm={handleConfirm}
         onClose={() => setConfirmOpen(false)}

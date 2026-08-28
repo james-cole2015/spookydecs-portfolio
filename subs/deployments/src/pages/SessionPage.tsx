@@ -319,6 +319,7 @@ export default function SessionPage() {
                           key={item.item_id}
                           disabled={isDisabled}
                           onClick={() => setConnectSource(item)}
+                          data-testid={`source-item-${item.item_id}`}
                           className={`flex items-center gap-2 rounded-medium border border-default-200 p-2 text-left ${
                             isDisabled ? 'opacity-50' : 'hover:border-secondary'
                           }`}

@@ -51,12 +51,14 @@
     "build:deployments": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-deployments",
     "build:maintenance": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-maintenance",
     "build:landing": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-landing",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:e2e:deployments": "playwright test --config subs/deployments/tests/e2e/playwright.config.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@playwright/test": "^1.48.0",
     "vite": "^6.4.1"
   },
   "comments": {
