@@ -3,8 +3,19 @@
  * extracted reason, IG analysis (Violation.Annotated), editable notes, and the
  * Dismiss / Run IG / Delete actions. Prev/Next navigation comes from the
  * sessionStorage nav context seeded by RuleDetail. Mirrors violation-detail.js.
+ *
+ * IG polling (via the shared useResumablePoll hook, #396/#572) is elapsed-time
+ * based from the run's trigger moment. sd_inspector_gadget and the downstream
+ * sd_inspector_executor each carry a 60s Lambda timeout (confirmed against
+ * live config), so the ceiling below covers both plus EventBridge/SQS
+ * propagation margin. Past the ceiling, automatic polling stops and a manual
+ * "Check now" button takes over instead of a dead-end toast — "Run IG" stays
+ * disabled throughout so a user can't accidentally fire a duplicate run while
+ * the first might still resolve. Unlike the ideas-sub enrichment panels, the
+ * violation record carries no started_at to resume from on a fresh page
+ * load/remount — this only fixes in-session recovery via "Check now".
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Card,
@@ -16,7 +27,16 @@ import {
   Code,
   Textarea,
 } from '@heroui/react';
-import { Breadcrumbs, LoadingState, ErrorState, useConfig, useToast, ConfirmDialog } from '@spookydecs/ui';
+import { RefreshCw } from 'lucide-react';
+import {
+  Breadcrumbs,
+  LoadingState,
+  ErrorState,
+  useConfig,
+  useResumablePoll,
+  useToast,
+  ConfirmDialog,
+} from '@spookydecs/ui';
 import { InspectorAPI } from '../api/inspectorApi';
 import {
   formatDate,
@@ -28,8 +48,10 @@ import { IGAnalysisCard } from '../components/IGAnalysisCard';
 import { DismissModal } from '../components/DismissModal';
 import { getNavContext, type NavContext } from '../lib/navContext';
 
-const IG_POLL_INTERVAL = 3000;
-const IG_POLL_TIMEOUT = 60000;
+const IG_POLL_FAST_INTERVAL_MS = 3000;
+const IG_POLL_FAST_PHASE_MS = 60 * 1000; // 1 min — covers the IG Lambda's own 60s timeout
+const IG_POLL_SLOW_INTERVAL_MS = 5000;
+const IG_POLL_CEILING_MS = 180 * 1000; // IG (60s) + executor (60s) + propagation margin
 
 export default function ViolationDetail() {
   const { violationId = '' } = useParams();
@@ -50,7 +72,27 @@ export default function ViolationDetail() {
   const [deleting, setDeleting] = useState(false);
   const [igRunning, setIgRunning] = useState(false);
   const [copied, setCopied] = useState(false);
-  const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const { pastCeiling, checkingNow, startPolling, stopPolling, checkNow } = useResumablePoll({
+    fastIntervalMs: IG_POLL_FAST_INTERVAL_MS,
+    fastPhaseMs: IG_POLL_FAST_PHASE_MS,
+    slowIntervalMs: IG_POLL_SLOW_INTERVAL_MS,
+    ceilingMs: IG_POLL_CEILING_MS,
+    checkNow: async () => {
+      if (!violationId) return false;
+      try {
+        const data = await InspectorAPI.getViolation(violationId);
+        if (data.violation.agent_notes) {
+          setViolation(data.violation);
+          setIgRunning(false);
+          return true;
+        }
+        return false;
+      } catch {
+        return false; // keep polling
+      }
+    },
+  });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -69,9 +111,8 @@ export default function ViolationDetail() {
 
   useEffect(() => {
     void load();
-    return () => {
-      if (pollTimer.current) clearTimeout(pollTimer.current);
-    };
+    return stopPolling;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [load]);
 
   async function reloadViolation() {
@@ -131,27 +172,7 @@ export default function ViolationDetail() {
     try {
       await InspectorAPI.runIG(violation.violation_id);
       toast.showSuccess('Inspector Gadget invoked — analysis will appear shortly');
-
-      const started = Date.now();
-      const poll = async () => {
-        if (Date.now() - started >= IG_POLL_TIMEOUT) {
-          setIgRunning(false);
-          toast.showError('IG is taking longer than expected — check back soon');
-          return;
-        }
-        try {
-          const data = await InspectorAPI.getViolation(violation.violation_id);
-          if (data.violation.agent_notes) {
-            setViolation(data.violation);
-            setIgRunning(false);
-            return;
-          }
-        } catch {
-          /* keep polling */
-        }
-        pollTimer.current = setTimeout(poll, IG_POLL_INTERVAL);
-      };
-      pollTimer.current = setTimeout(poll, IG_POLL_INTERVAL);
+      startPolling(new Date().toISOString());
     } catch (e) {
       toast.showError(`Failed to invoke Inspector Gadget: ${(e as Error).message}`);
       setIgRunning(false);
@@ -284,7 +305,23 @@ export default function ViolationDetail() {
       </div>
 
       {igRunning && (
-        <p className="text-small text-secondary">Inspector Gadget is analyzing this violation…</p>
+        <div className="flex items-center gap-2">
+          <p className="text-small text-secondary">Inspector Gadget is analyzing this violation…</p>
+          {pastCeiling && (
+            <>
+              <span className="text-small text-default-400">— taking longer than usual.</span>
+              <Button
+                size="sm"
+                variant="light"
+                startContent={<RefreshCw size={14} />}
+                onPress={checkNow}
+                isLoading={checkingNow}
+              >
+                Check now
+              </Button>
+            </>
+          )}
+        </div>
       )}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">

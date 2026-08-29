@@ -6,19 +6,20 @@
  * purchase_links, materials, instructions, estimated_cost, tags) with
  * loading / partial / failed states.
  *
- * Polling is elapsed-time based (from agent_enrichment.started_at), not tick
- * counted, so a remount mid-flight resumes in the correct phase: a fast 4s
- * cadence for the first POLL_FAST_PHASE_MS (covers the common case), then a
- * sparser POLL_SLOW_INTERVAL_MS cadence out to POLL_CEILING_MS — sized just
- * past the backend worker's 900s Lambda timeout, since nothing can still be
- * running past that (#396). Past the ceiling, automatic polling stops and a
- * manual "Check now" button takes over — the backend's single atomic
- * agent_enrichment write means one fresh GET either has the answer or not.
+ * Polling (via the shared useResumablePoll hook, #396/#572) is elapsed-time
+ * based (from agent_enrichment.started_at), not tick counted, so a remount
+ * mid-flight resumes in the correct phase: a fast 4s cadence for the first
+ * POLL_FAST_PHASE_MS (covers the common case), then a sparser
+ * POLL_SLOW_INTERVAL_MS cadence out to POLL_CEILING_MS — sized just past the
+ * backend worker's 900s Lambda timeout, since nothing can still be running
+ * past that. Past the ceiling, automatic polling stops and a manual "Check
+ * now" button takes over — the backend's single atomic agent_enrichment
+ * write means one fresh GET either has the answer or not.
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Accordion, AccordionItem, Button, Chip, Spinner } from '@heroui/react';
 import { Wand2, RefreshCw } from 'lucide-react';
-import { PhotoLightbox, useToast, type LightboxPhoto } from '@spookydecs/ui';
+import { PhotoLightbox, useResumablePoll, useToast, type LightboxPhoto } from '@spookydecs/ui';
 import { getIdea, startEnrichment } from '../api/ideasApi';
 import type { AgentEnrichment, EnrichmentLink, EnrichmentStep } from '../config/ideasConfig';
 
@@ -234,65 +235,30 @@ export function EnrichmentPanel({
   const toast = useToast();
   const [ae, setAe] = useState<AgentEnrichment | undefined>(initial);
   const [starting, setStarting] = useState(false);
-  const [pastCeiling, setPastCeiling] = useState(false);
-  const [checkingNow, setCheckingNow] = useState(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const stopPolling = useCallback(() => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-  }, []);
-
-  const checkNow = useCallback(async () => {
-    try {
+  const { pastCeiling, checkingNow, startPolling, stopPolling, checkNow } = useResumablePoll({
+    fastIntervalMs: POLL_FAST_INTERVAL_MS,
+    fastPhaseMs: POLL_FAST_PHASE_MS,
+    slowIntervalMs: POLL_SLOW_INTERVAL_MS,
+    ceilingMs: POLL_CEILING_MS,
+    checkNow: async () => {
       const refreshed = await getIdea(ideaId);
       const next = refreshed?.agent_enrichment;
       if (next) setAe(next);
-      return next;
-    } catch {
-      return undefined;
-    }
-  }, [ideaId]);
-
-  const startPolling = useCallback(
-    (startedAt: string) => {
-      stopPolling();
-      setPastCeiling(false);
-      const startedMs = new Date(startedAt).getTime();
-
-      const tick = async () => {
-        const elapsed = Date.now() - startedMs;
-        if (elapsed >= POLL_CEILING_MS) {
-          stopPolling();
-          setPastCeiling(true);
-          return;
-        }
-        const next = await checkNow();
-        if (next && next.status !== 'in_progress') {
-          stopPolling();
-          return;
-        }
-        const interval = elapsed < POLL_FAST_PHASE_MS ? POLL_FAST_INTERVAL_MS : POLL_SLOW_INTERVAL_MS;
-        timeoutRef.current = setTimeout(tick, interval);
-      };
-
-      timeoutRef.current = setTimeout(tick, POLL_FAST_INTERVAL_MS);
+      return Boolean(next && next.status !== 'in_progress');
     },
-    [checkNow, stopPolling],
-  );
+  });
 
   // Resume polling if we mount mid-flight (from the record's own started_at,
   // so we land in the correct phase); always clean up on unmount.
   useEffect(() => {
     if (initial?.status === 'in_progress' && initial.started_at) startPolling(initial.started_at);
     return stopPolling;
-  }, [initial?.status, initial?.started_at, startPolling, stopPolling]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initial?.status, initial?.started_at]);
 
   async function handleEnrich() {
     setStarting(true);
-    setPastCeiling(false);
     try {
       await startEnrichment(ideaId);
       const startedAt = new Date().toISOString();
@@ -306,16 +272,6 @@ export function EnrichmentPanel({
       toast.showError((err as Error).message || 'Igor failed to start');
     } finally {
       setStarting(false);
-    }
-  }
-
-  async function handleCheckNow() {
-    setCheckingNow(true);
-    try {
-      const next = await checkNow();
-      if (next && next.status !== 'in_progress') setPastCeiling(false);
-    } finally {
-      setCheckingNow(false);
     }
   }
 
@@ -384,7 +340,7 @@ export function EnrichmentPanel({
                     size="sm"
                     variant="light"
                     startContent={<RefreshCw size={14} />}
-                    onPress={handleCheckNow}
+                    onPress={checkNow}
                     isLoading={checkingNow}
                   >
                     Check now

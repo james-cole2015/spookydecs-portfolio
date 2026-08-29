@@ -60,6 +60,8 @@ export { ConfirmDialog } from './components/ConfirmDialog';
 export type { ConfirmDialogProps, ConfirmColor } from './components/ConfirmDialog';
 export { useConfirm } from './hooks/useConfirm';
 export type { UseConfirm, ConfirmOptions } from './hooks/useConfirm';
+export { useResumablePoll } from './hooks/useResumablePoll';
+export type { UseResumablePoll, ResumablePollConfig } from './hooks/useResumablePoll';
 export { FilterBar } from './components/FilterBar';
 export type { FilterBarProps, Filters, FilterOption } from './components/FilterBar';
 export { PhotoGallery } from './components/PhotoGallery';
