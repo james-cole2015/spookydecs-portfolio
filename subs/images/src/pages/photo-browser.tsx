@@ -21,6 +21,14 @@ import { fetchImages } from '../api/imagesApi';
 import { isOrphaned, canonicalSeason, readFilters, writeFilters, type Photo, type ImageUiFilters } from '../config/imagesConfig';
 import { ImagesFilters } from '../components/ImagesFilters';
 
+function sortByRecent(photos: Photo[]): Photo[] {
+  return [...photos].sort(
+    (a, b) =>
+      new Date(b.upload_date || b.created_at || 0).getTime() -
+      new Date(a.upload_date || a.created_at || 0).getTime(),
+  );
+}
+
 function applyClientFilters(photos: Photo[], filters: ImageUiFilters): Photo[] {
   let out = photos.filter((p) => p.photo_type !== 'receipt');
   if (filters.isPublic) {
@@ -89,7 +97,7 @@ export default function PhotoBrowser() {
     setSearchParams(writeFilters(next), { replace: true });
   }
 
-  const visible = applyClientFilters(photos, filters);
+  const visible = sortByRecent(applyClientFilters(photos, filters));
 
   return (
     <div>
