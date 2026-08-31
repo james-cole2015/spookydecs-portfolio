@@ -206,7 +206,7 @@ export function ConnectionModal({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} backdrop="blur" size="lg" scrollBehavior="inside">
+    <Modal isOpen={isOpen} onClose={onClose} backdrop="blur" size="lg" placement="center" scrollBehavior="inside">
       <ModalContent>
         <ModalHeader>
           {step === 'destination'
@@ -252,6 +252,7 @@ export function ConnectionModal({
                       <button
                         key={item.id}
                         onClick={() => setSelected(item)}
+                        data-testid={`destination-item-${item.id}`}
                         className={`flex items-center justify-between rounded-medium border p-2 text-left ${
                           selected?.id === item.id
                             ? 'border-secondary bg-secondary-50/40'
@@ -338,6 +339,7 @@ export function ConnectionModal({
             isDisabled={!selected}
             isLoading={connecting}
             onPress={handlePrimaryPress}
+            data-testid="connection-modal-connect"
           >
             {step === 'destination' && selected?.class === 'Light' ? 'Next: Illuminate →' : 'Connect'}
           </Button>

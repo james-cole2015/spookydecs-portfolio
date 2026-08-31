@@ -29,6 +29,8 @@ import {
   getCriticalityChip,
   getRecordTypeChip,
   generateSeasonBuckets,
+  getCurrentBucket,
+  bucketRank,
   type MaintenanceRecord,
   type Item,
 } from '../config/maintenanceConfig';
@@ -38,14 +40,22 @@ const PAGE_SIZE = 20;
 const SEASON_OPTIONS = ['Halloween', 'Christmas', 'Shared'];
 const CLASS_OPTIONS = ['Decoration', 'Light', 'Accessory'];
 
-// Tab → status filter (mirrors the vanilla AppState.applyFilters tab buckets, plus an
-// "All" default so the landing view always shows data regardless of status mix).
+// Tabs slice the records along the season-bucket timeline, not by status:
+//   All        — everything except completed (Completed has its own tab)
+//   Current    — records in the season bucket we're in right now
+//   Upcoming   — records in buckets after the current one
+//   Completed  — completed records
+// Current/Upcoming also drop cancelled records, and skip records with no
+// date_scheduled since those can't be placed on the timeline (see the season
+// bucket notes in maintenanceConfig.ts). The tab predicates live in `filtered`.
 const TABS = [
-  { key: 'all', label: 'All', status: null },
-  { key: 'current', label: 'Current Tasks', status: 'in_progress' },
-  { key: 'upcoming', label: 'Upcoming', status: 'scheduled' },
-  { key: 'completed', label: 'Completed', status: 'completed' },
+  { key: 'all', label: 'All' },
+  { key: 'current', label: 'Current Tasks' },
+  { key: 'upcoming', label: 'Upcoming' },
+  { key: 'completed', label: 'Completed' },
 ] as const;
+
+const isOpenWork = (r: MaintenanceRecord) => r.status !== 'completed' && r.status !== 'cancelled';
 
 const COLUMNS = [
   { key: 'item_id', label: 'Item', sortable: true },
@@ -126,11 +136,25 @@ export default function RecordsListPage() {
     return generateSeasonBuckets(existing);
   }, [records]);
 
+  // Stable for the session — the current bucket only changes at a season boundary.
+  const currentRank = useMemo(() => bucketRank(getCurrentBucket()), []);
+
   const filtered = useMemo(() => {
     let rows = [...records];
 
-    const tabStatus = TABS.find((t) => t.key === tab)?.status;
-    if (tabStatus) rows = rows.filter((r) => r.status === tabStatus);
+    if (tab === 'completed') {
+      rows = rows.filter((r) => r.status === 'completed');
+    } else if (tab === 'current') {
+      rows = rows.filter((r) => isOpenWork(r) && bucketRank(r.date_scheduled) === currentRank);
+    } else if (tab === 'upcoming') {
+      rows = rows.filter((r) => {
+        if (!isOpenWork(r)) return false;
+        const rank = bucketRank(r.date_scheduled);
+        return rank !== null && currentRank !== null && rank > currentRank;
+      });
+    } else {
+      rows = rows.filter((r) => r.status !== 'completed');
+    }
 
     if (season.length > 0) {
       rows = rows.filter((r) => {
@@ -177,7 +201,7 @@ export default function RecordsListPage() {
     });
 
     return rows;
-  }, [records, items, tab, season, classType, bucket, itemId, startDate, endDate, sortColumn, sortDirection]);
+  }, [records, items, tab, currentRank, season, classType, bucket, itemId, startDate, endDate, sortColumn, sortDirection]);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const pageData = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);

@@ -183,7 +183,12 @@ export default function TeardownPage() {
               This will mark the deployment as <strong>active teardown</strong> and allow you to
               remove items zone by zone.
             </p>
-            <Button color="primary" isLoading={starting} onPress={handleStart}>
+            <Button
+              color="primary"
+              isLoading={starting}
+              onPress={handleStart}
+              data-testid="teardown-start"
+            >
               Start Teardown
             </Button>
           </CardBody>
@@ -229,7 +234,11 @@ export default function TeardownPage() {
               <p className="text-sm text-default-500">
                 Completing teardown will archive this deployment. This cannot be undone.
               </p>
-              <Button color="danger" onPress={() => setCompleteOpen(true)}>
+              <Button
+                color="danger"
+                onPress={() => setCompleteOpen(true)}
+                data-testid="teardown-complete-trigger"
+              >
                 Complete Teardown
               </Button>
             </CardBody>
@@ -242,6 +251,7 @@ export default function TeardownPage() {
         title="Complete Teardown?"
         body="This will archive the deployment and mark teardown as complete. This cannot be undone."
         confirmLabel="Yes, Complete Teardown"
+        confirmTestId="teardown-complete-confirm"
         isDestructive
         isLoading={completing}
         onConfirm={handleComplete}
@@ -316,6 +326,7 @@ function ZonePanel({
                           variant="flat"
                           isLoading={tearingDown === item.id}
                           onPress={() => onTeardown(item.id)}
+                          data-testid={`teardown-item-${item.id}`}
                         >
                           Tear Down
                         </Button>

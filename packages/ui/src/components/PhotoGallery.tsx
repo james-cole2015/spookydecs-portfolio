@@ -299,6 +299,7 @@ export function PhotoGallery({
         isOpen={lightboxOpen}
         onOpenChange={setLightboxOpen}
         size="full"
+        placement="center"
         backdrop="blur"
         hideCloseButton
         classNames={{ base: 'bg-transparent shadow-none' }}

@@ -155,7 +155,7 @@ export function EndSessionReview({
 
   return (
     <>
-    <Modal isOpen={isOpen} onClose={onClose} backdrop="blur" size="2xl" scrollBehavior="inside">
+    <Modal isOpen={isOpen} onClose={onClose} backdrop="blur" size="2xl" placement="center" scrollBehavior="inside">
       <ModalContent>
         <ModalHeader>End Session — Review &amp; Add Photos</ModalHeader>
         <ModalBody>
@@ -325,10 +325,20 @@ export function EndSessionReview({
           <Button variant="light" onPress={onClose} isDisabled={busy}>
             Cancel
           </Button>
-          <Button variant="flat" onPress={() => confirmEndSession(true)} isDisabled={busy}>
+          <Button
+            variant="flat"
+            onPress={() => confirmEndSession(true)}
+            isDisabled={busy}
+            data-testid="end-session-skip-photos"
+          >
             Skip Photos &amp; End
           </Button>
-          <Button color="primary" onPress={() => confirmEndSession(false)} isLoading={busy}>
+          <Button
+            color="primary"
+            onPress={() => confirmEndSession(false)}
+            isLoading={busy}
+            data-testid="end-session-confirm"
+          >
             End Session
           </Button>
         </ModalFooter>

@@ -196,7 +196,12 @@ export default function BuilderPage() {
         </Card>
 
         <div className="mt-6 flex justify-end">
-          <Button color="primary" isLoading={submitting} onPress={handleSubmit}>
+          <Button
+            color="primary"
+            isLoading={submitting}
+            onPress={handleSubmit}
+            data-testid="builder-create-submit"
+          >
             Create Deployment
           </Button>
         </div>

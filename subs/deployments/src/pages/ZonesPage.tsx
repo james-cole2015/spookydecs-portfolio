@@ -135,6 +135,7 @@ export default function ZonesPage() {
             isHoverable={c.enabled}
             onPress={c.enabled ? () => navigate(c.to) : undefined}
             className={`h-full ${c.enabled ? '' : 'opacity-60'}`}
+            data-testid={`admin-card-${c.key}`}
           >
             <CardHeader className="gap-3">
               {c.icon}
@@ -173,6 +174,7 @@ export default function ZonesPage() {
                 navigate(`/builder/${deploymentId}/zones/${zone.zone_code}`)
               }
               className="h-full"
+              data-testid={`zone-card-${zone.zone_code}`}
             >
               <CardHeader className="justify-between gap-3">
                 <div className="flex items-center gap-3">

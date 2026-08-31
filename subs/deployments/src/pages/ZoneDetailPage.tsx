@@ -197,7 +197,12 @@ export default function ZoneDetailPage() {
       <h2 className="mb-3 text-lg font-semibold text-foreground">Quick Actions</h2>
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
         {!activeSession && (
-          <Card isPressable isHoverable onPress={() => setStartOpen(true)}>
+          <Card
+            isPressable
+            isHoverable
+            onPress={() => setStartOpen(true)}
+            data-testid="start-session-card"
+          >
             <CardBody className="flex-row items-center gap-3">
               <Play className="text-secondary" size={24} />
               <div>
@@ -261,6 +266,7 @@ export default function ZoneDetailPage() {
           </>
         }
         confirmLabel="Start Session"
+        confirmTestId="start-session-confirm"
         isLoading={busy}
         onConfirm={handleStartSession}
         onClose={() => setStartOpen(false)}
