@@ -677,6 +677,12 @@
           <p class="highlight-desc">A custom static-analysis check encodes the design spec's mechanical rules — no local chip helpers, no hardcoded hex, no per-sub token blocks, canonical season casing — with a per-sub exceptions manifest. It runs on every PR as a required, blocking GitHub Actions status check, so design-system drift fails CI instead of accumulating.</p>
         </div>
 
+        <div class="highlight-card">
+          <div class="highlight-icon">🎭</div>
+          <h4 class="highlight-title">Browser-Driven E2E Testing</h4>
+          <p class="highlight-desc">Playwright drives a real browser end-to-end through the Deployments builder → staging → session → teardown flow, with authentication established programmatically instead of a manual cookie paste — the first browser-level test in the fleet, laying the pattern for other subs to adopt.</p>
+        </div>
+
       </div>
     </div>
   </section>
