@@ -612,6 +612,12 @@
         </div>
 
         <div class="highlight-card">
+          <div class="highlight-icon">🔎</div>
+          <h4 class="highlight-title">Structured Cross-Service Tracing</h4>
+          <p class="highlight-desc">Every Lambda emits JSON logs via a shared entrypoint decorator — no per-handler wiring. A correlating entity ID (plus a related-entity ID for container/content relationships, like an item packed into a tote) follows one user action across the EventBridge hop between services, so a single CloudWatch Insights query reconstructs the full trace. Outcome-driven severity (INFO/WARNING/ERROR) lets alarms key off real failures without writing a query at all.</p>
+        </div>
+
+        <div class="highlight-card">
           <div class="highlight-icon">🗄️</div>
           <h4 class="highlight-title">Single-Table DynamoDB Design</h4>
           <p class="highlight-desc">Composite PK+SK patterns, sparse GSIs, and DynamoDB Streams feed the audit trail across 8 event sources — all without a relational database.</p>
