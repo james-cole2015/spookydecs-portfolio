@@ -202,16 +202,10 @@ export default function StagingPage() {
     setStaging(true);
     try {
       await stageTote(deploymentId, { tote_id: tote.id, item_ids: tote.contents || [] });
-      // Move the tote from available → staged, marking its items Staged.
-      const stagedVersion: Tote = {
-        ...tote,
-        contents_details: (tote.contents_details || []).map((item) => ({
-          ...item,
-          status: (tote.contents || []).includes(item.id) ? 'Staged' : item.status,
-        })),
-      };
+      // Move the tote from available → staged. Items stay Packed (#470) — the tote's own
+      // staged-ness (array membership here) is what "staged" means for its contents.
       setTotes((prev) => prev.filter((t) => t.id !== tote.id));
-      setStagedTotes((prev) => [...prev, stagedVersion]);
+      setStagedTotes((prev) => [...prev, tote]);
       setConfirmTote(null);
     } catch (e: any) {
       console.error('[Staging] Stage failed:', e);
@@ -227,9 +221,11 @@ export default function StagingPage() {
     setStaging(true);
     try {
       await stageItems(deploymentId, [item.id]);
-      // Move the item from available → staged.
+      // Move the item from available → staged. No status stamp (#470) — staged-ness for
+      // L&O items is the STAGING record's existence, not item.status; array membership
+      // here already reflects that.
       setNonPackable((prev) => prev.filter((i) => i.id !== item.id));
-      setStagedNonPackable((prev) => [...prev, { ...item, status: 'Staged' }]);
+      setStagedNonPackable((prev) => [...prev, item]);
       setConfirmItem(null);
     } catch (e: any) {
       console.error('[Staging] Stage item failed:', e);
