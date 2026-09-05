@@ -112,6 +112,12 @@ export interface BuildSession {
   notes?: string;
 }
 
+export interface BuildInstructionStep {
+  step?: number;
+  title?: string;
+  detail?: string;
+}
+
 export interface EnrichmentPhoto {
   url: string;
   alt?: string;
@@ -172,6 +178,7 @@ export interface Idea {
   estimated_cost?: number | null;
   materials?: Array<Material | string>;
   build_sessions?: BuildSession[];
+  build_instructions?: BuildInstructionStep[];
   prep_start?: string;
   build_start?: string;
   build_complete?: string;

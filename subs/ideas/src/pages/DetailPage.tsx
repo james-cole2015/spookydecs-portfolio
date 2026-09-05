@@ -1,8 +1,8 @@
 // Idea detail — hero/gallery, enrichment, costs, photos, status transitions, delete.
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Button, Card, CardBody, CardHeader, Chip, Link } from '@heroui/react';
-import { ArrowLeft, Pencil, Trash2, ArrowRight } from 'lucide-react';
+import { Button, Card, CardBody, CardHeader, Chip, Input, Link, Textarea } from '@heroui/react';
+import { ArrowLeft, Pencil, Plus, Trash2, ArrowRight, X } from 'lucide-react';
 import {
   LoadingState,
   ErrorState,
@@ -15,7 +15,7 @@ import {
   useConfirm,
 } from '@spookydecs/ui';
 import { getIdea, updateIdea, deleteIdea, previewIdeaCascade } from '../api/ideasApi';
-import { ITEMS_BASE_URL, SEASON_PLACEHOLDERS, type Idea } from '../config/ideasConfig';
+import { ITEMS_BASE_URL, SEASON_PLACEHOLDERS, type Idea, type BuildInstructionStep } from '../config/ideasConfig';
 import { formatDate, heroImageUrl, normalizeMaterials } from '../lib/format';
 import { SeasonChip, StatusChip } from '../components/chips';
 import { EnrichmentPanel } from '../components/EnrichmentPanel';
@@ -54,6 +54,19 @@ export default function DetailPage() {
       .catch((err) => setError((err as Error).message))
       .finally(() => setLoading(false));
   }, [id, navigate]);
+
+  // Persist a patch and merge into local state. title+season are always sent
+  // (the backend PUT treats them as required, matching the vanilla calls).
+  async function patchIdea(partial: Partial<Idea>) {
+    if (!idea) return;
+    try {
+      await updateIdea({ id: idea.id, season: idea.season, title: idea.title, ...partial });
+      setIdea({ ...idea, ...partial });
+    } catch (err) {
+      toast.showError('Failed to save: ' + (err as Error).message);
+      throw err;
+    }
+  }
 
   async function transition(newStatus: Idea['status'], title: string, message: string, dest?: string) {
     const ok = await confirm({ title, body: message, confirmLabel: title });
@@ -265,6 +278,46 @@ export default function DetailPage() {
           {!isBuilt && <EnrichmentPanel ideaId={idea.id} initial={idea.agent_enrichment} />}
 
           <Card>
+            <CardHeader className="font-semibold">Build Instructions</CardHeader>
+            <CardBody className="gap-3">
+              <InstructionStepForm
+                onAdd={(step) => {
+                  const existing = idea.build_instructions || [];
+                  patchIdea({ build_instructions: [...existing, { ...step, step: existing.length + 1 }] });
+                }}
+              />
+              {(idea.build_instructions || []).length === 0 ? (
+                <p className="text-small text-default-400">No build instructions yet.</p>
+              ) : (
+                <ol className="flex flex-col gap-2 text-small">
+                  {(idea.build_instructions || []).map((s, i) => (
+                    <li key={i} className="flex gap-2">
+                      <span className="font-medium text-foreground">{s.step ?? i + 1}.</span>
+                      <div className="flex-1">
+                        {s.title && <p className="font-medium text-foreground/80">{s.title}</p>}
+                        {s.detail && <p className="whitespace-pre-wrap text-foreground/70">{s.detail}</p>}
+                      </div>
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        variant="light"
+                        aria-label="Remove step"
+                        onPress={() =>
+                          patchIdea({
+                            build_instructions: (idea.build_instructions || []).filter((_, j) => j !== i),
+                          })
+                        }
+                      >
+                        <X size={15} />
+                      </Button>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </CardBody>
+          </Card>
+
+          <Card>
             <CardHeader className="font-semibold">Planning</CardHeader>
             <CardBody>
               <p className="mb-2 text-tiny font-semibold uppercase tracking-wide text-default-400">
@@ -388,6 +441,62 @@ export default function DetailPage() {
         onClose={() => setCostModalOpen(false)}
         onSaved={() => setCostRefresh((n) => n + 1)}
       />
+    </div>
+  );
+}
+
+function InstructionStepForm({ onAdd }: { onAdd: (s: BuildInstructionStep) => void }) {
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState('');
+  const [detail, setDetail] = useState('');
+  const toast = useToast();
+
+  function reset() {
+    setTitle('');
+    setDetail('');
+  }
+
+  function save() {
+    if (!title.trim() && !detail.trim()) {
+      toast.showError('Title or detail is required');
+      return;
+    }
+    const step: BuildInstructionStep = {
+      title: title.trim() || undefined,
+      detail: detail.trim() || undefined,
+    };
+    onAdd(step);
+    reset();
+    setOpen(false);
+  }
+
+  if (!open) {
+    return (
+      <Button size="sm" variant="flat" className="w-fit" startContent={<Plus size={14} />} onPress={() => setOpen(true)}>
+        Add Step
+      </Button>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-3 rounded-medium bg-default-100 p-3">
+      <Input size="sm" label="Title" value={title} onValueChange={setTitle} />
+      <Textarea size="sm" label="Detail" minRows={2} value={detail} onValueChange={setDetail} />
+      <div className="flex justify-end gap-2">
+        <Button
+          size="sm"
+          variant="light"
+          onPress={() => {
+            reset();
+            setOpen(false);
+          }}
+        >
+          Cancel
+        </Button>
+        <Button size="sm" color="primary" onPress={save}>
+          Save Step
+        </Button>
+      </div>
     </div>
   );
 }
