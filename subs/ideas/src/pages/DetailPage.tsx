@@ -467,7 +467,6 @@ function InstructionStepForm({ onAdd }: { onAdd: (s: BuildInstructionStep) => vo
     };
     onAdd(step);
     reset();
-    setOpen(false);
   }
 
   if (!open) {
