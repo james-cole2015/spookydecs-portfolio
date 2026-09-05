@@ -221,6 +221,25 @@ export default function BuildDetailPage() {
             </CardBody>
           </Card>
 
+          {idea.build_instructions && idea.build_instructions.length > 0 && (
+            <Card>
+              <CardHeader className="font-semibold">Build Instructions</CardHeader>
+              <CardBody>
+                <ol className="flex flex-col gap-2 text-small">
+                  {idea.build_instructions.map((s, i) => (
+                    <li key={i} className="flex gap-2">
+                      <span className="font-medium text-foreground">{s.step ?? i + 1}.</span>
+                      <div className="flex-1">
+                        {s.title && <p className="font-medium text-foreground/80">{s.title}</p>}
+                        {s.detail && <p className="whitespace-pre-wrap text-foreground/70">{s.detail}</p>}
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              </CardBody>
+            </Card>
+          )}
+
           <Card>
             <CardHeader className="font-semibold">Materials</CardHeader>
             <CardBody className="gap-3">
