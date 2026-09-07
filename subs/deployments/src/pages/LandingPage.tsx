@@ -37,8 +37,8 @@ const CARDS: OptionCard[] = [
     Icon: BarChart3,
     title: 'Deployment Graphs',
     description:
-      'Visualize deployment trends and patterns with interactive charts. Analyze item usage, deployment timelines, and seasonal comparisons.',
-    active: false,
+      'Explore an interactive power-topology schematic for any deployment — loads, cords, and circuits, wired from real connection data.',
+    active: true,
     route: '/graphs',
   },
   {
