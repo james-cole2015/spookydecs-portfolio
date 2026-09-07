@@ -18,7 +18,8 @@ const HistoricalPage = lazy(() => import('./pages/HistoricalPage'));
 const HistoricalDetailPage = lazy(() => import('./pages/HistoricalDetailPage'));
 const StatsPage = lazy(() => import('./pages/StatsPage'));
 const StatsDetailPage = lazy(() => import('./pages/StatsDetailPage'));
-const GraphsPlaceholderPage = lazy(() => import('./pages/GraphsPlaceholderPage'));
+const GraphsPage = lazy(() => import('./pages/GraphsPage'));
+const DeploymentSchematic = lazy(() => import('./pages/DeploymentSchematic'));
 const DetailPlaceholderPage = lazy(() => import('./pages/DetailPlaceholderPage'));
 
 export default function App() {
@@ -62,8 +63,9 @@ export default function App() {
             <Route path="/stats/:id" element={<StatsDetailPage />} />
             <Route path="/stats" element={<StatsPage />} />
 
-            {/* Graphs placeholder */}
-            <Route path="/graphs" element={<GraphsPlaceholderPage />} />
+            {/* Graphs */}
+            <Route path="/graphs/:id" element={<DeploymentSchematic />} />
+            <Route path="/graphs" element={<GraphsPage />} />
 
             {/* Generic detail placeholder (least specific) */}
             <Route path="/:id" element={<DetailPlaceholderPage />} />

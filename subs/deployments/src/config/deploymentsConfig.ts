@@ -47,6 +47,28 @@ export const DEPLOYMENT_CONFIG = {
   },
 } as const;
 
+// Deployment graph (#466) — per-outlet amp rollup overload threshold.
+export const OVERLOAD_AMPS_THRESHOLD = 15;
+
+// Deployment graph (#466) node icons, keyed by class_type. Duplicated from
+// subs/items/src/config/itemsConfig.ts (TYPE_ICONS) rather than a cross-sub
+// import — each sub is an independent Vite app/CloudFront origin, so there's
+// no established cross-sub-package import pattern in this monorepo. Keep in
+// sync with itemsConfig.ts if that map changes.
+export const GRAPH_CLASS_TYPE_ICONS: Record<string, string> = {
+  Inflatable: '🎈',
+  Animatronic: '🤖',
+  'Static Prop': '🗿',
+  'String Light': '💡',
+  'Spot Light': '🔦',
+  Projection: '📽️',
+  Cord: '➰',
+  Plug: '🔌',
+  Receptacle: '⚡',
+  Timer: '⏱️',
+  Controller: '🎮',
+};
+
 // ---- Domain types ----------------------------------------------------------
 
 export type DeploymentStatus =
