@@ -2,12 +2,19 @@ import { useEffect, useState } from 'react';
 import type { Node, Edge } from '@xyflow/react';
 import { PhotoLightbox, type LightboxPhoto } from '@spookydecs/ui';
 import { fetchImageById } from '../../api/deploymentsApi';
-import type { GraphConnection, GraphItem, GraphNodeData, GraphEdgeData } from '../../lib/graphDerivation';
+import type { GraphConnection, GraphPlacement, GraphNodeData, GraphEdgeData } from '../../lib/graphDerivation';
 
 export type GraphSelection =
   | { type: 'node'; node: Node<GraphNodeData> }
   | { type: 'edge'; edge: Edge<GraphEdgeData> }
   | null;
+
+interface DetailContext {
+  connections: GraphConnection[];
+  placements: GraphPlacement[];
+  /** id -> display label, covers every node kind (hub/load/branch/placeholder). */
+  nodeLabels: Record<string, string>;
+}
 
 function DefRow({ label, value }: { label: string; value?: string | number | null }) {
   if (value == null || value === '') return null;
@@ -17,6 +24,19 @@ function DefRow({ label, value }: { label: string; value?: string | number | nul
       <span className="font-medium text-foreground">{value}</span>
     </div>
   );
+}
+
+function formatDateTime(iso?: string): string | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
 }
 
 async function resolvePhotos(photoIds: string[] | undefined): Promise<LightboxPhoto[]> {
@@ -29,14 +49,15 @@ async function resolvePhotos(photoIds: string[] | undefined): Promise<LightboxPh
     .map((r) => ({ url: r.cloudfront_url, thumbUrl: r.thumb_cloudfront_url || r.cloudfront_url }));
 }
 
-function IlluminatesRow({ itemIds, items }: { itemIds: string[]; items: Record<string, GraphItem | undefined> }) {
+function LabeledList({ label, items }: { label: string; items: { id: string; text: string }[] }) {
+  if (items.length === 0) return null;
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-sm text-default-500">Illuminates</span>
+      <span className="text-sm text-default-500">{label}</span>
       <div className="flex flex-col gap-1">
-        {itemIds.map((id) => (
-          <span key={id} className="text-sm font-medium text-foreground">
-            💡 {items[id]?.short_name || id}
+        {items.map((it) => (
+          <span key={it.id} className="text-xs text-foreground">
+            {it.text}
           </span>
         ))}
       </div>
@@ -44,15 +65,18 @@ function IlluminatesRow({ itemIds, items }: { itemIds: string[]; items: Record<s
   );
 }
 
-function NodeDetail({
-  node,
-  connections,
-  items,
-}: {
-  node: Node<GraphNodeData>;
-  connections: GraphConnection[];
-  items: Record<string, GraphItem | undefined>;
-}) {
+/** Every connection/placement touching this node, split by direction. */
+function connectionsForNode(nodeId: string, ctx: DetailContext) {
+  const incoming = ctx.connections.filter((c) => c.to_item_id === nodeId);
+  const outgoing = ctx.connections.filter((c) => c.from_item_id === nodeId);
+  const placement = ctx.placements.find((p) => p.item_id === nodeId);
+  // The connection whose illuminates list contains this node — i.e. this node
+  // is a decoration lit by another connection's to_item (a spotlight).
+  const illuminatedByConn = ctx.connections.find((c) => c.illuminates?.includes(nodeId));
+  return { incoming, outgoing, placement, illuminatedByConn };
+}
+
+function NodeDetail({ node, ctx }: { node: Node<GraphNodeData>; ctx: DetailContext }) {
   const { data } = node;
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
 
@@ -95,9 +119,20 @@ function NodeDetail({
   }
 
   const item = data.item;
-  // A connection's `illuminates` list belongs to its to_item (typically the
-  // spotlight) — find the connection this node is the destination of.
-  const illuminates = connections.find((c) => c.to_item_id === node.id)?.illuminates;
+  const { incoming, outgoing, placement, illuminatedByConn } = connectionsForNode(node.id, ctx);
+  const deployedAt = formatDateTime(incoming[0]?.connected_at || placement?.placed_at);
+  // `illuminates` belongs to the connection where this node is the *target*
+  // (this node is the spotlight powering on) — never the outgoing side.
+  const illuminates = incoming.find((c) => c.illuminates?.length)?.illuminates;
+
+  const incomingRows = incoming.map((c) => ({
+    id: c.connection_id || c.from_item_id,
+    text: `← ${ctx.nodeLabels[c.from_item_id] || c.from_item_id}${c.from_port ? ` (${c.from_port})` : ''}`,
+  }));
+  const outgoingRows = outgoing.map((c) => ({
+    id: c.connection_id || c.to_item_id,
+    text: `→ ${ctx.nodeLabels[c.to_item_id] || c.to_item_id}${c.to_port ? ` (${c.to_port})` : ''}`,
+  }));
 
   return (
     <div className="flex flex-col gap-2">
@@ -122,12 +157,26 @@ function NodeDetail({
       <DefRow label="Male ends" value={item?.male_ends} />
       <DefRow label="Female ends" value={item?.female_ends} />
       <DefRow label="Length" value={item?.length} />
-      {illuminates && illuminates.length > 0 && <IlluminatesRow itemIds={illuminates} items={items} />}
+      <DefRow label="Deployed" value={deployedAt} />
+      {illuminates && illuminates.length > 0 && (
+        <LabeledList
+          label="Illuminates"
+          items={illuminates.map((id) => ({ id, text: `💡 ${ctx.nodeLabels[id] || id}` }))}
+        />
+      )}
+      {illuminatedByConn && (
+        <LabeledList
+          label="Illuminated by"
+          items={[{ id: illuminatedByConn.connection_id || illuminatedByConn.to_item_id, text: `💡 ${ctx.nodeLabels[illuminatedByConn.to_item_id] || illuminatedByConn.to_item_id}` }]}
+        />
+      )}
+      <LabeledList label="Incoming connections" items={incomingRows} />
+      <LabeledList label="Outgoing connections" items={outgoingRows} />
     </div>
   );
 }
 
-function EdgeDetail({ edge, items }: { edge: Edge<GraphEdgeData>; items: Record<string, GraphItem | undefined> }) {
+function EdgeDetail({ edge, ctx }: { edge: Edge<GraphEdgeData>; ctx: DetailContext }) {
   const [photos, setPhotos] = useState<LightboxPhoto[]>([]);
   const photoIds = edge.data?.connection?.photo_ids;
 
@@ -144,6 +193,7 @@ function EdgeDetail({ edge, items }: { edge: Edge<GraphEdgeData>; items: Record<
 
   const conn = edge.data?.connection;
   const placement = edge.data?.placement;
+  const when = formatDateTime(conn?.connected_at || placement?.placed_at);
 
   return (
     <div className="flex flex-col gap-2">
@@ -157,8 +207,12 @@ function EdgeDetail({ edge, items }: { edge: Edge<GraphEdgeData>; items: Record<
       <DefRow label="To port" value={conn?.to_port} />
       <DefRow label="Zone" value={conn?.zone_code || placement?.zone_code} />
       <DefRow label="Signal" value={edge.data?.label} />
+      <DefRow label="Deployed" value={when} />
       {conn?.illuminates && conn.illuminates.length > 0 && (
-        <IlluminatesRow itemIds={conn.illuminates} items={items} />
+        <LabeledList
+          label="Illuminates"
+          items={conn.illuminates.map((id) => ({ id, text: `💡 ${ctx.nodeLabels[id] || id}` }))}
+        />
       )}
     </div>
   );
@@ -168,12 +222,11 @@ function EdgeDetail({ edge, items }: { edge: Edge<GraphEdgeData>; items: Record<
 export default function DetailPanel({
   selection,
   connections,
-  items,
+  placements,
+  nodeLabels,
 }: {
   selection: GraphSelection;
-  connections: GraphConnection[];
-  items: Record<string, GraphItem | undefined>;
-}) {
+} & DetailContext) {
   if (!selection) {
     return (
       <div className="flex h-full items-center justify-center rounded-medium border border-dashed border-default-200 p-4 text-center text-sm text-default-400">
@@ -182,12 +235,14 @@ export default function DetailPanel({
     );
   }
 
+  const ctx: DetailContext = { connections, placements, nodeLabels };
+
   return (
     <div className="rounded-medium border border-default-200 p-4">
       {selection.type === 'node' ? (
-        <NodeDetail node={selection.node} connections={connections} items={items} />
+        <NodeDetail node={selection.node} ctx={ctx} />
       ) : (
-        <EdgeDetail edge={selection.edge} items={items} />
+        <EdgeDetail edge={selection.edge} ctx={ctx} />
       )}
     </div>
   );

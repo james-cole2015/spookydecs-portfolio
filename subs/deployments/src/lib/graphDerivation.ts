@@ -44,6 +44,7 @@ export interface GraphConnection {
   zone_code?: string;
   /** Item ids this connection's to_item (typically a spotlight) illuminates. */
   illuminates?: string[];
+  connected_at?: string;
 }
 
 export interface GraphPlacement {
@@ -52,6 +53,7 @@ export interface GraphPlacement {
   zone_code: string;
   placement_type?: 'deployment' | 'removal';
   photo_ids?: string[];
+  placed_at?: string;
 }
 
 export interface GraphInput {

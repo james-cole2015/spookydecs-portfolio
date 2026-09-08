@@ -114,11 +114,12 @@ export default function DeploymentSchematic() {
     };
   }, [id]);
 
-  const { nodes, edges } = useMemo(() => {
-    if (!loaded) return { nodes: [] as Node<GraphNodeData>[], edges: [] as Edge<GraphEdgeData>[] };
+  const { nodes, edges, nodeLabels } = useMemo(() => {
+    if (!loaded) return { nodes: [] as Node<GraphNodeData>[], edges: [] as Edge<GraphEdgeData>[], nodeLabels: {} as Record<string, string> };
     const derived = deriveGraph(loaded.input);
     const laidOutNodes = layoutGraph(derived.nodes, derived.edges);
-    return { nodes: laidOutNodes, edges: styleEdges(derived.edges) };
+    const labels = Object.fromEntries(laidOutNodes.map((n) => [n.id, n.data.label]));
+    return { nodes: laidOutNodes, edges: styleEdges(derived.edges), nodeLabels: labels };
   }, [loaded]);
 
   if (!id) return null;
@@ -174,7 +175,8 @@ export default function DeploymentSchematic() {
             <DetailPanel
               selection={selection}
               connections={loaded.input.connections}
-              items={loaded.input.items}
+              placements={loaded.input.placements}
+              nodeLabels={nodeLabels}
             />
           </div>
         </div>
