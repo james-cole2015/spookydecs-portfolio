@@ -42,6 +42,8 @@ export interface GraphConnection {
   photo_ids?: string[];
   connection_type?: 'deployment' | 'removal';
   zone_code?: string;
+  /** Item ids this connection's to_item (typically a spotlight) illuminates. */
+  illuminates?: string[];
 }
 
 export interface GraphPlacement {
