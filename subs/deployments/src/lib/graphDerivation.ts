@@ -26,7 +26,7 @@ export interface GraphItem {
   class?: string;
   class_type?: string;
   status?: string;
-  power_data?: { watts?: number; amps?: number };
+  power_data?: { watts?: number | string; amps?: number | string };
   male_ends?: string | number;
   female_ends?: string | number;
   length?: string | number;
@@ -86,11 +86,24 @@ function toNumber(value: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+/**
+ * True when a load item carries a real (non-empty) amps reading. Seed/live
+ * data can carry `power_data: { amps: '', watts: '' }` on an item that has
+ * the field but was never filled in — that's "no power_data" for rendering
+ * purposes, not a real 0A reading, so an empty string must not pass `!= null`.
+ */
+function hasResolvableAmps(item: GraphItem | undefined): boolean {
+  if (!item || !LOAD_CLASS_TYPES.has(item.class_type || '')) return false;
+  const amps = item.power_data?.amps;
+  return amps != null && amps !== '';
+}
+
 function edgeLabel(item: GraphItem | undefined, length?: string | number): { label: string; powered: boolean } {
-  if (item && LOAD_CLASS_TYPES.has(item.class_type || '') && item.power_data?.amps != null) {
-    const { amps, watts } = item.power_data;
+  if (hasResolvableAmps(item)) {
+    const { amps, watts } = item!.power_data!;
     const lenPart = length != null && length !== '' ? `${length} · ` : '';
-    return { label: `${lenPart}${amps}A${watts != null ? `/${watts}W` : ''}`, powered: true };
+    const wattsPart = watts != null && watts !== '' ? `/${watts}W` : '';
+    return { label: `${lenPart}${amps}A${wattsPart}`, powered: true };
   }
   const lenPart = length != null && length !== '' ? String(length) : 'no power_data';
   return { label: lenPart, powered: false };
@@ -152,7 +165,7 @@ export function deriveGraph(input: GraphInput): { nodes: Node<GraphNodeData>[]; 
     }
 
     const femaleEnds = toNumber(item!.female_ends);
-    const hasPowerData = LOAD_CLASS_TYPES.has(item!.class_type || '') && item!.power_data?.amps != null;
+    const hasPowerData = hasResolvableAmps(item);
 
     addNode(id, {
       kind,
@@ -216,8 +229,8 @@ export function deriveGraph(input: GraphInput): { nodes: Node<GraphNodeData>[]; 
       if (visited.has(id)) continue;
       visited.add(id);
       const item = items[id];
-      if (item && LOAD_CLASS_TYPES.has(item.class_type || '') && item.power_data?.amps != null) {
-        amps += toNumber(item.power_data.amps);
+      if (hasResolvableAmps(item)) {
+        amps += toNumber(item!.power_data!.amps);
       }
       stack.push(...(adjacency.get(id) || []));
     }
