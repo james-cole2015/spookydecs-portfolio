@@ -3,7 +3,13 @@ import { Chip } from '@heroui/react';
 import { GRAPH_CLASS_TYPE_ICONS } from '../../config/deploymentsConfig';
 import type { GraphNodeData } from '../../lib/graphDerivation';
 
-/** Terminal load — two visual states depending on whether power_data resolved. */
+/**
+ * A load or a single-female-end cord/plug — two visual states depending on
+ * whether power_data resolved. Not always terminal: a 1-female-end cord can
+ * be mid-chain (both a connection's target AND another connection's source),
+ * so this needs both handles even though a true leaf load only ever uses the
+ * target one.
+ */
 export default function LoadNode({ data, selected }: NodeProps<Node<GraphNodeData>>) {
   const ring = selected ? 'ring-2 ring-secondary' : '';
   const icon = GRAPH_CLASS_TYPE_ICONS[data.classType || ''] || '📦';
@@ -36,6 +42,7 @@ export default function LoadNode({ data, selected }: NodeProps<Node<GraphNodeDat
       )}
 
       <Handle id="t-t" type="target" position={Position.Top} isConnectable={false} style={{ opacity: 0 }} />
+      <Handle id="b-s" type="source" position={Position.Bottom} isConnectable={false} style={{ opacity: 0 }} />
     </div>
   );
 }

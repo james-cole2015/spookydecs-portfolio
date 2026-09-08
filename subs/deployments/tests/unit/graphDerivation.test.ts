@@ -66,6 +66,24 @@ describe('deriveGraph — missing item placeholder', () => {
 });
 
 describe('deriveGraph — power_data degradation', () => {
+  it('treats power_data with empty-string amps/watts as no power_data, not a real 0A reading', () => {
+    // Real seed/live data can carry power_data:{amps:'',watts:''} on a load item
+    // whose fields were never filled in — this must render the "empty" state,
+    // not the powered state with a blank amp value (found via DEP-DEMO-2026).
+    const input = baseInput({
+      items: {
+        'LOAD-1': { id: 'LOAD-1', class_type: 'String Light', power_data: { amps: '', watts: '' } },
+      },
+      placements: [{ item_id: 'LOAD-1', zone_code: 'FY', placement_type: 'deployment' }],
+    });
+    const { nodes, edges } = deriveGraph(input);
+    const loadNode = nodes.find((n) => n.id === 'LOAD-1');
+    expect(loadNode?.data.hasPowerData).toBe(false);
+    const edge = edges.find((e) => e.target === 'LOAD-1');
+    expect(edge?.data?.powered).toBe(false);
+    expect(edge?.data?.label).toBe('no power_data');
+  });
+
   it('renders items without power_data as valid nodes with no amps/watts', () => {
     const input = baseInput({
       items: {
