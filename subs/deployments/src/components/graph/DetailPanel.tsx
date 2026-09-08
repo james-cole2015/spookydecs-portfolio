@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Node, Edge } from '@xyflow/react';
 import { PhotoLightbox, type LightboxPhoto } from '@spookydecs/ui';
 import { fetchImageById } from '../../api/deploymentsApi';
-import type { GraphNodeData, GraphEdgeData } from '../../lib/graphDerivation';
+import type { GraphConnection, GraphItem, GraphNodeData, GraphEdgeData } from '../../lib/graphDerivation';
 
 export type GraphSelection =
   | { type: 'node'; node: Node<GraphNodeData> }
@@ -29,7 +29,30 @@ async function resolvePhotos(photoIds: string[] | undefined): Promise<LightboxPh
     .map((r) => ({ url: r.cloudfront_url, thumbUrl: r.thumb_cloudfront_url || r.cloudfront_url }));
 }
 
-function NodeDetail({ node }: { node: Node<GraphNodeData> }) {
+function IlluminatesRow({ itemIds, items }: { itemIds: string[]; items: Record<string, GraphItem | undefined> }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-sm text-default-500">Illuminates</span>
+      <div className="flex flex-col gap-1">
+        {itemIds.map((id) => (
+          <span key={id} className="text-sm font-medium text-foreground">
+            💡 {items[id]?.short_name || id}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function NodeDetail({
+  node,
+  connections,
+  items,
+}: {
+  node: Node<GraphNodeData>;
+  connections: GraphConnection[];
+  items: Record<string, GraphItem | undefined>;
+}) {
   const { data } = node;
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
 
@@ -72,6 +95,10 @@ function NodeDetail({ node }: { node: Node<GraphNodeData> }) {
   }
 
   const item = data.item;
+  // A connection's `illuminates` list belongs to its to_item (typically the
+  // spotlight) — find the connection this node is the destination of.
+  const illuminates = connections.find((c) => c.to_item_id === node.id)?.illuminates;
+
   return (
     <div className="flex flex-col gap-2">
       {photoUrl ? (
@@ -95,11 +122,12 @@ function NodeDetail({ node }: { node: Node<GraphNodeData> }) {
       <DefRow label="Male ends" value={item?.male_ends} />
       <DefRow label="Female ends" value={item?.female_ends} />
       <DefRow label="Length" value={item?.length} />
+      {illuminates && illuminates.length > 0 && <IlluminatesRow itemIds={illuminates} items={items} />}
     </div>
   );
 }
 
-function EdgeDetail({ edge }: { edge: Edge<GraphEdgeData> }) {
+function EdgeDetail({ edge, items }: { edge: Edge<GraphEdgeData>; items: Record<string, GraphItem | undefined> }) {
   const [photos, setPhotos] = useState<LightboxPhoto[]>([]);
   const photoIds = edge.data?.connection?.photo_ids;
 
@@ -129,12 +157,23 @@ function EdgeDetail({ edge }: { edge: Edge<GraphEdgeData> }) {
       <DefRow label="To port" value={conn?.to_port} />
       <DefRow label="Zone" value={conn?.zone_code || placement?.zone_code} />
       <DefRow label="Signal" value={edge.data?.label} />
+      {conn?.illuminates && conn.illuminates.length > 0 && (
+        <IlluminatesRow itemIds={conn.illuminates} items={items} />
+      )}
     </div>
   );
 }
 
 /** Persistent right-column detail panel — not a modal/Drawer (#466 plan §2a). */
-export default function DetailPanel({ selection }: { selection: GraphSelection }) {
+export default function DetailPanel({
+  selection,
+  connections,
+  items,
+}: {
+  selection: GraphSelection;
+  connections: GraphConnection[];
+  items: Record<string, GraphItem | undefined>;
+}) {
   if (!selection) {
     return (
       <div className="flex h-full items-center justify-center rounded-medium border border-dashed border-default-200 p-4 text-center text-sm text-default-400">
@@ -145,7 +184,11 @@ export default function DetailPanel({ selection }: { selection: GraphSelection }
 
   return (
     <div className="rounded-medium border border-default-200 p-4">
-      {selection.type === 'node' ? <NodeDetail node={selection.node} /> : <EdgeDetail edge={selection.edge} />}
+      {selection.type === 'node' ? (
+        <NodeDetail node={selection.node} connections={connections} items={items} />
+      ) : (
+        <EdgeDetail edge={selection.edge} items={items} />
+      )}
     </div>
   );
 }

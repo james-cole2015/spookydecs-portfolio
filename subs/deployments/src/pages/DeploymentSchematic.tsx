@@ -171,7 +171,11 @@ export default function DeploymentSchematic() {
           </div>
 
           <div className="order-3 h-[600px] overflow-y-auto">
-            <DetailPanel selection={selection} />
+            <DetailPanel
+              selection={selection}
+              connections={loaded.input.connections}
+              items={loaded.input.items}
+            />
           </div>
         </div>
       )}
