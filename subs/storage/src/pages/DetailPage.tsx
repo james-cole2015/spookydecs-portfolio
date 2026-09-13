@@ -143,7 +143,6 @@ export default function DetailPage() {
     setBusy(true);
     try {
       await storageAPI.removeItems(unit.id, [itemId]);
-      if (unit.packed) await storageAPI.update(unit.id, { packed: false });
       toast.showSuccess('Item removed from storage unit');
       setConfirm(null);
       await load();
@@ -189,16 +188,16 @@ export default function DetailPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             {canWrite && (
-              <Button color="secondary" variant="flat" isDisabled={packDisabled} startContent={<PackageCheck size={18} />} onPress={() => setConfirm('markPacked')}>Mark as Packed</Button>
+              <Button color="secondary" variant="flat" isDisabled={packDisabled} startContent={<PackageCheck size={18} />} onPress={() => setConfirm('markPacked')} data-testid="mark-packed-btn">Mark as Packed</Button>
             )}
             {canWrite && (
-              <Button color="primary" variant="flat" isDisabled={storeDisabled} startContent={<Warehouse size={18} />} onPress={() => setConfirm('store')}>Mark as Stored</Button>
+              <Button color="primary" variant="flat" isDisabled={storeDisabled} startContent={<Warehouse size={18} />} onPress={() => setConfirm('store')} data-testid="mark-stored-btn">Mark as Stored</Button>
             )}
             {canWrite && (
               <Button variant="flat" startContent={<Pencil size={18} />} onPress={() => navigate(`/storage/${unit.id}/edit`)}>Edit</Button>
             )}
             {canDelete && (
-              <Button color="danger" variant="light" startContent={<Trash2 size={18} />} onPress={() => setConfirm('delete')}>Delete</Button>
+              <Button color="danger" variant="light" startContent={<Trash2 size={18} />} onPress={() => setConfirm('delete')} data-testid="delete-btn">Delete</Button>
             )}
           </div>
         </CardHeader>
@@ -238,7 +237,7 @@ export default function DetailPage() {
               </Typography>
             ) : (
               contents.map((item) => (
-                <div key={item.id} className="flex items-center gap-3 rounded-lg border border-default-100 p-2">
+                <div key={item.id} data-testid={`content-item-${item.id}`} className="flex items-center gap-3 rounded-lg border border-default-100 p-2">
                   <Image
                     src={item.images?.photo_url || getPlaceholderImage()}
                     alt={item.short_name ?? item.id}
@@ -256,6 +255,7 @@ export default function DetailPage() {
                       size="sm"
                       variant="light"
                       color="danger"
+                      data-testid={`remove-item-${item.id}`}
                       onPress={() => setConfirm({ type: 'remove', itemId: item.id })}
                     >
                       Remove
@@ -273,6 +273,7 @@ export default function DetailPage() {
         title="Delete storage unit?"
         body={<p>Delete <strong>{unit.short_name}</strong>? This cannot be undone.</p>}
         confirmLabel="Delete"
+        confirmTestId="confirm-delete"
         isDestructive
         isLoading={busy}
         onConfirm={doDelete}
@@ -283,6 +284,7 @@ export default function DetailPage() {
         title="Mark as Packed"
         body={<p>Mark <strong>{unit.short_name}</strong> as <strong>Packed</strong>? You can then mark it Stored to make it available for deployment staging.</p>}
         confirmLabel="Mark as Packed"
+        confirmTestId="confirm-mark-packed"
         confirmColor="secondary"
         isLoading={busy}
         onConfirm={doMarkPacked}
@@ -293,6 +295,7 @@ export default function DetailPage() {
         title="Mark as Stored"
         body={<p>Move <strong>{unit.short_name}</strong> to <strong>Stored</strong>? It will then be available in the deployment staging area.</p>}
         confirmLabel="Mark as Stored"
+        confirmTestId="confirm-mark-stored"
         confirmColor="primary"
         isLoading={busy}
         onConfirm={doStore}
@@ -303,6 +306,7 @@ export default function DetailPage() {
         title="Remove item?"
         body={<p>Remove this item from <strong>{unit.short_name}</strong>? Its packing status resets to unpacked.</p>}
         confirmLabel="Remove"
+        confirmTestId="confirm-remove-item"
         isDestructive
         isLoading={busy}
         onConfirm={() => typeof confirm === 'object' && confirm?.type === 'remove' && doRemove(confirm.itemId)}

@@ -52,7 +52,8 @@
     "build:maintenance": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-maintenance",
     "build:landing": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-landing",
     "preview": "vite preview",
-    "test:e2e:deployments": "playwright test --config subs/deployments/tests/e2e/playwright.config.ts"
+    "test:e2e:deployments": "playwright test --config subs/deployments/tests/e2e/playwright.config.ts",
+    "test:e2e:storage": "playwright test --config subs/storage/tests/e2e/playwright.config.ts"
   },
   "keywords": [],
   "author": "",

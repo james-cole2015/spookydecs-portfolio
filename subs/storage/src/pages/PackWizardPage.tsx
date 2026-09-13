@@ -290,7 +290,7 @@ function TotePackFlow({ id }: { id: string }) {
             <span className="text-sm text-default-500">{selected.size} selected</span>
             <div className="flex gap-2">
               <Button variant="light" onPress={() => navigate('/storage/pack')}>Cancel</Button>
-              <Button color="primary" variant="shadow" startContent={<Save size={18} />} isLoading={busy} onPress={complete}>Save</Button>
+              <Button color="primary" variant="shadow" startContent={<Save size={18} />} isLoading={busy} onPress={complete} data-testid="pack-tote-save">Save</Button>
             </div>
           </div>
         </CardBody>
