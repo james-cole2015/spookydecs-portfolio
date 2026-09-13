@@ -3,7 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Card, CardBody, CardHeader, Chip, Image, Divider } from '@heroui/react';
 import { PackageCheck, Pencil, Trash2, Warehouse } from 'lucide-react';
 import { storageAPI, photosAPI } from '../api/storageApi';
-import { getPlaceholderImage, STORAGE_STATUS_COLORS, type StorageUnit } from '../config/storageConfig';
+import { getPlaceholderImage, STORAGE_STATUS_COLORS, type StorageUnit, type SupplyEntry } from '../config/storageConfig';
+import { SupplyListEditor } from '../components/SupplyListEditor';
 import {
   Breadcrumbs,
   LoadingState,
@@ -33,6 +34,8 @@ export default function DetailPage() {
 
   const [unit, setUnit] = useState<StorageUnit | null>(null);
   const [contents, setContents] = useState<ContentItem[]>([]);
+  const [supplies, setSupplies] = useState<SupplyEntry[]>([]);
+  const [savingSupplies, setSavingSupplies] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<null | 'delete' | 'store' | 'markPacked' | { type: 'remove'; itemId: string }>(null);
@@ -76,6 +79,7 @@ export default function DetailPage() {
 
       setUnit(data);
       setContents(enriched);
+      setSupplies(data.supplies ?? []);
     } catch (e: any) {
       setError(e?.message ?? 'Failed to load storage unit');
     } finally {
@@ -90,7 +94,13 @@ export default function DetailPage() {
 
   async function doDelete() {
     if (!unit) return;
-    if ((unit.contents_count ?? 0) > 0) {
+    if (unit.is_supply_tote) {
+      if (supplies.length > 0) {
+        toast.showError('Cannot delete a supply tote with supplies. Remove all supplies first.');
+        setConfirm(null);
+        return;
+      }
+    } else if ((unit.contents_count ?? 0) > 0) {
       toast.showError('Cannot delete a storage unit with contents. Remove all items first.');
       setConfirm(null);
       return;
@@ -138,6 +148,21 @@ export default function DetailPage() {
     }
   }
 
+  async function doSaveSupplies() {
+    if (!unit) return;
+    setSavingSupplies(true);
+    try {
+      const cleaned = supplies.filter((s) => s.name.trim());
+      await storageAPI.update(unit.id, { supplies: cleaned });
+      setSupplies(cleaned);
+      toast.showSuccess('Supplies updated');
+    } catch (e: any) {
+      toast.showError(e?.message ?? 'Failed to update supplies');
+    } finally {
+      setSavingSupplies(false);
+    }
+  }
+
   async function doRemove(itemId: string) {
     if (!unit) return;
     setBusy(true);
@@ -181,6 +206,7 @@ export default function DetailPage() {
               <div className="mt-2 flex flex-wrap gap-1">
                 <SeasonChip value={String(unit.season ?? '')} label={String(unit.season ?? '—')} />
                 <Chip size="sm" variant="flat">{String(unit.class_type)}</Chip>
+                {unit.is_supply_tote && <Chip size="sm" variant="flat" color="warning">Supply Tote</Chip>}
                 {unit.location && <Chip size="sm" variant="flat">{String(unit.location)}</Chip>}
                 {unit.size && <Chip size="sm" variant="flat">{String(unit.size)}</Chip>}
                 <StatusChip value={status} colorMap={STORAGE_STATUS_COLORS} />
@@ -226,46 +252,63 @@ export default function DetailPage() {
           </CardBody>
         </Card>
 
-        <Card shadow="md" className="bg-content1">
-          <CardHeader>
-            <Typography type="h5" className="text-foreground">Contents ({contents.length})</Typography>
-          </CardHeader>
-          <Divider />
-          <CardBody className="gap-2">
-            {contents.length === 0 ? (
-              <Typography type="body-sm" className="py-6 text-center text-default-500">
-                No items in this storage unit.
-              </Typography>
-            ) : (
-              contents.map((item) => (
-                <div key={item.id} className="flex items-center gap-3 rounded-lg border border-default-100 p-2">
-                  <Image
-                    src={item.images?.photo_url || getPlaceholderImage()}
-                    alt={item.short_name ?? item.id}
-                    width={44}
-                    height={44}
-                    radius="sm"
-                    className="h-11 w-11 object-cover"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <Typography type="body-sm" as="div" className="truncate text-foreground">{item.short_name ?? item.id}</Typography>
-                    <Typography type="body-xs" as="div" className="truncate text-default-500">{item.id}</Typography>
+        {unit.is_supply_tote ? (
+          <Card shadow="md" className="bg-content1">
+            <CardHeader className="flex items-center justify-between">
+              <Typography type="h5" className="text-foreground">Supplies ({supplies.length})</Typography>
+              {canWrite && (
+                <Button size="sm" color="secondary" variant="flat" onPress={doSaveSupplies} isLoading={savingSupplies}>
+                  Save Supplies
+                </Button>
+              )}
+            </CardHeader>
+            <Divider />
+            <CardBody className="gap-2">
+              <SupplyListEditor supplies={supplies} onChange={setSupplies} disabled={!canWrite} />
+            </CardBody>
+          </Card>
+        ) : (
+          <Card shadow="md" className="bg-content1">
+            <CardHeader>
+              <Typography type="h5" className="text-foreground">Contents ({contents.length})</Typography>
+            </CardHeader>
+            <Divider />
+            <CardBody className="gap-2">
+              {contents.length === 0 ? (
+                <Typography type="body-sm" className="py-6 text-center text-default-500">
+                  No items in this storage unit.
+                </Typography>
+              ) : (
+                contents.map((item) => (
+                  <div key={item.id} className="flex items-center gap-3 rounded-lg border border-default-100 p-2">
+                    <Image
+                      src={item.images?.photo_url || getPlaceholderImage()}
+                      alt={item.short_name ?? item.id}
+                      width={44}
+                      height={44}
+                      radius="sm"
+                      className="h-11 w-11 object-cover"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <Typography type="body-sm" as="div" className="truncate text-foreground">{item.short_name ?? item.id}</Typography>
+                      <Typography type="body-xs" as="div" className="truncate text-default-500">{item.id}</Typography>
+                    </div>
+                    {canWrite && (
+                      <Button
+                        size="sm"
+                        variant="light"
+                        color="danger"
+                        onPress={() => setConfirm({ type: 'remove', itemId: item.id })}
+                      >
+                        Remove
+                      </Button>
+                    )}
                   </div>
-                  {canWrite && (
-                    <Button
-                      size="sm"
-                      variant="light"
-                      color="danger"
-                      onPress={() => setConfirm({ type: 'remove', itemId: item.id })}
-                    >
-                      Remove
-                    </Button>
-                  )}
-                </div>
-              ))
-            )}
-          </CardBody>
-        </Card>
+                ))
+              )}
+            </CardBody>
+          </Card>
+        )}
       </div>
 
       <ConfirmDialog

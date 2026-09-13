@@ -51,7 +51,7 @@ function PackChooser() {
   }, []);
 
   const unpackedTotes = useMemo(
-    () => storage.filter((u) => u.class_type === 'Tote' && !u.packed),
+    () => storage.filter((u) => u.class_type === 'Tote' && !u.is_supply_tote && !u.packed),
     [storage],
   );
 
@@ -213,6 +213,11 @@ function TotePackFlow({ id }: { id: string }) {
         if (!raw) throw new Error('Storage unit not found');
         if (raw.class_type !== 'Tote') {
           toast.showInfo('Pack flow is only available for Tote-type storage units');
+          navigate(`/storage/${id}`);
+          return;
+        }
+        if (raw.is_supply_tote) {
+          toast.showInfo('Pack flow is not available for supply totes');
           navigate(`/storage/${id}`);
           return;
         }

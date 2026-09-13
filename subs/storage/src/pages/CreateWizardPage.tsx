@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardBody, Button, Chip } from '@heroui/react';
 import type { ReactNode } from 'react';
-import { Plus, Package, FileBox, Camera, ArrowLeft, ArrowRight, Save } from 'lucide-react';
+import { Plus, Package, FileBox, Boxes, Camera, ArrowLeft, ArrowRight, Save } from 'lucide-react';
 import { storageAPI, photosAPI } from '../api/storageApi';
 import STORAGE_CONFIG from '../config/storageConfig';
 import { Breadcrumbs, PageHeader, Typography, useAuth } from '@spookydecs/ui';
@@ -19,6 +19,7 @@ export default function CreateWizardPage() {
 
   const [step, setStep] = useState(1);
   const [type, setType] = useState<ClassType | null>(null);
+  const [isSupplyTote, setIsSupplyTote] = useState(false);
   const [data, setData] = useState<FormData>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [photoIds, setPhotoIds] = useState<string[]>([]);
@@ -36,6 +37,7 @@ export default function CreateWizardPage() {
 
   function selectType(t: ClassType) {
     setType(t);
+    setIsSupplyTote(false);
     setData({});
     setErrors({});
     setStep(2);
@@ -66,7 +68,7 @@ export default function CreateWizardPage() {
         location: data.location,
         name: data.short_name,
         general_notes: data.general_notes || '',
-        ...(type === 'Tote' ? { size: data.size } : { item_id: data.item_id }),
+        ...(type === 'Tote' ? { size: data.size, is_supply_tote: isSupplyTote } : { item_id: data.item_id }),
       };
       const unit = type === 'Tote' ? await storageAPI.createTote(payload) : await storageAPI.createSelf(payload);
       if (!unit) throw new Error('Create returned no unit');
@@ -164,6 +166,28 @@ export default function CreateWizardPage() {
             <Typography type="h5" className="text-foreground">
               {type === 'Tote' ? 'Tote' : 'Self-Contained Unit'} details
             </Typography>
+            {type === 'Tote' && (
+              <div className="flex items-center gap-2">
+                <Chip
+                  variant={!isSupplyTote ? 'solid' : 'flat'}
+                  color={!isSupplyTote ? 'secondary' : 'default'}
+                  className="cursor-pointer"
+                  onClick={() => setIsSupplyTote(false)}
+                  startContent={<Package size={14} />}
+                >
+                  Items
+                </Chip>
+                <Chip
+                  variant={isSupplyTote ? 'solid' : 'flat'}
+                  color={isSupplyTote ? 'secondary' : 'default'}
+                  className="cursor-pointer"
+                  onClick={() => setIsSupplyTote(true)}
+                  startContent={<Boxes size={14} />}
+                >
+                  Supplies
+                </Chip>
+              </div>
+            )}
             <StorageForm classType={type} data={data} errors={errors} onChange={setData} />
             <div className="flex justify-between">
               <Button variant="light" startContent={<ArrowLeft size={18} />} onPress={() => setStep(1)}>Back</Button>
@@ -184,6 +208,7 @@ export default function CreateWizardPage() {
             <dl className="grid grid-cols-2 gap-3">
               <Review label="Generated ID" value={idPreview()} mono />
               <Review label="Type" value={type} />
+              {type === 'Tote' && <Review label="Tote Contents" value={isSupplyTote ? 'Supplies' : 'Items'} />}
               <Review label="Season" value={data.season} />
               <Review label="Location" value={data.location} />
               <Review label="Short Name" value={data.short_name} />
