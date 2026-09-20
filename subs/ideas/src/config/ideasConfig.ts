@@ -75,6 +75,10 @@ export const CLASS_TYPES: Record<string, string[]> = {
 
 export const PIPELINE_STAGES: Status[] = ['Considering', 'Planning', 'Workbench', 'Built'];
 
+// WIP cap on concurrent Workbench (active build) ideas — mirrors MAX_ACTIVE_BUILDS
+// in sd_ideas_handler.py, which is the enforced source of truth.
+export const MAX_ACTIVE_BUILDS = 3;
+
 // Inline season placeholder SVGs (ported from ideas-config.js SEASON_PLACEHOLDERS).
 export const SEASON_PLACEHOLDERS: Record<string, string> = {
   halloween: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
