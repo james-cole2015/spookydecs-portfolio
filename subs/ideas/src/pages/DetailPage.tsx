@@ -14,8 +14,8 @@ import {
   type LightboxPhoto,
   useConfirm,
 } from '@spookydecs/ui';
-import { getIdea, updateIdea, deleteIdea, previewIdeaCascade } from '../api/ideasApi';
-import { ITEMS_BASE_URL, SEASON_PLACEHOLDERS, type Idea, type BuildInstructionStep } from '../config/ideasConfig';
+import { getIdea, updateIdea, deleteIdea, listIdeas, previewIdeaCascade } from '../api/ideasApi';
+import { ITEMS_BASE_URL, MAX_ACTIVE_BUILDS, SEASON_PLACEHOLDERS, type Idea, type BuildInstructionStep } from '../config/ideasConfig';
 import { formatDate, heroImageUrl, normalizeMaterials } from '../lib/format';
 import { SeasonChip, StatusChip } from '../components/chips';
 import { EnrichmentPanel } from '../components/EnrichmentPanel';
@@ -34,6 +34,7 @@ export default function DetailPage() {
   const [notFound, setNotFound] = useState(false);
   const [costModalOpen, setCostModalOpen] = useState(false);
   const [costRefresh, setCostRefresh] = useState(0);
+  const [activeBuildCount, setActiveBuildCount] = useState<number | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -50,6 +51,13 @@ export default function DetailPage() {
           return;
         }
         setIdea(fetched);
+        if (fetched.status === 'Planning') {
+          listIdeas()
+            .then((all) => setActiveBuildCount(all.filter((i) => i.status === 'Workbench').length))
+            .catch(() => {
+              /* button falls back to enabled; backend still enforces the cap */
+            });
+        }
       })
       .catch((err) => setError((err as Error).message))
       .finally(() => setLoading(false));
@@ -226,6 +234,7 @@ export default function DetailPage() {
                   color="warning"
                   variant="flat"
                   endContent={<ArrowRight size={15} />}
+                  isDisabled={activeBuildCount !== null && activeBuildCount >= MAX_ACTIVE_BUILDS}
                   onPress={() =>
                     transition(
                       'Workbench',
@@ -235,7 +244,9 @@ export default function DetailPage() {
                     )
                   }
                 >
-                  Move to Workbench
+                  {activeBuildCount !== null && activeBuildCount >= MAX_ACTIVE_BUILDS
+                    ? `Build Limit Reached (${MAX_ACTIVE_BUILDS}/${MAX_ACTIVE_BUILDS})`
+                    : 'Move to Workbench'}
                 </Button>
               </>
             )}
