@@ -27,6 +27,7 @@ interface FormValues {
   tags: string;
   notes: string;
   estimated_cost: string;
+  remaining_units: string;
   prep_start: string;
   build_start: string;
   build_complete: string;
@@ -56,6 +57,7 @@ export default function FormPage() {
       tags: '',
       notes: '',
       estimated_cost: '',
+      remaining_units: '',
       prep_start: '',
       build_start: '',
       build_complete: '',
@@ -88,6 +90,7 @@ export default function FormPage() {
           tags: (idea.tags || []).join(', '),
           notes: idea.notes || '',
           estimated_cost: idea.estimated_cost != null ? String(idea.estimated_cost) : '',
+          remaining_units: idea.remaining_units != null ? String(idea.remaining_units) : '',
           prep_start: idea.prep_start || '',
           build_start: idea.build_start || '',
           build_complete: idea.build_complete || '',
@@ -129,6 +132,7 @@ export default function FormPage() {
         .map((t) => t.trim())
         .filter(Boolean),
       estimated_cost: values.estimated_cost.trim() ? parseFloat(values.estimated_cost) : null,
+      remaining_units: values.remaining_units.trim() ? parseInt(values.remaining_units, 10) : null,
       materials: cleanMaterials,
       prep_start: values.prep_start || '',
       build_start: values.build_start || '',
@@ -273,6 +277,15 @@ export default function FormPage() {
               step="0.01"
               placeholder="0.00"
               {...register('estimated_cost')}
+            />
+            <Input
+              label="Remaining Units"
+              type="number"
+              min="0"
+              step="1"
+              placeholder="e.g. 6"
+              description="Units still unfinished from a prior partial build, if any."
+              {...register('remaining_units')}
             />
             {isEdit ? (
               <ReadonlyField label="Prep Start Date" value={formatDate(existing?.prep_start) || '—'} />
