@@ -174,19 +174,19 @@ export function BuildCompleteWizard({
     }
     setSubmitting(true);
 
-    // Batch build (#435): create N item records, each backlinked to the idea. All N
-    // share the same short_name — the items handler's per-class atomic number in the
-    // generated id (…-046, …-047) is what distinguishes the copies, so no name suffix
-    // is needed (and a suffix would only pollute the id, which is derived from
-    // short_name). Creates are sequential (awaited) so the ConsistentRead atomic
-    // generator increments cleanly across them.
+    // Batch build (#435): create N item records, each backlinked to the idea.
+    // When N > 1 each gets a "#i" suffix (#593) so they're distinguishable in
+    // list views, not just by their internal generated id. Creates are
+    // sequential (awaited) so the ConsistentRead atomic generator increments
+    // cleanly across them.
     // Track created ids as we go so a mid-loop failure can report exactly which
     // items were already created (no rollback) — both in the UI and the console.
     const created: string[] = [];
     const name = shortName.trim();
     try {
       for (let i = 0; i < n; i++) {
-        const itemResult = await createItem(buildItemBody(name));
+        const unitName = n > 1 ? `${name} #${i + 1}` : name;
+        const itemResult = await createItem(buildItemBody(unitName));
         const itemId =
           itemResult?.confirmation?.id || itemResult?.preview?.id || itemResult?.id;
         if (!itemId) throw new Error(`Item ${i + 1} of ${n} created but no ID returned`);
@@ -337,9 +337,9 @@ export function BuildCompleteWizard({
               </div>
               {parseUnits() !== null && parseUnits()! > 1 && (
                 <p className="rounded-medium bg-default-100 px-3 py-2 text-tiny text-default-500">
-                  Creates {parseUnits()} separate item records (each named “
-                  {shortName.trim() || 'Item'}”, distinguished by id), with the build cost split
-                  evenly across them.
+                  Creates {parseUnits()} separate item records (named “
+                  {shortName.trim() || 'Item'} #1”–“{shortName.trim() || 'Item'} #{parseUnits()}”), with the
+                  build cost split evenly across them.
                 </p>
               )}
               <div className="flex gap-3">
