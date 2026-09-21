@@ -181,6 +181,7 @@ export interface Idea {
   build_images?: string[];
   estimated_cost?: number | null;
   materials?: Array<Material | string>;
+  remaining_units?: number | null;
   build_sessions?: BuildSession[];
   build_instructions?: BuildInstructionStep[];
   prep_start?: string;

@@ -406,6 +406,9 @@ export default function DetailPage() {
               <SidebarField label="Season" value={idea.season} />
               {idea.bucket && <SidebarField label="Build Season" value={idea.bucket} />}
               <SidebarField label="Status" value={idea.status} />
+              {idea.remaining_units != null && (
+                <SidebarField label="Remaining Units" value={String(idea.remaining_units)} />
+              )}
               <div className="flex flex-col gap-0.5">
                 <span className="text-default-500">Link</span>
                 {idea.link ? (
