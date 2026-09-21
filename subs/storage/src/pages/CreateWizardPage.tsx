@@ -144,6 +144,7 @@ export default function CreateWizardPage() {
       {step === 1 && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <TypeCard
+            testId="create-type-tote"
             icon={<Package size={28} />}
             title="Tote"
             description="Standardized container for multiple items."
@@ -191,7 +192,7 @@ export default function CreateWizardPage() {
             <StorageForm classType={type} data={data} errors={errors} onChange={setData} />
             <div className="flex justify-between">
               <Button variant="light" startContent={<ArrowLeft size={18} />} onPress={() => setStep(1)}>Back</Button>
-              <Button color="primary" endContent={<ArrowRight size={18} />} onPress={goReview}>Review</Button>
+              <Button color="primary" endContent={<ArrowRight size={18} />} onPress={goReview} data-testid="create-review-submit">Review</Button>
             </div>
           </CardBody>
         </Card>
@@ -218,7 +219,7 @@ export default function CreateWizardPage() {
             </dl>
             <div className="flex justify-between">
               <Button variant="light" startContent={<ArrowLeft size={18} />} onPress={() => setStep(2)}>Back</Button>
-              <Button color="primary" variant="shadow" startContent={<Save size={18} />} onPress={submit} isLoading={submitting}>Create Storage Unit</Button>
+              <Button color="primary" variant="shadow" startContent={<Save size={18} />} onPress={submit} isLoading={submitting} data-testid="create-submit">Create Storage Unit</Button>
             </div>
           </CardBody>
         </Card>
@@ -235,12 +236,14 @@ function TypeCard({
   description,
   selected,
   onPress,
+  testId,
 }: {
   icon: ReactNode;
   title: string;
   description: string;
   selected: boolean;
   onPress: () => void;
+  testId?: string;
 }) {
   return (
     <Card
@@ -248,6 +251,7 @@ function TypeCard({
       isHoverable
       shadow="md"
       onPress={onPress}
+      data-testid={testId}
       className={`bg-content1 ${selected ? 'ring-2 ring-secondary' : ''}`}
     >
       <CardBody className="flex flex-row items-center gap-4">
