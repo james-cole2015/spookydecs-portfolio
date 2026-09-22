@@ -20,6 +20,10 @@ export default defineConfig({
   globalSetup: resolve(here, 'global-setup.ts'),
   use: {
     baseURL: 'http://localhost:3000',
+    // Taller than Playwright's 1280x720 default — the CreateWizardPage's Items/Supplies
+    // choice (#590) pushes the Size select to the bottom edge at 720px, which made its
+    // popover intermittently fail to stabilize when clicked.
+    viewport: { width: 1280, height: 1000 },
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
