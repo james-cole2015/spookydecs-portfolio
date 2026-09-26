@@ -5,7 +5,7 @@
 // former BuildDetailPage.tsx (deleted).
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Button, Card, CardBody, CardHeader, Checkbox, Chip, Input, Link, Textarea } from '@heroui/react';
+import { Button, Card, CardBody, CardHeader, Checkbox, Chip, Input, Link, Select, SelectItem, Textarea } from '@heroui/react';
 import { Pencil, Plus, Trash2, ArrowRight, X } from 'lucide-react';
 import {
   LoadingState,
@@ -28,10 +28,12 @@ import {
   type Idea,
   type BuildInstructionStep,
   type BuildSession,
+  type StepStatus,
+  STEP_STATUSES,
 } from '../config/ideasConfig';
 import { fieldMode, missingGateLabels } from '../config/fieldAvailability';
 import { formatDate, formatDuration, heroImageUrl, normalizeMaterials } from '../lib/format';
-import { SeasonChip, StatusChip } from '../components/chips';
+import { SeasonChip, StatusChip, StepStatusChip } from '../components/chips';
 import { EnrichmentPanel } from '../components/EnrichmentPanel';
 import { CostsSection } from '../components/CostsSection';
 import { CostLogModal } from '../components/CostLogModal';
@@ -442,30 +444,67 @@ export default function DetailPage() {
                 <p className="text-small text-default-400">No build instructions yet.</p>
               ) : (
                 <ol className="flex flex-col gap-2 text-small">
-                  {(idea.build_instructions || []).map((s, i) => (
-                    <li key={i} className="flex gap-2">
-                      <span className="font-medium text-foreground">{s.step ?? i + 1}.</span>
-                      <div className="flex-1">
-                        {s.title && <p className="font-medium text-foreground/80">{s.title}</p>}
-                        {s.detail && <p className="whitespace-pre-wrap text-foreground/70">{s.detail}</p>}
-                      </div>
-                      {instructionsMode === 'editable' && (
-                        <Button
-                          isIconOnly
-                          size="sm"
-                          variant="light"
-                          aria-label="Remove step"
-                          onPress={() =>
-                            patchIdea({
-                              build_instructions: (idea.build_instructions || []).filter((_, j) => j !== i),
-                            })
-                          }
-                        >
-                          <X size={15} />
-                        </Button>
-                      )}
-                    </li>
-                  ))}
+                  {(idea.build_instructions || []).map((s, i) => {
+                    const stepSessions = (idea.build_sessions || []).filter(
+                      (sess) => s.step_id && sess.step_ref === s.step_id,
+                    );
+                    const lastSession = [...stepSessions].sort((a, b) =>
+                      (b.date || '').localeCompare(a.date || ''),
+                    )[0];
+                    return (
+                      <li key={s.step_id || i} className="flex gap-2">
+                        <span className="font-medium text-foreground">{s.step ?? i + 1}.</span>
+                        <div className="flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            {s.title && <p className="font-medium text-foreground/80">{s.title}</p>}
+                            <StepStatusChip status={s.status} />
+                          </div>
+                          {s.detail && <p className="whitespace-pre-wrap text-foreground/70">{s.detail}</p>}
+                          {stepSessions.length > 0 && (
+                            <p className="text-tiny text-default-400">
+                              {stepSessions.length} session{stepSessions.length === 1 ? '' : 's'} logged
+                              {lastSession && ` · last ${formatDate(lastSession.date)}`}
+                            </p>
+                          )}
+                          {instructionsMode === 'editable' && (
+                            <Select
+                              size="sm"
+                              aria-label="Step status"
+                              className="mt-2 max-w-40"
+                              selectedKeys={[s.status ?? 'pending']}
+                              disallowEmptySelection
+                              onChange={(e) => {
+                                const nextStatus = e.target.value as StepStatus;
+                                const next = (idea.build_instructions || []).map((step, j) =>
+                                  j === i ? { ...step, status: nextStatus } : step,
+                                );
+                                patchIdea({ build_instructions: next });
+                              }}
+                            >
+                              {STEP_STATUSES.map((st) => (
+                                <SelectItem key={st}>{st.replace('_', ' ')}</SelectItem>
+                              ))}
+                            </Select>
+                          )}
+                        </div>
+                        {instructionsMode === 'editable' && (
+                          <Button
+                            isIconOnly
+                            size="sm"
+                            variant="light"
+                            aria-label="Remove step"
+                            onPress={() =>
+                              patchIdea({
+                                build_instructions: (idea.build_instructions || []).filter((_, j) => j !== i),
+                              })
+                            }
+                          >
+                            <X size={15} />
+                          </Button>
+                        )}
+                      </li>
+                    );
+                  })}
                 </ol>
               )}
             </CardBody>
@@ -546,24 +585,43 @@ export default function DetailPage() {
               <CardBody className="gap-3">
                 {sessionsMode === 'editable' && (
                   <SessionForm
-                    onAdd={(session) => patchIdea({ build_sessions: [...(idea.build_sessions || []), session] })}
+                    steps={idea.build_instructions || []}
+                    onAdd={(session, completeStepId) => {
+                      const nextInstructions = completeStepId
+                        ? (idea.build_instructions || []).map((s) =>
+                            s.step_id === completeStepId ? { ...s, status: 'done' as const } : s,
+                          )
+                        : idea.build_instructions;
+                      patchIdea({
+                        build_sessions: [...(idea.build_sessions || []), session],
+                        ...(completeStepId ? { build_instructions: nextInstructions } : {}),
+                      });
+                    }}
                   />
                 )}
                 {sessions.length === 0 ? (
                   <p className="text-small text-default-400">No sessions logged yet.</p>
                 ) : (
                   <div className="flex flex-col divide-y divide-default-100">
-                    {sessions.map((s) => (
-                      <div key={s.session_id} className="flex flex-col gap-0.5 py-2">
-                        <div className="flex gap-3 text-small">
-                          <span className="font-medium text-foreground">{formatDate(s.date)}</span>
-                          {s.duration_min ? (
-                            <span className="text-default-400">{formatDuration(s.duration_min)}</span>
-                          ) : null}
+                    {sessions.map((s) => {
+                      const linkedStep = (idea.build_instructions || []).find((st) => st.step_id === s.step_ref);
+                      return (
+                        <div key={s.session_id} className="flex flex-col gap-0.5 py-2">
+                          <div className="flex gap-3 text-small">
+                            <span className="font-medium text-foreground">{formatDate(s.date)}</span>
+                            {s.duration_min ? (
+                              <span className="text-default-400">{formatDuration(s.duration_min)}</span>
+                            ) : null}
+                          </div>
+                          {s.notes && <p className="text-small text-default-500">{s.notes}</p>}
+                          {linkedStep && (
+                            <p className="text-tiny text-default-400">
+                              Step: {linkedStep.title || `Step ${linkedStep.step}`}
+                            </p>
+                          )}
                         </div>
-                        {s.notes && <p className="text-small text-default-500">{s.notes}</p>}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </CardBody>
@@ -711,8 +769,10 @@ function InstructionStepForm({ onAdd }: { onAdd: (s: BuildInstructionStep) => vo
       return;
     }
     const step: BuildInstructionStep = {
+      step_id: crypto.randomUUID(),
       title: title.trim() || undefined,
       detail: detail.trim() || undefined,
+      status: 'pending',
     };
     onAdd(step);
     reset();
@@ -778,17 +838,27 @@ function AddMaterial({ onAdd }: { onAdd: (name: string) => void }) {
   );
 }
 
-function SessionForm({ onAdd }: { onAdd: (s: BuildSession) => void }) {
+function SessionForm({
+  steps,
+  onAdd,
+}: {
+  steps: BuildInstructionStep[];
+  onAdd: (s: BuildSession, completeStepId?: string) => void;
+}) {
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(todayIso());
   const [duration, setDuration] = useState('');
   const [notes, setNotes] = useState('');
+  const [stepId, setStepId] = useState('');
+  const [markDone, setMarkDone] = useState(false);
   const toast = useToast();
 
   function reset() {
     setDate(todayIso());
     setDuration('');
     setNotes('');
+    setStepId('');
+    setMarkDone(false);
   }
 
   function save() {
@@ -801,9 +871,10 @@ function SessionForm({ onAdd }: { onAdd: (s: BuildSession) => void }) {
       session_id: `sess-${date.replace(/-/g, '')}-${suffix}`,
       date,
       notes: notes.trim() || undefined,
+      step_ref: stepId || undefined,
     };
     if (duration.trim()) session.duration_min = parseInt(duration, 10);
-    onAdd(session);
+    onAdd(session, stepId && markDone ? stepId : undefined);
     reset();
     setOpen(false);
   }
@@ -830,6 +901,24 @@ function SessionForm({ onAdd }: { onAdd: (s: BuildSession) => void }) {
         />
       </div>
       <Textarea size="sm" label="Notes" minRows={2} value={notes} onValueChange={setNotes} />
+      {steps.length > 0 && (
+        <div className="flex flex-wrap items-end gap-3">
+          <Select
+            size="sm"
+            label="Step (optional)"
+            className="max-w-56"
+            selectedKeys={stepId ? [stepId] : []}
+            onChange={(e) => setStepId(e.target.value)}
+          >
+            {steps.map((s) => (
+              <SelectItem key={s.step_id}>{s.title || `Step ${s.step}`}</SelectItem>
+            ))}
+          </Select>
+          <Checkbox isSelected={markDone} isDisabled={!stepId} onValueChange={setMarkDone}>
+            Mark step done
+          </Checkbox>
+        </div>
+      )}
       <div className="flex justify-end gap-2">
         <Button
           size="sm"

@@ -109,17 +109,30 @@ export interface Material {
   done?: boolean;
 }
 
+export const STEP_STATUSES = ['pending', 'in_progress', 'done'] as const;
+export type StepStatus = (typeof STEP_STATUSES)[number];
+
+// Maps a build_instructions step status to a HeroUI Chip color.
+export const STEP_STATUS_CHIP_COLOR: Record<StepStatus, 'default' | 'primary' | 'success'> = {
+  pending: 'default',
+  in_progress: 'primary',
+  done: 'success',
+};
+
 export interface BuildSession {
   session_id: string;
   date: string;
   duration_min?: number;
   notes?: string;
+  step_ref?: string; // BuildInstructionStep.step_id, not array position (#599)
 }
 
 export interface BuildInstructionStep {
-  step?: number;
+  step_id?: string; // stable UUID, backend-assigned/backfilled (#599)
+  step?: number; // display ordinal only — NOT a stable reference
   title?: string;
   detail?: string;
+  status?: StepStatus; // default 'pending'
 }
 
 export interface EnrichmentPhoto {
