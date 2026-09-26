@@ -1,8 +1,12 @@
-// Idea detail — hero/gallery, enrichment, costs, photos, status transitions, delete.
-import { useEffect, useState } from 'react';
+// Unified idea detail page (#597) — single route for all 5 statuses. Sections
+// always render; per-field editable/readonly/hidden behavior and the
+// Workbench-only pipeline nav/action bar are driven by fieldAvailability.ts,
+// not by ad hoc idea.status conditionals scattered through JSX. Absorbs the
+// former BuildDetailPage.tsx (deleted).
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Button, Card, CardBody, CardHeader, Chip, Input, Link, Textarea } from '@heroui/react';
-import { ArrowLeft, Pencil, Plus, Trash2, ArrowRight, X } from 'lucide-react';
+import { Button, Card, CardBody, CardHeader, Checkbox, Chip, Input, Link, Textarea } from '@heroui/react';
+import { Pencil, Plus, Trash2, ArrowRight, X } from 'lucide-react';
 import {
   LoadingState,
   ErrorState,
@@ -11,22 +15,37 @@ import {
   PhotoGallery,
   PhotoLightbox,
   useToast,
+  usePhotoUpload,
   type LightboxPhoto,
   useConfirm,
 } from '@spookydecs/ui';
-import { getIdea, updateIdea, deleteIdea, listIdeas, previewIdeaCascade } from '../api/ideasApi';
-import { ITEMS_BASE_URL, MAX_ACTIVE_BUILDS, SEASON_PLACEHOLDERS, type Idea, type BuildInstructionStep } from '../config/ideasConfig';
-import { formatDate, heroImageUrl, normalizeMaterials } from '../lib/format';
+import { getIdea, updateIdea, deleteIdea, listIdeas, previewIdeaCascade, getIdeaPhotos } from '../api/ideasApi';
+import {
+  ITEMS_BASE_URL,
+  MAX_ACTIVE_BUILDS,
+  PIPELINE_STAGES,
+  SEASON_PLACEHOLDERS,
+  type Idea,
+  type BuildInstructionStep,
+  type BuildSession,
+} from '../config/ideasConfig';
+import { fieldMode, missingGateLabels } from '../config/fieldAvailability';
+import { formatDate, formatDuration, heroImageUrl, normalizeMaterials } from '../lib/format';
 import { SeasonChip, StatusChip } from '../components/chips';
 import { EnrichmentPanel } from '../components/EnrichmentPanel';
 import { CostsSection } from '../components/CostsSection';
 import { CostLogModal } from '../components/CostLogModal';
+import { InlineEdit } from '../components/InlineEdit';
+import { BuildCompleteWizard } from '../components/BuildCompleteWizard';
+
+const todayIso = () => new Date().toISOString().slice(0, 10);
 
 export default function DetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const toast = useToast();
   const { confirm, dialog } = useConfirm();
+  const { openWithEditor, editor } = usePhotoUpload();
 
   const [idea, setIdea] = useState<Idea | null>(null);
   const [loading, setLoading] = useState(true);
@@ -35,6 +54,18 @@ export default function DetailPage() {
   const [costModalOpen, setCostModalOpen] = useState(false);
   const [costRefresh, setCostRefresh] = useState(0);
   const [activeBuildCount, setActiveBuildCount] = useState<number | null>(null);
+  const [buildPhotos, setBuildPhotos] = useState<LightboxPhoto[]>([]);
+  const [wizardOpen, setWizardOpen] = useState(false);
+
+  const loadBuildPhotos = useCallback(async () => {
+    if (!id) return;
+    try {
+      const list = await getIdeaPhotos(id, 'build');
+      setBuildPhotos(list.map((p) => ({ url: p.cloudfront_url, thumbUrl: p.thumb_cloudfront_url || p.cloudfront_url })));
+    } catch {
+      /* leave empty */
+    }
+  }, [id]);
 
   useEffect(() => {
     setLoading(true);
@@ -46,10 +77,6 @@ export default function DetailPage() {
           setNotFound(true);
           return;
         }
-        if (fetched.status === 'Workbench') {
-          navigate(`/workbench/${fetched.id}`, { replace: true });
-          return;
-        }
         setIdea(fetched);
         if (fetched.status === 'Planning') {
           listIdeas()
@@ -58,10 +85,11 @@ export default function DetailPage() {
               /* button falls back to enabled; backend still enforces the cap */
             });
         }
+        if (fieldMode('build_images', fetched.status) !== 'hidden') void loadBuildPhotos();
       })
       .catch((err) => setError((err as Error).message))
       .finally(() => setLoading(false));
-  }, [id, navigate]);
+  }, [id, loadBuildPhotos]);
 
   // Persist a patch and merge into local state. title+season are always sent
   // (the backend PUT treats them as required, matching the vanilla calls).
@@ -76,17 +104,50 @@ export default function DetailPage() {
     }
   }
 
-  async function transition(newStatus: Idea['status'], title: string, message: string, dest?: string) {
+  async function transition(newStatus: Idea['status'], title: string, message: string) {
+    if (!idea) return;
     const ok = await confirm({ title, body: message, confirmLabel: title });
     if (!ok) return;
     try {
-      await updateIdea({ ...(idea as Idea), status: newStatus });
+      await updateIdea({ ...idea, status: newStatus });
       toast.showSuccess(`Moved to ${newStatus}`);
-      if (dest) navigate(dest);
+      const refreshed = await getIdea(idea.id);
+      if (refreshed) setIdea(refreshed);
+    } catch (err) {
+      toast.showError('Failed: ' + (err as Error).message);
+    }
+  }
+
+  // Pipeline-strip advance (Workbench only) — no confirm dialog, matches the
+  // existing build-workspace UX for stepping through PIPELINE_STAGES.
+  async function advanceTo(stage: Idea['status']) {
+    if (!idea) return;
+    try {
+      await updateIdea({ id: idea.id, season: idea.season, title: idea.title, status: stage });
+      toast.showSuccess(`Moved to ${stage}`);
+      if (stage === 'Built') navigate('/');
       else {
-        const refreshed = await getIdea(id!);
+        const refreshed = await getIdea(idea.id);
         if (refreshed) setIdea(refreshed);
       }
+    } catch (err) {
+      toast.showError('Failed: ' + (err as Error).message);
+    }
+  }
+
+  async function handleAbandon() {
+    if (!idea) return;
+    const ok = await confirm({
+      title: 'Abandon Build',
+      body: `Abandon "${idea.title}"? It will be moved to Abandoned status.`,
+      confirmLabel: 'Abandon',
+      isDestructive: true,
+    });
+    if (!ok) return;
+    try {
+      await updateIdea({ id: idea.id, season: idea.season, title: idea.title, status: 'Abandoned' });
+      toast.showSuccess('Build abandoned');
+      navigate('/');
     } catch (err) {
       toast.showError('Failed: ' + (err as Error).message);
     }
@@ -123,6 +184,20 @@ export default function DetailPage() {
     }
   }
 
+  async function addBuildPhotos() {
+    if (!idea) return;
+    const uploaded = await openWithEditor({
+      context: 'idea',
+      photo_type: 'build',
+      entityId: idea.id,
+      season: idea.season || 'Shared',
+    });
+    if (uploaded.length) {
+      toast.showSuccess('Build photos saved');
+      await loadBuildPhotos();
+    }
+  }
+
   if (loading) return <LoadingState />;
   if (error)
     return (
@@ -147,12 +222,30 @@ export default function DetailPage() {
     );
 
   const isBuilt = idea.status === 'Built';
+  const isWorkbench = idea.status === 'Workbench';
   const locked = isBuilt && !!idea.item_id;
   const hero = heroImageUrl(idea.images, idea.link);
   const placeholder = SEASON_PLACEHOLDERS[(idea.season || 'shared').toLowerCase()] || SEASON_PLACEHOLDERS.shared;
   const images = idea.images || [];
   const lbPhotos: LightboxPhoto[] = images.map((url) => ({ url }));
   const materials = normalizeMaterials(idea.materials);
+  const sessions = [...(idea.build_sessions || [])].sort((a, b) =>
+    (b.date || '').localeCompare(a.date || ''),
+  );
+  const currentPipelineIdx = PIPELINE_STAGES.indexOf(idea.status);
+
+  const descriptionMode = fieldMode('description', idea.status);
+  const materialsMode = fieldMode('materials', idea.status);
+  const instructionsMode = fieldMode('build_instructions', idea.status);
+  const costsMode = fieldMode('costs', idea.status);
+  const sessionsMode = fieldMode('build_sessions', idea.status);
+  const imagesMode = fieldMode('images', idea.status);
+  const buildImagesMode = fieldMode('build_images', idea.status);
+  const enrichmentReadOnly = fieldMode('agent_enrichment', idea.status) === 'readonly';
+
+  const planningGateMissing = missingGateLabels(idea, 'Planning');
+  const workbenchGateMissing = missingGateLabels(idea, 'Workbench');
+  const atBuildCap = activeBuildCount !== null && activeBuildCount >= MAX_ACTIVE_BUILDS;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-6">
@@ -178,6 +271,36 @@ export default function DetailPage() {
           className="mb-6 grid grid-cols-[repeat(auto-fill,minmax(80px,1fr))] gap-2"
           thumbnailClassName="aspect-square h-full w-full rounded-medium object-cover"
         />
+      )}
+
+      {/* Pipeline nav (Workbench only) */}
+      {isWorkbench && (
+        <div className="mb-6 flex items-center gap-1">
+          {PIPELINE_STAGES.map((stage, i) => {
+            const isNext = i === currentPipelineIdx + 1;
+            return (
+              <div key={stage} className="flex flex-1 items-center gap-1">
+                <button
+                  type="button"
+                  disabled={!isNext}
+                  onClick={() => isNext && advanceTo(stage)}
+                  title={isNext ? `Advance to ${stage}` : undefined}
+                  className={`flex-1 rounded-medium px-2 py-1.5 text-center text-tiny transition-colors ${
+                    i < currentPipelineIdx
+                      ? 'bg-primary/20 text-primary'
+                      : i === currentPipelineIdx
+                      ? 'bg-primary text-white'
+                      : isNext
+                      ? 'cursor-pointer bg-default-100 text-default-500 hover:bg-primary/20 hover:text-primary'
+                      : 'bg-default-100 text-default-300'
+                  }`}
+                >
+                  {stage}
+                </button>
+              </div>
+            );
+          })}
+        </div>
       )}
 
       {/* Header */}
@@ -213,6 +336,7 @@ export default function DetailPage() {
                 color="warning"
                 variant="flat"
                 endContent={<ArrowRight size={15} />}
+                isDisabled={planningGateMissing.length > 0}
                 onPress={() => transition('Planning', 'Move to Planning', `Move "${idea.title}" to Planning?`)}
               >
                 Move to Planning
@@ -234,19 +358,16 @@ export default function DetailPage() {
                   color="warning"
                   variant="flat"
                   endContent={<ArrowRight size={15} />}
-                  isDisabled={activeBuildCount !== null && activeBuildCount >= MAX_ACTIVE_BUILDS}
+                  isDisabled={workbenchGateMissing.length > 0 || atBuildCap}
                   onPress={() =>
                     transition(
                       'Workbench',
                       'Move to Workbench',
                       `Move "${idea.title}" to the Workbench? It will be tracked as an active build.`,
-                      `/workbench/${idea.id}`,
                     )
                   }
                 >
-                  {activeBuildCount !== null && activeBuildCount >= MAX_ACTIVE_BUILDS
-                    ? `Build Limit Reached (${MAX_ACTIVE_BUILDS}/${MAX_ACTIVE_BUILDS})`
-                    : 'Move to Workbench'}
+                  {atBuildCap ? `Build Limit Reached (${MAX_ACTIVE_BUILDS}/${MAX_ACTIVE_BUILDS})` : 'Move to Workbench'}
                 </Button>
               </>
             )}
@@ -263,6 +384,12 @@ export default function DetailPage() {
             )}
           </div>
         </div>
+        {idea.status === 'Considering' && planningGateMissing.length > 0 && (
+          <p className="text-tiny text-default-400">Missing for Planning: {planningGateMissing.join(', ')}</p>
+        )}
+        {idea.status === 'Planning' && workbenchGateMissing.length > 0 && (
+          <p className="text-tiny text-default-400">Missing for Workbench: {workbenchGateMissing.join(', ')}</p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_280px]">
@@ -271,32 +398,46 @@ export default function DetailPage() {
           <Card>
             <CardHeader className="font-semibold">Description</CardHeader>
             <CardBody>
-              <p className={`text-small ${idea.description ? 'text-foreground/80' : 'text-default-400'}`}>
-                {idea.description || 'No description provided.'}
-              </p>
+              {descriptionMode === 'editable' ? (
+                <InlineEdit
+                  value={idea.description || ''}
+                  type="textarea"
+                  placeholder="Click to add a description…"
+                  onSave={(v) => patchIdea({ description: v })}
+                />
+              ) : (
+                <p className={`text-small ${idea.description ? 'text-foreground/80' : 'text-default-400'}`}>
+                  {idea.description || 'No description provided.'}
+                </p>
+              )}
             </CardBody>
           </Card>
 
-          {idea.notes && (
-            <Card>
-              <CardHeader className="font-semibold">Notes</CardHeader>
-              <CardBody>
-                <p className="whitespace-pre-wrap text-small text-foreground/80">{idea.notes}</p>
-              </CardBody>
-            </Card>
-          )}
+          <Card>
+            <CardHeader className="font-semibold">Notes</CardHeader>
+            <CardBody>
+              <InlineEdit
+                value={idea.notes || ''}
+                type="textarea"
+                placeholder="Click to add notes…"
+                onSave={(v) => patchIdea({ notes: v })}
+              />
+            </CardBody>
+          </Card>
 
-          {!isBuilt && <EnrichmentPanel ideaId={idea.id} initial={idea.agent_enrichment} />}
+          <EnrichmentPanel ideaId={idea.id} initial={idea.agent_enrichment} readOnly={enrichmentReadOnly} />
 
           <Card>
             <CardHeader className="font-semibold">Build Instructions</CardHeader>
             <CardBody className="gap-3">
-              <InstructionStepForm
-                onAdd={(step) => {
-                  const existing = idea.build_instructions || [];
-                  patchIdea({ build_instructions: [...existing, { ...step, step: existing.length + 1 }] });
-                }}
-              />
+              {instructionsMode === 'editable' && (
+                <InstructionStepForm
+                  onAdd={(step) => {
+                    const existing = idea.build_instructions || [];
+                    patchIdea({ build_instructions: [...existing, { ...step, step: existing.length + 1 }] });
+                  }}
+                />
+              )}
               {(idea.build_instructions || []).length === 0 ? (
                 <p className="text-small text-default-400">No build instructions yet.</p>
               ) : (
@@ -308,19 +449,21 @@ export default function DetailPage() {
                         {s.title && <p className="font-medium text-foreground/80">{s.title}</p>}
                         {s.detail && <p className="whitespace-pre-wrap text-foreground/70">{s.detail}</p>}
                       </div>
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        variant="light"
-                        aria-label="Remove step"
-                        onPress={() =>
-                          patchIdea({
-                            build_instructions: (idea.build_instructions || []).filter((_, j) => j !== i),
-                          })
-                        }
-                      >
-                        <X size={15} />
-                      </Button>
+                      {instructionsMode === 'editable' && (
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          variant="light"
+                          aria-label="Remove step"
+                          onPress={() =>
+                            patchIdea({
+                              build_instructions: (idea.build_instructions || []).filter((_, j) => j !== i),
+                            })
+                          }
+                        >
+                          <X size={15} />
+                        </Button>
+                      )}
                     </li>
                   ))}
                 </ol>
@@ -329,12 +472,39 @@ export default function DetailPage() {
           </Card>
 
           <Card>
-            <CardHeader className="font-semibold">Planning</CardHeader>
-            <CardBody>
-              <p className="mb-2 text-tiny font-semibold uppercase tracking-wide text-default-400">
-                Materials
-              </p>
-              {materials.length ? (
+            <CardHeader className="font-semibold">Materials</CardHeader>
+            <CardBody className="gap-3">
+              {materials.length === 0 ? (
+                <p className="text-small text-default-400">No materials listed yet.</p>
+              ) : materialsMode === 'editable' ? (
+                <div className="flex flex-col gap-1">
+                  {materials.map((m, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <Checkbox
+                        isSelected={m.done}
+                        onValueChange={(checked) => {
+                          const next = materials.map((x, j) => (j === i ? { ...x, done: checked } : x));
+                          void patchIdea({ materials: next });
+                        }}
+                      >
+                        <span className={m.done ? 'text-default-400 line-through' : 'text-foreground/80'}>
+                          {m.name}
+                        </span>
+                      </Checkbox>
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        variant="light"
+                        aria-label="Remove material"
+                        className="ml-auto"
+                        onPress={() => patchIdea({ materials: materials.filter((_, j) => j !== i) })}
+                      >
+                        <X size={15} />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
                 <ul className="flex flex-col gap-1 text-small">
                   {materials.map((m, i) => (
                     <li key={i} className={m.done ? 'text-default-400 line-through' : 'text-foreground/80'}>
@@ -342,45 +512,78 @@ export default function DetailPage() {
                     </li>
                   ))}
                 </ul>
-              ) : (
-                <p className="text-small text-default-400">None listed</p>
+              )}
+              {materialsMode === 'editable' && (
+                <AddMaterial onAdd={(name) => patchIdea({ materials: [...materials, { name, done: false }] })} />
               )}
             </CardBody>
           </Card>
 
           {idea.status !== 'Considering' && (
-            <>
-              <Card>
-                <CardHeader className="font-semibold">Build</CardHeader>
-                <CardBody className="gap-2">
-                  <BuildField label="Prep Start" value={idea.prep_start} />
-                  <BuildField label="Build Start" value={idea.build_start} />
-                  <BuildField label="Build Complete" value={idea.build_complete} />
-                  <div className="flex justify-between text-small">
-                    <span className="text-default-500">Item ID</span>
-                    {idea.item_id ? (
-                      <Link href={`${ITEMS_BASE_URL}/items/${idea.item_id}`} isExternal size="sm">
-                        {idea.item_id}
-                      </Link>
-                    ) : (
-                      <span className="text-default-400">—</span>
-                    )}
-                  </div>
-                </CardBody>
-              </Card>
+            <Card>
+              <CardHeader className="font-semibold">Build</CardHeader>
+              <CardBody className="gap-2">
+                <BuildField label="Prep Start" value={idea.prep_start} />
+                <BuildField label="Build Start" value={idea.build_start} />
+                <BuildField label="Build Complete" value={idea.build_complete} />
+                <div className="flex justify-between text-small">
+                  <span className="text-default-500">Item ID</span>
+                  {idea.item_id ? (
+                    <Link href={`${ITEMS_BASE_URL}/items/${idea.item_id}`} isExternal size="sm">
+                      {idea.item_id}
+                    </Link>
+                  ) : (
+                    <span className="text-default-400">—</span>
+                  )}
+                </div>
+              </CardBody>
+            </Card>
+          )}
 
-              <Card>
-                <CardHeader className="flex items-center justify-between font-semibold">
-                  Costs
+          {sessionsMode !== 'hidden' && (
+            <Card>
+              <CardHeader className="font-semibold">Build Sessions</CardHeader>
+              <CardBody className="gap-3">
+                {sessionsMode === 'editable' && (
+                  <SessionForm
+                    onAdd={(session) => patchIdea({ build_sessions: [...(idea.build_sessions || []), session] })}
+                  />
+                )}
+                {sessions.length === 0 ? (
+                  <p className="text-small text-default-400">No sessions logged yet.</p>
+                ) : (
+                  <div className="flex flex-col divide-y divide-default-100">
+                    {sessions.map((s) => (
+                      <div key={s.session_id} className="flex flex-col gap-0.5 py-2">
+                        <div className="flex gap-3 text-small">
+                          <span className="font-medium text-foreground">{formatDate(s.date)}</span>
+                          {s.duration_min ? (
+                            <span className="text-default-400">{formatDuration(s.duration_min)}</span>
+                          ) : null}
+                        </div>
+                        {s.notes && <p className="text-small text-default-500">{s.notes}</p>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardBody>
+            </Card>
+          )}
+
+          {costsMode !== 'hidden' && (
+            <Card>
+              <CardHeader className="flex items-center justify-between font-semibold">
+                Costs
+                {costsMode === 'editable' && (
                   <Button size="sm" color="primary" onPress={() => setCostModalOpen(true)}>
                     + Log Cost
                   </Button>
-                </CardHeader>
-                <CardBody>
-                  <CostsSection ideaId={idea.id} refreshKey={costRefresh} />
-                </CardBody>
-              </Card>
-            </>
+                )}
+              </CardHeader>
+              <CardBody>
+                <CostsSection ideaId={idea.id} refreshKey={costRefresh} />
+              </CardBody>
+            </Card>
           )}
 
           <Card>
@@ -391,11 +594,35 @@ export default function DetailPage() {
                 entityId={idea.id}
                 season={(idea.season || 'shared').toLowerCase()}
                 photoType="inspiration"
-                noSetPrimary={locked}
-                enableUpload={!locked}
+                noSetPrimary={imagesMode !== 'editable' || locked}
+                enableUpload={imagesMode === 'editable' && !locked}
               />
             </CardBody>
           </Card>
+
+          {buildImagesMode !== 'hidden' && (
+            <Card>
+              <CardHeader className="flex items-center justify-between font-semibold">
+                Build Photos
+                {buildImagesMode === 'editable' && (
+                  <Button size="sm" variant="flat" onPress={addBuildPhotos}>
+                    + Add Build Photo
+                  </Button>
+                )}
+              </CardHeader>
+              <CardBody>
+                {buildPhotos.length === 0 ? (
+                  <p className="text-small text-default-400">No build photos yet.</p>
+                ) : (
+                  <PhotoLightbox
+                    photos={buildPhotos}
+                    className="grid grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-2"
+                    thumbnailClassName="aspect-square h-full w-full rounded-medium object-cover"
+                  />
+                )}
+              </CardBody>
+            </Card>
+          )}
         </div>
 
         {/* Sidebar */}
@@ -409,15 +636,9 @@ export default function DetailPage() {
               {idea.remaining_units != null && (
                 <SidebarField label="Remaining Units" value={String(idea.remaining_units)} />
               )}
-              <div className="flex flex-col gap-0.5">
+              <div className="flex flex-col gap-1">
                 <span className="text-default-500">Link</span>
-                {idea.link ? (
-                  <Link href={idea.link} isExternal size="sm" className="break-all">
-                    {idea.link}
-                  </Link>
-                ) : (
-                  <span className="text-default-400">—</span>
-                )}
+                <InlineEdit value={idea.link || ''} type="url" onSave={(v) => patchIdea({ link: v })} />
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-default-500">Tags</span>
@@ -449,12 +670,26 @@ export default function DetailPage() {
         </div>
       </div>
 
+      {/* Action bar (Workbench only) */}
+      {isWorkbench && (
+        <div className="mt-8 flex flex-wrap gap-3">
+          <Button color="primary" onPress={() => setWizardOpen(true)}>
+            Complete Build
+          </Button>
+          <Button color="danger" variant="flat" onPress={handleAbandon}>
+            Abandon Build
+          </Button>
+        </div>
+      )}
+
       <CostLogModal
         idea={idea}
         isOpen={costModalOpen}
         onClose={() => setCostModalOpen(false)}
         onSaved={() => setCostRefresh((n) => n + 1)}
       />
+      <BuildCompleteWizard idea={idea} isOpen={wizardOpen} onClose={() => navigate('/')} />
+      {editor}
     </div>
   );
 }
@@ -508,6 +743,106 @@ function InstructionStepForm({ onAdd }: { onAdd: (s: BuildInstructionStep) => vo
         </Button>
         <Button size="sm" color="primary" onPress={save}>
           Save Step
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function AddMaterial({ onAdd }: { onAdd: (name: string) => void }) {
+  const [value, setValue] = useState('');
+  function add() {
+    const name = value.trim();
+    if (!name) return;
+    onAdd(name);
+    setValue('');
+  }
+  return (
+    <div className="flex gap-2">
+      <Input
+        size="sm"
+        placeholder="Add material…"
+        value={value}
+        onValueChange={setValue}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            add();
+          }
+        }}
+      />
+      <Button size="sm" variant="flat" onPress={add}>
+        Add
+      </Button>
+    </div>
+  );
+}
+
+function SessionForm({ onAdd }: { onAdd: (s: BuildSession) => void }) {
+  const [open, setOpen] = useState(false);
+  const [date, setDate] = useState(todayIso());
+  const [duration, setDuration] = useState('');
+  const [notes, setNotes] = useState('');
+  const toast = useToast();
+
+  function reset() {
+    setDate(todayIso());
+    setDuration('');
+    setNotes('');
+  }
+
+  function save() {
+    if (!date) {
+      toast.showError('Date is required');
+      return;
+    }
+    const suffix = Math.random().toString(36).slice(2, 6);
+    const session: BuildSession = {
+      session_id: `sess-${date.replace(/-/g, '')}-${suffix}`,
+      date,
+      notes: notes.trim() || undefined,
+    };
+    if (duration.trim()) session.duration_min = parseInt(duration, 10);
+    onAdd(session);
+    reset();
+    setOpen(false);
+  }
+
+  if (!open) {
+    return (
+      <Button size="sm" variant="flat" className="w-fit" startContent={<Plus size={14} />} onPress={() => setOpen(true)}>
+        Add Session
+      </Button>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-3 rounded-medium bg-default-100 p-3">
+      <div className="flex gap-3">
+        <Input size="sm" type="date" label="Date" value={date} onValueChange={setDate} />
+        <Input
+          size="sm"
+          type="number"
+          label="Duration (min)"
+          placeholder="60"
+          value={duration}
+          onValueChange={setDuration}
+        />
+      </div>
+      <Textarea size="sm" label="Notes" minRows={2} value={notes} onValueChange={setNotes} />
+      <div className="flex justify-end gap-2">
+        <Button
+          size="sm"
+          variant="light"
+          onPress={() => {
+            reset();
+            setOpen(false);
+          }}
+        >
+          Cancel
+        </Button>
+        <Button size="sm" color="primary" onPress={save}>
+          Save Session
         </Button>
       </div>
     </div>

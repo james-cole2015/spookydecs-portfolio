@@ -228,9 +228,12 @@ function hasAnyResults(ae: AgentEnrichment): boolean {
 export function EnrichmentPanel({
   ideaId,
   initial,
+  readOnly = false,
 }: {
   ideaId: string;
   initial?: AgentEnrichment;
+  /** Suppress the "Ask Igor" / "Re-fetch" trigger buttons (matrix: agent_enrichment readonly). */
+  readOnly?: boolean;
 }) {
   const toast = useToast();
   const [ae, setAe] = useState<AgentEnrichment | undefined>(initial);
@@ -316,15 +319,17 @@ export function EnrichmentPanel({
                 Igor researches the web to gather reference photos, purchase links, materials, build
                 instructions, and a cost estimate for this idea.
               </p>
-              <Button
-                color="secondary"
-                startContent={<Wand2 size={16} />}
-                onPress={handleEnrich}
-                isLoading={starting}
-                className="w-fit"
-              >
-                Ask Igor
-              </Button>
+              {!readOnly && (
+                <Button
+                  color="secondary"
+                  startContent={<Wand2 size={16} />}
+                  onPress={handleEnrich}
+                  isLoading={starting}
+                  className="w-fit"
+                >
+                  Ask Igor
+                </Button>
+              )}
             </>
           )}
 
@@ -354,15 +359,17 @@ export function EnrichmentPanel({
             <>
               <div className="flex items-center justify-between">
                 <SubAgentPanel subAgents={ae.sub_agents} />
-                <Button
-                  size="sm"
-                  variant="bordered"
-                  startContent={<RefreshCw size={14} />}
-                  onPress={handleEnrich}
-                  isLoading={starting}
-                >
-                  Re-fetch
-                </Button>
+                {!readOnly && (
+                  <Button
+                    size="sm"
+                    variant="bordered"
+                    startContent={<RefreshCw size={14} />}
+                    onPress={handleEnrich}
+                    isLoading={starting}
+                  >
+                    Re-fetch
+                  </Button>
+                )}
               </div>
               {ae.photos?.length ? <PhotosBlock photos={ae.photos} /> : null}
               {ae.purchase_links?.length ? <LinksBlock links={ae.purchase_links} /> : null}
@@ -388,15 +395,17 @@ export function EnrichmentPanel({
               <p className="text-small text-danger">
                 Igor hit a snag — the response came back malformed. Try asking again.
               </p>
-              <Button
-                color="secondary"
-                startContent={<RefreshCw size={16} />}
-                onPress={handleEnrich}
-                isLoading={starting}
-                className="w-fit"
-              >
-                Re-fetch
-              </Button>
+              {!readOnly && (
+                <Button
+                  color="secondary"
+                  startContent={<RefreshCw size={16} />}
+                  onPress={handleEnrich}
+                  isLoading={starting}
+                  className="w-fit"
+                >
+                  Re-fetch
+                </Button>
+              )}
             </>
           )}
         </div>
