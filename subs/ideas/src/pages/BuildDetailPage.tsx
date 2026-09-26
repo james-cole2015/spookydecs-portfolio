@@ -221,10 +221,12 @@ export default function BuildDetailPage() {
             </CardBody>
           </Card>
 
-          {idea.build_instructions && idea.build_instructions.length > 0 && (
-            <Card>
-              <CardHeader className="font-semibold">Build Instructions</CardHeader>
-              <CardBody>
+          <Card>
+            <CardHeader className="font-semibold">Build Instructions</CardHeader>
+            <CardBody>
+              {!idea.build_instructions || idea.build_instructions.length === 0 ? (
+                <p className="text-small text-default-400">No build instructions yet.</p>
+              ) : (
                 <ol className="flex flex-col gap-2 text-small">
                   {idea.build_instructions.map((s, i) => (
                     <li key={i} className="flex gap-2">
@@ -236,9 +238,9 @@ export default function BuildDetailPage() {
                     </li>
                   ))}
                 </ol>
-              </CardBody>
-            </Card>
-          )}
+              )}
+            </CardBody>
+          </Card>
 
           <Card>
             <CardHeader className="font-semibold">Materials</CardHeader>
