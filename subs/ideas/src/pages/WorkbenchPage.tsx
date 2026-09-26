@@ -61,7 +61,7 @@ export default function WorkbenchPage() {
               subtitle="Active builds in the workshop."
               ideas={builds}
               countLabel={`${builds.length} / ${MAX_ACTIVE_BUILDS}`}
-              onOpen={(idea) => navigate(`/workbench/${idea.id}`)}
+              onOpen={(idea) => navigate(`/${idea.id}`)}
             />
           )}
           {planning.length > 0 && (
