@@ -686,27 +686,6 @@ export default function DetailPage() {
             </CardBody>
           </Card>
 
-          {idea.status !== 'Considering' && (
-            <Card>
-              <CardHeader className="font-semibold">Build</CardHeader>
-              <CardBody className="gap-2">
-                <BuildField label="Prep Start" value={idea.prep_start} />
-                <BuildField label="Build Start" value={idea.build_start} />
-                <BuildField label="Build Complete" value={idea.build_complete} />
-                <div className="flex justify-between text-small">
-                  <span className="text-default-500">Item ID</span>
-                  {idea.item_id ? (
-                    <Link href={`${ITEMS_BASE_URL}/items/${idea.item_id}`} isExternal size="sm">
-                      {idea.item_id}
-                    </Link>
-                  ) : (
-                    <span className="text-default-400">—</span>
-                  )}
-                </div>
-              </CardBody>
-            </Card>
-          )}
-
           {sessionsMode !== 'hidden' && (
             <Card>
               <CardHeader className="font-semibold">Build Sessions</CardHeader>
@@ -826,6 +805,22 @@ export default function DetailPage() {
               </div>
               {idea.bucket && <SidebarField label="Build Season" value={idea.bucket} />}
               <SidebarField label="Status" value={idea.status} />
+              {idea.status !== 'Considering' && (
+                <>
+                  <SidebarField label="Build Start" value={formatDate(idea.build_start) || '—'} />
+                  <SidebarField label="Build Complete" value={formatDate(idea.build_complete) || '—'} />
+                  <div className="flex justify-between">
+                    <span className="text-default-500">Item ID</span>
+                    {idea.item_id ? (
+                      <Link href={`${ITEMS_BASE_URL}/items/${idea.item_id}`} isExternal size="sm">
+                        {idea.item_id}
+                      </Link>
+                    ) : (
+                      <span className="text-default-400">—</span>
+                    )}
+                  </div>
+                </>
+              )}
               <div className="flex items-center justify-between">
                 <span className="text-default-500">Estimated Cost</span>
                 {fieldMode('estimated_cost', idea.status) === 'editable' ? (
@@ -1098,16 +1093,6 @@ function SessionForm({
   );
 }
 
-function BuildField({ label, value }: { label: string; value?: string }) {
-  return (
-    <div className="flex justify-between text-small">
-      <span className="text-default-500">{label}</span>
-      <span className={value ? 'text-foreground/80' : 'text-default-400'}>
-        {value ? formatDate(value) : '—'}
-      </span>
-    </div>
-  );
-}
 
 function SidebarField({ label, value }: { label: string; value: string }) {
   return (
