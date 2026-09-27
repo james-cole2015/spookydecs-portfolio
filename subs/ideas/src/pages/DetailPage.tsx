@@ -435,17 +435,15 @@ export default function DetailPage() {
             <CardHeader className="flex items-center justify-between gap-3 font-semibold">
               <span>Build Instructions</span>
               {totalSteps > 0 && (
-                <div className="flex w-32 items-center gap-2 text-tiny font-normal text-default-500">
+                <div className="flex w-56 items-center gap-2 text-small font-normal text-default-500">
                   <Progress
                     aria-label="Build progress"
-                    size="sm"
+                    size="md"
                     value={doneSteps}
                     maxValue={totalSteps}
                     className="flex-1"
                   />
-                  <span>
-                    {doneSteps}/{totalSteps}
-                  </span>
+                  <span>{Math.round((doneSteps / totalSteps) * 100)}%</span>
                 </div>
               )}
             </CardHeader>
