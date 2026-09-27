@@ -204,9 +204,10 @@ export default function DetailPage() {
       } catch (err) {
         toast.showError('Failed: ' + (err as Error).message);
       }
-    } else {
-      navigate(`/${idea.id}/edit`);
     }
+    // "Go Back and Edit" (or dismiss) — no navigation. build_instructions has no
+    // editor on the /edit FormPage; the inline step editor further down this same
+    // page is the only place to fix it, so staying put is the correct behavior.
   }
 
   async function handleAbandon() {
