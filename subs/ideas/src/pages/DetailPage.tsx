@@ -452,25 +452,17 @@ export default function DetailPage() {
                       (b.date || '').localeCompare(a.date || ''),
                     )[0];
                     return (
-                      <li key={s.step_id || i} className="flex gap-2">
-                        <span className="font-medium text-foreground">{s.step ?? i + 1}.</span>
-                        <div className="flex-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            {s.title && <p className="font-medium text-foreground/80">{s.title}</p>}
-                            <StepStatusChip status={s.status} />
-                          </div>
-                          {s.detail && <p className="whitespace-pre-wrap text-foreground/70">{s.detail}</p>}
-                          {stepSessions.length > 0 && (
-                            <p className="text-tiny text-default-400">
-                              {stepSessions.length} session{stepSessions.length === 1 ? '' : 's'} logged
-                              {lastSession && ` · last ${formatDate(lastSession.date)}`}
-                            </p>
+                      <li key={s.step_id || i} className="flex items-start gap-2">
+                        <span className="pt-1 font-medium text-foreground">{s.step ?? i + 1}.</span>
+                        <div className="flex flex-1 flex-wrap items-center gap-2">
+                          {s.title && (
+                            <p className="min-w-0 flex-1 break-words font-medium text-foreground/80">{s.title}</p>
                           )}
-                          {instructionsMode === 'editable' && (
+                          {instructionsMode === 'editable' ? (
                             <Select
                               size="sm"
                               aria-label="Step status"
-                              className="mt-2 max-w-40"
+                              className="w-36 shrink-0"
                               selectedKeys={[s.status ?? 'pending']}
                               disallowEmptySelection
                               onChange={(e) => {
@@ -485,6 +477,17 @@ export default function DetailPage() {
                                 <SelectItem key={st}>{st.replace('_', ' ')}</SelectItem>
                               ))}
                             </Select>
+                          ) : (
+                            <StepStatusChip status={s.status} />
+                          )}
+                          {s.detail && (
+                            <p className="w-full whitespace-pre-wrap text-foreground/70">{s.detail}</p>
+                          )}
+                          {stepSessions.length > 0 && (
+                            <p className="w-full text-tiny text-default-400">
+                              {stepSessions.length} session{stepSessions.length === 1 ? '' : 's'} logged
+                              {lastSession && ` · last ${formatDate(lastSession.date)}`}
+                            </p>
                           )}
                         </div>
                         {instructionsMode === 'editable' && (
