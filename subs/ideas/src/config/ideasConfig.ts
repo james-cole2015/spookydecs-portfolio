@@ -135,6 +135,15 @@ export interface BuildInstructionStep {
   status?: StepStatus; // default 'pending'
 }
 
+// Response shape of POST /ideas/{id}/review-instructions (#598, advisory
+// Bedrock quality check). Not persisted on the idea — ephemeral, one call
+// per Move-to-Workbench click.
+export interface InstructionReviewResult {
+  sufficient: boolean;
+  overall_feedback: string | null;
+  step_feedback: { step_id: string; issue: string }[];
+}
+
 export interface EnrichmentPhoto {
   url: string;
   alt?: string;

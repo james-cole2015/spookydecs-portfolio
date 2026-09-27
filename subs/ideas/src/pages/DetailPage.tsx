@@ -19,7 +19,15 @@ import {
   type LightboxPhoto,
   useConfirm,
 } from '@spookydecs/ui';
-import { getIdea, updateIdea, deleteIdea, listIdeas, previewIdeaCascade, getIdeaPhotos } from '../api/ideasApi';
+import {
+  getIdea,
+  updateIdea,
+  deleteIdea,
+  listIdeas,
+  previewIdeaCascade,
+  getIdeaPhotos,
+  reviewBuildInstructions,
+} from '../api/ideasApi';
 import {
   ITEMS_BASE_URL,
   MAX_ACTIVE_BUILDS,
@@ -29,6 +37,7 @@ import {
   type BuildInstructionStep,
   type BuildSession,
   type StepStatus,
+  type InstructionReviewResult,
   STEP_STATUSES,
 } from '../config/ideasConfig';
 import { fieldMode, missingGateLabels } from '../config/fieldAvailability';
@@ -57,6 +66,7 @@ export default function DetailPage() {
   const [costRefresh, setCostRefresh] = useState(0);
   const [activeBuildCount, setActiveBuildCount] = useState<number | null>(null);
   const [buildPhotos, setBuildPhotos] = useState<LightboxPhoto[]>([]);
+  const [reviewingInstructions, setReviewingInstructions] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
 
   const loadBuildPhotos = useCallback(async () => {
@@ -134,6 +144,68 @@ export default function DetailPage() {
       }
     } catch (err) {
       toast.showError('Failed: ' + (err as Error).message);
+    }
+  }
+
+  // Advisory AI quality check (#598) on the Planning->Workbench edge only — the
+  // Workbench-internal pipeline strip (advanceTo) is untouched. Fails open: any
+  // thrown error or sufficient===true falls straight through to the normal
+  // transition, exactly as if this check didn't exist.
+  async function handleMoveToWorkbench() {
+    if (!idea) return;
+    let result: InstructionReviewResult | null = null;
+    setReviewingInstructions(true);
+    try {
+      result = await reviewBuildInstructions(idea.id);
+    } catch {
+      result = null; // fail open — a network blip must never block a real transition
+    } finally {
+      setReviewingInstructions(false);
+    }
+
+    if (!result || result.sufficient) {
+      await transition(
+        'Workbench',
+        'Move to Workbench',
+        `Move "${idea.title}" to the Workbench? It will be tracked as an active build.`,
+      );
+      return;
+    }
+
+    const flagged = result.step_feedback
+      .map((f) => ({ ...f, step: idea.build_instructions?.find((s) => s.step_id === f.step_id) }))
+      .filter((f) => f.step);
+    const body = (
+      <div className="flex flex-col gap-2">
+        <p>{result.overall_feedback}</p>
+        {flagged.length > 0 && (
+          <ul className="list-disc pl-5 text-small">
+            {flagged.map((f) => (
+              <li key={f.step_id}>
+                <strong>{f.step!.title || `Step ${f.step!.step}`}:</strong> {f.issue}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+    const proceed = await confirm({
+      title: 'Build Instructions May Be Thin',
+      body,
+      confirmLabel: 'Proceed Anyway',
+      cancelLabel: 'Go Back and Edit',
+    });
+    if (proceed) {
+      try {
+        await updateIdea({ ...idea, status: 'Workbench' });
+        toast.showSuccess('Moved to Workbench');
+        const refreshed = await getIdea(idea.id);
+        if (refreshed) setIdea(refreshed);
+      } catch (err) {
+        toast.showError('Failed: ' + (err as Error).message);
+      }
+    } else {
+      navigate(`/${idea.id}/edit`);
     }
   }
 
@@ -363,13 +435,8 @@ export default function DetailPage() {
                   variant="flat"
                   endContent={<ArrowRight size={15} />}
                   isDisabled={workbenchGateMissing.length > 0 || atBuildCap}
-                  onPress={() =>
-                    transition(
-                      'Workbench',
-                      'Move to Workbench',
-                      `Move "${idea.title}" to the Workbench? It will be tracked as an active build.`,
-                    )
-                  }
+                  isLoading={reviewingInstructions}
+                  onPress={handleMoveToWorkbench}
                 >
                   {atBuildCap ? `Build Limit Reached (${MAX_ACTIVE_BUILDS}/${MAX_ACTIVE_BUILDS})` : 'Move to Workbench'}
                 </Button>

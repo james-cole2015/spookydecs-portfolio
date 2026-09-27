@@ -87,6 +87,17 @@ export async function startEnrichment(id: string): Promise<any> {
   return await handleResponse(response);
 }
 
+// POST /ideas/{id}/review-instructions — advisory Bedrock quality check on
+// build_instructions (#598), synchronous, fires once per Move-to-Workbench click.
+export async function reviewBuildInstructions(id: string): Promise<any> {
+  const endpoint = await getEndpoint();
+  const response = await fetch(`${endpoint}/${encodeURIComponent(id)}/review-instructions`, {
+    method: 'POST',
+    headers: auth().buildHeaders(),
+  });
+  return await handleResponse(response);
+}
+
 // POST create new idea
 export async function createIdea(body: Partial<Idea>): Promise<any> {
   const endpoint = await getEndpoint();
