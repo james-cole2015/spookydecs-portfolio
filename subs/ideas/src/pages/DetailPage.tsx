@@ -539,8 +539,23 @@ export default function DetailPage() {
                       <li key={s.step_id || i} className="flex items-start gap-2">
                         <span className="pt-1 font-medium text-foreground">{s.step ?? i + 1}.</span>
                         <div className="flex flex-1 flex-wrap items-center gap-2">
-                          {s.title && (
-                            <p className="min-w-0 flex-1 break-words font-medium text-foreground/80">{s.title}</p>
+                          {instructionsMode === 'editable' ? (
+                            <div className="min-w-0 flex-1 font-medium text-foreground/80">
+                              <InlineEdit
+                                value={s.title || ''}
+                                placeholder="Click to add a title…"
+                                onSave={(v) => {
+                                  const next = (idea.build_instructions || []).map((step, j) =>
+                                    j === i ? { ...step, title: v } : step,
+                                  );
+                                  return patchIdea({ build_instructions: next });
+                                }}
+                              />
+                            </div>
+                          ) : (
+                            s.title && (
+                              <p className="min-w-0 flex-1 break-words font-medium text-foreground/80">{s.title}</p>
+                            )
                           )}
                           {instructionsMode === 'editable' ? (
                             <Select
@@ -564,8 +579,24 @@ export default function DetailPage() {
                           ) : (
                             <StepStatusChip status={s.status} />
                           )}
-                          {s.detail && (
-                            <p className="w-full whitespace-pre-wrap text-foreground/70">{s.detail}</p>
+                          {instructionsMode === 'editable' ? (
+                            <div className="w-full text-foreground/70">
+                              <InlineEdit
+                                value={s.detail || ''}
+                                type="textarea"
+                                placeholder="Click to add detail…"
+                                onSave={(v) => {
+                                  const next = (idea.build_instructions || []).map((step, j) =>
+                                    j === i ? { ...step, detail: v } : step,
+                                  );
+                                  return patchIdea({ build_instructions: next });
+                                }}
+                              />
+                            </div>
+                          ) : (
+                            s.detail && (
+                              <p className="w-full whitespace-pre-wrap text-foreground/70">{s.detail}</p>
+                            )
                           )}
                           {stepSessions.length > 0 && (
                             <p className="w-full text-tiny text-default-400">
