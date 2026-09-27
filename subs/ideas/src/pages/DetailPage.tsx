@@ -5,8 +5,8 @@
 // former BuildDetailPage.tsx (deleted).
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Button, Card, CardBody, CardHeader, Checkbox, Chip, Input, Link, Progress, Select, SelectItem, Textarea } from '@heroui/react';
-import { Pencil, Plus, Trash2, ArrowRight, X } from 'lucide-react';
+import { Button, Card, CardBody, CardHeader, Checkbox, Input, Link, Progress, Select, SelectItem, Textarea } from '@heroui/react';
+import { Plus, Trash2, ArrowRight, X } from 'lucide-react';
 import {
   LoadingState,
   ErrorState,
@@ -33,6 +33,7 @@ import {
   MAX_ACTIVE_BUILDS,
   PIPELINE_STAGES,
   SEASON_PLACEHOLDERS,
+  SEASONS,
   type Idea,
   type BuildInstructionStep,
   type BuildSession,
@@ -47,6 +48,8 @@ import { EnrichmentPanel } from '../components/EnrichmentPanel';
 import { CostsSection } from '../components/CostsSection';
 import { CostLogModal } from '../components/CostLogModal';
 import { InlineEdit } from '../components/InlineEdit';
+import { InlineSelectEdit } from '../components/InlineSelectEdit';
+import { InlineTagsEdit } from '../components/InlineTagsEdit';
 import { BuildCompleteWizard } from '../components/BuildCompleteWizard';
 
 const todayIso = () => new Date().toISOString().slice(0, 10);
@@ -395,18 +398,25 @@ export default function DetailPage() {
           </div>
         )}
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-2xl font-semibold text-foreground">{idea.title}</h1>
+          {fieldMode('title', idea.status) === 'editable' ? (
+            <div className="min-w-0 flex-1">
+              <InlineEdit
+                value={idea.title}
+                displayClassName="text-2xl font-semibold text-foreground"
+                onSave={(v) => {
+                  const next = v.trim();
+                  if (!next) {
+                    toast.showError('Title cannot be empty');
+                    return Promise.resolve();
+                  }
+                  return patchIdea({ title: next });
+                }}
+              />
+            </div>
+          ) : (
+            <h1 className="text-2xl font-semibold text-foreground">{idea.title}</h1>
+          )}
           <div className="flex flex-wrap gap-2">
-            {!locked && (
-              <Button
-                size="sm"
-                variant="flat"
-                startContent={<Pencil size={15} />}
-                onPress={() => navigate(`/${idea.id}/edit`)}
-              >
-                Edit
-              </Button>
-            )}
             {idea.status === 'Considering' && (
               <Button
                 size="sm"
@@ -806,29 +816,61 @@ export default function DetailPage() {
           <Card>
             <CardHeader className="font-semibold">Info</CardHeader>
             <CardBody className="gap-3 text-small">
-              <SidebarField label="Season" value={idea.season} />
+              <div className="flex items-center justify-between">
+                <span className="text-default-500">Season</span>
+                <InlineSelectEdit
+                  value={idea.season}
+                  options={SEASONS}
+                  onSave={(v) => patchIdea({ season: v })}
+                />
+              </div>
               {idea.bucket && <SidebarField label="Build Season" value={idea.bucket} />}
               <SidebarField label="Status" value={idea.status} />
-              {idea.remaining_units != null && (
-                <SidebarField label="Remaining Units" value={String(idea.remaining_units)} />
-              )}
+              <div className="flex items-center justify-between">
+                <span className="text-default-500">Estimated Cost</span>
+                {fieldMode('estimated_cost', idea.status) === 'editable' ? (
+                  <InlineEdit
+                    value={idea.estimated_cost != null ? String(idea.estimated_cost) : ''}
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="$0.00"
+                    displayClassName="text-foreground/80"
+                    onSave={(v) =>
+                      patchIdea({ estimated_cost: v.trim() === '' ? null : parseFloat(v) })
+                    }
+                  />
+                ) : (
+                  <span className="text-foreground/80">
+                    {idea.estimated_cost != null ? `$${idea.estimated_cost}` : '—'}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-default-500">Remaining Units</span>
+                {fieldMode('remaining_units', idea.status) === 'editable' ? (
+                  <InlineEdit
+                    value={idea.remaining_units != null ? String(idea.remaining_units) : ''}
+                    type="number"
+                    min="0"
+                    step="1"
+                    placeholder="—"
+                    displayClassName="text-foreground/80"
+                    onSave={(v) =>
+                      patchIdea({ remaining_units: v.trim() === '' ? null : parseInt(v, 10) })
+                    }
+                  />
+                ) : (
+                  <span className="text-foreground/80">{idea.remaining_units ?? '—'}</span>
+                )}
+              </div>
               <div className="flex flex-col gap-1">
                 <span className="text-default-500">Link</span>
                 <InlineEdit value={idea.link || ''} type="url" onSave={(v) => patchIdea({ link: v })} />
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-default-500">Tags</span>
-                {idea.tags?.length ? (
-                  <div className="flex flex-wrap gap-1">
-                    {idea.tags.map((t) => (
-                      <Chip key={t} size="sm" variant="flat">
-                        {t}
-                      </Chip>
-                    ))}
-                  </div>
-                ) : (
-                  <span className="text-default-400">None</span>
-                )}
+                <InlineTagsEdit tags={idea.tags || []} onSave={(next) => patchIdea({ tags: next })} />
               </div>
               <div className="flex flex-col gap-0.5">
                 <span className="text-default-500">ID</span>

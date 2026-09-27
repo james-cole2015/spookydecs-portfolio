@@ -21,6 +21,13 @@ function WorkbenchIdRedirect() {
   return <Navigate to={`/${id}`} replace />;
 }
 
+// #601: FormPage is create-only now — editing happens inline on DetailPage.
+// Keep old /:id/edit deep links resolving to the idea instead of 404ing.
+function EditRedirect() {
+  const { id } = useParams<{ id: string }>();
+  return <Navigate to={`/${id}`} replace />;
+}
+
 export default function App() {
   return (
     <>
@@ -42,7 +49,7 @@ export default function App() {
             <Route path="/acquisitions/create" element={<AcquisitionFormPage />} />
             <Route path="/acquisitions/:id/edit" element={<AcquisitionFormPage />} />
             <Route path="/acquisitions/:id" element={<AcquisitionDetailPage />} />
-            <Route path="/:id/edit" element={<FormPage />} />
+            <Route path="/:id/edit" element={<EditRedirect />} />
             <Route path="/:id" element={<DetailPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
