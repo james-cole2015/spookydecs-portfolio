@@ -5,7 +5,7 @@
 // former BuildDetailPage.tsx (deleted).
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Button, Card, CardBody, CardHeader, Checkbox, Chip, Input, Link, Select, SelectItem, Textarea } from '@heroui/react';
+import { Button, Card, CardBody, CardHeader, Checkbox, Chip, Input, Link, Progress, Select, SelectItem, Textarea } from '@heroui/react';
 import { Pencil, Plus, Trash2, ArrowRight, X } from 'lucide-react';
 import {
   LoadingState,
@@ -234,6 +234,8 @@ export default function DetailPage() {
   const sessions = [...(idea.build_sessions || [])].sort((a, b) =>
     (b.date || '').localeCompare(a.date || ''),
   );
+  const totalSteps = (idea.build_instructions || []).length;
+  const doneSteps = (idea.build_instructions || []).filter((s) => s.status === 'done').length;
   const currentPipelineIdx = PIPELINE_STAGES.indexOf(idea.status);
 
   const descriptionMode = fieldMode('description', idea.status);
@@ -430,7 +432,23 @@ export default function DetailPage() {
           <EnrichmentPanel ideaId={idea.id} initial={idea.agent_enrichment} readOnly={enrichmentReadOnly} />
 
           <Card>
-            <CardHeader className="font-semibold">Build Instructions</CardHeader>
+            <CardHeader className="flex items-center justify-between gap-3 font-semibold">
+              <span>Build Instructions</span>
+              {totalSteps > 0 && (
+                <div className="flex w-32 items-center gap-2 text-tiny font-normal text-default-500">
+                  <Progress
+                    aria-label="Build progress"
+                    size="sm"
+                    value={doneSteps}
+                    maxValue={totalSteps}
+                    className="flex-1"
+                  />
+                  <span>
+                    {doneSteps}/{totalSteps}
+                  </span>
+                </div>
+              )}
+            </CardHeader>
             <CardBody className="gap-3">
               {instructionsMode === 'editable' && (
                 <InstructionStepForm
