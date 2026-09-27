@@ -11,11 +11,17 @@ export function InlineEdit({
   type = 'text',
   placeholder = 'Click to add…',
   onSave,
+  displayClassName,
+  min,
+  step,
 }: {
   value: string;
-  type?: 'text' | 'textarea' | 'url';
+  type?: 'text' | 'textarea' | 'url' | 'number';
   placeholder?: string;
   onSave: (next: string) => Promise<void>;
+  displayClassName?: string;
+  min?: string;
+  step?: string;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -58,7 +64,9 @@ export function InlineEdit({
     return (
       <Input
         {...common}
-        type={type === 'url' ? 'url' : 'text'}
+        type={type === 'url' ? 'url' : type === 'number' ? 'number' : 'text'}
+        min={type === 'number' ? min : undefined}
+        step={type === 'number' ? step : undefined}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
@@ -100,7 +108,7 @@ export function InlineEdit({
           {value}
         </Link>
       ) : (
-        <span className="whitespace-pre-wrap text-small text-foreground/80">{value}</span>
+        <span className={displayClassName ?? 'whitespace-pre-wrap text-small text-foreground/80'}>{value}</span>
       )}
     </div>
   );
