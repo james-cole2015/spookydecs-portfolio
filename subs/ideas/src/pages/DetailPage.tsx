@@ -17,6 +17,7 @@ import {
   useToast,
   usePhotoUpload,
   type LightboxPhoto,
+  type PhotoGalleryPhoto,
   useConfirm,
 } from '@spookydecs/ui';
 import {
@@ -69,6 +70,7 @@ export default function DetailPage() {
   const [costRefresh, setCostRefresh] = useState(0);
   const [activeBuildCount, setActiveBuildCount] = useState<number | null>(null);
   const [buildPhotos, setBuildPhotos] = useState<LightboxPhoto[]>([]);
+  const [inspirationPhotos, setInspirationPhotos] = useState<PhotoGalleryPhoto[]>([]);
   const [reviewingInstructions, setReviewingInstructions] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
@@ -87,6 +89,7 @@ export default function DetailPage() {
     setLoading(true);
     setError('');
     setNotFound(false);
+    setInspirationPhotos([]);
     getIdea(id!)
       .then((fetched) => {
         if (!fetched) {
@@ -309,10 +312,23 @@ export default function DetailPage() {
   const isBuilt = idea.status === 'Built';
   const isWorkbench = idea.status === 'Workbench';
   const locked = isBuilt && !!idea.item_id;
-  const hero = heroImageUrl(idea.images, idea.link);
+  // Photo-service is the source of truth for the hero: prefer its primary photo
+  // (set via the Photos card), then fall back to the legacy idea.images field, then
+  // the YouTube-link thumbnail (#606 — idea.images is never written by the frontend).
+  const inspirationPrimary = inspirationPhotos.find((p) => p.is_primary) ?? inspirationPhotos[0] ?? null;
+  const hero =
+    inspirationPrimary?.cloudfront_url ||
+    inspirationPrimary?.thumb_cloudfront_url ||
+    heroImageUrl(idea.images, idea.link);
   const placeholder = SEASON_PLACEHOLDERS[(idea.season || 'shared').toLowerCase()] || SEASON_PLACEHOLDERS.shared;
-  const images = idea.images || [];
-  const lbPhotos: LightboxPhoto[] = images.map((url) => ({ url }));
+  // Same photo-service source as the hero — falls back to legacy idea.images only
+  // for old records that predate the Photos card (#606).
+  const lbPhotos: LightboxPhoto[] = inspirationPhotos.length
+    ? inspirationPhotos.map((p) => ({
+        url: p.cloudfront_url || p.thumb_cloudfront_url || '',
+        thumbUrl: p.thumb_cloudfront_url || p.cloudfront_url,
+      }))
+    : (idea.images || []).map((url) => ({ url }));
   const materials = normalizeMaterials(idea.materials);
   const sessions = [...(idea.build_sessions || [])].sort((a, b) =>
     (b.date || '').localeCompare(a.date || ''),
@@ -352,7 +368,7 @@ export default function DetailPage() {
           )}
         </div>
       </Card>
-      {images.length > 1 && (
+      {lbPhotos.length > 1 && (
         <PhotoLightbox
           photos={lbPhotos}
           className="mb-6 grid grid-cols-[repeat(auto-fill,minmax(80px,1fr))] gap-2"
@@ -768,6 +784,7 @@ export default function DetailPage() {
                 photoType="inspiration"
                 noSetPrimary={imagesMode !== 'editable' || locked}
                 enableUpload={imagesMode === 'editable' && !locked}
+                onPhotosChange={setInspirationPhotos}
               />
             </CardBody>
           </Card>
