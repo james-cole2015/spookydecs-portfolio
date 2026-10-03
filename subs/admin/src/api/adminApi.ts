@@ -294,7 +294,7 @@ export async function createOutlet(
   return result.data?.confirmation || null;
 }
 
-/** A zone receptacle (outlet) item, as returned by GET /items?class=Receptacle. */
+/** A zone receptacle (outlet) item, as returned by GET /items. */
 export interface Outlet {
   id: string;
   short_name: string;
@@ -302,23 +302,17 @@ export interface Outlet {
   female_ends?: number;
 }
 
-/**
- * List existing zone receptacles (outlets), for the read-only "Existing
- * Outlets" section on AddOutletPage (#613) — lets the user spot a duplicate
- * before registering a new one. Sourced from GET /items filtered server-side
- * to class=Receptacle; no dedicated route.
- */
-export async function listOutlets(): Promise<Outlet[] | null> {
+async function fetchItemsBy(params: Record<string, string>): Promise<Outlet[]> {
   const config = await window.SpookyConfig.get();
-  const params = new URLSearchParams({ class: 'Receptacle' });
+  const query = new URLSearchParams(params);
 
-  const response = await fetch(`${config.API_ENDPOINT}/items?${params}`, {
+  const response = await fetch(`${config.API_ENDPOINT}/items?${query}`, {
     headers: buildHeaders(),
   });
 
   if (response.status === 401) {
     await redirectToLogin();
-    return null;
+    return [];
   }
 
   if (!response.ok) {
@@ -332,6 +326,29 @@ export async function listOutlets(): Promise<Outlet[] | null> {
   }
 
   return result.data?.items || [];
+}
+
+/**
+ * List existing zone receptacles (outlets), for the read-only "Existing
+ * Outlets" section on AddOutletPage (#613) — lets the user spot a duplicate
+ * before registering a new one. No dedicated route; sourced from GET /items.
+ *
+ * Two shapes exist for "a receptacle" in this data (tracked as a cleanup
+ * issue, see #613 notes): legacy/seeded items use class=Accessory +
+ * class_type=Receptacle, while items created via this sub's Add Outlet form
+ * (#582) use class=Receptacle + class_type=Outlet. The backend ANDs class/
+ * class_type in one query, so there's no single filter that catches both —
+ * query each shape separately and merge, deduping by id.
+ */
+export async function listOutlets(): Promise<Outlet[] | null> {
+  const [legacy, current] = await Promise.all([
+    fetchItemsBy({ class_type: 'Receptacle' }),
+    fetchItemsBy({ class: 'Receptacle' }),
+  ]);
+
+  const byId = new Map<string, Outlet>();
+  for (const item of [...legacy, ...current]) byId.set(item.id, item);
+  return Array.from(byId.values());
 }
 
 /**
