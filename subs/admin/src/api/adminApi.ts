@@ -294,6 +294,46 @@ export async function createOutlet(
   return result.data?.confirmation || null;
 }
 
+/** A zone receptacle (outlet) item, as returned by GET /items?class=Receptacle. */
+export interface Outlet {
+  id: string;
+  short_name: string;
+  zone_code: string;
+  female_ends?: number;
+}
+
+/**
+ * List existing zone receptacles (outlets), for the read-only "Existing
+ * Outlets" section on AddOutletPage (#613) — lets the user spot a duplicate
+ * before registering a new one. Sourced from GET /items filtered server-side
+ * to class=Receptacle; no dedicated route.
+ */
+export async function listOutlets(): Promise<Outlet[] | null> {
+  const config = await window.SpookyConfig.get();
+  const params = new URLSearchParams({ class: 'Receptacle' });
+
+  const response = await fetch(`${config.API_ENDPOINT}/items?${params}`, {
+    headers: buildHeaders(),
+  });
+
+  if (response.status === 401) {
+    await redirectToLogin();
+    return null;
+  }
+
+  if (!response.ok) {
+    throw new Error(`Failed to list outlets: ${response.status}`);
+  }
+
+  const result = await response.json();
+
+  if (!result.success) {
+    throw new Error(result.error || 'Failed to list outlets');
+  }
+
+  return result.data?.items || [];
+}
+
 /**
  * Submit the full conversation to Iris (multi-turn POST /iris/chat). Sends the
  * `messages` array, handles the 401 redirect + error states, and returns
