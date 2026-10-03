@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inspector Gadget — Resolution Pipeline | SpookyDecs</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['Fira Code', 'monospace'] },
+          colors: {
+            brand: { DEFAULT: '#FF9900', dark: '#cc7a00', light: '#ffb833' },
+            surface: { 1: '#0d0d12', 2: '#13131a', 3: '#1a1a24', 4: '#22222f' },
+          },
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="bg-surface-1 text-gray-100 font-sans antialiased">
+
+  <!-- NAV -->
+  <nav class="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-surface-1/90 backdrop-blur-md">
+    <div class="max-w-4xl mx-auto px-6 flex items-center justify-between h-14">
+      <a href="index.html" class="text-brand font-bold tracking-tight text-lg">SpookyDecs</a>
+      <a href="index.html#subsystems" class="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-1.5">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        Back to Subsystems
+      </a>
+    </div>
+  </nav>
+
+  <main class="max-w-4xl mx-auto px-6 pt-32 pb-24">
+    <div class="section-label">Inspector · AI</div>
+    <h1 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mb-4">Inspector Gadget — A Deterministic AI Resolution Pipeline</h1>
+    <p class="text-gray-400 text-base leading-relaxed max-w-2xl">
+      Inspector runs continuous data-quality checks across the whole inventory — a missing field, an
+      orphaned photo, a relationship that no longer makes sense. What makes it a portfolio centerpiece
+      isn't the checks themselves; it's the three-stage pipeline that turns a detected problem into a
+      resolved one, where an AI model decides <em class="not-italic text-gray-300">what</em> to do but
+      never gets to decide <em class="not-italic text-gray-300">whether</em> it's safe to do it.
+    </p>
+
+    <!-- Pipeline stepper -->
+    <div class="mt-16 grid gap-4">
+
+      <div class="lifecycle-step">
+        <div class="lifecycle-num">1</div>
+        <div>
+          <h3 class="lifecycle-title">Detect</h3>
+          <p class="lifecycle-desc">Rule-based checks — no AI involved — continuously scan active records against configured rules: a required field left blank, a reference pointing at a record that no longer exists, a duplicate that shouldn't be there. Anything that trips a rule is published as a violation.</p>
+        </div>
+      </div>
+
+      <div class="lifecycle-step">
+        <div class="lifecycle-num">2</div>
+        <div>
+          <h3 class="lifecycle-title">Enrich <span class="text-brand text-xs font-mono ml-1">Bedrock · Claude Sonnet</span></h3>
+          <p class="lifecycle-desc">An AI agent picks up the violation and investigates — pulling context from across the inventory using a set of read-only tools, the same way a person would dig through related records before deciding what to do. It writes up its reasoning and stages a specific, concrete fix. Critically, the agent never touches the data itself here — it only proposes.</p>
+        </div>
+      </div>
+
+      <div class="lifecycle-step">
+        <div class="lifecycle-num">3</div>
+        <div>
+          <h3 class="lifecycle-title">Execute <span class="text-gray-500 text-xs font-mono ml-1">deterministic — no AI</span></h3>
+          <p class="lifecycle-desc">A separate, ordinary function picks up the staged fix, runs a set of safety checks against it, and — only if those checks pass — applies the exact change the agent proposed. This function has no model in the loop at all; it's plain code making a yes/no call on a plan someone else already wrote.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Notable decision -->
+    <div class="mt-16 rounded-xl border border-brand/25 bg-brand/5 p-6">
+      <div class="text-xs font-mono text-brand mb-2 uppercase tracking-wide">Notable decision</div>
+      <p class="text-gray-300 text-sm leading-relaxed">
+        The tempting design is to let the AI agent make the fix directly — one fewer moving part.
+        Inspector deliberately doesn't do that. Splitting "decide what to do" from "decide whether it's
+        safe and do it" means every single write to inventory data is made by ordinary, auditable code —
+        never by a model call. The AI's judgment is still the thing that makes the fix smart, but a
+        non-AI gatekeeper is what makes it safe to run unattended.
+      </p>
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-white/5 py-12 px-6">
+    <div class="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div>
+        <div class="font-bold text-white text-lg">SpookyDecs</div>
+        <div class="text-gray-600 text-sm mt-0.5">Serverless holiday decoration management</div>
+      </div>
+      <a href="index.html#subsystems" class="text-gray-400 hover:text-brand transition-colors text-sm">← Back to Subsystems</a>
+    </div>
+  </footer>
+
+  <style>
+    .lifecycle-step {
+      display: flex;
+      gap: 1.25rem;
+      padding: 1.5rem;
+      border-radius: 0.75rem;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02);
+    }
+    .lifecycle-num {
+      flex-shrink: 0;
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 999px;
+      background: rgba(255,153,0,0.1);
+      border: 1px solid rgba(255,153,0,0.3);
+      color: #FF9900;
+      font-weight: 700;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .lifecycle-title { font-size: 1.05rem; font-weight: 700; color: #e5e7eb; margin-bottom: 0.35rem; }
+    .lifecycle-desc { font-size: 0.875rem; color: #9ca3af; line-height: 1.65; }
+  </style>
+</body>
+</html>

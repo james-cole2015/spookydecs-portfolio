@@ -6,6 +6,7 @@
  * item create fires the finance/items sync event downstream.
  */
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Modal,
   ModalContent,
@@ -20,7 +21,7 @@ import {
   Checkbox,
   Link,
 } from '@heroui/react';
-import { createItem, updateIdea, getIdeaCosts } from '../api/ideasApi';
+import { createItem, createIdea, updateIdea, getIdeaCosts } from '../api/ideasApi';
 import { CLASS_TYPES, ITEMS_BASE_URL, type Idea } from '../config/ideasConfig';
 import { formatDate } from '../lib/format';
 
@@ -72,6 +73,7 @@ export function BuildCompleteWizard({
   onClose: () => void;
 }) {
   const MAX_UNITS = 20;
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [completeDate, setCompleteDate] = useState(idea.build_complete || todayIso());
   const [units, setUnits] = useState('1');
@@ -86,6 +88,11 @@ export function BuildCompleteWizard({
   const [submitting, setSubmitting] = useState(false);
   const [createdItemId, setCreatedItemId] = useState('');
   const [createdItemIds, setCreatedItemIds] = useState<string[]>([]);
+  const [hasRemainder, setHasRemainder] = useState(false);
+  const [remainderUnits, setRemainderUnits] = useState('');
+  const [remainderState, setRemainderState] = useState('');
+  const [remainderIdeaId, setRemainderIdeaId] = useState('');
+  const [remainderError, setRemainderError] = useState('');
 
   const fields = useMemo(() => specFields(cls, classType), [cls, classType]);
 
@@ -107,6 +114,12 @@ export function BuildCompleteWizard({
     }
   }
 
+  function parseRemainderUnits(): number | null {
+    const n = Number(remainderUnits);
+    if (!Number.isInteger(n) || n < 1) return null;
+    return n;
+  }
+
   function validateStep2(): boolean {
     setError('');
     if (!shortName.trim()) return setError('Item name is required.'), false;
@@ -114,6 +127,8 @@ export function BuildCompleteWizard({
       return setError(`Units built must be a whole number from 1 to ${MAX_UNITS}.`), false;
     if (!cls) return setError('Class is required.'), false;
     if (!classType) return setError('Type is required.'), false;
+    if (hasRemainder && parseRemainderUnits() === null)
+      return setError('Remaining units must be a whole number of 1 or more.'), false;
     return true;
   }
 
@@ -159,19 +174,19 @@ export function BuildCompleteWizard({
     }
     setSubmitting(true);
 
-    // Batch build (#435): create N item records, each backlinked to the idea. All N
-    // share the same short_name — the items handler's per-class atomic number in the
-    // generated id (…-046, …-047) is what distinguishes the copies, so no name suffix
-    // is needed (and a suffix would only pollute the id, which is derived from
-    // short_name). Creates are sequential (awaited) so the ConsistentRead atomic
-    // generator increments cleanly across them.
+    // Batch build (#435): create N item records, each backlinked to the idea.
+    // When N > 1 each gets a "#i" suffix (#593) so they're distinguishable in
+    // list views, not just by their internal generated id. Creates are
+    // sequential (awaited) so the ConsistentRead atomic generator increments
+    // cleanly across them.
     // Track created ids as we go so a mid-loop failure can report exactly which
     // items were already created (no rollback) — both in the UI and the console.
     const created: string[] = [];
     const name = shortName.trim();
     try {
       for (let i = 0; i < n; i++) {
-        const itemResult = await createItem(buildItemBody(name));
+        const unitName = n > 1 ? `${name} #${i + 1}` : name;
+        const itemResult = await createItem(buildItemBody(unitName));
         const itemId =
           itemResult?.confirmation?.id || itemResult?.preview?.id || itemResult?.id;
         if (!itemId) throw new Error(`Item ${i + 1} of ${n} created but no ID returned`);
@@ -192,6 +207,38 @@ export function BuildCompleteWizard({
 
       console.log(`[435] Batch build complete: idea=${idea.id} items=`, created);
       setCreatedItemId(created[0]);
+
+      // [592] Spin off a new idea for units left partially complete, so the
+      // unfinished work carries into a future season instead of getting lost
+      // when this idea goes terminal. Lands in "Considering" — non-terminal
+      // and excluded from the #591 Workbench WIP cap.
+      if (hasRemainder) {
+        const remainder = parseRemainderUnits();
+        if (remainder !== null) {
+          try {
+            const backlink = `Duplicated from "${idea.title}" (${idea.id})`;
+            const stateNote = remainderState.trim();
+            const remainderResult = await createIdea({
+              title: idea.title,
+              season: idea.season,
+              description: idea.description || '',
+              link: idea.link || '',
+              tags: idea.tags || [],
+              materials: (idea.materials || []).map((m) =>
+                typeof m === 'string' ? { name: m, done: false } : { name: m.name, done: false },
+              ),
+              notes: stateNote ? `${backlink}\n\n${stateNote}` : backlink,
+              remaining_units: remainder,
+              status: 'Considering',
+            });
+            setRemainderIdeaId(remainderResult?.id || '');
+          } catch (remainderErr) {
+            console.error(`[592] Failed to create remainder idea for idea=${idea.id}:`, remainderErr);
+            setRemainderError((remainderErr as Error).message);
+          }
+        }
+      }
+
       setStep(4); // success
     } catch (err) {
       const msg = (err as Error).message;
@@ -290,9 +337,9 @@ export function BuildCompleteWizard({
               </div>
               {parseUnits() !== null && parseUnits()! > 1 && (
                 <p className="rounded-medium bg-default-100 px-3 py-2 text-tiny text-default-500">
-                  Creates {parseUnits()} separate item records (each named “
-                  {shortName.trim() || 'Item'}”, distinguished by id), with the build cost split
-                  evenly across them.
+                  Creates {parseUnits()} separate item records (named “
+                  {shortName.trim() || 'Item'} #1”–“{shortName.trim() || 'Item'} #{parseUnits()}”), with the
+                  build cost split evenly across them.
                 </p>
               )}
               <div className="flex gap-3">
@@ -346,6 +393,34 @@ export function BuildCompleteWizard({
               )}
 
               <Textarea label="Notes" minRows={2} value={generalNotes} onValueChange={setGeneralNotes} />
+
+              <Checkbox isSelected={hasRemainder} onValueChange={setHasRemainder}>
+                Some units are still partially complete and not finished now
+              </Checkbox>
+              {hasRemainder && (
+                <div className="flex flex-col gap-3 rounded-medium bg-default-100 p-3">
+                  <Input
+                    isRequired
+                    type="number"
+                    min={1}
+                    step={1}
+                    label="How many remaining"
+                    value={remainderUnits}
+                    onValueChange={setRemainderUnits}
+                  />
+                  <Textarea
+                    label="Current state"
+                    placeholder="e.g. shapes cut, unpainted"
+                    minRows={2}
+                    value={remainderState}
+                    onValueChange={setRemainderState}
+                  />
+                  <p className="text-tiny text-default-500">
+                    A new idea will be created for the remaining units, set to "Considering" so it
+                    doesn't count as an active build.
+                  </p>
+                </div>
+              )}
             </>
           )}
 
@@ -361,6 +436,9 @@ export function BuildCompleteWizard({
                 <ReviewRow label="Class / Type" value={`${cls} / ${classType}`} />
                 <ReviewRow label="Season" value={idea.season} />
                 <ReviewRow label="Completion Date" value={completeDate ? formatDate(completeDate) : '—'} />
+                {hasRemainder && (
+                  <ReviewRow label="Remaining Units" value={`${parseRemainderUnits() ?? '—'} (new idea)`} />
+                )}
               </div>
             </>
           )}
@@ -383,6 +461,26 @@ export function BuildCompleteWizard({
                   </>
                 )}
               </p>
+              {hasRemainder && remainderIdeaId && (
+                <p className="text-small text-default-500">
+                  A new idea was created for the remaining{' '}
+                  <strong className="text-foreground">{parseRemainderUnits()}</strong> unit(s):{' '}
+                  <Button
+                    variant="light"
+                    size="sm"
+                    className="h-auto min-w-0 p-0 text-primary"
+                    onPress={() => navigate(`/${remainderIdeaId}`)}
+                  >
+                    {remainderIdeaId}
+                  </Button>
+                </p>
+              )}
+              {hasRemainder && !remainderIdeaId && remainderError && (
+                <p className="text-small text-danger">
+                  Build completed, but creating the remainder idea failed: {remainderError}. Create it
+                  manually if needed.
+                </p>
+              )}
             </div>
           )}
 

@@ -187,7 +187,7 @@ export default function BuilderPage() {
                   <div>
                     <h3 className="font-medium text-foreground">{zone.zone_name}</h3>
                     <p className="text-xs text-default-500">{zone.zone_code}</p>
-                    <p className="text-xs text-default-400">{zone.receptacle_id}</p>
+                    <p className="text-xs text-default-400">Receptacles auto-assigned</p>
                   </div>
                 </div>
               ))}

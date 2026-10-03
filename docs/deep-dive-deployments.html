@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deployments — Status Lifecycle | SpookyDecs</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['Fira Code', 'monospace'] },
+          colors: {
+            brand: { DEFAULT: '#FF9900', dark: '#cc7a00', light: '#ffb833' },
+            surface: { 1: '#0d0d12', 2: '#13131a', 3: '#1a1a24', 4: '#22222f' },
+          },
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="bg-surface-1 text-gray-100 font-sans antialiased">
+
+  <!-- NAV -->
+  <nav class="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-surface-1/90 backdrop-blur-md">
+    <div class="max-w-4xl mx-auto px-6 flex items-center justify-between h-14">
+      <a href="index.html" class="text-brand font-bold tracking-tight text-lg">SpookyDecs</a>
+      <a href="index.html#subsystems" class="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-1.5">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        Back to Subsystems
+      </a>
+    </div>
+  </nav>
+
+  <main class="max-w-4xl mx-auto px-6 pt-32 pb-24">
+    <div class="section-label">Deployments</div>
+    <h1 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mb-4">The Deployment Status Lifecycle</h1>
+    <p class="text-gray-400 text-base leading-relaxed max-w-2xl">
+      Deployments is the richest state machine in the app. A seasonal display doesn't just get "set up" —
+      it moves through five distinct stages, and every item, zone, and power connection inside it advances
+      in lockstep. This is the sub that makes "what's actually deployed right now, and what's still boxed?"
+      a question with a real-time answer instead of a guess.
+    </p>
+
+    <!-- Lifecycle stepper -->
+    <div class="mt-16 grid gap-4">
+
+      <div class="lifecycle-step">
+        <div class="lifecycle-num">1</div>
+        <div>
+          <h3 class="lifecycle-title">Plan</h3>
+          <p class="lifecycle-desc">A deployment is created for a season and year, with three fixed zones — front yard, back yard, side yard. This is the planning surface: deciding what goes where before anything physically moves.</p>
+        </div>
+      </div>
+
+      <div class="lifecycle-step">
+        <div class="lifecycle-num">2</div>
+        <div>
+          <h3 class="lifecycle-title">Stage</h3>
+          <p class="lifecycle-desc">Storage totes — and, for large or awkward props that don't live in a tote at all, individual items — are pulled and marked staged. This is the only point where Deployments reaches into Storage, and it does so by reading eligible items directly rather than duplicating what Storage already knows.</p>
+        </div>
+      </div>
+
+      <div class="lifecycle-step">
+        <div class="lifecycle-num">3</div>
+        <div>
+          <h3 class="lifecycle-title">Deploy</h3>
+          <p class="lifecycle-desc">Work sessions track who's actively setting up and when. Items get placed into zones and wired to power connections one at a time; completing the deployment bulk-advances every staged item to deployed in one step — and is blocked outright if a session is still open, so a deployment can't be marked done while someone's mid-setup.</p>
+        </div>
+      </div>
+
+      <div class="lifecycle-step">
+        <div class="lifecycle-num">4</div>
+        <div>
+          <h3 class="lifecycle-title">Teardown</h3>
+          <p class="lifecycle-desc">A dedicated teardown phase walks items back out of the display — the reverse of staging, not a delete. Items return to storage status rather than disappearing from the system.</p>
+        </div>
+      </div>
+
+      <div class="lifecycle-step">
+        <div class="lifecycle-num">5</div>
+        <div>
+          <h3 class="lifecycle-title">Archive</h3>
+          <p class="lifecycle-desc">Once torn down, a deployment becomes historical — queryable on its own, with the season's full zone/session/connection layout preserved for next year's planning instead of thrown away.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Notable decision -->
+    <div class="mt-16 rounded-xl border border-brand/25 bg-brand/5 p-6">
+      <div class="text-xs font-mono text-brand mb-2 uppercase tracking-wide">Notable decision</div>
+      <p class="text-gray-300 text-sm leading-relaxed">
+        Item status isn't a field Deployments merely reads — it's a field Deployments actively drives.
+        As a deployment moves through each stage, the items inside it are pushed through their own
+        status transitions in the same operation. That coupling is deliberate: it's what lets Items,
+        Storage, and Workbench all show a consistent, real-time picture of "where is this thing right now"
+        without a separate reconciliation process running behind the scenes.
+      </p>
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-white/5 py-12 px-6">
+    <div class="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div>
+        <div class="font-bold text-white text-lg">SpookyDecs</div>
+        <div class="text-gray-600 text-sm mt-0.5">Serverless holiday decoration management</div>
+      </div>
+      <a href="index.html#subsystems" class="text-gray-400 hover:text-brand transition-colors text-sm">← Back to Subsystems</a>
+    </div>
+  </footer>
+
+  <style>
+    .lifecycle-step {
+      display: flex;
+      gap: 1.25rem;
+      padding: 1.5rem;
+      border-radius: 0.75rem;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02);
+    }
+    .lifecycle-num {
+      flex-shrink: 0;
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 999px;
+      background: rgba(255,153,0,0.1);
+      border: 1px solid rgba(255,153,0,0.3);
+      color: #FF9900;
+      font-weight: 700;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .lifecycle-title { font-size: 1.05rem; font-weight: 700; color: #e5e7eb; margin-bottom: 0.35rem; }
+    .lifecycle-desc { font-size: 0.875rem; color: #9ca3af; line-height: 1.65; }
+  </style>
+</body>
+</html>

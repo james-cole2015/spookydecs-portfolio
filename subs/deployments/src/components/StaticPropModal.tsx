@@ -10,14 +10,13 @@ import {
   Spinner,
 } from '@heroui/react';
 import { useToast } from '@spookydecs/ui';
-import { searchItems, createPlacement } from '../api/deploymentsApi';
+import { searchItems, createPlacement, getStagingTotes } from '../api/deploymentsApi';
 import type { Deployment, Zone, Session, Connection } from '../config/deploymentsConfig';
 
 interface StaticProp {
   id: string;
   short_name?: string;
   class?: string;
-  status?: string;
   male_ends?: number | string;
   female_ends?: number | string;
   power_inlet?: boolean;
@@ -85,11 +84,19 @@ export function StaticPropModal({
     setSearch('');
     (async () => {
       try {
-        const response = await searchItems({
-          season: deployment.season,
-          connection_building: 'true',
-        });
+        const [response, stagingRes] = await Promise.all([
+          searchItems({
+            season: deployment.season,
+            connection_building: 'true',
+          }),
+          getStagingTotes(deployment.deployment_id),
+        ]);
         const items: StaticProp[] = response?.data?.items || [];
+        // #470: item.status never carries 'Staged' — staged-ness for L&O items is
+        // STAGING-record existence, sourced here the same way StagingPage does.
+        const stagedIds = new Set<string>(
+          (stagingRes?.data?.staged_non_packable || []).map((i: any) => i.id),
+        );
         const excludedIds = getExcludedItemIds(zones, activeConnections, activePlacements);
         // Static prop = staged for this deployment with no power ports at all.
         const eligible = items.filter((item: any) => {
@@ -97,7 +104,7 @@ export function StaticPropModal({
             parseInt(item.male_ends || 0, 10) === 0 &&
             parseInt(item.female_ends || 0, 10) === 0 &&
             item.power_inlet !== true;
-          const isStaged = item.status === 'Staged';
+          const isStaged = stagedIds.has(item.id);
           return noPorts && isStaged && !excludedIds.has(item.id);
         });
         setAllItems(eligible);

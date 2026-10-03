@@ -235,6 +235,21 @@ function toteStatus(toteId) {
   return r?.Item?.status?.S;
 }
 
+/**
+ * #470: item.status never carries 'Staged' — the STAGING-{tote_id|item_id}
+ * record on the deployment partition is the sole staged signal. Returns the
+ * record's item_ids list, or null if no STAGING record exists for this key.
+ */
+function stagedItemIds(staginKey) {
+  const r = ddb(['get-item', '--table-name', `sd_deployments_records_${ARGS.stage}`,
+    '--key', JSON.stringify({
+      deployment_id: { S: DEPLOYMENT_ID },
+      deployment_item_id: { S: `STAGING-${staginKey}` },
+    })]);
+  if (!r?.Item) return null;
+  return (r.Item.item_ids?.L || []).map((v) => v.S);
+}
+
 // ---------------------------------------------------------------------------
 // Restore ledger — every mutated item, with the status it had before we touched it
 // ---------------------------------------------------------------------------
@@ -565,14 +580,20 @@ async function main() {
       assertEq(res.data.items_failed_count, 0, 'items_failed_count');
       assertEq(toteStatus(tote.id), 'Staged', `tote ${tote.id} status in storage table`);
 
+      // #470: item.status never carries 'Staged' for tote-resident items — the
+      // STAGING-{tote_id} record's item_ids list is the sole staged signal, and
+      // selected items stay 'Packed' until create_connection/create_placement
+      // advances them to 'PreDeployment'.
+      const stagedIds = stagedItemIds(tote.id);
+      assert(stagedIds !== null, `STAGING-${tote.id} record was not written`);
       for (const id of selected) {
-        assertEq(await itemStatus(id), 'Staged', `staged tote content ${id}`);
+        assert(stagedIds.includes(id), `${id} missing from STAGING-${tote.id}.item_ids`);
+        assertEq(await itemStatus(id), 'Packed', `staged tote content ${id} stays Packed until connected`);
       }
       // Unselected contents must be left alone — partial staging must not over-reach.
       const unselected = contents.filter((id) => !selected.includes(id));
       for (const id of unselected) {
-        const st = await itemStatus(id);
-        assert(st !== 'Staged', `unselected item ${id} was staged anyway (status ${st})`);
+        assert(!stagedIds.includes(id), `unselected item ${id} was staged anyway`);
       }
       assertEq(res.data.items_remaining_count, unselected.length, 'items_remaining_count');
 
@@ -591,14 +612,20 @@ async function main() {
         );
       }
       await remember(candidate.id);
+      const statusBefore = await itemStatus(candidate.id);
       const res = await api('POST', `/deployments/${DEPLOYMENT_ID}/stage`, { item_ids: [candidate.id] });
       assertStatus(res, 200, 'POST /stage {item_ids}');
-      assertEq(await itemStatus(candidate.id), 'Staged', `loose item ${candidate.id} status`);
+      // #470: item.status never carries 'Staged' — the STAGING-{item_id} record
+      // is the sole staged signal, and item.status is left untouched by this call.
+      const stagingIds = stagedItemIds(candidate.id);
+      assert(stagingIds !== null, `STAGING-${candidate.id} record was not written`);
+      assert(stagingIds.includes(candidate.id), `${candidate.id} missing from STAGING-${candidate.id}.item_ids`);
+      assertEq(await itemStatus(candidate.id), statusBefore, `loose item ${candidate.id} status unchanged by staging`);
 
       // It must now show up on the staged side of the split, not the idle side.
       const recheck = await api('GET', `/deployments/${DEPLOYMENT_ID}/stage`);
-      const stagedIds = recheck.data.staged_non_packable.map((x) => x.id);
-      assert(stagedIds.includes(candidate.id),
+      const stagedNonPackableIds = recheck.data.staged_non_packable.map((x) => x.id);
+      assert(stagedNonPackableIds.includes(candidate.id),
         `${candidate.id} staged but absent from staged_non_packable`);
       return candidate;
     });

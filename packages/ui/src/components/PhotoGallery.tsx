@@ -38,7 +38,7 @@ const CONTEXT_MAP: Record<PhotoGalleryContext, { queryParam: string; setPrimaryK
 };
 
 /** A photo record as returned by `GET /admin/images`. */
-interface Photo {
+export interface PhotoGalleryPhoto {
   photo_id: string;
   cloudfront_url?: string;
   thumb_cloudfront_url?: string;
@@ -60,6 +60,12 @@ export interface PhotoGalleryProps {
   noSetPrimary?: boolean;
   /** Render the CDN-delegating "Add Photos" button. Default true. */
   enableUpload?: boolean;
+  /**
+   * Fired whenever the loaded photo set changes (initial load, upload, set-primary).
+   * Lets a parent that renders its own hero/preview from this same photo set (e.g.
+   * ideas DetailPage) stay in sync without re-deriving the fetch itself (#606).
+   */
+  onPhotosChange?: (photos: PhotoGalleryPhoto[]) => void;
 }
 
 export function PhotoGallery({
@@ -70,12 +76,13 @@ export function PhotoGallery({
   maxPhotos = Infinity,
   noSetPrimary = false,
   enableUpload = true,
+  onPhotosChange,
 }: PhotoGalleryProps) {
   const config = useConfig();
   const apiEndpoint = config.API_ENDPOINT;
   const { openWithEditor, editor } = usePhotoUpload();
 
-  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [photos, setPhotos] = useState<PhotoGalleryPhoto[]>([]);
   const [loading, setLoading] = useState(true);
   const [settingPrimaryId, setSettingPrimaryId] = useState<string | null>(null);
 
@@ -114,6 +121,10 @@ export function PhotoGallery({
   useEffect(() => {
     void reload();
   }, [reload]);
+
+  useEffect(() => {
+    onPhotosChange?.(photos);
+  }, [photos, onPhotosChange]);
 
   const primary = useMemo(() => photos.find((p) => p.is_primary) ?? null, [photos]);
   // Everything that isn't the chosen primary is secondary — keyed by photo_id, not

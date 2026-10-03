@@ -75,6 +75,10 @@ export const CLASS_TYPES: Record<string, string[]> = {
 
 export const PIPELINE_STAGES: Status[] = ['Considering', 'Planning', 'Workbench', 'Built'];
 
+// WIP cap on concurrent Workbench (active build) ideas — mirrors MAX_ACTIVE_BUILDS
+// in sd_ideas_handler.py, which is the enforced source of truth.
+export const MAX_ACTIVE_BUILDS = 3;
+
 // Inline season placeholder SVGs (ported from ideas-config.js SEASON_PLACEHOLDERS).
 export const SEASON_PLACEHOLDERS: Record<string, string> = {
   halloween: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
@@ -105,11 +109,39 @@ export interface Material {
   done?: boolean;
 }
 
+export const STEP_STATUSES = ['pending', 'in_progress', 'done'] as const;
+export type StepStatus = (typeof STEP_STATUSES)[number];
+
+// Maps a build_instructions step status to a HeroUI Chip color.
+export const STEP_STATUS_CHIP_COLOR: Record<StepStatus, 'default' | 'primary' | 'success'> = {
+  pending: 'default',
+  in_progress: 'primary',
+  done: 'success',
+};
+
 export interface BuildSession {
   session_id: string;
   date: string;
   duration_min?: number;
   notes?: string;
+  step_ref?: string; // BuildInstructionStep.step_id, not array position (#599)
+}
+
+export interface BuildInstructionStep {
+  step_id?: string; // stable UUID, backend-assigned/backfilled (#599)
+  step?: number; // display ordinal only — NOT a stable reference
+  title?: string;
+  detail?: string;
+  status?: StepStatus; // default 'pending'
+}
+
+// Response shape of POST /ideas/{id}/review-instructions (#598, advisory
+// Bedrock quality check). Not persisted on the idea — ephemeral, one call
+// per Move-to-Workbench click.
+export interface InstructionReviewResult {
+  sufficient: boolean;
+  overall_feedback: string | null;
+  step_feedback: { step_id: string; issue: string }[];
 }
 
 export interface EnrichmentPhoto {
@@ -171,7 +203,9 @@ export interface Idea {
   build_images?: string[];
   estimated_cost?: number | null;
   materials?: Array<Material | string>;
+  remaining_units?: number | null;
   build_sessions?: BuildSession[];
+  build_instructions?: BuildInstructionStep[];
   prep_start?: string;
   build_start?: string;
   build_complete?: string;

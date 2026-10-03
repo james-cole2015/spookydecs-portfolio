@@ -16,7 +16,6 @@ export interface SeasonOption {
 export interface ZoneDef {
   zone_code: string;
   zone_name: string;
-  receptacle_id: string;
 }
 
 export const DEPLOYMENT_CONFIG = {
@@ -30,11 +29,13 @@ export const DEPLOYMENT_CONFIG = {
   MIN_YEAR: 2023,
   MAX_YEAR: 2030,
 
-  // Predefined zones (immutable)
+  // Predefined zones (immutable). No hardcoded receptacle here (#582) — zones
+  // self-register whichever receptacles are tagged with their zone_code at
+  // deployment-creation time; the backend resolves and ignores any client value.
   ZONES: [
-    { zone_code: 'FY', zone_name: 'Front Yard', receptacle_id: 'REC-FY-001' },
-    { zone_code: 'BY', zone_name: 'Back Yard', receptacle_id: 'REC-BY-001' },
-    { zone_code: 'SY', zone_name: 'Side Yard', receptacle_id: 'REC-SY-001' },
+    { zone_code: 'FY', zone_name: 'Front Yard' },
+    { zone_code: 'BY', zone_name: 'Back Yard' },
+    { zone_code: 'SY', zone_name: 'Side Yard' },
   ] as ZoneDef[],
 
   // Deployment statuses
@@ -46,6 +47,28 @@ export const DEPLOYMENT_CONFIG = {
     ARCHIVED: 'archived',
   },
 } as const;
+
+// Deployment graph (#466) — per-outlet amp rollup overload threshold.
+export const OVERLOAD_AMPS_THRESHOLD = 15;
+
+// Deployment graph (#466) node icons, keyed by class_type. Duplicated from
+// subs/items/src/config/itemsConfig.ts (TYPE_ICONS) rather than a cross-sub
+// import — each sub is an independent Vite app/CloudFront origin, so there's
+// no established cross-sub-package import pattern in this monorepo. Keep in
+// sync with itemsConfig.ts if that map changes.
+export const GRAPH_CLASS_TYPE_ICONS: Record<string, string> = {
+  Inflatable: '🎈',
+  Animatronic: '🤖',
+  'Static Prop': '🗿',
+  'String Light': '💡',
+  'Spot Light': '🔦',
+  Projection: '📽️',
+  Cord: '➰',
+  Plug: '🔌',
+  Receptacle: '⚡',
+  Timer: '⏱️',
+  Controller: '🎮',
+};
 
 // ---- Domain types ----------------------------------------------------------
 
@@ -73,6 +96,10 @@ export interface Deployment {
 export interface Zone {
   zone_code: string;
   zone_name: string;
+  /** Every receptacle self-registered in this zone (#582). Canonical field. */
+  receptacle_ids?: string[];
+  /** First of receptacle_ids; kept for back-compat with the graph/schematic's
+   * single hub-node-per-zone rendering (#612 extends that to the full list). */
   receptacle_id?: string;
   connection_count?: number;
   item_count?: number;

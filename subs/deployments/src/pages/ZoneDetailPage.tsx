@@ -15,6 +15,12 @@ import type { Session, Zone } from '../config/deploymentsConfig';
 
 const ZONE_ICON: Record<string, string> = { FY: '🏡', BY: '🌳', SY: '🏠' };
 
+/** receptacle_ids (plural, canonical) falling back to the legacy singular receptacle_id (#582). */
+function zoneReceptacles(zone: Zone): string[] {
+  if (zone.receptacle_ids?.length) return zone.receptacle_ids;
+  return zone.receptacle_id ? [zone.receptacle_id] : [];
+}
+
 function formatMinutes(minutes: number): string {
   if (minutes < 60) return `${minutes}m`;
   const hours = Math.floor(minutes / 60);
@@ -136,7 +142,7 @@ export default function ZoneDetailPage() {
       />
       <PageHeader
         title={`${ZONE_ICON[zone.zone_code] || '📍'} ${zone.zone_name}`}
-        subtitle={`${zone.zone_code}${zone.receptacle_id ? ` · 🔌 ${zone.receptacle_id}` : ''}`}
+        subtitle={`${zone.zone_code}${zoneReceptacles(zone).length ? ` · 🔌 ${zoneReceptacles(zone).join(', ')}` : ''}`}
       />
 
       {activeSession && (

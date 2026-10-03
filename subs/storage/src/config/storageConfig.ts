@@ -18,6 +18,13 @@ export interface FormField {
   placeholder?: string;
 }
 
+/** A single free-text supply entry on a supply tote. */
+export interface SupplyEntry {
+  name: string;
+  quantity?: string;
+  notes?: string;
+}
+
 /** Normalized storage unit shape consumed by the UI. */
 export interface StorageUnit {
   id: string;
@@ -32,6 +39,9 @@ export interface StorageUnit {
   general_notes?: string;
   contents?: unknown[];
   contents_count: number;
+  is_supply_tote?: boolean;
+  supplies?: SupplyEntry[];
+  supplies_count?: number;
   item_id?: string;
   primary_photo_id?: string;
   photo_ids?: string[];
@@ -175,6 +185,9 @@ export function formatStorageUnit(unit: Record<string, any>): StorageUnit {
     short_name: shortName,
     packed,
     contents_count: unit.contents_count || (unit.contents ? unit.contents.length : 0),
+    is_supply_tote: Boolean(unit.is_supply_tote),
+    supplies: unit.supplies || [],
+    supplies_count: unit.supplies_count ?? (unit.supplies ? unit.supplies.length : 0),
   } as StorageUnit;
 }
 

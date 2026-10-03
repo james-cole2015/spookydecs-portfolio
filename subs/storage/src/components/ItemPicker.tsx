@@ -41,6 +41,7 @@ export function ItemPicker({
           filtered.map((item) => (
             <label
               key={item.id}
+              data-testid={`item-picker-${item.id}`}
               className="flex cursor-pointer items-center gap-3 border-b border-default-100 p-2 last:border-b-0 hover:bg-content2/40"
             >
               <Checkbox isSelected={selected.has(item.id)} onValueChange={() => onToggle(item.id)} color="secondary" />

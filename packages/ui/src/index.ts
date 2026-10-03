@@ -65,7 +65,7 @@ export type { UseResumablePoll, ResumablePollConfig } from './hooks/useResumable
 export { FilterBar } from './components/FilterBar';
 export type { FilterBarProps, Filters, FilterOption } from './components/FilterBar';
 export { PhotoGallery } from './components/PhotoGallery';
-export type { PhotoGalleryProps, PhotoGalleryContext } from './components/PhotoGallery';
+export type { PhotoGalleryProps, PhotoGalleryContext, PhotoGalleryPhoto } from './components/PhotoGallery';
 export { PhotoLightbox } from './components/PhotoLightbox';
 export type { PhotoLightboxProps, LightboxPhoto, LightboxThumbnailProps } from './components/PhotoLightbox';
 export { DemoResetBanner, isDemoEnv } from './components/DemoResetBanner';

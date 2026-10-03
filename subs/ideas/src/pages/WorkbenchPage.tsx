@@ -5,7 +5,7 @@ import { Button, Card, CardBody } from '@heroui/react';
 import { ArrowLeft } from 'lucide-react';
 import { LoadingState, ErrorState, EmptyState, PageHeader } from '@spookydecs/ui';
 import { listIdeas } from '../api/ideasApi';
-import { PIPELINE_STAGES, type Idea } from '../config/ideasConfig';
+import { MAX_ACTIVE_BUILDS, PIPELINE_STAGES, type Idea } from '../config/ideasConfig';
 import { SeasonChip } from '../components/chips';
 import { formatDate } from '../lib/format';
 
@@ -60,7 +60,8 @@ export default function WorkbenchPage() {
               title="In Build"
               subtitle="Active builds in the workshop."
               ideas={builds}
-              onOpen={(idea) => navigate(`/workbench/${idea.id}`)}
+              countLabel={`${builds.length} / ${MAX_ACTIVE_BUILDS}`}
+              onOpen={(idea) => navigate(`/${idea.id}`)}
             />
           )}
           {planning.length > 0 && (
@@ -81,11 +82,13 @@ function BuildSection({
   title,
   subtitle,
   ideas,
+  countLabel,
   onOpen,
 }: {
   title: string;
   subtitle: string;
   ideas: Idea[];
+  countLabel?: string;
   onOpen: (idea: Idea) => void;
 }) {
   return (
@@ -93,7 +96,7 @@ function BuildSection({
       <div>
         <h2 className="text-medium font-semibold text-foreground">
           {title}
-          <span className="ml-2 text-small font-normal text-default-400">({ideas.length})</span>
+          <span className="ml-2 text-small font-normal text-default-400">({countLabel ?? ideas.length})</span>
         </h2>
         <p className="text-small text-default-500">{subtitle}</p>
       </div>

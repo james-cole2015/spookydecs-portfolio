@@ -109,6 +109,13 @@ export async function getHistoricalDeployment(deploymentId: string): Promise<any
   return await apiCall(`/deployments/historical/${deploymentId}`);
 }
 
+// Graph (#466) — live-derived topology for an active (non-archived) deployment.
+// Archived deployments use getHistoricalDeployment's `graph` key instead
+// (snapshot-or-live-derive fallback, resolved server-side).
+export async function getDeploymentGraph(deploymentId: string): Promise<any> {
+  return await apiCall(`/deployments/${deploymentId}/graph`);
+}
+
 // Items
 
 export interface ItemFilters {

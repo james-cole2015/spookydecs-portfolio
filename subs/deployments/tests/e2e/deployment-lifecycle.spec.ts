@@ -17,6 +17,10 @@ test('deployment lifecycle: builder → staging → session → complete → tea
   deployment,
 }) => {
   const { deploymentId, api, ledger } = deployment;
+  // Set by the loose-item staging step below when a staged item also qualifies as a
+  // static prop (no power ports) — lets the later "deploy a static prop" step assert a
+  // real deploy instead of falling back to Cancel (#579).
+  let staticPropCandidateId: string | undefined;
 
   await test.step('Builder — create the deployment through the UI', async () => {
     await page.goto('/builder');
@@ -46,6 +50,35 @@ test('deployment lifecycle: builder → staging → session → complete → tea
     // no UI entry point and is not exercised here. See #470 for the tracked fix.
     await page.getByTestId('staging-confirm-tote').click();
     await expect(page.getByTestId(`tote-card-${tote.id}`).getByText('✓ Staged')).toBeVisible();
+  });
+
+  await test.step('Staging — stage a loose non-packable item (#579: covers stage_loose_items / the StagingPage non-packable section)', async () => {
+    const stageRes = await api('GET', `/deployments/${deploymentId}/stage`);
+    const nonPackable: { id: string }[] = stageRes.data?.non_packable_items || [];
+    test.skip(nonPackable.length === 0, 'dev has no non-packable items to stage — fixture gap, not a #579 regression');
+
+    // Prefer a candidate that will also be eligible for static-prop deploy, mirroring
+    // StaticPropModal's own filter (connection_building item, no power ports at all) —
+    // this lets the "deploy a static prop" step below assert a real deploy rather than
+    // treat "nothing eligible" and "modal is broken" as the same silent Cancel outcome.
+    const eligibleRes = await api('GET', `/items?season=${SEASON}&connection_building=true`);
+    const eligibleIds = new Set<string>(
+      (eligibleRes.data?.items || [])
+        .filter(
+          (i: any) =>
+            parseInt(i.male_ends || 0, 10) === 0 &&
+            parseInt(i.female_ends || 0, 10) === 0 &&
+            i.power_inlet !== true,
+        )
+        .map((i: any) => i.id),
+    );
+    const item = nonPackable.find((i) => eligibleIds.has(i.id)) || nonPackable[0];
+    if (eligibleIds.has(item.id)) staticPropCandidateId = item.id;
+
+    await ledger.rememberItem(api, item.id);
+    await page.getByTestId(`item-card-${item.id}`).getByRole('button', { name: 'Stage Item' }).click();
+    await page.getByTestId('staging-confirm-item').click();
+    await expect(page.getByTestId(`item-card-${item.id}`).getByText('✓ Staged')).toBeVisible();
   });
 
   const ZONE = 'FY';
@@ -81,17 +114,21 @@ test('deployment lifecycle: builder → staging → session → complete → tea
 
   await test.step('Session — deploy a static prop', async () => {
     await page.getByRole('button', { name: 'Deploy Static Prop' }).click();
-    const propButtons = page.locator('[data-testid^="static-prop-item-"]');
-    if (await propButtons.first().isVisible({ timeout: 3000 }).catch(() => false)) {
-      const propTestId = await propButtons.first().getAttribute('data-testid');
-      const propItemId = idFromTestId('static-prop-item-', propTestId);
-      await ledger.rememberItem(api, propItemId);
-      await propButtons.first().click();
+    if (staticPropCandidateId) {
+      // We staged a known non-powered item above (#579) — the modal must actually offer
+      // it. Asserting on this specific testid (rather than "any prop button") fails loud
+      // if StaticPropModal's eligibility filter or the non-packable staging split
+      // regresses, instead of silently taking the Cancel path.
+      const propButton = page.getByTestId(`static-prop-item-${staticPropCandidateId}`);
+      await expect(propButton).toBeVisible();
+      await ledger.rememberItem(api, staticPropCandidateId);
+      await propButton.click();
       await page.getByTestId('static-prop-modal-deploy').click();
       await expect(page.getByText('Static prop deployed')).toBeVisible();
     } else {
-      // No eligible non-powered props staged in this run — not a #554 regression,
-      // the connection above already covers the connect+place AC's "connect" half.
+      // No non-packable item in dev today has zero power ports — a fixture gap (not a
+      // #554/#579 regression); the loose-item staging step above still exercised
+      // stage_loose_items and the non-packable StagingPage flow.
       await page.getByRole('button', { name: 'Cancel' }).click();
     }
   });
