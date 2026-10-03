@@ -203,9 +203,16 @@ export default function ZonesPage() {
                     <div className="text-xs text-default-500">Sessions</div>
                   </div>
                 </div>
-                {zone.receptacle_id && (
-                  <p className="mt-3 text-xs text-default-400">🔌 {zone.receptacle_id}</p>
-                )}
+                {(() => {
+                  const receptacles = zone.receptacle_ids?.length
+                    ? zone.receptacle_ids
+                    : zone.receptacle_id
+                      ? [zone.receptacle_id]
+                      : [];
+                  return receptacles.length > 0 ? (
+                    <p className="mt-3 text-xs text-default-400">🔌 {receptacles.join(', ')}</p>
+                  ) : null;
+                })()}
               </CardBody>
               <CardFooter className="pt-0 text-sm font-medium text-secondary">
                 <span className="flex items-center gap-1">
