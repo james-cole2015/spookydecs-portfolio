@@ -6,7 +6,7 @@
 import { describe, it, expect } from 'vitest';
 import { deriveGraph, type GraphInput } from '../../src/lib/graphDerivation';
 
-const ZONE = { zone_code: 'FY', zone_name: 'Front Yard', receptacle_id: 'REC-FY-001' };
+const ZONE = { zone_code: 'FY', zone_name: 'Front Yard', receptacle_ids: ['REC-FY-001'] };
 
 function baseInput(overrides: Partial<GraphInput> = {}): GraphInput {
   return {
@@ -23,6 +23,38 @@ describe('deriveGraph — root nodes', () => {
     const { nodes } = deriveGraph(baseInput());
     expect(nodes).toHaveLength(1);
     expect(nodes[0]).toMatchObject({ id: 'REC-FY-001', data: { kind: 'hub' } });
+    expect(nodes[0].data.label).toBe('Wall Outlet — Front Yard');
+  });
+
+  it('adds one hub node per receptacle for a multi-outlet zone (#612)', () => {
+    const input = baseInput({
+      zones: { FY: { zone_code: 'FY', zone_name: 'Front Yard', receptacle_ids: ['REC-FY-001', 'REC-FY-002'] } },
+    });
+    const { nodes } = deriveGraph(input);
+    const hubs = nodes.filter((n) => n.data.kind === 'hub');
+    expect(hubs).toHaveLength(2);
+    expect(hubs.map((n) => n.id)).toEqual(['REC-FY-001', 'REC-FY-002']);
+    expect(hubs.map((n) => n.data.label)).toEqual([
+      'Wall Outlet — Front Yard (Outlet 1)',
+      'Wall Outlet — Front Yard (Outlet 2)',
+    ]);
+  });
+
+  it('attaches connection edges to the specific receptacle they name, within a multi-outlet zone', () => {
+    const input = baseInput({
+      zones: { FY: { zone_code: 'FY', zone_name: 'Front Yard', receptacle_ids: ['REC-FY-001', 'REC-FY-002'] } },
+      items: {
+        'LOAD-1': { id: 'LOAD-1', class_type: 'Inflatable', power_data: { amps: 2 } },
+        'LOAD-2': { id: 'LOAD-2', class_type: 'Inflatable', power_data: { amps: 3 } },
+      },
+      connections: [
+        { from_item_id: 'REC-FY-001', to_item_id: 'LOAD-1', connection_type: 'deployment' },
+        { from_item_id: 'REC-FY-002', to_item_id: 'LOAD-2', connection_type: 'deployment' },
+      ],
+    });
+    const { edges } = deriveGraph(input);
+    expect(edges.find((e) => e.source === 'REC-FY-001')?.target).toBe('LOAD-1');
+    expect(edges.find((e) => e.source === 'REC-FY-002')?.target).toBe('LOAD-2');
   });
 });
 

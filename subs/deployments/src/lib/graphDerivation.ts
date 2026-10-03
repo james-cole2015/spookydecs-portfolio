@@ -17,7 +17,8 @@ const LOAD_CLASS_TYPES = new Set(['Inflatable', 'Animatronic', 'String Light', '
 export interface GraphZone {
   zone_code: string;
   zone_name: string;
-  receptacle_id: string;
+  /** One or more receptacle (outlet) ids for this zone (#582 — plural, self-registering outlets). */
+  receptacle_ids: string[];
 }
 
 export interface GraphItem {
@@ -115,10 +116,10 @@ function edgeLabel(item: GraphItem | undefined, length?: string | number): { lab
 
 /**
  * Resolves the node id a connection/placement's edge should terminate FROM/TO,
- * treating a zone's synthetic receptacle_id as a valid endpoint (never an item).
+ * treating a zone's synthetic receptacle_ids as valid endpoints (never an item).
  */
 function isRootId(id: string, zones: Record<string, GraphZone>): boolean {
-  return Object.values(zones).some((z) => z.receptacle_id === id);
+  return Object.values(zones).some((z) => z.receptacle_ids.includes(id));
 }
 
 export function deriveGraph(input: GraphInput): { nodes: Node<GraphNodeData>[]; edges: Edge<GraphEdgeData>[] } {
@@ -133,15 +134,23 @@ export function deriveGraph(input: GraphInput): { nodes: Node<GraphNodeData>[]; 
     nodes.push({ id, type: data.kind, position: { x: 0, y: 0 }, data });
   };
 
-  // Root nodes — one per zone circuit source. Never resolved via items table.
+  // Root nodes — one per zone receptacle (outlet), never resolved via items
+  // table. A zone with 2+ self-registered outlets (#582) gets one hub node
+  // per outlet, each labeled with its position when there's more than one.
   Object.values(zones).forEach((zone) => {
-    addNode(zone.receptacle_id, {
-      kind: 'hub',
-      label: `Wall Outlet — ${zone.zone_name}`,
-      hasPowerData: false,
-      zone,
-      rollupAmps: 0,
-      overloaded: false,
+    zone.receptacle_ids.forEach((receptacleId, i) => {
+      const label =
+        zone.receptacle_ids.length > 1
+          ? `Wall Outlet — ${zone.zone_name} (Outlet ${i + 1})`
+          : `Wall Outlet — ${zone.zone_name}`;
+      addNode(receptacleId, {
+        kind: 'hub',
+        label,
+        hasPowerData: false,
+        zone,
+        rollupAmps: 0,
+        overloaded: false,
+      });
     });
   });
 
@@ -198,17 +207,21 @@ export function deriveGraph(input: GraphInput): { nodes: Node<GraphNodeData>[]; 
       });
     });
 
-  // Active placements -> edges from the zone root directly to a static (no-power) item.
+  // Active placements -> edges from the zone's first receptacle root directly
+  // to a static (no-power) item. Placements carry no receptacle reference
+  // (they're not powered — see sd_deployments_item_handler.py create_placement),
+  // so the first outlet is used as an arbitrary, consistent anchor.
   placements
     .filter((p) => (p.placement_type ?? 'deployment') === 'deployment')
     .forEach((placement) => {
       const zone = zones[placement.zone_code];
-      if (!zone) return;
+      const rootId = zone?.receptacle_ids[0];
+      if (!zone || !rootId) return;
       ensureItemNode(placement.item_id);
       const { label, powered } = edgeLabel(items[placement.item_id]);
       edges.push({
-        id: placement.placement_id || `${zone.receptacle_id}->${placement.item_id}`,
-        source: zone.receptacle_id,
+        id: placement.placement_id || `${rootId}->${placement.item_id}`,
+        source: rootId,
         target: placement.item_id,
         label,
         data: { powered, label, placement },
