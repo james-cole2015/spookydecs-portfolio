@@ -31,10 +31,15 @@ function styleEdges(edges: Edge<GraphEdgeData>[]): Edge<GraphEdgeData>[] {
   }));
 }
 
+// Pre-#466 archives have no graph key at all, so this synthesizes an empty
+// zone-root per zone for that (very old, best-effort) fallback. DEPLOYMENT_CONFIG
+// no longer carries a receptacle_id (#582 — receptacles self-register), so a
+// placeholder root id is synthesized here instead; no live receptacle data
+// exists for these archives regardless.
 function zonesRecord(): GraphInput['zones'] {
   const record: GraphInput['zones'] = {};
   DEPLOYMENT_CONFIG.ZONES.forEach((z) => {
-    record[z.zone_code] = z;
+    record[z.zone_code] = { ...z, receptacle_id: `ROOT-${z.zone_code}` };
   });
   return record;
 }
