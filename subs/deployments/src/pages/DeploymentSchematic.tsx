@@ -39,7 +39,7 @@ function styleEdges(edges: Edge<GraphEdgeData>[]): Edge<GraphEdgeData>[] {
 function zonesRecord(): GraphInput['zones'] {
   const record: GraphInput['zones'] = {};
   DEPLOYMENT_CONFIG.ZONES.forEach((z) => {
-    record[z.zone_code] = { ...z, receptacle_id: `ROOT-${z.zone_code}` };
+    record[z.zone_code] = { ...z, receptacle_ids: [`ROOT-${z.zone_code}`] };
   });
   return record;
 }

@@ -8,8 +8,8 @@ import { deriveGraph, type GraphInput } from '../../src/lib/graphDerivation';
 import { layoutGraph } from '../../src/lib/graphLayout';
 
 const ZONES = {
-  FY: { zone_code: 'FY', zone_name: 'Front Yard', receptacle_id: 'REC-FY-001' },
-  BY: { zone_code: 'BY', zone_name: 'Back Yard', receptacle_id: 'REC-BY-001' },
+  FY: { zone_code: 'FY', zone_name: 'Front Yard', receptacle_ids: ['REC-FY-001'] },
+  BY: { zone_code: 'BY', zone_name: 'Back Yard', receptacle_ids: ['REC-BY-001'] },
 };
 
 describe('layoutGraph', () => {
@@ -59,5 +59,20 @@ describe('layoutGraph', () => {
     const laidOut = layoutGraph(nodes, edges);
     const prop = laidOut.find((n) => n.id === 'PROP-1')!;
     expect(prop.position.y).toBeGreaterThan(0);
+  });
+
+  it('gives each receptacle in a multi-outlet zone its own distinct, non-overlapping band (#612)', () => {
+    const zones = {
+      FY: { zone_code: 'FY', zone_name: 'Front Yard', receptacle_ids: ['REC-FY-001', 'REC-FY-002'] },
+    };
+    const input: GraphInput = { zones, items: {}, connections: [], placements: [] };
+    const { nodes, edges } = deriveGraph(input);
+    const laidOut = layoutGraph(nodes, edges);
+
+    const outlet1 = laidOut.find((n) => n.id === 'REC-FY-001')!;
+    const outlet2 = laidOut.find((n) => n.id === 'REC-FY-002')!;
+    expect(outlet1.position.y).toBe(0);
+    expect(outlet2.position.y).toBe(0);
+    expect(outlet1.position.x).not.toBe(outlet2.position.x);
   });
 });
