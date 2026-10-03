@@ -245,6 +245,55 @@ export async function triggerReindex(mode: 'all' | 'text' | 'images' = 'all'): P
   return result.data;
 }
 
+/** Payload for registering a new zone receptacle (outlet) via the Admin flow. */
+export interface NewOutlet {
+  zoneCode: string;
+  shortName: string;
+  femaleEnds: number;
+}
+
+/**
+ * Create a zone receptacle (outlet) as a Receptacle item (#582). Receptacles
+ * are season-agnostic physical objects, so season is fixed to 'Shared'. The
+ * backend tags the item with zoneCode so deployment creation can self-register
+ * it. Returns the created item's id + short_name on success.
+ */
+export async function createOutlet(
+  outlet: NewOutlet,
+): Promise<{ id: string; short_name: string } | null> {
+  const config = await window.SpookyConfig.get();
+
+  const response = await fetch(`${config.API_ENDPOINT}/items`, {
+    method: 'POST',
+    headers: buildHeaders(),
+    body: JSON.stringify({
+      type: 'Receptacle',
+      category: 'Outlet',
+      season: 'Shared',
+      shortName: outlet.shortName,
+      zoneCode: outlet.zoneCode,
+      femaleEnds: outlet.femaleEnds,
+    }),
+  });
+
+  if (response.status === 401) {
+    await redirectToLogin();
+    return null;
+  }
+
+  if (!response.ok) {
+    throw new Error(`Failed to create outlet: ${response.status}`);
+  }
+
+  const result = await response.json();
+
+  if (!result.success) {
+    throw new Error(result.error || 'Failed to create outlet');
+  }
+
+  return result.data?.confirmation || null;
+}
+
 /**
  * Submit the full conversation to Iris (multi-turn POST /iris/chat). Sends the
  * `messages` array, handles the 401 redirect + error states, and returns
