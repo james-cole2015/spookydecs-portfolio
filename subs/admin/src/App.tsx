@@ -10,6 +10,7 @@ import { PageContainer, LoadingState, AppHeader } from '@spookydecs/ui';
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
 const SearchTextPage = lazy(() => import('./pages/SearchTextPage'));
+const AddOutletPage = lazy(() => import('./pages/AddOutletPage'));
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/search-text" element={<SearchTextPage />} />
+            <Route path="/add-outlet" element={<AddOutletPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
