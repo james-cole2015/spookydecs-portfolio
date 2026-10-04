@@ -30,7 +30,9 @@
     </script>
 
     <!-- Header is now the native React <AppHeader> from @spookydecs/ui (#348) — CDN spookydecs-header dropped here. -->
-    <!-- admin uses no photo web components — no upload/gallery CDN scripts needed. -->
+    <!-- Headless upload service for usePhotoUpload (Place Photo, #621). Without it the
+         <photo-upload-service> element is inert and has no upload() method. -->
+    <script src="https://assets.spookydecs.com/components/photo-upload-service.js"></script>
 </head>
 <body>
     <!-- Deployed via GitHub Actions (_deploy-sub.yml / deploy-admin.yml, #269/#331) -->
