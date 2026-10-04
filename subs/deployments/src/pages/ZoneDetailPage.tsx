@@ -7,7 +7,6 @@ import {
   getDeployment,
   getZoneSessions,
   createSession,
-  endSession,
 } from '../api/deploymentsApi';
 import { SessionHistoryTable } from '../components/SessionHistoryTable';
 import { ZoneItemsDrawer } from '../components/ZoneItemsDrawer';
@@ -46,7 +45,6 @@ export default function ZoneDetailPage() {
   const [activeSession, setActiveSession] = useState<Session | null>(null);
 
   const [startOpen, setStartOpen] = useState(false);
-  const [endOpen, setEndOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -92,23 +90,6 @@ export default function ZoneDetailPage() {
       toast.showError(e?.message || 'Failed to start session');
       setBusy(false);
       setStartOpen(false);
-    }
-  }
-
-  async function handleEndSession() {
-    if (!activeSession) return;
-    setBusy(true);
-    try {
-      await endSession(deploymentId, activeSession.session_id, {
-        end_time: new Date().toISOString(),
-      });
-      setEndOpen(false);
-      setBusy(false);
-      load();
-    } catch (e: any) {
-      console.error('[ZoneDetail] Error ending session:', e);
-      toast.showError('Failed to end session. Please try again.');
-      setBusy(false);
     }
   }
 
@@ -175,7 +156,11 @@ export default function ZoneDetailPage() {
               <Button
                 variant="flat"
                 startContent={<Square size={16} />}
-                onPress={() => setEndOpen(true)}
+                onPress={() =>
+                  navigate(`/builder/${deploymentId}/zones/${zoneCode}/session`, {
+                    state: { openEndReview: true },
+                  })
+                }
               >
                 End Session
               </Button>
@@ -278,16 +263,6 @@ export default function ZoneDetailPage() {
         onClose={() => setStartOpen(false)}
       />
 
-      <ConfirmDialog
-        isOpen={endOpen}
-        title="End Session"
-        body="Are you sure you want to end this session?"
-        confirmLabel="End Session"
-        isDestructive
-        isLoading={busy}
-        onConfirm={handleEndSession}
-        onClose={() => setEndOpen(false)}
-      />
     </>
   );
 }
