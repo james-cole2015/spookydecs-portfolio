@@ -48,7 +48,6 @@ import { SeasonChip, StatusChip, StepStatusChip } from '../components/chips';
 import { EnrichmentPanel } from '../components/EnrichmentPanel';
 import { CostsSection } from '../components/CostsSection';
 import { CostLogModal } from '../components/CostLogModal';
-import { DeferModal } from '../components/DeferModal';
 import { InlineEdit } from '../components/InlineEdit';
 import { InlineSelectEdit } from '../components/InlineSelectEdit';
 import { InlineTagsEdit } from '../components/InlineTagsEdit';
@@ -68,7 +67,6 @@ export default function DetailPage() {
   const [error, setError] = useState('');
   const [notFound, setNotFound] = useState(false);
   const [costModalOpen, setCostModalOpen] = useState(false);
-  const [deferOpen, setDeferOpen] = useState(false);
   const [costRefresh, setCostRefresh] = useState(0);
   const [activeBuildCount, setActiveBuildCount] = useState<number | null>(null);
   const [buildPhotos, setBuildPhotos] = useState<LightboxPhoto[]>([]);
@@ -142,21 +140,6 @@ export default function DetailPage() {
       if (refreshed) setIdea(refreshed);
     } catch (err) {
       toast.showError('Failed: ' + (err as Error).message);
-    }
-  }
-
-  // Defer (#604): park the idea in Planning with a future-season bucket. The
-  // bucket is sent explicitly so the backend's Planning auto-bucket never runs.
-  async function handleDefer(bucket: string) {
-    if (!idea) return;
-    try {
-      await updateIdea({ id: idea.id, season: idea.season, title: idea.title, status: 'Planning', bucket });
-      toast.showSuccess(`Deferred to ${bucket}`);
-      const refreshed = await getIdea(idea.id);
-      if (refreshed) setIdea(refreshed);
-    } catch (err) {
-      toast.showError('Failed to defer: ' + (err as Error).message);
-      throw err;
     }
   }
 
@@ -492,16 +475,6 @@ export default function DetailPage() {
                   {atBuildCap ? `Build Limit Reached (${MAX_ACTIVE_BUILDS}/${MAX_ACTIVE_BUILDS})` : 'Move to Workbench'}
                 </Button>
               </>
-            )}
-            {(idea.status === 'Considering' || idea.status === 'Planning' || idea.status === 'Workbench') && (
-              <Button
-                size="sm"
-                variant="flat"
-                isDisabled={idea.status === 'Considering' && planningGateMissing.length > 0}
-                onPress={() => setDeferOpen(true)}
-              >
-                Defer
-              </Button>
             )}
             {!locked && (
               <Button
@@ -951,12 +924,6 @@ export default function DetailPage() {
         isOpen={costModalOpen}
         onClose={() => setCostModalOpen(false)}
         onSaved={() => setCostRefresh((n) => n + 1)}
-      />
-      <DeferModal
-        title={idea.title}
-        isOpen={deferOpen}
-        onClose={() => setDeferOpen(false)}
-        onConfirm={handleDefer}
       />
       <BuildCompleteWizard idea={idea} isOpen={wizardOpen} onClose={() => navigate('/')} />
       {editor}

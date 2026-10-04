@@ -5,7 +5,7 @@ import { Button, Card, CardBody } from '@heroui/react';
 import { ArrowLeft } from 'lucide-react';
 import { LoadingState, ErrorState, EmptyState, PageHeader } from '@spookydecs/ui';
 import { listIdeas } from '../api/ideasApi';
-import { isDeferred, MAX_ACTIVE_BUILDS, PIPELINE_STAGES, type Idea } from '../config/ideasConfig';
+import { MAX_ACTIVE_BUILDS, PIPELINE_STAGES, type Idea } from '../config/ideasConfig';
 import { SeasonChip } from '../components/chips';
 import { formatDate } from '../lib/format';
 
@@ -142,7 +142,6 @@ function BuildCard({ idea, onOpen }: { idea: Idea; onOpen: () => void }) {
         </div>
 
         <div className="flex flex-col gap-1 text-tiny text-default-500">
-          {isDeferred(idea) && <span className="font-medium text-warning">Deferred to {idea.bucket}</span>}
           {idea.estimated_cost != null && (
             <span>Est. Cost: ${Number(idea.estimated_cost).toFixed(2)}</span>
           )}
