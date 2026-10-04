@@ -234,16 +234,22 @@ export interface Cost {
 }
 
 // Deferral (#604): punting an idea to a future season reuses the existing
-// `bucket` field. The Planning auto-bucket (#603 guard) is always "{year}
-// Off-Season", so any bucket not ending in that suffix is a deliberate target.
-export const DEFAULT_BUCKET_SUFFIX = 'Off-Season';
+// `bucket` field. Targets are next year's Halloween, Christmas and Off-Season.
+export const DEFER_SEASON_LABELS = ['Halloween', 'Christmas', 'Off-Season'] as const;
 
-// Deferral targets are next year's seasons — "not this cycle" by construction.
 export function deferTargets(now: Date = new Date()): string[] {
   const year = now.getFullYear() + 1;
-  return SEASONS.map((s) => `${year} ${s}`);
+  return DEFER_SEASON_LABELS.map((s) => `${year} ${s}`);
 }
 
-export function isDeferred(idea: Pick<Idea, 'status' | 'bucket'>): boolean {
-  return idea.status === 'Planning' && !!idea.bucket && !idea.bucket.endsWith(DEFAULT_BUCKET_SUFFIX);
+// The Planning auto-bucket is "{year} Off-Season" with the year the idea entered
+// Planning (its prep_start year). A bucket whose year is later than that is a
+// deliberate deferral, whatever the season label.
+export function isDeferred(idea: Pick<Idea, 'status' | 'bucket' | 'prep_start'>): boolean {
+  if (idea.status !== 'Planning' || !idea.bucket) return false;
+  const bucketYear = Number.parseInt(idea.bucket, 10);
+  const enteredYear = idea.prep_start
+    ? Number.parseInt(idea.prep_start, 10)
+    : new Date().getFullYear();
+  return Number.isFinite(bucketYear) && bucketYear > enteredYear;
 }
