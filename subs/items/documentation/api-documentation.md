@@ -7,7 +7,7 @@
 | **POST** | `/admin/items` | `createItem` | Creates a new item. Expects `itemData` JSON in the body. |
 | **PUT** | `/items/{itemId}` | `updateItem` | Updates an existing item. Used directly and by `retireItem` (which sets status to "Retired"). |
 | **DELETE** | `/items/{itemId}` | `deleteItem` | Performs a hard delete of a specific item. |
-| **PATCH** | `/admin/items/bulk` | `bulkStore` | Bulk updates the storage location for multiple items. Expects `{ item_ids, location }`. |
+| **PATCH** | `/items/bulk` | `bulkStore` | Bulk updates the storage location for multiple items. Expects `{ item_ids, location }`. |
 | **GET** | `/admin/maintenance-records` | `getMaintenanceRecords` | Fetches maintenance records for a specific item. Accepts `item_id` and `limit` as query parameters. |
 | **GET** | `/admin/images/{photoId}` | `fetchPhotoById` | Retrieves a specific photo object by its ID. Returns null if 404. |
 | **POST** | `/admin/images/presign` | `uploadPhoto` | Requests presigned S3 URLs for uploading the original image and thumbnail. |
