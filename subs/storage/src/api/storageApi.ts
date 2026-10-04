@@ -222,11 +222,20 @@ export const itemsAPI = {
   async bulkStore(itemIds: string[], location: string): Promise<any> {
     if (!auth().hasMinRole('builder')) throw new Error('Insufficient permissions');
     const API_ENDPOINT = await getApiEndpoint();
-    const response = await fetch(`${API_ENDPOINT}/admin/items/bulk`, {
-      method: 'PATCH',
-      headers: auth().buildHeaders(),
-      body: JSON.stringify({ item_ids: itemIds, location }),
-    });
+    // Single attempt, no retry: this is a write. A route miss surfaces as a
+    // TypeError("Failed to fetch") in the browser, so rethrow it readably.
+    let response: Response;
+    try {
+      response = await fetch(`${API_ENDPOINT}/items/bulk`, {
+        method: 'PATCH',
+        headers: auth().buildHeaders(),
+        body: JSON.stringify({ item_ids: itemIds, location }),
+      });
+    } catch {
+      throw new Error(
+        "Couldn't reach the items service (PATCH /items/bulk). Refresh and try again; if it persists, the endpoint may be misconfigured.",
+      );
+    }
     const data = await handleResponse(response);
     return data.success && data.data ? data.data : data;
   },
