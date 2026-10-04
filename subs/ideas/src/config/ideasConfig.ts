@@ -232,3 +232,18 @@ export interface Cost {
   receipt_data?: { url?: string };
   related_idea_id?: string;
 }
+
+// Deferral (#604): punting an idea to a future season reuses the existing
+// `bucket` field. The Planning auto-bucket (#603 guard) is always "{year}
+// Off-Season", so any bucket not ending in that suffix is a deliberate target.
+export const DEFAULT_BUCKET_SUFFIX = 'Off-Season';
+
+// Deferral targets are next year's seasons — "not this cycle" by construction.
+export function deferTargets(now: Date = new Date()): string[] {
+  const year = now.getFullYear() + 1;
+  return SEASONS.map((s) => `${year} ${s}`);
+}
+
+export function isDeferred(idea: Pick<Idea, 'status' | 'bucket'>): boolean {
+  return idea.status === 'Planning' && !!idea.bucket && !idea.bucket.endsWith(DEFAULT_BUCKET_SUFFIX);
+}
