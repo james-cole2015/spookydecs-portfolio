@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   Button,
   Card,
@@ -69,7 +69,17 @@ export default function SessionPage() {
   const [search, setSearch] = useState('');
   const [connectSource, setConnectSource] = useState<SourceItem | null>(null);
   const [staticPropOpen, setStaticPropOpen] = useState(false);
-  const [endReviewOpen, setEndReviewOpen] = useState(false);
+  // Zone page's End Session navigates here with openEndReview so the photo prompt opens on arrival (#618)
+  const location = useLocation();
+  const [endReviewOpen, setEndReviewOpen] = useState(
+    () => !!(location.state as { openEndReview?: boolean } | null)?.openEndReview,
+  );
+  useEffect(() => {
+    if ((location.state as { openEndReview?: boolean } | null)?.openEndReview) {
+      navigate(location.pathname, { replace: true, state: null });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Remove reason modal (shared by connections and placements)
   const [removeTarget, setRemoveTarget] = useState<string | null>(null);
