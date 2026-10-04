@@ -66,6 +66,8 @@ export { FilterBar } from './components/FilterBar';
 export type { FilterBarProps, Filters, FilterOption } from './components/FilterBar';
 export { EntityPicker } from './components/EntityPicker';
 export type { EntityPickerProps, PickerOption } from './components/EntityPicker';
+export { EntityList } from './components/EntityList';
+export type { EntityListProps, EntityListOption } from './components/EntityList';
 export { PhotoGallery } from './components/PhotoGallery';
 export type { PhotoGalleryProps, PhotoGalleryContext, PhotoGalleryPhoto } from './components/PhotoGallery';
 export { PhotoLightbox } from './components/PhotoLightbox';

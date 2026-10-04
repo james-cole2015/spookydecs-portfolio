@@ -11,12 +11,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { Button, Card, CardBody, CardHeader, Select, SelectItem, Tab, Tabs } from '@heroui/react';
 import { ArrowLeft, Camera } from 'lucide-react';
 import {
+  EntityList,
   EntityPicker,
   LoadingState,
   ErrorState,
   PageHeader,
   usePhotoUpload,
   useToast,
+  type EntityListOption,
   type PickerOption,
 } from '@spookydecs/ui';
 import { useNavigate } from 'react-router-dom';
@@ -124,39 +126,27 @@ export default function PlacePhotoPage() {
     };
   }, [target]);
 
-  // Client-side filter for the one-shot lists.
-  const filteredOptions = useMemo(() => {
-    if (target === 'item') return options;
-    const needle = query.trim().toLowerCase();
-    if (!needle) return options;
-    return options.filter(
-      (o) => o.label.toLowerCase().includes(needle) || o.id.toLowerCase().includes(needle),
-    );
-  }, [target, options, query]);
-
   // Connection target: items that touch at least one connection, filtered by the query.
-  const connectionItemOptions = useMemo<PickerOption[]>(() => {
+  const connectionItemOptions = useMemo<EntityListOption[]>(() => {
     if (!connections) return [];
     const byItem = new Map<string, number>();
     for (const c of connections) {
       for (const id of c.itemIds) byItem.set(id, (byItem.get(id) ?? 0) + 1);
     }
-    const needle = query.trim().toLowerCase();
-    return Array.from(byItem.entries())
-      .filter(([id]) => !needle || id.toLowerCase().includes(needle))
-      .map(([id, count]) => ({
-        id,
-        label: id,
-        description: `${count} connection${count === 1 ? '' : 's'}`,
-      }));
-  }, [connections, query]);
+    return Array.from(byItem.entries()).map(([id, count]) => ({
+      id,
+      label: id,
+      description: `${count} connection${count === 1 ? '' : 's'}`,
+    }));
+  }, [connections]);
 
   const connectionsForItem = useMemo(
     () => (connections ?? []).filter((c) => selectedId && c.itemIds.includes(selectedId)),
     [connections, selectedId],
   );
 
-  const pickerOptions = target === 'connection' ? connectionItemOptions : filteredOptions;
+  // Lists show every candidate and filter in place; items use the server search.
+  const listOptions = target === 'connection' ? connectionItemOptions : options;
   const selectedConnection = connectionsForItem.find(
     (c) => `${c.deploymentId}::${c.connectionId}` === selectedConnectionKey,
   );
@@ -231,19 +221,33 @@ export default function PlacePhotoPage() {
         <CardBody className="gap-5">
           {error && <ErrorState message={error} />}
 
-          <EntityPicker
-            label={`Search ${TARGET_LABEL[target].toLowerCase()}`}
-            options={pickerOptions}
-            query={query}
-            onQueryChange={setQuery}
-            selectedId={selectedId}
-            onSelect={(id) => {
-              setSelectedId(id);
-              setSelectedConnectionKey(null);
-            }}
-            loading={loading}
-            hint={target === 'item' && query.trim().length < 2 ? 'Type at least 2 characters to search' : undefined}
-          />
+          {target === 'item' ? (
+            <EntityPicker
+              label="Search items"
+              options={options}
+              query={query}
+              onQueryChange={setQuery}
+              selectedId={selectedId}
+              onSelect={(id) => {
+                setSelectedId(id);
+                setSelectedConnectionKey(null);
+              }}
+              loading={loading}
+              hint={query.trim().length < 2 ? 'Type at least 2 characters to search' : undefined}
+            />
+          ) : (
+            <EntityList
+              searchLabel={`Filter ${TARGET_LABEL[target].toLowerCase()}`}
+              options={listOptions}
+              selectedId={selectedId}
+              onSelect={(id) => {
+                setSelectedId(id);
+                setSelectedConnectionKey(null);
+              }}
+              loading={loading}
+              emptyText={`No ${TARGET_LABEL[target].toLowerCase()} to show`}
+            />
+          )}
 
           {target === 'connection' && selectedId && (
             <Select

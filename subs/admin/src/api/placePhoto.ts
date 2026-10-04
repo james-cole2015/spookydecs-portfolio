@@ -7,7 +7,7 @@
  * only handles reads and the one write that is not a plain upload
  * (connection photos, which the deployments sub links via PATCH).
  */
-import type { PickerOption } from '@spookydecs/ui';
+import type { EntityListOption, PickerOption } from '@spookydecs/ui';
 
 const { buildHeaders, redirectToLogin } = window.SpookyAuth;
 
@@ -55,23 +55,56 @@ export async function searchItemOptions(query: string): Promise<PickerOption[]> 
 }
 
 /** List ideas (all statuses — completed ideas can still get photos). */
-export async function listIdeaOptions(): Promise<PickerOption[]> {
+export async function listIdeaOptions(): Promise<EntityListOption[]> {
   const data = await getJson<Array<Record<string, unknown>>>('/ideas');
   return (data ?? []).map((idea) => ({
     id: String(idea.id ?? idea.idea_id),
     label: String(idea.title || idea.id || idea.idea_id),
     description: idea.status ? String(idea.status) : undefined,
+    tags: idea.status ? [String(idea.status)] : [],
   }));
 }
 
-/** List maintenance records (repairs and inspections; any status). */
-export async function listMaintenanceOptions(): Promise<PickerOption[]> {
+/**
+ * Look up item short names for a set of ids. A failed lookup falls back to the
+ * id, so one bad item does not blank the whole list.
+ */
+async function itemShortNames(ids: string[]): Promise<Map<string, string>> {
+  const names = new Map<string, string>();
+  await Promise.all(
+    ids.map(async (id) => {
+      try {
+        const item = await getJson<Record<string, unknown>>(`/items/${encodeURIComponent(id)}`);
+        if (item?.short_name) names.set(id, String(item.short_name));
+      } catch {
+        // Fall back to the id below.
+      }
+    }),
+  );
+  return names;
+}
+
+/**
+ * List maintenance records (repairs and inspections; any status). Each option is
+ * labelled with the item's short name, so the picker's search matches it.
+ */
+export async function listMaintenanceOptions(): Promise<EntityListOption[]> {
   const data = await getJson<Array<Record<string, unknown>>>('/admin/maintenance-records');
-  return (data ?? []).map((record) => ({
-    id: String(record.record_id),
-    label: String(record.title || record.record_type || record.record_id),
-    description: [record.item_id, record.status].filter(Boolean).map(String).join(' · ') || undefined,
-  }));
+  const records = data ?? [];
+  const itemIds = Array.from(new Set(records.map((r) => String(r.item_id ?? '')).filter(Boolean)));
+  const names = await itemShortNames(itemIds);
+
+  return records.map((record) => {
+    const itemId = String(record.item_id ?? '');
+    const itemName = names.get(itemId) ?? itemId;
+    const kind = String(record.record_type ?? 'record');
+    return {
+      id: String(record.record_id),
+      label: [itemName, kind].filter(Boolean).join(' · '),
+      description: [record.title, record.status].filter(Boolean).map(String).join(' · ') || undefined,
+      tags: [kind, String(record.status ?? '')].filter(Boolean),
+    };
+  });
 }
 
 /**
