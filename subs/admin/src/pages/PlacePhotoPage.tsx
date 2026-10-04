@@ -1,0 +1,283 @@
+/**
+ * Place Photo — attach a new photo to an existing record from one admin place (#621).
+ *
+ * The core case is out-of-band: the record was completed earlier, and the photo is
+ * taken and uploaded later. Pick a target type, pick the record, upload. Uploads go
+ * through the shared usePhotoUpload pipeline with the owning sub's context, so the
+ * photo lands where that sub already expects it. Connection photos are linked to the
+ * connection after upload.
+ */
+import { useEffect, useMemo, useState } from 'react';
+import { Button, Card, CardBody, CardHeader, Select, SelectItem, Tab, Tabs } from '@heroui/react';
+import { ArrowLeft, Camera } from 'lucide-react';
+import {
+  EntityPicker,
+  LoadingState,
+  ErrorState,
+  PageHeader,
+  usePhotoUpload,
+  useToast,
+  type PickerOption,
+} from '@spookydecs/ui';
+import { useNavigate } from 'react-router-dom';
+import {
+  attachPhotosToConnection,
+  listConnectionOptions,
+  listIdeaOptions,
+  listMaintenanceOptions,
+  searchItemOptions,
+  type ConnectionOption,
+  type PlaceTarget,
+} from '../api/placePhoto';
+
+/** Upload context per target. The connection target uploads under `deployment`. */
+const TARGET_CONTEXT: Record<PlaceTarget, string> = {
+  item: 'item',
+  connection: 'deployment',
+  idea: 'idea',
+  maintenance: 'maintenance',
+};
+
+const TARGET_LABEL: Record<PlaceTarget, string> = {
+  item: 'Item',
+  connection: 'Connection',
+  idea: 'Idea',
+  maintenance: 'Maintenance / Inspection',
+};
+
+export default function PlacePhotoPage() {
+  const navigate = useNavigate();
+  const toast = useToast();
+  const { openWithEditor, editor } = usePhotoUpload();
+
+  const [target, setTarget] = useState<PlaceTarget>('item');
+  const [query, setQuery] = useState('');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  // Options for the current target. Item options come from a debounced server search;
+  // the other targets load their full list once and filter it client-side.
+  const [options, setOptions] = useState<PickerOption[]>([]);
+  const [connections, setConnections] = useState<ConnectionOption[] | null>(null);
+  const [selectedConnectionKey, setSelectedConnectionKey] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  // Reset selection when the target type changes.
+  useEffect(() => {
+    setQuery('');
+    setSelectedId(null);
+    setSelectedConnectionKey(null);
+    setOptions([]);
+  }, [target]);
+
+  // Item search: debounced server search on every query change.
+  useEffect(() => {
+    if (target !== 'item') return;
+    let cancelled = false;
+    setError(null);
+    setLoading(true);
+    const timer = window.setTimeout(async () => {
+      try {
+        const found = await searchItemOptions(query);
+        if (!cancelled) setOptions(found);
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Item search failed');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }, 250);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [target, query]);
+
+  // Idea / maintenance / connection lists: load once per target, filter client-side.
+  useEffect(() => {
+    if (target === 'item') return;
+    let cancelled = false;
+    setError(null);
+    setLoading(true);
+
+    const load = async () => {
+      try {
+        if (target === 'idea') {
+          const all = await listIdeaOptions();
+          if (!cancelled) setOptions(all);
+        } else if (target === 'maintenance') {
+          const all = await listMaintenanceOptions();
+          if (!cancelled) setOptions(all);
+        } else {
+          const all = await listConnectionOptions();
+          if (!cancelled) setConnections(all);
+        }
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [target]);
+
+  // Client-side filter for the one-shot lists.
+  const filteredOptions = useMemo(() => {
+    if (target === 'item') return options;
+    const needle = query.trim().toLowerCase();
+    if (!needle) return options;
+    return options.filter(
+      (o) => o.label.toLowerCase().includes(needle) || o.id.toLowerCase().includes(needle),
+    );
+  }, [target, options, query]);
+
+  // Connection target: items that touch at least one connection, filtered by the query.
+  const connectionItemOptions = useMemo<PickerOption[]>(() => {
+    if (!connections) return [];
+    const byItem = new Map<string, number>();
+    for (const c of connections) {
+      for (const id of c.itemIds) byItem.set(id, (byItem.get(id) ?? 0) + 1);
+    }
+    const needle = query.trim().toLowerCase();
+    return Array.from(byItem.entries())
+      .filter(([id]) => !needle || id.toLowerCase().includes(needle))
+      .map(([id, count]) => ({
+        id,
+        label: id,
+        description: `${count} connection${count === 1 ? '' : 's'}`,
+      }));
+  }, [connections, query]);
+
+  const connectionsForItem = useMemo(
+    () => (connections ?? []).filter((c) => selectedId && c.itemIds.includes(selectedId)),
+    [connections, selectedId],
+  );
+
+  const pickerOptions = target === 'connection' ? connectionItemOptions : filteredOptions;
+  const selectedConnection = connectionsForItem.find(
+    (c) => `${c.deploymentId}::${c.connectionId}` === selectedConnectionKey,
+  );
+
+  // The record that receives the upload. For connections it is the deployment and the
+  // connection is linked after upload.
+  const canUpload =
+    target === 'connection' ? Boolean(selectedConnection) : Boolean(selectedId);
+
+  const handleUpload = async () => {
+    setUploading(true);
+    try {
+      if (target === 'connection' && selectedConnection) {
+        const photos = await openWithEditor({
+          context: TARGET_CONTEXT.connection,
+          entityId: selectedConnection.deploymentId,
+        });
+        if (photos.length === 0) return;
+        await attachPhotosToConnection(
+          selectedConnection.deploymentId,
+          selectedConnection.connectionId,
+          photos.map((p) => p.photo_id),
+        );
+        toast.showSuccess(
+          `${photos.length} photo${photos.length === 1 ? '' : 's'} linked to connection ${selectedConnection.connectionId}.`,
+        );
+        return;
+      }
+
+      if (selectedId) {
+        const photos = await openWithEditor({
+          context: TARGET_CONTEXT[target],
+          entityId: selectedId,
+        });
+        if (photos.length === 0) return;
+        toast.showSuccess(
+          `${photos.length} photo${photos.length === 1 ? '' : 's'} uploaded to ${TARGET_LABEL[target]} ${selectedId}.`,
+        );
+      }
+    } catch (err) {
+      toast.showError(err instanceof Error ? err.message : 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <>
+      <PageHeader
+        title="Place Photo"
+        subtitle="Attach a photo to a record you already completed. Pick the record, then upload."
+        actions={
+          <Button variant="light" startContent={<ArrowLeft size={16} />} onPress={() => navigate('/')}>
+            Back
+          </Button>
+        }
+      />
+
+      <Card shadow="md" className="bg-content1">
+        <CardHeader className="flex-col items-stretch gap-3">
+          <Tabs
+            aria-label="Target type"
+            selectedKey={target}
+            onSelectionChange={(key) => setTarget(key as PlaceTarget)}
+          >
+            {(Object.keys(TARGET_LABEL) as PlaceTarget[]).map((t) => (
+              <Tab key={t} title={TARGET_LABEL[t]} />
+            ))}
+          </Tabs>
+        </CardHeader>
+
+        <CardBody className="gap-5">
+          {error && <ErrorState message={error} />}
+
+          <EntityPicker
+            label={`Search ${TARGET_LABEL[target].toLowerCase()}`}
+            options={pickerOptions}
+            query={query}
+            onQueryChange={setQuery}
+            selectedId={selectedId}
+            onSelect={(id) => {
+              setSelectedId(id);
+              setSelectedConnectionKey(null);
+            }}
+            loading={loading}
+            hint={target === 'item' && query.trim().length < 2 ? 'Type at least 2 characters to search' : undefined}
+          />
+
+          {target === 'connection' && selectedId && (
+            <Select
+              label="Connection"
+              variant="bordered"
+              selectedKeys={selectedConnectionKey ? [selectedConnectionKey] : []}
+              onSelectionChange={(keys) => setSelectedConnectionKey(Array.from(keys)[0] as string)}
+              isDisabled={connectionsForItem.length === 0}
+            >
+              {connectionsForItem.map((c) => (
+                <SelectItem key={`${c.deploymentId}::${c.connectionId}`} textValue={c.description}>
+                  {c.description}
+                </SelectItem>
+              ))}
+            </Select>
+          )}
+
+          {target === 'connection' && loading && connections === null && <LoadingState />}
+
+          <div className="flex justify-end">
+            <Button
+              color="primary"
+              startContent={<Camera size={16} />}
+              isDisabled={!canUpload}
+              isLoading={uploading}
+              onPress={handleUpload}
+            >
+              Choose photos to upload
+            </Button>
+          </div>
+        </CardBody>
+      </Card>
+
+      {editor}
+    </>
+  );
+}

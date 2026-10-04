@@ -11,6 +11,7 @@ const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
 const SearchTextPage = lazy(() => import('./pages/SearchTextPage'));
 const AddOutletPage = lazy(() => import('./pages/AddOutletPage'));
+const PlacePhotoPage = lazy(() => import('./pages/PlacePhotoPage'));
 
 export default function App() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
             <Route path="/about" element={<AboutPage />} />
             <Route path="/search-text" element={<SearchTextPage />} />
             <Route path="/add-outlet" element={<AddOutletPage />} />
+            <Route path="/place-photo" element={<PlacePhotoPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>

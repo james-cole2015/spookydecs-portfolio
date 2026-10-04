@@ -64,6 +64,8 @@ export { useResumablePoll } from './hooks/useResumablePoll';
 export type { UseResumablePoll, ResumablePollConfig } from './hooks/useResumablePoll';
 export { FilterBar } from './components/FilterBar';
 export type { FilterBarProps, Filters, FilterOption } from './components/FilterBar';
+export { EntityPicker } from './components/EntityPicker';
+export type { EntityPickerProps, PickerOption } from './components/EntityPicker';
 export { PhotoGallery } from './components/PhotoGallery';
 export type { PhotoGalleryProps, PhotoGalleryContext, PhotoGalleryPhoto } from './components/PhotoGallery';
 export { PhotoLightbox } from './components/PhotoLightbox';
