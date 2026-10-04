@@ -494,7 +494,12 @@ export default function DetailPage() {
               </>
             )}
             {(idea.status === 'Considering' || idea.status === 'Planning' || idea.status === 'Workbench') && (
-              <Button size="sm" variant="flat" onPress={() => setDeferOpen(true)}>
+              <Button
+                size="sm"
+                variant="flat"
+                isDisabled={idea.status === 'Considering' && planningGateMissing.length > 0}
+                onPress={() => setDeferOpen(true)}
+              >
                 Defer
               </Button>
             )}

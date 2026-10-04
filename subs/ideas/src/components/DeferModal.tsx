@@ -20,11 +20,15 @@ export function DeferModal({
   const [target, setTarget] = useState<string>(targets[0]);
   const [saving, setSaving] = useState(false);
 
+  // onConfirm reports its own failure via toast; swallow here so the modal stays
+  // open for a retry instead of surfacing an unhandled rejection.
   async function handleConfirm() {
     setSaving(true);
     try {
       await onConfirm(target);
       onClose();
+    } catch {
+      /* toast shown by caller */
     } finally {
       setSaving(false);
     }
