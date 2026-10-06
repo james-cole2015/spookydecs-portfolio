@@ -116,8 +116,8 @@ export function EntityList({
               role="option"
               aria-selected={selected}
               onClick={() => onSelect(option.id)}
-              className={`flex flex-col items-start gap-0.5 border-b border-default-100 px-4 py-2 text-left last:border-b-0 hover:bg-default-100 ${
-                selected ? 'bg-primary-50' : ''
+              className={`flex flex-col items-start gap-0.5 border-b border-default-100 px-4 py-2 text-left text-foreground last:border-b-0 hover:bg-default-100 ${
+                selected ? 'bg-primary/20 font-medium' : ''
               }`}
             >
               <span className="text-small text-foreground">{option.label}</span>
