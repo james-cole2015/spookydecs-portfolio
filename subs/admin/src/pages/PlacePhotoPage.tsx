@@ -157,6 +157,14 @@ export default function PlacePhotoPage() {
   const canUpload =
     target === 'connection' ? Boolean(selectedConnection) : Boolean(selectedId);
 
+  // After a successful upload, clear the selection so the next record starts fresh.
+  // Target type and the loaded lists stay as they are.
+  const resetSelection = () => {
+    setSelectedId(null);
+    setSelectedConnectionKey(null);
+    setQuery('');
+  };
+
   const handleUpload = async () => {
     setUploading(true);
     try {
@@ -174,6 +182,7 @@ export default function PlacePhotoPage() {
         toast.showSuccess(
           `${photos.length} photo${photos.length === 1 ? '' : 's'} linked to connection ${selectedConnection.connectionId}.`,
         );
+        resetSelection();
         return;
       }
 
@@ -192,6 +201,7 @@ export default function PlacePhotoPage() {
         toast.showSuccess(
           `${photos.length} photo${photos.length === 1 ? '' : 's'} uploaded to ${TARGET_LABEL[target]} ${selectedId}.`,
         );
+        resetSelection();
       }
     } catch (err) {
       toast.showError(err instanceof Error ? err.message : 'Upload failed');
