@@ -299,6 +299,11 @@ function ViewPanel({
             </div>
           </ReadonlyRow>
         )}
+        {photo.deployment_id && (
+          <ReadonlyRow label="Deployment ID">
+            <span className="font-mono text-tiny">{photo.deployment_id}</span>
+          </ReadonlyRow>
+        )}
         {category === 'maintenance' && photo.record_id && maintUrl && (
           <ReadonlyRow label="Repair Record">
             <a
