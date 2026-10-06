@@ -56,6 +56,10 @@ export default function PlacePhotoPage() {
   const [target, setTarget] = useState<PlaceTarget>('item');
   const [query, setQuery] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Label is kept at pick time: item search results can change while a record stays selected.
+  const [selectedLabel, setSelectedLabel] = useState<{ label: string; description?: string } | null>(null);
+  // The list is open until a record is picked; it collapses to a summary card after that.
+  const [editing, setEditing] = useState(true);
 
   // Options for the current target. Item options come from a debounced server search;
   // the other targets load their full list once and filter it client-side.
@@ -70,7 +74,9 @@ export default function PlacePhotoPage() {
   useEffect(() => {
     setQuery('');
     setSelectedId(null);
+    setSelectedLabel(null);
     setSelectedConnectionKey(null);
+    setEditing(true);
     setOptions([]);
   }, [target]);
 
@@ -161,8 +167,19 @@ export default function PlacePhotoPage() {
   // Target type and the loaded lists stay as they are.
   const resetSelection = () => {
     setSelectedId(null);
+    setSelectedLabel(null);
     setSelectedConnectionKey(null);
     setQuery('');
+    setEditing(true);
+  };
+
+  const handlePick = (id: string) => {
+    const source = target === 'connection' ? connectionItemOptions : options;
+    const match = source.find((o) => o.id === id);
+    setSelectedId(id);
+    setSelectedLabel(match ? { label: match.label, description: match.description } : { label: id });
+    setSelectedConnectionKey(null);
+    setEditing(false);
   };
 
   const handleUpload = async () => {
@@ -238,32 +255,56 @@ export default function PlacePhotoPage() {
         <CardBody className="gap-5">
           {error && <ErrorState message={error} />}
 
-          {target === 'item' ? (
-            <EntityPicker
-              label="Search items"
-              options={options}
-              query={query}
-              onQueryChange={setQuery}
-              selectedId={selectedId}
-              onSelect={(id) => {
-                setSelectedId(id);
-                setSelectedConnectionKey(null);
-              }}
-              loading={loading}
-              hint={query.trim().length < 2 ? 'Type at least 2 characters to search' : undefined}
-            />
+          {editing || !selectedId ? (
+            target === 'item' ? (
+              <EntityPicker
+                label="Search items"
+                options={options}
+                query={query}
+                onQueryChange={setQuery}
+                selectedId={selectedId}
+                onSelect={(id) => {
+                  if (id) handlePick(id);
+                }}
+                loading={loading}
+                hint={query.trim().length < 2 ? 'Type at least 2 characters to search' : undefined}
+              />
+            ) : (
+              <EntityList
+                searchLabel={`Filter ${TARGET_LABEL[target].toLowerCase()}`}
+                options={listOptions}
+                selectedId={selectedId}
+                onSelect={handlePick}
+                loading={loading}
+                emptyText={`No ${TARGET_LABEL[target].toLowerCase()} to show`}
+              />
+            )
           ) : (
-            <EntityList
-              searchLabel={`Filter ${TARGET_LABEL[target].toLowerCase()}`}
-              options={listOptions}
-              selectedId={selectedId}
-              onSelect={(id) => {
-                setSelectedId(id);
-                setSelectedConnectionKey(null);
-              }}
-              loading={loading}
-              emptyText={`No ${TARGET_LABEL[target].toLowerCase()} to show`}
-            />
+            <Card className="bg-content2 shadow-none">
+              <CardBody className="flex-row items-center justify-between gap-3">
+                <div className="flex min-w-0 flex-col">
+                  <span className="text-tiny uppercase tracking-wide text-default-500">
+                    {TARGET_LABEL[target]}
+                  </span>
+                  <span className="truncate font-medium text-foreground">
+                    {selectedLabel?.label ?? selectedId}
+                  </span>
+                  {selectedLabel?.description && (
+                    <span className="truncate text-tiny text-default-500">{selectedLabel.description}</span>
+                  )}
+                </div>
+                <Button
+                  variant="flat"
+                  size="sm"
+                  onPress={() => {
+                    setEditing(true);
+                    setSelectedConnectionKey(null);
+                  }}
+                >
+                  Change
+                </Button>
+              </CardBody>
+            </Card>
           )}
 
           {target === 'connection' && selectedId && (
