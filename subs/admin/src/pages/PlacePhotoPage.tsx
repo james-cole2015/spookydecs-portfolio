@@ -188,9 +188,13 @@ export default function PlacePhotoPage() {
       if (target === 'connection' && selectedConnection) {
         // The connection's item travels with the upload, so the photo has item_id and
         // the item's entity page finds it. selectedId is one endpoint of this connection.
+        // Season comes from the deployment, lowercased to the photo key (Halloween -> halloween).
+        // Without it the upload defaults to "shared".
         const photos = await openWithEditor({
           context: TARGET_CONTEXT.connection,
           entityId: selectedConnection.deploymentId,
+          season: selectedConnection.season?.toLowerCase(),
+          ...(selectedConnection.year ? { year: selectedConnection.year } : {}),
           metadata: { item_ids: [selectedId] },
         });
         if (photos.length === 0) return;

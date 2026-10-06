@@ -29,6 +29,9 @@ export interface ConnectionOption {
   connectionId: string;
   itemIds: string[];
   description: string;
+  /** The deployment's season, as the deployments sub stores it (e.g. "Halloween"). */
+  season?: string;
+  year?: number;
 }
 
 /** GET a JSON envelope; redirects to login on 401; returns null on 401. */
@@ -128,6 +131,8 @@ export async function listConnectionOptions(): Promise<ConnectionOption[]> {
 
   for (const deployment of deployments ?? []) {
     const deploymentId = String(deployment.deployment_id);
+    const season = deployment.season ? String(deployment.season) : undefined;
+    const year = deployment.year ? Number(deployment.year) : undefined;
     const detail = await getJson<{ connections?: Array<Record<string, unknown>> }>(
       `/deployments/${encodeURIComponent(deploymentId)}?include=connections`,
     );
@@ -138,6 +143,8 @@ export async function listConnectionOptions(): Promise<ConnectionOption[]> {
         connectionId: String(c.connection_id),
         itemIds,
         description: `${c.from_item_id ?? '?'} → ${c.to_item_id ?? '?'}`,
+        season,
+        year,
       });
     }
   }
