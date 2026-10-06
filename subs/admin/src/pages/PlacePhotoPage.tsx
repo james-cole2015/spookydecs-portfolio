@@ -186,9 +186,12 @@ export default function PlacePhotoPage() {
     setUploading(true);
     try {
       if (target === 'connection' && selectedConnection) {
+        // The connection's item travels with the upload, so the photo has item_id and
+        // the item's entity page finds it. selectedId is one endpoint of this connection.
         const photos = await openWithEditor({
           context: TARGET_CONTEXT.connection,
           entityId: selectedConnection.deploymentId,
+          metadata: { item_ids: [selectedId] },
         });
         if (photos.length === 0) return;
         await attachPhotosToConnection(
