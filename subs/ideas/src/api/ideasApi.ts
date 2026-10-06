@@ -153,6 +153,17 @@ export async function createItem(body: Record<string, unknown>): Promise<any> {
   return await handleResponse(response);
 }
 
+// Full-update PUT (not PATCH: the PATCH route only accepts core fields). #616 uses it to clear needs_photo.
+export async function updateItem(itemId: string, body: Record<string, unknown>): Promise<any> {
+  const base = await getApiBase();
+  const response = await fetch(`${base}/items/${itemId}`, {
+    method: 'PUT',
+    headers: auth().buildHeaders(),
+    body: JSON.stringify(body),
+  });
+  return await handleResponse(response);
+}
+
 // GET all photos linked to an idea (via images table GSI)
 export async function getIdeaPhotos(ideaId: string, photoType?: string): Promise<any[]> {
   const base = await getApiBase();

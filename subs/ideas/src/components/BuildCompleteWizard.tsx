@@ -21,9 +21,10 @@ import {
   Checkbox,
   Link,
 } from '@heroui/react';
-import { createItem, createIdea, updateIdea, getIdeaCosts } from '../api/ideasApi';
+import { createItem, createIdea, updateIdea, updateItem, getIdeaCosts } from '../api/ideasApi';
 import { CLASS_TYPES, ITEMS_BASE_URL, type Idea } from '../config/ideasConfig';
 import { formatDate } from '../lib/format';
+import { usePhotoUpload } from '@spookydecs/ui';
 
 const todayIso = () => new Date().toISOString().slice(0, 10);
 
@@ -93,6 +94,10 @@ export function BuildCompleteWizard({
   const [remainderState, setRemainderState] = useState('');
   const [remainderIdeaId, setRemainderIdeaId] = useState('');
   const [remainderError, setRemainderError] = useState('');
+  // #616: optional item photo on the success screen (single-unit builds only).
+  const { openWithEditor, editor: photoEditor } = usePhotoUpload();
+  const [photoState, setPhotoState] = useState<'idle' | 'saving' | 'done'>('idle');
+  const [photoError, setPhotoError] = useState('');
 
   const fields = useMemo(() => specFields(cls, classType), [cls, classType]);
 
@@ -139,6 +144,7 @@ export function BuildCompleteWizard({
       class_type: classType,
       season: idea.season,
       status: 'Ready', // §6A canonical lifecycle (#280) — legacy 'Active' was renamed to 'Ready'
+      needs_photo: true, // #616: cleared once a photo is attached; skipping completion never blocks on it
       general_notes: generalNotes.trim(),
       date_acquired: String(new Date().getFullYear()),
       build_data: { idea_build: true, related_idea_id: idea.id },
@@ -163,6 +169,29 @@ export function BuildCompleteWizard({
       if ('length' in spec) itemBody.length = spec.length || '';
     }
     return itemBody;
+  }
+
+  // #616: attach an optional photo to the just-created item and clear needs_photo.
+  // Runs only after the idea is marked Built, so a photo failure never undoes completion.
+  async function addPhoto() {
+    if (!createdItemId) return;
+    setPhotoError('');
+    try {
+      const photos = await openWithEditor({
+        context: 'item',
+        entityId: createdItemId,
+        season: idea.season,
+        maxPhotos: 1,
+      });
+      if (photos.length === 0) return;
+      setPhotoState('saving');
+      await updateItem(createdItemId, { needs_photo: false });
+      setPhotoState('done');
+    } catch (err) {
+      console.error(`[616] Photo attach failed for item=${createdItemId}:`, err);
+      setPhotoError((err as Error).message);
+      setPhotoState('idle');
+    }
   }
 
   async function submit() {
@@ -461,6 +490,28 @@ export function BuildCompleteWizard({
                   </>
                 )}
               </p>
+              {createdItemIds.length === 1 && (
+                <div className="flex w-full flex-col items-center gap-2 rounded-medium bg-default-100 p-3">
+                  {photoState === 'done' ? (
+                    <p className="text-small text-success">Photo added. Item is no longer flagged for a photo.</p>
+                  ) : (
+                    <>
+                      <p className="text-small text-default-500">
+                        Add a photo now, or skip. A skipped item stays flagged as needing a photo.
+                      </p>
+                      <Button
+                        variant="flat"
+                        size="sm"
+                        onPress={addPhoto}
+                        isLoading={photoState === 'saving'}
+                      >
+                        Add Photo
+                      </Button>
+                    </>
+                  )}
+                  {photoError && <p className="text-tiny text-danger">Photo upload failed: {photoError}</p>}
+                </div>
+              )}
               {hasRemainder && remainderIdeaId && (
                 <p className="text-small text-default-500">
                   A new idea was created for the remaining{' '}
@@ -485,6 +536,7 @@ export function BuildCompleteWizard({
           )}
 
           {error && <p className="text-small text-danger">{error}</p>}
+          {photoEditor}
         </ModalBody>
         <ModalFooter>
           {step === 1 && (
