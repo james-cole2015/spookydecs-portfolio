@@ -85,6 +85,7 @@ export default function ConnectionDetailPage() {
   const [fromItem, setFromItem] = useState<any>(null);
   const [toItem, setToItem] = useState<any>(null);
   const [illuminatedItems, setIlluminatedItems] = useState<any[]>([]);
+  const [photos, setPhotos] = useState<Array<{ photo_id: string; url: string; thumb: string }>>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -126,7 +127,20 @@ export default function ConnectionDetailPage() {
         };
         await Promise.all([resolvePhoto(from), resolvePhoto(to), ...illuminated.map(resolvePhoto)]);
 
+        // Connection photos are linked by id (photo_ids). Load each record for its URLs.
+        const photoRecords = await Promise.all(
+          (conn.photo_ids ?? []).map((id: string) => fetchImageById(id).catch(() => null)),
+        );
+        const linkedPhotos = photoRecords
+          .filter((p: any) => p?.cloudfront_url)
+          .map((p: any) => ({
+            photo_id: p.photo_id,
+            url: p.cloudfront_url,
+            thumb: p.thumb_cloudfront_url || p.cloudfront_url,
+          }));
+
         if (cancelled) return;
+        setPhotos(linkedPhotos);
         setConnection(conn);
         setDeployment(dep);
         setZone(foundZone);
@@ -237,6 +251,23 @@ export default function ConnectionDetailPage() {
         <MetaCard label="Session ID" value={c.session_id} />
         <MetaCard label="Connection ID" value={c.connection_id} />
       </div>
+
+      <h2 className="mb-3 text-lg font-semibold text-foreground">Photos</h2>
+      {photos.length > 0 ? (
+        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {photos.map((photo) => (
+            <a key={photo.photo_id} href={photo.url} target="_blank" rel="noreferrer" className="block">
+              <img
+                src={photo.thumb}
+                alt={`Connection photo ${photo.photo_id}`}
+                className="h-32 w-full rounded-medium object-cover"
+              />
+            </a>
+          ))}
+        </div>
+      ) : (
+        <p className="mb-6 text-sm text-default-500">No photos for this connection yet</p>
+      )}
 
       <h2 className="mb-3 text-lg font-semibold text-foreground">Notes</h2>
       {c.notes ? (
