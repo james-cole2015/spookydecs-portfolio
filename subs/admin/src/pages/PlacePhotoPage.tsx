@@ -29,6 +29,7 @@ import {
   listMaintenanceOptions,
   searchItemOptions,
   type ConnectionOption,
+  type MaintenanceOption,
   type PlaceTarget,
 } from '../api/placePhoto';
 
@@ -177,9 +178,15 @@ export default function PlacePhotoPage() {
       }
 
       if (selectedId) {
+        // A maintenance photo also carries its item, so it is not orphaned in the images sub.
+        const maintenanceItemId =
+          target === 'maintenance'
+            ? (options as MaintenanceOption[]).find((o) => o.id === selectedId)?.itemId
+            : undefined;
         const photos = await openWithEditor({
           context: TARGET_CONTEXT[target],
           entityId: selectedId,
+          ...(maintenanceItemId ? { metadata: { item_ids: [maintenanceItemId] } } : {}),
         });
         if (photos.length === 0) return;
         toast.showSuccess(

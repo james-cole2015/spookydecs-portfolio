@@ -13,6 +13,16 @@ const { buildHeaders, redirectToLogin } = window.SpookyAuth;
 
 export type PlaceTarget = 'item' | 'connection' | 'idea' | 'maintenance';
 
+/**
+ * A maintenance option. The item id travels with it so an upload can link the
+ * photo to the item as well as the record. The images sub treats a photo with no
+ * item, idea, deployment, storage, or cost link as orphaned, and record_id alone
+ * does not count.
+ */
+export interface MaintenanceOption extends EntityListOption {
+  itemId: string;
+}
+
 /** A deployment connection, flattened with the items it touches. */
 export interface ConnectionOption {
   deploymentId: string;
@@ -88,7 +98,7 @@ async function itemShortNames(ids: string[]): Promise<Map<string, string>> {
  * List maintenance records (repairs and inspections; any status). Each option is
  * labelled with the item's short name, so the picker's search matches it.
  */
-export async function listMaintenanceOptions(): Promise<EntityListOption[]> {
+export async function listMaintenanceOptions(): Promise<MaintenanceOption[]> {
   const data = await getJson<Array<Record<string, unknown>>>('/admin/maintenance-records');
   const records = data ?? [];
   const itemIds = Array.from(new Set(records.map((r) => String(r.item_id ?? '')).filter(Boolean)));
@@ -100,6 +110,7 @@ export async function listMaintenanceOptions(): Promise<EntityListOption[]> {
     const kind = String(record.record_type ?? 'record');
     return {
       id: String(record.record_id),
+      itemId,
       label: [itemName, kind].filter(Boolean).join(' · '),
       description: [record.title, record.status].filter(Boolean).map(String).join(' · ') || undefined,
       tags: [kind, String(record.status ?? '')].filter(Boolean),
