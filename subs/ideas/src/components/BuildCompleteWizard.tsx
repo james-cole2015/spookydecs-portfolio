@@ -23,6 +23,7 @@ import {
 } from '@heroui/react';
 import { createItem, createIdea, updateIdea, updateItem, getIdeaCosts } from '../api/ideasApi';
 import { CLASS_TYPES, ITEMS_BASE_URL, type Idea } from '../config/ideasConfig';
+import { PACK_MODE_OPTIONS, packModeToStorageFlags } from '../config/packMode';
 import { formatDate } from '../lib/format';
 import { usePhotoUpload } from '@spookydecs/ui';
 
@@ -83,6 +84,7 @@ export function BuildCompleteWizard({
   const [classType, setClassType] = useState('');
   const [spec, setSpec] = useState<Record<string, string>>({});
   const [hasPowerInlet, setHasPowerInlet] = useState(true);
+  const [packMode, setPackMode] = useState('tote');
   const [generalNotes, setGeneralNotes] = useState('');
   const [costSummary, setCostSummary] = useState<string>('');
   const [error, setError] = useState('');
@@ -148,6 +150,7 @@ export function BuildCompleteWizard({
       general_notes: generalNotes.trim(),
       date_acquired: String(new Date().getFullYear()),
       build_data: { idea_build: true, related_idea_id: idea.id },
+      ...packModeToStorageFlags(packMode),
     };
     if (cls === 'Decoration') {
       itemBody.height_length = spec.height_length || '';
@@ -421,6 +424,16 @@ export function BuildCompleteWizard({
                 </Checkbox>
               )}
 
+              <Select
+                label="Pack mode"
+                description={parseUnits() !== null && parseUnits()! > 1 ? 'Applies to all units built' : undefined}
+                selectedKeys={[packMode]}
+                onChange={(e) => e.target.value && setPackMode(e.target.value)}
+                disallowEmptySelection
+              >
+                {PACK_MODE_OPTIONS.map((m) => <SelectItem key={m.value}>{m.label}</SelectItem>)}
+              </Select>
+
               <Textarea label="Notes" minRows={2} value={generalNotes} onValueChange={setGeneralNotes} />
 
               <Checkbox isSelected={hasRemainder} onValueChange={setHasRemainder}>
@@ -464,6 +477,10 @@ export function BuildCompleteWizard({
                 />
                 <ReviewRow label="Class / Type" value={`${cls} / ${classType}`} />
                 <ReviewRow label="Season" value={idea.season} />
+                <ReviewRow
+                  label="Pack mode"
+                  value={PACK_MODE_OPTIONS.find((m) => m.value === packMode)?.label ?? 'Tote-packed'}
+                />
                 <ReviewRow label="Completion Date" value={completeDate ? formatDate(completeDate) : '—'} />
                 {hasRemainder && (
                   <ReviewRow label="Remaining Units" value={`${parseRemainderUnits() ?? '—'} (new idea)`} />
