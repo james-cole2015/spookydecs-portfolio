@@ -71,8 +71,9 @@ export const FIELD_METADATA: Record<string, FieldMeta> = {
 
 // ── List-view filters ──────────────────────────────────────────────────────
 // State + option config for the shared @spookydecs/ui FilterBar (#429). `class_type`
-// is a hidden filter carried in the URL (set by landing-page nav, cascaded off
-// `class`), not a rendered select — so it is absent from FILTER_SELECT_KEYS.
+// is a class-dependent select — its options come from CLASS_HIERARCHY[class].types,
+// so ListPage renders it conditionally and builds its options at render time
+// rather than from a static FILTER_OPTIONS entry.
 
 export interface Filters {
   search: string;
@@ -94,6 +95,7 @@ export const FILTER_LABELS: Record<string, string> = {
   status: 'Status',
   season: 'Season',
   class: 'Class',
+  class_type: 'Type',
   maintenance: 'Maintenance',
 };
 
