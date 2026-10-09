@@ -6,12 +6,17 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerBody,
+  Tabs,
+  Tab,
+  Accordion,
+  AccordionItem,
   useDisclosure,
 } from '@heroui/react';
 import { Package, BarChart3, Luggage, Plus } from 'lucide-react';
 import { storageAPI, itemsAPI, photosAPI, type ItemRecord } from '../api/storageApi';
 import STORAGE_CONFIG, { type StorageUnit } from '../config/storageConfig';
 import { applyFilters, calculateStats, type StorageStats } from '../lib/stats';
+import { groupByLocation } from '../lib/groupByLocation';
 import {
   Breadcrumbs,
   PageHeader,
@@ -26,8 +31,10 @@ import {
   useToast,
 } from '@spookydecs/ui';
 import { StorageCard } from '../components/StorageCard';
+import { LocationGroup } from '../components/LocationGroup';
 
 const FILTER_KEYS = ['season', 'location', 'class_type', 'status', 'search'];
+type ViewMode = 'default' | 'location';
 
 function readFilters(params: URLSearchParams): Filters {
   return {
@@ -55,6 +62,7 @@ export default function ListPage() {
 
   const statsDrawer = useDisclosure();
   const filters = readFilters(searchParams);
+  const viewMode: ViewMode = searchParams.get('view') === 'location' ? 'location' : 'default';
   const canWrite = hasMinRole('builder');
   const canDelete = hasMinRole('admin');
 
@@ -101,6 +109,10 @@ export default function ListPage() {
   }, []);
 
   const filtered = useMemo(() => applyFilters(allStorage, filters), [allStorage, filters]);
+  const locationGroups = useMemo(
+    () => groupByLocation(allStorage, allItems, filters),
+    [allStorage, allItems, filters],
+  );
 
   function updateFilters(next: Filters) {
     const params = new URLSearchParams();
@@ -108,6 +120,14 @@ export default function ListPage() {
       const v = next[k];
       if (v && v !== 'All' && v !== '') params.set(k, v);
     });
+    if (viewMode === 'location') params.set('view', 'location');
+    setSearchParams(params, { replace: true });
+  }
+
+  function updateViewMode(next: ViewMode) {
+    const params = new URLSearchParams(searchParams);
+    if (next === 'location') params.set('view', 'location');
+    else params.delete('view');
     setSearchParams(params, { replace: true });
   }
 
@@ -159,23 +179,60 @@ export default function ListPage() {
         }
       />
 
+      <Tabs
+        selectedKey={viewMode}
+        onSelectionChange={(key) => updateViewMode(key as ViewMode)}
+        className="mb-4"
+        aria-label="View mode"
+      >
+        <Tab key="default" title="Default" />
+        <Tab key="location" title="By Location" />
+      </Tabs>
+
       <FilterBar
         filters={filters}
-        show={['season', 'location', 'class_type', 'status']}
+        show={viewMode === 'location' ? ['season', 'class_type', 'status'] : ['season', 'location', 'class_type', 'status']}
         options={STORAGE_CONFIG.FILTER_OPTIONS}
         onChange={updateFilters}
       />
 
-      <Typography type="body-sm" className="mb-3 text-default-500">
-        {filtered.length === allStorage.length
-          ? `${allStorage.length} ${allStorage.length === 1 ? 'unit' : 'units'}`
-          : `${filtered.length} of ${allStorage.length} units`}
-      </Typography>
+      {viewMode === 'default' && (
+        <Typography type="body-sm" className="mb-3 text-default-500">
+          {filtered.length === allStorage.length
+            ? `${allStorage.length} ${allStorage.length === 1 ? 'unit' : 'units'}`
+            : `${filtered.length} of ${allStorage.length} units`}
+        </Typography>
+      )}
 
       {loading ? (
         <LoadingState label="Loading storage units…" />
       ) : error ? (
         <ErrorState message={error} onRetry={loadData} />
+      ) : viewMode === 'location' ? (
+        locationGroups.length === 0 ? (
+          <EmptyState title="No storage units" message="Try adjusting your filters or create a new unit." />
+        ) : (
+          <Accordion
+            selectionMode="multiple"
+            defaultExpandedKeys={locationGroups.map((g) => g.location)}
+            variant="splitted"
+          >
+            {locationGroups.map((group) => (
+              <AccordionItem
+                key={group.location}
+                aria-label={group.location}
+                title={
+                  <span className="flex items-center gap-2">
+                    <Typography type="h6" as="span" className="text-foreground">{group.location}</Typography>
+                    <Typography type="body-xs" as="span" className="text-default-500">({group.count})</Typography>
+                  </span>
+                }
+              >
+                <LocationGroup group={group} canDelete={canDelete} onDelete={setDeleteTarget} />
+              </AccordionItem>
+            ))}
+          </Accordion>
+        )
       ) : filtered.length === 0 ? (
         <EmptyState title="No storage units" message="Try adjusting your filters or create a new unit." />
       ) : (

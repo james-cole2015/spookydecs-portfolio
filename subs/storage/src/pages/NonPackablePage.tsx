@@ -3,6 +3,7 @@ import { Card, CardBody, Chip, Image, Select, SelectItem, Input } from '@heroui/
 import { Ruler } from 'lucide-react';
 import { itemsAPI, type ItemRecord } from '../api/storageApi';
 import { getPlaceholderImage } from '../config/storageConfig';
+import { isNonPackableItem } from '../lib/nonPackable';
 import { Breadcrumbs, PageHeader, LoadingState, ErrorState, EmptyState, Typography, useConfig, SeasonChip } from '@spookydecs/ui';
 
 function sd(item: ItemRecord): Record<string, unknown> {
@@ -25,12 +26,7 @@ export default function NonPackablePage() {
     setError(null);
     try {
       const all = await itemsAPI.getAll({});
-      setItems(
-        all.filter(
-          (i) =>
-            sd(i).packable === false && i.class !== 'Deployment' && i.class !== 'Storage' && i.class_type !== 'Receptacle',
-        ),
-      );
+      setItems(all.filter(isNonPackableItem));
     } catch (e: any) {
       setError(e?.message ?? 'Failed to load items');
     } finally {
