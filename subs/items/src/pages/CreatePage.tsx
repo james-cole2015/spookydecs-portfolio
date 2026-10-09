@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Button, Card, CardBody, Divider } from '@heroui/react';
 import { Breadcrumbs, PageHeader, Typography, useToast, useAuth } from '@spookydecs/ui';
-import { CLASS_HIERARCHY, TYPE_ICONS, getClassIcon } from '../config/itemsConfig';
+import { CLASS_HIERARCHY, TYPE_ICONS, getClassIcon, PACK_MODES } from '../config/itemsConfig';
 import { BasicFields, ClassSpecificFields, VendorFields, StorageFields } from '../components/ItemFormFields';
 import { type ItemFormValues, DEFAULT_VALUES } from '../components/ItemFormSchema';
 import { buildCreatePayload, createItem } from '../api/itemsApi';
@@ -179,7 +179,7 @@ export default function CreatePage() {
               <Divider />
               <div>
                 <Typography type="h6" className="mb-3">Storage Information</Typography>
-                <StorageFields register={register} />
+                <StorageFields register={register} setValue={setValue} watch={watch} />
               </div>
               <div className="flex justify-end">
                 <Button color="primary" type="button" onPress={() => setStep(4)}>
@@ -234,6 +234,7 @@ function ReviewSummary({ values }: { values: ItemFormValues }) {
   if (values.vendor_value)       rows.push(['Value',          `$${values.vendor_value}`]);
   if (values.vendor_manufacturer)rows.push(['Manufacturer',   values.vendor_manufacturer]);
   if (values.vendor_store)       rows.push(['Store',          values.vendor_store]);
+  rows.push(['Pack Mode',        PACK_MODES.find((m) => m.value === values.pack_mode)?.label ?? 'Tote-packed']);
   if (values.storage_tote_id)    rows.push(['Tote ID',        values.storage_tote_id]);
   if (values.storage_location)   rows.push(['Location',       values.storage_location]);
 
