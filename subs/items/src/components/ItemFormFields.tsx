@@ -2,7 +2,7 @@
 // react-hook-form: register/errors/setValue passed in from the parent form context.
 import { Input, Select, SelectItem, Checkbox } from '@heroui/react';
 import { type UseFormRegister, type FieldErrors, type UseFormSetValue, type UseFormWatch } from 'react-hook-form';
-import { CLASS_TYPE_ATTRIBUTES, FIELD_METADATA, SEASONS, ITEM_STATUS } from '../config/itemsConfig';
+import { CLASS_TYPE_ATTRIBUTES, FIELD_METADATA, SEASONS, ITEM_STATUS, PACK_MODES } from '../config/itemsConfig';
 import { type ItemFormValues } from './ItemFormSchema';
 
 interface BasicFieldsProps {
@@ -122,11 +122,25 @@ export function VendorFields({ register }: VendorFieldsProps) {
 
 interface StorageFieldsProps {
   register: UseFormRegister<ItemFormValues>;
+  setValue: UseFormSetValue<ItemFormValues>;
+  watch: UseFormWatch<ItemFormValues>;
 }
 
-export function StorageFields({ register }: StorageFieldsProps) {
+export function StorageFields({ register, setValue, watch }: StorageFieldsProps) {
+  // Same watch/setValue pattern as the Season select above — HeroUI Select
+  // doesn't bind via register().
+  const packMode = watch('pack_mode');
   return (
     <div className="flex flex-col gap-4">
+      <Select
+        label="Pack Mode"
+        description="How this item will be stored — can be changed later from Edit."
+        selectedKeys={packMode ? [packMode] : ['tote']}
+        onChange={(e) => e.target.value && setValue('pack_mode', e.target.value)}
+        disallowEmptySelection
+      >
+        {PACK_MODES.map((m) => <SelectItem key={m.value}>{m.label}</SelectItem>)}
+      </Select>
       <Input label="Storage Tote ID" placeholder="e.g. TOTE 004" {...register('storage_tote_id')} />
       <Input label="Storage Location" placeholder="e.g. Shed, Crawl Space" {...register('storage_location')} />
     </div>

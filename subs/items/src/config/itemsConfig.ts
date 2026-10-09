@@ -29,6 +29,27 @@ export const ITEM_STATUS = [
   { value: 'Retired',       label: 'Retired',        color: '#ef4444' },
 ] as const;
 
+// Pack mode — a 3-way choice over storage_data's two independent booleans
+// (packable, single_packed). Tote-packed is the create default (#619).
+export const PACK_MODES = [
+  { value: 'tote',     label: 'Tote-packed' },
+  { value: 'single',   label: 'Single-packed' },
+  { value: 'oversized', label: 'Large & Oversized' },
+] as const;
+export type PackMode = typeof PACK_MODES[number]['value'];
+
+export function packModeToStorageFlags(mode: string): { packable: boolean; single_packed: boolean } {
+  if (mode === 'oversized') return { packable: false, single_packed: false };
+  if (mode === 'single')    return { packable: true, single_packed: true };
+  return { packable: true, single_packed: false }; // 'tote' / default
+}
+
+export function storageFlagsToPackMode(packable?: boolean, singlePacked?: boolean): PackMode {
+  if (packable === false) return 'oversized';
+  if (singlePacked) return 'single';
+  return 'tote';
+}
+
 // Fields per class_type — verbatim from item-config.js
 export const CLASS_TYPE_ATTRIBUTES: Record<string, { fields: string[]; required: string[] }> = {
   Inflatable:    { fields: ['height_length', 'stakes', 'tethers', 'adapter', 'power_inlet'], required: ['height_length'] },

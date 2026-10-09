@@ -10,6 +10,7 @@ import { fetchItemById, updateItem } from '../api/itemsApi';
 import { type Item, type StorageData } from '../api/types';
 import { BasicFields, ClassSpecificFields, VendorFields, StorageFields } from '../components/ItemFormFields';
 import { type ItemFormValues, DEFAULT_VALUES } from '../components/ItemFormSchema';
+import { packModeToStorageFlags, storageFlagsToPackMode } from '../config/itemsConfig';
 
 function itemToFormValues(item: Item): Partial<ItemFormValues> {
   const storage = item.storage_data ?? {} as StorageData;
@@ -38,6 +39,7 @@ function itemToFormValues(item: Item): Partial<ItemFormValues> {
     vendor_store:         vendor.vendor_store ?? '',
     storage_tote_id:      storage.tote_id ?? '',
     storage_location:     storage.location ?? '',
+    pack_mode:            storageFlagsToPackMode(storage.packable, storage.single_packed),
   };
 }
 
@@ -73,17 +75,26 @@ function buildUpdatePayload(data: ItemFormValues, existing: Item): Record<string
     vendor_store:  data.vendor_store       || undefined,
   };
 
-  // Storage data — preserve existing fields the edit form doesn't own
+  // Storage data — preserve existing fields the edit form doesn't own; pack mode
+  // is now user-owned, mapped onto packable/single_packed (#619).
   const existingStorage = existing.storage_data ?? {} as StorageData;
+  const { packable, single_packed } = packModeToStorageFlags(data.pack_mode);
   payload.storage_data = {
-    packable:      existingStorage.packable,
-    single_packed: existingStorage.single_packed,
+    packable,
+    single_packed,
     is_stored:     existingStorage.is_stored,
     tote_id:       data.storage_tote_id || existingStorage.tote_id,
     location:      data.storage_location || existingStorage.location,
   };
 
   return payload;
+}
+
+/** True if the submitted pack mode differs from the item's existing mode. */
+function packModeChanged(data: ItemFormValues, existing: Item): boolean {
+  const existingStorage = existing.storage_data ?? {} as StorageData;
+  const existingMode = storageFlagsToPackMode(existingStorage.packable, existingStorage.single_packed);
+  return data.pack_mode !== existingMode;
 }
 
 export default function EditPage() {
@@ -125,6 +136,13 @@ export default function EditPage() {
 
   async function onSubmit(data: ItemFormValues) {
     if (!item) return;
+    if (packModeChanged(data, item) && item.storage_data?.is_stored) {
+      const ok = window.confirm(
+        'This item is currently marked as stored. Changing its pack mode will not move it ' +
+        'out of its current tote/location — you may need to update storage separately. Continue?'
+      );
+      if (!ok) return;
+    }
     setSaving(true);
     try {
       const payload = buildUpdatePayload(data, item);
@@ -180,7 +198,7 @@ export default function EditPage() {
             <Divider />
             <div>
               <Typography type="h6" className="mb-3">Storage Information</Typography>
-              <StorageFields register={register} />
+              <StorageFields register={register} setValue={setValue} watch={watch} />
             </div>
           </CardBody>
         </Card>

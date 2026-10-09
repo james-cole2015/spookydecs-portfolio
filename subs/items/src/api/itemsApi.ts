@@ -8,7 +8,7 @@
  * Framework-agnostic: calls window.SpookyConfig / window.SpookyAuth directly.
  */
 import { type Item, type CascadePreview } from './types';
-import { ALLOWED_CLASSES } from '../config/itemsConfig';
+import { ALLOWED_CLASSES, packModeToStorageFlags } from '../config/itemsConfig';
 
 function auth() { return window.SpookyAuth; }
 
@@ -142,6 +142,10 @@ export function buildCreatePayload(formData: Record<string, any>): Record<string
   if (formData.vendor_store)    d.vendorStore    = formData.vendor_store;
   if (formData.storage_tote_id) d.toteId         = formData.storage_tote_id;
   if (formData.storage_location) d.toteLocation  = formData.storage_location;
+
+  const { packable, single_packed } = packModeToStorageFlags(formData.pack_mode);
+  d.packable     = packable;
+  d.singlePacked = single_packed;
 
   return d;
 }
