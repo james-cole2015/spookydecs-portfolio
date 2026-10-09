@@ -42,6 +42,7 @@ import {
   ITEMS_BASE_URL,
   type Acquisition,
 } from '../config/acquisitionsConfig';
+import { PACK_MODE_OPTIONS, packModeToStorageFlags } from '../config/packMode';
 import { formatDate } from '../lib/format';
 
 const todayIso = () => new Date().toISOString().slice(0, 10);
@@ -136,6 +137,7 @@ export function AcquisitionPurchaseWizard({
     return seed;
   });
   const [hasPowerInlet, setHasPowerInlet] = useState(true);
+  const [packMode, setPackMode] = useState('tote');
   const [generalNotes, setGeneralNotes] = useState('');
 
   // Purchase details. Price prefers the record's own price, then Renfield's enriched
@@ -223,6 +225,7 @@ export function AcquisitionPurchaseWizard({
       vendor_store: retailer.trim(),
       manufacturer: manufacturer.trim(),
       acquisition_data: { related_acquisition_id: acquisition.acquisition_id },
+      ...packModeToStorageFlags(packMode),
     };
     if (cls === 'Decoration') {
       itemBody.height_length = spec.height_length || '';
@@ -471,6 +474,16 @@ export function AcquisitionPurchaseWizard({
                 </Checkbox>
               )}
 
+              <Select
+                label="Pack mode"
+                description={n !== null && n > 1 ? 'Applies to all units purchased' : undefined}
+                selectedKeys={[packMode]}
+                onChange={(e) => e.target.value && setPackMode(e.target.value)}
+                disallowEmptySelection
+              >
+                {PACK_MODE_OPTIONS.map((m) => <SelectItem key={m.value}>{m.label}</SelectItem>)}
+              </Select>
+
               <Textarea label="Notes" minRows={2} value={generalNotes} onValueChange={setGeneralNotes} />
             </>
           )}
@@ -537,6 +550,10 @@ export function AcquisitionPurchaseWizard({
                 <ReviewRow label="Quantity" value={n && n > 1 ? `${n} items` : '1 item'} />
                 <ReviewRow label="Class / Type" value={`${cls} / ${classType}`} />
                 <ReviewRow label="Season" value={acquisition.season} />
+                <ReviewRow
+                  label="Pack mode"
+                  value={PACK_MODE_OPTIONS.find((m) => m.value === packMode)?.label ?? 'Tote-packed'}
+                />
                 <ReviewRow label="Price" value={total != null ? `$${total.toFixed(2)}` : '—'} />
                 {n != null && n > 1 && total != null && (
                   <ReviewRow label="Per item" value={`$${(splitEvenly(total, n)[0]).toFixed(2)} each`} />
