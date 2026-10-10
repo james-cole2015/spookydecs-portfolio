@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Node, Edge } from '@xyflow/react';
 import { Button } from '@heroui/react';
-import { X } from 'lucide-react';
+import { Camera, X } from 'lucide-react';
 import { nodeIcon } from './graphIcons';
 import { PhotoLightbox, type LightboxPhoto } from '@spookydecs/ui';
 import { fetchImageById } from '../../api/deploymentsApi';
@@ -14,9 +14,11 @@ export type GraphSelection =
 
 /** Something the side panel can ask the page to delete (always confirmed by the page). */
 export interface RemoveRequest {
-  /** 'connection' hard-deletes the record; 'illuminates' drops one prop from a light's list. */
-  kind: 'connection' | 'illuminates';
-  connectionId: string;
+  /** 'connection' hard-deletes the record; 'illuminates' drops one prop from a light's list;
+   *  'declaration' takes an unwired item out of the deployment (soft-removes its placement). */
+  kind: 'connection' | 'illuminates' | 'declaration';
+  connectionId?: string;
+  placementId?: string;
   litId?: string;
   description: string;
 }
@@ -111,10 +113,12 @@ function NodeDetail({
   node,
   ctx,
   onRemove,
+  onAddPhoto,
 }: {
   node: Node<GraphNodeData>;
   ctx: DetailContext;
   onRemove?: (req: RemoveRequest) => void;
+  onAddPhoto?: (itemId: string) => void;
 }) {
   const { data } = node;
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
@@ -280,6 +284,36 @@ function NodeDetail({
       )}
       <LabeledList label="Incoming connections" items={incomingRows} />
       <LabeledList label="Outgoing connections" items={outgoingRows} />
+      {(onAddPhoto || onRemove) && (
+        <div className="flex flex-col gap-2 border-t border-default-200 pt-3">
+          {onAddPhoto && (placement || incoming.length > 0) && (
+            <Button size="sm" variant="flat" startContent={<Camera size={14} />} onPress={() => onAddPhoto(node.id)} data-testid="graph-add-photo">
+              Add photo
+            </Button>
+          )}
+          {onRemove && placement?.placement_id && (
+            incoming.length === 0 && outgoing.length === 0 ? (
+              <Button
+                size="sm"
+                color="danger"
+                variant="flat"
+                onPress={() =>
+                  onRemove({
+                    kind: 'declaration',
+                    placementId: placement.placement_id!,
+                    description: `Take ${nameOf(node.id)} out of this deployment`,
+                  })
+                }
+                data-testid="graph-remove-declared"
+              >
+                Remove from deployment
+              </Button>
+            ) : (
+              <p className="text-xs text-default-400">Disconnect this item first to remove it from the deployment.</p>
+            )
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -386,8 +420,11 @@ export default function DetailPanel({
   placements,
   nodeLabels,
   onRemove,
+  onAddPhoto,
 }: {
   selection: GraphSelection;
+  /** Present only in authoring mode — attaches a photo to a declared / wired item. */
+  onAddPhoto?: (itemId: string) => void;
   /** Present only in authoring mode — enables the remove buttons on node and edge details. */
   onRemove?: (req: RemoveRequest) => void;
 } & DetailContext) {
@@ -404,7 +441,7 @@ export default function DetailPanel({
   return (
     <div className="rounded-medium border border-default-200 p-4">
       {selection.type === 'node' ? (
-        <NodeDetail node={selection.node} ctx={ctx} onRemove={onRemove} />
+        <NodeDetail node={selection.node} ctx={ctx} onRemove={onRemove} onAddPhoto={onAddPhoto} />
       ) : (
         <EdgeDetail edge={selection.edge} ctx={ctx} onRemove={onRemove} />
       )}
