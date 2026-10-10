@@ -12,17 +12,19 @@ export default function LightNode({ data, selected }: NodeProps<Node<GraphNodeDa
   const ring = selected ? 'ring-2 ring-secondary' : '';
   const icon = GRAPH_CLASS_TYPE_ICONS[data.classType || ''] || '💡';
   const powered = data.hasPowerData;
+  // A lighter-weight card than a decoration: neutral surface, thick amber left bar, amber icon
+  // chip. (Amber fill is what powered loads used to look like, so it wouldn't read as new.)
   const stateClasses = powered
-    ? 'border-warning bg-warning-50'
-    : 'border-default-300 border-dashed bg-default-50';
+    ? 'border-default-200 border-l-[6px] border-l-warning bg-content1'
+    : 'border-default-300 border-l-[6px] border-l-default-300 border-dashed bg-default-50';
   const item = data.item;
   const amps = item?.power_data?.amps;
   const watts = item?.power_data?.watts;
 
   return (
-    <div className={`flex w-[200px] flex-col gap-1 rounded-lg border-2 p-3 text-left shadow-sm ${stateClasses} ${ring}`}>
+    <div className={`flex w-[200px] flex-col gap-1 rounded-md border p-3 text-left shadow-sm ${stateClasses} ${ring}`}>
       <div className="flex items-center justify-between">
-        <span className="text-xl">{icon}</span>
+        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-warning-100 text-base">{icon}</span>
         {!powered && (
           <Chip size="sm" variant="flat" color="default">
             no power_data
@@ -32,7 +34,10 @@ export default function LightNode({ data, selected }: NodeProps<Node<GraphNodeDa
       <span className="truncate text-sm font-semibold text-foreground" title={data.label}>
         {data.label}
       </span>
-      <span className="text-xs text-default-500">{data.classType || '—'}</span>
+      <span className="text-xs text-default-500">
+        {data.classType || '—'}
+        {data.litCount ? ` · lights ${data.litCount}` : ''}
+      </span>
       {powered && (
         <span className="text-xs font-medium text-warning-600">
           {amps}A{watts != null ? ` / ${watts}W` : ''}
