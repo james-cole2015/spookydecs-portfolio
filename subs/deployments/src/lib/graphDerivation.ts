@@ -63,6 +63,8 @@ export interface GraphInput {
   items: Record<string, GraphItem | undefined>;
   connections: GraphConnection[];
   placements: GraphPlacement[];
+  /** Item ids shown as nodes without being declared or connected yet (Connect tab's "Add accessory"). */
+  pending?: string[];
 }
 
 export type GraphNodeKind = 'hub' | 'load' | 'branch' | 'placeholder';
@@ -208,6 +210,7 @@ export function deriveGraph(input: GraphInput): { nodes: Node<GraphNodeData>[]; 
   placements
     .filter((p) => (p.placement_type ?? 'deployment') === 'deployment')
     .forEach((placement) => ensureItemNode(placement.item_id));
+  (input.pending || []).forEach(ensureItemNode);
 
   // Active connections -> power edges (source may be a zone root or another item/cord).
   const activeConnections = connections.filter((c) => (c.connection_type ?? 'deployment') === 'deployment');

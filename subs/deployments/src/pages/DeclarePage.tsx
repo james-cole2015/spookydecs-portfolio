@@ -13,6 +13,7 @@ import { DEPLOYMENT_CONFIG } from '../config/deploymentsConfig';
 interface Candidate {
   id: string;
   short_name?: string;
+  class?: string;
   class_type?: string;
 }
 
@@ -65,15 +66,19 @@ export default function DeclarePage({
         (t.contents_details || []).map((i: any) => ({
           id: i.id,
           short_name: i.short_name,
+          class: i.class,
           class_type: i.class_type,
         })),
       );
       const loose: Candidate[] = (stagingRes?.data?.staged_non_packable || []).map((i: any) => ({
         id: i.id,
         short_name: i.short_name,
+        class: i.class,
         class_type: i.class_type,
       }));
-      setStaged([...fromTotes, ...loose]);
+      // Accessories (cords, plugs, adapters) are never declared — they're always available
+      // to wire from the Connect tab's "Add accessory" picker.
+      setStaged([...fromTotes, ...loose].filter((c) => c.class !== 'Accessory'));
 
       setPlacements(
         portRes.flatMap((r: any, idx: number) =>
