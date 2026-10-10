@@ -11,18 +11,18 @@ import type { Node, Edge } from '@xyflow/react';
 import type { GraphNodeData } from './graphDerivation';
 
 const GAP_X = 40;
-const GAP_Y = 50;
+const GAP_Y = 44;
 const BAND_GAP = 120;
 
-// Per-kind footprint, matching the node components. Cords are compact pills, so a chain of
-// them doesn't take the space of a chain of cards.
+// Per-kind footprint (icon badge + label), matching the node components. Cords are small dots,
+// so a chain of them doesn't take the space of a chain of decorations.
 const SIZE: Record<string, { w: number; h: number }> = {
-  hub: { w: 200, h: 110 },
-  load: { w: 220, h: 110 },
-  light: { w: 200, h: 100 },
-  branch: { w: 200, h: 96 },
-  cord: { w: 150, h: 44 },
-  placeholder: { w: 200, h: 80 },
+  hub: { w: 150, h: 112 },
+  load: { w: 140, h: 124 },
+  light: { w: 130, h: 104 },
+  branch: { w: 120, h: 92 },
+  cord: { w: 100, h: 62 },
+  placeholder: { w: 120, h: 84 },
 };
 const sizeOf = (kind: string) => SIZE[kind] || SIZE.load;
 
