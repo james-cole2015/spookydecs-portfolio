@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import {
   ReactFlow,
   Background,
@@ -11,7 +11,7 @@ import {
   type Edge,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Autocomplete, AutocompleteItem, Chip } from '@heroui/react';
+import { Autocomplete, AutocompleteItem, Chip, Tab, Tabs } from '@heroui/react';
 import { Breadcrumbs, ConfirmDialog, EmptyState, ErrorState, LoadingState, PageHeader, useToast } from '@spookydecs/ui';
 import {
   createConnection,
@@ -29,9 +29,11 @@ import { layoutGraph } from '../lib/graphLayout';
 import {
   connectionPoweringLight,
   decorateNodes,
+  filterToZone,
   freeFemalePorts,
+  itemsInUse,
   targetPortFor,
-  zoneOfNode,
+  zoneSummary,
 } from '../lib/graphPorts';
 import HubNode from '../components/graph/HubNode';
 import LoadNode from '../components/graph/LoadNode';
@@ -153,6 +155,7 @@ function ModeChip({ mode }: { mode: RenderMode }) {
 export default function DeploymentSchematic({ embedded = false }: { embedded?: boolean }) {
   const { id } = useParams<{ id: string }>();
   const toast = useToast();
+  const [params, setParams] = useSearchParams();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -161,7 +164,8 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
   const [removeTarget, setRemoveTarget] = useState<RemoveRequest | null>(null);
   const [removing, setRemoving] = useState(false);
   // Accessories added to the canvas from the picker before they're wired (client-only until connected).
-  const [pending, setPending] = useState<Record<string, GraphItem>>({});
+  // Accessories added from the picker, each pinned to the zone view it was added in.
+  const [pending, setPending] = useState<Record<string, { item: GraphItem; zone: string }>>({});
   const [accessoryOptions, setAccessoryOptions] = useState<GraphItem[]>([]);
   const [accessoryQuery, setAccessoryQuery] = useState('');
   const [positions, setPositions] = useState<Positions>(() => (id ? loadPositions(id) : {}));
@@ -190,13 +194,36 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
 
   const editable = !!loaded && loaded.mode === 'live' && EDITABLE_STATUSES.includes(loaded.status || '');
 
-  const effectiveInput = useMemo<GraphInput | null>(() => {
+  // One graph per zone (#638). Read-only views (completed / archived) also get an "All" option.
+  const zoneCodes = useMemo(() => {
+    const codes = Object.keys(loaded?.input.zones || {});
+    const order = DEPLOYMENT_CONFIG.ZONES.map((z) => z.zone_code);
+    return codes.length ? [...codes].sort((a, b) => order.indexOf(a) - order.indexOf(b)) : order;
+  }, [loaded]);
+  const zoneParam = params.get('zone');
+  const zone = zoneParam === 'ALL' && !editable ? 'ALL' : zoneCodes.includes(zoneParam || '') ? zoneParam! : zoneCodes[0] || 'FY';
+
+  // Whole-deployment input with the picker's pending accessories merged in (items resolved too).
+  const fullInput = useMemo<GraphInput | null>(() => {
     if (!loaded) return null;
-    const ids = Object.keys(pending);
-    return ids.length === 0
+    const entries = Object.entries(pending);
+    return entries.length === 0
       ? loaded.input
-      : { ...loaded.input, items: { ...loaded.input.items, ...pending }, pending: ids };
+      : { ...loaded.input, items: { ...loaded.input.items, ...Object.fromEntries(entries.map(([k, v]) => [k, v.item])) } };
   }, [loaded, pending]);
+
+  // What the canvas actually renders: the selected zone only (or everything, read-only).
+  const effectiveInput = useMemo<GraphInput | null>(() => {
+    if (!fullInput) return null;
+    if (zone === 'ALL') return fullInput;
+    const pendingHere = Object.entries(pending).filter(([, v]) => v.zone === zone).map(([k]) => k);
+    return filterToZone(fullInput, zone, pendingHere);
+  }, [fullInput, pending, zone]);
+
+  const zoneTabs = useMemo(
+    () => (fullInput ? zoneCodes.map((code) => ({ code, ...zoneSummary(fullInput, code) })) : []),
+    [fullInput, zoneCodes],
+  );
 
   const { nodes, edges, nodeLabels } = useMemo(() => {
     if (!loaded) return { nodes: [] as Node<GraphNodeData>[], edges: [] as Edge<GraphEdgeData>[], nodeLabels: {} as Record<string, string> };
@@ -231,8 +258,7 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
         } else {
           const fromPort = freeFemalePorts(c.source, input)[0];
           const toPort = targetPortFor(input.items[c.target]);
-          const zone = zoneOfNode(c.source, input) || zoneOfNode(c.target, input);
-          if (!fromPort || !toPort || !zone) throw new Error('No free port available for that connection');
+          if (!fromPort || !toPort || zone === 'ALL') throw new Error('No free port available for that connection');
           await createConnection(id, {
             zone_code: zone,
             from_item_id: c.source,
@@ -249,7 +275,7 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
         toast.showError(err?.message || 'Failed to connect');
       }
     },
-    [id, loaded, effectiveInput, refresh, toast],
+    [id, loaded, effectiveInput, zone, refresh, toast],
   );
 
   const isValidConnection = useCallback((c: Connection | Edge) => {
@@ -300,13 +326,14 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
   }, [editable, id, loaded?.season]);
 
   const availableAccessories = useMemo(() => {
-    const onCanvas = new Set(nodes.map((n) => n.id));
-    return accessoryOptions.filter((a) => !onCanvas.has(a.id));
-  }, [accessoryOptions, nodes]);
+    const inUse = fullInput ? itemsInUse(fullInput) : new Set<string>();
+    const pinned = new Set(Object.keys(pending));
+    return accessoryOptions.filter((a) => !inUse.has(a.id) && !pinned.has(a.id));
+  }, [accessoryOptions, fullInput, pending]);
 
   function addAccessory(itemId: string) {
     const item = accessoryOptions.find((a) => a.id === itemId);
-    if (item) setPending((prev) => ({ ...prev, [itemId]: item }));
+    if (item && zone !== 'ALL') setPending((prev) => ({ ...prev, [itemId]: { item, zone } }));
     setAccessoryQuery('');
   }
 
@@ -349,12 +376,54 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
           <PageHeader title={id} subtitle={loaded ? undefined : 'Power-topology schematic'} />
         </>
       )}
+      {loaded && zoneTabs.length > 0 && (
+        <Tabs
+          aria-label="Zone"
+          size="sm"
+          className="mb-3"
+          selectedKey={zone}
+          onSelectionChange={(k) => {
+            setSelection(null);
+            setParams(
+              (prev) => {
+                const next = new URLSearchParams(prev);
+                next.set('zone', String(k));
+                return next;
+              },
+              { replace: true },
+            );
+          }}
+        >
+          {[
+            ...zoneTabs.map((z) => (
+              <Tab
+                key={z.code}
+                data-testid={`graph-zone-${z.code}`}
+                title={
+                  <span className="flex items-center gap-2">
+                    {DEPLOYMENT_CONFIG.ZONES.find((d) => d.zone_code === z.code)?.zone_name || z.code}
+                    <Chip size="sm" variant="flat">
+                      {z.items}
+                    </Chip>
+                    {z.unwired > 0 && (
+                      <Chip size="sm" variant="flat" color="warning">
+                        {z.unwired} unwired
+                      </Chip>
+                    )}
+                  </span>
+                }
+              />
+            )),
+            ...(editable ? [] : [<Tab key="ALL" title="All zones" data-testid="graph-zone-ALL" />]),
+          ]}
+        </Tabs>
+      )}
       {editable && (
         <p className="mb-3 text-sm text-default-500">
           Drag from an outlet or cord&apos;s bottom handle to a declared item&apos;s top handle to connect them.
           Drag from a light&apos;s right handle to a prop&apos;s left handle to mark what it illuminates.
-          Select a line to inspect or remove it. Drag any item to arrange the canvas. Unwired items sit in the
-          bottom row; cords and plugs aren&apos;t declared — add them here when you need one.
+          Select a line to inspect or remove it. Drag any item to arrange the canvas. Each zone is its own graph. Unwired
+          items sit in the bottom row; cords and plugs aren&apos;t declared — add them here when you need one.
         </p>
       )}
       {editable && (
