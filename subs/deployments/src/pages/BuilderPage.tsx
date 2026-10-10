@@ -44,7 +44,7 @@ export default function BuilderPage() {
         if (response?.success && response.data) {
           const active = response.data.filter((d: any) => d.status !== 'archived');
           if (active.length > 0 && !cancelled) {
-            navigate(`/builder/${active[0].deployment_id}/zones`);
+            navigate(`/builder/${active[0].deployment_id}`);
             return;
           }
         }
@@ -99,7 +99,7 @@ export default function BuilderPage() {
       if (response?.success) {
         toast.showSuccess('Deployment created successfully!');
         const deploymentId = response.data.metadata.deployment_id;
-        setTimeout(() => navigate(`/builder/${deploymentId}/zones`), 600);
+        setTimeout(() => navigate(`/builder/${deploymentId}`), 600);
       } else {
         toast.showError('Failed to create deployment');
         setSubmitting(false);
