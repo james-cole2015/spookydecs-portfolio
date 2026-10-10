@@ -130,7 +130,11 @@ export function zoneSummary(input: GraphInput, zone: string): { items: number; u
   });
   roots.forEach((r) => ids.delete(r));
   const wired = new Set<string>(conns.flatMap((c) => [c.from_item_id, c.to_item_id]));
-  return { items: ids.size, unwired: declared.filter((id) => !wired.has(id)).length };
+  // "Unwired" = declared items that could take power (male end / power inlet) but have no
+  // connection yet. Port-less props (static props) can never be wired — they're set up once
+  // declared (and lit, if a spotlight covers them) — so they never count.
+  const needsWiring = (id: string) => targetPortFor(input.items[id]) !== null;
+  return { items: ids.size, unwired: declared.filter((id) => needsWiring(id) && !wired.has(id)).length };
 }
 
 /** Every item id on any zone's canvas — an accessory already in use in one zone isn't offered for another. */
