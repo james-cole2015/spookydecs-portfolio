@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Node, Edge } from '@xyflow/react';
+import { Button } from '@heroui/react';
 import { PhotoLightbox, type LightboxPhoto } from '@spookydecs/ui';
 import { fetchImageById } from '../../api/deploymentsApi';
 import type { GraphConnection, GraphPlacement, GraphNodeData, GraphEdgeData } from '../../lib/graphDerivation';
@@ -79,6 +80,20 @@ function connectionsForNode(nodeId: string, ctx: DetailContext) {
 function NodeDetail({ node, ctx }: { node: Node<GraphNodeData>; ctx: DetailContext }) {
   const { data } = node;
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [declaredPhotos, setDeclaredPhotos] = useState<LightboxPhoto[]>([]);
+  const declaredPhotoIds = ctx.placements.find((p) => p.item_id === node.id)?.photo_ids;
+
+  // Photos attached on the Declare tab (PLACEMENT- photo_ids) surface here (#638).
+  useEffect(() => {
+    let cancelled = false;
+    setDeclaredPhotos([]);
+    resolvePhotos(declaredPhotoIds).then((p) => {
+      if (!cancelled) setDeclaredPhotos(p);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [declaredPhotoIds]);
 
   useEffect(() => {
     let cancelled = false;
@@ -158,6 +173,12 @@ function NodeDetail({ node, ctx }: { node: Node<GraphNodeData>; ctx: DetailConte
       <DefRow label="Female ends" value={item?.female_ends} />
       <DefRow label="Length" value={item?.length} />
       <DefRow label="Deployed" value={deployedAt} />
+      {declaredPhotos.length > 0 && (
+        <div className="flex flex-col gap-1">
+          <span className="text-sm text-default-500">Deployment photos</span>
+          <PhotoLightbox photos={declaredPhotos} className="grid grid-cols-3 gap-2" thumbnailClassName="h-16 w-full rounded-medium object-cover" />
+        </div>
+      )}
       {illuminates && illuminates.length > 0 && (
         <LabeledList
           label="Illuminates"
@@ -176,7 +197,15 @@ function NodeDetail({ node, ctx }: { node: Node<GraphNodeData>; ctx: DetailConte
   );
 }
 
-function EdgeDetail({ edge, ctx }: { edge: Edge<GraphEdgeData>; ctx: DetailContext }) {
+function EdgeDetail({
+  edge,
+  ctx,
+  onRemove,
+}: {
+  edge: Edge<GraphEdgeData>;
+  ctx: DetailContext;
+  onRemove?: (edge: Edge<GraphEdgeData>) => void;
+}) {
   const [photos, setPhotos] = useState<LightboxPhoto[]>([]);
   const photoIds = edge.data?.connection?.photo_ids;
 
@@ -192,8 +221,23 @@ function EdgeDetail({ edge, ctx }: { edge: Edge<GraphEdgeData>; ctx: DetailConte
   }, [photoIds]);
 
   const conn = edge.data?.connection;
-  const placement = edge.data?.placement;
-  const when = formatDateTime(conn?.connected_at || placement?.placed_at);
+  const when = formatDateTime(conn?.connected_at);
+
+  if (edge.data?.kind === 'illuminates') {
+    return (
+      <div className="flex flex-col gap-2">
+        <h3 className="text-sm font-semibold text-foreground">Illuminates</h3>
+        <p className="text-xs text-default-500">
+          {ctx.nodeLabels[edge.source] || edge.source} lights {ctx.nodeLabels[edge.target] || edge.target}.
+        </p>
+        {onRemove && (
+          <Button size="sm" color="danger" variant="flat" onPress={() => onRemove(edge)} data-testid="graph-edge-remove">
+            Remove illuminates
+          </Button>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-2">
@@ -205,7 +249,7 @@ function EdgeDetail({ edge, ctx }: { edge: Edge<GraphEdgeData>; ctx: DetailConte
       )}
       <DefRow label="From port" value={conn?.from_port} />
       <DefRow label="To port" value={conn?.to_port} />
-      <DefRow label="Zone" value={conn?.zone_code || placement?.zone_code} />
+      <DefRow label="Zone" value={conn?.zone_code} />
       <DefRow label="Signal" value={edge.data?.label} />
       <DefRow label="Deployed" value={when} />
       {conn?.illuminates && conn.illuminates.length > 0 && (
@@ -213,6 +257,11 @@ function EdgeDetail({ edge, ctx }: { edge: Edge<GraphEdgeData>; ctx: DetailConte
           label="Illuminates"
           items={conn.illuminates.map((id) => ({ id, text: `💡 ${ctx.nodeLabels[id] || id}` }))}
         />
+      )}
+      {onRemove && (
+        <Button size="sm" color="danger" variant="flat" onPress={() => onRemove(edge)} data-testid="graph-edge-remove">
+          Remove connection
+        </Button>
       )}
     </div>
   );
@@ -224,8 +273,11 @@ export default function DetailPanel({
   connections,
   placements,
   nodeLabels,
+  onRemoveEdge,
 }: {
   selection: GraphSelection;
+  /** Present only in authoring mode — shows a remove button on the edge detail. */
+  onRemoveEdge?: (edge: Edge<GraphEdgeData>) => void;
 } & DetailContext) {
   if (!selection) {
     return (
@@ -242,7 +294,7 @@ export default function DetailPanel({
       {selection.type === 'node' ? (
         <NodeDetail node={selection.node} ctx={ctx} />
       ) : (
-        <EdgeDetail edge={selection.edge} ctx={ctx} />
+        <EdgeDetail edge={selection.edge} ctx={ctx} onRemove={onRemoveEdge} />
       )}
     </div>
   );

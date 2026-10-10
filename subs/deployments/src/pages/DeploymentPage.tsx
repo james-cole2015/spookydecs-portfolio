@@ -95,7 +95,7 @@ export default function DeploymentPage() {
         />
       ) : (
         <Suspense fallback={<LoadingState />}>
-          <DeploymentSchematic />
+          <DeploymentSchematic embedded />
         </Suspense>
       )}
     </>

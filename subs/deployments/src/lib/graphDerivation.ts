@@ -30,6 +30,7 @@ export interface GraphItem {
   power_data?: { watts?: number | string; amps?: number | string };
   male_ends?: string | number;
   female_ends?: string | number;
+  power_inlet?: boolean;
   length?: string | number;
   images?: { primary_photo_id?: string };
 }
@@ -77,13 +78,24 @@ export interface GraphNodeData extends Record<string, unknown> {
   /** Per-outlet amp rollup (hub nodes only). */
   rollupAmps?: number;
   overloaded?: boolean;
+  /** Authoring affordances (#638) — set by decorateNodes() in graphPorts.ts, never by deriveGraph. */
+  editable?: boolean;
+  /** Has a free female port to drag a power connection FROM. */
+  canSource?: boolean;
+  /** Has a male end / power inlet and no inbound connection yet — can be dragged TO. */
+  canTarget?: boolean;
+  /** A light with an inbound connection — can drag an illuminates edge FROM. */
+  canIlluminate?: boolean;
+  /** A declared item that can be lit — can be dragged TO by an illuminates edge. */
+  canBeLit?: boolean;
 }
 
 export interface GraphEdgeData extends Record<string, unknown> {
+  /** 'connection' = a CONNECTION- record (power); 'illuminates' = a light → lit-prop annotation edge. */
+  kind: 'connection' | 'illuminates';
   powered: boolean;
   label: string;
   connection?: GraphConnection;
-  placement?: GraphPlacement;
 }
 
 function toNumber(value: unknown): number {
@@ -190,48 +202,51 @@ export function deriveGraph(input: GraphInput): { nodes: Node<GraphNodeData>[]; 
     });
   };
 
-  // Active connections -> edges (source may be a zone root or another item/cord).
-  connections
-    .filter((c) => (c.connection_type ?? 'deployment') === 'deployment')
-    .forEach((conn) => {
-      ensureItemNode(conn.from_item_id);
-      ensureItemNode(conn.to_item_id);
-      const destItem = items[conn.to_item_id];
-      const { label, powered } = edgeLabel(destItem, destItem?.length);
-      edges.push({
-        id: conn.connection_id || `${conn.from_item_id}->${conn.to_item_id}`,
-        source: conn.from_item_id,
-        target: conn.to_item_id,
-        label,
-        data: { powered, label, connection: conn },
-      });
-    });
-
-  // Active placements -> edges from the zone's first receptacle root directly
-  // to a static (no-power) item. Placements carry no receptacle reference
-  // (they're not powered — see sd_deployments_item_handler.py create_placement),
-  // so the first outlet is used as an arbitrary, consistent anchor.
+  // Declared items -> nodes (#638). Every active placement is a node even with zero
+  // edges, so an unconnected declared item is on the canvas and wire-able. Edges below
+  // come purely from CONNECTION- records.
   placements
     .filter((p) => (p.placement_type ?? 'deployment') === 'deployment')
-    .forEach((placement) => {
-      const zone = zones[placement.zone_code];
-      const rootId = zone?.receptacle_ids[0];
-      if (!zone || !rootId) return;
-      ensureItemNode(placement.item_id);
-      const { label, powered } = edgeLabel(items[placement.item_id]);
+    .forEach((placement) => ensureItemNode(placement.item_id));
+
+  // Active connections -> power edges (source may be a zone root or another item/cord).
+  const activeConnections = connections.filter((c) => (c.connection_type ?? 'deployment') === 'deployment');
+  activeConnections.forEach((conn) => {
+    ensureItemNode(conn.from_item_id);
+    ensureItemNode(conn.to_item_id);
+    const destItem = items[conn.to_item_id];
+    const { label, powered } = edgeLabel(destItem, destItem?.length);
+    edges.push({
+      id: conn.connection_id || `${conn.from_item_id}->${conn.to_item_id}`,
+      source: conn.from_item_id,
+      target: conn.to_item_id,
+      label,
+      data: { kind: 'connection', powered, label, connection: conn },
+    });
+  });
+
+  // Illuminates -> dashed annotation edges from the light (the connection's to_item)
+  // to each prop it lights. Unlit props simply stay unconnected. These are not power
+  // paths, so they are excluded from the amp rollup below.
+  activeConnections.forEach((conn) => {
+    (conn.illuminates || []).forEach((litId) => {
+      ensureItemNode(litId);
       edges.push({
-        id: placement.placement_id || `${rootId}->${placement.item_id}`,
-        source: rootId,
-        target: placement.item_id,
-        label,
-        data: { powered, label, placement },
+        id: `illum:${conn.connection_id || conn.to_item_id}:${litId}`,
+        source: conn.to_item_id,
+        target: litId,
+        sourceHandle: 'illum-s',
+        targetHandle: 'illum-t',
+        label: 'illuminates',
+        data: { kind: 'illuminates', powered: false, label: 'illuminates', connection: conn },
       });
     });
+  });
 
   // Per-outlet amp rollup: sum of resolved load power_data.amps reachable from each root.
   const adjacency = new Map<string, string[]>();
   edges.forEach((e) => {
-    if (!e.source || !e.target) return;
+    if (!e.source || !e.target || e.data?.kind !== 'connection') return;
     const list = adjacency.get(e.source) || [];
     list.push(e.target);
     adjacency.set(e.source, list);
