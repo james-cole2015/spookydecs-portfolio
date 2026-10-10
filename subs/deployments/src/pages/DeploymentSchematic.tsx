@@ -1,8 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { ReactFlow, Background, Controls, type Connection, type Node, type Edge } from '@xyflow/react';
+import {
+  ReactFlow,
+  Background,
+  Controls,
+  applyNodeChanges,
+  type Connection,
+  type Node,
+  type NodeChange,
+  type Edge,
+} from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Chip } from '@heroui/react';
+import { Autocomplete, AutocompleteItem, Chip } from '@heroui/react';
 import { Breadcrumbs, ConfirmDialog, EmptyState, ErrorState, LoadingState, PageHeader, useToast } from '@spookydecs/ui';
 import {
   createConnection,
@@ -10,9 +19,11 @@ import {
   getDeploymentGraph,
   getHistoricalDeployment,
   removeConnection,
+  searchItems,
   updateConnection,
 } from '../api/deploymentsApi';
 import { DEPLOYMENT_CONFIG } from '../config/deploymentsConfig';
+import type { GraphItem } from '../lib/graphDerivation';
 import { deriveGraph, type GraphInput, type GraphNodeData, type GraphEdgeData } from '../lib/graphDerivation';
 import { layoutGraph } from '../lib/graphLayout';
 import {
@@ -69,6 +80,24 @@ interface LoadedGraph {
 
 const EDITABLE_STATUSES = ['pre-deployment', 'active_setup'];
 
+// Node positions are a per-viewer layout preference, so they live in localStorage (not DDB).
+type Positions = Record<string, { x: number; y: number }>;
+const posKey = (id: string) => `deployments-graph-pos:${id}`;
+function loadPositions(id: string): Positions {
+  try {
+    return JSON.parse(localStorage.getItem(posKey(id)) || '{}') as Positions;
+  } catch {
+    return {};
+  }
+}
+function savePositions(id: string, positions: Positions) {
+  try {
+    localStorage.setItem(posKey(id), JSON.stringify(positions));
+  } catch {
+    /* storage unavailable — positions just won't persist */
+  }
+}
+
 async function loadGraph(deploymentId: string): Promise<LoadedGraph> {
   const depRes = await getDeployment(deploymentId);
   const status = depRes?.data?.status;
@@ -118,6 +147,12 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
   const [selection, setSelection] = useState<GraphSelection>(null);
   const [removeTarget, setRemoveTarget] = useState<Edge<GraphEdgeData> | null>(null);
   const [removing, setRemoving] = useState(false);
+  // Accessories added to the canvas from the picker before they're wired (client-only until connected).
+  const [pending, setPending] = useState<Record<string, GraphItem>>({});
+  const [accessoryOptions, setAccessoryOptions] = useState<GraphItem[]>([]);
+  const [accessoryQuery, setAccessoryQuery] = useState('');
+  const [positions, setPositions] = useState<Positions>(() => (id ? loadPositions(id) : {}));
+  const [flowNodes, setFlowNodes] = useState<Node<GraphNodeData>[]>([]);
 
   useEffect(() => {
     if (!id) return;
@@ -142,13 +177,21 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
 
   const editable = !!loaded && loaded.mode === 'live' && EDITABLE_STATUSES.includes(loaded.status || '');
 
+  const effectiveInput = useMemo<GraphInput | null>(() => {
+    if (!loaded) return null;
+    const ids = Object.keys(pending);
+    return ids.length === 0
+      ? loaded.input
+      : { ...loaded.input, items: { ...loaded.input.items, ...pending }, pending: ids };
+  }, [loaded, pending]);
+
   const { nodes, edges, nodeLabels } = useMemo(() => {
     if (!loaded) return { nodes: [] as Node<GraphNodeData>[], edges: [] as Edge<GraphEdgeData>[], nodeLabels: {} as Record<string, string> };
-    const derived = deriveGraph(loaded.input);
-    const laidOutNodes = decorateNodes(layoutGraph(derived.nodes, derived.edges), loaded.input, editable);
+    const derived = deriveGraph(effectiveInput!);
+    const laidOutNodes = decorateNodes(layoutGraph(derived.nodes, derived.edges), effectiveInput!, editable);
     const labels = Object.fromEntries(laidOutNodes.map((n) => [n.id, n.data.label]));
     return { nodes: laidOutNodes, edges: styleEdges(derived.edges), nodeLabels: labels };
-  }, [loaded, editable]);
+  }, [effectiveInput, loaded, editable]);
 
   const refresh = useCallback(async () => {
     if (!id) return;
@@ -164,7 +207,7 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
   const onConnect = useCallback(
     async (c: Connection) => {
       if (!id || !loaded || !c.source || !c.target) return;
-      const input = loaded.input;
+      const input = effectiveInput!;
       try {
         if (c.sourceHandle === 'illum-s') {
           const powering = connectionPoweringLight(c.source, input);
@@ -193,7 +236,7 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
         toast.showError(err?.message || 'Failed to connect');
       }
     },
-    [id, loaded, refresh, toast],
+    [id, loaded, effectiveInput, refresh, toast],
   );
 
   const isValidConnection = useCallback((c: Connection | Edge) => {
@@ -201,6 +244,59 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
     // Power handles pair with power handles, illuminates with illuminates — never crossed.
     return c.sourceHandle === 'illum-s' ? c.targetHandle === 'illum-t' : c.targetHandle === 't-t';
   }, []);
+
+  // Derived layout -> controlled React Flow nodes, with any saved/dragged position winning.
+  useEffect(() => {
+    setFlowNodes(nodes.map((n) => ({ ...n, position: positions[n.id] || n.position })));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nodes]);
+
+  const onNodesChange = useCallback(
+    (changes: NodeChange<Node<GraphNodeData>>[]) => setFlowNodes((ns) => applyNodeChanges(changes, ns)),
+    [],
+  );
+
+  const onNodeDragStop = useCallback(() => {
+    if (!id) return;
+    const next: Positions = { ...positions };
+    flowNodes.forEach((n) => {
+      next[n.id] = n.position;
+    });
+    setPositions(next);
+    savePositions(id, next);
+  }, [id, positions, flowNodes]);
+
+  // Accessory picker: cords/plugs/adapters are always wire-able without being declared.
+  useEffect(() => {
+    if (!editable || !id) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const dep = await getDeployment(id);
+        const res = await searchItems({ season: dep?.data?.season, connection_building: 'true' });
+        const all: GraphItem[] = (res?.data?.items || []).filter(
+          (i: any) => i.class === 'Accessory' && i.class_type !== 'Receptacle',
+        );
+        if (!cancelled) setAccessoryOptions(all);
+      } catch (err) {
+        console.error('[Schematic] accessory list failed:', err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [editable, id]);
+
+  const availableAccessories = useMemo(() => {
+    const onCanvas = new Set(nodes.map((n) => n.id));
+    return accessoryOptions.filter((a) => !onCanvas.has(a.id));
+  }, [accessoryOptions, nodes]);
+
+  function addAccessory(itemId: string) {
+    const item = accessoryOptions.find((a) => a.id === itemId);
+    if (item) setPending((prev) => ({ ...prev, [itemId]: item }));
+    setAccessoryQuery('');
+  }
 
   async function confirmRemove() {
     if (!id || !removeTarget) return;
@@ -246,8 +342,28 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
         <p className="mb-3 text-sm text-default-500">
           Drag from an outlet or cord&apos;s bottom handle to a declared item&apos;s top handle to connect them.
           Drag from a light&apos;s right handle to a prop&apos;s left handle to mark what it illuminates.
-          Select a line to inspect or remove it. Items appear in the bottom row until they&apos;re wired.
+          Select a line to inspect or remove it. Drag any item to arrange the canvas. Unwired items sit in the
+          bottom row; cords and plugs aren&apos;t declared — add them here when you need one.
         </p>
+      )}
+      {editable && (
+        <Autocomplete
+          label="Add accessory"
+          placeholder="Search cords, plugs, adapters…"
+          size="sm"
+          className="mb-3 max-w-sm"
+          inputValue={accessoryQuery}
+          onInputChange={setAccessoryQuery}
+          selectedKey={null}
+          onSelectionChange={(k) => k && addAccessory(String(k))}
+          data-testid="graph-add-accessory"
+        >
+          {availableAccessories.map((a) => (
+            <AutocompleteItem key={a.id} textValue={`${a.short_name || a.id} ${a.id}`}>
+              {a.short_name || a.id} <span className="text-xs text-default-400">{a.class_type}</span>
+            </AutocompleteItem>
+          ))}
+        </Autocomplete>
       )}
 
       {loading ? (
@@ -272,8 +388,10 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
             </div>
             <div className="h-[calc(100%-45px)]">
               <ReactFlow
-                nodes={nodes}
+                nodes={flowNodes}
                 edges={edges}
+                onNodesChange={onNodesChange}
+                onNodeDragStop={onNodeDragStop}
                 nodeTypes={nodeTypes}
                 onNodeClick={(_, node) => setSelection({ type: 'node', node: node as Node<GraphNodeData> })}
                 onEdgeClick={(_, edge) => setSelection({ type: 'edge', edge: edge as Edge<GraphEdgeData> })}
@@ -297,8 +415,8 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
           <div className="order-3 h-[600px] overflow-y-auto">
             <DetailPanel
               selection={selection}
-              connections={loaded.input.connections}
-              placements={loaded.input.placements}
+              connections={effectiveInput!.connections}
+              placements={effectiveInput!.placements}
               nodeLabels={nodeLabels}
               onRemoveEdge={editable ? (edge) => setRemoveTarget(edge) : undefined}
             />
