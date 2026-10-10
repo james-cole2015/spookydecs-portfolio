@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Node, Edge } from '@xyflow/react';
 import { Button } from '@heroui/react';
 import { X } from 'lucide-react';
+import { nodeIcon } from './graphIcons';
 import { PhotoLightbox, type LightboxPhoto } from '@spookydecs/ui';
 import { fetchImageById } from '../../api/deploymentsApi';
 import type { GraphConnection, GraphPlacement, GraphNodeData, GraphEdgeData } from '../../lib/graphDerivation';
@@ -225,8 +226,11 @@ function NodeDetail({
       {photoUrl ? (
         <img src={photoUrl} alt={data.label} className="h-32 w-full rounded-medium object-cover" />
       ) : (
-        <div className="flex h-32 items-center justify-center rounded-medium bg-default-100 text-4xl">
-          {data.kind === 'branch' || data.kind === 'cord' ? '➰' : '📦'}
+        <div className="flex h-32 items-center justify-center rounded-medium bg-default-100 text-default-400">
+          {(() => {
+            const Icon = nodeIcon(data);
+            return <Icon size={48} strokeWidth={1.5} aria-hidden />;
+          })()}
         </div>
       )}
       <h3 className="text-sm font-semibold text-foreground">{data.label}</h3>
