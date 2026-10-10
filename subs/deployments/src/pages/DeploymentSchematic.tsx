@@ -76,6 +76,7 @@ interface LoadedGraph {
   input: GraphInput;
   /** Deployment status — authoring is only offered while the deployment is still being set up. */
   status?: string;
+  season?: string;
 }
 
 const EDITABLE_STATUSES = ['pre-deployment', 'active_setup'];
@@ -100,7 +101,10 @@ function savePositions(id: string, positions: Positions) {
 
 async function loadGraph(deploymentId: string): Promise<LoadedGraph> {
   const depRes = await getDeployment(deploymentId);
-  const status = depRes?.data?.status;
+  // getDeployment always wraps the record as { metadata }; read status/season from there.
+  const meta = depRes?.data?.metadata ?? depRes?.data;
+  const status = meta?.status;
+  const season = meta?.season;
 
   if (status === 'archived') {
     const histRes = await getHistoricalDeployment(deploymentId);
@@ -112,7 +116,7 @@ async function loadGraph(deploymentId: string): Promise<LoadedGraph> {
   }
 
   const graphRes = await getDeploymentGraph(deploymentId);
-  return { mode: 'live', input: graphRes.data as GraphInput, status };
+  return { mode: 'live', input: graphRes.data as GraphInput, status, season };
 }
 
 function ModeChip({ mode }: { mode: RenderMode }) {
@@ -272,8 +276,7 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
     let cancelled = false;
     (async () => {
       try {
-        const dep = await getDeployment(id);
-        const res = await searchItems({ season: dep?.data?.season, connection_building: 'true' });
+        const res = await searchItems({ season: loaded?.season, connection_building: 'true' });
         const all: GraphItem[] = (res?.data?.items || []).filter(
           (i: any) => i.class === 'Accessory' && i.class_type !== 'Receptacle',
         );
@@ -285,7 +288,7 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
     return () => {
       cancelled = true;
     };
-  }, [editable, id]);
+  }, [editable, id, loaded?.season]);
 
   const availableAccessories = useMemo(() => {
     const onCanvas = new Set(nodes.map((n) => n.id));
