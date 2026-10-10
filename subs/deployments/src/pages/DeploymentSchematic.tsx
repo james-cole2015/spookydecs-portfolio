@@ -40,7 +40,7 @@ import CordNode from '../components/graph/CordNode';
 import LightNode from '../components/graph/LightNode';
 import PlaceholderNode from '../components/graph/PlaceholderNode';
 import GraphLegend from '../components/graph/GraphLegend';
-import DetailPanel, { type GraphSelection } from '../components/graph/DetailPanel';
+import DetailPanel, { type GraphSelection, type RemoveRequest } from '../components/graph/DetailPanel';
 
 const nodeTypes = {
   hub: HubNode,
@@ -158,7 +158,7 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
   const [error, setError] = useState<string | null>(null);
   const [loaded, setLoaded] = useState<LoadedGraph | null>(null);
   const [selection, setSelection] = useState<GraphSelection>(null);
-  const [removeTarget, setRemoveTarget] = useState<Edge<GraphEdgeData> | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<RemoveRequest | null>(null);
   const [removing, setRemoving] = useState(false);
   // Accessories added to the canvas from the picker before they're wired (client-only until connected).
   const [pending, setPending] = useState<Record<string, GraphItem>>({});
@@ -312,16 +312,15 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
 
   async function confirmRemove() {
     if (!id || !removeTarget) return;
-    const conn = removeTarget.data?.connection;
     setRemoving(true);
     try {
-      if (removeTarget.data?.kind === 'illuminates') {
-        if (!conn?.connection_id) throw new Error('Connection not found');
+      const conn = loaded?.input.connections.find((c) => c.connection_id === removeTarget.connectionId);
+      if (!conn?.connection_id) throw new Error('Connection not found');
+      if (removeTarget.kind === 'illuminates') {
         await updateConnection(id, conn.connection_id, {
-          illuminates: (conn.illuminates || []).filter((x) => x !== removeTarget.target),
+          illuminates: (conn.illuminates || []).filter((x) => x !== removeTarget.litId),
         });
       } else {
-        if (!conn?.connection_id) throw new Error('Connection not found');
         await removeConnection(id, conn.connection_id);
       }
       setRemoveTarget(null);
@@ -430,18 +429,23 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
               connections={effectiveInput!.connections}
               placements={effectiveInput!.placements}
               nodeLabels={nodeLabels}
-              onRemoveEdge={editable ? (edge) => setRemoveTarget(edge) : undefined}
+              onRemove={editable ? (req) => setRemoveTarget(req) : undefined}
             />
           </div>
         </div>
       )}
       <ConfirmDialog
         isOpen={!!removeTarget}
-        title={removeTarget?.data?.kind === 'illuminates' ? 'Remove illuminates?' : 'Remove connection?'}
+        title={removeTarget?.kind === 'illuminates' ? 'Remove illuminates?' : 'Remove connection?'}
         body={
-          removeTarget?.data?.kind === 'illuminates'
-            ? 'The prop stays declared; it just stops being marked as lit by this light.'
-            : 'This deletes the connection. Both items stay declared and become wire-able again.'
+          <>
+            <p className="font-medium">{removeTarget?.description}</p>
+            <p className="mt-2 text-sm">
+              {removeTarget?.kind === 'illuminates'
+                ? 'The prop stays declared; it just stops being marked as lit by this light.'
+                : 'This deletes the connection. Both items stay declared and become wire-able again.'}
+            </p>
+          </>
         }
         confirmLabel="Remove"
         isDestructive

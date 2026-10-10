@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Node, Edge } from '@xyflow/react';
 import { Button } from '@heroui/react';
+import { X } from 'lucide-react';
 import { PhotoLightbox, type LightboxPhoto } from '@spookydecs/ui';
 import { fetchImageById } from '../../api/deploymentsApi';
 import type { GraphConnection, GraphPlacement, GraphNodeData, GraphEdgeData } from '../../lib/graphDerivation';
@@ -9,6 +10,15 @@ export type GraphSelection =
   | { type: 'node'; node: Node<GraphNodeData> }
   | { type: 'edge'; edge: Edge<GraphEdgeData> }
   | null;
+
+/** Something the side panel can ask the page to delete (always confirmed by the page). */
+export interface RemoveRequest {
+  /** 'connection' hard-deletes the record; 'illuminates' drops one prop from a light's list. */
+  kind: 'connection' | 'illuminates';
+  connectionId: string;
+  litId?: string;
+  description: string;
+}
 
 interface DetailContext {
   connections: GraphConnection[];
@@ -50,16 +60,35 @@ async function resolvePhotos(photoIds: string[] | undefined): Promise<LightboxPh
     .map((r) => ({ url: r.cloudfront_url, thumbUrl: r.thumb_cloudfront_url || r.cloudfront_url }));
 }
 
-function LabeledList({ label, items }: { label: string; items: { id: string; text: string }[] }) {
+function LabeledList({
+  label,
+  items,
+}: {
+  label: string;
+  items: { id: string; text: string; onRemove?: () => void; removeLabel?: string }[];
+}) {
   if (items.length === 0) return null;
   return (
     <div className="flex flex-col gap-1">
       <span className="text-sm text-default-500">{label}</span>
       <div className="flex flex-col gap-1">
         {items.map((it) => (
-          <span key={it.id} className="text-xs text-foreground">
-            {it.text}
-          </span>
+          <div key={it.id} className="flex items-center justify-between gap-2">
+            <span className="min-w-0 truncate text-xs text-foreground">{it.text}</span>
+            {it.onRemove && (
+              <Button
+                isIconOnly
+                size="sm"
+                variant="light"
+                color="danger"
+                aria-label={it.removeLabel || 'Remove'}
+                onPress={it.onRemove}
+                data-testid="graph-row-remove"
+              >
+                <X size={14} />
+              </Button>
+            )}
+          </div>
         ))}
       </div>
     </div>
@@ -77,7 +106,15 @@ function connectionsForNode(nodeId: string, ctx: DetailContext) {
   return { incoming, outgoing, placement, illuminatedByConn };
 }
 
-function NodeDetail({ node, ctx }: { node: Node<GraphNodeData>; ctx: DetailContext }) {
+function NodeDetail({
+  node,
+  ctx,
+  onRemove,
+}: {
+  node: Node<GraphNodeData>;
+  ctx: DetailContext;
+  onRemove?: (req: RemoveRequest) => void;
+}) {
   const { data } = node;
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [declaredPhotos, setDeclaredPhotos] = useState<LightboxPhoto[]>([]);
@@ -140,14 +177,48 @@ function NodeDetail({ node, ctx }: { node: Node<GraphNodeData>; ctx: DetailConte
   // (this node is the spotlight powering on) — never the outgoing side.
   const illuminates = incoming.find((c) => c.illuminates?.length)?.illuminates;
 
+  const nameOf = (id: string) => ctx.nodeLabels[id] || id;
+  const removeConn = (c: GraphConnection) =>
+    onRemove && c.connection_id
+      ? () =>
+          onRemove({
+            kind: 'connection',
+            connectionId: c.connection_id!,
+            description: `${nameOf(c.from_item_id)} → ${nameOf(c.to_item_id)}`,
+          })
+      : undefined;
+
   const incomingRows = incoming.map((c) => ({
     id: c.connection_id || c.from_item_id,
-    text: `← ${ctx.nodeLabels[c.from_item_id] || c.from_item_id}${c.from_port ? ` (${c.from_port})` : ''}`,
+    text: `← ${nameOf(c.from_item_id)}${c.from_port ? ` (${c.from_port})` : ''}`,
+    onRemove: removeConn(c),
+    removeLabel: 'Remove this connection',
   }));
   const outgoingRows = outgoing.map((c) => ({
     id: c.connection_id || c.to_item_id,
-    text: `→ ${ctx.nodeLabels[c.to_item_id] || c.to_item_id}${c.to_port ? ` (${c.to_port})` : ''}`,
+    text: `→ ${nameOf(c.to_item_id)}${c.to_port ? ` (${c.to_port})` : ''}`,
+    onRemove: removeConn(c),
+    removeLabel: 'Remove this connection',
   }));
+  // This light's illuminates list lives on its powering connection; each lit prop is removable alone.
+  const illuminatesRows = (illuminates || []).map((litId) => {
+    const powering = incoming.find((c) => c.illuminates?.includes(litId));
+    return {
+      id: litId,
+      text: `💡 ${nameOf(litId)}`,
+      onRemove:
+        onRemove && powering?.connection_id
+          ? () =>
+              onRemove({
+                kind: 'illuminates',
+                connectionId: powering.connection_id!,
+                litId,
+                description: `${nameOf(node.id)} no longer lights ${nameOf(litId)}`,
+              })
+          : undefined,
+      removeLabel: 'Stop illuminating',
+    };
+  });
 
   return (
     <div className="flex flex-col gap-2">
@@ -180,16 +251,27 @@ function NodeDetail({ node, ctx }: { node: Node<GraphNodeData>; ctx: DetailConte
           <PhotoLightbox photos={declaredPhotos} className="grid grid-cols-3 gap-2" thumbnailClassName="h-16 w-full rounded-medium object-cover" />
         </div>
       )}
-      {illuminates && illuminates.length > 0 && (
-        <LabeledList
-          label="Illuminates"
-          items={illuminates.map((id) => ({ id, text: `💡 ${ctx.nodeLabels[id] || id}` }))}
-        />
-      )}
+      <LabeledList label="Illuminates" items={illuminatesRows} />
       {illuminatedByConn && (
         <LabeledList
           label="Illuminated by"
-          items={[{ id: illuminatedByConn.connection_id || illuminatedByConn.to_item_id, text: `💡 ${ctx.nodeLabels[illuminatedByConn.to_item_id] || illuminatedByConn.to_item_id}` }]}
+          items={[
+            {
+              id: illuminatedByConn.connection_id || illuminatedByConn.to_item_id,
+              text: `💡 ${nameOf(illuminatedByConn.to_item_id)}`,
+              onRemove:
+                onRemove && illuminatedByConn.connection_id
+                  ? () =>
+                      onRemove({
+                        kind: 'illuminates',
+                        connectionId: illuminatedByConn.connection_id!,
+                        litId: node.id,
+                        description: `${nameOf(illuminatedByConn.to_item_id)} no longer lights ${nameOf(node.id)}`,
+                      })
+                  : undefined,
+              removeLabel: 'Stop illuminating',
+            },
+          ]}
         />
       )}
       <LabeledList label="Incoming connections" items={incomingRows} />
@@ -205,7 +287,7 @@ function EdgeDetail({
 }: {
   edge: Edge<GraphEdgeData>;
   ctx: DetailContext;
-  onRemove?: (edge: Edge<GraphEdgeData>) => void;
+  onRemove?: (req: RemoveRequest) => void;
 }) {
   const [photos, setPhotos] = useState<LightboxPhoto[]>([]);
   const photoIds = edge.data?.connection?.photo_ids;
@@ -232,7 +314,20 @@ function EdgeDetail({
           {ctx.nodeLabels[edge.source] || edge.source} lights {ctx.nodeLabels[edge.target] || edge.target}.
         </p>
         {onRemove && (
-          <Button size="sm" color="danger" variant="flat" onPress={() => onRemove(edge)} data-testid="graph-edge-remove">
+          <Button
+            size="sm"
+            color="danger"
+            variant="flat"
+            onPress={() =>
+              onRemove({
+                kind: 'illuminates',
+                connectionId: conn?.connection_id || '',
+                litId: edge.target,
+                description: `${ctx.nodeLabels[edge.source] || edge.source} no longer lights ${ctx.nodeLabels[edge.target] || edge.target}`,
+              })
+            }
+            data-testid="graph-edge-remove"
+          >
             Remove illuminates
           </Button>
         )}
@@ -260,7 +355,19 @@ function EdgeDetail({
         />
       )}
       {onRemove && (
-        <Button size="sm" color="danger" variant="flat" onPress={() => onRemove(edge)} data-testid="graph-edge-remove">
+        <Button
+          size="sm"
+          color="danger"
+          variant="flat"
+          onPress={() =>
+            onRemove({
+              kind: 'connection',
+              connectionId: conn?.connection_id || '',
+              description: `${ctx.nodeLabels[edge.source] || edge.source} → ${ctx.nodeLabels[edge.target] || edge.target}`,
+            })
+          }
+          data-testid="graph-edge-remove"
+        >
           Remove connection
         </Button>
       )}
@@ -274,11 +381,11 @@ export default function DetailPanel({
   connections,
   placements,
   nodeLabels,
-  onRemoveEdge,
+  onRemove,
 }: {
   selection: GraphSelection;
-  /** Present only in authoring mode — shows a remove button on the edge detail. */
-  onRemoveEdge?: (edge: Edge<GraphEdgeData>) => void;
+  /** Present only in authoring mode — enables the remove buttons on node and edge details. */
+  onRemove?: (req: RemoveRequest) => void;
 } & DetailContext) {
   if (!selection) {
     return (
@@ -293,9 +400,9 @@ export default function DetailPanel({
   return (
     <div className="rounded-medium border border-default-200 p-4">
       {selection.type === 'node' ? (
-        <NodeDetail node={selection.node} ctx={ctx} />
+        <NodeDetail node={selection.node} ctx={ctx} onRemove={onRemove} />
       ) : (
-        <EdgeDetail edge={selection.edge} ctx={ctx} onRemove={onRemoveEdge} />
+        <EdgeDetail edge={selection.edge} ctx={ctx} onRemove={onRemove} />
       )}
     </div>
   );

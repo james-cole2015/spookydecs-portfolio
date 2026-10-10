@@ -82,6 +82,8 @@ export interface GraphNodeData extends Record<string, unknown> {
   rollupAmps?: number;
   /** Amps flowing through a cord / plug / splitter (sum of the loads downstream of it). */
   throughAmps?: number;
+  /** Light nodes: how many decorations this light illuminates. */
+  litCount?: number;
   overloaded?: boolean;
   /** Authoring affordances (#638) — set by decorateNodes() in graphPorts.ts, never by deriveGraph. */
   editable?: boolean;
@@ -278,6 +280,14 @@ export function deriveGraph(input: GraphInput): { nodes: Node<GraphNodeData>[]; 
     }
     return amps;
   };
+
+  // A light's illuminates list lives on the connection powering it.
+  nodes.forEach((n) => {
+    if (n.data.kind !== 'light') return;
+    n.data.litCount = activeConnections
+      .filter((c) => c.to_item_id === n.id)
+      .reduce((sum, c) => sum + (c.illuminates?.length || 0), 0);
+  });
 
   const round2 = (n: number) => Math.round(n * 100) / 100;
   const throughById = new Map<string, number>();
