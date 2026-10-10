@@ -81,3 +81,67 @@ export function decorateNodes(
     };
   });
 }
+
+// ---- Per-zone scoping (#638) -------------------------------------------------------------
+// Each graph shows one zone: a zone is a physically separate setup with its own outlets and
+// breaker, and wiring never crosses zones.
+
+/**
+ * The zone an item belongs to: a receptacle's own zone, else where it is declared, else the
+ * zone of any active connection touching it (older items were wired without being declared).
+ */
+export function itemZone(id: string, input: GraphInput): string | undefined {
+  return (
+    rootZone(id, input) ||
+    input.placements.find((p) => p.item_id === id && (p.placement_type ?? 'deployment') === 'deployment')?.zone_code ||
+    activeConns(input).find((c) => c.from_item_id === id || c.to_item_id === id)?.zone_code
+  );
+}
+
+/** Narrow a deployment-wide input to a single zone's graph. `pendingIds` are the picker-added accessories shown there. */
+export function filterToZone(input: GraphInput, zone: string, pendingIds: string[] = []): GraphInput {
+  const sameZoneOrUnknown = (id: string) => {
+    const z = itemZone(id, input);
+    return !z || z === zone;
+  };
+  return {
+    ...input,
+    zones: input.zones[zone] ? { [zone]: input.zones[zone] } : {},
+    connections: input.connections
+      .filter((c) => c.zone_code === zone)
+      .map((c) => ({ ...c, illuminates: (c.illuminates || []).filter(sameZoneOrUnknown) })),
+    placements: input.placements.filter((p) => p.zone_code === zone),
+    pending: pendingIds,
+  };
+}
+
+/** Counts shown on a zone's tab: items on the canvas and how many declared items still have no connection. */
+export function zoneSummary(input: GraphInput, zone: string): { items: number; unwired: number } {
+  const scoped = filterToZone(input, zone);
+  const roots = new Set(Object.values(scoped.zones).flatMap((z) => z.receptacle_ids));
+  const conns = activeConns(scoped);
+  const declared = scoped.placements
+    .filter((p) => (p.placement_type ?? 'deployment') === 'deployment')
+    .map((p) => p.item_id);
+  const ids = new Set<string>(declared);
+  conns.forEach((c) => {
+    ids.add(c.from_item_id);
+    ids.add(c.to_item_id);
+  });
+  roots.forEach((r) => ids.delete(r));
+  const wired = new Set<string>(conns.flatMap((c) => [c.from_item_id, c.to_item_id]));
+  return { items: ids.size, unwired: declared.filter((id) => !wired.has(id)).length };
+}
+
+/** Every item id on any zone's canvas — an accessory already in use in one zone isn't offered for another. */
+export function itemsInUse(input: GraphInput): Set<string> {
+  const ids = new Set<string>();
+  input.placements
+    .filter((p) => (p.placement_type ?? 'deployment') === 'deployment')
+    .forEach((p) => ids.add(p.item_id));
+  activeConns(input).forEach((c) => {
+    ids.add(c.from_item_id);
+    ids.add(c.to_item_id);
+  });
+  return ids;
+}
