@@ -3,7 +3,7 @@ import { STORAGE_STATE_PATH } from './global-setup';
 
 // First Playwright spec in the fleet (#554). One sequential test, not independent
 // tests per phase — each phase depends on state the browser itself created in the
-// previous one (a fresh deployment, a staged tote, an open session), exactly like
+// previous one (a fresh deployment, a staged tote, declared items), exactly like
 // the API pre-season gate it complements (tests/preseason/lifecycle.e2e.mjs).
 test.use({ storageState: STORAGE_STATE_PATH });
 
@@ -12,7 +12,7 @@ function idFromTestId(prefix: string, testId: string | null): string {
   return testId.slice(prefix.length);
 }
 
-test('deployment lifecycle: builder → staging → session → complete → teardown', async ({
+test('deployment lifecycle: builder → staging → declare + connect → complete → teardown', async ({
   page,
   deployment,
 }) => {
@@ -28,7 +28,7 @@ test('deployment lifecycle: builder → staging → session → complete → tea
     await page.getByRole('option', { name: SEASON }).click();
     await page.getByLabel('Year').fill('2030');
     await page.getByTestId('builder-create-submit').click();
-    await page.waitForURL(`**/builder/${deploymentId}/zones`);
+    await page.waitForURL(`**/builder/${deploymentId}`);
   });
 
   await test.step('Staging — stage a tote (asserts the #470 whole-tote behavior)', async () => {
@@ -82,70 +82,91 @@ test('deployment lifecycle: builder → staging → session → complete → tea
   });
 
   const ZONE = 'FY';
-  await test.step('Session — start a session in a zone', async () => {
-    await page.getByRole('link', { name: 'Deployments' }).first().click().catch(() => {});
-    await page.goto(`/builder/${deploymentId}/zones/${ZONE}`);
-    await page.getByTestId('start-session-card').click();
-    await page.getByTestId('start-session-confirm').click();
-    await page.waitForURL(`**/builder/${deploymentId}/zones/${ZONE}/session`);
+
+  /**
+   * Adds an item to the zone through the graph's "Add to <zone>" picker — the UI path that
+   * declares it (writes the PLACEMENT- record). Types the item's short name and picks the option.
+   */
+  async function addViaPicker(itemId: string) {
+    const detail = await api('GET', `/items/${itemId}`);
+    const name: string = (detail.data ?? detail.body)?.short_name || itemId;
+    await ledger.rememberItem(api, itemId);
+    const picker = page.getByTestId('graph-add-item').getByRole('combobox');
+    await picker.click();
+    await picker.fill(name);
+    await page.getByRole('option', { name: new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')) }).first().click();
+    await expect
+      .poll(async () => {
+        const g = await api('GET', `/deployments/${deploymentId}/graph`);
+        return (g.data?.placements || []).some((p: any) => p.item_id === itemId);
+      }, { message: `${itemId} should be declared after picking it` })
+      .toBe(true);
+  }
+
+  await test.step('Workspace — open the Front Yard graph', async () => {
+    await page.goto(`/builder/${deploymentId}?zone=${ZONE}`);
+    await expect(page.getByTestId(`graph-zone-${ZONE}`)).toBeVisible();
+    await expect(page.getByTestId('graph-add-item')).toBeVisible();
   });
 
-  await test.step('Session — connect a destination item to the zone receptacle', async () => {
-    const sourceButtons = page.locator('[data-testid^="source-item-"]');
-    await expect(sourceButtons.first()).toBeVisible();
-    await sourceButtons.first().click();
-
-    const destinationButtons = page.locator('[data-testid^="destination-item-"]');
-    await expect(destinationButtons.first()).toBeVisible();
-    const destTestId = await destinationButtons.first().getAttribute('data-testid');
-    const destItemId = idFromTestId('destination-item-', destTestId);
-    await ledger.rememberItem(api, destItemId);
-
-    await destinationButtons.first().click();
-    await page.getByTestId('connection-modal-connect').click();
-    // If the destination is a Light, an "Illuminate" step appears first — finalize
-    // with no extra decorations selected (they're optional).
-    const illuminateHeading = page.getByRole('heading', { name: /^What does/ });
-    if (await illuminateHeading.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await page.getByTestId('connection-modal-connect').click();
+  let poweredItemId = '';
+  await test.step('Declare — add a powered staged item to the zone from the picker', async () => {
+    const stageRes = await api('GET', `/deployments/${deploymentId}/stage`);
+    const staged: { id: string }[] = (stageRes.data?.staged_totes || []).flatMap((t: any) => t.contents_details || []);
+    let found: string | undefined;
+    for (const c of staged) {
+      const d = await api('GET', `/items/${c.id}`);
+      const item = d.data ?? d.body;
+      if (item?.class !== 'Accessory' && (parseInt(item?.male_ends || 0, 10) > 0 || item?.power_inlet === true)) {
+        found = c.id;
+        break;
+      }
     }
+    test.skip(!found, 'no powered, non-accessory item in the staged tote — fixture gap');
+    poweredItemId = found!;
+    await addViaPicker(poweredItemId);
+  });
+
+  await test.step('Connect — drag the zone outlet onto the declared item', async () => {
+    const graph = await api('GET', `/deployments/${deploymentId}/graph`);
+    const outletId: string = graph.data?.zones?.[ZONE]?.receptacle_ids?.[0];
+    expect(outletId, 'zone has a receptacle').toBeTruthy();
+
+    // Handles carry data-nodeid / data-handleid (React Flow v12). The outlet's bottom handle is the
+    // power source; the declared item's top handle is the power target.
+    const source = page.locator(`[data-nodeid="${outletId}"][data-handleid="b-s"]`);
+    const target = page.locator(`[data-nodeid="${poweredItemId}"][data-handleid="t-t"]`);
+    await expect(source).toBeAttached();
+    await expect(target).toBeAttached();
+    const s = (await source.boundingBox())!;
+    const t = (await target.boundingBox())!;
+    await page.mouse.move(s.x + s.width / 2, s.y + s.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(t.x + t.width / 2, t.y + t.height / 2, { steps: 12 });
+    await page.mouse.up();
     await expect(page.getByText('Connection created')).toBeVisible();
+
+    const after = await api('GET', `/deployments/${deploymentId}/graph`);
+    expect((after.data?.connections || []).some((c: any) => c.to_item_id === poweredItemId && c.zone_code === ZONE)).toBe(true);
   });
 
-  await test.step('Session — deploy a static prop', async () => {
-    await page.getByRole('button', { name: 'Deploy Static Prop' }).click();
+  await test.step('Declare — add a static prop to the zone', async () => {
     if (staticPropCandidateId) {
-      // We staged a known non-powered item above (#579) — the modal must actually offer
-      // it. Asserting on this specific testid (rather than "any prop button") fails loud
-      // if StaticPropModal's eligibility filter or the non-packable staging split
-      // regresses, instead of silently taking the Cancel path.
-      const propButton = page.getByTestId(`static-prop-item-${staticPropCandidateId}`);
-      await expect(propButton).toBeVisible();
-      await ledger.rememberItem(api, staticPropCandidateId);
-      await propButton.click();
-      await page.getByTestId('static-prop-modal-deploy').click();
-      await expect(page.getByText('Static prop deployed')).toBeVisible();
-    } else {
-      // No non-packable item in dev today has zero power ports — a fixture gap (not a
-      // #554/#579 regression); the loose-item staging step above still exercised
-      // stage_loose_items and the non-packable StagingPage flow.
-      await page.getByRole('button', { name: 'Cancel' }).click();
+      // We staged a known non-powered item above (#579); the picker must offer it. addViaPicker
+      // fails loud if the staged list or the declare path regresses.
+      await addViaPicker(staticPropCandidateId);
     }
-  });
-
-  await test.step('Session — end the session (skip photos, keep the flow deterministic)', async () => {
-    await page.getByRole('button', { name: 'End Session' }).click();
-    await page.getByTestId('end-session-skip-photos').click();
-    await page.waitForURL(`**/builder/${deploymentId}/zones/${ZONE}`);
+    // else: no non-packable item in dev has zero power ports — a fixture gap (not a regression);
+    // the loose-item staging step above still exercised stage_loose_items.
   });
 
   await test.step('Complete — finalize the deployment', async () => {
-    await page.goto(`/builder/${deploymentId}/zones`);
+    await page.goto(`/builder/${deploymentId}`);
     await page.getByTestId('admin-card-complete').click();
-    await page.waitForURL(`**/builder/${deploymentId}/zones/complete`);
+    await page.waitForURL(`**/builder/${deploymentId}/complete`);
     await page.getByTestId('complete-trigger').click();
     await page.getByTestId('complete-confirm').click();
-    await page.waitForURL(`**/builder/${deploymentId}/zones`, { timeout: 10_000 });
+    await page.waitForURL(`**/builder/${deploymentId}`, { timeout: 10_000 });
 
     const dep = await api('GET', `/deployments/${deploymentId}`);
     expect(dep.data?.metadata?.status ?? dep.data?.status).toBe('completed');

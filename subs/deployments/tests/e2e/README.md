@@ -2,7 +2,7 @@
 
 The first browser-driven test in the Portfolio repo. Complements the API-only pre-season
 gate (`../preseason/lifecycle.e2e.mjs`) by actually rendering the deployments UI and
-driving it: builder → staging → session (connect + place) → complete → teardown.
+driving it: builder → staging → declare (Add-to-zone picker) → connect (drag on the graph) → complete → teardown.
 
 ## Run it
 
@@ -37,8 +37,8 @@ regenerated each run, not the durable run log. Copy anything worth keeping into
 | The flow | `deployment-lifecycle.spec.ts` | One sequential test, `test.step()` per phase |
 
 **Why one sequential test, not N independent ones:** each phase depends on state the
-browser itself created in the previous phase (the deployment, the staged tote, the open
-session). Splitting into independent tests would mean re-deriving that state per test —
+browser itself created in the previous phase (the deployment, the staged tote, the declared
+items). Splitting into independent tests would mean re-deriving that state per test —
 more fixture code for no real isolation benefit, since the whole flow is inherently a
 state machine.
 
