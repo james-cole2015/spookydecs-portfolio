@@ -67,7 +67,8 @@ export interface GraphInput {
   pending?: string[];
 }
 
-export type GraphNodeKind = 'hub' | 'load' | 'branch' | 'placeholder';
+// Visual tiers, loudest to quietest: load (decoration) > light > branch (plug / splitter) > cord.
+export type GraphNodeKind = 'hub' | 'load' | 'light' | 'branch' | 'cord' | 'placeholder';
 
 export interface GraphNodeData extends Record<string, unknown> {
   kind: GraphNodeKind;
@@ -79,6 +80,8 @@ export interface GraphNodeData extends Record<string, unknown> {
   femaleEnds?: number;
   /** Per-outlet amp rollup (hub nodes only). */
   rollupAmps?: number;
+  /** Amps flowing through a cord / plug / splitter (sum of the loads downstream of it). */
+  throughAmps?: number;
   overloaded?: boolean;
   /** Authoring affordances (#638) — set by decorateNodes() in graphPorts.ts, never by deriveGraph. */
   editable?: boolean;
@@ -173,8 +176,12 @@ export function deriveGraph(input: GraphInput): { nodes: Node<GraphNodeData>[]; 
     const item = items[id];
     if (!item) return 'placeholder';
     const femaleEnds = toNumber(item.female_ends);
-    if (femaleEnds > 1) return 'branch';
-    return 'load';
+    if (item.class === 'Accessory') {
+      // Plugs are splitters in practice; any accessory fanning out to 2+ outlets is a distribution point.
+      return item.class_type === 'Plug' || femaleEnds > 1 ? 'branch' : 'cord';
+    }
+    if (item.class === 'Light') return 'light';
+    return femaleEnds > 1 ? 'branch' : 'load';
   };
 
   const ensureItemNode = (id: string) => {
@@ -272,11 +279,29 @@ export function deriveGraph(input: GraphInput): { nodes: Node<GraphNodeData>[]; 
     return amps;
   };
 
+  const round2 = (n: number) => Math.round(n * 100) / 100;
+  const throughById = new Map<string, number>();
   nodes.forEach((n) => {
-    if (n.data.kind !== 'hub' || !n.data.zone) return;
-    const rollupAmps = rollupFor(n.id);
-    n.data.rollupAmps = rollupAmps;
-    n.data.overloaded = rollupAmps > OVERLOAD_AMPS_THRESHOLD;
+    if (n.data.kind === 'hub' && n.data.zone) {
+      const rollupAmps = rollupFor(n.id);
+      n.data.rollupAmps = rollupAmps;
+      n.data.overloaded = rollupAmps > OVERLOAD_AMPS_THRESHOLD;
+    } else if (n.data.kind === 'cord' || n.data.kind === 'branch') {
+      // Conductors aren't loads, but they carry one: show what flows through them.
+      const through = round2(rollupFor(n.id));
+      n.data.throughAmps = through;
+      throughById.set(n.id, through);
+    }
+  });
+
+  // Edges into a conductor are labelled with the load they carry (solid when live), not the
+  // conductor's own (absent) power_data.
+  edges.forEach((e) => {
+    if (e.data?.kind !== 'connection' || !throughById.has(e.target)) return;
+    const through = throughById.get(e.target)!;
+    const label = through > 0 ? `${through}A` : '';
+    e.label = label;
+    e.data = { ...e.data, label, powered: through > 0 };
   });
 
   return { nodes, edges };

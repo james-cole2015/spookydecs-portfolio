@@ -36,11 +36,20 @@ import {
 import HubNode from '../components/graph/HubNode';
 import LoadNode from '../components/graph/LoadNode';
 import BranchNode from '../components/graph/BranchNode';
+import CordNode from '../components/graph/CordNode';
+import LightNode from '../components/graph/LightNode';
 import PlaceholderNode from '../components/graph/PlaceholderNode';
 import GraphLegend from '../components/graph/GraphLegend';
 import DetailPanel, { type GraphSelection } from '../components/graph/DetailPanel';
 
-const nodeTypes = { hub: HubNode, load: LoadNode, branch: BranchNode, placeholder: PlaceholderNode };
+const nodeTypes = {
+  hub: HubNode,
+  load: LoadNode,
+  light: LightNode,
+  branch: BranchNode,
+  cord: CordNode,
+  placeholder: PlaceholderNode,
+};
 
 // Edge color via HeroUI CSS vars (design.md F5 — no hardcoded hex).
 const POWERED_STROKE = 'hsl(var(--heroui-warning))';

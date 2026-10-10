@@ -155,7 +155,7 @@ function NodeDetail({ node, ctx }: { node: Node<GraphNodeData>; ctx: DetailConte
         <img src={photoUrl} alt={data.label} className="h-32 w-full rounded-medium object-cover" />
       ) : (
         <div className="flex h-32 items-center justify-center rounded-medium bg-default-100 text-4xl">
-          {data.kind === 'branch' ? '➰' : '📦'}
+          {data.kind === 'branch' || data.kind === 'cord' ? '➰' : '📦'}
         </div>
       )}
       <h3 className="text-sm font-semibold text-foreground">{data.label}</h3>
@@ -172,6 +172,7 @@ function NodeDetail({ node, ctx }: { node: Node<GraphNodeData>; ctx: DetailConte
       <DefRow label="Male ends" value={item?.male_ends} />
       <DefRow label="Female ends" value={item?.female_ends} />
       <DefRow label="Length" value={item?.length} />
+      <DefRow label="Load through" value={data.throughAmps ? `${data.throughAmps}A` : undefined} />
       <DefRow label="Deployed" value={deployedAt} />
       {declaredPhotos.length > 0 && (
         <div className="flex flex-col gap-1">

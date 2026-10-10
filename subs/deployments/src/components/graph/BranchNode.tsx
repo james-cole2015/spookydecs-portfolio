@@ -3,29 +3,32 @@ import { GRAPH_CLASS_TYPE_ICONS } from '../../config/deploymentsConfig';
 import type { GraphNodeData } from '../../lib/graphDerivation';
 
 /**
- * A Cord/Plug with female_ends > 1 — one card per cord (not one node per
- * terminal); every active outbound connection fans out as its own edge from
- * this single node. Per the approved concept mockup (#466 plan §2a).
+ * A plug / splitter (or any accessory fanning out to 2+ outlets) — third tier. A distribution
+ * point rather than a load: neutral card, outlet count, and the load flowing through it.
  */
 export default function BranchNode({ data, selected }: NodeProps<Node<GraphNodeData>>) {
   const ring = selected ? 'ring-2 ring-secondary' : '';
-  const icon = GRAPH_CLASS_TYPE_ICONS[data.classType || ''] || '➰';
+  const icon = GRAPH_CLASS_TYPE_ICONS[data.classType || ''] || '🔌';
 
   return (
     <div
-      className={`flex w-[200px] flex-col gap-1 rounded-lg border-2 border-dashed border-default-400 bg-content1 p-3 text-left shadow-sm ${ring}`}
+      className={`flex w-[200px] flex-col gap-1 rounded-lg border-2 border-default-500 bg-content2 p-3 text-left shadow-sm ${ring}`}
     >
-      <span className="text-lg">{icon}</span>
+      <div className="flex items-center justify-between">
+        <span className="text-lg">{icon}</span>
+        {data.throughAmps != null && data.throughAmps > 0 && (
+          <span className="text-xs font-medium text-warning-600">{data.throughAmps}A through</span>
+        )}
+      </div>
       <span className="truncate text-sm font-medium text-foreground" title={data.label}>
         {data.label}
       </span>
       <span className="text-xs text-default-500">
-        {data.femaleEnds ?? '—'} female ends · branch
+        {data.femaleEnds ?? '—'} outlets · splitter
       </span>
 
       <Handle id="t-t" type="target" position={Position.Top} isConnectable={!!data.canTarget} className={data.canTarget ? '!h-3 !w-3 !border-2 !border-background !bg-secondary' : ''} style={data.canTarget ? undefined : { opacity: 0 }} />
       <Handle id="b-s" type="source" position={Position.Bottom} isConnectable={!!data.canSource} className={data.canSource ? '!h-3 !w-3 !border-2 !border-background !bg-secondary' : ''} style={data.canSource ? undefined : { opacity: 0 }} />
-      <Handle id="illum-t" type="target" position={Position.Left} isConnectable={!!data.canBeLit} className={data.canBeLit ? '!h-3 !w-3 !border-2 !border-background !bg-warning' : ''} style={data.canBeLit ? undefined : { opacity: 0 }} />
     </div>
   );
 }
