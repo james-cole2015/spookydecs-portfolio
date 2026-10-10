@@ -69,7 +69,6 @@ export interface Deployment {
   updated_at?: string;
   completed_at?: string;
   zones?: Zone[];
-  sessions?: Session[];
   connections?: Connection[];
   [key: string]: unknown;
 }
@@ -84,30 +83,22 @@ export interface Zone {
   receptacle_id?: string;
   connection_count?: number;
   item_count?: number;
-  sessions?: Session[];
   [key: string]: unknown;
 }
 
-export interface Session {
-  session_id: string;
-  deployment_id?: string;
-  zone_code?: string;
-  status?: string;
-  started_at?: string;
-  ended_at?: string;
-  connections?: Connection[];
-  [key: string]: unknown;
-}
-
+/** A CONNECTION- record as the API returns it (item-to-item with ports; no session since #638). */
 export interface Connection {
   connection_id: string;
-  session_id?: string;
   deployment_id?: string;
-  source_item_id?: string;
-  destination_item_id?: string;
-  port?: string;
+  zone_code?: string;
+  from_item_id: string;
+  from_port: string;
+  to_item_id: string;
+  to_port: string;
+  illuminates?: string[];
   photo_ids?: string[];
-  type?: string;
+  connection_type?: 'deployment' | 'removal';
+  connected_at?: string;
   [key: string]: unknown;
 }
 

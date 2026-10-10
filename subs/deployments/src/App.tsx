@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { PageContainer, LoadingState, AppHeader } from '@spookydecs/ui';
 
 // Lazy-load pages so each route is its own chunk (playbook pattern: mirrors the
@@ -7,10 +7,6 @@ import { PageContainer, LoadingState, AppHeader } from '@spookydecs/ui';
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const BuilderPage = lazy(() => import('./pages/BuilderPage'));
 const DeploymentPage = lazy(() => import('./pages/DeploymentPage'));
-const ZoneDetailPage = lazy(() => import('./pages/ZoneDetailPage'));
-const SessionPage = lazy(() => import('./pages/SessionPage'));
-const SessionDetailPage = lazy(() => import('./pages/SessionDetailPage'));
-const ConnectionDetailPage = lazy(() => import('./pages/ConnectionDetailPage'));
 const StagingPage = lazy(() => import('./pages/StagingPage'));
 const CompletePage = lazy(() => import('./pages/CompletePage'));
 const TeardownPage = lazy(() => import('./pages/TeardownPage'));
@@ -20,7 +16,12 @@ const StatsPage = lazy(() => import('./pages/StatsPage'));
 const StatsDetailPage = lazy(() => import('./pages/StatsDetailPage'));
 const GraphsPage = lazy(() => import('./pages/GraphsPage'));
 const DeploymentSchematic = lazy(() => import('./pages/DeploymentSchematic'));
-const DetailPlaceholderPage = lazy(() => import('./pages/DetailPlaceholderPage'));
+
+/** Redirects an old path, filling `:id` from the current route. */
+function RedirectTo({ to }: { to: string }) {
+  const { id } = useParams();
+  return <Navigate to={to.replace(':id', id || '')} replace />;
+}
 
 export default function App() {
   return (
@@ -36,26 +37,17 @@ export default function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/builder" element={<BuilderPage />} />
 
-            {/* Builder → zones → session → staging/teardown flow */}
-            <Route path="/builder/:id/staging" element={<StagingPage />} />
-            <Route path="/builder/:id/teardown" element={<TeardownPage />} />
-            <Route path="/builder/:id/zones/complete" element={<CompletePage />} />
-            <Route
-              path="/builder/:id/zones/:zone/sessions/:sessionId"
-              element={<SessionDetailPage />}
-            />
-            <Route
-              path="/builder/:id/zones/:zone/session"
-              element={<SessionPage />}
-            />
-            <Route path="/builder/:id/zones/:zone" element={<ZoneDetailPage />} />
-            {/* Declare + Connect workspace (#638). /zones kept as an alias until the task 6 cleanup. */}
+            {/* Deployment workspace: one graph per zone (#638). Sessions, the zone dashboard and the
+                standalone connection/session pages are retired. */}
             <Route path="/builder/:id" element={<DeploymentPage />} />
-            <Route path="/builder/:id/zones" element={<DeploymentPage />} />
-            <Route
-              path="/builder/:deploymentId/:sessionId/:connectionId"
-              element={<ConnectionDetailPage />}
-            />
+            <Route path="/builder/:id/staging" element={<StagingPage />} />
+            <Route path="/builder/:id/complete" element={<CompletePage />} />
+            <Route path="/builder/:id/teardown" element={<TeardownPage />} />
+
+            {/* Old bookmarks */}
+            <Route path="/builder/:id/zones/complete" element={<RedirectTo to="/builder/:id/complete" />} />
+            <Route path="/builder/:id/zones/*" element={<RedirectTo to="/builder/:id" />} />
+            <Route path="/builder/:id/zones" element={<RedirectTo to="/builder/:id" />} />
 
             {/* Historical */}
             <Route path="/historical/:id" element={<HistoricalDetailPage />} />
@@ -68,9 +60,6 @@ export default function App() {
             {/* Graphs */}
             <Route path="/graphs/:id" element={<DeploymentSchematic />} />
             <Route path="/graphs" element={<GraphsPage />} />
-
-            {/* Generic detail placeholder (least specific) */}
-            <Route path="/:id" element={<DetailPlaceholderPage />} />
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

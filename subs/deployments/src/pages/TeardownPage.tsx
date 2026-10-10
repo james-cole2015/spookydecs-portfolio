@@ -157,14 +157,14 @@ export default function TeardownPage() {
 
   if (loading) return <LoadingState label="Loading teardown…" />;
   if (error || !deployment)
-    return <ErrorState message={error || 'Failed to load'} onRetry={() => navigate(`/builder/${deploymentId}/zones`)} />;
+    return <ErrorState message={error || 'Failed to load'} onRetry={() => navigate(`/builder/${deploymentId}`)} />;
 
   return (
     <>
       <Breadcrumbs
         crumbs={[
           { label: 'Deployments', to: '/' },
-          { label: deployment.deployment_id, to: `/builder/${deploymentId}/zones` },
+          { label: deployment.deployment_id, to: `/builder/${deploymentId}` },
           { label: 'Teardown' },
         ]}
       />
