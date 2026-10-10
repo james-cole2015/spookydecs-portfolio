@@ -4,44 +4,44 @@ import { GRAPH_CLASS_TYPE_ICONS } from '../../config/deploymentsConfig';
 import type { GraphNodeData } from '../../lib/graphDerivation';
 
 /**
- * A decoration — the loudest tier on the canvas (decoration > light > plug > cord). Large
- * card, primary accent, amps/watts front and centre. Two states: powered (power_data
- * resolved) or dashed (no power_data).
+ * A light — second tier, warning accent so a spotlight reads differently from the props
+ * it lights. Carries its own load, and the right-hand handle drags an illuminates edge
+ * onto a decoration.
  */
-export default function LoadNode({ data, selected }: NodeProps<Node<GraphNodeData>>) {
+export default function LightNode({ data, selected }: NodeProps<Node<GraphNodeData>>) {
   const ring = selected ? 'ring-2 ring-secondary' : '';
-  const icon = GRAPH_CLASS_TYPE_ICONS[data.classType || ''] || '📦';
+  const icon = GRAPH_CLASS_TYPE_ICONS[data.classType || ''] || '💡';
   const powered = data.hasPowerData;
   const stateClasses = powered
-    ? 'border-primary bg-primary-50'
+    ? 'border-warning bg-warning-50'
     : 'border-default-300 border-dashed bg-default-50';
   const item = data.item;
   const amps = item?.power_data?.amps;
   const watts = item?.power_data?.watts;
 
   return (
-    <div className={`flex w-[220px] flex-col gap-1 rounded-xl border-2 p-3 text-left shadow-md ${stateClasses} ${ring}`}>
+    <div className={`flex w-[200px] flex-col gap-1 rounded-lg border-2 p-3 text-left shadow-sm ${stateClasses} ${ring}`}>
       <div className="flex items-center justify-between">
-        <span className="text-2xl">{icon}</span>
+        <span className="text-xl">{icon}</span>
         {!powered && (
           <Chip size="sm" variant="flat" color="default">
             no power_data
           </Chip>
         )}
       </div>
-      <span className="truncate text-base font-semibold text-foreground" title={data.label}>
+      <span className="truncate text-sm font-semibold text-foreground" title={data.label}>
         {data.label}
       </span>
       <span className="text-xs text-default-500">{data.classType || '—'}</span>
       {powered && (
-        <span className="text-sm font-semibold text-primary">
+        <span className="text-xs font-medium text-warning-600">
           {amps}A{watts != null ? ` / ${watts}W` : ''}
         </span>
       )}
 
       <Handle id="t-t" type="target" position={Position.Top} isConnectable={!!data.canTarget} className={data.canTarget ? '!h-3 !w-3 !border-2 !border-background !bg-secondary' : ''} style={data.canTarget ? undefined : { opacity: 0 }} />
       <Handle id="b-s" type="source" position={Position.Bottom} isConnectable={!!data.canSource} className={data.canSource ? '!h-3 !w-3 !border-2 !border-background !bg-secondary' : ''} style={data.canSource ? undefined : { opacity: 0 }} />
-      <Handle id="illum-t" type="target" position={Position.Left} isConnectable={!!data.canBeLit} className={data.canBeLit ? '!h-3 !w-3 !border-2 !border-background !bg-warning' : ''} style={data.canBeLit ? undefined : { opacity: 0 }} />
+      <Handle id="illum-s" type="source" position={Position.Right} isConnectable={!!data.canIlluminate} className={data.canIlluminate ? '!h-3 !w-3 !border-2 !border-background !bg-warning' : ''} style={data.canIlluminate ? undefined : { opacity: 0 }} />
     </div>
   );
 }

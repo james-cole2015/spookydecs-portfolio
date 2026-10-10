@@ -10,16 +10,27 @@
 import type { Node, Edge } from '@xyflow/react';
 import type { GraphNodeData } from './graphDerivation';
 
-const NODE_W = 200;
-const NODE_H = 110;
 const GAP_X = 40;
-const GAP_Y = 60;
+const GAP_Y = 50;
 const BAND_GAP = 120;
+
+// Per-kind footprint, matching the node components. Cords are compact pills, so a chain of
+// them doesn't take the space of a chain of cards.
+const SIZE: Record<string, { w: number; h: number }> = {
+  hub: { w: 200, h: 110 },
+  load: { w: 220, h: 110 },
+  light: { w: 200, h: 100 },
+  branch: { w: 200, h: 96 },
+  cord: { w: 150, h: 44 },
+  placeholder: { w: 200, h: 80 },
+};
+const sizeOf = (kind: string) => SIZE[kind] || SIZE.load;
 
 export function layoutGraph(
   nodes: Node<GraphNodeData>[],
   edges: Edge[],
 ): Node<GraphNodeData>[] {
+  const kindOf = new Map(nodes.map((n) => [n.id, n.data.kind as string]));
   const adjacency = new Map<string, string[]>();
   edges.forEach((e) => {
     if (!e.source || !e.target) return;
@@ -29,7 +40,6 @@ export function layoutGraph(
   });
 
   const roots = nodes.filter((n) => n.data.kind === 'hub');
-  const depthOf = new Map<string, number>();
   const tierByRoot = new Map<string, Map<number, string[]>>();
 
   roots.forEach((root) => {
@@ -39,7 +49,6 @@ export function layoutGraph(
     let frontier = [root.id];
     let depth = 0;
     tiers.set(0, [root.id]);
-    depthOf.set(root.id, 0);
     while (frontier.length) {
       depth += 1;
       const next: string[] = [];
@@ -48,7 +57,6 @@ export function layoutGraph(
           if (visited.has(childId)) return;
           visited.add(childId);
           next.push(childId);
-          depthOf.set(childId, depth);
         });
       });
       if (next.length) tiers.set(depth, next);
@@ -56,37 +64,41 @@ export function layoutGraph(
     }
   });
 
+  const rowWidth = (ids: string[]) =>
+    ids.reduce((sum, id) => sum + sizeOf(kindOf.get(id) || '').w, 0) + Math.max(0, ids.length - 1) * GAP_X;
+  const rowHeight = (ids: string[]) => Math.max(...ids.map((id) => sizeOf(kindOf.get(id) || '').h));
+
   const positioned = new Map<string, { x: number; y: number }>();
   let bandX = 0;
+  let maxBottom = 0;
 
   roots.forEach((root) => {
     const tiers = tierByRoot.get(root.id)!;
-    const bandWidth = Math.max(
-      ...Array.from(tiers.values()).map((ids) => ids.length * (NODE_W + GAP_X)),
-      NODE_W,
-    );
-    tiers.forEach((ids, depth) => {
-      const rowWidth = ids.length * (NODE_W + GAP_X) - GAP_X;
-      const startX = bandX + (bandWidth - rowWidth) / 2;
-      ids.forEach((id, i) => {
-        positioned.set(id, {
-          x: startX + i * (NODE_W + GAP_X),
-          y: depth * (NODE_H + GAP_Y),
-        });
+    const ordered = Array.from(tiers.entries()).sort((a, b) => a[0] - b[0]);
+    const bandWidth = Math.max(...ordered.map(([, ids]) => rowWidth(ids)), SIZE.hub.w);
+    let y = 0;
+    ordered.forEach(([, ids]) => {
+      let x = bandX + (bandWidth - rowWidth(ids)) / 2;
+      ids.forEach((id) => {
+        positioned.set(id, { x, y });
+        x += sizeOf(kindOf.get(id) || '').w + GAP_X;
       });
+      y += rowHeight(ids) + GAP_Y;
     });
+    maxBottom = Math.max(maxBottom, y);
     bandX += bandWidth + BAND_GAP;
   });
 
   // Declared-but-unconnected nodes (#638) aren't reachable from any zone root, so give
-  // them a "Declared, not yet connected" row below the bands. They are the drag sources
-  // / targets for authoring, so they must be visible rather than stacked at the origin.
+  // them a row below the bands. They are the drag sources / targets for authoring, so they
+  // must be visible rather than stacked at the origin.
   const orphans = nodes.filter((n) => !positioned.has(n.id));
   if (orphans.length > 0) {
-    const maxY = Math.max(-(NODE_H + GAP_Y), ...Array.from(positioned.values()).map((p) => p.y));
-    const rowY = maxY + NODE_H + GAP_Y + BAND_GAP / 2;
-    orphans.forEach((n, i) => {
-      positioned.set(n.id, { x: i * (NODE_W + GAP_X), y: rowY });
+    const rowY = maxBottom + BAND_GAP / 2;
+    let x = 0;
+    orphans.forEach((n) => {
+      positioned.set(n.id, { x, y: rowY });
+      x += sizeOf(n.data.kind).w + GAP_X;
     });
   }
 

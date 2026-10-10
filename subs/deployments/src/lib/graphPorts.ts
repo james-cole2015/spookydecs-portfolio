@@ -76,7 +76,7 @@ export function decorateNodes(
         canSource: freeFemalePorts(n.id, input).length > 0,
         canTarget: !isHub && canReceive(n.id, input),
         canIlluminate: !isHub && isLight(input.items[n.id]) && !!connectionPoweringLight(n.id, input),
-        canBeLit: !isHub,
+        canBeLit: !isHub && input.items[n.id]?.class === 'Decoration',
       },
     };
   });
