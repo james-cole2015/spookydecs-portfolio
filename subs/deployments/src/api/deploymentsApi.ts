@@ -106,6 +106,48 @@ export async function getDeploymentGraph(deploymentId: string): Promise<any> {
   return await apiCall(`/deployments/${deploymentId}/graph`);
 }
 
+// Assistant (#639) — read-only Lambda that returns a reviewable proposal; the browser applies it
+// through the routes above. Unavailability (network, 5xx, 403, missing route) is signalled with
+// AssistantUnavailableError so the panel can fall back to the manual picker.
+
+export class AssistantUnavailableError extends Error {}
+
+const ASSISTANT_TIMEOUT_MS = 30000;
+
+export async function postAssistant(
+  deploymentId: string,
+  zone: string,
+  messages: Array<{ role: 'user' | 'assistant'; content: string }>,
+): Promise<any> {
+  if (!auth().hasMinRole('builder')) throw new Error('Insufficient permissions');
+  const { API_ENDPOINT } = await getConfig();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ASSISTANT_TIMEOUT_MS);
+  let response: Response;
+  try {
+    response = await fetch(`${API_ENDPOINT}/deployments/${deploymentId}/assistant`, {
+      method: 'POST',
+      headers: auth().buildHeaders(),
+      body: JSON.stringify({ zone, messages }),
+      signal: controller.signal,
+    });
+  } catch {
+    throw new AssistantUnavailableError('The assistant did not respond');
+  } finally {
+    clearTimeout(timer);
+  }
+  if (response.status === 401) {
+    await auth().redirectToLogin();
+    return null;
+  }
+  if (response.status >= 500 || response.status === 403 || response.status === 404) {
+    throw new AssistantUnavailableError(`Assistant unavailable (${response.status})`);
+  }
+  const json = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(json.error || `API error: ${response.status}`);
+  return json;
+}
+
 // Items
 
 export interface ItemFilters {
