@@ -55,7 +55,7 @@ export default function DeploymentPage() {
             <Button variant="flat" onPress={() => navigate(`/builder/${deploymentId}/staging`)} data-testid="admin-card-staging">
               Staging
             </Button>
-            <Button variant="flat" onPress={() => navigate(`/builder/${deploymentId}/zones/complete`)} data-testid="admin-card-complete">
+            <Button variant="flat" onPress={() => navigate(`/builder/${deploymentId}/complete`)} data-testid="admin-card-complete">
               Review &amp; Complete
             </Button>
             <Button

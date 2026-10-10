@@ -71,16 +71,6 @@ export async function createDeployment(deploymentData: unknown): Promise<any> {
   return await apiCall('/deployments', 'POST', deploymentData);
 }
 
-export async function updateDeployment(deploymentId: string, updates: unknown): Promise<any> {
-  if (!auth().hasMinRole('builder')) throw new Error('Insufficient permissions');
-  return await apiCall(`/deployments/${deploymentId}`, 'PUT', updates);
-}
-
-export async function deleteDeployment(deploymentId: string): Promise<any> {
-  if (!auth().hasMinRole('admin')) throw new Error('Insufficient permissions');
-  return await apiCall(`/deployments/${deploymentId}`, 'DELETE');
-}
-
 export async function checkDeploymentExists(
   season: string,
   year: number | string,
@@ -146,34 +136,6 @@ export async function getItem(itemId: string): Promise<any> {
   return await apiCall(`/items/${itemId}`);
 }
 
-// Sessions
-
-export async function createSession(deploymentId: string, sessionData: unknown): Promise<any> {
-  if (!auth().hasMinRole('builder')) throw new Error('Insufficient permissions');
-  return await apiCall(`/deployments/${deploymentId}/sessions`, 'POST', sessionData);
-}
-
-export async function endSession(
-  deploymentId: string,
-  sessionId: string,
-  data: unknown,
-): Promise<any> {
-  if (!auth().hasMinRole('builder')) throw new Error('Insufficient permissions');
-  return await apiCall(`/deployments/${deploymentId}/sessions/${sessionId}`, 'PUT', data);
-}
-
-export async function getSession(deploymentId: string, sessionId: string): Promise<any> {
-  return await apiCall(`/deployments/${deploymentId}/sessions/${sessionId}`);
-}
-
-export async function getZoneSessions(deploymentId: string, zoneCode: string): Promise<any> {
-  return await apiCall(`/deployments/${deploymentId}/zones/${zoneCode}/sessions`);
-}
-
-export async function getActiveSessions(deploymentId: string): Promise<any> {
-  return await apiCall(`/deployments/${deploymentId}/sessions/active`);
-}
-
 // Connections
 
 export async function getAvailablePorts(deploymentId: string, zoneCode: string): Promise<any> {
@@ -214,7 +176,7 @@ export async function updateConnectionPhotos(
   );
 }
 
-// Placements (static, non-powered props — #457)
+// Placements (declare an item in a zone — #457, generalized to any item in #638)
 
 export async function createPlacement(deploymentId: string, placementData: unknown): Promise<any> {
   if (!auth().hasMinRole('builder')) throw new Error('Insufficient permissions');
@@ -229,23 +191,6 @@ export async function updatePlacement(
   if (!auth().hasMinRole('builder')) throw new Error('Insufficient permissions');
   console.log('[deployments-api] updatePlacement:', { deploymentId, placementId, updates });
   return await apiCall(`/deployments/${deploymentId}/placements/${placementId}`, 'PATCH', updates);
-}
-
-export async function getConnection(
-  deploymentId: string,
-  sessionId: string,
-  connectionId: string,
-): Promise<any> {
-  return await apiCall(
-    `/deployments/${deploymentId}/sessions/${sessionId}/connections/${connectionId}`,
-  );
-}
-
-export async function getRemovedConnections(deploymentId: string, sessionId: string): Promise<any> {
-  console.log('[deployments-api] getRemovedConnections:', { deploymentId, sessionId });
-  return await apiCall(
-    `/deployments/${deploymentId}/sessions/${sessionId}/connections?type=removal`,
-  );
 }
 
 export async function fetchImageById(imageId: string): Promise<any> {
