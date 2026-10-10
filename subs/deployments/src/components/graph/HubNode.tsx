@@ -33,7 +33,7 @@ export default function HubNode({ data, selected }: NodeProps<Node<GraphNodeData
         </span>
       )}
 
-      <Handle id="b-s" type="source" position={Position.Bottom} isConnectable={false} style={{ opacity: 0 }} />
+      <Handle id="b-s" type="source" position={Position.Bottom} isConnectable={!!data.canSource} className={data.canSource ? '!h-3 !w-3 !border-2 !border-background !bg-secondary' : ''} style={data.canSource ? undefined : { opacity: 0 }} />
     </div>
   );
 }

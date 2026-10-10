@@ -6,7 +6,7 @@ import { PageContainer, LoadingState, AppHeader } from '@spookydecs/ui';
 // vanilla router's lazy page imports and keeps the initial bundle small).
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const BuilderPage = lazy(() => import('./pages/BuilderPage'));
-const ZonesPage = lazy(() => import('./pages/ZonesPage'));
+const DeploymentPage = lazy(() => import('./pages/DeploymentPage'));
 const ZoneDetailPage = lazy(() => import('./pages/ZoneDetailPage'));
 const SessionPage = lazy(() => import('./pages/SessionPage'));
 const SessionDetailPage = lazy(() => import('./pages/SessionDetailPage'));
@@ -49,7 +49,9 @@ export default function App() {
               element={<SessionPage />}
             />
             <Route path="/builder/:id/zones/:zone" element={<ZoneDetailPage />} />
-            <Route path="/builder/:id/zones" element={<ZonesPage />} />
+            {/* Declare + Connect workspace (#638). /zones kept as an alias until the task 6 cleanup. */}
+            <Route path="/builder/:id" element={<DeploymentPage />} />
+            <Route path="/builder/:id/zones" element={<DeploymentPage />} />
             <Route
               path="/builder/:deploymentId/:sessionId/:connectionId"
               element={<ConnectionDetailPage />}

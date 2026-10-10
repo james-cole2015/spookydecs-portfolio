@@ -78,6 +78,18 @@ export function layoutGraph(
     bandX += bandWidth + BAND_GAP;
   });
 
+  // Declared-but-unconnected nodes (#638) aren't reachable from any zone root, so give
+  // them a "Declared, not yet connected" row below the bands. They are the drag sources
+  // / targets for authoring, so they must be visible rather than stacked at the origin.
+  const orphans = nodes.filter((n) => !positioned.has(n.id));
+  if (orphans.length > 0) {
+    const maxY = Math.max(-(NODE_H + GAP_Y), ...Array.from(positioned.values()).map((p) => p.y));
+    const rowY = maxY + NODE_H + GAP_Y + BAND_GAP / 2;
+    orphans.forEach((n, i) => {
+      positioned.set(n.id, { x: i * (NODE_W + GAP_X), y: rowY });
+    });
+  }
+
   return nodes.map((n) => ({
     ...n,
     position: positioned.get(n.id) || n.position,

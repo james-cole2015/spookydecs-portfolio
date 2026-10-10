@@ -41,8 +41,10 @@ export default function LoadNode({ data, selected }: NodeProps<Node<GraphNodeDat
         </span>
       )}
 
-      <Handle id="t-t" type="target" position={Position.Top} isConnectable={false} style={{ opacity: 0 }} />
-      <Handle id="b-s" type="source" position={Position.Bottom} isConnectable={false} style={{ opacity: 0 }} />
+      <Handle id="t-t" type="target" position={Position.Top} isConnectable={!!data.canTarget} className={data.canTarget ? '!h-3 !w-3 !border-2 !border-background !bg-secondary' : ''} style={data.canTarget ? undefined : { opacity: 0 }} />
+      <Handle id="b-s" type="source" position={Position.Bottom} isConnectable={!!data.canSource} className={data.canSource ? '!h-3 !w-3 !border-2 !border-background !bg-secondary' : ''} style={data.canSource ? undefined : { opacity: 0 }} />
+      <Handle id="illum-s" type="source" position={Position.Right} isConnectable={!!data.canIlluminate} className={data.canIlluminate ? '!h-3 !w-3 !border-2 !border-background !bg-warning' : ''} style={data.canIlluminate ? undefined : { opacity: 0 }} />
+      <Handle id="illum-t" type="target" position={Position.Left} isConnectable={!!data.canBeLit} className={data.canBeLit ? '!h-3 !w-3 !border-2 !border-background !bg-warning' : ''} style={data.canBeLit ? undefined : { opacity: 0 }} />
     </div>
   );
 }
