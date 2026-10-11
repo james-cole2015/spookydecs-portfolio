@@ -122,9 +122,9 @@ export function styleGhosts(
   return {
     nodes: nodes.map((n) =>
       overlay.addedNodes.has(n.id)
-        ? { ...n, style: { ...n.style, opacity: 0.55 }, className: 'proposal-ghost' }
+        ? { ...n, data: { ...n.data, label: `${n.data.label} (new)` }, style: { ...n.style, opacity: 0.7, outline: `2px dashed ${GHOST_ADD_STROKE}`, outlineOffset: 6, borderRadius: 12 }, className: 'proposal-ghost' }
         : overlay.removedNodes.has(n.id)
-          ? { ...n, style: { ...n.style, opacity: 0.35, filter: 'grayscale(1)' }, className: 'proposal-removed' }
+          ? { ...n, data: { ...n.data, label: `${n.data.label} (remove)` }, style: { ...n.style, opacity: 0.45, filter: 'grayscale(1)', outline: `2px dashed ${GHOST_REMOVE_STROKE}`, outlineOffset: 6, borderRadius: 12 }, className: 'proposal-removed' }
           : n,
     ),
     edges: edges.map((e) =>
