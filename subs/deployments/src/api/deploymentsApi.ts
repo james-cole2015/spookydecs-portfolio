@@ -118,6 +118,9 @@ export async function getDeploymentGraph(deploymentId: string): Promise<any> {
 
 export class AssistantUnavailableError extends Error {}
 
+/** A 504 or client-side timeout: Lurch is healthy but this request was slow (#641). Retryable. */
+export class AssistantTimeoutError extends Error {}
+
 const ASSISTANT_TIMEOUT_MS = 30000;
 
 export async function postAssistant(
@@ -137,7 +140,8 @@ export async function postAssistant(
       body: JSON.stringify({ zone, messages }),
       signal: controller.signal,
     });
-  } catch {
+  } catch (err: any) {
+    if (err?.name === 'AbortError') throw new AssistantTimeoutError('That took too long. Try again, or narrow the request.');
     throw new AssistantUnavailableError('The assistant did not respond');
   } finally {
     clearTimeout(timer);
@@ -145,6 +149,9 @@ export async function postAssistant(
   if (response.status === 401) {
     await auth().redirectToLogin();
     return null;
+  }
+  if (response.status === 504) {
+    throw new AssistantTimeoutError('That took too long. Try again, or narrow the request.');
   }
   if (response.status >= 500 || response.status === 403 || response.status === 404) {
     throw new AssistantUnavailableError(`Assistant unavailable (${response.status})`);
