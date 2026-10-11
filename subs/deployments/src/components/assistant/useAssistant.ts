@@ -15,6 +15,7 @@ export interface ChatMessage {
 export function useAssistant(deploymentId: string, zone: string) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [proposal, setProposal] = useState<Proposal | null>(null);
+  const [clarify, setClarify] = useState<Proposal['clarify'] | null>(null);
   const [included, setIncluded] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
   const [available, setAvailable] = useState(true);
@@ -24,6 +25,7 @@ export function useAssistant(deploymentId: string, zone: string) {
     zoneRef.current = zone;
     setMessages([]);
     setProposal(null);
+    setClarify(null);
     setIncluded(new Set());
   }
 
@@ -33,6 +35,7 @@ export function useAssistant(deploymentId: string, zone: string) {
       if (!trimmed || busy) return;
       const next: ChatMessage[] = [...messages, { role: 'user', text: trimmed }];
       setMessages(next);
+      setClarify(null);
       setBusy(true);
       try {
         const res = await postAssistant(
@@ -46,6 +49,7 @@ export function useAssistant(deploymentId: string, zone: string) {
         setMessages((m) => [...m, { role: 'assistant', text: data.message || '…' }]);
         const hasRows = data.type === 'proposal' && data.rows.length > 0;
         setProposal(hasRows ? data : null);
+        setClarify(data.type === 'clarify' ? data.clarify ?? null : null);
         setIncluded(hasRows ? defaultIncluded(data.rows) : new Set());
       } catch (err: any) {
         if (err instanceof AssistantUnavailableError) setAvailable(false);
@@ -71,5 +75,5 @@ export function useAssistant(deploymentId: string, zone: string) {
     setIncluded(new Set());
   }, []);
 
-  return { messages, proposal, included, busy, available, send, toggle, clearProposal };
+  return { messages, proposal, clarify, included, busy, available, send, toggle, clearProposal };
 }

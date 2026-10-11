@@ -28,7 +28,7 @@ const EXAMPLES = [
 /** Docked (non-modal) so the graph and its ghost preview stay visible while the panel is open. */
 export default function AssistantPanel({ assistant, zoneName, open, onOpenChange, results, applying, onApply, onDiscard }: Props) {
   const [draft, setDraft] = useState('');
-  const { messages, proposal, included, busy, available, send, toggle } = assistant;
+  const { messages, proposal, clarify, included, busy, available, send, toggle } = assistant;
   const includedCount = proposal ? proposal.rows.filter((r) => r.valid && included.has(r.row_id)).length : 0;
   const hasResults = Object.keys(results).length > 0;
 
@@ -81,6 +81,20 @@ export default function AssistantPanel({ assistant, zoneName, open, onOpenChange
             {m.text}
           </p>
         ))}
+        {clarify?.candidates && clarify.candidates.length > 0 && (
+          <div className="flex flex-col gap-2" data-testid="assistant-clarify">
+            {clarify.candidates.map((c: any) => (
+              <Chip
+                key={c.id}
+                variant="bordered"
+                className="h-auto cursor-pointer whitespace-normal py-1"
+                onClick={() => submit(`I mean ${c.short_name || c.id} (${c.id})`)}
+              >
+                {c.short_name || c.id} <span className="text-xs text-default-400">{c.season} {c.class}</span>
+              </Chip>
+            ))}
+          </div>
+        )}
         {busy && <p className="text-sm text-default-400">Thinking…</p>}
         {proposal && (
           <ProposalTable rows={proposal.rows} included={included} results={results} locked={applying || hasResults} onToggle={toggle} />
