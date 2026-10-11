@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Node, Edge } from '@xyflow/react';
 import { Button } from '@heroui/react';
 import { Camera, X } from 'lucide-react';
@@ -123,19 +123,26 @@ function NodeDetail({
   const { data } = node;
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [declaredPhotos, setDeclaredPhotos] = useState<LightboxPhoto[]>([]);
-  const declaredPhotoIds = ctx.placements.find((p) => p.item_id === node.id)?.photo_ids;
+  // Deployment photos live on the item's declaration (PLACEMENT- photo_ids) or, for an item that was
+  // wired without ever being declared, on its inbound connection. Show both, de-duplicated (#638, #639).
+  const photoKey = useMemo(() => {
+    const ids = [
+      ...(ctx.placements.find((p) => p.item_id === node.id)?.photo_ids || []),
+      ...ctx.connections.filter((c) => c.to_item_id === node.id).flatMap((c) => c.photo_ids || []),
+    ];
+    return Array.from(new Set(ids)).join(',');
+  }, [ctx.placements, ctx.connections, node.id]);
 
-  // Photos attached on the Declare tab (PLACEMENT- photo_ids) surface here (#638).
   useEffect(() => {
     let cancelled = false;
     setDeclaredPhotos([]);
-    resolvePhotos(declaredPhotoIds).then((p) => {
+    resolvePhotos(photoKey ? photoKey.split(',') : []).then((p) => {
       if (!cancelled) setDeclaredPhotos(p);
     });
     return () => {
       cancelled = true;
     };
-  }, [declaredPhotoIds]);
+  }, [photoKey]);
 
   useEffect(() => {
     let cancelled = false;
@@ -154,7 +161,7 @@ function NodeDetail({
 
   if (data.kind === 'hub') {
     return (
-      <div className="flex flex-col gap-2">
+      <div className="flex max-w-xl flex-col gap-2">
         <h3 className="text-sm font-semibold text-foreground">{data.label}</h3>
         <p className="text-xs text-default-500">Circuit source — synthetic zone outlet, not an item.</p>
         <DefRow label="Zone" value={data.zone?.zone_name} />
@@ -226,94 +233,102 @@ function NodeDetail({
   });
 
   return (
-    <div className="flex flex-col gap-2">
-      {photoUrl ? (
-        <img src={photoUrl} alt={data.label} className="h-32 w-full rounded-medium object-cover" />
-      ) : (
-        <div className="flex h-32 items-center justify-center rounded-medium bg-default-100 text-default-400">
-          {(() => {
-            const Icon = nodeIcon(data);
-            return <Icon size={48} strokeWidth={1.5} aria-hidden />;
-          })()}
-        </div>
-      )}
-      <h3 className="text-sm font-semibold text-foreground">{data.label}</h3>
-      <DefRow label="Class type" value={data.classType} />
-      <DefRow label="Status" value={item?.status} />
-      {data.hasPowerData ? (
-        <>
-          <DefRow label="Amps" value={item?.power_data?.amps} />
-          <DefRow label="Watts" value={item?.power_data?.watts} />
-        </>
-      ) : (
-        <p className="text-xs text-default-400">No power_data recorded for this item.</p>
-      )}
-      <DefRow label="Male ends" value={item?.male_ends} />
-      <DefRow label="Female ends" value={item?.female_ends} />
-      <DefRow label="Length" value={item?.length} />
-      <DefRow label="Load through" value={data.throughAmps ? `${data.throughAmps}A` : undefined} />
-      <DefRow label="Deployed" value={deployedAt} />
-      {declaredPhotos.length > 0 && (
-        <div className="flex flex-col gap-1">
-          <span className="text-sm text-default-500">Deployment photos</span>
-          <PhotoLightbox photos={declaredPhotos} className="grid grid-cols-3 gap-2" thumbnailClassName="h-16 w-full rounded-medium object-cover" />
-        </div>
-      )}
-      <LabeledList label="Illuminates" items={illuminatesRows} />
-      {illuminatedByConn && (
-        <LabeledList
-          label="Illuminated by"
-          items={[
-            {
-              id: illuminatedByConn.connection_id || illuminatedByConn.to_item_id,
-              text: `💡 ${nameOf(illuminatedByConn.to_item_id)}`,
-              onRemove:
-                onRemove && illuminatedByConn.connection_id
-                  ? () =>
-                      onRemove({
-                        kind: 'illuminates',
-                        connectionId: illuminatedByConn.connection_id!,
-                        litId: node.id,
-                        description: `${nameOf(illuminatedByConn.to_item_id)} no longer lights ${nameOf(node.id)}`,
-                      })
-                  : undefined,
-              removeLabel: 'Stop illuminating',
-            },
-          ]}
-        />
-      )}
-      <LabeledList label="Incoming connections" items={incomingRows} />
-      <LabeledList label="Outgoing connections" items={outgoingRows} />
-      {(onAddPhoto || onRemove) && (
-        <div className="flex flex-col gap-2 border-t border-default-200 pt-3">
-          {onAddPhoto && (placement || incoming.length > 0) && (
-            <Button size="sm" variant="flat" startContent={<Camera size={14} />} onPress={() => onAddPhoto(node.id)} data-testid="graph-add-photo">
-              Add photo
-            </Button>
-          )}
-          {onRemove && placement?.placement_id && (
-            incoming.length === 0 && outgoing.length === 0 ? (
-              <Button
-                size="sm"
-                color="danger"
-                variant="flat"
-                onPress={() =>
-                  onRemove({
-                    kind: 'declaration',
-                    placementId: placement.placement_id!,
-                    description: `Take ${nameOf(node.id)} out of this deployment`,
-                  })
-                }
-                data-testid="graph-remove-declared"
-              >
-                Remove from deployment
+    <div className="grid gap-4 md:grid-cols-[200px_minmax(0,1fr)_minmax(0,1fr)]">
+      <div className="flex flex-col gap-2">
+        {photoUrl || declaredPhotos[0]?.url ? (
+          <img src={photoUrl || declaredPhotos[0]?.url} alt={data.label} className="h-32 w-full rounded-medium object-cover" />
+        ) : (
+          <div className="flex h-32 items-center justify-center rounded-medium bg-default-100 text-default-400">
+            {(() => {
+              const Icon = nodeIcon(data);
+              return <Icon size={48} strokeWidth={1.5} aria-hidden />;
+            })()}
+          </div>
+        )}
+        <h3 className="text-sm font-semibold text-foreground">{data.label}</h3>
+        {declaredPhotos.length > 0 && (
+          <div className="flex flex-col gap-1" data-testid="graph-deployment-photos">
+            <span className="text-xs text-default-500">Deployment photos ({declaredPhotos.length})</span>
+            <PhotoLightbox photos={declaredPhotos} className="grid grid-cols-3 gap-2" thumbnailClassName="h-14 w-full rounded-medium object-cover" />
+          </div>
+        )}
+        {(onAddPhoto || onRemove) && (
+          <div className="flex flex-col gap-2">
+            {onAddPhoto && (placement || incoming.length > 0) && (
+              <Button size="sm" variant="flat" startContent={<Camera size={14} />} onPress={() => onAddPhoto(node.id)} data-testid="graph-add-photo">
+                Add photo
               </Button>
-            ) : (
-              <p className="text-xs text-default-400">Disconnect this item first to remove it from the deployment.</p>
-            )
-          )}
-        </div>
-      )}
+            )}
+            {onRemove && placement?.placement_id && (
+              incoming.length === 0 && outgoing.length === 0 ? (
+                <Button
+                  size="sm"
+                  color="danger"
+                  variant="flat"
+                  onPress={() =>
+                    onRemove({
+                      kind: 'declaration',
+                      placementId: placement.placement_id!,
+                      description: `Take ${nameOf(node.id)} out of this deployment`,
+                    })
+                  }
+                  data-testid="graph-remove-declared"
+                >
+                  Remove from deployment
+                </Button>
+              ) : (
+                <p className="text-xs text-default-400">Disconnect this item first to remove it from the deployment.</p>
+              )
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <DefRow label="Class type" value={data.classType} />
+        <DefRow label="Status" value={item?.status} />
+        {data.hasPowerData ? (
+          <>
+            <DefRow label="Amps" value={item?.power_data?.amps} />
+            <DefRow label="Watts" value={item?.power_data?.watts} />
+          </>
+        ) : (
+          <p className="text-xs text-default-400">No power_data recorded for this item.</p>
+        )}
+        <DefRow label="Male ends" value={item?.male_ends} />
+        <DefRow label="Female ends" value={item?.female_ends} />
+        <DefRow label="Length" value={item?.length} />
+        <DefRow label="Load through" value={data.throughAmps ? `${data.throughAmps}A` : undefined} />
+        <DefRow label="Deployed" value={deployedAt} />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <LabeledList label="Illuminates" items={illuminatesRows} />
+        {illuminatedByConn && (
+          <LabeledList
+            label="Illuminated by"
+            items={[
+              {
+                id: illuminatedByConn.connection_id || illuminatedByConn.to_item_id,
+                text: `💡 ${nameOf(illuminatedByConn.to_item_id)}`,
+                onRemove:
+                  onRemove && illuminatedByConn.connection_id
+                    ? () =>
+                        onRemove({
+                          kind: 'illuminates',
+                          connectionId: illuminatedByConn.connection_id!,
+                          litId: node.id,
+                          description: `${nameOf(illuminatedByConn.to_item_id)} no longer lights ${nameOf(node.id)}`,
+                        })
+                    : undefined,
+                removeLabel: 'Stop illuminating',
+              },
+            ]}
+          />
+        )}
+        <LabeledList label="Incoming connections" items={incomingRows} />
+        <LabeledList label="Outgoing connections" items={outgoingRows} />
+      </div>
     </div>
   );
 }
@@ -374,46 +389,51 @@ function EdgeDetail({
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <h3 className="text-sm font-semibold text-foreground">Connection</h3>
-      {photos.length > 0 ? (
-        <PhotoLightbox photos={photos} className="grid grid-cols-3 gap-2" thumbnailClassName="h-16 w-full rounded-medium object-cover" />
-      ) : (
-        <p className="text-xs text-default-400">No photos recorded for this connection.</p>
-      )}
-      <DefRow label="From port" value={conn?.from_port} />
-      <DefRow label="To port" value={conn?.to_port} />
-      <DefRow label="Zone" value={conn?.zone_code} />
-      <DefRow label="Signal" value={edge.data?.label} />
-      <DefRow label="Deployed" value={when} />
-      {conn?.illuminates && conn.illuminates.length > 0 && (
-        <LabeledList
-          label="Illuminates"
-          items={conn.illuminates.map((id) => ({ id, text: `💡 ${ctx.nodeLabels[id] || id}` }))}
-        />
-      )}
-      {onRemove && (
-        <Button
-          size="sm"
-          color="danger"
-          variant="flat"
-          onPress={() =>
-            onRemove({
-              kind: 'connection',
-              connectionId: conn?.connection_id || '',
-              description: `${ctx.nodeLabels[edge.source] || edge.source} → ${ctx.nodeLabels[edge.target] || edge.target}`,
-            })
-          }
-          data-testid="graph-edge-remove"
-        >
-          Remove connection
-        </Button>
-      )}
+    <div className="grid gap-4 md:grid-cols-2">
+      <div className="flex flex-col gap-2">
+        <h3 className="text-sm font-semibold text-foreground">Connection</h3>
+        <DefRow label="From port" value={conn?.from_port} />
+        <DefRow label="To port" value={conn?.to_port} />
+        <DefRow label="Zone" value={conn?.zone_code} />
+        <DefRow label="Signal" value={edge.data?.label} />
+        <DefRow label="Deployed" value={when} />
+        {conn?.illuminates && conn.illuminates.length > 0 && (
+          <LabeledList
+            label="Illuminates"
+            items={conn.illuminates.map((id) => ({ id, text: `💡 ${ctx.nodeLabels[id] || id}` }))}
+          />
+        )}
+      </div>
+      <div className="flex flex-col gap-2">
+        {photos.length > 0 ? (
+          <PhotoLightbox photos={photos} className="grid grid-cols-3 gap-2" thumbnailClassName="h-16 w-full rounded-medium object-cover" />
+        ) : (
+          <p className="text-xs text-default-400">No photos recorded for this connection.</p>
+        )}
+        {onRemove && (
+          <Button
+            size="sm"
+            color="danger"
+            variant="flat"
+            className="self-start"
+            onPress={() =>
+              onRemove({
+                kind: 'connection',
+                connectionId: conn?.connection_id || '',
+                description: `${ctx.nodeLabels[edge.source] || edge.source} → ${ctx.nodeLabels[edge.target] || edge.target}`,
+              })
+            }
+            data-testid="graph-edge-remove"
+          >
+            Remove connection
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
 
-/** Persistent right-column detail panel — not a modal/Drawer (#466 plan §2a). */
+/** Persistent detail panel under the graph — not a modal/Drawer (#466 plan §2a). */
 export default function DetailPanel({
   selection,
   connections,
@@ -430,7 +450,7 @@ export default function DetailPanel({
 } & DetailContext) {
   if (!selection) {
     return (
-      <div className="flex h-full items-center justify-center rounded-medium border border-dashed border-default-200 p-4 text-center text-sm text-default-400">
+      <div className="flex items-center justify-center rounded-medium border border-dashed border-default-200 p-5 text-center text-sm text-default-400">
         Click a node or edge to preview its item photo and power_data…
       </div>
     );

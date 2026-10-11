@@ -18,3 +18,28 @@ body {
 #root {
   min-height: calc(100vh - 64px);
 }
+
+/* React Flow zoom controls: the stock buttons are light-on-light in the dark theme. Drive them from
+   the active HeroUI theme tokens so they stay legible in both. */
+.react-flow__controls {
+  --xy-controls-button-background-color: hsl(var(--heroui-content2));
+  --xy-controls-button-background-color-hover: hsl(var(--heroui-content3));
+  --xy-controls-button-color: hsl(var(--heroui-foreground));
+  --xy-controls-button-color-hover: hsl(var(--heroui-foreground));
+  --xy-controls-button-border-color: hsl(var(--heroui-default-300));
+  border: 1px solid hsl(var(--heroui-default-300));
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: none;
+}
+
+.react-flow__controls-button {
+  width: 28px;
+  height: 28px;
+}
+
+.react-flow__controls-button svg {
+  fill: currentColor;
+  max-width: 14px;
+  max-height: 14px;
+}

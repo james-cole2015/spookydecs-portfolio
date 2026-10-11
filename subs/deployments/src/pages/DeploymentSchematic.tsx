@@ -485,24 +485,28 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
     const inbound = loaded.input.connections.find(
       (c) => c.to_item_id === itemId && (c.connection_type ?? 'deployment') === 'deployment',
     );
-    if (!placement?.placement_id && !inbound?.connection_id) return;
-    const photos = await photoUpload.openWithEditor({
-      context: 'deployment',
-      photo_type: 'deployment',
-      season: loaded.season || '',
-      year: Number(loaded.year),
-      entityId: itemId,
-      metadata: { 'deployment-id': id },
-    });
-    if (photos.length === 0) return;
+    if (!placement?.placement_id && !inbound?.connection_id) {
+      toast.showError('Declare or connect this item before adding a photo');
+      return;
+    }
     try {
+      const photos = await photoUpload.openWithEditor({
+        context: 'deployment',
+        photo_type: 'deployment',
+        season: loaded.season || '',
+        year: Number(loaded.year),
+        entityId: itemId,
+        metadata: { 'deployment-id': id },
+      });
+      if (photos.length === 0) return;
       const photoIds = photos.map((p) => p.photo_id);
+      // The routes append to the record's existing photos, so only the new ids are sent.
       if (placement?.placement_id) await updatePlacement(id, placement.placement_id, { photo_ids: photoIds });
       else await updateConnectionPhotos(id, inbound!.connection_id!, photoIds);
-      toast.showSuccess('Photo added');
+      toast.showSuccess(photos.length === 1 ? 'Photo added' : `${photos.length} photos added`);
       await refresh();
     } catch (err: any) {
-      toast.showError(err?.message || 'Failed to attach photo');
+      toast.showError(err?.message || 'Failed to add photo');
     }
   }
 
@@ -652,12 +656,13 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
           message={embedded ? 'Use Add to put staged items into this zone' : undefined}
         />
       ) : (
-        <div className={`grid grid-cols-1 gap-4 ${panelOpen ? 'lg:grid-cols-[1fr_240px]' : 'lg:grid-cols-[200px_1fr_280px]'}`}>
-          <div className={`order-2 lg:order-1 ${panelOpen ? 'lg:hidden' : ''}`}>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[200px_minmax(0,1fr)]">
+          <div className="order-2 lg:order-1">
             <GraphLegend />
           </div>
 
-          <div className="order-1 h-[600px] rounded-medium border border-default-200 lg:order-2">
+          <div className="order-1 min-w-0 lg:order-2">
+          <div className="h-[600px] rounded-medium border border-default-200">
             <div className="flex items-center justify-end border-b border-default-200 p-2">
               <ModeChip mode={loaded.mode} />
             </div>
@@ -688,7 +693,7 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
             </div>
           </div>
 
-          <div className="order-3 h-[600px] overflow-y-auto">
+          <div className="mt-4" data-testid="graph-detail-panel">
             <DetailPanel
               selection={selection}
               connections={effectiveInput!.connections}
@@ -697,6 +702,7 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
               onRemove={editable ? (req) => setRemoveTarget(req) : undefined}
               onAddPhoto={editable ? addPhoto : undefined}
             />
+          </div>
           </div>
         </div>
       )}
@@ -725,6 +731,7 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
           />
         </div>
       )}
+      {photoUpload.editor}
       <ConfirmDialog
         isOpen={!!removeTarget}
         title={
