@@ -102,6 +102,36 @@ interface LoadedGraph {
 }
 
 const EDITABLE_STATUSES = ['pre-deployment', 'active_setup'];
+// Lurch (the deployments assistant) is open by default for builders on desktop widths. An explicit
+// open/close is remembered per browser; storage may be unavailable, so every access is guarded.
+const ASSISTANT_PREF_KEY = 'deployments-assistant-open';
+const DESKTOP_QUERY = '(min-width: 1024px)';
+function loadAssistantPref(): boolean | null {
+  try {
+    const v = localStorage.getItem(ASSISTANT_PREF_KEY);
+    return v === null ? null : v === '1';
+  } catch {
+    return null;
+  }
+}
+function saveAssistantPref(open: boolean) {
+  try {
+    localStorage.setItem(ASSISTANT_PREF_KEY, open ? '1' : '0');
+  } catch {
+    /* storage unavailable — the choice just won't persist */
+  }
+}
+function useIsDesktop(): boolean {
+  const [wide, setWide] = useState(() => typeof window !== 'undefined' && window.matchMedia(DESKTOP_QUERY).matches);
+  useEffect(() => {
+    const mq = window.matchMedia(DESKTOP_QUERY);
+    const onChange = (e: MediaQueryListEvent) => setWide(e.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+  return wide;
+}
+
 // A spotlight lights at most two decorations (same limit the assistant's validator enforces).
 const MAX_ILLUMINATES = 2;
 
@@ -188,8 +218,13 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
   const [accessoryQuery, setAccessoryQuery] = useState('');
   const [positions, setPositions] = useState<Positions>(() => (id ? loadPositions(id) : {}));
   const [flowNodes, setFlowNodes] = useState<Node<GraphNodeData>[]>([]);
-  // Assistant (#639): null = auto (open by default on an empty zone, the front door for setup).
-  const [assistantOpen, setAssistantOpen] = useState<boolean | null>(null);
+  // Lurch (#639): null = no explicit choice yet -> default open on desktop (or an empty zone, the front door).
+  const [assistantOpen, setAssistantOpen] = useState<boolean | null>(loadAssistantPref);
+  const isDesktop = useIsDesktop();
+  const setAssistantOpenSaved = useCallback((open: boolean) => {
+    setAssistantOpen(open);
+    saveAssistantPref(open);
+  }, []);
   const [applyResults, setApplyResults] = useState<Record<string, RowResult>>({});
   const [applying, setApplying] = useState(false);
 
@@ -250,7 +285,7 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
   const assistant = useAssistant(id ?? '', zone);
   const assistantEnabled = editable && zone !== 'ALL' && auth.hasMinRole('builder');
   const zoneIsEmpty = !!fullInput && zone !== 'ALL' && zoneSummary(fullInput, zone).items === 0;
-  const panelOpen = assistantEnabled && (assistantOpen ?? zoneIsEmpty);
+  const panelOpen = assistantEnabled && (assistantOpen ?? (zoneIsEmpty || isDesktop));
 
   // Included proposal rows previewed as ghosts on the zone graph (never persisted).
   const overlay = useMemo(
@@ -712,7 +747,7 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
             assistant={assistant}
             zoneName={DEPLOYMENT_CONFIG.ZONES.find((d) => d.zone_code === zone)?.zone_name || zone}
             open={!!panelOpen}
-            onOpenChange={setAssistantOpen}
+            onOpenChange={setAssistantOpenSaved}
             busyApplying={applying}
           />
         )}
