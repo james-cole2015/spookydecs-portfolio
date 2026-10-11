@@ -23,7 +23,7 @@ import {
 } from '@heroui/react';
 import { createItem, createIdea, updateIdea, updateItem, getIdeaCosts } from '../api/ideasApi';
 import { CLASS_TYPES, ITEMS_BASE_URL, type Idea } from '../config/ideasConfig';
-import { PACK_MODE_OPTIONS, packModeToStorageFlags } from '../config/packMode';
+import { PACK_MODE_OPTIONS, STORAGE_LOCATIONS, packModeToStorageFlags } from '../config/packMode';
 import { formatDate } from '../lib/format';
 import { usePhotoUpload } from '@spookydecs/ui';
 
@@ -85,6 +85,7 @@ export function BuildCompleteWizard({
   const [spec, setSpec] = useState<Record<string, string>>({});
   const [hasPowerInlet, setHasPowerInlet] = useState(true);
   const [packMode, setPackMode] = useState('tote');
+  const [packLocation, setPackLocation] = useState('');
   const [generalNotes, setGeneralNotes] = useState('');
   const [costSummary, setCostSummary] = useState<string>('');
   const [error, setError] = useState('');
@@ -136,6 +137,8 @@ export function BuildCompleteWizard({
     if (!classType) return setError('Type is required.'), false;
     if (hasRemainder && parseRemainderUnits() === null)
       return setError('Remaining units must be a whole number of 1 or more.'), false;
+    if (packMode === 'single' && !packLocation)
+      return setError('Choose a pack location for single-packed items.'), false;
     return true;
   }
 
@@ -151,6 +154,7 @@ export function BuildCompleteWizard({
       date_acquired: String(new Date().getFullYear()),
       build_data: { idea_build: true, related_idea_id: idea.id },
       ...packModeToStorageFlags(packMode),
+      ...(packMode === 'single' ? { tote_location: packLocation } : {}),
     };
     if (cls === 'Decoration') {
       itemBody.height_length = spec.height_length || '';
@@ -434,6 +438,18 @@ export function BuildCompleteWizard({
                 {PACK_MODE_OPTIONS.map((m) => <SelectItem key={m.value}>{m.label}</SelectItem>)}
               </Select>
 
+              {packMode === 'single' && (
+                <Select
+                  label="Pack location"
+                  description="Applies to all units — a storage box is created for each"
+                  isRequired
+                  selectedKeys={packLocation ? [packLocation] : []}
+                  onChange={(e) => setPackLocation(e.target.value)}
+                >
+                  {STORAGE_LOCATIONS.map((l) => <SelectItem key={l}>{l}</SelectItem>)}
+                </Select>
+              )}
+
               <Textarea label="Notes" minRows={2} value={generalNotes} onValueChange={setGeneralNotes} />
 
               <Checkbox isSelected={hasRemainder} onValueChange={setHasRemainder}>
@@ -481,6 +497,7 @@ export function BuildCompleteWizard({
                   label="Pack mode"
                   value={PACK_MODE_OPTIONS.find((m) => m.value === packMode)?.label ?? 'Tote-packed'}
                 />
+                {packMode === 'single' && <ReviewRow label="Pack location" value={packLocation || '—'} />}
                 <ReviewRow label="Completion Date" value={completeDate ? formatDate(completeDate) : '—'} />
                 {hasRemainder && (
                   <ReviewRow label="Remaining Units" value={`${parseRemainderUnits() ?? '—'} (new idea)`} />
