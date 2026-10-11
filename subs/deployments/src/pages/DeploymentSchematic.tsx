@@ -485,24 +485,28 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
     const inbound = loaded.input.connections.find(
       (c) => c.to_item_id === itemId && (c.connection_type ?? 'deployment') === 'deployment',
     );
-    if (!placement?.placement_id && !inbound?.connection_id) return;
-    const photos = await photoUpload.openWithEditor({
-      context: 'deployment',
-      photo_type: 'deployment',
-      season: loaded.season || '',
-      year: Number(loaded.year),
-      entityId: itemId,
-      metadata: { 'deployment-id': id },
-    });
-    if (photos.length === 0) return;
+    if (!placement?.placement_id && !inbound?.connection_id) {
+      toast.showError('Declare or connect this item before adding a photo');
+      return;
+    }
     try {
+      const photos = await photoUpload.openWithEditor({
+        context: 'deployment',
+        photo_type: 'deployment',
+        season: loaded.season || '',
+        year: Number(loaded.year),
+        entityId: itemId,
+        metadata: { 'deployment-id': id },
+      });
+      if (photos.length === 0) return;
       const photoIds = photos.map((p) => p.photo_id);
+      // The routes append to the record's existing photos, so only the new ids are sent.
       if (placement?.placement_id) await updatePlacement(id, placement.placement_id, { photo_ids: photoIds });
       else await updateConnectionPhotos(id, inbound!.connection_id!, photoIds);
-      toast.showSuccess('Photo added');
+      toast.showSuccess(photos.length === 1 ? 'Photo added' : `${photos.length} photos added`);
       await refresh();
     } catch (err: any) {
-      toast.showError(err?.message || 'Failed to attach photo');
+      toast.showError(err?.message || 'Failed to add photo');
     }
   }
 
@@ -727,6 +731,7 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
           />
         </div>
       )}
+      {photoUpload.editor}
       <ConfirmDialog
         isOpen={!!removeTarget}
         title={

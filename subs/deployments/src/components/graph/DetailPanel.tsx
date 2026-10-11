@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Node, Edge } from '@xyflow/react';
 import { Button } from '@heroui/react';
 import { Camera, X } from 'lucide-react';
@@ -123,19 +123,26 @@ function NodeDetail({
   const { data } = node;
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [declaredPhotos, setDeclaredPhotos] = useState<LightboxPhoto[]>([]);
-  const declaredPhotoIds = ctx.placements.find((p) => p.item_id === node.id)?.photo_ids;
+  // Deployment photos live on the item's declaration (PLACEMENT- photo_ids) or, for an item that was
+  // wired without ever being declared, on its inbound connection. Show both, de-duplicated (#638, #639).
+  const photoKey = useMemo(() => {
+    const ids = [
+      ...(ctx.placements.find((p) => p.item_id === node.id)?.photo_ids || []),
+      ...ctx.connections.filter((c) => c.to_item_id === node.id).flatMap((c) => c.photo_ids || []),
+    ];
+    return Array.from(new Set(ids)).join(',');
+  }, [ctx.placements, ctx.connections, node.id]);
 
-  // Photos attached on the Declare tab (PLACEMENT- photo_ids) surface here (#638).
   useEffect(() => {
     let cancelled = false;
     setDeclaredPhotos([]);
-    resolvePhotos(declaredPhotoIds).then((p) => {
+    resolvePhotos(photoKey ? photoKey.split(',') : []).then((p) => {
       if (!cancelled) setDeclaredPhotos(p);
     });
     return () => {
       cancelled = true;
     };
-  }, [declaredPhotoIds]);
+  }, [photoKey]);
 
   useEffect(() => {
     let cancelled = false;
@@ -228,8 +235,8 @@ function NodeDetail({
   return (
     <div className="grid gap-4 md:grid-cols-[200px_minmax(0,1fr)_minmax(0,1fr)]">
       <div className="flex flex-col gap-2">
-        {photoUrl ? (
-          <img src={photoUrl} alt={data.label} className="h-32 w-full rounded-medium object-cover" />
+        {photoUrl || declaredPhotos[0]?.url ? (
+          <img src={photoUrl || declaredPhotos[0]?.url} alt={data.label} className="h-32 w-full rounded-medium object-cover" />
         ) : (
           <div className="flex h-32 items-center justify-center rounded-medium bg-default-100 text-default-400">
             {(() => {
@@ -239,6 +246,12 @@ function NodeDetail({
           </div>
         )}
         <h3 className="text-sm font-semibold text-foreground">{data.label}</h3>
+        {declaredPhotos.length > 0 && (
+          <div className="flex flex-col gap-1" data-testid="graph-deployment-photos">
+            <span className="text-xs text-default-500">Deployment photos ({declaredPhotos.length})</span>
+            <PhotoLightbox photos={declaredPhotos} className="grid grid-cols-3 gap-2" thumbnailClassName="h-14 w-full rounded-medium object-cover" />
+          </div>
+        )}
         {(onAddPhoto || onRemove) && (
           <div className="flex flex-col gap-2">
             {onAddPhoto && (placement || incoming.length > 0) && (
@@ -287,12 +300,6 @@ function NodeDetail({
         <DefRow label="Length" value={item?.length} />
         <DefRow label="Load through" value={data.throughAmps ? `${data.throughAmps}A` : undefined} />
         <DefRow label="Deployed" value={deployedAt} />
-        {declaredPhotos.length > 0 && (
-          <div className="flex flex-col gap-1">
-            <span className="text-sm text-default-500">Deployment photos</span>
-            <PhotoLightbox photos={declaredPhotos} className="grid grid-cols-3 gap-2" thumbnailClassName="h-16 w-full rounded-medium object-cover" />
-          </div>
-        )}
       </div>
 
       <div className="flex flex-col gap-2">
