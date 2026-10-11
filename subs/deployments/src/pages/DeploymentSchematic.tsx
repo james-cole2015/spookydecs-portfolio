@@ -652,12 +652,13 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
           message={embedded ? 'Use Add to put staged items into this zone' : undefined}
         />
       ) : (
-        <div className={`grid grid-cols-1 gap-4 ${panelOpen ? 'lg:grid-cols-[1fr_240px]' : 'lg:grid-cols-[200px_1fr_280px]'}`}>
-          <div className={`order-2 lg:order-1 ${panelOpen ? 'lg:hidden' : ''}`}>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[200px_minmax(0,1fr)]">
+          <div className="order-2 lg:order-1">
             <GraphLegend />
           </div>
 
-          <div className="order-1 h-[600px] rounded-medium border border-default-200 lg:order-2">
+          <div className="order-1 min-w-0 lg:order-2">
+          <div className="h-[600px] rounded-medium border border-default-200">
             <div className="flex items-center justify-end border-b border-default-200 p-2">
               <ModeChip mode={loaded.mode} />
             </div>
@@ -688,7 +689,7 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
             </div>
           </div>
 
-          <div className="order-3 h-[600px] overflow-y-auto">
+          <div className="mt-4" data-testid="graph-detail-panel">
             <DetailPanel
               selection={selection}
               connections={effectiveInput!.connections}
@@ -697,6 +698,7 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
               onRemove={editable ? (req) => setRemoveTarget(req) : undefined}
               onAddPhoto={editable ? addPhoto : undefined}
             />
+          </div>
           </div>
         </div>
       )}
