@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import {
   ReactFlow,
@@ -9,6 +9,7 @@ import {
   type Node,
   type NodeChange,
   type Edge,
+  type ReactFlowInstance,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Autocomplete, AutocompleteItem, AutocompleteSection, Chip, Tab, Tabs } from '@heroui/react';
@@ -48,6 +49,7 @@ import PlaceholderNode from '../components/graph/PlaceholderNode';
 import GraphLegend from '../components/graph/GraphLegend';
 import DetailPanel, { type GraphSelection, type RemoveRequest } from '../components/graph/DetailPanel';
 import AssistantPanel from '../components/assistant/AssistantPanel';
+import ProposalReview from '../components/assistant/ProposalReview';
 import { useAssistant } from '../components/assistant/useAssistant';
 import { applyProposal, type RowResult } from '../lib/applyProposal';
 import { applyProposalToGraph, styleGhosts } from '../lib/proposalGhosts';
@@ -100,6 +102,8 @@ interface LoadedGraph {
 }
 
 const EDITABLE_STATUSES = ['pre-deployment', 'active_setup'];
+// A spotlight lights at most two decorations (same limit the assistant's validator enforces).
+const MAX_ILLUMINATES = 2;
 
 // Node positions are a per-viewer layout preference, so they live in localStorage (not DDB).
 type Positions = Record<string, { x: number; y: number }>;
@@ -259,6 +263,32 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
   const graphInput = overlay?.input ?? effectiveInput;
   useEffect(() => setApplyResults({}), [zone]);
 
+  // Names for the review table: graph items plus the items the proposal brought along.
+  const labelFor = useCallback(
+    (itemId?: string) => {
+      if (!itemId) return '';
+      const it = fullInput?.items[itemId] ?? assistant.proposal?.items?.[itemId];
+      return it?.short_name || itemId;
+    },
+    [fullInput, assistant.proposal],
+  );
+
+  // Keep ghosts in view: refit the canvas when the set of added/removed nodes changes.
+  const [rf, setRf] = useState<ReactFlowInstance<Node<GraphNodeData>, Edge<GraphEdgeData>> | null>(null);
+  const ghostKey = overlay ? [...overlay.addedNodes, ...overlay.removedNodes].sort().join(',') : '';
+  useEffect(() => {
+    if (!rf || !ghostKey) return;
+    const t = setTimeout(() => rf.fitView({ padding: 0.2, duration: 300 }), 150);
+    return () => clearTimeout(t);
+  }, [rf, ghostKey, panelOpen]);
+
+  // Bring the review into view when a new proposal lands.
+  const reviewRef = useRef<HTMLDivElement>(null);
+  const hasProposal = !!assistant.proposal;
+  useEffect(() => {
+    if (hasProposal) reviewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [hasProposal]);
+
   const { nodes, edges, nodeLabels } = useMemo(() => {
     if (!loaded) return { nodes: [] as Node<GraphNodeData>[], edges: [] as Edge<GraphEdgeData>[], nodeLabels: {} as Record<string, string> };
     const derived = deriveGraph(graphInput!);
@@ -321,6 +351,7 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
           const powering = connectionPoweringLight(c.source, input);
           if (!powering?.connection_id) throw new Error('That light has no power connection to attach illumination to');
           const next = Array.from(new Set([...(powering.illuminates || []), c.target]));
+          if (next.length > MAX_ILLUMINATES) throw new Error(`A spotlight can illuminate at most ${MAX_ILLUMINATES} decorations`);
           await updateConnection(id, powering.connection_id, { illuminates: next });
           toast.showSuccess('Illuminates added');
         } else {
@@ -621,8 +652,8 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
           message={embedded ? 'Use Add to put staged items into this zone' : undefined}
         />
       ) : (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[200px_1fr_280px]">
-          <div className="order-2 lg:order-1">
+        <div className={`grid grid-cols-1 gap-4 ${panelOpen ? 'lg:grid-cols-[1fr_240px]' : 'lg:grid-cols-[200px_1fr_280px]'}`}>
+          <div className={`order-2 lg:order-1 ${panelOpen ? 'lg:hidden' : ''}`}>
             <GraphLegend />
           </div>
 
@@ -637,6 +668,7 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
                 onNodesChange={onNodesChange}
                 onNodeDragStop={onNodeDragStop}
                 nodeTypes={nodeTypes}
+                onInit={setRf}
                 onNodeClick={(_, node) => setSelection({ type: 'node', node: node as Node<GraphNodeData> })}
                 onEdgeClick={(_, edge) => setSelection({ type: 'edge', edge: edge as Edge<GraphEdgeData> })}
                 onPaneClick={() => setSelection(null)}
@@ -675,13 +707,24 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
             zoneName={DEPLOYMENT_CONFIG.ZONES.find((d) => d.zone_code === zone)?.zone_name || zone}
             open={!!panelOpen}
             onOpenChange={setAssistantOpen}
-            results={applyResults}
-            applying={applying}
-            onApply={onApplyProposal}
-            onDiscard={onDiscardProposal}
+            busyApplying={applying}
           />
         )}
       </div>
+      {assistantEnabled && assistant.proposal && (
+        <div ref={reviewRef}>
+          <ProposalReview
+            proposal={assistant.proposal}
+            included={assistant.included}
+            results={applyResults}
+            applying={applying}
+            onToggle={assistant.toggle}
+            onApply={onApplyProposal}
+            onDiscard={onDiscardProposal}
+            labelFor={labelFor}
+          />
+        </div>
+      )}
       <ConfirmDialog
         isOpen={!!removeTarget}
         title={
