@@ -12,7 +12,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Autocomplete, AutocompleteItem, AutocompleteSection, Chip, Tab, Tabs } from '@heroui/react';
-import { Breadcrumbs, ConfirmDialog, EmptyState, ErrorState, LoadingState, PageHeader, useToast, usePhotoUpload } from '@spookydecs/ui';
+import { Breadcrumbs, ConfirmDialog, EmptyState, ErrorState, LoadingState, PageHeader, useAuth, useToast, usePhotoUpload } from '@spookydecs/ui';
 import {
   createConnection,
   createPlacement,
@@ -47,6 +47,10 @@ import LightNode from '../components/graph/LightNode';
 import PlaceholderNode from '../components/graph/PlaceholderNode';
 import GraphLegend from '../components/graph/GraphLegend';
 import DetailPanel, { type GraphSelection, type RemoveRequest } from '../components/graph/DetailPanel';
+import AssistantPanel from '../components/assistant/AssistantPanel';
+import { useAssistant } from '../components/assistant/useAssistant';
+import { applyProposal, type RowResult } from '../lib/applyProposal';
+import { applyProposalToGraph, styleGhosts } from '../lib/proposalGhosts';
 
 const nodeTypes = {
   hub: HubNode,
@@ -162,6 +166,7 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
   const { id } = useParams<{ id: string }>();
   const toast = useToast();
   const photoUpload = usePhotoUpload();
+  const auth = useAuth();
   const [params, setParams] = useSearchParams();
 
   const [loading, setLoading] = useState(true);
@@ -179,6 +184,10 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
   const [accessoryQuery, setAccessoryQuery] = useState('');
   const [positions, setPositions] = useState<Positions>(() => (id ? loadPositions(id) : {}));
   const [flowNodes, setFlowNodes] = useState<Node<GraphNodeData>[]>([]);
+  // Assistant (#639): null = auto (open by default on an empty zone, the front door for setup).
+  const [assistantOpen, setAssistantOpen] = useState<boolean | null>(null);
+  const [applyResults, setApplyResults] = useState<Record<string, RowResult>>({});
+  const [applying, setApplying] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -234,13 +243,31 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
     [fullInput, zoneCodes],
   );
 
+  const assistant = useAssistant(id ?? '', zone);
+  const assistantEnabled = editable && zone !== 'ALL' && auth.hasMinRole('builder');
+  const zoneIsEmpty = !!fullInput && zone !== 'ALL' && zoneSummary(fullInput, zone).items === 0;
+  const panelOpen = assistantEnabled && (assistantOpen ?? zoneIsEmpty);
+
+  // Included proposal rows previewed as ghosts on the zone graph (never persisted).
+  const overlay = useMemo(
+    () =>
+      effectiveInput && assistant.proposal && zone !== 'ALL' && assistantEnabled
+        ? applyProposalToGraph(effectiveInput, assistant.proposal.rows, assistant.included, zone, assistant.proposal.items)
+        : null,
+    [effectiveInput, assistant.proposal, assistant.included, zone, assistantEnabled],
+  );
+  const graphInput = overlay?.input ?? effectiveInput;
+  useEffect(() => setApplyResults({}), [zone]);
+
   const { nodes, edges, nodeLabels } = useMemo(() => {
     if (!loaded) return { nodes: [] as Node<GraphNodeData>[], edges: [] as Edge<GraphEdgeData>[], nodeLabels: {} as Record<string, string> };
-    const derived = deriveGraph(effectiveInput!);
-    const laidOutNodes = decorateNodes(layoutGraph(derived.nodes, derived.edges), effectiveInput!, editable);
+    const derived = deriveGraph(graphInput!);
+    let laidOutNodes = decorateNodes(layoutGraph(derived.nodes, derived.edges), graphInput!, editable);
+    let styledEdges = styleEdges(derived.edges);
+    if (overlay) ({ nodes: laidOutNodes, edges: styledEdges } = styleGhosts(laidOutNodes, styledEdges, overlay));
     const labels = Object.fromEntries(laidOutNodes.map((n) => [n.id, n.data.label]));
-    return { nodes: laidOutNodes, edges: styleEdges(derived.edges), nodeLabels: labels };
-  }, [effectiveInput, loaded, editable]);
+    return { nodes: laidOutNodes, edges: styledEdges, nodeLabels: labels };
+  }, [graphInput, overlay, loaded, editable]);
 
   const refresh = useCallback(async () => {
     if (!id) return;
@@ -250,6 +277,38 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
       toast.showError(err?.message || 'Failed to refresh the graph');
     }
   }, [id, toast]);
+
+  async function onApplyProposal() {
+    if (!id || !assistant.proposal || zone === 'ALL') return;
+    const rows = assistant.proposal.rows.filter((r) => r.valid && assistant.included.has(r.row_id));
+    if (rows.length === 0) return;
+    setApplying(true);
+    setApplyResults({});
+    try {
+      const lookup = (connectionId: string) =>
+        loaded?.input.connections.find((c) => c.connection_id === connectionId)?.illuminates || [];
+      const results = await applyProposal({
+        api: { createPlacement, createConnection, updateConnection, removeConnection, updatePlacement },
+        deploymentId: id,
+        zone,
+        rows,
+        existingIlluminates: lookup,
+        onResult: (rowId, r) => setApplyResults((prev) => ({ ...prev, [rowId]: r })),
+      });
+      const failed = Object.values(results).some((r) => r.status === 'error');
+      if (failed) toast.showError('Some changes were not applied — see the table');
+      else toast.showSuccess(`Applied ${rows.length} ${rows.length === 1 ? 'change' : 'changes'}`);
+      await refresh();
+      await loadStaged();
+    } finally {
+      setApplying(false);
+    }
+  }
+
+  function onDiscardProposal() {
+    assistant.clearProposal();
+    setApplyResults({});
+  }
 
   // Drag port -> port. Ports are auto-assigned: first free Female_N on the source,
   // Male_1 / Power_Inlet on the target. This is the only path that writes a CONNECTION- record.
@@ -522,7 +581,7 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
       )}
       {editable && (
         <Autocomplete
-          label={`Add to ${DEPLOYMENT_CONFIG.ZONES.find((d) => d.zone_code === zone)?.zone_name || 'zone'}`}
+          label={`Add manually to ${DEPLOYMENT_CONFIG.ZONES.find((d) => d.zone_code === zone)?.zone_name || 'zone'}`}
           placeholder="Search staged decorations and lights, or cords and plugs…"
           size="sm"
           className="mb-3 max-w-md"
@@ -549,6 +608,8 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
         </Autocomplete>
       )}
 
+      <div className="flex flex-col-reverse gap-4 lg:flex-row" data-testid="graph-workspace">
+        <div className="min-w-0 flex-1">
       {loading ? (
         <LoadingState label="Loading schematic…" />
       ) : error ? (
@@ -607,6 +668,20 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
           </div>
         </div>
       )}
+        </div>
+        {assistantEnabled && (
+          <AssistantPanel
+            assistant={assistant}
+            zoneName={DEPLOYMENT_CONFIG.ZONES.find((d) => d.zone_code === zone)?.zone_name || zone}
+            open={!!panelOpen}
+            onOpenChange={setAssistantOpen}
+            results={applyResults}
+            applying={applying}
+            onApply={onApplyProposal}
+            onDiscard={onDiscardProposal}
+          />
+        )}
+      </div>
       <ConfirmDialog
         isOpen={!!removeTarget}
         title={
