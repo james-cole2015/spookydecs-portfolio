@@ -8,7 +8,7 @@ type Assistant = ReturnType<typeof useAssistant>;
 interface Props {
   assistant: Assistant;
   zoneName: string;
-  /** Empty zone => the panel is the front door, so it opens by default. */
+  /** Controlled by the page: default open for builders on desktop, then the viewer's remembered choice. */
   open: boolean;
   onOpenChange: (open: boolean) => void;
   busyApplying: boolean;
@@ -20,7 +20,7 @@ const EXAMPLES = [
   'Spot light 2 lights the reaper',
 ];
 
-/** The chat. Docked (non-modal) so the graph and its ghost preview stay visible; the review table lives under the graph. */
+/** Lurch's chat panel. Docked (non-modal) so the graph and its ghost preview stay visible; the review table lives under the graph. */
 export default function AssistantPanel({ assistant, zoneName, open, onOpenChange, busyApplying }: Props) {
   const [draft, setDraft] = useState('');
   const { messages, proposal, clarify, busy, available, send } = assistant;
@@ -28,7 +28,7 @@ export default function AssistantPanel({ assistant, zoneName, open, onOpenChange
   if (!available) {
     return (
       <p className="mb-3 text-sm text-default-500" data-testid="assistant-unavailable">
-        Assistant unavailable — use Add manually below.
+        Lurch is unavailable — use Add manually below.
       </p>
     );
   }
@@ -38,7 +38,7 @@ export default function AssistantPanel({ assistant, zoneName, open, onOpenChange
       <div className="fixed right-0 top-1/2 z-30 -translate-y-1/2" data-testid="assistant-pull-tab">
         <Badge content="" color="primary" isInvisible={!proposal} shape="circle">
           <Button color="primary" variant="solid" radius="none" className="rounded-l-medium px-3" onPress={() => onOpenChange(true)} startContent={<Sparkles size={16} />}>
-            {proposal ? 'Review proposal' : 'Assistant'}
+            {proposal ? 'Review proposal' : 'Lurch'}
           </Button>
         </Badge>
       </div>
@@ -53,7 +53,7 @@ export default function AssistantPanel({ assistant, zoneName, open, onOpenChange
   return (
     <Card className="w-full shrink-0 lg:w-[320px]" data-testid="assistant-panel">
       <CardHeader className="flex items-center justify-between">
-        <span className="font-semibold">Assistant · {zoneName}</span>
+        <span className="font-semibold">Lurch · {zoneName}</span>
         <Button size="sm" variant="light" onPress={() => onOpenChange(false)}>
           Close
         </Button>
@@ -61,7 +61,7 @@ export default function AssistantPanel({ assistant, zoneName, open, onOpenChange
       <CardBody className="max-h-[520px] gap-3 overflow-y-auto">
         {messages.length === 0 && (
           <div className="flex flex-col gap-2">
-            <p className="text-sm text-default-500">Describe what you set up. I will propose changes for you to review before anything is saved.</p>
+            <p className="text-sm text-default-500">You rang? Tell me what you set up and I will propose changes for you to review before anything is saved.</p>
             {EXAMPLES.map((e) => (
               <Chip key={e} variant="bordered" className="h-auto cursor-pointer whitespace-normal py-1" onClick={() => submit(e)}>
                 {e}
