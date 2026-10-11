@@ -71,6 +71,12 @@ export async function createDeployment(deploymentData: unknown): Promise<any> {
   return await apiCall('/deployments', 'POST', deploymentData);
 }
 
+/** Builder override of the inferred start date (#643). `startDate` is YYYY-MM-DD. */
+export async function updateDeploymentStartDate(deploymentId: string, startDate: string): Promise<any> {
+  if (!auth().hasMinRole('builder')) throw new Error('Insufficient permissions');
+  return await apiCall(`/deployments/${deploymentId}`, 'PUT', { start_date: startDate });
+}
+
 export async function checkDeploymentExists(
   season: string,
   year: number | string,

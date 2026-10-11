@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@heroui/react';
 import { Breadcrumbs, ErrorState, LoadingState, PageHeader } from '@spookydecs/ui';
 import { getDeployment } from '../api/deploymentsApi';
+import { DeploymentDates } from '../components/DeploymentDates';
 import { StatusChip } from '../components/StatusChip';
 import DeploymentSchematic from './DeploymentSchematic';
 
@@ -68,6 +69,13 @@ export default function DeploymentPage() {
             </Button>
           </div>
         }
+      />
+      <DeploymentDates
+        deploymentId={deploymentId}
+        startDate={meta.start_date}
+        setupCompletedAt={meta.setup_completed_at}
+        readOnly={status === 'archived'}
+        onSaved={load}
       />
       <DeploymentSchematic embedded />
     </>
