@@ -7,6 +7,11 @@ export const PACK_MODE_OPTIONS = [
   { value: 'single',    label: 'Single-packed' },
   { value: 'oversized', label: 'Large & Oversized' },
 ] as const;
+// Locations a Single-packed item's Self storage unit can be created in (#637).
+// Mirrors VALID_LOCATIONS in the storage + items Lambdas and
+// subs/items/src/config/itemsConfig.ts's STORAGE_LOCATIONS.
+export const STORAGE_LOCATIONS = ['Shed', 'Attic', 'Crawl Space', 'Other'] as const;
+
 export type PackMode = typeof PACK_MODE_OPTIONS[number]['value'];
 
 export function packModeToStorageFlags(mode: string): { packable: boolean; single_packed: boolean } {

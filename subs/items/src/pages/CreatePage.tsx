@@ -179,7 +179,7 @@ export default function CreatePage() {
               <Divider />
               <div>
                 <Typography type="h6" className="mb-3">Storage Information</Typography>
-                <StorageFields register={register} setValue={setValue} watch={watch} />
+                <StorageFields register={register} setValue={setValue} watch={watch} errors={errors} />
               </div>
               <div className="flex justify-end">
                 <Button color="primary" type="button" onPress={() => setStep(4)}>

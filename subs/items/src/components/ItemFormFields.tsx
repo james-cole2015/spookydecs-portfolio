@@ -2,7 +2,7 @@
 // react-hook-form: register/errors/setValue passed in from the parent form context.
 import { Input, Select, SelectItem, Checkbox } from '@heroui/react';
 import { type UseFormRegister, type FieldErrors, type UseFormSetValue, type UseFormWatch } from 'react-hook-form';
-import { CLASS_TYPE_ATTRIBUTES, FIELD_METADATA, SEASONS, ITEM_STATUS, PACK_MODES } from '../config/itemsConfig';
+import { CLASS_TYPE_ATTRIBUTES, FIELD_METADATA, SEASONS, ITEM_STATUS, PACK_MODES, STORAGE_LOCATIONS } from '../config/itemsConfig';
 import { type ItemFormValues } from './ItemFormSchema';
 
 interface BasicFieldsProps {
@@ -124,12 +124,21 @@ interface StorageFieldsProps {
   register: UseFormRegister<ItemFormValues>;
   setValue: UseFormSetValue<ItemFormValues>;
   watch: UseFormWatch<ItemFormValues>;
+  errors: FieldErrors<ItemFormValues>;
 }
 
-export function StorageFields({ register, setValue, watch }: StorageFieldsProps) {
+export function StorageFields({ register, setValue, watch, errors }: StorageFieldsProps) {
   // Same watch/setValue pattern as the Season select above — HeroUI Select
   // doesn't bind via register().
   const packMode = watch('pack_mode');
+  const location = watch('storage_location');
+  const isSingle = packMode === 'single';
+  // Single-packed items get a Self unit auto-created in this location (#637), so it
+  // must be one of the fixed options; tote items keep the free-text location.
+  const locationReg = register('storage_location', {
+    validate: (v) =>
+      packMode !== 'single' || (STORAGE_LOCATIONS as readonly string[]).includes(v) || 'Choose a storage location',
+  });
   return (
     <div className="flex flex-col gap-4">
       <Select
@@ -142,7 +151,21 @@ export function StorageFields({ register, setValue, watch }: StorageFieldsProps)
         {PACK_MODES.map((m) => <SelectItem key={m.value}>{m.label}</SelectItem>)}
       </Select>
       <Input label="Storage Tote ID" placeholder="e.g. TOTE 004" {...register('storage_tote_id')} />
-      <Input label="Storage Location" placeholder="e.g. Shed, Crawl Space" {...register('storage_location')} />
+      {isSingle ? (
+        <Select
+          label="Storage Location"
+          description="A storage box is created for this item in this location."
+          isRequired
+          selectedKeys={(STORAGE_LOCATIONS as readonly string[]).includes(location) ? [location] : []}
+          onChange={(e) => setValue('storage_location', e.target.value, { shouldValidate: true })}
+          isInvalid={!!errors.storage_location}
+          errorMessage={errors.storage_location?.message}
+        >
+          {STORAGE_LOCATIONS.map((l) => <SelectItem key={l}>{l}</SelectItem>)}
+        </Select>
+      ) : (
+        <Input label="Storage Location" placeholder="e.g. Shed, Crawl Space" {...locationReg} />
+      )}
     </div>
   );
 }

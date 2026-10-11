@@ -198,7 +198,7 @@ export default function EditPage() {
             <Divider />
             <div>
               <Typography type="h6" className="mb-3">Storage Information</Typography>
-              <StorageFields register={register} setValue={setValue} watch={watch} />
+              <StorageFields register={register} setValue={setValue} watch={watch} errors={errors} />
             </div>
           </CardBody>
         </Card>
