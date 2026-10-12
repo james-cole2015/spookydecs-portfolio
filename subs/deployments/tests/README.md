@@ -33,7 +33,7 @@ that's also the pattern the next sub should copy.
 |------|------|
 | `preseason/lifecycle.e2e.mjs` | The API gate — zero dependencies, Node 18+ |
 | `e2e/` | The Playwright browser gate — builder → staging → declare + connect → complete → teardown |
-| `shared/auth.mjs`, `shared/sentinel.mjs` | Auth + fixture logic shared by both gates |
+| `shared/sentinel.mjs` | Fixture logic shared by both gates (auth is the shared `subs/_e2e/shared/auth.mjs`, #623) |
 | `unit/*.test.ts` | vitest specs: config/validation, graph derivation + layout, authoring/port rules, per-zone scoping and visual tiers. Run with `npx vitest run --dir subs/deployments/tests/unit` |
 
 📖 **Full guide — design, coverage, outputs, failure diagnosis, run log, known gaps:**

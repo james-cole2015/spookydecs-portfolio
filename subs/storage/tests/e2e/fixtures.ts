@@ -1,26 +1,8 @@
 import { test as base } from '@playwright/test';
 import { makeApiClient, sweepSentinels, pickPackableItem, sentinelName, SENTINEL_MARKER } from '../shared/sentinel.mjs';
-import { fetchIdToken } from '../shared/auth.mjs';
-import { readFileSync, existsSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { dirname, resolve } from 'node:path';
+import { fetchIdToken } from '../../../_e2e/shared/auth.mjs';
+import { loadEnvLocal } from '../../../_e2e/shared/env.mjs';
 
-const here = dirname(fileURLToPath(import.meta.url));
-const repoRoot = resolve(here, '../../../..');
-
-function loadEnvLocal(): Record<string, string> {
-  const path = resolve(repoRoot, '.env.local');
-  if (!existsSync(path)) return {};
-  const env: Record<string, string> = {};
-  for (const line of readFileSync(path, 'utf8').split('\n')) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#')) continue;
-    const eq = trimmed.indexOf('=');
-    if (eq === -1) continue;
-    env[trimmed.slice(0, eq).trim()] = trimmed.slice(eq + 1).trim();
-  }
-  return env;
-}
 
 export const SEASON = 'Halloween';
 export const LOCATION = 'Shed';

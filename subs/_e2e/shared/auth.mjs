@@ -1,8 +1,10 @@
 /**
- * Programmatic Cognito login — shared by the Playwright e2e suite (tests/e2e/global-setup.ts).
- * Copied from subs/deployments/tests/shared/auth.mjs (#554) per the pattern this sub's
- * suite mirrors (#589) — kept per-sub rather than cross-sub-imported so each suite stays
- * self-contained. Zero dependencies — Node 18+ (native fetch).
+ * Programmatic Cognito login — the single shared copy for every sub's Playwright e2e suite
+ * (global-setup.ts / fixtures.ts) and the deployments pre-season API gate. Promoted from
+ * subs/deployments/tests/shared/ and subs/storage/tests/shared/ (identical copies) in #623.
+ *
+ * Extracted originally from subs/deployments/vite.config.ts's `autoAuthPlugin`/`fetchToken`.
+ * Zero dependencies — Node 18+ (native fetch).
  */
 
 export const AUTH_URL = 'https://miinu7boec.execute-api.us-east-2.amazonaws.com/dev/auth';

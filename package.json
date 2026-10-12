@@ -53,14 +53,16 @@
     "build:landing": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-landing",
     "preview": "vite preview",
     "test:e2e:deployments": "playwright test --config subs/deployments/tests/e2e/playwright.config.ts",
-    "test:e2e:storage": "playwright test --config subs/storage/tests/e2e/playwright.config.ts"
+    "test:e2e:storage": "playwright test --config subs/storage/tests/e2e/playwright.config.ts",
+    "test:unit": "vitest run"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@playwright/test": "^1.48.0",
-    "vite": "^6.4.1"
+    "vite": "^6.4.1",
+    "vitest": "^4.1.11"
   },
   "comments": {
     "overrides": "react-konva 19.x (pulled transitively by react-filerobot-image-editor) requires React 19; pin it to the React-18-compatible line to match the workspace's React 18 (#523)."

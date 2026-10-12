@@ -29,7 +29,7 @@ like `test-results/`: gitignored, regenerated each run — copy anything worth k
 
 | Piece | File | Purpose |
 |---|---|---|
-| Auth | `../shared/auth.mjs` | `fetchIdToken()` — POSTs to the Cognito `/auth` route, zero deps (copy of deployments' version — kept per-sub rather than cross-sub-imported) |
+| Auth | `../../../_e2e/shared/auth.mjs` | `fetchIdToken()` — POSTs to the Cognito `/auth` route, zero deps (single shared copy, #623) |
 | Auth wiring | `global-setup.ts` | Seeds a `storageState` cookie once per run; the spec loads it via `test.use()` |
 | Sentinel data | `../shared/sentinel.mjs` | Marker-based find/sweep/delete for sentinel storage units, plus `pickPackableItem()` to find a real item eligible for packing |
 | Fixture lifecycle | `fixtures.ts` | Worker-scoped `storage` fixture: preflight sweep → hand off `{ api, marker }` → sweep again on teardown, even on failure |
