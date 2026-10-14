@@ -91,7 +91,7 @@ test('deployment lifecycle: builder → staging → declare + connect → comple
     const detail = await api('GET', `/items/${itemId}`);
     const name: string = (detail.data ?? detail.body)?.short_name || itemId;
     await ledger.rememberItem(api, itemId);
-    const picker = page.getByTestId('graph-add-item').getByRole('combobox');
+    const picker = page.getByRole('combobox', { name: /^Add manually to/ });
     await picker.click();
     await picker.fill(name);
     await page.getByRole('option', { name: new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')) }).first().click();
@@ -138,6 +138,7 @@ test('deployment lifecycle: builder → staging → declare + connect → comple
     const target = page.locator(`[data-nodeid="${poweredItemId}"][data-handleid="t-t"]`);
     await expect(source).toBeAttached();
     await expect(target).toBeAttached();
+    await source.scrollIntoViewIfNeeded();
     const s = (await source.boundingBox())!;
     const t = (await target.boundingBox())!;
     await page.mouse.move(s.x + s.width / 2, s.y + s.height / 2);

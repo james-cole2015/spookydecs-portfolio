@@ -20,6 +20,9 @@ export default defineConfig({
   globalSetup: resolve(here, 'global-setup.ts'),
   use: {
     baseURL: 'http://localhost:3000',
+    // The graph canvas sits below the 720px default fold once the workspace header + picker
+    // render; the raw mouse drag in the Connect step needs both handles on screen (#645).
+    viewport: { width: 1280, height: 1400 },
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },

@@ -4,6 +4,8 @@ import {
   deleteSentinel,
   createLedger,
   sentinelDeploymentId,
+  archiveActiveDeployments,
+  restoreDeploymentStatuses,
 } from '../shared/sentinel.mjs';
 import { fetchIdToken } from '../../../_e2e/shared/auth.mjs';
 import { loadEnvLocal } from '../../../_e2e/shared/env.mjs';
@@ -12,7 +14,9 @@ import { dirname, resolve } from 'node:path';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
-export const SEASON = 'Halloween';
+// Christmas, not Halloween: dev's Halloween totes are all Staged in the real DEP-HAL-2026
+// (copied from prod), so a Halloween sentinel finds nothing to stage (#645).
+export const SEASON = 'Christmas';
 export const STAGE = 'dev';
 
 type DeploymentFixture = {
@@ -53,7 +57,14 @@ export const test = base.extend<{}, { deployment: DeploymentFixture }>({
 
       await deleteSentinel(api, deploymentId, STAGE); // preflight — no-ops (404) if none exists
 
+      // BuilderPage won't show the create form while any other deployment is active (#645).
+      const archived = await archiveActiveDeployments(api, STAGE, deploymentId);
+      if (archived.length) console.log(`[e2e setup] temporarily archived: ${archived.map((a) => a.id).join(', ')}`);
+
       await use({ deploymentId, api, ledger });
+
+      const unrestored = restoreDeploymentStatuses(archived, STAGE);
+      if (unrestored.length) console.warn(`[e2e cleanup] status restore FAILED for: ${unrestored.join(', ')}`);
 
       // Teardown always runs, even if the test above threw (AC4 — verified deliberately
       // per docs-spookydecs/sub_tests/deployments.md's e2e section).

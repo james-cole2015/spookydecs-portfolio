@@ -83,6 +83,12 @@ test('storage lifecycle: create → pack → mark packed → mark stored → unp
     await expect(page.getByText('Stored', { exact: true })).toBeVisible();
   });
 
+  await test.step('Un-store — back to Packed (#634: items cannot be removed from a Stored tote)', async () => {
+    await page.getByTestId('mark-packed-btn').click();
+    await page.getByTestId('confirm-mark-packed').click();
+    await expect(page.getByText('Packed', { exact: true })).toBeVisible();
+  });
+
   await test.step('Unpack — remove the item from the tote', async () => {
     await page.getByTestId(`remove-item-${itemId}`).click();
     await page.getByTestId('confirm-remove-item').click();
