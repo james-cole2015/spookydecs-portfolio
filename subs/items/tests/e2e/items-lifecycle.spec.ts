@@ -21,8 +21,7 @@ async function createViaWizard(page: Page, opts: { cls: string; type: string; na
   await page.getByRole('button', { name: opts.type, exact: false }).first().click();
   await page.getByLabel('Item Name').fill(opts.name);
   await selectOption(page, 'Season', SEASON);
-  // validators.py requires stakes + tethers for every Decoration, but itemsConfig marks them optional
-  // for Static Prop (UI/API mismatch — a user hits a 400 here). Filled so the journey can proceed.
+  // Required Decoration fields (stakes/tethers) — the wizard enforces them inline (#647).
   await page.getByLabel('Stakes').fill('4');
   await page.getByLabel('Tethers').fill('2');
   if (opts.packMode) {
