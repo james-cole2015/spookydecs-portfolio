@@ -280,7 +280,7 @@ export default function DetailPage() {
             {(canWrite || canAdmin) && (
               <Dropdown>
                 <DropdownTrigger>
-                  <Button isIconOnly variant="flat" size="sm"><MoreVertical size={16} /></Button>
+                  <Button isIconOnly variant="flat" size="sm" aria-label="Item actions" data-testid="item-actions-menu"><MoreVertical size={16} /></Button>
                 </DropdownTrigger>
                 <DropdownMenu>
                   {canWrite ? (
