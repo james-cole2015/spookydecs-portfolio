@@ -77,14 +77,13 @@ test('items lifecycle: create (Tote-packed) → edit → cascade delete', async 
   });
 });
 
-// Opt-in: deleting a single-packed item leaves its Self storage unit orphaned (contents still lists the
-// deleted item; DELETE /storage refuses, Self units reject content edits), so every run strands one
-// STOR-SELF-* record on dev. Run with E2E_SINGLE_PACKED=1 only until that product bug is fixed.
+// Cascade delete leaves the item's Self unit behind (contents still lists the deleted item); #646 makes
+// such an orphaned Self unit deletable, so the test removes it to leave no STOR-SELF-* record on dev.
 test('items lifecycle: Single-packed requires a location and auto-creates a Self unit (#632/#637)', async ({ page, items }) => {
-  test.skip(!process.env.E2E_SINGLE_PACKED, 'opt-in (E2E_SINGLE_PACKED=1): leaves an orphaned Self unit on dev — see comment');
   const { api } = items;
   const name = sentinelName('Single');
   let id = '';
+  let selfId = '';
 
   await test.step('Create — Single-packed with a location', async () => {
     await createViaWizard(page, { cls: 'Decoration', type: 'Static Prop', name, packMode: 'Single-packed', location: 'Shed' });
@@ -98,7 +97,14 @@ test('items lifecycle: Single-packed requires a location and auto-creates a Self
     await expect.poll(async () => {
       const res = await api('GET', '/storage');
       const units: any[] = res.data?.storage_units || res.body?.storage_units || [];
-      return units.some((u) => u.class_type === 'Self' && (u.contents || []).includes(id));
+      selfId = units.find((u) => u.class_type === 'Self' && (u.contents || []).includes(id))?.id || '';
+      return !!selfId;
     }, { timeout: 30_000, intervals: [1000, 2000, 3000] }).toBe(true);
+  });
+
+  await test.step('Cleanup — cascade delete the item, then delete its orphaned Self unit (#646)', async () => {
+    expect((await api('DELETE', `/items/${id}/cascade`)).status).toBe(200);
+    expect((await api('DELETE', `/storage/${selfId}`)).status).toBe(200);
+    expect((await api('GET', '/storage')).data?.storage_units?.some((u: any) => u.id === selfId) ?? false).toBe(false);
   });
 });
