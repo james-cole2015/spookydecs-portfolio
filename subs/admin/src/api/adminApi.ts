@@ -268,7 +268,7 @@ export async function createOutlet(
     headers: buildHeaders(),
     body: JSON.stringify({
       type: 'Receptacle',
-      category: 'Outlet',
+      category: 'Receptacle',
       season: 'Shared',
       shortName: outlet.shortName,
       zoneCode: outlet.zoneCode,
@@ -333,22 +333,12 @@ async function fetchItemsBy(params: Record<string, string>): Promise<Outlet[]> {
  * Outlets" section on AddOutletPage (#613) — lets the user spot a duplicate
  * before registering a new one. No dedicated route; sourced from GET /items.
  *
- * Two shapes exist for "a receptacle" in this data (tracked as a cleanup
- * issue, see #613 notes): legacy/seeded items use class=Accessory +
- * class_type=Receptacle, while items created via this sub's Add Outlet form
- * (#582) use class=Receptacle + class_type=Outlet. The backend ANDs class/
- * class_type in one query, so there's no single filter that catches both —
- * query each shape separately and merge, deduping by id.
+ * Receptacle is its own class (class=Receptacle, class_type=Receptacle, #615), so
+ * one filter catches every receptacle. (Before #615 two legacy shapes existed and
+ * had to be queried separately and merged.)
  */
 export async function listOutlets(): Promise<Outlet[] | null> {
-  const [legacy, current] = await Promise.all([
-    fetchItemsBy({ class_type: 'Receptacle' }),
-    fetchItemsBy({ class: 'Receptacle' }),
-  ]);
-
-  const byId = new Map<string, Outlet>();
-  for (const item of [...legacy, ...current]) byId.set(item.id, item);
-  return Array.from(byId.values());
+  return fetchItemsBy({ class: 'Receptacle' });
 }
 
 /**
