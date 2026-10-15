@@ -3,8 +3,8 @@ import type { FilterOption } from '@spookydecs/ui';
 
 export const CLASS_HIERARCHY: Record<string, { types: string[]; icon: string }> = {
   Decoration: { types: ['Inflatable', 'Animatronic', 'Static Prop'], icon: '🎃' },
-  Light:      { types: ['String Light', 'Spot Light', 'Projection'], icon: '💡' },
-  Accessory:  { types: ['Cord', 'Plug', 'Receptacle'], icon: '🔌' },
+  Light:      { types: ['String Light', 'Spot Light'], icon: '💡' },
+  Accessory:  { types: ['Cord', 'Plug'], icon: '🔌' },
 };
 
 export const ALLOWED_CLASSES = ['Decoration', 'Light', 'Accessory'] as const;
@@ -55,17 +55,17 @@ export function storageFlagsToPackMode(packable?: boolean, singlePacked?: boolea
   return 'tote';
 }
 
-// Fields per class_type — verbatim from item-config.js
+// Fields per class_type — verbatim from item-config.js.
+// `required` must be a superset of what validate_item() in the items Lambda
+// (handlers/items/validators.py) requires, or users hit a raw 400 on save (#647).
 export const CLASS_TYPE_ATTRIBUTES: Record<string, { fields: string[]; required: string[] }> = {
-  Inflatable:    { fields: ['height_length', 'stakes', 'tethers', 'adapter', 'power_inlet'], required: ['height_length'] },
-  Animatronic:   { fields: ['height_length', 'stakes', 'tethers', 'adapter', 'power_inlet'], required: ['height_length'] },
-  'Static Prop': { fields: ['height_length', 'stakes', 'tethers', 'power_inlet'],            required: [] },
-  'String Light':{ fields: ['color', 'bulb_type', 'length', 'power_inlet'],                  required: ['color', 'length'] },
-  'Spot Light':  { fields: ['color', 'bulb_type', 'power_inlet'],                            required: ['color'] },
-  Projection:    { fields: ['power_inlet'],                                                   required: [] },
-  Cord:          { fields: ['length', 'male_ends', 'female_ends', 'watts', 'amps'],          required: ['length'] },
-  Plug:          { fields: ['male_ends', 'female_ends', 'power_inlet'],                      required: [] },
-  Receptacle:    { fields: ['female_ends', 'power_inlet'],                                   required: ['female_ends'] },
+  Inflatable:    { fields: ['height_length', 'stakes', 'tethers', 'adapter', 'power_inlet'], required: ['height_length', 'stakes', 'tethers'] },
+  Animatronic:   { fields: ['height_length', 'stakes', 'tethers', 'adapter', 'power_inlet'], required: ['height_length', 'stakes', 'tethers'] },
+  'Static Prop': { fields: ['height_length', 'stakes', 'tethers', 'power_inlet'],            required: ['stakes', 'tethers'] },
+  'String Light':{ fields: ['color', 'bulb_type', 'length', 'power_inlet'],                  required: ['color', 'bulb_type', 'length'] },
+  'Spot Light':  { fields: ['color', 'bulb_type', 'power_inlet'],                            required: ['color', 'bulb_type'] },
+  Cord:          { fields: ['length', 'male_ends', 'female_ends', 'watts', 'amps'],          required: ['length', 'male_ends', 'female_ends'] },
+  Plug:          { fields: ['length', 'male_ends', 'female_ends', 'power_inlet'],            required: ['length', 'male_ends', 'female_ends'] },
   Timer:         { fields: ['male_ends', 'female_ends', 'power_inlet'],                      required: [] },
   Controller:    { fields: ['male_ends', 'female_ends', 'power_inlet'],                      required: [] },
   Tote:          { fields: [], required: [] },
@@ -172,10 +172,8 @@ export const TYPE_ICONS: Record<string, string> = {
   'Static Prop': '🗿',
   'String Light':'💡',
   'Spot Light':  '🔦',
-  Projection:    '📽️',
   Cord:          '➰',
   Plug:          '🔌',
-  Receptacle:    '⚡',
   Timer:         '⏱️',
   Controller:    '🎮',
   Tote:          '📦',
