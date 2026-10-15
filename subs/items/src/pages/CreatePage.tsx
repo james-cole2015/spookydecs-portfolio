@@ -80,12 +80,7 @@ export default function CreatePage() {
     }
   }
 
-  // Receptacle stays in CLASS_HIERARCHY for the list filter (legacy Accessory/Receptacle
-  // items still exist) but can't be created here: the API only accepts it as its own class,
-  // and outlets are registered from Admin → Add Outlet (#647).
-  const classTypes = (selectedClass ? CLASS_HIERARCHY[selectedClass]?.types ?? [] : []).filter(
-    (t) => t !== 'Receptacle',
-  );
+  const classTypes = selectedClass ? CLASS_HIERARCHY[selectedClass]?.types ?? [] : [];
 
   return (
     <div className="p-4 max-w-2xl mx-auto">
