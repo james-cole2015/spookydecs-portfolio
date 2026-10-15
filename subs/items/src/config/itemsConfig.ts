@@ -4,7 +4,7 @@ import type { FilterOption } from '@spookydecs/ui';
 export const CLASS_HIERARCHY: Record<string, { types: string[]; icon: string }> = {
   Decoration: { types: ['Inflatable', 'Animatronic', 'Static Prop'], icon: '🎃' },
   Light:      { types: ['String Light', 'Spot Light'], icon: '💡' },
-  Accessory:  { types: ['Cord', 'Plug', 'Receptacle'], icon: '🔌' },
+  Accessory:  { types: ['Cord', 'Plug'], icon: '🔌' },
 };
 
 export const ALLOWED_CLASSES = ['Decoration', 'Light', 'Accessory'] as const;
@@ -66,7 +66,6 @@ export const CLASS_TYPE_ATTRIBUTES: Record<string, { fields: string[]; required:
   'Spot Light':  { fields: ['color', 'bulb_type', 'power_inlet'],                            required: ['color', 'bulb_type'] },
   Cord:          { fields: ['length', 'male_ends', 'female_ends', 'watts', 'amps'],          required: ['length', 'male_ends', 'female_ends'] },
   Plug:          { fields: ['length', 'male_ends', 'female_ends', 'power_inlet'],            required: ['length', 'male_ends', 'female_ends'] },
-  Receptacle:    { fields: ['female_ends', 'power_inlet'],                                   required: ['female_ends'] },
   Timer:         { fields: ['male_ends', 'female_ends', 'power_inlet'],                      required: [] },
   Controller:    { fields: ['male_ends', 'female_ends', 'power_inlet'],                      required: [] },
   Tote:          { fields: [], required: [] },
@@ -175,7 +174,6 @@ export const TYPE_ICONS: Record<string, string> = {
   'Spot Light':  '🔦',
   Cord:          '➰',
   Plug:          '🔌',
-  Receptacle:    '⚡',
   Timer:         '⏱️',
   Controller:    '🎮',
   Tote:          '📦',
