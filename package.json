@@ -57,7 +57,8 @@
     "test:unit": "vitest run",
     "test:e2e:items": "playwright test --config subs/items/tests/e2e/playwright.config.ts",
     "test:e2e:ideas": "playwright test --config subs/ideas/tests/e2e/playwright.config.ts",
-    "test:e2e:gallery": "playwright test --config subs/gallery/tests/e2e/playwright.config.ts"
+    "test:e2e:gallery": "playwright test --config subs/gallery/tests/e2e/playwright.config.ts",
+    "test:e2e:images": "playwright test --config subs/images/tests/e2e/playwright.config.ts"
   },
   "keywords": [],
   "author": "",
