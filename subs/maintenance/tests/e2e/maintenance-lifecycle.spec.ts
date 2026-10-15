@@ -1,0 +1,82 @@
+import type { Page } from '@playwright/test';
+import { test, expect, createSentinelItem } from './fixtures';
+import { STORAGE_STATE_PATH } from './global-setup';
+
+/** Opens a HeroUI select by label and picks an option by visible name (retried: popovers can re-close). */
+/** Polls the sentinel item until `maintenance.repair_data.needs_repair` and `operational_status` match. */
+async function expectItemRepairState(api: any, itemId: string, needsRepair: boolean, operational: boolean) {
+  await expect.poll(async () => {
+    const res = await api('GET', `/items/${itemId}`);
+    const it = res.data?.item ?? res.data ?? res.body;
+    return { needs_repair: it?.maintenance?.repair_data?.needs_repair, operational_status: it?.operational_status };
+  }, { timeout: 45_000, intervals: [1000, 2000, 3000, 5000], message: 'maintenance → items consumer should land the downstream write' })
+    .toEqual({ needs_repair: needsRepair, operational_status: operational });
+}
+
+async function selectOption(page: Page, label: string, name: RegExp | string) {
+  const trigger = page.getByRole('button', { name: new RegExp(`\\b${label}\\b`) });
+  const option = page.getByRole('option', { name });
+  await expect(async () => {
+    if (!(await option.first().isVisible())) await trigger.click();
+    await option.first().click({ timeout: 3_000 });
+    await expect(option.first()).toBeHidden({ timeout: 3_000 });
+  }).toPass({ timeout: 20_000 });
+}
+
+test.use({ storageState: STORAGE_STATE_PATH });
+
+// Sequential: each phase depends on the record the previous one created.
+test('maintenance lifecycle: create repair → perform repair → item updated (EDA) → delete record', async ({ page, maint }) => {
+  const { api } = maint;
+  const item = await createSentinelItem(api, 'repair');
+  const title = `E2E repair ${Date.now()}`;
+  let recordId = '';
+
+  await test.step('Create — repair record for the sentinel item through RecordFormPage', async () => {
+    await page.goto(`/create?item_id=${item.id}`);
+    await selectOption(page, 'Record Type', /^Repair$/);
+    await selectOption(page, 'Category', /^(?!Uncategorized)/);
+    await selectOption(page, 'Status', /^Scheduled$/);
+    await page.getByLabel('Title').fill(title);
+    await selectOption(page, 'Criticality', /^Critical$/);
+    await page.getByLabel('Performed By').fill('e2e-suite');
+    const posted = page.waitForResponse((r) => r.request().method() === 'POST' && /\/admin\/maintenance-records$/.test(r.url()));
+    await page.getByRole('button', { name: /Create|Save/ }).last().click();
+    const res = await posted;
+    expect(res.status(), `POST record → ${(await res.text()).slice(0, 300)}`).toBeLessThan(300);
+    await page.waitForURL(new RegExp(`/${item.id}/[^/]+$`), { timeout: 15_000 });
+    recordId = new URL(page.url()).pathname.split('/').pop()!;
+    const rec = await api('GET', `/admin/maintenance-records/${recordId}`);
+    const body = rec.data?.record ?? rec.data ?? rec.body;
+    expect(body.title).toBe(title);
+    expect(body.status).toBe('scheduled');
+  });
+
+  await test.step('EDA — RepairRecord.Created (critical) marks the item needs_repair and not operational', async () => {
+    await expectItemRepairState(api, item.id, true, false);
+  });
+
+  await test.step('Perform — complete the repair through RepairFormPage', async () => {
+    await page.goto(`/${item.id}/${recordId}/perform-repair`);
+    await page.getByLabel('Performed By').fill('e2e-suite');
+    await page.getByLabel('Date Performed').fill(new Date().toISOString().slice(0, 10));
+    await page.getByLabel('Repair Notes').fill('Replaced the sentinel widget.');
+    await page.getByRole('button', { name: /Complete|Submit|Save/ }).last().click();
+    await expect(page.getByText('Repair Completed Successfully')).toBeVisible({ timeout: 15_000 });
+    await expect.poll(async () => {
+      const rec = await api('GET', `/admin/maintenance-records/${recordId}`);
+      return (rec.data?.record ?? rec.data ?? rec.body)?.status;
+    }, { timeout: 15_000 }).toBe('completed');
+  });
+
+  await test.step('EDA — Repair.Completed clears needs_repair and restores operational_status', async () => {
+    await expectItemRepairState(api, item.id, false, true);
+  });
+
+  await test.step('Delete — remove the record from RecordDetailPage', async () => {
+    await page.goto(`/${item.id}/${recordId}`);
+    await page.getByRole('button', { name: 'Delete', exact: true }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Delete', exact: true }).click();
+    await expect.poll(async () => (await api('GET', `/admin/maintenance-records/${recordId}`)).status, { timeout: 15_000 }).toBe(404);
+  });
+});
