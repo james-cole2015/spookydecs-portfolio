@@ -1,17 +1,6 @@
-import type { Page } from '@playwright/test';
 import { test, expect, sentinelName, findSentinels, SEASON } from './fixtures';
 import { STORAGE_STATE_PATH } from './global-setup';
-
-async function selectOption(page: Page, label: string, value: string) {
-  const trigger = page.getByRole('button', { name: new RegExp(`\\b${label}\\b`) });
-  const option = page.getByRole('option', { name: new RegExp(`(^|\\s)${value}$`) });
-  // Popovers can close again right after opening; open + pick is one retried unit.
-  await expect(async () => {
-    if (!(await option.isVisible())) await trigger.click();
-    await option.click({ timeout: 3_000 });
-    await expect(option).toBeHidden({ timeout: 3_000 });
-  }).toPass({ timeout: 20_000 });
-}
+import { selectOption } from '../../../_e2e/shared/ui';
 
 test.use({ storageState: STORAGE_STATE_PATH });
 

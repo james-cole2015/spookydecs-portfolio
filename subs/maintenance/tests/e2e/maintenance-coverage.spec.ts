@@ -1,6 +1,6 @@
 import { test, expect, createSentinelItem, createSentinelRecord, findSentinelSchedules, sentinelName, asList } from './fixtures';
 import { STORAGE_STATE_PATH } from './global-setup';
-import { selectOption } from './helpers';
+import { selectOption } from '../../../_e2e/shared/ui';
 
 
 const recordOf = (r: any) => r.data?.record ?? r.data ?? r.body;

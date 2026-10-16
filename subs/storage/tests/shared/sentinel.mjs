@@ -90,6 +90,7 @@ export async function pickPackableItem(api) {
   const items = res.data?.items || res.body?.items || [];
   return items.find((item) => {
     if (item.class === 'Deployment' || item.class === 'Storage' || item.class_type === 'Receptacle') return false;
+    if (String(item.short_name ?? '').includes('SENTINEL')) return false; // another suite's throwaway record
     const sd = item.storage_data || {};
     return sd.packable !== false && sd.is_stored === false && sd.single_packed !== true;
   }) || null;

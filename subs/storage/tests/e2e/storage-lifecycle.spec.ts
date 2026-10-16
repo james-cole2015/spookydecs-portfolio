@@ -57,6 +57,8 @@ test('storage lifecycle: create → pack → mark packed → mark stored → unp
       itemsRes.data?.items || itemsRes.body?.items || [];
     const candidate = items.find((i) => {
       if (i.class === 'Deployment' || i.class === 'Storage' || i.class_type === 'Receptacle') return false;
+      // Never pack another suite's throwaway record (items/maintenance/ideas sentinels get swept mid-flight).
+      if (String((i as any).short_name ?? '').includes('SENTINEL')) return false;
       const sd = i.storage_data || {};
       return sd.packable !== false && sd.is_stored === false && sd.single_packed !== true;
     });

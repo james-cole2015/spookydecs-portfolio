@@ -1,6 +1,6 @@
 import { test, expect, createSentinelItem } from './fixtures';
 import { STORAGE_STATE_PATH } from './global-setup';
-import { selectOption } from './helpers';
+import { selectOption } from '../../../_e2e/shared/ui';
 
 /** Polls the sentinel item until `maintenance.repair_data.needs_repair` and `operational_status` match. */
 async function expectItemRepairState(api: any, itemId: string, needsRepair: boolean, operational: boolean) {
