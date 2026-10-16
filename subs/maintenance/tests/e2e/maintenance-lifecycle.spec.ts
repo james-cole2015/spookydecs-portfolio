@@ -1,8 +1,7 @@
-import type { Page } from '@playwright/test';
 import { test, expect, createSentinelItem } from './fixtures';
 import { STORAGE_STATE_PATH } from './global-setup';
+import { selectOption } from './helpers';
 
-/** Opens a HeroUI select by label and picks an option by visible name (retried: popovers can re-close). */
 /** Polls the sentinel item until `maintenance.repair_data.needs_repair` and `operational_status` match. */
 async function expectItemRepairState(api: any, itemId: string, needsRepair: boolean, operational: boolean) {
   await expect.poll(async () => {
@@ -13,15 +12,6 @@ async function expectItemRepairState(api: any, itemId: string, needsRepair: bool
     .toEqual({ needs_repair: needsRepair, operational_status: operational });
 }
 
-async function selectOption(page: Page, label: string, name: RegExp | string) {
-  const trigger = page.getByRole('button', { name: new RegExp(`\\b${label}\\b`) });
-  const option = page.getByRole('option', { name });
-  await expect(async () => {
-    if (!(await option.first().isVisible())) await trigger.click();
-    await option.first().click({ timeout: 3_000 });
-    await expect(option.first()).toBeHidden({ timeout: 3_000 });
-  }).toPass({ timeout: 20_000 });
-}
 
 test.use({ storageState: STORAGE_STATE_PATH });
 
@@ -35,7 +25,7 @@ test('maintenance lifecycle: create repair → perform repair → item updated (
   await test.step('Create — repair record for the sentinel item through RecordFormPage', async () => {
     await page.goto(`/create?item_id=${item.id}`);
     await selectOption(page, 'Record Type', /^Repair$/);
-    await selectOption(page, 'Category', /^(?!Uncategorized)/);
+    await selectOption(page, 'Category', /^Replacement$/);
     await selectOption(page, 'Status', /^Scheduled$/);
     await page.getByLabel('Title').fill(title);
     await selectOption(page, 'Criticality', /^Critical$/);

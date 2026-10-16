@@ -1,5 +1,5 @@
 import { test as base } from '@playwright/test';
-import { makeApiClient, sweepSentinels, createSentinelItem, SENTINEL_MARKER } from '../shared/sentinel.mjs';
+import { makeApiClient, sweepSentinels, createSentinelItem, createSentinelRecord, findSentinelSchedules, sentinelName, asList, SENTINEL_MARKER } from '../shared/sentinel.mjs';
 import { fetchIdToken } from '../../../_e2e/shared/auth.mjs';
 import { loadEnvLocal } from '../../../_e2e/shared/env.mjs';
 
@@ -19,16 +19,16 @@ export const test = base.extend<{}, { maint: MaintFixture }>({
       const api = makeApiClient({ token, stage: STAGE });
 
       const pre = await sweepSentinels(api);
-      if (pre) console.log(`[e2e cleanup] preflight swept ${pre} leftover item(s)`);
+      if (pre) console.log(`[e2e cleanup] preflight swept ${pre} leftover sentinel(s)`);
 
       await use({ api, marker: SENTINEL_MARKER });
 
       const post = await sweepSentinels(api);
-      console.log(`[e2e cleanup] swept ${post} item(s)`);
+      console.log(`[e2e cleanup] swept ${post} sentinel(s)`);
     },
     { scope: 'worker' },
   ],
 });
 
 export { expect } from '@playwright/test';
-export { createSentinelItem };
+export { createSentinelItem, createSentinelRecord, findSentinelSchedules, sentinelName, asList };
