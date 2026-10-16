@@ -260,17 +260,6 @@ export const scheduleAPI = {
     return json.data || [];
   },
 
-  async generateRecords(scheduleId: string, count = 2): Promise<unknown> {
-    const API_ENDPOINT = await getApiEndpoint();
-    const response = await fetch(`${API_ENDPOINT}/admin/maintenance-schedules/${scheduleId}/generate`, {
-      method: 'POST',
-      headers: auth().buildHeaders(),
-      body: JSON.stringify({ count }),
-    });
-    const json = await handleResponse(response);
-    return json.data;
-  },
-
   async applyToItems(scheduleId: string, data: Record<string, unknown>): Promise<any> {
     const API_ENDPOINT = await getApiEndpoint();
     const response = await fetch(`${API_ENDPOINT}/admin/maintenance-schedules/${scheduleId}/apply`, {
