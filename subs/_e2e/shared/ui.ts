@@ -21,7 +21,8 @@ export async function selectOption(page: Page, label: string, value: string | Re
   const triggers = page.getByRole('button', { name: new RegExp(`\\b${escapeRe(label)}\\b`) });
   // `first`/`last` disambiguate when other triggers merely mention the label (e.g. a placeholder "Select a Cost Type first").
   const trigger = first ? triggers.first() : last ? triggers.last() : triggers;
-  const option = page.getByRole('option', { name: optionName });
+  // Located by slot, not role: inside a HeroUI Modal the popover renders aria-hidden, which role queries skip.
+  const option = page.locator('[data-slot="listbox"] [role="option"]').filter({ hasText: optionName });
   await expect(async () => {
     if (await trigger.filter({ hasText: shown }).count()) return;
     if (!(await option.first().isVisible())) await trigger.click();

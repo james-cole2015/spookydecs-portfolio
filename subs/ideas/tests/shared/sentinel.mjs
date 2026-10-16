@@ -18,7 +18,27 @@ export async function findSentinels(api) {
   return ideas.filter((i) => String(i.title ?? '').includes(SENTINEL_MARKER));
 }
 
-/** Items first (build tests create marked items), then ideas; idea cascade also removes linked costs (incl. acq-build-*). */
+const asList = (res, key) => {
+  const d = res.data ?? res.body?.data ?? res.body;
+  return Array.isArray(d) ? d : d?.[key] || [];
+};
+
+export async function findSentinelAcquisitions(api) {
+  return asList(await api('GET', '/acquisitions'), 'acquisitions').filter((a) => String(a.title ?? '').includes(SENTINEL_MARKER));
+}
+
+export async function findSentinelCosts(api) {
+  return asList(await api('GET', '/finance/costs'), 'costs').filter((c) => String(c.item_name ?? '').includes(SENTINEL_MARKER));
+}
+
+/**
+ * Costs (acq-buy-* rows carry the acquisition title), acquisitions, then items and ideas (idea cascade also removes
+ * linked costs, incl. acq-build-*). Returns the number of records removed.
+ */
 export async function sweepSentinels(api) {
-  return sweepItemsAndIdeas(api, SENTINEL_MARKER);
+  const costs = await findSentinelCosts(api);
+  for (const c of costs) await api('DELETE', `/finance/costs/${c.cost_id}/delete`);
+  const acqs = await findSentinelAcquisitions(api);
+  for (const a of acqs) await api('DELETE', `/acquisitions/${a.acquisition_id}`);
+  return costs.length + acqs.length + (await sweepItemsAndIdeas(api, SENTINEL_MARKER));
 }
