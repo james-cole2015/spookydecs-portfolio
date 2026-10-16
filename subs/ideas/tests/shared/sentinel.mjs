@@ -4,6 +4,7 @@
  * costs/photos). Idea titles allow up to 150 chars (FormPage maxLength).
  */
 export { makeApiClient } from '../../../storage/tests/shared/sentinel.mjs';
+import { sweepItemsAndIdeas } from '../../../_e2e/shared/entities.mjs';
 
 export const SENTINEL_MARKER = 'E2E IDEAS SENTINEL - safe to delete';
 
@@ -17,8 +18,7 @@ export async function findSentinels(api) {
   return ideas.filter((i) => String(i.title ?? '').includes(SENTINEL_MARKER));
 }
 
+/** Items first (build tests create marked items), then ideas; idea cascade also removes linked costs (incl. acq-build-*). */
 export async function sweepSentinels(api) {
-  const found = await findSentinels(api);
-  for (const idea of found) await api('DELETE', `/ideas/${idea.id}/cascade`);
-  return found.length;
+  return sweepItemsAndIdeas(api, SENTINEL_MARKER);
 }
