@@ -22,7 +22,7 @@ export function sentinelName(label) {
 export async function findSentinelItems(api) {
   const res = await api('GET', '/items');
   const items = res.data?.items || res.body?.items || [];
-  return items.filter((i) => String(i.short_name ?? '').includes(SENTINEL_MARKER));
+  return items.filter((i) => String(i.short_name ?? '').includes(SENTINEL_MARKER) || String(i.id ?? '').includes(SENTINEL_MARKER.split(' - ')[0].replace(/ /g, '_')));
 }
 
 /** Creates a plain tote-packed Static Prop (validators.py needs stakes + tethers) and returns its record. */

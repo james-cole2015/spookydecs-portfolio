@@ -88,6 +88,11 @@ test('items lifecycle: Single-packed requires a location and auto-creates a Self
       selfId = units.find((u) => u.class_type === 'Self' && (u.contents || []).includes(id))?.id || '';
       return !!selfId;
     }, { timeout: 30_000, intervals: [1000, 2000, 3000] }).toBe(true);
+    // Item.Packed must land before teardown deletes the item, or the consumer re-creates it as a ghost stub.
+    await expect.poll(async () => {
+      const r = await api('GET', `/items/${id}`);
+      return (r.data?.item ?? r.data ?? r.body)?.storage_data?.is_stored;
+    }, { timeout: 30_000, intervals: [1000, 2000, 3000] }).toBe(true);
   });
 
   await test.step('Cleanup — cascade delete the item, then delete its orphaned Self unit (#646)', async () => {

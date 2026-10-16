@@ -11,7 +11,7 @@ const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
  * Popovers can close again right after opening, so open + pick is retried — but re-clicking an
  * already-selected option DESELECTS it, so each attempt first checks whether the value is already set.
  */
-export async function selectOption(page: Page, label: string, value: string | RegExp, { last = false } = {}) {
+export async function selectOption(page: Page, label: string, value: string | RegExp, { first = false, last = false } = {}) {
   const optionName = typeof value === 'string' ? new RegExp(`(^|\\s)${escapeRe(value)}$`) : value;
   // After selection the trigger reads "<label><value>" with no separator (e.g. "Class TypeStatic Prop"), so
   // match the value un-anchored, but not when it is merely a prefix of another word ("Critical" vs "Criticality").
@@ -19,7 +19,8 @@ export async function selectOption(page: Page, label: string, value: string | Re
   const shown = new RegExp(`(${core})(?![a-z])`);
 
   const triggers = page.getByRole('button', { name: new RegExp(`\\b${escapeRe(label)}\\b`) });
-  const trigger = last ? triggers.last() : triggers;
+  // `first`/`last` disambiguate when other triggers merely mention the label (e.g. a placeholder "Select a Cost Type first").
+  const trigger = first ? triggers.first() : last ? triggers.last() : triggers;
   const option = page.getByRole('option', { name: optionName });
   await expect(async () => {
     if (await trigger.filter({ hasText: shown }).count()) return;
