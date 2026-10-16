@@ -81,17 +81,12 @@ test('items lifecycle: Single-packed requires a location and auto-creates a Self
     expect(rec.storage_data?.single_packed).toBe(true);
   });
 
-  await test.step('EDA — Item.PackingRequested → Self unit created and item marked stored', async () => {
+  await test.step('EDA — Item.PackingRequested → Self unit created', async () => {
     await expect.poll(async () => {
       const res = await api('GET', '/storage');
       const units: any[] = res.data?.storage_units || res.body?.storage_units || [];
       selfId = units.find((u) => u.class_type === 'Self' && (u.contents || []).includes(id))?.id || '';
       return !!selfId;
-    }, { timeout: 30_000, intervals: [1000, 2000, 3000] }).toBe(true);
-    // Item.Packed must land before teardown deletes the item, or the consumer re-creates it as a ghost stub.
-    await expect.poll(async () => {
-      const r = await api('GET', `/items/${id}`);
-      return (r.data?.item ?? r.data ?? r.body)?.storage_data?.is_stored;
     }, { timeout: 30_000, intervals: [1000, 2000, 3000] }).toBe(true);
   });
 

@@ -15,15 +15,11 @@ export function sentinelName(label) {
 }
 
 const isMarked = (o) => String(o?.short_name ?? o?.name ?? '').includes(SENTINEL_MARKER);
-// Ghost items: sd_items_storage_consumer's unconditional update_item re-creates a deleted item as a stub
-// (id/status/storage_data only, no short_name) when Item.Packed lands after the delete. Match those by id too.
-const ID_TOKEN = SENTINEL_MARKER.split(' - ')[0].replace(/ /g, '_');
-const isMarkedItem = (o) => isMarked(o) || String(o?.id ?? '').includes(ID_TOKEN);
 
 export async function findSentinelItems(api) {
   const res = await api('GET', '/items');
   const items = res.data?.items || res.body?.items || [];
-  return items.filter(isMarkedItem);
+  return items.filter(isMarked);
 }
 
 export async function findSentinelUnits(api) {
