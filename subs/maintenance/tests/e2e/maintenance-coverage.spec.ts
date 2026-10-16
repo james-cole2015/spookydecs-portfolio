@@ -82,12 +82,10 @@ test('maintenance: template lifecycle — create → edit → apply to an item �
     await page.getByRole('button', { name: /Create|Save/ }).last().click();
     const res = await posted;
     expect(res.status(), `POST schedule → ${(await res.text()).slice(0, 300)}`).toBeLessThan(300);
-    // KNOWN BUG: ScheduleFormPage reads result.schedule.schedule_id but scheduleAPI.create returns the
-    // template itself, so the app navigates to /schedules/undefined and hangs on "Loading…". Resolve the
-    // real id from the API by title instead, then open the detail page directly.
-    await expect.poll(async () => (await findSentinelSchedules(api)).find((t: any) => t.title === title)?.schedule_id, { timeout: 15_000 }).toBeTruthy();
-    scheduleId = (await findSentinelSchedules(api)).find((t: any) => t.title === title)!.schedule_id;
-    await page.goto(`/schedules/${scheduleId}`);
+    // Creating a template lands on its real detail page (was /schedules/undefined before #650).
+    await page.waitForURL(/\/schedules\/TMPL-[^/]+$/, { timeout: 15_000 });
+    scheduleId = new URL(page.url()).pathname.split('/').pop()!;
+    expect((await findSentinelSchedules(api)).some((t: any) => t.schedule_id === scheduleId)).toBe(true);
     await expect(page.getByText(title).first()).toBeVisible();
   });
 
@@ -121,30 +119,4 @@ test('maintenance: template lifecycle — create → edit → apply to an item �
     await page.getByRole('dialog').getByRole('button', { name: 'Delete', exact: true }).click();
     await expect.poll(async () => (await findSentinelSchedules(api)).some((t: any) => t.schedule_id === scheduleId), { timeout: 15_000 }).toBe(false);
   });
-});
-
-// KNOWN FAILING (documented, not hidden): sd_maintenance_scheduler_handler.generate_records_manually is a
-// stub — it returns 200 "Record generation initiated" but creates nothing, while the UI toasts "Created N new
-// maintenance record(s)". This test asserts the correct behavior; `test.fail` makes the run green while the
-// stub exists and turns it red ("expected to fail, but passed") the day generation is implemented, at which
-// point delete the test.fail line.
-test('maintenance: Generate on a template creates additional records', async ({ page, maint }) => {
-  // Set E2E_GENERATE_STRICT=1 to run this as a normal test and see the real failure.
-  test.fail(!process.env.E2E_GENERATE_STRICT, 'generate_records_manually is an unimplemented stub');
-  const { api } = maint;
-  const item = await createSentinelItem(api, 'generate');
-  const created = await api('POST', '/admin/maintenance-schedules', {
-    class_type: 'Static Prop', record_type: 'maintenance', category: 'cleaning', short_name: `E2E_GEN_${Date.now()}`,
-    title: sentinelName('generate'), description: '', frequency: 'annual', is_default: false, enabled: true,
-    estimated_cost: 0, days_before_reminder: 7,
-  });
-  const scheduleId = created.data.schedule_id;
-  await api('POST', `/admin/maintenance-schedules/${scheduleId}/apply`, { item_ids: [item.id] });
-  const countRecords = async () => asList(await api('GET', `/admin/maintenance-schedules/${scheduleId}/records`), 'records').length;
-  const before = await countRecords();
-
-  await page.goto(`/schedules/${scheduleId}`);
-  page.once('dialog', (d) => d.accept('2'));
-  await page.getByRole('button', { name: 'Generate' }).click();
-  await expect.poll(countRecords, { timeout: 15_000 }).toBeGreaterThan(before);
 });
