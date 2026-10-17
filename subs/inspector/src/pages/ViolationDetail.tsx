@@ -211,6 +211,8 @@ export default function ViolationDetail() {
 
   const dismissibleConfig = getDismissibleConfig(violation.dismissible);
   const details = violation.violation_details || {};
+  // Lambda stores dismissal_notes top-level; older records may carry it inside violation_details.
+  const dismissalReason = violation.dismissal_notes || details.dismissal_notes;
   const isDuplicate =
     violation.rule_id === 'DUPLICATE_LIGHTS' || violation.rule_id === 'DUPLICATE_ITEMS';
   const canDismiss = violation.dismissible !== false && violation.status === 'open';
@@ -400,10 +402,10 @@ export default function ViolationDetail() {
                   <dd className="text-foreground">{formatDate(violation.dismissed_at)}</dd>
                   <dt className="text-default-500">Dismissed By:</dt>
                   <dd className="text-foreground">{violation.dismissed_by || 'N/A'}</dd>
-                  {details.dismissal_notes && (
+                  {dismissalReason && (
                     <>
                       <dt className="text-default-500">Dismissal Reason:</dt>
-                      <dd className="text-foreground">{details.dismissal_notes}</dd>
+                      <dd className="text-foreground">{dismissalReason}</dd>
                     </>
                   )}
                 </>

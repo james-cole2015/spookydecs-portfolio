@@ -80,15 +80,10 @@ test('inspector: run a rule → violation appears → views → notes → dismis
     await dialog.locator('footer').getByRole('button', { name: 'Dismiss', exact: true }).click();
     await expect.poll(async () => violationOf(await api('GET', `/admin/inspector/violations/${violationId}`))?.status, { timeout: 15_000 }).toBe('dismissed');
     expect(violationOf(await api('GET', `/admin/inspector/violations/${violationId}`)).dismissal_notes).toContain('#623 e2e');
-    // The detail page should show the stored reason once dismissed. Known defect: ViolationDetail reads
-    // violation_details.dismissal_notes but the Lambda stores dismissal_notes at the top level, so the reason never renders.
+    // The detail page shows the stored reason once dismissed.
     await page.reload();
     await expect(page.getByText('Dismissed:', { exact: false }).first()).toBeVisible();
-    const shown = await page.getByText(/Dismissed by the #623 e2e suite/).count();
-    if (!shown) {
-      test.info().annotations.push({ type: 'known-defect', description: 'dismissal reason is stored but not rendered on ViolationDetail' });
-      expect(process.env.E2E_INSPECTOR_STRICT, 'dismissal reason not rendered').toBeFalsy();
-    }
+    await expect(page.getByText(/Dismissed by the #623 e2e suite/)).toBeVisible();
   });
 
   await test.step('Rule description edit round-trips and restores', async () => {
