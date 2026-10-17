@@ -192,4 +192,34 @@ test('deployment lifecycle: builder → staging → declare + connect → comple
     await page.getByTestId('teardown-complete-confirm').click();
     await page.waitForURL('**/');
   });
+  // The deployment is now fully torn down, i.e. historical: the read-only pages must serve it.
+  await test.step('Historical — list and detail show the torn-down deployment', async () => {
+    await page.goto('/historical');
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByText(/Something went wrong|Unable to load|Failed to load/i)).toHaveCount(0);
+    await expect(page.getByText(deploymentId).first()).toBeVisible();
+
+    await page.goto(`/historical/${deploymentId}`);
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByText(/Something went wrong|Unable to load|Failed to load|not found/i)).toHaveCount(0);
+    await expect(page.getByText(deploymentId).first()).toBeVisible();
+  });
+
+  await test.step('Stats — list and per-deployment page render', async () => {
+    for (const path of ['/stats', `/stats/${deploymentId}`]) {
+      await page.goto(path);
+      await page.waitForLoadState('networkidle');
+      await expect(page.getByText(/Something went wrong|Unable to load|Failed to load|not found/i), path).toHaveCount(0);
+    }
+    await expect(page.getByText(deploymentId).first()).toBeVisible();
+  });
+
+  await test.step('Graphs — list and schematic render', async () => {
+    for (const path of ['/graphs', `/graphs/${deploymentId}`]) {
+      await page.goto(path);
+      await page.waitForLoadState('networkidle');
+      await expect(page.getByText(/Something went wrong|Unable to load|Failed to load|not found/i), path).toHaveCount(0);
+    }
+    await expect(page.getByText(deploymentId).first()).toBeVisible();
+  });
 });
