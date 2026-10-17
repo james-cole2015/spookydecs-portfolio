@@ -23,12 +23,12 @@ export const IMG = Buffer.from(
 );
 
 /** Uploads one sentinel image end to end; returns the confirmed photo record. */
-export async function createSentinelImage(api, { caption = '', itemId = null } = {}) {
+export async function createSentinelImage(api, { caption = '', itemId = null, target: explicitTarget = null } = {}) {
   const filename = `e2e-sentinel-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.jpeg`;
   // Item context (photo_type 'catalog') carries item_ids and fires Image.Uploaded → items.images; otherwise the fake idea.
-  const target = itemId
+  const target = explicitTarget ?? (itemId
     ? { context: 'item', photo_type: 'catalog', item_ids: [itemId] }
-    : { context: 'idea', photo_type: 'inspiration', idea_id: SENTINEL_IDEA_ID };
+    : { context: 'idea', photo_type: 'inspiration', idea_id: SENTINEL_IDEA_ID });
   const presign = await api('POST', '/admin/images/presign', {
     ...target,
     season: 'halloween',
