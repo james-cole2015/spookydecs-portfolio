@@ -91,7 +91,7 @@ test('inspector: run a rule → violation appears → views → notes → dismis
     }
   });
 
-  await test.step('Rule description edit (role sd_inspector_rules_handler-role is read-only on DynamoDB today)', async () => {
+  await test.step('Rule description edit round-trips and restores', async () => {
     const original = (await api('GET', `/admin/inspector/rules/${RULE_ID}`)).data.rule.description as string;
     await page.goto(`/rules/${RULE_ID}`);
     await page.getByRole('button', { name: /Edit Description/ }).click();
@@ -100,19 +100,12 @@ test('inspector: run a rule → violation appears → views → notes → dismis
     const patched = page.waitForResponse((r) => r.request().method() === 'PATCH' && r.url().includes(`/admin/inspector/rules/${RULE_ID}`));
     await dialog.locator('footer').getByRole('button', { name: /Save/ }).click();
     const status = (await patched).status();
-    if (status < 300) {
-      try {
-        await expect.poll(async () => (await api('GET', `/admin/inspector/rules/${RULE_ID}`)).data.rule.description, { timeout: 15_000 }).toBe(`${original} [e2e]`);
-      } finally {
-        await api('PATCH', `/admin/inspector/rules/${RULE_ID}`, { description: original, updated_by: 'e2e-restore' });
-      }
-      expect((await api('GET', `/admin/inspector/rules/${RULE_ID}`)).data.rule.description).toBe(original);
-    } else {
-      // Known defect: the handler's role only has the read-only DynamoDB policy, so PATCH/DELETE on rules 500 with
-      // AccessDeniedException (UpdateItem). Recorded, not asserted, unless E2E_INSPECTOR_STRICT=1.
-      test.info().annotations.push({ type: 'known-defect', description: `Edit Description PATCH → ${status}: rules handler role lacks DynamoDB write` });
-      expect(process.env.E2E_INSPECTOR_STRICT, `Edit Description PATCH returned ${status}`).toBeFalsy();
-      expect((await api('GET', `/admin/inspector/rules/${RULE_ID}`)).data.rule.description).toBe(original);
+    expect(status, `Edit Description PATCH returned ${status}`).toBeLessThan(300);
+    try {
+      await expect.poll(async () => (await api('GET', `/admin/inspector/rules/${RULE_ID}`)).data.rule.description, { timeout: 15_000 }).toBe(`${original} [e2e]`);
+    } finally {
+      await api('PATCH', `/admin/inspector/rules/${RULE_ID}`, { description: original, updated_by: 'e2e-restore' });
     }
+    expect((await api('GET', `/admin/inspector/rules/${RULE_ID}`)).data.rule.description).toBe(original);
   });
 });
