@@ -96,3 +96,27 @@ test('items lifecycle: Single-packed requires a location and auto-creates a Self
     expect((await api('GET', '/storage')).data?.storage_units?.some((u: any) => u.id === selfId) ?? false).toBe(false);
   });
 });
+
+// Item ids embed the short_name, so a name like "<name> #1" (batch builds, #593) yields an id with '#',
+// which reaches the cascade route percent-encoded (%23). Regression for #656.
+test("items lifecycle: cascade delete from DetailPage for an id containing '#' (#656)", async ({ page, items }) => {
+  const { api } = items;
+  const name = `${sentinelName('Static Prop')} #1`;
+  let id = '';
+
+  await test.step("Create — name containing '#' through the wizard", async () => {
+    await createViaWizard(page, { cls: 'Decoration', type: 'Static Prop', name });
+    const rec = await findByName(api, name);
+    expect(rec, 'created item present via API').toBeTruthy();
+    id = rec.id;
+    expect(id, "item id embeds the '#'").toContain('#');
+  });
+
+  await test.step('Delete — cascade preview + delete from DetailPage', async () => {
+    await page.goto(`/${encodeURIComponent(id)}`);
+    await page.getByTestId('item-actions-menu').click();
+    await page.getByRole('menuitem', { name: /Delete \(Cascade\)/ }).click();
+    await page.getByRole('button', { name: 'Delete Everything' }).click();
+    await expect.poll(async () => (await api('GET', `/items/${encodeURIComponent(id)}`)).status, { timeout: 15_000 }).toBe(404);
+  });
+});
