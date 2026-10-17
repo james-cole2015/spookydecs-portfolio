@@ -58,7 +58,7 @@ export async function findSentinelSchedules(api) {
 /** Items first (cascade removes their records), then any leftover marked templates. */
 export async function sweepSentinels(api) {
   const items = await findSentinelItems(api);
-  for (const item of items) await api('DELETE', `/items/${item.id}/cascade`);
+  for (const item of items) await api('DELETE', `/items/${encodeURIComponent(item.id)}/cascade`);
   const schedules = await findSentinelSchedules(api);
   for (const t of schedules) await api('DELETE', `/admin/maintenance-schedules/${t.schedule_id}`);
   return items.length + schedules.length;

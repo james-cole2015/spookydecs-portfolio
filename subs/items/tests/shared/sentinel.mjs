@@ -31,7 +31,7 @@ export async function findSentinelUnits(api) {
 /** @returns {Promise<{items:number, units:number, stuckUnits:string[]}>} */
 export async function sweepSentinels(api) {
   const items = await findSentinelItems(api);
-  for (const item of items) await api('DELETE', `/items/${item.id}/cascade`);
+  for (const item of items) await api('DELETE', `/items/${encodeURIComponent(item.id)}/cascade`);
   const stuckUnits = [];
   const units = await findSentinelUnits(api);
   for (const unit of units) {
