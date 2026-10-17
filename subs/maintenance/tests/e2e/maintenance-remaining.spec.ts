@@ -200,3 +200,34 @@ test('maintenance: record photos and cost link — attach through the edit form,
     expect(left, 'maintenance photo objects left after item cascade (#663)').toEqual([]);
   });
 });
+
+test('maintenance: deleting a record removes its photo from S3 and the images table (#663)', async ({ page, maint }) => {
+  test.setTimeout(180_000);
+  const { api } = maint;
+  const item = await createSentinelItem(api, 'recphoto');
+  const rec = await createSentinelRecord(api, item.id);
+
+  await page.goto(`/${item.id}/${rec.record_id}/edit`);
+  await page.getByRole('button', { name: 'Add Photos' }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.locator('input[type="file"]').setInputFiles({ name: 'maint.jpg', mimeType: 'image/jpeg', buffer: IMG });
+  await dialog.getByRole('button', { name: /^Continue/ }).click();
+  await page.getByRole('button', { name: 'Use original' }).click();
+  await expect(page.getByText('1 photo(s) attached')).toBeVisible({ timeout: 60_000 });
+  await page.getByRole('button', { name: /Update Record/ }).click();
+  await page.waitForURL(new RegExp(`/${item.id}/${rec.record_id}$`), { timeout: 15_000 });
+
+  const a = recordOf(await api('GET', `/admin/maintenance-records/${rec.record_id}`)).attachments;
+  const photoId = (a.documentation?.[0] ?? a.before_photos?.[0] ?? a.after_photos?.[0])?.photo_id;
+  expect(photoId).toBeTruthy();
+  const img = await api('GET', `/admin/images/${photoId}`);
+  const photo = (img.data?.photo ?? img.data) as { s3_key?: string; thumb_s3_key?: string };
+  expect(photo?.s3_key).toBeTruthy();
+
+  const del = await api('DELETE', `/admin/maintenance-records/${rec.record_id}`);
+  expect(del.status, JSON.stringify(del.body ?? del.data).slice(0, 300)).toBeLessThan(300);
+  await expect.poll(async () => (await api('GET', `/admin/images/${photoId}`)).status, { timeout: 20_000 }).toBe(404);
+  const left = remainingObjects(photo);
+  if (left === null) test.info().annotations.push({ type: 'note', description: 'aws CLI unavailable — S3 not checked' });
+  else expect(left, 'objects left after record delete (#663)').toEqual([]);
+});
