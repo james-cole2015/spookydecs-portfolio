@@ -52,7 +52,7 @@ test('inspector: run a rule → violation appears → views → notes → dismis
     await expect(page.getByText(item.short_name).or(page.getByText(item.id)).first()).toBeVisible();
   });
 
-  await test.step('Violation detail — renders; Save Notes (API Gateway has no PUT on this resource yet)', async () => {
+  await test.step('Violation detail — renders; Save Notes persists', async () => {
     await page.goto(`/violations/${violationId}`);
     await expect(page.getByText(item.short_name).or(page.getByText(item.id)).first()).toBeVisible();
     await page.getByPlaceholder('Add notes about this violation...').fill('e2e note');
