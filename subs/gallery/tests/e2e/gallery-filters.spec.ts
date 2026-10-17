@@ -113,13 +113,10 @@ test('gallery: photo detail — a card opens the lightbox, Close dismisses it; t
     }).toPass({ timeout: 15_000 });
   });
 
-  // KNOWN GAP (flagged to the owner, not filed yet): the handler implements GET /gallery/images/{id} and galleryApi.getPhoto
-  // calls it, but the route is not on the API Gateway (403 "Missing Authentication Token" on dev and prod) and no page uses it.
-  await test.step('Single-photo route is not exposed (recorded gap); the list route returns only public fields', async () => {
-    const res = await page.request.get(`${base}/gallery/images/${photos[0].photo_id}`);
-    console.log(`[gallery] GAP GET /gallery/images/{id} -> ${res.status()}`);
+  await test.step('The list returns public fields only (the single-photo route was removed, not exposed)', async () => {
     expect(photos[0].cloudfront_url).toBeTruthy();
     expect(Object.keys(photos[0])).not.toContain('is_public'); // internal fields are stripped from the list
+    expect((await page.request.get(`${base}/gallery/images/${photos[0].photo_id}`)).status()).toBeGreaterThanOrEqual(400);
   });
 
   await test.step('Invalid and missing section are 400', async () => {
