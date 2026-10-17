@@ -15,6 +15,8 @@
  * contents is itself the item cleanup, no separate ledger needed.
  */
 
+import { sweepItemsAndIdeas } from '../../../_e2e/shared/entities.mjs';
+
 export const API_HOST = 'https://miinu7boec.execute-api.us-east-2.amazonaws.com';
 // Must satisfy the storage sub's short_name validation pattern (letters, digits,
 // spaces, hyphen, underscore, parens only — see STORAGE_CONFIG.VALIDATION in
@@ -69,13 +71,16 @@ export async function deleteSentinelUnit(api, unit) {
   return res.status === 200 || res.status === 404;
 }
 
-/** Preflight/teardown sweep — finds and deletes every leftover sentinel unit. */
+/**
+ * Preflight/teardown sweep — deletes every leftover sentinel unit, then any marked sentinel items/ideas the coverage
+ * specs seed (units first: emptying a unit fires Item.Unpacked, which must not find a deleted item).
+ */
 export async function sweepSentinels(api) {
   const sentinels = await findSentinels(api);
   for (const unit of sentinels) {
     await deleteSentinelUnit(api, unit);
   }
-  return sentinels.length;
+  return sentinels.length + (await sweepItemsAndIdeas(api, SENTINEL_MARKER));
 }
 
 /**
