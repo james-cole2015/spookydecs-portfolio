@@ -9,8 +9,11 @@
  * by idea_id and DELETEs each via the API, which removes the S3 object, thumbnail and DDB record.
  */
 export { makeApiClient } from '../../../storage/tests/shared/sentinel.mjs';
+import { sweepItemsAndIdeas, findSentinelItems } from '../../../_e2e/shared/entities.mjs';
 
 export const SENTINEL_MARKER = 'E2E IMAGES SENTINEL - safe to delete';
+/** Sentinel items for item-context photos carry this marker. */
+export const ITEM_MARKER = 'E2E IMAGES ITEM SENTINEL - safe to delete';
 export const SENTINEL_IDEA_ID = 'E2E-IMAGES-SENTINEL';
 
 // 8x8 JPEG (the real client uploads JPEG thumbnails alongside the original).
@@ -20,13 +23,15 @@ const IMG = Buffer.from(
 );
 
 /** Uploads one sentinel image end to end; returns the confirmed photo record. */
-export async function createSentinelImage(api, { caption = '' } = {}) {
-  const filename = `e2e-sentinel-${Date.now()}.jpeg`;
+export async function createSentinelImage(api, { caption = '', itemId = null } = {}) {
+  const filename = `e2e-sentinel-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.jpeg`;
+  // Item context (photo_type 'catalog') carries item_ids and fires Image.Uploaded → items.images; otherwise the fake idea.
+  const target = itemId
+    ? { context: 'item', photo_type: 'catalog', item_ids: [itemId] }
+    : { context: 'idea', photo_type: 'inspiration', idea_id: SENTINEL_IDEA_ID };
   const presign = await api('POST', '/admin/images/presign', {
-    context: 'idea',
-    photo_type: 'inspiration',
+    ...target,
     season: 'halloween',
-    idea_id: SENTINEL_IDEA_ID,
     files: [{ filename, content_type: 'image/jpeg', file_size: IMG.length }],
   });
   if (presign.status !== 200) throw new Error(`presign failed (${presign.status}): ${JSON.stringify(presign.body).slice(0, 300)}`);
@@ -40,10 +45,8 @@ export async function createSentinelImage(api, { caption = '' } = {}) {
   }
 
   const confirm = await api('POST', '/admin/images/confirm', {
-    context: 'idea',
-    photo_type: 'inspiration',
+    ...target,
     season: 'halloween',
-    idea_id: SENTINEL_IDEA_ID,
     caption: `${SENTINEL_MARKER} ${caption}`.trim(),
     tags: ['e2e-sentinel'],
     photos: [{
@@ -64,8 +67,21 @@ export async function findSentinels(api) {
   return (Array.isArray(photos) ? photos : []).filter((p) => String(p.caption ?? '').includes(SENTINEL_MARKER));
 }
 
+/** Deletes through the images API (removes S3 original, stored + generated thumbnail, record, and fires Image.Deleted). */
 export async function sweepSentinels(api) {
   const found = await findSentinels(api);
   for (const p of found) await api('DELETE', `/admin/images/${p.photo_id}`);
-  return found.length;
+  // Item-context photos: delete them via the images API before the item goes (item cascade would orphan thumbnails, #655).
+  const items = await findSentinelItems(api, ITEM_MARKER);
+  let itemPhotos = 0;
+  for (const item of items) {
+    const res = await api('GET', `/admin/images?item_id=${encodeURIComponent(item.id)}`);
+    const photos = res.data?.photos || res.data?.images || res.body?.photos || res.body?.images || res.data || [];
+    for (const p of Array.isArray(photos) ? photos : []) {
+      await api('DELETE', `/admin/images/${p.photo_id}`);
+      itemPhotos++;
+    }
+  }
+  const rest = await sweepItemsAndIdeas(api, ITEM_MARKER);
+  return found.length + itemPhotos + rest;
 }

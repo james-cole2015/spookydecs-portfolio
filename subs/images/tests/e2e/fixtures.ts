@@ -1,5 +1,5 @@
 import { test as base } from '@playwright/test';
-import { makeApiClient, sweepSentinels, createSentinelImage, findSentinels, SENTINEL_MARKER } from '../shared/sentinel.mjs';
+import { makeApiClient, sweepSentinels, createSentinelImage, findSentinels, SENTINEL_MARKER, ITEM_MARKER } from '../shared/sentinel.mjs';
 import { fetchIdToken } from '../../../_e2e/shared/auth.mjs';
 import { loadEnvLocal } from '../../../_e2e/shared/env.mjs';
 
@@ -31,4 +31,4 @@ export const test = base.extend<{}, { images: ImagesFixture }>({
 });
 
 export { expect } from '@playwright/test';
-export { createSentinelImage, findSentinels };
+export { createSentinelImage, findSentinels, ITEM_MARKER };
