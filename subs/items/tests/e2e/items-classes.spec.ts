@@ -86,6 +86,7 @@ test('items classes: Large & Oversized is not packable; vendor + power fields pe
   await page.getByLabel('Manufacturer').fill('E2E Mfg');
   await page.getByLabel('Store', { exact: true }).fill('E2E Store');
   await selectOption(page, 'Pack Mode', 'Large & Oversized');
+  await page.getByLabel('Power Required').check();
   await save(page);
 
   const rec = await findByName(api, name);
@@ -93,8 +94,7 @@ test('items classes: Large & Oversized is not packable; vendor + power fields pe
   expect(rec.storage_data).toMatchObject({ packable: false, single_packed: false });
   expect(rec.vendor_metadata).toMatchObject({ manufacturer: 'E2E Mfg', vendor_store: 'E2E Store' });
   expect(Number(rec.vendor_metadata.cost)).toBeCloseTo(49.99, 2);
-  // 'Power Required' is deliberately not asserted: builder.py ignores the checkbox on create (sets power_inlet only for
-  // power classes, unconditionally), so a Static Prop never stores it. Flagged to the user.
+  expect(rec.power_inlet, 'checked Power Required stores power_inlet on a Static Prop (#657)').toBe(true);
 
   await test.step('Edit shows the stored pack mode', async () => {
     await page.goto(`/${encodeURIComponent(rec.id)}/edit`);
@@ -129,4 +129,21 @@ test('items classes: required class fields block the wizard until filled', async
     await page.waitForURL(/\/items$/);
     expect(await findByName(api, name)).toBeTruthy();
   });
+});
+
+test('items classes: unchecked Power Required is stored false on a powered type (#657)', async ({ page, items }) => {
+  const { api } = items;
+  const name = sentinelName('Unpowered');
+  await pickClassAndType(page, 'Decoration', 'Inflatable');
+  await page.getByLabel('Item Name').fill(name);
+  await selectOption(page, 'Season', SEASON);
+  await field(page, 'Height/Length').fill('4');
+  await field(page, 'Stakes').fill('2');
+  await field(page, 'Tethers').fill('2');
+  await page.getByLabel('Power Required').uncheck();
+  await save(page);
+
+  const rec = await findByName(api, name);
+  expect(rec).toBeTruthy();
+  expect(rec.power_inlet).toBe(false);
 });
