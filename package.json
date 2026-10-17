@@ -61,6 +61,7 @@
     "test:e2e:gallery": "playwright test --config subs/gallery/tests/e2e/playwright.config.ts",
     "test:e2e:images": "playwright test --config subs/images/tests/e2e/playwright.config.ts",
     "test:e2e:admin": "playwright test --config subs/admin/tests/e2e/playwright.config.ts",
+    "test:e2e:workbench": "playwright test --config subs/workbench/tests/e2e/playwright.config.ts",
     "test:e2e:maintenance": "playwright test --config subs/maintenance/tests/e2e/playwright.config.ts",
     "test:e2e:finance": "playwright test --config subs/finance/tests/e2e/playwright.config.ts"
   },
