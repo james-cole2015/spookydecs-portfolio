@@ -58,15 +58,9 @@ test('inspector: run a rule → violation appears → views → notes → dismis
     await page.getByPlaceholder('Add notes about this violation...').fill('e2e note');
     const put = page.waitForResponse((r) => r.request().method() === 'PUT' && r.url().includes(`/violations/${violationId}`));
     await page.getByRole('button', { name: 'Save Notes' }).click();
-    const status = (await put).status();
-    if (status < 300) {
-      await expect.poll(async () => violationOf(await api('GET', `/admin/inspector/violations/${violationId}`))?.violation_details?.notes, { timeout: 15_000 }).toBe('e2e note');
-    } else {
-      // Known defect: PUT/DELETE /admin/inspector/violations/{id} are not wired in API Gateway (only GET/OPTIONS), so the
-      // gateway answers 403. Recorded, not asserted, unless E2E_INSPECTOR_STRICT=1 (flip it once the routes exist).
-      test.info().annotations.push({ type: 'known-defect', description: `Save Notes PUT → ${status}: route not wired in API Gateway` });
-      expect(process.env.E2E_INSPECTOR_STRICT, `Save Notes PUT returned ${status}`).toBeFalsy();
-    }
+    const res = await put;
+    expect(res.status(), `save notes → ${(await res.text()).slice(0, 300)}`).toBeLessThan(300);
+    await expect.poll(async () => violationOf(await api('GET', `/admin/inspector/violations/${violationId}`))?.violation_details?.notes, { timeout: 15_000 }).toBe('e2e note');
   });
 
   await test.step('Dismiss — a reason under the minimum is rejected by the form; a real reason dismisses', async () => {
