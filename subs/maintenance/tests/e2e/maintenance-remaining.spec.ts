@@ -2,7 +2,7 @@ import { test, expect, createSentinelItem, createSentinelRecord, findSentinelSch
 import { STORAGE_STATE_PATH } from './global-setup';
 import { selectOption } from '../../../_e2e/shared/ui';
 import { IMG } from '../../../images/tests/shared/sentinel.mjs';
-import { generatedThumbKey, keysWithPrefix } from '../../../_e2e/shared/s3.mjs';
+import { remainingObjects } from '../../../_e2e/shared/s3.mjs';
 
 test.use({ storageState: STORAGE_STATE_PATH });
 
@@ -192,10 +192,11 @@ test('maintenance: record photos and cost link — attach through the edit form,
     const a = recordOf(await api('GET', `/admin/maintenance-records/${rec.record_id}`)).attachments;
     const photoId = (a.documentation?.[0] ?? a.before_photos?.[0] ?? a.after_photos?.[0])?.photo_id;
     const img = await api('GET', `/admin/images/${photoId}`);
-    const key = (img.data?.photo ?? img.data)?.s3_key as string | undefined;
+    const photo = (img.data?.photo ?? img.data) as { s3_key?: string; thumb_s3_key?: string } | undefined;
     await api('DELETE', `/items/${encodeURIComponent(item.id)}/cascade`);
-    if (!key) { test.info().annotations.push({ type: 'note', description: 'photo s3_key not readable; S3 check skipped' }); return; }
-    const left = [...(keysWithPrefix(key) ?? []), ...(keysWithPrefix(generatedThumbKey(key)) ?? [])];
-    console.log('[maint] S3 objects after cascade:', JSON.stringify(left));
+    if (!photo?.s3_key) { test.info().annotations.push({ type: 'note', description: 'photo s3_key not readable; S3 check skipped' }); return; }
+    const left = remainingObjects(photo);
+    if (left === null) { test.info().annotations.push({ type: 'note', description: 'aws CLI unavailable — S3 not checked' }); return; }
+    expect(left, 'maintenance photo objects left after item cascade (#663)').toEqual([]);
   });
 });
