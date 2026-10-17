@@ -58,10 +58,10 @@ test('maintenance: inspection Maintenance Required with two tasks creates two re
   expect(titles).toEqual(['E2E task one', 'E2E task two']);
 });
 
-test('maintenance: inspection Failed requires a reason and retires the item', async ({ page, maint }) => {
+test('maintenance: Retire Item requires a reason, asks to confirm, and retires the item', async ({ page, maint }) => {
   const { api } = maint;
   const { item, insp } = await openInspection(page, api, 'failed');
-  await page.getByRole('radio', { name: /Failed/ }).check();
+  await page.getByRole('radio', { name: /Retire Item/ }).check();
   // The reason is a required field: the browser blocks the submit and nothing is posted.
   let posted = false;
   page.on('request', (r: any) => { if (r.method() === 'POST' && r.url().includes('/inspect')) posted = true; });
@@ -71,16 +71,22 @@ test('maintenance: inspection Failed requires a reason and retires the item', as
 
   await page.getByLabel('Reason for Retirement').fill('Seams split beyond repair (#623 e2e).');
   await selectOption(page, 'Disposal Method', /Donate/);
-  await submitInspection(page, insp.record_id);
+  // Retiring is permanent, so the form asks first; cancelling posts nothing.
+  await page.getByRole('button', { name: 'Complete Inspection' }).click();
+  await expect(page.getByText('Retire this item?')).toBeVisible();
+  await page.getByRole('button', { name: 'Cancel' }).click();
+  expect(posted, 'cancelling the confirm must not post').toBe(false);
+  const done = page.waitForResponse((r: any) => r.request().method() === 'POST' && r.url().includes(`/${insp.record_id}/inspect`));
+  await page.getByRole('button', { name: 'Complete Inspection' }).click();
+  await page.getByTestId('confirm-retire').click();
+  expect((await done).status()).toBeLessThan(300);
+  await expect(page.getByText('Inspection Completed Successfully')).toBeVisible({ timeout: 15_000 });
 
   await expect.poll(async () => recordOf(await api('GET', `/admin/maintenance-records/${insp.record_id}`))?.status, { timeout: 15_000 }).toBe('completed');
   expect(recordOf(await api('GET', `/admin/maintenance-records/${insp.record_id}`)).inspection_result)
     .toMatchObject({ result: 'failed', action_taken: 'item_retired', retirement_details: { disposal_method: 'donate' } });
-  // KNOWN GAP (flagged to the owner, not filed yet): the handler POSTs {API_URL}/items/{id}/retire, which has no route
-  // (403 "Missing Authentication Token", swallowed), so the item is never retired. Assert the real outcome once fixed.
-  await page.waitForTimeout(8_000);
-  const status = String(itemOf(await api('GET', `/items/${encodeURIComponent(item.id)}`))?.status ?? '');
-  console.log('[maint] GAP', `item status after Failed inspection: ${status} (expected Retired once the retire route exists)`);
+  // #662: the handler publishes Inspection.Failed and the items consumer retires the item.
+  await expect.poll(async () => String(itemOf(await api('GET', `/items/${encodeURIComponent(item.id)}`))?.status ?? ''), { timeout: 30_000 }).toBe('Retired');
 });
 
 test('maintenance: standalone template-apply wizard — select template → select items → review → apply', async ({ page, maint }) => {
