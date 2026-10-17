@@ -1,4 +1,5 @@
 import type { Locator } from '@playwright/test';
+import { selectOption } from '../../../_e2e/shared/ui';
 import { test, expect, sentinelName, findSentinels } from './fixtures';
 import { STORAGE_STATE_PATH } from './global-setup';
 import { createSentinelItem } from '../../../_e2e/shared/entities.mjs';
@@ -164,7 +165,7 @@ test('ideas workflow: IdeaBuild.Complete → item vendor_metadata + finance acqu
 
   await test.step('Ideas → Items: vendor_metadata split 6.17 / 6.18 and source_idea_id set', async () => {
     const read = async (id: string) => {
-      const r = await api('GET', `/items/${id}`);
+      const r = await api('GET', `/items/${encodeURIComponent(id)}`);
       return r.data?.item ?? r.body?.data?.item ?? r.data ?? r.body?.data ?? r.body;
     };
     await expect.poll(async () => (await read(itemA.id))?.source_idea_id, { timeout: 60_000, intervals: [2_000] }).toBe(idea.id);
@@ -192,4 +193,107 @@ test('ideas workflow: IdeaBuild.Complete → item vendor_metadata + finance acqu
     await expect(page.getByRole('link', { name: /View Item/ }).first()).toBeVisible();
     await expect(page.getByRole('button', { name: 'Delete', exact: true })).toHaveCount(0);
   });
+});
+
+/** Seeds an idea that already satisfies the Workbench gate and moves it there through the API. Needs room under the WIP cap. */
+async function seedWorkbenchIdea(api: any, label: string) {
+  const idea = await createIdea(api, label, {
+    description: 'workbench build',
+    link: 'https://example.com/wb',
+    materials: [{ name: 'PVC pipe', done: false }],
+    build_instructions: [{ title: 'Cut pipe', description: 'Cut it', status: 'pending' }],
+  });
+  expect((await putIdea(api, idea, { status: 'Planning' })).status).toBeLessThan(300);
+  const res = await putIdea(api, idea, { status: 'Workbench' });
+  expect(res.status, `Workbench move → ${JSON.stringify(res.body).slice(0, 200)} (is dev over the WIP cap?)`).toBeLessThan(300);
+  return idea;
+}
+
+test('workbench: Complete Build wizard (2 units + remainder idea) → Built, items, remainder idea, events', async ({ page, ideas }) => {
+  const { api } = ideas;
+  const idea = await seedWorkbenchIdea(api, 'Wizard');
+  const cost = await api('POST', '/finance/costs', {
+    item_name: `${idea.title} materials`, cost_type: 'build', category: 'materials', total_cost: '12.35',
+    cost_date: new Date().toISOString().slice(0, 10), vendor: 'E2E Hardware', class_type: 'item', no_receipt: true, related_idea_id: idea.id,
+  });
+  expect(cost.status, JSON.stringify(cost.body).slice(0, 200)).toBeLessThan(300);
+
+  await page.goto(`/${idea.id}`);
+  await page.getByRole('button', { name: 'Complete Build' }).click();
+  const wizard = page.getByRole('dialog');
+
+  await test.step('Step 1 — completion date', async () => {
+    await expect(wizard.getByText('Confirm Completion')).toBeVisible();
+    await wizard.getByRole('button', { name: /Next/ }).click();
+  });
+
+  await test.step('Step 2 — validation, then item spec', async () => {
+    await expect(wizard.getByText(/Logged costs: \$12\.35 across 1 record/)).toBeVisible();
+    await wizard.getByRole('button', { name: /Review/ }).click();
+    await expect(wizard.getByText('Class is required.')).toBeVisible();
+    await wizard.getByLabel('Units built').fill('2');
+    await selectOption(page, 'Class', 'Decoration');
+    await selectOption(page, 'Type', 'Static Prop');
+    await wizard.getByLabel('Tethers').fill('2');
+    await wizard.getByLabel('Stakes').fill('4');
+    await wizard.getByRole('checkbox', { name: /still partially complete/ }).check();
+    await wizard.getByLabel('How many remaining').fill('3');
+    await wizard.getByLabel('Current state').fill('shapes cut, unpainted');
+    await wizard.getByRole('button', { name: /Review/ }).click();
+  });
+
+  await test.step('Step 3 — review, submit', async () => {
+    await expect(wizard.getByText('2 items')).toBeVisible();
+    await expect(wizard.getByText('Decoration / Static Prop')).toBeVisible();
+    await expect(wizard.getByText('3 (new idea)')).toBeVisible();
+    await wizard.getByRole('button', { name: 'Complete Build' }).click();
+    await expect(wizard.getByText('Build Complete!')).toBeVisible({ timeout: 30_000 });
+  });
+
+  let itemIds: string[] = [];
+  await test.step('Records — idea Built with both items; remainder idea queued in Considering', async () => {
+    const built = await getIdea(api, idea.id);
+    expect(built.status).toBe('Built');
+    itemIds = built.built_item_ids;
+    expect(itemIds).toHaveLength(2);
+    expect(built.item_id).toBe(itemIds[0]);
+    const names: string[] = [];
+    for (const id of itemIds) {
+      const r = await api('GET', `/items/${encodeURIComponent(id)}`);
+      const it = r.data?.item ?? r.body?.data?.item ?? r.data ?? r.body?.data ?? r.body;
+      names.push(it?.short_name);
+    }
+    expect(names.sort()).toEqual([`${idea.title} #1`, `${idea.title} #2`]);
+    const remainder = (await findSentinels(api)).find((i: any) => i.id !== idea.id && i.notes?.includes(idea.id));
+    expect(remainder, 'remainder idea').toBeTruthy();
+    expect(remainder).toMatchObject({ status: 'Considering', remaining_units: 3 });
+    expect(remainder.notes).toContain('shapes cut, unpainted');
+  });
+
+  await test.step('Events — items get source_idea_id and the finance acquisition row appears', async () => {
+    for (const id of itemIds) {
+      await expect
+        .poll(async () => {
+          const r = await api('GET', `/items/${encodeURIComponent(id)}`);
+          return (r.data?.item ?? r.body?.data?.item ?? r.data ?? r.body?.data ?? r.body)?.source_idea_id;
+        }, { timeout: 60_000, intervals: [2_000] })
+        .toBe(idea.id);
+    }
+    await expect
+      .poll(async () => asList(await api('GET', `/finance/costs?related_idea_id=${idea.id}`)).some((c: any) => c.cost_id === `acq-build-${idea.id}`), {
+        timeout: 60_000, intervals: [2_000],
+      })
+      .toBe(true);
+  });
+});
+
+test('workbench: Abandon Build moves the idea to Abandoned and leaves no item', async ({ page, ideas }) => {
+  const { api } = ideas;
+  const idea = await seedWorkbenchIdea(api, 'Abandon');
+  await page.goto(`/${idea.id}`);
+  await page.getByRole('button', { name: 'Abandon Build' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Abandon', exact: true }).click();
+  await page.waitForURL(/\/$/, { timeout: 15_000 });
+  await expect.poll(async () => (await getIdea(api, idea.id))?.status).toBe('Abandoned');
+  expect((await getIdea(api, idea.id)).item_id).toBeFalsy();
 });

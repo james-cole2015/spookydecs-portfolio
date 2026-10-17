@@ -45,7 +45,13 @@ export async function findSentinelIdeas(api, marker) {
 /** Cascade-deletes every marked item and idea; returns how many were removed. */
 export async function sweepItemsAndIdeas(api, marker) {
   const items = await findSentinelItems(api, marker);
-  for (const i of items) await api('DELETE', `/items/${i.id}/cascade`);
+  for (const i of items) {
+    const enc = encodeURIComponent(i.id);
+    // The cascade route does not URL-decode its path id, so ids containing '#' (batch builds: "<name> #1") 404 there;
+    // fall back to the plain delete, which does.
+    const res = await api('DELETE', `/items/${enc}/cascade`);
+    if (res.status >= 300) await api('DELETE', `/items/${enc}`);
+  }
   const ideas = await findSentinelIdeas(api, marker);
   for (const i of ideas) await api('DELETE', `/ideas/${i.id}/cascade`);
   return items.length + ideas.length;
