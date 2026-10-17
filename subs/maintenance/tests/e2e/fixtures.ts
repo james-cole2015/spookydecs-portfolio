@@ -1,5 +1,5 @@
 import { test as base } from '@playwright/test';
-import { makeApiClient, sweepSentinels, createSentinelItem, createSentinelRecord, findSentinelSchedules, sentinelName, asList, SENTINEL_MARKER } from '../shared/sentinel.mjs';
+import { makeApiClient, sweepSentinels, createSentinelItem, createSentinelRecord, findSentinelSchedules, findSentinelCosts, sentinelName, asList, SENTINEL_MARKER } from '../shared/sentinel.mjs';
 import { fetchIdToken } from '../../../_e2e/shared/auth.mjs';
 import { loadEnvLocal } from '../../../_e2e/shared/env.mjs';
 
@@ -31,4 +31,4 @@ export const test = base.extend<{}, { maint: MaintFixture }>({
 });
 
 export { expect } from '@playwright/test';
-export { createSentinelItem, createSentinelRecord, findSentinelSchedules, sentinelName, asList };
+export { createSentinelItem, createSentinelRecord, findSentinelSchedules, findSentinelCosts, sentinelName, asList, SENTINEL_MARKER };

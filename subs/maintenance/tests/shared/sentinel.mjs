@@ -55,11 +55,17 @@ export async function findSentinelSchedules(api) {
   return asList(res, 'schedules').filter((t) => String(t.title ?? '').includes(SENTINEL_MARKER));
 }
 
-/** Items first (cascade removes their records), then any leftover marked templates. */
+export async function findSentinelCosts(api) {
+  return asList(await api('GET', '/finance/costs'), 'costs').filter((c) => String(c.item_name ?? '').includes(SENTINEL_MARKER));
+}
+
+/** Costs, then items (cascade removes their records), then any leftover marked templates. */
 export async function sweepSentinels(api) {
+  const costs = await findSentinelCosts(api);
+  for (const c of costs) await api('DELETE', `/finance/costs/${c.cost_id}/delete`);
   const items = await findSentinelItems(api);
   for (const item of items) await api('DELETE', `/items/${encodeURIComponent(item.id)}/cascade`);
   const schedules = await findSentinelSchedules(api);
   for (const t of schedules) await api('DELETE', `/admin/maintenance-schedules/${t.schedule_id}`);
-  return items.length + schedules.length;
+  return costs.length + items.length + schedules.length;
 }
