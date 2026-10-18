@@ -70,3 +70,44 @@ test('maintenance lifecycle: create repair → perform repair → item updated (
     await expect.poll(async () => (await api('GET', `/admin/maintenance-records/${recordId}`)).status, { timeout: 15_000 }).toBe(404);
   });
 });
+
+/** Creates an open critical repair through the API and waits for the items consumer to flag the item. */
+async function createFlaggedRepair(api: any, itemId: string, title: string): Promise<string> {
+  const res = await api('POST', '/admin/maintenance-records', {
+    item_id: itemId, record_type: 'repair', category: 'replacement', status: 'scheduled',
+    criticality: 'critical', title, performed_by: 'e2e-suite',
+  });
+  const rec = res.data?.record ?? res.data ?? res.body;
+  expect(res.status, `POST record → ${JSON.stringify(res.body).slice(0, 300)}`).toBeLessThan(300);
+  await expectItemRepairState(api, itemId, true, false);
+  return rec.record_id;
+}
+
+// #668: the generic edit and delete paths must release the item, not just perform-repair.
+test('maintenance: completing a repair through the generic edit form clears the item flag (EDA)', async ({ page, maint }) => {
+  const { api } = maint;
+  const item = await createSentinelItem(api, 'repair-edit');
+  const recordId = await createFlaggedRepair(api, item.id, `E2E repair edit ${Date.now()}`);
+
+  await page.goto(`/${item.id}/${recordId}/edit`);
+  await selectOption(page, 'Status', /^Completed$/);
+  await page.getByLabel(/Date Performed/).fill(new Date().toISOString().slice(0, 10));
+  const put = page.waitForResponse((r) => r.request().method() === 'PUT' && r.url().includes(`/admin/maintenance-records/${recordId}`));
+  await page.getByRole('button', { name: /Update|Save/ }).last().click();
+  expect((await put).status()).toBeLessThan(300);
+
+  await expectItemRepairState(api, item.id, false, true);
+});
+
+test('maintenance: deleting an open repair clears the item flag (EDA)', async ({ page, maint }) => {
+  const { api } = maint;
+  const item = await createSentinelItem(api, 'repair-delete');
+  const recordId = await createFlaggedRepair(api, item.id, `E2E repair delete ${Date.now()}`);
+
+  await page.goto(`/${item.id}/${recordId}`);
+  await page.getByRole('button', { name: 'Delete', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Delete', exact: true }).click();
+  await expect.poll(async () => (await api('GET', `/admin/maintenance-records/${recordId}`)).status, { timeout: 15_000 }).toBe(404);
+
+  await expectItemRepairState(api, item.id, false, true);
+});
