@@ -21,9 +21,11 @@ import {
   Checkbox,
   Link,
 } from '@heroui/react';
-import { createItem, createIdea, updateIdea, getIdeaCosts } from '../api/ideasApi';
+import { createItem, createIdea, updateIdea, updateItem, getIdeaCosts } from '../api/ideasApi';
 import { CLASS_TYPES, ITEMS_BASE_URL, type Idea } from '../config/ideasConfig';
+import { PACK_MODE_OPTIONS, STORAGE_LOCATIONS, packModeToStorageFlags } from '../config/packMode';
 import { formatDate } from '../lib/format';
+import { usePhotoUpload } from '@spookydecs/ui';
 
 const todayIso = () => new Date().toISOString().slice(0, 10);
 
@@ -82,6 +84,8 @@ export function BuildCompleteWizard({
   const [classType, setClassType] = useState('');
   const [spec, setSpec] = useState<Record<string, string>>({});
   const [hasPowerInlet, setHasPowerInlet] = useState(true);
+  const [packMode, setPackMode] = useState('tote');
+  const [packLocation, setPackLocation] = useState('');
   const [generalNotes, setGeneralNotes] = useState('');
   const [costSummary, setCostSummary] = useState<string>('');
   const [error, setError] = useState('');
@@ -93,6 +97,10 @@ export function BuildCompleteWizard({
   const [remainderState, setRemainderState] = useState('');
   const [remainderIdeaId, setRemainderIdeaId] = useState('');
   const [remainderError, setRemainderError] = useState('');
+  // #616: optional item photo on the success screen (single-unit builds only).
+  const { openWithEditor, editor: photoEditor } = usePhotoUpload();
+  const [photoState, setPhotoState] = useState<'idle' | 'saving' | 'done'>('idle');
+  const [photoError, setPhotoError] = useState('');
 
   const fields = useMemo(() => specFields(cls, classType), [cls, classType]);
 
@@ -129,6 +137,8 @@ export function BuildCompleteWizard({
     if (!classType) return setError('Type is required.'), false;
     if (hasRemainder && parseRemainderUnits() === null)
       return setError('Remaining units must be a whole number of 1 or more.'), false;
+    if (packMode === 'single' && !packLocation)
+      return setError('Choose a pack location for single-packed items.'), false;
     return true;
   }
 
@@ -139,9 +149,12 @@ export function BuildCompleteWizard({
       class_type: classType,
       season: idea.season,
       status: 'Ready', // §6A canonical lifecycle (#280) — legacy 'Active' was renamed to 'Ready'
+      needs_photo: true, // #616: cleared once a photo is attached; skipping completion never blocks on it
       general_notes: generalNotes.trim(),
       date_acquired: String(new Date().getFullYear()),
       build_data: { idea_build: true, related_idea_id: idea.id },
+      ...packModeToStorageFlags(packMode),
+      ...(packMode === 'single' ? { tote_location: packLocation } : {}),
     };
     if (cls === 'Decoration') {
       itemBody.height_length = spec.height_length || '';
@@ -163,6 +176,29 @@ export function BuildCompleteWizard({
       if ('length' in spec) itemBody.length = spec.length || '';
     }
     return itemBody;
+  }
+
+  // #616: attach an optional photo to the just-created item and clear needs_photo.
+  // Runs only after the idea is marked Built, so a photo failure never undoes completion.
+  async function addPhoto() {
+    if (!createdItemId) return;
+    setPhotoError('');
+    try {
+      const photos = await openWithEditor({
+        context: 'item',
+        entityId: createdItemId,
+        season: idea.season,
+        maxPhotos: 1,
+      });
+      if (photos.length === 0) return;
+      setPhotoState('saving');
+      await updateItem(createdItemId, { needs_photo: false });
+      setPhotoState('done');
+    } catch (err) {
+      console.error(`[616] Photo attach failed for item=${createdItemId}:`, err);
+      setPhotoError((err as Error).message);
+      setPhotoState('idle');
+    }
   }
 
   async function submit() {
@@ -392,6 +428,28 @@ export function BuildCompleteWizard({
                 </Checkbox>
               )}
 
+              <Select
+                label="Pack mode"
+                description={parseUnits() !== null && parseUnits()! > 1 ? 'Applies to all units built' : undefined}
+                selectedKeys={[packMode]}
+                onChange={(e) => e.target.value && setPackMode(e.target.value)}
+                disallowEmptySelection
+              >
+                {PACK_MODE_OPTIONS.map((m) => <SelectItem key={m.value}>{m.label}</SelectItem>)}
+              </Select>
+
+              {packMode === 'single' && (
+                <Select
+                  label="Pack location"
+                  description="Applies to all units — a storage box is created for each"
+                  isRequired
+                  selectedKeys={packLocation ? [packLocation] : []}
+                  onChange={(e) => setPackLocation(e.target.value)}
+                >
+                  {STORAGE_LOCATIONS.map((l) => <SelectItem key={l}>{l}</SelectItem>)}
+                </Select>
+              )}
+
               <Textarea label="Notes" minRows={2} value={generalNotes} onValueChange={setGeneralNotes} />
 
               <Checkbox isSelected={hasRemainder} onValueChange={setHasRemainder}>
@@ -435,6 +493,11 @@ export function BuildCompleteWizard({
                 />
                 <ReviewRow label="Class / Type" value={`${cls} / ${classType}`} />
                 <ReviewRow label="Season" value={idea.season} />
+                <ReviewRow
+                  label="Pack mode"
+                  value={PACK_MODE_OPTIONS.find((m) => m.value === packMode)?.label ?? 'Tote-packed'}
+                />
+                {packMode === 'single' && <ReviewRow label="Pack location" value={packLocation || '—'} />}
                 <ReviewRow label="Completion Date" value={completeDate ? formatDate(completeDate) : '—'} />
                 {hasRemainder && (
                   <ReviewRow label="Remaining Units" value={`${parseRemainderUnits() ?? '—'} (new idea)`} />
@@ -461,6 +524,28 @@ export function BuildCompleteWizard({
                   </>
                 )}
               </p>
+              {createdItemIds.length === 1 && (
+                <div className="flex w-full flex-col items-center gap-2 rounded-medium bg-default-100 p-3">
+                  {photoState === 'done' ? (
+                    <p className="text-small text-success">Photo added. Item is no longer flagged for a photo.</p>
+                  ) : (
+                    <>
+                      <p className="text-small text-default-500">
+                        Add a photo now, or skip. A skipped item stays flagged as needing a photo.
+                      </p>
+                      <Button
+                        variant="flat"
+                        size="sm"
+                        onPress={addPhoto}
+                        isLoading={photoState === 'saving'}
+                      >
+                        Add Photo
+                      </Button>
+                    </>
+                  )}
+                  {photoError && <p className="text-tiny text-danger">Photo upload failed: {photoError}</p>}
+                </div>
+              )}
               {hasRemainder && remainderIdeaId && (
                 <p className="text-small text-default-500">
                   A new idea was created for the remaining{' '}
@@ -485,6 +570,7 @@ export function BuildCompleteWizard({
           )}
 
           {error && <p className="text-small text-danger">{error}</p>}
+          {photoEditor}
         </ModalBody>
         <ModalFooter>
           {step === 1 && (

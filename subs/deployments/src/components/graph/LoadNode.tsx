@@ -1,48 +1,34 @@
 import { Handle, Position, type Node, type NodeProps } from '@xyflow/react';
-import { Chip } from '@heroui/react';
-import { GRAPH_CLASS_TYPE_ICONS } from '../../config/deploymentsConfig';
 import type { GraphNodeData } from '../../lib/graphDerivation';
+import IconNodeShell from './IconNodeShell';
+import { nodeIcon } from './graphIcons';
 
 /**
- * A load or a single-female-end cord/plug — two visual states depending on
- * whether power_data resolved. Not always terminal: a 1-female-end cord can
- * be mid-chain (both a connection's target AND another connection's source),
- * so this needs both handles even though a true leaf load only ever uses the
- * target one.
+ * A decoration — the loudest tier: large circular badge in the primary colour, glyph by class_type, amps/watts under the name. Dashed neutral when there is no power_data.
  */
 export default function LoadNode({ data, selected }: NodeProps<Node<GraphNodeData>>) {
-  const ring = selected ? 'ring-2 ring-secondary' : '';
-  const icon = GRAPH_CLASS_TYPE_ICONS[data.classType || ''] || '📦';
   const powered = data.hasPowerData;
-  const stateClasses = powered
-    ? 'border-warning bg-warning-50'
-    : 'border-default-300 border-dashed bg-default-50';
-  const item = data.item;
-  const amps = item?.power_data?.amps;
-  const watts = item?.power_data?.watts;
-
+  const amps = data.item?.power_data?.amps;
+  const watts = data.item?.power_data?.watts;
   return (
-    <div className={`flex w-[200px] flex-col gap-1 rounded-lg border-2 p-3 text-left shadow-sm ${stateClasses} ${ring}`}>
-      <div className="flex items-center justify-between">
-        <span className="text-lg">{icon}</span>
-        {!powered && (
-          <Chip size="sm" variant="flat" color="default">
-            no power_data
-          </Chip>
-        )}
-      </div>
-      <span className="truncate text-sm font-medium text-foreground" title={data.label}>
-        {data.label}
-      </span>
-      <span className="text-xs text-default-500">{data.classType || '—'}</span>
-      {powered && (
-        <span className="text-xs font-medium text-warning-600">
-          {amps}A{watts != null ? ` / ${watts}W` : ''}
-        </span>
-      )}
-
-      <Handle id="t-t" type="target" position={Position.Top} isConnectable={false} style={{ opacity: 0 }} />
-      <Handle id="b-s" type="source" position={Position.Bottom} isConnectable={false} style={{ opacity: 0 }} />
-    </div>
+    <IconNodeShell
+      Icon={nodeIcon(data)}
+      badgeSize={76}
+      iconSize={38}
+      width={140}
+      selected={selected}
+      label={data.label}
+      sublabel={powered ? `${amps}A${watts != null ? ` · ${watts}W` : ''}` : 'no power_data'}
+      sublabelClassName={powered ? 'font-semibold text-primary' : 'text-default-400'}
+      badgeClassName={
+        powered
+          ? 'border-primary bg-primary-100 text-primary shadow-md'
+          : 'border-dashed border-default-300 bg-default-50 text-default-400'
+      }
+    >
+        <Handle id="t-t" type="target" position={Position.Top} isConnectable={!!data.canTarget} className={data.canTarget ? '!h-3 !w-3 !border-2 !border-background !bg-secondary' : ''} style={data.canTarget ? undefined : { opacity: 0 }} />
+        <Handle id="b-s" type="source" position={Position.Bottom} isConnectable={!!data.canSource} className={data.canSource ? '!h-3 !w-3 !border-2 !border-background !bg-secondary' : ''} style={data.canSource ? undefined : { opacity: 0 }} />
+        <Handle id="illum-t" type="target" position={Position.Left} isConnectable={!!data.canBeLit} className={data.canBeLit ? '!h-3 !w-3 !border-2 !border-background !bg-warning' : ''} style={data.canBeLit ? undefined : { opacity: 0 }} />
+    </IconNodeShell>
   );
 }

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@heroui/react';
 import { Plus } from 'lucide-react';
-import { Breadcrumbs, PageHeader, LoadingState, ErrorState, FilterBar, useAuth, useToast } from '@spookydecs/ui';
+import { Breadcrumbs, PageHeader, LoadingState, ErrorState, FilterBar, useAuth, useToast, type FilterOption } from '@spookydecs/ui';
 import { fetchAllItems } from '../api/itemsApi';
 import { type Item } from '../api/types';
 import {
@@ -11,6 +11,7 @@ import {
   FILTER_SELECT_KEYS,
   FILTER_OPTIONS,
   FILTER_LABELS,
+  CLASS_HIERARCHY,
   readFilters,
 } from '../config/itemsConfig';
 import { ItemsCards } from '../components/ItemsCards';
@@ -64,8 +65,19 @@ export default function ListPage() {
 
   const filtered = useMemo(() => applyFilters(allItems, filters), [allItems, filters]);
 
+  const show = FILTER_SELECT_KEYS.flatMap((k) => (k === 'class' ? ['class', 'class_type'] : [k]));
+  const options: Record<string, FilterOption[]> = useMemo(() => {
+    const types = filters.class
+      ? CLASS_HIERARCHY[filters.class]?.types ?? []
+      : Object.values(CLASS_HIERARCHY).flatMap((c) => c.types);
+    return {
+      ...FILTER_OPTIONS,
+      class_type: [{ value: '', label: 'All Types' }, ...types.map((t) => ({ value: t, label: t }))],
+    };
+  }, [filters.class]);
+
   function updateFilters(next: Record<string, string>) {
-    // Cascade: changing class invalidates the (hidden) class_type sub-filter.
+    // Cascade: changing class invalidates the class_type sub-filter (its options are class-dependent).
     if (next.class !== filters.class) next.class_type = '';
     const params = new URLSearchParams();
     FILTER_KEYS.forEach((k) => {
@@ -79,7 +91,7 @@ export default function ListPage() {
   if (error)   return <ErrorState message={error} onRetry={loadData} />;
 
   return (
-    <div className="p-4 max-w-6xl mx-auto">
+    <>
       <Breadcrumbs crumbs={[{ label: 'Items', to: '/' }, { label: title }]} />
       <div className="flex items-center justify-between mb-4">
         <PageHeader title="Inventory Management" />
@@ -91,8 +103,8 @@ export default function ListPage() {
       </div>
       <FilterBar
         filters={filters}
-        show={FILTER_SELECT_KEYS}
-        options={FILTER_OPTIONS}
+        show={show}
+        options={options}
         labels={FILTER_LABELS}
         onChange={updateFilters}
         searchPlaceholder="Search by name or ID..."
@@ -115,6 +127,6 @@ export default function ListPage() {
         canWrite={canWrite}
         canDelete={hasMinRole('admin')}
       />
-    </div>
+    </>
   );
 }

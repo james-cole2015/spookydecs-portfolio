@@ -32,6 +32,7 @@ export interface ItemFormValues {
   // storage
   storage_tote_id: string;
   storage_location: string;
+  pack_mode: string;
 }
 
 export const DEFAULT_VALUES: ItemFormValues = {
@@ -41,5 +42,5 @@ export const DEFAULT_VALUES: ItemFormValues = {
   height_length: '', stakes: '', tethers: '', adapter: '', power_inlet: false,
   color: '', bulb_type: '', length: '', male_ends: '', female_ends: '', watts: '', amps: '',
   vendor_cost: '', vendor_value: '', vendor_manufacturer: '', vendor_store: '',
-  storage_tote_id: '', storage_location: '',
+  storage_tote_id: '', storage_location: '', pack_mode: 'tote',
 };

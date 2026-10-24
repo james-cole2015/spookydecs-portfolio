@@ -51,25 +51,6 @@ export const DEPLOYMENT_CONFIG = {
 // Deployment graph (#466) — per-outlet amp rollup overload threshold.
 export const OVERLOAD_AMPS_THRESHOLD = 15;
 
-// Deployment graph (#466) node icons, keyed by class_type. Duplicated from
-// subs/items/src/config/itemsConfig.ts (TYPE_ICONS) rather than a cross-sub
-// import — each sub is an independent Vite app/CloudFront origin, so there's
-// no established cross-sub-package import pattern in this monorepo. Keep in
-// sync with itemsConfig.ts if that map changes.
-export const GRAPH_CLASS_TYPE_ICONS: Record<string, string> = {
-  Inflatable: '🎈',
-  Animatronic: '🤖',
-  'Static Prop': '🗿',
-  'String Light': '💡',
-  'Spot Light': '🔦',
-  Projection: '📽️',
-  Cord: '➰',
-  Plug: '🔌',
-  Receptacle: '⚡',
-  Timer: '⏱️',
-  Controller: '🎮',
-};
-
 // ---- Domain types ----------------------------------------------------------
 
 export type DeploymentStatus =
@@ -88,7 +69,6 @@ export interface Deployment {
   updated_at?: string;
   completed_at?: string;
   zones?: Zone[];
-  sessions?: Session[];
   connections?: Connection[];
   [key: string]: unknown;
 }
@@ -103,30 +83,22 @@ export interface Zone {
   receptacle_id?: string;
   connection_count?: number;
   item_count?: number;
-  sessions?: Session[];
   [key: string]: unknown;
 }
 
-export interface Session {
-  session_id: string;
-  deployment_id?: string;
-  zone_code?: string;
-  status?: string;
-  started_at?: string;
-  ended_at?: string;
-  connections?: Connection[];
-  [key: string]: unknown;
-}
-
+/** A CONNECTION- record as the API returns it (item-to-item with ports; no session since #638). */
 export interface Connection {
   connection_id: string;
-  session_id?: string;
   deployment_id?: string;
-  source_item_id?: string;
-  destination_item_id?: string;
-  port?: string;
+  zone_code?: string;
+  from_item_id: string;
+  from_port: string;
+  to_item_id: string;
+  to_port: string;
+  illuminates?: string[];
   photo_ids?: string[];
-  type?: string;
+  connection_type?: 'deployment' | 'removal';
+  connected_at?: string;
   [key: string]: unknown;
 }
 

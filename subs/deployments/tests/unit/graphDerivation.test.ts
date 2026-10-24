@@ -111,9 +111,8 @@ describe('deriveGraph — power_data degradation', () => {
     const { nodes, edges } = deriveGraph(input);
     const loadNode = nodes.find((n) => n.id === 'LOAD-1');
     expect(loadNode?.data.hasPowerData).toBe(false);
-    const edge = edges.find((e) => e.target === 'LOAD-1');
-    expect(edge?.data?.powered).toBe(false);
-    expect(edge?.data?.label).toBe('no power_data');
+    // #638: a declared item is a node but never gets a fake outlet edge — edges are connections only.
+    expect(edges.find((e) => e.target === 'LOAD-1')).toBeUndefined();
   });
 
   it('renders items without power_data as valid nodes with no amps/watts', () => {
@@ -127,9 +126,7 @@ describe('deriveGraph — power_data degradation', () => {
     const propNode = nodes.find((n) => n.id === 'PROP-1');
     expect(propNode?.data.hasPowerData).toBe(false);
     expect(propNode?.data.kind).toBe('load');
-    const edge = edges.find((e) => e.target === 'PROP-1');
-    expect(edge?.data?.powered).toBe(false);
-    expect(edge?.data?.label).toBe('no power_data');
+    expect(edges.find((e) => e.target === 'PROP-1')).toBeUndefined();
   });
 
   it('labels a powered edge with the destination load amps/watts, not the cord', () => {

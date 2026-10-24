@@ -3,8 +3,8 @@ import type { FilterOption } from '@spookydecs/ui';
 
 export const CLASS_HIERARCHY: Record<string, { types: string[]; icon: string }> = {
   Decoration: { types: ['Inflatable', 'Animatronic', 'Static Prop'], icon: '🎃' },
-  Light:      { types: ['String Light', 'Spot Light', 'Projection'], icon: '💡' },
-  Accessory:  { types: ['Cord', 'Plug', 'Receptacle'], icon: '🔌' },
+  Light:      { types: ['String Light', 'Spot Light'], icon: '💡' },
+  Accessory:  { types: ['Cord', 'Plug'], icon: '🔌' },
 };
 
 export const ALLOWED_CLASSES = ['Decoration', 'Light', 'Accessory'] as const;
@@ -29,17 +29,43 @@ export const ITEM_STATUS = [
   { value: 'Retired',       label: 'Retired',        color: '#ef4444' },
 ] as const;
 
-// Fields per class_type — verbatim from item-config.js
+// Pack mode — a 3-way choice over storage_data's two independent booleans
+// (packable, single_packed). Tote-packed is the create default (#619).
+export const PACK_MODES = [
+  { value: 'tote',     label: 'Tote-packed' },
+  { value: 'single',   label: 'Single-packed' },
+  { value: 'oversized', label: 'Large & Oversized' },
+] as const;
+export type PackMode = typeof PACK_MODES[number]['value'];
+
+// Locations a Single-packed item's Self storage unit can be created in (#637).
+// Mirrors VALID_LOCATIONS in the storage + items Lambdas and
+// subs/ideas/src/config/packMode.ts's STORAGE_LOCATIONS.
+export const STORAGE_LOCATIONS = ['Shed', 'Attic', 'Crawl Space', 'Other'] as const;
+
+export function packModeToStorageFlags(mode: string): { packable: boolean; single_packed: boolean } {
+  if (mode === 'oversized') return { packable: false, single_packed: false };
+  if (mode === 'single')    return { packable: true, single_packed: true };
+  return { packable: true, single_packed: false }; // 'tote' / default
+}
+
+export function storageFlagsToPackMode(packable?: boolean, singlePacked?: boolean): PackMode {
+  if (packable === false) return 'oversized';
+  if (singlePacked) return 'single';
+  return 'tote';
+}
+
+// Fields per class_type — verbatim from item-config.js.
+// `required` must be a superset of what validate_item() in the items Lambda
+// (handlers/items/validators.py) requires, or users hit a raw 400 on save (#647).
 export const CLASS_TYPE_ATTRIBUTES: Record<string, { fields: string[]; required: string[] }> = {
-  Inflatable:    { fields: ['height_length', 'stakes', 'tethers', 'adapter', 'power_inlet'], required: ['height_length'] },
-  Animatronic:   { fields: ['height_length', 'stakes', 'tethers', 'adapter', 'power_inlet'], required: ['height_length'] },
-  'Static Prop': { fields: ['height_length', 'stakes', 'tethers', 'power_inlet'],            required: [] },
-  'String Light':{ fields: ['color', 'bulb_type', 'length', 'power_inlet'],                  required: ['color', 'length'] },
-  'Spot Light':  { fields: ['color', 'bulb_type', 'power_inlet'],                            required: ['color'] },
-  Projection:    { fields: ['power_inlet'],                                                   required: [] },
-  Cord:          { fields: ['length', 'male_ends', 'female_ends', 'watts', 'amps'],          required: ['length'] },
-  Plug:          { fields: ['male_ends', 'female_ends', 'power_inlet'],                      required: [] },
-  Receptacle:    { fields: ['female_ends', 'power_inlet'],                                   required: ['female_ends'] },
+  Inflatable:    { fields: ['height_length', 'stakes', 'tethers', 'adapter', 'power_inlet'], required: ['height_length', 'stakes', 'tethers'] },
+  Animatronic:   { fields: ['height_length', 'stakes', 'tethers', 'adapter', 'power_inlet'], required: ['height_length', 'stakes', 'tethers'] },
+  'Static Prop': { fields: ['height_length', 'stakes', 'tethers', 'power_inlet'],            required: ['stakes', 'tethers'] },
+  'String Light':{ fields: ['color', 'bulb_type', 'length', 'power_inlet'],                  required: ['color', 'bulb_type', 'length'] },
+  'Spot Light':  { fields: ['color', 'bulb_type', 'power_inlet'],                            required: ['color', 'bulb_type'] },
+  Cord:          { fields: ['length', 'male_ends', 'female_ends', 'watts', 'amps'],          required: ['length', 'male_ends', 'female_ends'] },
+  Plug:          { fields: ['length', 'male_ends', 'female_ends', 'power_inlet'],            required: ['length', 'male_ends', 'female_ends'] },
   Timer:         { fields: ['male_ends', 'female_ends', 'power_inlet'],                      required: [] },
   Controller:    { fields: ['male_ends', 'female_ends', 'power_inlet'],                      required: [] },
   Tote:          { fields: [], required: [] },
@@ -71,8 +97,9 @@ export const FIELD_METADATA: Record<string, FieldMeta> = {
 
 // ── List-view filters ──────────────────────────────────────────────────────
 // State + option config for the shared @spookydecs/ui FilterBar (#429). `class_type`
-// is a hidden filter carried in the URL (set by landing-page nav, cascaded off
-// `class`), not a rendered select — so it is absent from FILTER_SELECT_KEYS.
+// is a class-dependent select — its options come from CLASS_HIERARCHY[class].types,
+// so ListPage renders it conditionally and builds its options at render time
+// rather than from a static FILTER_OPTIONS entry.
 
 export interface Filters {
   search: string;
@@ -94,6 +121,7 @@ export const FILTER_LABELS: Record<string, string> = {
   status: 'Status',
   season: 'Season',
   class: 'Class',
+  class_type: 'Type',
   maintenance: 'Maintenance',
 };
 
@@ -144,10 +172,8 @@ export const TYPE_ICONS: Record<string, string> = {
   'Static Prop': '🗿',
   'String Light':'💡',
   'Spot Light':  '🔦',
-  Projection:    '📽️',
   Cord:          '➰',
   Plug:          '🔌',
-  Receptacle:    '⚡',
   Timer:         '⏱️',
   Controller:    '🎮',
   Tote:          '📦',

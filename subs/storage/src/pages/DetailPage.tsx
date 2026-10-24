@@ -184,10 +184,14 @@ export default function DetailPage() {
   const images = (unit.images as Record<string, string> | undefined) ?? {};
   const hero = images.photo_url || images.thumb_cloudfront_url || getPlaceholderImage();
   const status = String(unit.status ?? 'Empty');
-  // Mark as Packed is disabled once a unit is already Packed or Stored.
-  const packDisabled = status === 'Packed' || status === 'Stored';
+  // Mark as Packed is disabled once already Packed; Stored can still come back to Packed
+  // (un-storing) so items can be removed again (#634).
+  const packDisabled = status === 'Packed';
   // Mark as Stored is only enabled from Packed (a Stored unit shows both greyed out).
   const storeDisabled = status !== 'Packed';
+  // Items can't be removed from a Stored/Staged tote until it's un-stored back to
+  // Packed — status for those is deployment-adjacent and isn't recomputed on removal (#634).
+  const removeItemsDisabled = status === 'Stored' || status === 'Staged';
 
   return (
     <div>
@@ -297,6 +301,7 @@ export default function DetailPage() {
                         size="sm"
                         variant="light"
                         color="danger"
+                        isDisabled={removeItemsDisabled}
                         data-testid={`remove-item-${item.id}`}
                         onPress={() => setConfirm({ type: 'remove', itemId: item.id })}
                       >
@@ -347,7 +352,7 @@ export default function DetailPage() {
       <ConfirmDialog
         isOpen={typeof confirm === 'object' && confirm?.type === 'remove'}
         title="Remove item?"
-        body={<p>Remove this item from <strong>{unit.short_name}</strong>? Its packing status resets to unpacked.</p>}
+        body={<p>Remove this item from <strong>{unit.short_name}</strong>? Its status will update to reflect what's left — Partial if other items remain, or Empty if this was the last one.</p>}
         confirmLabel="Remove"
         confirmTestId="confirm-remove-item"
         isDestructive

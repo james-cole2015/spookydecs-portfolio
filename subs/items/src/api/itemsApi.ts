@@ -8,7 +8,7 @@
  * Framework-agnostic: calls window.SpookyConfig / window.SpookyAuth directly.
  */
 import { type Item, type CascadePreview } from './types';
-import { ALLOWED_CLASSES } from '../config/itemsConfig';
+import { ALLOWED_CLASSES, packModeToStorageFlags } from '../config/itemsConfig';
 
 function auth() { return window.SpookyAuth; }
 
@@ -102,7 +102,7 @@ export async function fetchAllItems(bustCache = false): Promise<Item[]> {
 
 export async function fetchItemById(itemId: string, bustCache = false): Promise<Item> {
   const API = await getApiEndpoint();
-  const url = bustCache ? `${API}/items/${itemId}?_t=${Date.now()}` : `${API}/items/${itemId}`;
+  const url = bustCache ? `${API}/items/${encodeURIComponent(itemId)}?_t=${Date.now()}` : `${API}/items/${encodeURIComponent(itemId)}`;
   const res = await fetch(url, {
     headers: auth().buildHeaders(),
     ...(bustCache && { cache: 'no-cache' }),
@@ -143,6 +143,10 @@ export function buildCreatePayload(formData: Record<string, any>): Record<string
   if (formData.storage_tote_id) d.toteId         = formData.storage_tote_id;
   if (formData.storage_location) d.toteLocation  = formData.storage_location;
 
+  const { packable, single_packed } = packModeToStorageFlags(formData.pack_mode);
+  d.packable     = packable;
+  d.singlePacked = single_packed;
+
   return d;
 }
 
@@ -163,7 +167,7 @@ export async function createItem(payload: Record<string, any>): Promise<Item> {
 export async function updateItem(itemId: string, payload: Record<string, any>): Promise<Item> {
   if (!auth().hasMinRole('builder')) throw new Error('Insufficient permissions');
   const API = await getApiEndpoint();
-  const res = await fetch(`${API}/items/${itemId}`, {
+  const res = await fetch(`${API}/items/${encodeURIComponent(itemId)}`, {
     method: 'PUT',
     headers: auth().buildHeaders(),
     body: JSON.stringify(payload),
@@ -181,7 +185,7 @@ export async function patchItem(
 ): Promise<Item> {
   if (!auth().hasMinRole('builder')) throw new Error('Insufficient permissions');
   const API = await getApiEndpoint();
-  const res = await fetch(`${API}/items/${itemId}`, {
+  const res = await fetch(`${API}/items/${encodeURIComponent(itemId)}`, {
     method: 'PATCH',
     headers: auth().buildHeaders(),
     body: JSON.stringify(payload),
@@ -196,7 +200,7 @@ export async function patchItem(
 export async function deleteItem(itemId: string): Promise<void> {
   if (!auth().hasMinRole('admin')) throw new Error('Insufficient permissions');
   const API = await getApiEndpoint();
-  const res = await fetch(`${API}/items/${itemId}`, {
+  const res = await fetch(`${API}/items/${encodeURIComponent(itemId)}`, {
     method: 'DELETE',
     headers: auth().buildHeaders(),
   });
@@ -205,14 +209,14 @@ export async function deleteItem(itemId: string): Promise<void> {
 
 export async function cascadePreview(itemId: string): Promise<CascadePreview> {
   const API = await getApiEndpoint();
-  const res = await fetch(`${API}/items/${itemId}/cascade`, { headers: auth().buildHeaders() });
+  const res = await fetch(`${API}/items/${encodeURIComponent(itemId)}/cascade`, { headers: auth().buildHeaders() });
   return handleResponse(res);
 }
 
 export async function cascadeDelete(itemId: string): Promise<void> {
   if (!auth().hasMinRole('admin')) throw new Error('Insufficient permissions');
   const API = await getApiEndpoint();
-  const res = await fetch(`${API}/items/${itemId}/cascade`, {
+  const res = await fetch(`${API}/items/${encodeURIComponent(itemId)}/cascade`, {
     method: 'DELETE',
     headers: auth().buildHeaders(),
   });

@@ -2,7 +2,7 @@
 
 The first browser-driven test in the Portfolio repo. Complements the API-only pre-season
 gate (`../preseason/lifecycle.e2e.mjs`) by actually rendering the deployments UI and
-driving it: builder → staging → session (connect + place) → complete → teardown.
+driving it: builder → staging → declare (Add-to-zone picker) → connect (drag on the graph) → complete → teardown.
 
 ## Run it
 
@@ -30,15 +30,15 @@ regenerated each run, not the durable run log. Copy anything worth keeping into
 
 | Piece | File | Purpose |
 |---|---|---|
-| Auth | `../shared/auth.mjs` | `fetchIdToken()` — POSTs to the Cognito `/auth` route, zero deps |
+| Auth | `../../../_e2e/shared/auth.mjs` | `fetchIdToken()` — POSTs to the Cognito `/auth` route, zero deps |
 | Auth wiring | `global-setup.ts` | Seeds a `storageState` cookie once per run; every spec loads it via `test.use()` |
 | Fixture data | `../shared/sentinel.mjs` | Sentinel deployment id, ledger (snapshot/restore), delete — extracted from the API gate |
 | Fixture lifecycle | `fixtures.ts` | Worker-scoped `deployment` fixture: preflight cleanup → hand off `{ deploymentId, api, ledger }` → restore/delete on teardown, even on failure |
 | The flow | `deployment-lifecycle.spec.ts` | One sequential test, `test.step()` per phase |
 
 **Why one sequential test, not N independent ones:** each phase depends on state the
-browser itself created in the previous phase (the deployment, the staged tote, the open
-session). Splitting into independent tests would mean re-deriving that state per test —
+browser itself created in the previous phase (the deployment, the staged tote, the declared
+items). Splitting into independent tests would mean re-deriving that state per test —
 more fixture code for no real isolation benefit, since the whole flow is inherently a
 state machine.
 

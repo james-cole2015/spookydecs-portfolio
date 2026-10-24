@@ -83,7 +83,7 @@ export interface PhotoUploadOptions {
   /** Calendar year bucket. Defaults to the current year. */
   year?: number;
   /** Extra metadata merged into the upload (passthrough for edge-case contexts). */
-  metadata?: Record<string, string | number | boolean>;
+  metadata?: Record<string, unknown>;
   /**
    * Mark uploads public (gallery context) — emitted as `is_public` in the upload
    * metadata, which the CDN service forwards to `/presign` and `/confirm`. Default false.

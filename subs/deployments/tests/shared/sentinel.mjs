@@ -121,6 +121,39 @@ export function createLedger() {
 }
 
 /**
+ * BuilderPage redirects to (and refuses to create alongside) any non-archived deployment,
+ * so a real active deployment on dev (e.g. copied from prod) hides the create form (#645).
+ * Sets every such deployment's METADATA status to `archived` and returns [{id, status}] so
+ * `restoreDeploymentStatuses` can put them back. Never touches `exceptId` (the sentinel).
+ */
+export async function archiveActiveDeployments(api, stage, exceptId) {
+  const res = await api('GET', '/deployments');
+  const active = (res.data || []).filter((d) => d.status !== 'archived' && d.deployment_id !== exceptId);
+  const saved = [];
+  for (const d of active) {
+    setDeploymentStatus(d.deployment_id, 'archived', stage);
+    saved.push({ id: d.deployment_id, status: d.status });
+  }
+  return saved;
+}
+
+export function restoreDeploymentStatuses(saved, stage) {
+  const failed = [];
+  for (const { id, status } of saved) {
+    try { setDeploymentStatus(id, status, stage); } catch { failed.push(id); }
+  }
+  return failed;
+}
+
+function setDeploymentStatus(deploymentId, status, stage) {
+  ddb(['update-item', '--table-name', `sd_deployments_records_${stage}`,
+    '--key', JSON.stringify({ deployment_id: { S: deploymentId }, deployment_item_id: { S: 'METADATA' } }),
+    '--update-expression', 'SET #s = :s',
+    '--expression-attribute-names', JSON.stringify({ '#s': 'status' }),
+    '--expression-attribute-values', JSON.stringify({ ':s': { S: status } })], stage);
+}
+
+/**
  * The API has no DELETE /deployments/{id} route on any stage (README §7) — try it first
  * so this self-heals if the route is ever added, then fall back to DynamoDB directly.
  */

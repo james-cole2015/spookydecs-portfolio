@@ -42,17 +42,3 @@ export async function getPhotos(
   const data = await response.json();
   return (data.data as GalleryPhoto[]) || [];
 }
-
-/** Fetch a single photo's metadata. */
-export async function getPhoto(photoId: string): Promise<GalleryPhoto | null> {
-  const baseUrl = await getEndpoint();
-  const response = await fetch(`${baseUrl}/gallery/images/${photoId}`);
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Failed to fetch photo' }));
-    throw new Error(error.error || 'Failed to fetch photo');
-  }
-
-  const data = await response.json();
-  return (data.data as GalleryPhoto) || null;
-}

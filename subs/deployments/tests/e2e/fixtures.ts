@@ -4,30 +4,19 @@ import {
   deleteSentinel,
   createLedger,
   sentinelDeploymentId,
+  archiveActiveDeployments,
+  restoreDeploymentStatuses,
 } from '../shared/sentinel.mjs';
-import { fetchIdToken } from '../shared/auth.mjs';
-import { readFileSync, existsSync } from 'node:fs';
+import { fetchIdToken } from '../../../_e2e/shared/auth.mjs';
+import { loadEnvLocal } from '../../../_e2e/shared/env.mjs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const repoRoot = resolve(here, '../../../..');
 
-function loadEnvLocal(): Record<string, string> {
-  const path = resolve(repoRoot, '.env.local');
-  if (!existsSync(path)) return {};
-  const env: Record<string, string> = {};
-  for (const line of readFileSync(path, 'utf8').split('\n')) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#')) continue;
-    const eq = trimmed.indexOf('=');
-    if (eq === -1) continue;
-    env[trimmed.slice(0, eq).trim()] = trimmed.slice(eq + 1).trim();
-  }
-  return env;
-}
-
-export const SEASON = 'Halloween';
+// Christmas, not Halloween: dev's Halloween totes are all Staged in the real DEP-HAL-2026
+// (copied from prod), so a Halloween sentinel finds nothing to stage (#645).
+export const SEASON = 'Christmas';
 export const STAGE = 'dev';
 
 type DeploymentFixture = {
@@ -68,7 +57,14 @@ export const test = base.extend<{}, { deployment: DeploymentFixture }>({
 
       await deleteSentinel(api, deploymentId, STAGE); // preflight — no-ops (404) if none exists
 
+      // BuilderPage won't show the create form while any other deployment is active (#645).
+      const archived = await archiveActiveDeployments(api, STAGE, deploymentId);
+      if (archived.length) console.log(`[e2e setup] temporarily archived: ${archived.map((a) => a.id).join(', ')}`);
+
       await use({ deploymentId, api, ledger });
+
+      const unrestored = restoreDeploymentStatuses(archived, STAGE);
+      if (unrestored.length) console.warn(`[e2e cleanup] status restore FAILED for: ${unrestored.join(', ')}`);
 
       // Teardown always runs, even if the test above threw (AC4 — verified deliberately
       // per docs-spookydecs/sub_tests/deployments.md's e2e section).
