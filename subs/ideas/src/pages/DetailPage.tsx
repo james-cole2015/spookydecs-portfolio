@@ -42,7 +42,7 @@ import {
   type InstructionReviewResult,
   STEP_STATUSES,
 } from '../config/ideasConfig';
-import { fieldMode, missingGateLabels } from '../config/fieldAvailability';
+import { blockedStatuses, fieldMode, missingGateLabels, nextStatusOptions } from '../config/fieldAvailability';
 import { formatDate, formatDuration, heroImageUrl, normalizeMaterials } from '../lib/format';
 import { SeasonChip, StatusChip, StepStatusChip } from '../components/chips';
 import { EnrichmentPanel } from '../components/EnrichmentPanel';
@@ -51,6 +51,8 @@ import { CostLogModal } from '../components/CostLogModal';
 import { InlineEdit } from '../components/InlineEdit';
 import { InlineSelectEdit } from '../components/InlineSelectEdit';
 import { InlineTagsEdit } from '../components/InlineTagsEdit';
+import { DeferModal } from '../components/DeferModal';
+import { StatusEdit } from '../components/StatusEdit';
 import { BuildCompleteWizard } from '../components/BuildCompleteWizard';
 
 const todayIso = () => new Date().toISOString().slice(0, 10);
@@ -73,6 +75,7 @@ export default function DetailPage() {
   const [inspirationPhotos, setInspirationPhotos] = useState<PhotoGalleryPhoto[]>([]);
   const [reviewingInstructions, setReviewingInstructions] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [deferOpen, setDeferOpen] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
 
   const loadBuildPhotos = useCallback(async () => {
@@ -140,6 +143,36 @@ export default function DetailPage() {
       if (refreshed) setIdea(refreshed);
     } catch (err) {
       toast.showError('Failed: ' + (err as Error).message);
+    }
+  }
+
+  // Defer (#683): park a Workbench build in Planning with a future-season bucket.
+  // Only status + bucket are sent, so sessions, step progress, photos and build_start
+  // are untouched and the build resumes where it left off when it returns to Workbench.
+  async function handleDefer(bucket: string) {
+    if (!idea) return;
+    try {
+      await updateIdea({ id: idea.id, season: idea.season, title: idea.title, status: 'Planning', bucket });
+      toast.showSuccess(`Deferred to ${bucket}`);
+      const refreshed = await getIdea(idea.id);
+      if (refreshed) setIdea(refreshed);
+    } catch (err) {
+      toast.showError('Failed to defer: ' + (err as Error).message);
+      throw err;
+    }
+  }
+
+  // Sidebar status change: route each legal edge through the existing action so
+  // confirms, gates, the AI instruction review and the Complete wizard all apply.
+  function handleStatusSelect(target: Idea['status']) {
+    if (!idea) return;
+    if (target === 'Built') setWizardOpen(true);
+    else if (target === 'Abandoned') void handleAbandon();
+    else if (target === 'Workbench') void handleMoveToWorkbench();
+    else if (target === 'Planning') {
+      void transition('Planning', 'Move to Planning', `Move "${idea.title}" to Planning?`);
+    } else {
+      void transition('Considering', 'Back to Considering', `Move "${idea.title}" back to Considering?`);
     }
   }
 
@@ -828,7 +861,15 @@ export default function DetailPage() {
                 />
               </div>
               {idea.bucket && <SidebarField label="Build Season" value={idea.bucket} />}
-              <SidebarField label="Status" value={idea.status} />
+              <div className="flex items-center justify-between">
+                <span className="text-default-500">Status</span>
+                <StatusEdit
+                  value={idea.status}
+                  next={nextStatusOptions(idea.status)}
+                  blocked={blockedStatuses(idea, atBuildCap)}
+                  onSelect={handleStatusSelect}
+                />
+              </div>
               {idea.status !== 'Considering' && (
                 <>
                   <SidebarField label="Build Start" value={formatDate(idea.build_start) || '—'} />
@@ -916,6 +957,18 @@ export default function DetailPage() {
           <Button color="danger" variant="flat" onPress={handleAbandon}>
             Abandon Build
           </Button>
+          <Button
+            variant="flat"
+            isDisabled={planningGateMissing.length > 0}
+            onPress={() => setDeferOpen(true)}
+          >
+            Defer
+          </Button>
+          {planningGateMissing.length > 0 && (
+            <p className="self-center text-tiny text-default-400">
+              Missing to defer (Planning): {planningGateMissing.join(', ')}
+            </p>
+          )}
         </div>
       )}
 
@@ -924,6 +977,12 @@ export default function DetailPage() {
         isOpen={costModalOpen}
         onClose={() => setCostModalOpen(false)}
         onSaved={() => setCostRefresh((n) => n + 1)}
+      />
+      <DeferModal
+        title={idea.title}
+        isOpen={deferOpen}
+        onClose={() => setDeferOpen(false)}
+        onConfirm={handleDefer}
       />
       <BuildCompleteWizard idea={idea} isOpen={wizardOpen} onClose={() => navigate('/')} />
       {editor}

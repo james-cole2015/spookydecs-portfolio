@@ -2,7 +2,7 @@
 import { Card, CardBody, Chip } from '@heroui/react';
 import { useNavigate } from 'react-router-dom';
 import { SeasonChip, StatusChip } from './chips';
-import { SEASON_PLACEHOLDERS, TERMINAL_STATUSES, type Idea } from '../config/ideasConfig';
+import { PIPELINE_STAGES, SEASON_PLACEHOLDERS, TERMINAL_STATUSES, type Idea } from '../config/ideasConfig';
 import { heroImageUrl } from '../lib/format';
 
 function Placeholder({ season }: { season: string }) {
@@ -13,6 +13,32 @@ function Placeholder({ season }: { season: string }) {
       className="flex h-full w-full items-center justify-center p-8 text-default-300 [&_svg]:h-16 [&_svg]:w-16"
       dangerouslySetInnerHTML={{ __html: svg }}
     />
+  );
+}
+
+// Card progress positions, aligned to the status pipeline (Considering →
+// Planning → Workbench → Built maps onto Idea → Prep → Build → Complete).
+const STAGE_LABELS = ['Idea', 'Prep', 'Build', 'Complete'];
+
+// Progress = the furthest of the status baseline and any filled date milestone,
+// so a Workbench idea reflects "Build" even before prep/build dates are set.
+function ProgressStrip({ idea }: { idea: Idea }) {
+  const statusIdx = PIPELINE_STAGES.indexOf(idea.status);
+  const dateIdx = idea.build_complete ? 3 : idea.build_start ? 2 : idea.prep_start ? 1 : 0;
+  const activeThrough = Math.max(statusIdx, dateIdx, 0);
+  return (
+    <div className="flex items-center gap-1">
+      {STAGE_LABELS.map((label, i) => (
+        <div
+          key={label}
+          className={`flex-1 rounded-full px-2 py-1 text-center text-tiny ${
+            i <= activeThrough ? 'bg-primary/20 text-primary' : 'bg-default-100 text-default-400'
+          }`}
+        >
+          {label}
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -43,6 +69,7 @@ export function IdeaCard({ idea }: { idea: Idea }) {
           <StatusChip status={idea.status} />
         </div>
         <h3 className="line-clamp-1 text-medium font-semibold text-foreground">{idea.title}</h3>
+        {idea.status === 'Workbench' && <ProgressStrip idea={idea} />}
         {idea.description && (
           <p className="line-clamp-2 text-small text-default-500">{idea.description}</p>
         )}

@@ -88,3 +88,31 @@ export function missingGateFields(idea: Idea, target: Status): string[] {
 export function missingGateLabels(idea: Idea, target: Status): string[] {
   return missingGateFields(idea, target).map((f) => GATE_FIELD_LABELS[f] || f);
 }
+
+// Legal next statuses for the editable sidebar Status (#683). Mirrors the
+// transitions the DetailPage actions already expose: Considering <-> Planning,
+// Planning -> Workbench, Workbench -> Built | Abandoned. Workbench does not go
+// straight back to Planning here — that edge is the Defer action. Gates are
+// applied separately (disabledStatuses) so the options stay a pure edge map.
+const NEXT_STATUSES: Record<Status, Status[]> = {
+  Considering: ['Planning'],
+  Planning: ['Considering', 'Workbench'],
+  Workbench: ['Built', 'Abandoned'],
+  Built: [],
+  Abandoned: [],
+};
+
+export function nextStatusOptions(status: Status): Status[] {
+  return NEXT_STATUSES[status];
+}
+
+// Next statuses that are currently blocked, with the reason (gate fields / WIP cap).
+export function blockedStatuses(idea: Idea, atBuildCap: boolean): Partial<Record<Status, string>> {
+  const out: Partial<Record<Status, string>> = {};
+  for (const target of nextStatusOptions(idea.status)) {
+    const missing = missingGateLabels(idea, target);
+    if (missing.length) out[target] = `Missing: ${missing.join(', ')}`;
+    else if (target === 'Workbench' && atBuildCap) out[target] = 'Build limit reached';
+  }
+  return out;
+}

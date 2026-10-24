@@ -8,7 +8,6 @@ const LandingPage = lazy(() => import('./pages/LandingPage'));
 const ListPage = lazy(() => import('./pages/ListPage'));
 const FormPage = lazy(() => import('./pages/FormPage'));
 const DetailPage = lazy(() => import('./pages/DetailPage'));
-const WorkbenchPage = lazy(() => import('./pages/WorkbenchPage'));
 // Acquisitions (/acquisitions/*) rides in the ideas sub deployment (#494, W3).
 const AcquisitionsListPage = lazy(() => import('./pages/AcquisitionsListPage'));
 const AcquisitionFormPage = lazy(() => import('./pages/AcquisitionFormPage'));
@@ -16,6 +15,7 @@ const AcquisitionDetailPage = lazy(() => import('./pages/AcquisitionDetailPage')
 
 // #597: DetailPage now handles every status, including Workbench. This keeps
 // any bookmarked/deep-linked /workbench/:id URL resolving instead of 404ing.
+// (#683: /workbench itself is gone — active builds are list?status=Workbench.)
 function WorkbenchIdRedirect() {
   const { id } = useParams<{ id: string }>();
   return <Navigate to={`/${id}`} replace />;
@@ -42,7 +42,7 @@ export default function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/list" element={<ListPage />} />
             <Route path="/create" element={<FormPage />} />
-            <Route path="/workbench" element={<WorkbenchPage />} />
+            <Route path="/workbench" element={<Navigate to="/list?status=Workbench" replace />} />
             <Route path="/workbench/:id" element={<WorkbenchIdRedirect />} />
             {/* Acquisitions (#494). Static `acquisitions` segment ranks above `/:id`. */}
             <Route path="/acquisitions" element={<AcquisitionsListPage />} />
