@@ -172,3 +172,27 @@ test('admin: place photo — attach to an item, an idea and a maintenance record
     }
   });
 });
+
+test('admin: Run Validation — dashboard card opens the hub, all ten subs listed, a sub page shows its checks and re-run command; unknown sub falls back', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: /Run Validation/ }).click();
+  await expect(page).toHaveURL(/\/validation$/);
+  await expect(page.getByRole('heading', { name: 'Run Validation' })).toBeVisible();
+
+  const subs = ['Admin', 'Deployments', 'Gallery', 'Ideas', 'Images', 'Inspector', 'Items', 'Maintenance', 'Storage', 'Workbench'];
+  for (const name of subs) await expect(page.getByRole('link', { name: new RegExp(`^${name}\\b`) })).toBeVisible();
+  await expect(page.getByRole('link', { name: /Finance/ })).toHaveCount(0); // descoped
+
+  await page.getByRole('link', { name: /^Storage\b/ }).click();
+  await expect(page).toHaveURL(/\/validation\/storage$/);
+  await expect(page.getByRole('heading', { name: 'Storage' })).toBeVisible();
+  await expect(page.getByText('Browser checks')).toBeVisible();
+  await expect(page.getByText('npm run test:e2e:storage')).toBeVisible();
+  await expect(page.getByText(/Photos: upload, back-link, set primary/)).toBeVisible();
+
+  await page.getByRole('button', { name: 'All subs' }).click();
+  await expect(page).toHaveURL(/\/validation$/);
+
+  await page.goto('/validation/not-a-sub');
+  await expect(page).toHaveURL(/\/validation$/);
+});
