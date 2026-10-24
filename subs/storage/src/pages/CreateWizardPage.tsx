@@ -152,6 +152,7 @@ export default function CreateWizardPage() {
             onPress={() => selectType('Tote')}
           />
           <TypeCard
+            testId="create-type-self"
             icon={<FileBox size={28} />}
             title="Self-Contained"
             description="An item stored in its original box."

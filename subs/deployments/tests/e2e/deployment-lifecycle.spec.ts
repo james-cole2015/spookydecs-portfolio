@@ -1,5 +1,6 @@
 import { test, expect, SEASON, STAGE } from './fixtures';
 import { STORAGE_STATE_PATH } from './global-setup';
+import { createSentinelImage } from '../../../images/tests/shared/sentinel.mjs';
 
 // First Playwright spec in the fleet (#554). One sequential test, not independent
 // tests per phase — each phase depends on state the browser itself created in the
@@ -91,7 +92,7 @@ test('deployment lifecycle: builder → staging → declare + connect → comple
     const detail = await api('GET', `/items/${itemId}`);
     const name: string = (detail.data ?? detail.body)?.short_name || itemId;
     await ledger.rememberItem(api, itemId);
-    const picker = page.getByTestId('graph-add-item').getByRole('combobox');
+    const picker = page.getByRole('combobox', { name: /^Add manually to/ });
     await picker.click();
     await picker.fill(name);
     await page.getByRole('option', { name: new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')) }).first().click();
@@ -138,6 +139,7 @@ test('deployment lifecycle: builder → staging → declare + connect → comple
     const target = page.locator(`[data-nodeid="${poweredItemId}"][data-handleid="t-t"]`);
     await expect(source).toBeAttached();
     await expect(target).toBeAttached();
+    await source.scrollIntoViewIfNeeded();
     const s = (await source.boundingBox())!;
     const t = (await target.boundingBox())!;
     await page.mouse.move(s.x + s.width / 2, s.y + s.height / 2);
@@ -148,6 +150,29 @@ test('deployment lifecycle: builder → staging → declare + connect → comple
 
     const after = await api('GET', `/deployments/${deploymentId}/graph`);
     expect((after.data?.connections || []).some((c: any) => c.to_item_id === poweredItemId && c.zone_code === ZONE)).toBe(true);
+  });
+
+  await test.step('Connection photo — upload under the deployment context and link it (the Place Photo path), #623', async () => {
+    const graph = await api('GET', `/deployments/${deploymentId}/graph`);
+    const conn = (graph.data?.connections || []).find((c: any) => c.to_item_id === poweredItemId);
+    expect(conn, 'the connection made above').toBeTruthy();
+    const photo = await createSentinelImage(api, {
+      caption: 'deployment connection photo',
+      target: { context: 'deployment', photo_type: 'deployment', deployment_id: deploymentId, item_ids: [poweredItemId] },
+    });
+    try {
+      const linked = await api('PATCH', `/deployments/${deploymentId}/connections/${conn.connection_id}/photos`, { photo_ids: [photo.photo_id] });
+      expect(linked.status, JSON.stringify(linked.body).slice(0, 300)).toBeLessThan(300);
+      // Linking again is idempotent — the id is not duplicated.
+      await api('PATCH', `/deployments/${deploymentId}/connections/${conn.connection_id}/photos`, { photo_ids: [photo.photo_id] });
+      const after = await api('GET', `/deployments/${deploymentId}/graph`);
+      const stored = (after.data?.connections || []).find((c: any) => c.connection_id === conn.connection_id);
+      expect(stored?.photo_ids).toEqual([photo.photo_id]);
+      const missing = await api('PATCH', `/deployments/${deploymentId}/connections/NO-SUCH-CONNECTION/photos`, { photo_ids: [photo.photo_id] });
+      expect(missing.status).toBe(404);
+    } finally {
+      await api('DELETE', `/admin/images/${photo.photo_id}`);
+    }
   });
 
   await test.step('Declare — add a static prop to the zone', async () => {
@@ -190,5 +215,35 @@ test('deployment lifecycle: builder → staging → declare + connect → comple
     await page.getByTestId('teardown-complete-trigger').click();
     await page.getByTestId('teardown-complete-confirm').click();
     await page.waitForURL('**/');
+  });
+  // The deployment is now fully torn down, i.e. historical: the read-only pages must serve it.
+  await test.step('Historical — list and detail show the torn-down deployment', async () => {
+    await page.goto('/historical');
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByText(/Something went wrong|Unable to load|Failed to load/i)).toHaveCount(0);
+    await expect(page.getByText(deploymentId).first()).toBeVisible();
+
+    await page.goto(`/historical/${deploymentId}`);
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByText(/Something went wrong|Unable to load|Failed to load|not found/i)).toHaveCount(0);
+    await expect(page.getByText(deploymentId).first()).toBeVisible();
+  });
+
+  await test.step('Stats — list and per-deployment page render', async () => {
+    for (const path of ['/stats', `/stats/${deploymentId}`]) {
+      await page.goto(path);
+      await page.waitForLoadState('networkidle');
+      await expect(page.getByText(/Something went wrong|Unable to load|Failed to load|not found/i), path).toHaveCount(0);
+    }
+    await expect(page.getByText(deploymentId).first()).toBeVisible();
+  });
+
+  await test.step('Graphs — list and schematic render', async () => {
+    for (const path of ['/graphs', `/graphs/${deploymentId}`]) {
+      await page.goto(path);
+      await page.waitForLoadState('networkidle');
+      await expect(page.getByText(/Something went wrong|Unable to load|Failed to load|not found/i), path).toHaveCount(0);
+    }
+    await expect(page.getByText(deploymentId).first()).toBeVisible();
   });
 });

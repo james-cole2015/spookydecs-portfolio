@@ -1,27 +1,11 @@
 import { chromium } from '@playwright/test';
-import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
-import { fetchIdToken } from '../shared/auth.mjs';
+import { fetchIdToken } from '../../../_e2e/shared/auth.mjs';
+import { loadEnvLocal } from '../../../_e2e/shared/env.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const repoRoot = resolve(here, '../../../..');
 export const STORAGE_STATE_PATH = resolve(here, '.auth/dev.json');
-
-/** Tiny KEY=VALUE parser — avoids adding a dotenv dependency for one file. */
-function loadEnvLocal(): Record<string, string> {
-  const path = resolve(repoRoot, '.env.local');
-  if (!existsSync(path)) return {};
-  const env: Record<string, string> = {};
-  for (const line of readFileSync(path, 'utf8').split('\n')) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#')) continue;
-    const eq = trimmed.indexOf('=');
-    if (eq === -1) continue;
-    env[trimmed.slice(0, eq).trim()] = trimmed.slice(eq + 1).trim();
-  }
-  return env;
-}
 
 /**
  * Programmatic auth (#554 AC2) — no UI login form is driven and no manual cookie

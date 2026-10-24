@@ -30,7 +30,7 @@ regenerated each run, not the durable run log. Copy anything worth keeping into
 
 | Piece | File | Purpose |
 |---|---|---|
-| Auth | `../shared/auth.mjs` | `fetchIdToken()` — POSTs to the Cognito `/auth` route, zero deps |
+| Auth | `../../../_e2e/shared/auth.mjs` | `fetchIdToken()` — POSTs to the Cognito `/auth` route, zero deps |
 | Auth wiring | `global-setup.ts` | Seeds a `storageState` cookie once per run; every spec loads it via `test.use()` |
 | Fixture data | `../shared/sentinel.mjs` | Sentinel deployment id, ledger (snapshot/restore), delete — extracted from the API gate |
 | Fixture lifecycle | `fixtures.ts` | Worker-scoped `deployment` fixture: preflight cleanup → hand off `{ deploymentId, api, ledger }` → restore/delete on teardown, even on failure |
