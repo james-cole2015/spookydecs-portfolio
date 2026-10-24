@@ -531,8 +531,10 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
         photo_type: 'deployment',
         season: loaded.season || '',
         year: Number(loaded.year),
-        entityId: itemId,
-        metadata: { 'deployment-id': id },
+        // entityId maps to the context's id field (deployment_id), so it is the deployment;
+        // the item travels as item_ids (#682).
+        entityId: id,
+        metadata: { item_ids: [itemId] },
       });
       if (photos.length === 0) return;
       const photoIds = photos.map((p) => p.photo_id);
