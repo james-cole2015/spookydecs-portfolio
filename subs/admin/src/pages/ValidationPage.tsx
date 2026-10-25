@@ -1,12 +1,13 @@
 /**
  * Run Validation hub (#623): the ten holiday-readiness subs with what each does, the checks that guard it,
- * and the last recorded result. Read-only in stage 1. Not available in the demo environment.
+ * and the last recorded result. Includes the live readiness check (#680). Not available in the demo environment.
  */
 import { Card, CardBody, Chip } from '@heroui/react';
 import { ChevronRight } from 'lucide-react';
 import { Link, Navigate } from 'react-router-dom';
 import { PageHeader, isDemoEnv } from '@spookydecs/ui';
 import { VALIDATION_SUBS, overallStatus } from '../config/validationRegistry';
+import ReadinessCheck from '../components/ReadinessCheck';
 
 export default function ValidationPage() {
   if (isDemoEnv()) return <Navigate to="/" replace />;
@@ -23,6 +24,7 @@ export default function ValidationPage() {
           </Chip>
         }
       />
+      <ReadinessCheck />
       <Card shadow="sm">
         <CardBody className="p-0">
           <ul className="divide-y divide-divider">
