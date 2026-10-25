@@ -132,9 +132,9 @@ function useIsDesktop(): boolean {
   return wide;
 }
 
-// A spotlight lights at most two decorations. Mirrors MAX_ILLUMINATES in the server's
+// A spotlight lights at most three decorations. Mirrors MAX_ILLUMINATES in the server's
 // connection_limits.py (write routes + Lurch validator, #642) — change them together.
-const MAX_ILLUMINATES = 2;
+const MAX_ILLUMINATES = 3;
 
 // Node positions are a per-viewer layout preference, so they live in localStorage (not DDB).
 type Positions = Record<string, { x: number; y: number }>;
