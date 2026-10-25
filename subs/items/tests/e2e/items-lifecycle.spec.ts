@@ -120,3 +120,35 @@ test("items lifecycle: cascade delete from DetailPage for an id containing '#' (
     await expect.poll(async () => (await api('GET', `/items/${encodeURIComponent(id)}`)).status, { timeout: 15_000 }).toBe(404);
   });
 });
+
+// navigate(`/${id}`) left the '#' raw, so it became a URL fragment and the detail page 404'd. Regression for #687.
+test("items lifecycle: open, edit and cancel from the list for an id containing '#' (#687)", async ({ page, items }) => {
+  const { api } = items;
+  const name = `${sentinelName('Static Prop')} #1`;
+  let id = '';
+
+  await test.step("Create — name containing '#' through the wizard", async () => {
+    await createViaWizard(page, { cls: 'Decoration', type: 'Static Prop', name });
+    const rec = await findByName(api, name);
+    expect(rec, 'created item present via API').toBeTruthy();
+    id = rec.id;
+    expect(id, "item id embeds the '#'").toContain('#');
+  });
+
+  await test.step('Open — click the item from the list lands on its detail page', async () => {
+    await page.goto('/items?search=' +encodeURIComponent(name));
+    await page.getByText(name, { exact: false }).first().click();
+    await expect(page).toHaveURL(new RegExp(`/${encodeURIComponent(id).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`));
+    await expect(page.getByText(name, { exact: false }).first()).toBeVisible();
+  });
+
+  await test.step('Edit + Cancel — returns to the same detail page', async () => {
+    await page.goto(`/${encodeURIComponent(id)}/edit`);
+    await page.getByRole('button', { name: 'Cancel' }).click();
+    await expect(page).toHaveURL(new RegExp(`%23`));
+  });
+
+  await test.step('Cleanup — cascade delete', async () => {
+    expect((await api('DELETE', `/items/${encodeURIComponent(id)}/cascade`)).status).toBe(200);
+  });
+});

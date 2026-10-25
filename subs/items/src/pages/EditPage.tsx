@@ -10,7 +10,7 @@ import { fetchItemById, updateItem } from '../api/itemsApi';
 import { type Item, type StorageData } from '../api/types';
 import { BasicFields, ClassSpecificFields, VendorFields, StorageFields } from '../components/ItemFormFields';
 import { type ItemFormValues, DEFAULT_VALUES } from '../components/ItemFormSchema';
-import { packModeToStorageFlags, storageFlagsToPackMode } from '../config/itemsConfig';
+import { itemPath, packModeToStorageFlags, storageFlagsToPackMode } from '../config/itemsConfig';
 
 function itemToFormValues(item: Item): Partial<ItemFormValues> {
   const storage = item.storage_data ?? {} as StorageData;
@@ -148,7 +148,7 @@ export default function EditPage() {
       const payload = buildUpdatePayload(data, item);
       const updated = await updateItem(item.id, payload);
       toast.showSuccess('Saved.');
-      setTimeout(() => navigate(`/${(updated as any).id ?? item.id}`), 800);
+      setTimeout(() => navigate(itemPath((updated as any).id ?? item.id)), 800);
     } catch (e: any) {
       toast.showError(e?.message ?? 'Save failed.');
     } finally {
@@ -204,7 +204,7 @@ export default function EditPage() {
         </Card>
 
         <div className="flex gap-3 justify-end">
-          <Button variant="flat" type="button" onPress={() => navigate(`/${item.id}`)}>Cancel</Button>
+          <Button variant="flat" type="button" onPress={() => navigate(itemPath(item.id))}>Cancel</Button>
           <Button color="primary" type="submit" isLoading={saving}>Save Changes</Button>
         </div>
       </form>
