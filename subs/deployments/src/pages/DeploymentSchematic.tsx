@@ -132,9 +132,9 @@ function useIsDesktop(): boolean {
   return wide;
 }
 
-// A spotlight lights at most two decorations. Mirrors MAX_ILLUMINATES in the server's
+// A spotlight lights at most three decorations. Mirrors MAX_ILLUMINATES in the server's
 // connection_limits.py (write routes + Lurch validator, #642) — change them together.
-const MAX_ILLUMINATES = 2;
+const MAX_ILLUMINATES = 3;
 
 // Node positions are a per-viewer layout preference, so they live in localStorage (not DDB).
 type Positions = Record<string, { x: number; y: number }>;
@@ -531,8 +531,10 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
         photo_type: 'deployment',
         season: loaded.season || '',
         year: Number(loaded.year),
-        entityId: itemId,
-        metadata: { 'deployment-id': id },
+        // entityId maps to the context's id field (deployment_id), so it is the deployment;
+        // the item travels as item_ids (#682).
+        entityId: id,
+        metadata: { item_ids: [itemId] },
       });
       if (photos.length === 0) return;
       const photoIds = photos.map((p) => p.photo_id);

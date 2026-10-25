@@ -55,18 +55,13 @@ export default function LandingPage() {
 
   useEffect(load, []);
 
-  const { workbenchTotal: building, planningTotal: planning } = counts;
-  const pipelineTotal = building + planning;
-  let buildsDesc: string;
-  if (building > 0 && planning > 0) {
-    buildsDesc = `${building} building · ${planning} planning.`;
-  } else if (building > 0) {
-    buildsDesc = `${building} active build${building !== 1 ? 's' : ''} in progress.`;
-  } else if (planning > 0) {
-    buildsDesc = `${planning} idea${planning !== 1 ? 's' : ''} in planning.`;
-  } else {
-    buildsDesc = 'Nothing in the pipeline right now.';
-  }
+  // The card opens list?status=Workbench (#683), so it counts only active builds.
+  const { workbenchTotal: building } = counts;
+  const pipelineTotal = building;
+  const buildsDesc =
+    building > 0
+      ? `${building} active build${building !== 1 ? 's' : ''} in progress.`
+      : 'No active builds right now.';
 
   if (error) {
     return (
@@ -121,7 +116,7 @@ export default function LandingPage() {
           title="Active Builds"
           desc={buildsDesc}
           badge={pipelineTotal > 0 ? pipelineTotal : undefined}
-          onPress={() => navigate('/workbench')}
+          onPress={() => navigate('/list?status=Workbench')}
         />
         <ActionCard
           icon={<ShoppingCart size={20} />}
