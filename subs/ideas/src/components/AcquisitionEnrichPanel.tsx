@@ -4,23 +4,31 @@
  * A scoped-down fork of the Igor EnrichmentPanel: a single agent (no sub-agent
  * fan-out) against the acquisitions enrichment contract. Trigger → POST
  * /acquisitions/{id}/enrich (202, optimistic in_progress) → poll GET
- * /acquisitions/{id} every 4s (~75-tick / 5-min cap) → render the enrichment
- * status. On any terminal status the poller stops and calls onUpdate(refreshed)
- * so the detail page's acquisition state — and thus the purchase wizard's prefill
- * from target_attributes — refreshes. The interval is cleaned up on unmount and
- * when the status leaves in_progress.
+ * /acquisitions/{id} → render the enrichment status. On any terminal status
+ * the poller stops and calls onUpdate(refreshed) so the detail page's
+ * acquisition state — and thus the purchase wizard's prefill from
+ * target_attributes — refreshes.
+ *
+ * Polling (via the shared useResumablePoll hook, #396/#572) is elapsed-time
+ * based (from enrichment.started_at), not tick counted, so a remount
+ * mid-flight resumes in the correct phase. The Renfield worker
+ * (sd_acquisitions_enrich_worker) shares Igor's 900s Lambda timeout, so this
+ * uses the same fast/slow/ceiling cadence as EnrichmentPanel. Past the
+ * ceiling, automatic polling stops and a manual "Check now" button takes over.
  *
  * Contract: docs-spookydecs/acquisitions_agent_docs/enrichment_output_contract.md
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Accordion, AccordionItem, Button, Chip, Spinner } from '@heroui/react';
 import { Wand2, RefreshCw, Info } from 'lucide-react';
-import { useToast } from '@spookydecs/ui';
+import { useResumablePoll, useToast } from '@spookydecs/ui';
 import { getAcquisition, startEnrichment } from '../api/acquisitionsApi';
 import type { Acquisition, AcquisitionEnrichment } from '../config/acquisitionsConfig';
 
-const POLL_INTERVAL_MS = 4000;
-const POLL_MAX_TICKS = 75; // ~5 min
+const POLL_FAST_INTERVAL_MS = 4000;
+const POLL_FAST_PHASE_MS = 2 * 60 * 1000; // 2 min
+const POLL_SLOW_INTERVAL_MS = 20 * 1000;
+const POLL_CEILING_MS = 930 * 1000; // just past the worker's 900s Lambda timeout
 
 const TERMINAL = new Set(['complete', 'partial', 'out_of_scope', 'failed']);
 
@@ -72,53 +80,40 @@ export function AcquisitionEnrichPanel({
     acquisition.enrichment,
   );
   const [starting, setStarting] = useState(false);
-  const [timedOut, setTimedOut] = useState(false);
   // Controlled accordion: open while mounting mid-flight (in_progress), else collapsed —
   // so revisiting an already-enriched record starts closed and a fresh run opens on trigger.
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(() =>
     acquisition.enrichment?.status === 'in_progress' ? new Set(['renfield']) : new Set(),
   );
   const prevStatusRef = useRef<string | undefined>(acquisition.enrichment?.status);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const hasUrl = Boolean(acquisition.url?.trim());
 
-  const stopPolling = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  }, []);
-
-  const startPolling = useCallback(() => {
-    stopPolling();
-    let ticks = 0;
-    intervalRef.current = setInterval(async () => {
-      ticks++;
-      if (ticks >= POLL_MAX_TICKS) {
-        stopPolling();
-        setTimedOut(true);
-        return;
+  const { pastCeiling, checkingNow, startPolling, stopPolling, checkNow } = useResumablePoll({
+    fastIntervalMs: POLL_FAST_INTERVAL_MS,
+    fastPhaseMs: POLL_FAST_PHASE_MS,
+    slowIntervalMs: POLL_SLOW_INTERVAL_MS,
+    ceilingMs: POLL_CEILING_MS,
+    checkNow: async () => {
+      const refreshed = await getAcquisition(id);
+      const next = refreshed?.enrichment;
+      if (!refreshed || !next) return false;
+      setEnrichment(next);
+      if (isTerminal(next.status)) {
+        onUpdate(refreshed); // refresh page state → wizard prefill sees target_attributes
+        return true;
       }
-      try {
-        const refreshed = await getAcquisition(id);
-        const next = refreshed?.enrichment;
-        if (!refreshed || !next) return;
-        setEnrichment(next);
-        if (isTerminal(next.status)) {
-          stopPolling();
-          onUpdate(refreshed); // refresh page state → wizard prefill sees target_attributes
-        }
-      } catch {
-        /* silent — retry next tick */
-      }
-    }, POLL_INTERVAL_MS);
-  }, [id, stopPolling, onUpdate]);
+      return false;
+    },
+  });
 
-  // Resume polling if we mount mid-flight; always clean up on unmount.
+  // Resume polling if we mount mid-flight (from the record's own started_at,
+  // so we land in the correct phase); always clean up on unmount.
   useEffect(() => {
-    if (acquisition.enrichment?.status === 'in_progress') startPolling();
+    const enr = acquisition.enrichment;
+    if (enr?.status === 'in_progress' && enr.started_at) startPolling(enr.started_at);
     return stopPolling;
-  }, [acquisition.enrichment?.status, startPolling, stopPolling]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [acquisition.enrichment?.status, acquisition.enrichment?.started_at]);
 
   // Auto-collapse once Renfield finishes: on the in_progress → terminal transition, close
   // the panel (the findings live on the detail page below). Gated on the transition so a
@@ -134,12 +129,12 @@ export function AcquisitionEnrichPanel({
   async function handleEnrich() {
     if (!hasUrl) return;
     setStarting(true);
-    setTimedOut(false);
     setExpandedKeys(new Set(['renfield'])); // open so the user sees the in-progress state
     try {
       await startEnrichment(id);
-      setEnrichment({ status: 'in_progress', started_at: new Date().toISOString() });
-      startPolling();
+      const startedAt = new Date().toISOString();
+      setEnrichment({ status: 'in_progress', started_at: startedAt });
+      startPolling(startedAt);
     } catch (err) {
       toast.showError((err as Error).message || 'Renfield failed to start');
     } finally {
@@ -224,10 +219,21 @@ export function AcquisitionEnrichPanel({
               <p className="text-small text-default-500">
                 Renfield is researching the listing — this usually takes under a minute.
               </p>
-              {timedOut && (
-                <p className="text-small text-default-400">
-                  Renfield is still researching — refresh to check the latest status.
-                </p>
+              {pastCeiling && (
+                <div className="flex items-center gap-2">
+                  <p className="text-small text-default-400">
+                    Renfield is taking longer than usual — this can happen on a detailed listing.
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="light"
+                    startContent={<RefreshCw size={14} />}
+                    onPress={checkNow}
+                    isLoading={checkingNow}
+                  >
+                    Check now
+                  </Button>
+                </div>
               )}
             </>
           )}

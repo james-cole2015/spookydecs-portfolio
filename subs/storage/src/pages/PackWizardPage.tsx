@@ -51,7 +51,7 @@ function PackChooser() {
   }, []);
 
   const unpackedTotes = useMemo(
-    () => storage.filter((u) => u.class_type === 'Tote' && !u.packed),
+    () => storage.filter((u) => u.class_type === 'Tote' && !u.is_supply_tote && !u.packed),
     [storage],
   );
 
@@ -216,6 +216,11 @@ function TotePackFlow({ id }: { id: string }) {
           navigate(`/storage/${id}`);
           return;
         }
+        if (raw.is_supply_tote) {
+          toast.showInfo('Pack flow is not available for supply totes');
+          navigate(`/storage/${id}`);
+          return;
+        }
         if (raw.packed) {
           toast.showInfo('This tote is already marked as packed');
           navigate(`/storage/${id}`);
@@ -290,7 +295,7 @@ function TotePackFlow({ id }: { id: string }) {
             <span className="text-sm text-default-500">{selected.size} selected</span>
             <div className="flex gap-2">
               <Button variant="light" onPress={() => navigate('/storage/pack')}>Cancel</Button>
-              <Button color="primary" variant="shadow" startContent={<Save size={18} />} isLoading={busy} onPress={complete}>Save</Button>
+              <Button color="primary" variant="shadow" startContent={<Save size={18} />} isLoading={busy} onPress={complete} data-testid="pack-tote-save">Save</Button>
             </div>
           </div>
         </CardBody>

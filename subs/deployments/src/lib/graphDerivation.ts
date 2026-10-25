@@ -1,0 +1,318 @@
+/**
+ * Topology derivation — raw deployment records → React Flow nodes/edges.
+ *
+ * Runs identically over live-derived data (active deployments) and frozen
+ * `graph_snapshot` data (completed/archived deployments) — see #466 plan §3.
+ * One function, one set of derivation rules, no duplicated logic between the
+ * live and snapshot paths.
+ */
+import type { Node, Edge } from '@xyflow/react';
+import { OVERLOAD_AMPS_THRESHOLD } from '../config/deploymentsConfig';
+
+// Leaf load class_types that carry power_data (backend: POWER_DATA_CLASS_TYPES
+// in lambdas-spookydecs/handlers/items/transforms.py). Cord/Plug are pass-through
+// edges, not loads, and never carry power_data — see plan Approach §0.
+const LOAD_CLASS_TYPES = new Set(['Inflatable', 'Animatronic', 'String Light', 'Spot Light']);
+
+export interface GraphZone {
+  zone_code: string;
+  zone_name: string;
+  /** One or more receptacle (outlet) ids for this zone (#582 — plural, self-registering outlets). */
+  receptacle_ids: string[];
+}
+
+export interface GraphItem {
+  id: string;
+  short_name?: string;
+  class?: string;
+  class_type?: string;
+  status?: string;
+  power_data?: { watts?: number | string; amps?: number | string };
+  male_ends?: string | number;
+  female_ends?: string | number;
+  power_inlet?: boolean;
+  length?: string | number;
+  images?: { primary_photo_id?: string };
+}
+
+export interface GraphConnection {
+  connection_id?: string;
+  from_item_id: string;
+  to_item_id: string;
+  from_port?: string;
+  to_port?: string;
+  photo_ids?: string[];
+  connection_type?: 'deployment' | 'removal';
+  zone_code?: string;
+  /** Item ids this connection's to_item (typically a spotlight) illuminates. */
+  illuminates?: string[];
+  connected_at?: string;
+}
+
+export interface GraphPlacement {
+  placement_id?: string;
+  item_id: string;
+  zone_code: string;
+  placement_type?: 'deployment' | 'removal';
+  photo_ids?: string[];
+  placed_at?: string;
+}
+
+export interface GraphInput {
+  zones: Record<string, GraphZone>;
+  items: Record<string, GraphItem | undefined>;
+  connections: GraphConnection[];
+  placements: GraphPlacement[];
+  /** Item ids shown as nodes without being declared or connected yet (Connect tab's "Add accessory"). */
+  pending?: string[];
+}
+
+// Visual tiers, loudest to quietest: load (decoration) > light > branch (plug / splitter) > cord.
+export type GraphNodeKind = 'hub' | 'load' | 'light' | 'branch' | 'cord' | 'placeholder';
+
+export interface GraphNodeData extends Record<string, unknown> {
+  kind: GraphNodeKind;
+  label: string;
+  classType?: string;
+  hasPowerData: boolean;
+  item?: GraphItem;
+  zone?: GraphZone;
+  femaleEnds?: number;
+  /** Per-outlet amp rollup (hub nodes only). */
+  rollupAmps?: number;
+  /** Amps flowing through a cord / plug / splitter (sum of the loads downstream of it). */
+  throughAmps?: number;
+  /** Light nodes: how many decorations this light illuminates. */
+  litCount?: number;
+  overloaded?: boolean;
+  /** Authoring affordances (#638) — set by decorateNodes() in graphPorts.ts, never by deriveGraph. */
+  editable?: boolean;
+  /** Has a free female port to drag a power connection FROM. */
+  canSource?: boolean;
+  /** Has a male end / power inlet and no inbound connection yet — can be dragged TO. */
+  canTarget?: boolean;
+  /** A light with an inbound connection — can drag an illuminates edge FROM. */
+  canIlluminate?: boolean;
+  /** A declared item that can be lit — can be dragged TO by an illuminates edge. */
+  canBeLit?: boolean;
+}
+
+export interface GraphEdgeData extends Record<string, unknown> {
+  /** 'connection' = a CONNECTION- record (power); 'illuminates' = a light → lit-prop annotation edge. */
+  kind: 'connection' | 'illuminates';
+  powered: boolean;
+  label: string;
+  connection?: GraphConnection;
+}
+
+function toNumber(value: unknown): number {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
+/**
+ * True when a load item carries a real (non-empty) amps reading. Seed/live
+ * data can carry `power_data: { amps: '', watts: '' }` on an item that has
+ * the field but was never filled in — that's "no power_data" for rendering
+ * purposes, not a real 0A reading, so an empty string must not pass `!= null`.
+ */
+function hasResolvableAmps(item: GraphItem | undefined): boolean {
+  if (!item || !LOAD_CLASS_TYPES.has(item.class_type || '')) return false;
+  const amps = item.power_data?.amps;
+  return amps != null && amps !== '';
+}
+
+function edgeLabel(item: GraphItem | undefined, length?: string | number): { label: string; powered: boolean } {
+  if (hasResolvableAmps(item)) {
+    const { amps, watts } = item!.power_data!;
+    const lenPart = length != null && length !== '' ? `${length} · ` : '';
+    const wattsPart = watts != null && watts !== '' ? `/${watts}W` : '';
+    return { label: `${lenPart}${amps}A${wattsPart}`, powered: true };
+  }
+  const lenPart = length != null && length !== '' ? String(length) : 'no power_data';
+  return { label: lenPart, powered: false };
+}
+
+/**
+ * Resolves the node id a connection/placement's edge should terminate FROM/TO,
+ * treating a zone's synthetic receptacle_ids as valid endpoints (never an item).
+ */
+function isRootId(id: string, zones: Record<string, GraphZone>): boolean {
+  return Object.values(zones).some((z) => z.receptacle_ids.includes(id));
+}
+
+export function deriveGraph(input: GraphInput): { nodes: Node<GraphNodeData>[]; edges: Edge<GraphEdgeData>[] } {
+  const { zones, items, connections, placements } = input;
+  const nodes: Node<GraphNodeData>[] = [];
+  const edges: Edge<GraphEdgeData>[] = [];
+  const seenNodeIds = new Set<string>();
+
+  const addNode = (id: string, data: GraphNodeData) => {
+    if (seenNodeIds.has(id)) return;
+    seenNodeIds.add(id);
+    nodes.push({ id, type: data.kind, position: { x: 0, y: 0 }, data });
+  };
+
+  // Root nodes — one per zone receptacle (outlet), never resolved via items
+  // table. A zone with 2+ self-registered outlets (#582) gets one hub node
+  // per outlet, each labeled with its position when there's more than one.
+  Object.values(zones).forEach((zone) => {
+    zone.receptacle_ids.forEach((receptacleId, i) => {
+      const label =
+        zone.receptacle_ids.length > 1
+          ? `Wall Outlet — ${zone.zone_name} (Outlet ${i + 1})`
+          : `Wall Outlet — ${zone.zone_name}`;
+      addNode(receptacleId, {
+        kind: 'hub',
+        label,
+        hasPowerData: false,
+        zone,
+        rollupAmps: 0,
+        overloaded: false,
+      });
+    });
+  });
+
+  const nodeKindFor = (id: string): GraphNodeData['kind'] => {
+    if (isRootId(id, zones)) return 'hub';
+    const item = items[id];
+    if (!item) return 'placeholder';
+    const femaleEnds = toNumber(item.female_ends);
+    if (item.class === 'Accessory') {
+      // Plugs are splitters in practice; any accessory fanning out to 2+ outlets is a distribution point.
+      return item.class_type === 'Plug' || femaleEnds > 1 ? 'branch' : 'cord';
+    }
+    if (item.class === 'Light') return 'light';
+    return femaleEnds > 1 ? 'branch' : 'load';
+  };
+
+  const ensureItemNode = (id: string) => {
+    if (isRootId(id, zones)) return; // already added above
+    const item = items[id];
+    const kind = nodeKindFor(id);
+
+    if (kind === 'placeholder') {
+      addNode(id, {
+        kind: 'placeholder',
+        label: 'Item retired',
+        hasPowerData: false,
+      });
+      return;
+    }
+
+    const femaleEnds = toNumber(item!.female_ends);
+    const hasPowerData = hasResolvableAmps(item);
+
+    addNode(id, {
+      kind,
+      label: item!.short_name || item!.id,
+      classType: item!.class_type,
+      hasPowerData,
+      item,
+      femaleEnds: kind === 'branch' ? femaleEnds : undefined,
+    });
+  };
+
+  // Declared items -> nodes (#638). Every active placement is a node even with zero
+  // edges, so an unconnected declared item is on the canvas and wire-able. Edges below
+  // come purely from CONNECTION- records.
+  placements
+    .filter((p) => (p.placement_type ?? 'deployment') === 'deployment')
+    .forEach((placement) => ensureItemNode(placement.item_id));
+  (input.pending || []).forEach(ensureItemNode);
+
+  // Active connections -> power edges (source may be a zone root or another item/cord).
+  const activeConnections = connections.filter((c) => (c.connection_type ?? 'deployment') === 'deployment');
+  activeConnections.forEach((conn) => {
+    ensureItemNode(conn.from_item_id);
+    ensureItemNode(conn.to_item_id);
+    const destItem = items[conn.to_item_id];
+    const { label, powered } = edgeLabel(destItem, destItem?.length);
+    edges.push({
+      id: conn.connection_id || `${conn.from_item_id}->${conn.to_item_id}`,
+      source: conn.from_item_id,
+      target: conn.to_item_id,
+      label,
+      data: { kind: 'connection', powered, label, connection: conn },
+    });
+  });
+
+  // Illuminates -> dashed annotation edges from the light (the connection's to_item)
+  // to each prop it lights. Unlit props simply stay unconnected. These are not power
+  // paths, so they are excluded from the amp rollup below.
+  activeConnections.forEach((conn) => {
+    (conn.illuminates || []).forEach((litId) => {
+      ensureItemNode(litId);
+      edges.push({
+        id: `illum:${conn.connection_id || conn.to_item_id}:${litId}`,
+        source: conn.to_item_id,
+        target: litId,
+        sourceHandle: 'illum-s',
+        targetHandle: 'illum-t',
+        label: 'illuminates',
+        data: { kind: 'illuminates', powered: false, label: 'illuminates', connection: conn },
+      });
+    });
+  });
+
+  // Per-outlet amp rollup: sum of resolved load power_data.amps reachable from each root.
+  const adjacency = new Map<string, string[]>();
+  edges.forEach((e) => {
+    if (!e.source || !e.target || e.data?.kind !== 'connection') return;
+    const list = adjacency.get(e.source) || [];
+    list.push(e.target);
+    adjacency.set(e.source, list);
+  });
+
+  const rollupFor = (rootId: string): number => {
+    const visited = new Set<string>([rootId]);
+    const stack = [...(adjacency.get(rootId) || [])];
+    let amps = 0;
+    while (stack.length) {
+      const id = stack.pop()!;
+      if (visited.has(id)) continue;
+      visited.add(id);
+      const item = items[id];
+      if (hasResolvableAmps(item)) {
+        amps += toNumber(item!.power_data!.amps);
+      }
+      stack.push(...(adjacency.get(id) || []));
+    }
+    return amps;
+  };
+
+  // A light's illuminates list lives on the connection powering it.
+  nodes.forEach((n) => {
+    if (n.data.kind !== 'light') return;
+    n.data.litCount = activeConnections
+      .filter((c) => c.to_item_id === n.id)
+      .reduce((sum, c) => sum + (c.illuminates?.length || 0), 0);
+  });
+
+  const round2 = (n: number) => Math.round(n * 100) / 100;
+  const throughById = new Map<string, number>();
+  nodes.forEach((n) => {
+    if (n.data.kind === 'hub' && n.data.zone) {
+      const rollupAmps = rollupFor(n.id);
+      n.data.rollupAmps = rollupAmps;
+      n.data.overloaded = rollupAmps > OVERLOAD_AMPS_THRESHOLD;
+    } else if (n.data.kind === 'cord' || n.data.kind === 'branch') {
+      // Conductors aren't loads, but they carry one: show what flows through them.
+      const through = round2(rollupFor(n.id));
+      n.data.throughAmps = through;
+      throughById.set(n.id, through);
+    }
+  });
+
+  // Edges into a conductor are labelled with the load they carry (solid when live), not the
+  // conductor's own (absent) power_data.
+  edges.forEach((e) => {
+    if (e.data?.kind !== 'connection' || !throughById.has(e.target)) return;
+    const through = throughById.get(e.target)!;
+    const label = through > 0 ? `${through}A` : '';
+    e.label = label;
+    e.data = { ...e.data, label, powered: through > 0 };
+  });
+
+  return { nodes, edges };
+}

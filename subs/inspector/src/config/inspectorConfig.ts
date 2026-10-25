@@ -50,6 +50,7 @@ export interface Violation {
   resolved_at?: string;
   dismissed_at?: string;
   dismissed_by?: string;
+  dismissal_notes?: string;
   updated_at?: string;
   updated_by?: string;
   violation_details?: ViolationDetails;

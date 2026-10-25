@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Accordion, AccordionItem, Card, CardBody, Chip } from '@heroui/react';
 import { Breadcrumbs, EmptyState, ErrorState, LoadingState, PageHeader } from '@spookydecs/ui';
 import { listHistoricalDeployments, getHistoricalDeployment } from '../api/deploymentsApi';
+import { deploymentSpan, formatYmd, spanLabel } from '../lib/deploymentDates';
 
 const CLASS_ICONS: Record<string, string> = {
   Decoration: '🎃',
@@ -29,6 +30,11 @@ function formatDate(iso?: string): string | null {
   }
 }
 
+function spanText(d: { start_date?: string; setup_completed_at?: string }): string | null {
+  const span = deploymentSpan(d.start_date, d.setup_completed_at);
+  return span && formatYmd(d.start_date) ? `${formatYmd(d.start_date)} · ${spanLabel(span)}` : null;
+}
+
 function seasonLabel(season?: string, year?: number | string): string {
   return `${season || '—'} ${year || ''}`.trim();
 }
@@ -37,6 +43,8 @@ interface HistoricalListItem {
   deployment_id: string;
   season?: string;
   year?: number | string;
+  start_date?: string;
+  setup_completed_at?: string;
   statistics?: { total_items?: number };
 }
 
@@ -76,6 +84,7 @@ function HistoricalDetail({ data }: { data: any }) {
   const { metadata, zones } = data;
   const stats = metadata.statistics || {};
   const dates = [
+    { label: 'Start Date', value: formatYmd(metadata.start_date) },
     { label: 'Setup Started', value: formatDate(metadata.setup_started_at) },
     { label: 'Setup Completed', value: formatDate(metadata.setup_completed_at) },
     { label: 'Teardown Completed', value: formatDate(metadata.teardown_completed_at) },
@@ -266,6 +275,7 @@ export default function HistoricalPage() {
                     <div className="text-xs text-default-500">
                       {seasonLabel(d.season, d.year)} · {d.statistics?.total_items ?? '—'} items
                     </div>
+                    {spanText(d) && <div className="text-xs text-default-500">{spanText(d)}</div>}
                   </button>
                 );
               })}

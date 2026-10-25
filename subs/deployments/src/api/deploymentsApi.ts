@@ -71,14 +71,10 @@ export async function createDeployment(deploymentData: unknown): Promise<any> {
   return await apiCall('/deployments', 'POST', deploymentData);
 }
 
-export async function updateDeployment(deploymentId: string, updates: unknown): Promise<any> {
+/** Builder override of the inferred start date (#643). `startDate` is YYYY-MM-DD. */
+export async function updateDeploymentStartDate(deploymentId: string, startDate: string): Promise<any> {
   if (!auth().hasMinRole('builder')) throw new Error('Insufficient permissions');
-  return await apiCall(`/deployments/${deploymentId}`, 'PUT', updates);
-}
-
-export async function deleteDeployment(deploymentId: string): Promise<any> {
-  if (!auth().hasMinRole('admin')) throw new Error('Insufficient permissions');
-  return await apiCall(`/deployments/${deploymentId}`, 'DELETE');
+  return await apiCall(`/deployments/${deploymentId}`, 'PUT', { start_date: startDate });
 }
 
 export async function checkDeploymentExists(
@@ -109,6 +105,62 @@ export async function getHistoricalDeployment(deploymentId: string): Promise<any
   return await apiCall(`/deployments/historical/${deploymentId}`);
 }
 
+// Graph (#466) — live-derived topology for an active (non-archived) deployment.
+// Archived deployments use getHistoricalDeployment's `graph` key instead
+// (snapshot-or-live-derive fallback, resolved server-side).
+export async function getDeploymentGraph(deploymentId: string): Promise<any> {
+  return await apiCall(`/deployments/${deploymentId}/graph`);
+}
+
+// Assistant (#639) — read-only Lambda that returns a reviewable proposal; the browser applies it
+// through the routes above. Unavailability (network, 5xx, 403, missing route) is signalled with
+// AssistantUnavailableError so the panel can fall back to the manual picker.
+
+export class AssistantUnavailableError extends Error {}
+
+/** A 504 or client-side timeout: Lurch is healthy but this request was slow (#641). Retryable. */
+export class AssistantTimeoutError extends Error {}
+
+const ASSISTANT_TIMEOUT_MS = 30000;
+
+export async function postAssistant(
+  deploymentId: string,
+  zone: string,
+  messages: Array<{ role: 'user' | 'assistant'; content: string }>,
+): Promise<any> {
+  if (!auth().hasMinRole('builder')) throw new Error('Insufficient permissions');
+  const { API_ENDPOINT } = await getConfig();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ASSISTANT_TIMEOUT_MS);
+  let response: Response;
+  try {
+    response = await fetch(`${API_ENDPOINT}/deployments/${deploymentId}/assistant`, {
+      method: 'POST',
+      headers: auth().buildHeaders(),
+      body: JSON.stringify({ zone, messages }),
+      signal: controller.signal,
+    });
+  } catch (err: any) {
+    if (err?.name === 'AbortError') throw new AssistantTimeoutError('That took too long. Try again, or narrow the request.');
+    throw new AssistantUnavailableError('The assistant did not respond');
+  } finally {
+    clearTimeout(timer);
+  }
+  if (response.status === 401) {
+    await auth().redirectToLogin();
+    return null;
+  }
+  if (response.status === 504) {
+    throw new AssistantTimeoutError('That took too long. Try again, or narrow the request.');
+  }
+  if (response.status >= 500 || response.status === 403 || response.status === 404) {
+    throw new AssistantUnavailableError(`Assistant unavailable (${response.status})`);
+  }
+  const json = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(json.error || `API error: ${response.status}`);
+  return json;
+}
+
 // Items
 
 export interface ItemFilters {
@@ -137,34 +189,6 @@ export async function searchItems(filters: ItemFilters = {}): Promise<any> {
 
 export async function getItem(itemId: string): Promise<any> {
   return await apiCall(`/items/${itemId}`);
-}
-
-// Sessions
-
-export async function createSession(deploymentId: string, sessionData: unknown): Promise<any> {
-  if (!auth().hasMinRole('builder')) throw new Error('Insufficient permissions');
-  return await apiCall(`/deployments/${deploymentId}/sessions`, 'POST', sessionData);
-}
-
-export async function endSession(
-  deploymentId: string,
-  sessionId: string,
-  data: unknown,
-): Promise<any> {
-  if (!auth().hasMinRole('builder')) throw new Error('Insufficient permissions');
-  return await apiCall(`/deployments/${deploymentId}/sessions/${sessionId}`, 'PUT', data);
-}
-
-export async function getSession(deploymentId: string, sessionId: string): Promise<any> {
-  return await apiCall(`/deployments/${deploymentId}/sessions/${sessionId}`);
-}
-
-export async function getZoneSessions(deploymentId: string, zoneCode: string): Promise<any> {
-  return await apiCall(`/deployments/${deploymentId}/zones/${zoneCode}/sessions`);
-}
-
-export async function getActiveSessions(deploymentId: string): Promise<any> {
-  return await apiCall(`/deployments/${deploymentId}/sessions/active`);
 }
 
 // Connections
@@ -207,7 +231,7 @@ export async function updateConnectionPhotos(
   );
 }
 
-// Placements (static, non-powered props — #457)
+// Placements (declare an item in a zone — #457, generalized to any item in #638)
 
 export async function createPlacement(deploymentId: string, placementData: unknown): Promise<any> {
   if (!auth().hasMinRole('builder')) throw new Error('Insufficient permissions');
@@ -222,23 +246,6 @@ export async function updatePlacement(
   if (!auth().hasMinRole('builder')) throw new Error('Insufficient permissions');
   console.log('[deployments-api] updatePlacement:', { deploymentId, placementId, updates });
   return await apiCall(`/deployments/${deploymentId}/placements/${placementId}`, 'PATCH', updates);
-}
-
-export async function getConnection(
-  deploymentId: string,
-  sessionId: string,
-  connectionId: string,
-): Promise<any> {
-  return await apiCall(
-    `/deployments/${deploymentId}/sessions/${sessionId}/connections/${connectionId}`,
-  );
-}
-
-export async function getRemovedConnections(deploymentId: string, sessionId: string): Promise<any> {
-  console.log('[deployments-api] getRemovedConnections:', { deploymentId, sessionId });
-  return await apiCall(
-    `/deployments/${deploymentId}/sessions/${sessionId}/connections?type=removal`,
-  );
 }
 
 export async function fetchImageById(imageId: string): Promise<any> {

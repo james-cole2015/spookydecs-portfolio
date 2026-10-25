@@ -14,6 +14,23 @@ export const SEASON_LABELS: Record<string, string> = {
   christmas: 'Christmas',
 };
 
+/**
+ * Deployment zones an outlet can live in (#582). Mirrors DEPLOYMENT_CONFIG.ZONES
+ * in the deployments sub — duplicated rather than cross-sub-imported, since each
+ * sub is an independent Vite app/CloudFront origin with no shared-import pattern.
+ * Keep in sync if the zone set ever changes.
+ */
+export interface ZoneOption {
+  code: string;
+  name: string;
+}
+
+export const DEPLOYMENT_ZONES: ZoneOption[] = [
+  { code: 'FY', name: 'Front Yard' },
+  { code: 'BY', name: 'Back Yard' },
+  { code: 'SY', name: 'Side Yard' },
+];
+
 /** A System Map tile. Either an external sub link (urlKey) or an internal route. */
 export interface Subdomain {
   id: string;
@@ -122,6 +139,12 @@ export const SUBDOMAINS: Subdomain[] = [
     title: 'Iris Admin',
     description: 'Edit item search text and trigger vector index rebuilds for Iris.',
     internalRoute: '/search-text',
+  },
+  {
+    id: 'add-outlet',
+    title: 'Add Outlet',
+    description: 'Register a new power receptacle in a deployment zone (self-registering outlets).',
+    internalRoute: '/add-outlet',
   },
 ];
 

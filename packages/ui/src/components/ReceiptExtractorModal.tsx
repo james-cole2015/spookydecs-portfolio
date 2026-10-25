@@ -81,6 +81,7 @@ export function ReceiptExtractorModal({ isOpen, onClose, ...config }: ReceiptExt
       isOpen={isOpen}
       onOpenChange={(open) => { if (!open) handleDismiss(); }}
       size={inReview ? '4xl' : '2xl'}
+      placement="center"
       scrollBehavior="inside"
       isDismissable={phase !== 'uploading' && phase !== 'extracting'}
     >

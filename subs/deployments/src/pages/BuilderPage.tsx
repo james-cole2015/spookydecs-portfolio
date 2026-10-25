@@ -44,7 +44,7 @@ export default function BuilderPage() {
         if (response?.success && response.data) {
           const active = response.data.filter((d: any) => d.status !== 'archived');
           if (active.length > 0 && !cancelled) {
-            navigate(`/builder/${active[0].deployment_id}/zones`);
+            navigate(`/builder/${active[0].deployment_id}`);
             return;
           }
         }
@@ -99,7 +99,7 @@ export default function BuilderPage() {
       if (response?.success) {
         toast.showSuccess('Deployment created successfully!');
         const deploymentId = response.data.metadata.deployment_id;
-        setTimeout(() => navigate(`/builder/${deploymentId}/zones`), 600);
+        setTimeout(() => navigate(`/builder/${deploymentId}`), 600);
       } else {
         toast.showError('Failed to create deployment');
         setSubmitting(false);
@@ -187,7 +187,7 @@ export default function BuilderPage() {
                   <div>
                     <h3 className="font-medium text-foreground">{zone.zone_name}</h3>
                     <p className="text-xs text-default-500">{zone.zone_code}</p>
-                    <p className="text-xs text-default-400">{zone.receptacle_id}</p>
+                    <p className="text-xs text-default-400">Receptacles auto-assigned</p>
                   </div>
                 </div>
               ))}
@@ -196,7 +196,12 @@ export default function BuilderPage() {
         </Card>
 
         <div className="mt-6 flex justify-end">
-          <Button color="primary" isLoading={submitting} onPress={handleSubmit}>
+          <Button
+            color="primary"
+            isLoading={submitting}
+            onPress={handleSubmit}
+            data-testid="builder-create-submit"
+          >
             Create Deployment
           </Button>
         </div>

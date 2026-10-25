@@ -149,7 +149,13 @@ export const RELATED_ID_CONFIG: Record<string, RelatedIdConfig | null> = {
     endpoint: '/ideas',
     searchFields: ['title', 'idea_name', 'id'],
   },
-  supply_purchase: null, // No related field
+  supply_purchase: {
+    field: 'related_idea_id',
+    label: 'Related Idea',
+    required: false,
+    endpoint: '/ideas',
+    searchFields: ['title', 'idea_name', 'id'],
+  },
   other: {
     field: 'related_item_id',
     label: 'Related Item',

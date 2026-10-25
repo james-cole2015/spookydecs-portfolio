@@ -98,7 +98,7 @@ export function ImageEditorModal({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="3xl" backdrop="blur">
+    <Modal isOpen={isOpen} onClose={onClose} size="3xl" backdrop="blur" placement="center">
       <ModalContent>
         <ModalHeader>Edit Photo</ModalHeader>
         <ModalBody className="gap-4">

@@ -15,7 +15,7 @@ import {
   Divider,
 } from '@heroui/react';
 import { Plus, Trash2, CheckCircle2 } from 'lucide-react';
-import { Breadcrumbs, LoadingState, ErrorState, Typography, useToast } from '@spookydecs/ui';
+import { Breadcrumbs, LoadingState, ErrorState, Typography, useToast, ConfirmDialog } from '@spookydecs/ui';
 import { recordsAPI, itemsAPI } from '../api/maintenanceApi';
 import { formatRecordType, type MaintenanceRecord, type Item } from '../config/maintenanceConfig';
 
@@ -55,6 +55,7 @@ export default function InspectionFormPage() {
   const [generatedTasks, setGeneratedTasks] = useState<GeneratedTask[] | null>(null);
 
   const today = new Date().toISOString().split('T')[0];
+  const [pendingRetirement, setPendingRetirement] = useState<Record<string, unknown> | null>(null);
   const { register, handleSubmit, control, watch, formState } = useForm<InspectionFormValues>({
     defaultValues: {
       inspector: 'SpookyDecs Ent',
@@ -121,17 +122,26 @@ export default function InspectionFormPage() {
         reason: values.retirement_reason,
         disposal_method: values.disposal_method || 'trash',
       };
+      // Retiring is permanent (no un-retire path), so confirm before sending.
+      setPendingRetirement(payload);
+      return;
     } else if (!values.result) {
       toast.showError('Overall result is required');
       return;
     }
 
+    await submitInspection(payload);
+  };
+
+  const submitInspection = async (payload: Record<string, unknown>) => {
     try {
       const res = await recordsAPI.performInspection(recordId, payload);
       setGeneratedTasks(((res as any)?.generated_tasks as GeneratedTask[]) || []);
     } catch (err) {
       console.error('Failed to complete inspection:', err);
       toast.showError((err as Error).message || 'Failed to complete inspection');
+    } finally {
+      setPendingRetirement(null);
     }
   };
 
@@ -236,7 +246,7 @@ export default function InspectionFormPage() {
                 <RadioGroup label="Overall Result" isRequired value={field.value} onValueChange={field.onChange}>
                   <Radio value="pass">✓ Pass — No issues found</Radio>
                   <Radio value="maintenance_required">⚠ Maintenance Required</Radio>
-                  <Radio value="failed">✗ Failed — Retire Item</Radio>
+                  <Radio value="failed">✗ Retire Item — not worth repairing</Radio>
                 </RadioGroup>
               )}
             />
@@ -319,6 +329,7 @@ export default function InspectionFormPage() {
               <Textarea
                 label="Reason for Retirement"
                 isRequired
+                description="Retiring takes this item out of service and stops its inspections. Choose Maintenance Required instead if it can be repaired."
                 placeholder="Explain why this item is being retired…"
                 minRows={3}
                 {...register('retirement_reason')}
@@ -353,6 +364,17 @@ export default function InspectionFormPage() {
           </Button>
         </div>
       </form>
+
+      <ConfirmDialog
+        isOpen={pendingRetirement !== null}
+        title="Retire this item?"
+        body="This permanently takes the item out of service and stops its inspections. It cannot be undone. If it can be repaired, choose Maintenance Required instead."
+        confirmLabel="Retire Item"
+        isDestructive
+        confirmTestId="confirm-retire"
+        onConfirm={() => pendingRetirement && submitInspection(pendingRetirement)}
+        onClose={() => setPendingRetirement(null)}
+      />
     </div>
   );
 }

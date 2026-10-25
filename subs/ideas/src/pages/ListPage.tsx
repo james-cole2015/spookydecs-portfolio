@@ -20,8 +20,9 @@ export default function ListPage() {
   const [ideas, setIdeas] = useState<Idea[] | null>(null);
   const [error, setError] = useState('');
 
-  const season = params.get('season') || 'Halloween';
   const status = params.get('status') || 'all';
+  // Active builds span seasons (#683), so an unscoped Workbench view lists all of them.
+  const season = params.get('season') || (status === 'Workbench' ? 'all' : 'Halloween');
   const sort = params.get('sort') || 'newest';
   const search = params.get('search') || '';
 
@@ -47,8 +48,8 @@ export default function ListPage() {
     if (!ideas) return [];
     const q = search.toLowerCase();
     const out = ideas.filter((idea) => {
-      if (HIDDEN_FROM_LIST.has(idea.status)) return false;
-      if (idea.season !== season) return false;
+      if (status === 'all' && HIDDEN_FROM_LIST.has(idea.status)) return false;
+      if (season !== 'all' && idea.season !== season) return false;
       if (status !== 'all' && idea.status !== status) return false;
       if (q) {
         const inTitle = (idea.title || '').toLowerCase().includes(q);

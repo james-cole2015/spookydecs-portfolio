@@ -50,3 +50,10 @@ fail-log.txt
 
 # Local-only infra verifier (AWS-credentialed; not committed)
 scripts/verify_sub_infra.py
+
+# Playwright (#554) — storageState carries a live idToken, never committed
+**/tests/e2e/.auth/
+**/tests/e2e/reports/
+test-results/
+playwright-report/
+blob-report/

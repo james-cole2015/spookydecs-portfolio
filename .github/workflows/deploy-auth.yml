@@ -1,0 +1,42 @@
+# Caller workflow for the auth sub (#319).
+#
+# Auth is the lone vanilla-JS sub (static login redirect, no build). It also has
+# a non-standard environment topology: the bucket/distribution named "dev"
+# (auth-dev-spookydecs / E36XO8PLVAJ2F0) is the one actually CNAME'd to the real
+# auth.spookydecs.com domain -- there is no separate auth-prod-* pair today.
+# Scoped as single-env (2026-09-06): the live deploy targets that "dev"-named
+# SSM path/bucket on push to main (not development, since that bucket serves
+# real traffic), plus a demo job for the demo-only auth-demo-spookydecs pair.
+#
+#   push to main  -> deploy live  (auto; targets the auth-dev-spookydecs pair)
+#   push to demo  -> deploy demo  (auto)
+#   workflow_dispatch -> manual hatch, targets the live env
+name: Deploy Auth Sub
+
+on:
+  push:
+    branches: [main, demo]
+    paths: ['subs/auth/**']
+  workflow_dispatch: {}
+
+# Required so the called reusable workflow can request id-token: write for OIDC.
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-live:
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    uses: ./.github/workflows/_deploy-sub.yml
+    with:
+      sub: auth
+      deploy_env: dev
+    secrets: inherit
+
+  deploy-demo:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/demo'
+    uses: ./.github/workflows/_deploy-sub.yml
+    with:
+      sub: auth
+      deploy_env: demo
+    secrets: inherit

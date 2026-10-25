@@ -17,7 +17,7 @@ import {
   Spinner,
   useDisclosure,
 } from '@heroui/react';
-import { Pencil, Trash2, RefreshCw, ArrowRight } from 'lucide-react';
+import { Pencil, Trash2, ArrowRight } from 'lucide-react';
 import { Breadcrumbs, LoadingState, ErrorState, EmptyState, Typography, useToast, ConfirmDialog } from '@spookydecs/ui';
 import { scheduleAPI, itemsAPI } from '../api/maintenanceApi';
 import {
@@ -72,7 +72,6 @@ export default function ScheduleDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [generating, setGenerating] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -124,27 +123,6 @@ export default function ScheduleDetailPage() {
     }
   };
 
-  const handleGenerate = async () => {
-    const input = window.prompt('How many additional records would you like to generate?', '2');
-    if (!input) return;
-    const count = parseInt(input, 10);
-    if (isNaN(count) || count < 1 || count > 10) {
-      toast.showError('Please enter a number between 1 and 10');
-      return;
-    }
-    try {
-      setGenerating(true);
-      const result: any = await scheduleAPI.generateRecords(id, count);
-      toast.showSuccess(`Created ${result?.records?.length ?? count} new maintenance record(s)`);
-      await load();
-    } catch (err) {
-      console.error('Failed to generate records:', err);
-      toast.showError('Failed to generate records');
-    } finally {
-      setGenerating(false);
-    }
-  };
-
   if (loading) return <LoadingState />;
   if (error || !schedule) return <ErrorState message="Unable to load schedule details." />;
 
@@ -177,9 +155,6 @@ export default function ScheduleDetailPage() {
         <div className="flex flex-wrap gap-2">
           <Button variant="flat" startContent={<ArrowRight size={16} />} onPress={() => navigate(`/schedules/${id}/apply`)}>
             Apply to Items
-          </Button>
-          <Button variant="flat" startContent={<RefreshCw size={16} />} isLoading={generating} onPress={handleGenerate}>
-            Generate
           </Button>
           <Button variant="flat" startContent={<Pencil size={16} />} onPress={() => navigate(`/schedules/${id}/edit`)}>
             Edit

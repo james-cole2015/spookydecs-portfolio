@@ -118,7 +118,7 @@ export function RecordDetailModal({
   const opBadge = operationBadge(record?.operation);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="5xl" scrollBehavior="inside">
+    <Modal isOpen={isOpen} onClose={onClose} size="5xl" placement="center" scrollBehavior="inside">
       <ModalContent>
         <ModalHeader className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center gap-2">

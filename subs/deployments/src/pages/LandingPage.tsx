@@ -19,7 +19,7 @@ const CARDS: OptionCard[] = [
     Icon: Hammer,
     title: 'Deployment Builder',
     description:
-      'Create and manage seasonal deployments by selecting items and organizing them into zones. Track deployment sessions and manage item placement throughout your display.',
+      'Create and manage seasonal deployments by selecting items and organizing them into zones. Add decorations to a zone, wire them on the graph, and track the whole display.',
     active: true,
     route: '/builder',
   },
@@ -37,8 +37,8 @@ const CARDS: OptionCard[] = [
     Icon: BarChart3,
     title: 'Deployment Graphs',
     description:
-      'Visualize deployment trends and patterns with interactive charts. Analyze item usage, deployment timelines, and seasonal comparisons.',
-    active: false,
+      'Explore an interactive power-topology schematic for any deployment — loads, cords, and circuits, wired from real connection data.',
+    active: true,
     route: '/graphs',
   },
   {

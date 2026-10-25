@@ -276,7 +276,7 @@ export default function RuleDetail() {
         />
       </section>
 
-      <Modal isOpen={editOpen} onClose={() => setEditOpen(false)} backdrop="blur" size="lg">
+      <Modal isOpen={editOpen} onClose={() => setEditOpen(false)} backdrop="blur" size="lg" placement="center">
         <ModalContent>
           <ModalHeader>Edit Rule Description</ModalHeader>
           <ModalBody>

@@ -1,6 +1,6 @@
 // Shared chip helpers — season + status pills used across cards, detail, build.
 import { Chip } from '@heroui/react';
-import { STATUS_CHIP_COLOR } from '../config/ideasConfig';
+import { STATUS_CHIP_COLOR, STEP_STATUS_CHIP_COLOR, type StepStatus } from '../config/ideasConfig';
 
 const SEASON_CLASS: Record<string, string> = {
   Halloween: 'bg-orange-500/15 text-orange-400 border-orange-500/30',
@@ -24,6 +24,15 @@ export function StatusChip({ status, size = 'sm' }: { status: string; size?: 'sm
   return (
     <Chip size={size} variant="flat" color={STATUS_CHIP_COLOR[status] || 'default'}>
       {status}
+    </Chip>
+  );
+}
+
+export function StepStatusChip({ status, size = 'sm' }: { status?: StepStatus; size?: 'sm' | 'md' }) {
+  const s = status ?? 'pending';
+  return (
+    <Chip size={size} variant="flat" color={STEP_STATUS_CHIP_COLOR[s]}>
+      {s.replace('_', ' ')}
     </Chip>
   );
 }

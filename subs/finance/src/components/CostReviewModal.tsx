@@ -33,7 +33,7 @@ export function CostReviewModal({
   onClose: () => void;
 }) {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} backdrop="blur" size="2xl" scrollBehavior="inside">
+    <Modal isOpen={isOpen} onClose={onClose} backdrop="blur" size="2xl" placement="center" scrollBehavior="inside">
       <ModalContent>
         <ModalHeader>Review Cost Record</ModalHeader>
         <ModalBody className="gap-5">

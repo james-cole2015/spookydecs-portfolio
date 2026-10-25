@@ -17,7 +17,7 @@ export function ExportFormatPrompt({
   onCancel: () => void;
 }) {
   return (
-    <Modal isOpen={isOpen} onClose={onCancel} size="sm">
+    <Modal isOpen={isOpen} onClose={onCancel} size="sm" placement="center">
       <ModalContent>
         <ModalHeader>Export format</ModalHeader>
         <ModalBody>

@@ -12,6 +12,14 @@ import { isOrphaned, readFilters, writeFilters, type Photo, type ImageUiFilters 
 import { ImagesFilters } from '../components/ImagesFilters';
 import { ImageCard } from '../components/ImageCard';
 
+function sortByRecent(images: Photo[]): Photo[] {
+  return [...images].sort(
+    (a, b) =>
+      new Date(b.upload_date || b.created_at || 0).getTime() -
+      new Date(a.upload_date || a.created_at || 0).getTime(),
+  );
+}
+
 function applyClientFilters(images: Photo[], filters: ImageUiFilters): Photo[] {
   let out = images;
   if (filters.isPublic) {
@@ -72,7 +80,7 @@ export default function ImagesList() {
     setSearchParams(writeFilters(next), { replace: true });
   }
 
-  const visible = applyClientFilters(images, filters);
+  const visible = sortByRecent(applyClientFilters(images, filters));
 
   return (
     <div>

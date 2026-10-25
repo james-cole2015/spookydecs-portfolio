@@ -245,6 +245,102 @@ export async function triggerReindex(mode: 'all' | 'text' | 'images' = 'all'): P
   return result.data;
 }
 
+/** Payload for registering a new zone receptacle (outlet) via the Admin flow. */
+export interface NewOutlet {
+  zoneCode: string;
+  shortName: string;
+  femaleEnds: number;
+}
+
+/**
+ * Create a zone receptacle (outlet) as a Receptacle item (#582). Receptacles
+ * are season-agnostic physical objects, so season is fixed to 'Shared'. The
+ * backend tags the item with zoneCode so deployment creation can self-register
+ * it. Returns the created item's id + short_name on success.
+ */
+export async function createOutlet(
+  outlet: NewOutlet,
+): Promise<{ id: string; short_name: string } | null> {
+  const config = await window.SpookyConfig.get();
+
+  const response = await fetch(`${config.API_ENDPOINT}/items`, {
+    method: 'POST',
+    headers: buildHeaders(),
+    body: JSON.stringify({
+      type: 'Receptacle',
+      category: 'Receptacle',
+      season: 'Shared',
+      shortName: outlet.shortName,
+      zoneCode: outlet.zoneCode,
+      femaleEnds: outlet.femaleEnds,
+    }),
+  });
+
+  if (response.status === 401) {
+    await redirectToLogin();
+    return null;
+  }
+
+  if (!response.ok) {
+    throw new Error(`Failed to create outlet: ${response.status}`);
+  }
+
+  const result = await response.json();
+
+  if (!result.success) {
+    throw new Error(result.error || 'Failed to create outlet');
+  }
+
+  return result.data?.confirmation || null;
+}
+
+/** A zone receptacle (outlet) item, as returned by GET /items. */
+export interface Outlet {
+  id: string;
+  short_name: string;
+  zone_code: string;
+  female_ends?: number;
+}
+
+async function fetchItemsBy(params: Record<string, string>): Promise<Outlet[]> {
+  const config = await window.SpookyConfig.get();
+  const query = new URLSearchParams(params);
+
+  const response = await fetch(`${config.API_ENDPOINT}/items?${query}`, {
+    headers: buildHeaders(),
+  });
+
+  if (response.status === 401) {
+    await redirectToLogin();
+    return [];
+  }
+
+  if (!response.ok) {
+    throw new Error(`Failed to list outlets: ${response.status}`);
+  }
+
+  const result = await response.json();
+
+  if (!result.success) {
+    throw new Error(result.error || 'Failed to list outlets');
+  }
+
+  return result.data?.items || [];
+}
+
+/**
+ * List existing zone receptacles (outlets), for the read-only "Existing
+ * Outlets" section on AddOutletPage (#613) — lets the user spot a duplicate
+ * before registering a new one. No dedicated route; sourced from GET /items.
+ *
+ * Receptacle is its own class (class=Receptacle, class_type=Receptacle, #615), so
+ * one filter catches every receptacle. (Before #615 two legacy shapes existed and
+ * had to be queried separately and merged.)
+ */
+export async function listOutlets(): Promise<Outlet[] | null> {
+  return fetchItemsBy({ class: 'Receptacle' });
+}
+
 /**
  * Submit the full conversation to Iris (multi-turn POST /iris/chat). Sends the
  * `messages` array, handles the 401 redirect + error states, and returns

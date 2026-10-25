@@ -37,7 +37,7 @@ function PropCard({
   onStage?: () => void;
 }) {
   return (
-    <Card className={isStaged ? 'opacity-90' : ''}>
+    <Card className={isStaged ? 'opacity-90' : ''} data-testid={`item-card-${item.id}`}>
       <CardBody className="gap-2">
         <div className="flex items-start justify-between gap-2">
           <div>
@@ -88,7 +88,7 @@ function ToteCard({
   const [expanded, setExpanded] = useState(false);
   const itemCount = tote.contents_count || 0;
   return (
-    <Card className={isStaged ? 'opacity-90' : ''}>
+    <Card className={isStaged ? 'opacity-90' : ''} data-testid={`tote-card-${tote.id}`}>
       <CardBody className="gap-2">
         <div className="flex items-start justify-between gap-2">
           <div>
@@ -202,16 +202,10 @@ export default function StagingPage() {
     setStaging(true);
     try {
       await stageTote(deploymentId, { tote_id: tote.id, item_ids: tote.contents || [] });
-      // Move the tote from available → staged, marking its items Staged.
-      const stagedVersion: Tote = {
-        ...tote,
-        contents_details: (tote.contents_details || []).map((item) => ({
-          ...item,
-          status: (tote.contents || []).includes(item.id) ? 'Staged' : item.status,
-        })),
-      };
+      // Move the tote from available → staged. Items stay Packed (#470) — the tote's own
+      // staged-ness (array membership here) is what "staged" means for its contents.
       setTotes((prev) => prev.filter((t) => t.id !== tote.id));
-      setStagedTotes((prev) => [...prev, stagedVersion]);
+      setStagedTotes((prev) => [...prev, tote]);
       setConfirmTote(null);
     } catch (e: any) {
       console.error('[Staging] Stage failed:', e);
@@ -227,9 +221,11 @@ export default function StagingPage() {
     setStaging(true);
     try {
       await stageItems(deploymentId, [item.id]);
-      // Move the item from available → staged.
+      // Move the item from available → staged. No status stamp (#470) — staged-ness for
+      // L&O items is the STAGING record's existence, not item.status; array membership
+      // here already reflects that.
       setNonPackable((prev) => prev.filter((i) => i.id !== item.id));
-      setStagedNonPackable((prev) => [...prev, { ...item, status: 'Staged' }]);
+      setStagedNonPackable((prev) => [...prev, item]);
       setConfirmItem(null);
     } catch (e: any) {
       console.error('[Staging] Stage item failed:', e);
@@ -240,7 +236,7 @@ export default function StagingPage() {
   }
 
   if (loading) return <LoadingState label="Loading staging area…" />;
-  if (error) return <ErrorState message={error} onRetry={() => navigate(`/builder/${deploymentId}/zones`)} />;
+  if (error) return <ErrorState message={error} onRetry={() => navigate(`/builder/${deploymentId}`)} />;
 
   const seasonLabel = `${deployment?.season || ''} ${deployment?.year || ''}`.trim();
 
@@ -249,7 +245,7 @@ export default function StagingPage() {
       <Breadcrumbs
         crumbs={[
           { label: 'Deployments', to: '/' },
-          { label: seasonLabel || deploymentId, to: `/builder/${deploymentId}/zones` },
+          { label: seasonLabel || deploymentId, to: `/builder/${deploymentId}` },
           { label: 'Staging' },
         ]}
       />
@@ -327,6 +323,7 @@ export default function StagingPage() {
           (confirmTote?.contents?.length || 0) !== 1 ? 's' : ''
         } as Staged and open the tote.`}
         confirmLabel="Stage Tote"
+        confirmTestId="staging-confirm-tote"
         isLoading={staging}
         onConfirm={handleStage}
         onClose={() => setConfirmTote(null)}
@@ -337,6 +334,7 @@ export default function StagingPage() {
         title={`Stage "${confirmItem?.short_name || confirmItem?.id || ''}"?`}
         body="This will mark this Large & Oversized item as Staged, making it available to place or connect in the deployment."
         confirmLabel="Stage Item"
+        confirmTestId="staging-confirm-item"
         isLoading={staging}
         onConfirm={handleStageItem}
         onClose={() => setConfirmItem(null)}

@@ -73,7 +73,7 @@ export function FileDropModal({ isOpen, maxFiles, onConfirm, onCancel }: FileDro
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={cancel} size="lg" backdrop="blur">
+    <Modal isOpen={isOpen} onClose={cancel} size="lg" backdrop="blur" placement="center">
       <ModalContent>
         <ModalHeader>Add Photos</ModalHeader>
         <ModalBody className="gap-3">

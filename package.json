@@ -51,13 +51,27 @@
     "build:deployments": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-deployments",
     "build:maintenance": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-maintenance",
     "build:landing": "npm run build -w @spookydecs/ui && npm run build -w spookydecs-landing",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:e2e:deployments": "playwright test --config subs/deployments/tests/e2e/playwright.config.ts",
+    "test:e2e:storage": "playwright test --config subs/storage/tests/e2e/playwright.config.ts",
+    "test:unit": "vitest run",
+    "test:e2e:items": "playwright test --config subs/items/tests/e2e/playwright.config.ts",
+    "test:e2e:ideas": "playwright test --config subs/ideas/tests/e2e/playwright.config.ts",
+    "test:e2e:inspector": "playwright test --config subs/inspector/tests/e2e/playwright.config.ts",
+    "test:e2e:gallery": "playwright test --config subs/gallery/tests/e2e/playwright.config.ts",
+    "test:e2e:images": "playwright test --config subs/images/tests/e2e/playwright.config.ts",
+    "test:e2e:admin": "playwright test --config subs/admin/tests/e2e/playwright.config.ts",
+    "test:e2e:workbench": "playwright test --config subs/workbench/tests/e2e/playwright.config.ts",
+    "test:e2e:maintenance": "playwright test --config subs/maintenance/tests/e2e/playwright.config.ts",
+    "test:e2e:finance": "playwright test --config subs/finance/tests/e2e/playwright.config.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "vite": "^6.4.1"
+    "@playwright/test": "^1.48.0",
+    "vite": "^6.4.1",
+    "vitest": "^4.1.11"
   },
   "comments": {
     "overrides": "react-konva 19.x (pulled transitively by react-filerobot-image-editor) requires React 19; pin it to the React-18-compatible line to match the workspace's React 18 (#523)."

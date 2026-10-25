@@ -2,20 +2,31 @@
  * EnrichmentPanel — the "Ask Igor" UI (#334 task 9).
  *
  * Trigger → POST /ideas/{id}/enrich (202, optimistic in_progress) → poll
- * GET /ideas/{id} every 4s (≈75-tick / 5-min cap) → render the agent_enrichment
- * contract (photos, purchase_links, materials, instructions, estimated_cost,
- * tags) with loading / partial / failed states. The polling interval is cleaned
- * up on unmount and when the status leaves in_progress.
+ * GET /ideas/{id} to render the agent_enrichment contract (photos,
+ * purchase_links, materials, instructions, estimated_cost, tags) with
+ * loading / partial / failed states.
+ *
+ * Polling (via the shared useResumablePoll hook, #396/#572) is elapsed-time
+ * based (from agent_enrichment.started_at), not tick counted, so a remount
+ * mid-flight resumes in the correct phase: a fast 4s cadence for the first
+ * POLL_FAST_PHASE_MS (covers the common case), then a sparser
+ * POLL_SLOW_INTERVAL_MS cadence out to POLL_CEILING_MS — sized just past the
+ * backend worker's 900s Lambda timeout, since nothing can still be running
+ * past that. Past the ceiling, automatic polling stops and a manual "Check
+ * now" button takes over — the backend's single atomic agent_enrichment
+ * write means one fresh GET either has the answer or not.
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Accordion, AccordionItem, Button, Chip, Spinner } from '@heroui/react';
 import { Wand2, RefreshCw } from 'lucide-react';
-import { PhotoLightbox, useToast, type LightboxPhoto } from '@spookydecs/ui';
+import { PhotoLightbox, useResumablePoll, useToast, type LightboxPhoto } from '@spookydecs/ui';
 import { getIdea, startEnrichment } from '../api/ideasApi';
 import type { AgentEnrichment, EnrichmentLink, EnrichmentStep } from '../config/ideasConfig';
 
-const POLL_INTERVAL_MS = 4000;
-const POLL_MAX_TICKS = 75; // ~5 min
+const POLL_FAST_INTERVAL_MS = 4000;
+const POLL_FAST_PHASE_MS = 2 * 60 * 1000; // 2 min
+const POLL_SLOW_INTERVAL_MS = 20 * 1000;
+const POLL_CEILING_MS = 930 * 1000; // just past the worker's 900s Lambda timeout
 
 const SUB_AGENT_ROWS = [
   { key: 'photos', label: 'Photos' },
@@ -217,62 +228,49 @@ function hasAnyResults(ae: AgentEnrichment): boolean {
 export function EnrichmentPanel({
   ideaId,
   initial,
+  readOnly = false,
 }: {
   ideaId: string;
   initial?: AgentEnrichment;
+  /** Suppress the "Ask Igor" / "Re-fetch" trigger buttons (matrix: agent_enrichment readonly). */
+  readOnly?: boolean;
 }) {
   const toast = useToast();
   const [ae, setAe] = useState<AgentEnrichment | undefined>(initial);
   const [starting, setStarting] = useState(false);
-  const [timedOut, setTimedOut] = useState(false);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const stopPolling = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  }, []);
+  const { pastCeiling, checkingNow, startPolling, stopPolling, checkNow } = useResumablePoll({
+    fastIntervalMs: POLL_FAST_INTERVAL_MS,
+    fastPhaseMs: POLL_FAST_PHASE_MS,
+    slowIntervalMs: POLL_SLOW_INTERVAL_MS,
+    ceilingMs: POLL_CEILING_MS,
+    checkNow: async () => {
+      const refreshed = await getIdea(ideaId);
+      const next = refreshed?.agent_enrichment;
+      if (next) setAe(next);
+      return Boolean(next && next.status !== 'in_progress');
+    },
+  });
 
-  const startPolling = useCallback(() => {
-    stopPolling();
-    let ticks = 0;
-    intervalRef.current = setInterval(async () => {
-      ticks++;
-      if (ticks >= POLL_MAX_TICKS) {
-        stopPolling();
-        setTimedOut(true);
-        return;
-      }
-      try {
-        const refreshed = await getIdea(ideaId);
-        const next = refreshed?.agent_enrichment;
-        if (!next) return;
-        setAe(next);
-        if (next.status !== 'in_progress') stopPolling();
-      } catch {
-        /* silent — retry next tick */
-      }
-    }, POLL_INTERVAL_MS);
-  }, [ideaId, stopPolling]);
-
-  // Resume polling if we mount mid-flight; always clean up on unmount.
+  // Resume polling if we mount mid-flight (from the record's own started_at,
+  // so we land in the correct phase); always clean up on unmount.
   useEffect(() => {
-    if (initial?.status === 'in_progress') startPolling();
+    if (initial?.status === 'in_progress' && initial.started_at) startPolling(initial.started_at);
     return stopPolling;
-  }, [initial?.status, startPolling, stopPolling]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initial?.status, initial?.started_at]);
 
   async function handleEnrich() {
     setStarting(true);
-    setTimedOut(false);
     try {
       await startEnrichment(ideaId);
+      const startedAt = new Date().toISOString();
       setAe({
         status: 'in_progress',
-        started_at: new Date().toISOString(),
+        started_at: startedAt,
         sub_agents: { photos: 'pending', purchase_links: 'pending', research: 'pending' },
       });
-      startPolling();
+      startPolling(startedAt);
     } catch (err) {
       toast.showError((err as Error).message || 'Igor failed to start');
     } finally {
@@ -321,25 +319,38 @@ export function EnrichmentPanel({
                 Igor researches the web to gather reference photos, purchase links, materials, build
                 instructions, and a cost estimate for this idea.
               </p>
-              <Button
-                color="secondary"
-                startContent={<Wand2 size={16} />}
-                onPress={handleEnrich}
-                isLoading={starting}
-                className="w-fit"
-              >
-                Ask Igor
-              </Button>
+              {!readOnly && (
+                <Button
+                  color="secondary"
+                  startContent={<Wand2 size={16} />}
+                  onPress={handleEnrich}
+                  isLoading={starting}
+                  className="w-fit"
+                >
+                  Ask Igor
+                </Button>
+              )}
             </>
           )}
 
           {status === 'in_progress' && (
             <>
               <SubAgentPanel subAgents={ae?.sub_agents} />
-              {timedOut && (
-                <p className="text-small text-default-400">
-                  Igor is still researching — refresh to check the latest status.
-                </p>
+              {pastCeiling && (
+                <div className="flex items-center gap-2">
+                  <p className="text-small text-default-400">
+                    Igor is taking longer than usual — this can happen on a big fan-out.
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="light"
+                    startContent={<RefreshCw size={14} />}
+                    onPress={checkNow}
+                    isLoading={checkingNow}
+                  >
+                    Check now
+                  </Button>
+                </div>
               )}
             </>
           )}
@@ -348,15 +359,17 @@ export function EnrichmentPanel({
             <>
               <div className="flex items-center justify-between">
                 <SubAgentPanel subAgents={ae.sub_agents} />
-                <Button
-                  size="sm"
-                  variant="bordered"
-                  startContent={<RefreshCw size={14} />}
-                  onPress={handleEnrich}
-                  isLoading={starting}
-                >
-                  Re-fetch
-                </Button>
+                {!readOnly && (
+                  <Button
+                    size="sm"
+                    variant="bordered"
+                    startContent={<RefreshCw size={14} />}
+                    onPress={handleEnrich}
+                    isLoading={starting}
+                  >
+                    Re-fetch
+                  </Button>
+                )}
               </div>
               {ae.photos?.length ? <PhotosBlock photos={ae.photos} /> : null}
               {ae.purchase_links?.length ? <LinksBlock links={ae.purchase_links} /> : null}
@@ -382,15 +395,17 @@ export function EnrichmentPanel({
               <p className="text-small text-danger">
                 Igor hit a snag — the response came back malformed. Try asking again.
               </p>
-              <Button
-                color="secondary"
-                startContent={<RefreshCw size={16} />}
-                onPress={handleEnrich}
-                isLoading={starting}
-                className="w-fit"
-              >
-                Re-fetch
-              </Button>
+              {!readOnly && (
+                <Button
+                  color="secondary"
+                  startContent={<RefreshCw size={16} />}
+                  onPress={handleEnrich}
+                  isLoading={starting}
+                  className="w-fit"
+                >
+                  Re-fetch
+                </Button>
+              )}
             </>
           )}
         </div>

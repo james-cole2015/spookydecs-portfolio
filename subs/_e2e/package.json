@@ -1,0 +1,6 @@
+{
+  "name": "spookydecs-e2e-shared",
+  "private": true,
+  "type": "module",
+  "description": "Shared Playwright e2e helpers (#623). Not a workspace — imported by relative path from each sub's tests/e2e."
+}

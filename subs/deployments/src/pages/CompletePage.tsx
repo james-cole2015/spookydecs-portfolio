@@ -4,15 +4,15 @@ import { Button, Card, CardBody, Chip, Link as HeroLink } from '@heroui/react';
 import { Breadcrumbs, ConfirmDialog, ErrorState, LoadingState, PageHeader, useToast } from '@spookydecs/ui';
 import {
   getDeployment,
-  getItem,
-  getZoneSessions,
+  getDeploymentGraph,
   completeDeployment,
   getItemsAdminUrl,
   fetchImageById,
 } from '../api/deploymentsApi';
 import { StatusChip } from '../components/StatusChip';
+import type { GraphInput } from '../lib/graphDerivation';
+import { zoneSummary } from '../lib/graphPorts';
 
-const ZONE_CODES = ['FY', 'BY', 'SY'];
 const ZONE_LABELS: Record<string, string> = { FY: 'Front Yard', BY: 'Back Yard', SY: 'Side Yard' };
 
 interface EnrichedItem {
@@ -26,27 +26,38 @@ interface EnrichedItem {
 interface EnrichedZone {
   zone_code: string;
   zone_name?: string;
-  statistics?: any;
   items: EnrichedItem[];
-  sessions: any[];
+  connectionCount: number;
+  unwired: number;
 }
 
-function buildItemPhotoMap(sessions: any[], itemIds: string[]): Record<string, string[]> {
-  const map: Record<string, string[]> = {};
-  itemIds.forEach((id) => {
-    map[id] = [];
-  });
-  sessions.forEach((session) => {
-    (session.connections || []).forEach((conn: any) => {
-      const toItem = conn.to_item_id;
-      if (map[toItem] !== undefined && conn.photo_ids?.length) {
-        conn.photo_ids.forEach((photoId: string) => {
-          if (!map[toItem].includes(photoId)) map[toItem].push(photoId);
-        });
-      }
+/**
+ * Build each zone's deployed set from the live records — the same rule the backend's
+ * complete step uses: items declared in the zone plus the targets of its active connections.
+ * Photos come from the declaration and from any inbound connection.
+ */
+function buildZones(graph: GraphInput): EnrichedZone[] {
+  const activeP = graph.placements.filter((p) => (p.placement_type ?? 'deployment') === 'deployment');
+  const activeC = graph.connections.filter((c) => (c.connection_type ?? 'deployment') === 'deployment');
+  return Object.values(graph.zones).map((zone) => {
+    const ids = new Set<string>();
+    activeP.filter((p) => p.zone_code === zone.zone_code).forEach((p) => ids.add(p.item_id));
+    const conns = activeC.filter((c) => c.zone_code === zone.zone_code);
+    conns.forEach((c) => ids.add(c.to_item_id));
+    const items: EnrichedItem[] = [...ids].map((iid) => {
+      const photos = new Set<string>();
+      activeP.filter((p) => p.item_id === iid).forEach((p) => (p.photo_ids || []).forEach((x) => photos.add(x)));
+      conns.filter((c) => c.to_item_id === iid).forEach((c) => (c.photo_ids || []).forEach((x) => photos.add(x)));
+      return { id: iid, ...(graph.items[iid] || {}), photo_ids: [...photos] };
     });
+    return {
+      zone_code: zone.zone_code,
+      zone_name: zone.zone_name,
+      items,
+      connectionCount: conns.length,
+      unwired: zoneSummary(graph, zone.zone_code).unwired,
+    };
   });
-  return map;
 }
 
 function decorationIcon(classType?: string): string {
@@ -120,42 +131,13 @@ export default function CompletePage() {
       setLoading(true);
       setError(null);
       try {
-        const [metaResponse, adminUrl, ...zoneResponses] = await Promise.all([
+        const [metaResponse, adminUrl, graphResponse] = await Promise.all([
           getDeployment(deploymentId, ['zones']),
           getItemsAdminUrl(),
-          ...ZONE_CODES.map((code) => getZoneSessions(deploymentId, code).catch(() => ({ data: [] }))),
+          getDeploymentGraph(deploymentId),
         ]);
         const meta = metaResponse.data?.metadata || metaResponse.data;
-        const rawZones = metaResponse.data?.zones || [];
-        const sessionsByZone: Record<string, any[]> = {};
-        ZONE_CODES.forEach((code, i) => {
-          sessionsByZone[code] = zoneResponses[i]?.data || [];
-        });
-
-        const allItemIds = new Set<string>();
-        rawZones.forEach((zone: any) => {
-          (zone.items_deployed || []).forEach((id: string) => allItemIds.add(id));
-        });
-        const itemResults = await Promise.allSettled([...allItemIds].map((iid) => getItem(iid)));
-        const itemMap: Record<string, any> = {};
-        itemResults.forEach((result, i) => {
-          const iid = [...allItemIds][i];
-          if (result.status === 'fulfilled' && (result.value as any)?.data) {
-            itemMap[iid] = (result.value as any).data;
-          }
-        });
-
-        const enrichedZones: EnrichedZone[] = rawZones.map((zone: any) => {
-          const itemIds: string[] = zone.items_deployed || [];
-          const sessions = sessionsByZone[zone.zone_code] || [];
-          const photoMap = buildItemPhotoMap(sessions, itemIds);
-          const items = itemIds.map((iid) => ({
-            id: iid,
-            ...itemMap[iid],
-            photo_ids: photoMap[iid] || [],
-          }));
-          return { ...zone, items, sessions };
-        });
+        const enrichedZones = buildZones(graphResponse.data as GraphInput);
 
         if (cancelled) return;
         setMetadata(meta);
@@ -181,13 +163,11 @@ export default function CompletePage() {
       if (data.items_failed > 0) msg += ` (${data.items_failed} item(s) failed to update — check logs.)`;
       toast.showSuccess(msg);
       setConfirmOpen(false);
-      setTimeout(() => navigate(`/builder/${deploymentId}/zones`), 1500);
+      setTimeout(() => navigate(`/builder/${deploymentId}`), 1500);
     } catch (e: any) {
       console.error('[Complete] Error:', e);
       let msg = `Failed to complete deployment: ${e?.message}`;
-      if (e?.message?.includes('active session'))
-        msg = 'Cannot complete: an active session is still open. End it first.';
-      else if (e?.message?.includes('already completed')) msg = 'This deployment is already completed.';
+      if (e?.message?.includes('already completed')) msg = 'This deployment is already completed.';
       toast.showError(msg);
       setConfirming(false);
     }
@@ -195,18 +175,20 @@ export default function CompletePage() {
 
   if (loading) return <LoadingState label="Loading deployment review…" />;
   if (error || !metadata)
-    return <ErrorState message={error || 'Failed to load'} onRetry={() => navigate(`/builder/${deploymentId}/zones`)} />;
+    return <ErrorState message={error || 'Failed to load'} onRetry={() => navigate(`/builder/${deploymentId}`)} />;
 
-  const stats = metadata.statistics || {};
-  const totalItems = zones.reduce((sum, z) => sum + ((z as any).items_deployed?.length || z.items?.length || 0), 0);
-  const byClass = stats.by_class || {};
+  const totalItems = zones.reduce((sum, z) => sum + z.items.length, 0);
+  const totalConnections = zones.reduce((sum, z) => sum + z.connectionCount, 0);
+  const totalUnwired = zones.reduce((sum, z) => sum + z.unwired, 0);
+  const byClass: Record<string, number> = {};
+  zones.forEach((z) => z.items.forEach((i) => (byClass[i.class || 'Other'] = (byClass[i.class || 'Other'] || 0) + 1)));
 
   return (
     <>
       <Breadcrumbs
         crumbs={[
           { label: 'Deployments', to: '/' },
-          { label: `${metadata.season} ${metadata.year}`, to: `/builder/${deploymentId}/zones` },
+          { label: `${metadata.season} ${metadata.year}`, to: `/builder/${deploymentId}` },
           { label: 'Complete Deployment' },
         ]}
       />
@@ -218,8 +200,8 @@ export default function CompletePage() {
       <div className="mb-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {[
           { label: 'Items Deployed', value: totalItems },
-          { label: 'Sessions', value: stats.total_sessions || 0 },
-          { label: 'Setup Time', value: `${stats.total_setup_minutes || 0}m` },
+          { label: 'Connections', value: totalConnections },
+          { label: 'Still unwired', value: totalUnwired },
           { label: 'Zones', value: zones.length },
         ].map((s) => (
           <Card key={s.label}>
@@ -241,7 +223,6 @@ export default function CompletePage() {
       )}
 
       {zones.map((zone) => {
-        const zoneStats = zone.statistics || {};
         const label = ZONE_LABELS[zone.zone_code] || zone.zone_name || zone.zone_code;
         const decorations = zone.items.filter((i) => i.class === 'Decoration');
         const lights = zone.items.filter((i) => i.class === 'Light');
@@ -251,31 +232,10 @@ export default function CompletePage() {
             <div className="mb-3">
               <h2 className="text-lg font-semibold text-foreground">{label}</h2>
               <div className="text-sm text-default-500">
-                {zone.items.length} items · {zoneStats.session_count || 0} sessions ·{' '}
-                {zoneStats.total_setup_minutes || 0}m setup
+                {zone.items.length} items · {zone.connectionCount} connections
+                {zone.unwired > 0 ? ` · ${zone.unwired} unwired` : ''}
               </div>
             </div>
-
-            {zone.sessions.filter((s) => s.session_id).length > 0 && (
-              <div className="mb-3 flex flex-wrap gap-2">
-                {zone.sessions
-                  .filter((s) => s.session_id)
-                  .map((s) => {
-                    const duration = s.duration_seconds ? `${Math.round(s.duration_seconds / 60)}m` : 'active';
-                    const date = s.start_time ? new Date(s.start_time).toLocaleDateString() : '';
-                    return (
-                      <HeroLink
-                        key={s.session_id}
-                        href={`/builder/${deploymentId}/zones/${zone.zone_code}/sessions/${s.session_id}`}
-                        size="sm"
-                        className="rounded-medium bg-default-100 px-2 py-1 text-secondary"
-                      >
-                        Session · {date} · {duration}
-                      </HeroLink>
-                    );
-                  })}
-              </div>
-            )}
 
             {zone.items.length === 0 ? (
               <p className="text-sm text-default-500">No items in this zone.</p>
@@ -328,14 +288,18 @@ export default function CompletePage() {
 
       <Card className="sticky bottom-4">
         <CardBody className="flex-row flex-wrap items-center justify-between gap-4">
-          <Button variant="flat" onPress={() => navigate(`/builder/${deploymentId}/zones`)}>
-            ← Back to Zones
+          <Button variant="flat" onPress={() => navigate(`/builder/${deploymentId}`)}>
+            ← Back to Deployment
           </Button>
           <div className="flex flex-1 flex-wrap items-center justify-end gap-3">
             <p className="text-sm text-default-500">
               This will mark all deployed items as <strong>Deployed</strong> and lock the deployment.
             </p>
-            <Button color="primary" onPress={() => setConfirmOpen(true)}>
+            <Button
+              color="primary"
+              onPress={() => setConfirmOpen(true)}
+              data-testid="complete-trigger"
+            >
               Confirm &amp; Complete Deployment
             </Button>
           </div>
@@ -347,6 +311,7 @@ export default function CompletePage() {
         title="Complete Deployment?"
         body="This will mark all deployed items as Deployed and lock the deployment."
         confirmLabel="Confirm & Complete"
+        confirmTestId="complete-confirm"
         isLoading={confirming}
         onConfirm={handleConfirm}
         onClose={() => setConfirmOpen(false)}

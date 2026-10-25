@@ -165,7 +165,8 @@ export default function ScheduleFormPage() {
         result = await scheduleAPI.create(data);
         toast.showSuccess('Template created successfully');
       }
-      const newId = result?.schedule?.schedule_id || id;
+      // scheduleAPI.create/update return the template itself (schedule_id at the top level), not a { schedule } wrapper.
+      const newId = (result as ScheduleTemplate)?.schedule_id || id;
       navigate(`/schedules/${newId}`);
     } catch (err) {
       console.error('Failed to save template:', err);

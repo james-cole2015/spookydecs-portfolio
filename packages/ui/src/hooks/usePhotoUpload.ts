@@ -35,6 +35,7 @@ import { createElement, Fragment, useCallback, useMemo, type ReactElement } from
 import { useImageEditor } from './useImageEditor';
 import { useFilePicker } from './useFilePicker';
 import { normalizeUploadFiles } from '../lib/normalizeUpload';
+import { assertUploadIds } from '../lib/uploadIdGuard';
 
 /** A photo record as returned by the CDN upload pipeline (`/confirm`). */
 export interface UploadedPhoto {
@@ -83,7 +84,7 @@ export interface PhotoUploadOptions {
   /** Calendar year bucket. Defaults to the current year. */
   year?: number;
   /** Extra metadata merged into the upload (passthrough for edge-case contexts). */
-  metadata?: Record<string, string | number | boolean>;
+  metadata?: Record<string, unknown>;
   /**
    * Mark uploads public (gallery context) — emitted as `is_public` in the upload
    * metadata, which the CDN service forwards to `/presign` and `/confirm`. Default false.
@@ -134,7 +135,7 @@ export function usePhotoUpload(): UsePhotoUpload {
   /** Build the metadata object every entry point shares. */
   const buildMetadata = useCallback((opts: PhotoUploadOptions): Record<string, unknown> => {
     const idKey = resolveIdKey(opts.context, opts.idField);
-    return {
+    const meta = {
       context: opts.context,
       photo_type: opts.photo_type ?? opts.context,
       season: opts.season || 'shared',
@@ -148,6 +149,10 @@ export function usePhotoUpload(): UsePhotoUpload {
         : {}),
       ...(opts.metadata ?? {}),
     };
+    // An id in the wrong field uploads cleanly but stores the photo under the wrong
+    // entity (#682), so reject it before anything is sent.
+    assertUploadIds(meta);
+    return meta;
   }, []);
 
   const uploadFiles = useCallback(
@@ -170,6 +175,8 @@ export function usePhotoUpload(): UsePhotoUpload {
 
   const openWithEditor = useCallback(
     async (opts: PhotoUploadOptions): Promise<UploadedPhoto[]> => {
+      // Validate the ids before the picker/editor, not after the user has cropped photos.
+      buildMetadata(opts);
       const picked = await pickFiles(opts.maxPhotos);
       if (picked.length === 0) return [];
       // Convert before editing — the browser can't decode HEIC to canvas, so the
@@ -178,7 +185,7 @@ export function usePhotoUpload(): UsePhotoUpload {
       const edited = await editFiles(normalized);
       return uploadFiles(edited, opts);
     },
-    [pickFiles, editFiles, uploadFiles],
+    [buildMetadata, pickFiles, editFiles, uploadFiles],
   );
 
   // One element mounts both the dropzone and the per-file editor modal.

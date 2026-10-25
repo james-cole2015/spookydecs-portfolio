@@ -48,6 +48,51 @@
     });
   });
 
+  // Subsystem cards -> detail panel
+  const subCards = document.querySelectorAll('.sub-card');
+  const subDetailDefault  = document.getElementById('sub-detail-default');
+  const subDetailContent  = document.getElementById('sub-detail-content');
+  const subDetailServices = document.getElementById('sub-detail-services');
+  const subDetailTitle    = document.getElementById('sub-detail-title');
+  const subDetailDesc     = document.getElementById('sub-detail-desc');
+  const subDetailDeepdive = document.getElementById('sub-detail-deepdive');
+
+  let activeSubCard = null;
+
+  subCards.forEach(card => {
+    card.addEventListener('click', () => {
+      const name    = card.querySelector('.sub-name')?.textContent || '';
+      const desc    = card.dataset.desc;
+      const services = (card.dataset.services || '').split(',').map(s => s.trim()).filter(Boolean);
+      const deepdiveHref  = card.dataset.deepdiveHref;
+      const deepdiveLabel = card.dataset.deepdiveLabel;
+
+      if (activeSubCard && activeSubCard !== card) {
+        activeSubCard.classList.remove('active');
+      }
+      card.classList.toggle('active');
+      activeSubCard = card.classList.contains('active') ? card : null;
+
+      if (activeSubCard) {
+        subDetailDefault.classList.add('hidden');
+        subDetailContent.classList.remove('hidden');
+        subDetailServices.innerHTML = services.map(s => `<span class="sub-service-tag">${s}</span>`).join('');
+        subDetailTitle.textContent = name;
+        subDetailDesc.textContent  = desc;
+        if (deepdiveHref) {
+          subDetailDeepdive.href = deepdiveHref;
+          subDetailDeepdive.textContent = `${deepdiveLabel || 'Deep dive'} →`;
+          subDetailDeepdive.classList.remove('hidden');
+        } else {
+          subDetailDeepdive.classList.add('hidden');
+        }
+      } else {
+        subDetailDefault.classList.remove('hidden');
+        subDetailContent.classList.add('hidden');
+      }
+    });
+  });
+
   // Smooth scroll for nav links
   document.querySelectorAll('a[href^="#"]').forEach(link => {
     link.addEventListener('click', e => {
