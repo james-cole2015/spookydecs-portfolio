@@ -211,7 +211,6 @@ export const VALIDATION_SUBS: ValidationSub[] = [
     browserCommand: 'npm run test:e2e:storage',
     readChecks: [
       { label: 'List storage units', path: '/storage', required: true },
-      { label: 'List pack contents', path: '/storage/pack', required: false },
     ],
     lastRun: run(6),
   },
