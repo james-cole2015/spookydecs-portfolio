@@ -69,6 +69,8 @@ describe('validationRunModel', () => {
     expect(resolveEnvironment('dev', 'admin.spookydecs.com')).toBe('dev');
     expect(resolveEnvironment(undefined, 'dev-admin.spookydecs.com')).toBe('dev');
     expect(resolveEnvironment(undefined, 'admin.spookydecs.com')).toBe('prod');
+    expect(resolveEnvironment(undefined, 'localhost')).toBe('dev');
+    expect(resolveEnvironment('prod', 'localhost')).toBe('prod');
   });
 
   it('finds the latest run that included a sub', () => {

@@ -117,10 +117,14 @@ export function totals(results: SubResult[]): Totals {
   );
 }
 
-/** The token's custom:env claim wins; otherwise infer from the hostname (dev sites are dev-*). */
+/**
+ * The token's custom:env claim wins; otherwise infer from the hostname. Dev sites are dev-*, and the local dev
+ * server (localhost) only proxies to the dev API, so it counts as dev too. The server enforces the real rule.
+ */
 export function resolveEnvironment(claim: unknown, hostname: string): string {
   if (claim) return String(claim);
-  return hostname.startsWith('dev-') ? 'dev' : 'prod';
+  const isDevHost = hostname.startsWith('dev-') || hostname === 'localhost' || hostname === '127.0.0.1';
+  return isDevHost ? 'dev' : 'prod';
 }
 
 /** Controls render only on dev and never in demo. The server enforces the same rule independently. */
