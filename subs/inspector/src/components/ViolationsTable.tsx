@@ -71,7 +71,7 @@ export function ViolationsTable({
     if (v.entity_type !== 'Item') return name;
     return (
       <span className="flex items-center gap-2">
-        <Link href={`/items/${v.entity_id}`} size="sm" className="cursor-pointer">
+        <Link href={`/items/${encodeURIComponent(v.entity_id)}`} size="sm" className="cursor-pointer">
           {name}
         </Link>
         {itemsAdminUrl && (

@@ -7,6 +7,10 @@ export const CLASS_HIERARCHY: Record<string, { types: string[]; icon: string }> 
   Accessory:  { types: ['Cord', 'Plug'], icon: '🔌' },
 };
 
+// In-app route for an item. Ids from batch builds contain '#', which navigate() would otherwise
+// treat as a URL fragment and truncate the path (#687).
+export const itemPath = (id: string, suffix = '') => `/${encodeURIComponent(id)}${suffix}`;
+
 export const ALLOWED_CLASSES = ['Decoration', 'Light', 'Accessory'] as const;
 export type ItemClass = typeof ALLOWED_CLASSES[number];
 
