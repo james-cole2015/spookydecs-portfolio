@@ -2,8 +2,9 @@
  * Run Validation registry (#623): the ten holiday-readiness subs, what each does, the checks its browser
  * suite covers, how to re-run it, and the last recorded result.
  *
- * Stage 1 is read-only: results are recorded here after a run (counts only, no environment detail, since this
- * repo is public). Live in-page checks and UI-triggered suites are follow-ups (#679). Finance is descoped.
+ * Browser-suite results are recorded here after a run (counts only, no environment detail, since this repo is
+ * public). `readChecks` drive the live GET-only readiness check (#680); UI-triggered suites are #679.
+ * Finance is descoped.
  */
 
 export type CheckLayer = 'browser' | 'unit';
@@ -11,8 +12,27 @@ export type CheckLayer = 'browser' | 'unit';
 export interface ValidationRun {
   /** ISO date of the recorded run. */
   date: string;
-  environment: 'dev';
+  environment: 'dev' | 'prod';
   passed: number;
+  total: number;
+}
+
+/** A read-only route the readiness check GETs. Static path, no ids, so nothing record-specific can leak. */
+export interface ReadCheck {
+  /** Shown in the UI, e.g. "List items". Never contains record data. */
+  label: string;
+  /** Path appended to API_ENDPOINT. */
+  path: string;
+  /** true: a failure fails the verdict. false: a failure only warns. */
+  required: boolean;
+}
+
+/** A recorded readiness-check run (counts only, since this repo is public). */
+export interface ReadinessRecord {
+  date: string;
+  environment: 'dev' | 'prod';
+  passed: number;
+  warned: number;
   total: number;
 }
 
@@ -27,6 +47,10 @@ export interface ValidationSub {
   /** Command that re-runs the browser suite from the Portfolio repo root. */
   browserCommand: string;
   lastRun: ValidationRun;
+  /** Routes the in-page readiness check GETs (#680). */
+  readChecks: ReadCheck[];
+  /** Latest recorded readiness-check run, kept apart from `lastRun` (the dev Playwright result). */
+  readiness?: ReadinessRecord;
 }
 
 const RUN_DATE = '2026-10-18';
@@ -46,6 +70,9 @@ export const VALIDATION_SUBS: ValidationSub[] = [
     ],
     unitSuites: ['Handler contract and role gates'],
     browserCommand: 'npm run test:e2e:admin',
+    readChecks: [
+      { label: 'Read admin config', path: '/admin/config', required: true },
+    ],
     lastRun: run(5, 5, '2026-10-24'),
   },
   {
@@ -55,6 +82,10 @@ export const VALIDATION_SUBS: ValidationSub[] = [
     browserChecks: ['Full lifecycle: builder, staging, declare and connect, connection photo, complete, teardown'],
     unitSuites: ['Deployments CRUD, connections and placements', 'Stage, complete and teardown lifecycle', 'Connection limits and dates'],
     browserCommand: 'npm run test:e2e:deployments',
+    readChecks: [
+      { label: 'List deployments', path: '/deployments', required: true },
+      { label: 'List historical deployments', path: '/deployments/historical', required: false },
+    ],
     lastRun: run(1),
   },
   {
@@ -70,6 +101,9 @@ export const VALIDATION_SUBS: ValidationSub[] = [
     ],
     unitSuites: ['Gallery handler contract'],
     browserCommand: 'npm run test:e2e:gallery',
+    readChecks: [
+      { label: 'List showcase photos', path: '/gallery/images?section=showcase', required: true },
+    ],
     lastRun: run(6),
   },
   {
@@ -87,6 +121,9 @@ export const VALIDATION_SUBS: ValidationSub[] = [
     ],
     unitSuites: ['Ideas handler API', 'Idea build consumer', 'Acquisitions API and purchase consumer'],
     browserCommand: 'npm run test:e2e:ideas',
+    readChecks: [
+      { label: 'List ideas', path: '/ideas', required: true },
+    ],
     lastRun: run(10),
   },
   {
@@ -101,6 +138,9 @@ export const VALIDATION_SUBS: ValidationSub[] = [
     ],
     unitSuites: ['Photo handler, set primary, presign and confirm', 'Items and storage image consumers'],
     browserCommand: 'npm run test:e2e:images',
+    readChecks: [
+      { label: 'List images', path: '/admin/images', required: true },
+    ],
     lastRun: run(4),
   },
   {
@@ -110,6 +150,11 @@ export const VALIDATION_SUBS: ValidationSub[] = [
     browserChecks: ['Run a rule, violation appears, item and rule views, notes save, dismiss, rule description edit round-trips'],
     unitSuites: ['Inspector rules and violations API', 'Violation consumer'],
     browserCommand: 'npm run test:e2e:inspector',
+    readChecks: [
+      { label: 'List rules', path: '/admin/inspector/rules', required: true },
+      { label: 'List violations', path: '/admin/inspector/violations', required: true },
+      { label: 'Violation stats', path: '/admin/inspector/violations/stats', required: false },
+    ],
     lastRun: run(1),
   },
   {
@@ -125,6 +170,10 @@ export const VALIDATION_SUBS: ValidationSub[] = [
     ],
     unitSuites: ['Items handler API', 'Search-text and template consumers'],
     browserCommand: 'npm run test:e2e:items',
+    readChecks: [
+      { label: 'List items', path: '/items', required: true },
+      { label: 'Item stats', path: '/stats/items', required: true },
+    ],
     lastRun: run(14),
   },
   {
@@ -140,6 +189,10 @@ export const VALIDATION_SUBS: ValidationSub[] = [
     ],
     unitSuites: ['Records API', 'Scheduler, template, repair and inspection handlers', 'Recurrence consumer'],
     browserCommand: 'npm run test:e2e:maintenance',
+    readChecks: [
+      { label: 'List maintenance records', path: '/admin/maintenance-records', required: true },
+      { label: 'List maintenance schedules', path: '/admin/maintenance-schedules', required: true },
+    ],
     lastRun: run(13),
   },
   {
@@ -156,6 +209,10 @@ export const VALIDATION_SUBS: ValidationSub[] = [
     ],
     unitSuites: ['Storage handler API', 'Storage image and item consumers'],
     browserCommand: 'npm run test:e2e:storage',
+    readChecks: [
+      { label: 'List storage units', path: '/storage', required: true },
+      { label: 'List pack contents', path: '/storage/pack', required: false },
+    ],
     lastRun: run(6),
   },
   {
@@ -165,6 +222,10 @@ export const VALIDATION_SUBS: ValidationSub[] = [
     browserChecks: ['Monitor renders seeded ideas and maintenance by bucket, status and year; cards preview and deep-link'],
     unitSuites: ['Ideas handler API'],
     browserCommand: 'npm run test:e2e:workbench',
+    readChecks: [
+      { label: 'Workbench summary', path: '/workbench/summary', required: true },
+      { label: 'Workbench seasons', path: '/workbench/seasons', required: true },
+    ],
     lastRun: run(1),
   },
 ];

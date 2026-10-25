@@ -30,6 +30,16 @@ export default function ValidationSubPage() {
         }
       />
       <div className="flex flex-col gap-4">
+        {sub.readiness && (
+          <Card shadow="sm">
+            <CardHeader className="flex flex-wrap items-center justify-between gap-2">
+              <span className="font-semibold">Last readiness check</span>
+              <Chip color={sub.readiness.passed === sub.readiness.total ? 'success' : 'warning'} variant="flat">
+                {sub.readiness.passed}/{sub.readiness.total} passed · {sub.readiness.date} · {sub.readiness.environment}
+              </Chip>
+            </CardHeader>
+          </Card>
+        )}
         <Card shadow="sm">
           <CardHeader className="flex flex-wrap items-center justify-between gap-2">
             <span className="font-semibold">Last recorded run</span>
@@ -76,7 +86,7 @@ export default function ValidationSubPage() {
         </Card>
 
         <p className="text-tiny text-default-400">
-          Running these from this page is planned. <Link to="/validation" className="text-primary underline">Back to all subs</Link>
+          The live read-only readiness check for every sub runs from the Run Validation page. <Link to="/validation" className="text-primary underline">Back to all subs</Link>
         </p>
       </div>
     </div>
