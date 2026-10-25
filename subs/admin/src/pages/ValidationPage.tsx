@@ -2,16 +2,29 @@
  * Run Validation hub (#623): the ten holiday-readiness subs with what each does, the checks that guard it,
  * and the last recorded result. Includes the live readiness check (#680). Not available in the demo environment.
  */
-import { Card, CardBody, Chip } from '@heroui/react';
-import { ChevronRight } from 'lucide-react';
-import { Link, Navigate } from 'react-router-dom';
-import { PageHeader, isDemoEnv } from '@spookydecs/ui';
+import { useState } from 'react';
+import { Button, Card, CardBody, Chip } from '@heroui/react';
+import { ChevronRight, History, Play } from 'lucide-react';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { ConfirmDialog, PageHeader, isDemoEnv } from '@spookydecs/ui';
 import { VALIDATION_SUBS, overallStatus } from '../config/validationRegistry';
 import ReadinessCheck from '../components/ReadinessCheck';
+import { useRunnerAvailable, useStartRun } from '../hooks/useValidationRun';
 
 export default function ValidationPage() {
+  const navigate = useNavigate();
+  const runnerAvailable = useRunnerAvailable();
+  const { start, starting, conflictRunId, error } = useStartRun();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
   if (isDemoEnv()) return <Navigate to="/" replace />;
   const { passing, total, latest } = overallStatus();
+
+  const runAll = async () => {
+    const runId = await start('all');
+    setConfirmOpen(false);
+    if (runId) navigate(`/validation/runs/${runId}`);
+  };
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -19,10 +32,43 @@ export default function ValidationPage() {
         title="Run Validation"
         subtitle="Check that every sub still works end to end before the season. Pick a sub to see its checks."
         actions={
-          <Chip color={passing === total ? 'success' : 'warning'} variant="flat">
-            {passing} of {total} passing · last run {latest}
-          </Chip>
+          <div className="flex flex-wrap items-center gap-2">
+            <Chip color={passing === total ? 'success' : 'warning'} variant="flat">
+              {passing} of {total} passing · last run {latest}
+            </Chip>
+            {runnerAvailable && (
+              <>
+                <Button variant="flat" startContent={<History size={16} />} onPress={() => navigate('/validation/history')}>
+                  Run history
+                </Button>
+                <Button color="primary" startContent={<Play size={16} />} onPress={() => setConfirmOpen(true)}>
+                  Run all suites
+                </Button>
+              </>
+            )}
+          </div>
         }
+      />
+      {error && (
+        <Card shadow="sm" className="mb-4 border border-warning">
+          <CardBody className="flex-row flex-wrap items-center justify-between gap-2 text-small">
+            <span>{error}</span>
+            {conflictRunId && (
+              <Link to={`/validation/runs/${conflictRunId}`} className="text-primary underline">
+                View the active run
+              </Link>
+            )}
+          </CardBody>
+        </Card>
+      )}
+      <ConfirmDialog
+        isOpen={confirmOpen}
+        title="Run all suites on dev?"
+        body="This runs every sub's browser and unit suites against the dev stack (about 20 to 30 minutes). The tests create and delete sentinel records in dev. Don't edit dev data or run local suites until it finishes."
+        confirmLabel="Start run"
+        isLoading={starting}
+        onConfirm={runAll}
+        onClose={() => setConfirmOpen(false)}
       />
       <ReadinessCheck />
       <Card shadow="sm">

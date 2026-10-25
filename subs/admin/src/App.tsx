@@ -14,6 +14,8 @@ const AddOutletPage = lazy(() => import('./pages/AddOutletPage'));
 const PlacePhotoPage = lazy(() => import('./pages/PlacePhotoPage'));
 const ValidationPage = lazy(() => import('./pages/ValidationPage'));
 const ValidationSubPage = lazy(() => import('./pages/ValidationSubPage'));
+const ValidationHistoryPage = lazy(() => import('./pages/ValidationHistoryPage'));
+const ValidationRunPage = lazy(() => import('./pages/ValidationRunPage'));
 
 export default function App() {
   return (
@@ -29,6 +31,8 @@ export default function App() {
             <Route path="/add-outlet" element={<AddOutletPage />} />
             <Route path="/place-photo" element={<PlacePhotoPage />} />
             <Route path="/validation" element={<ValidationPage />} />
+            <Route path="/validation/history" element={<ValidationHistoryPage />} />
+            <Route path="/validation/runs/:runId" element={<ValidationRunPage />} />
             <Route path="/validation/:sub" element={<ValidationSubPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
