@@ -73,6 +73,7 @@ export const VALIDATION_SUBS: ValidationSub[] = [
     readChecks: [
       { label: 'Read admin config', path: '/admin/config', required: true },
     ],
+    readiness: { date: '2026-10-25', environment: 'dev', passed: 1, warned: 0, total: 1 },
     lastRun: run(5, 5, '2026-10-24'),
   },
   {
@@ -86,6 +87,7 @@ export const VALIDATION_SUBS: ValidationSub[] = [
       { label: 'List deployments', path: '/deployments', required: true },
       { label: 'List historical deployments', path: '/deployments/historical', required: false },
     ],
+    readiness: { date: '2026-10-25', environment: 'dev', passed: 2, warned: 0, total: 2 },
     lastRun: run(1),
   },
   {
@@ -104,6 +106,7 @@ export const VALIDATION_SUBS: ValidationSub[] = [
     readChecks: [
       { label: 'List showcase photos', path: '/gallery/images?section=showcase', required: true },
     ],
+    readiness: { date: '2026-10-25', environment: 'dev', passed: 1, warned: 0, total: 1 },
     lastRun: run(6),
   },
   {
@@ -124,6 +127,7 @@ export const VALIDATION_SUBS: ValidationSub[] = [
     readChecks: [
       { label: 'List ideas', path: '/ideas', required: true },
     ],
+    readiness: { date: '2026-10-25', environment: 'dev', passed: 1, warned: 0, total: 1 },
     lastRun: run(10),
   },
   {
@@ -141,6 +145,7 @@ export const VALIDATION_SUBS: ValidationSub[] = [
     readChecks: [
       { label: 'List images', path: '/admin/images', required: true },
     ],
+    readiness: { date: '2026-10-25', environment: 'dev', passed: 1, warned: 0, total: 1 },
     lastRun: run(4),
   },
   {
@@ -155,6 +160,7 @@ export const VALIDATION_SUBS: ValidationSub[] = [
       { label: 'List violations', path: '/admin/inspector/violations', required: true },
       { label: 'Violation stats', path: '/admin/inspector/violations/stats', required: false },
     ],
+    readiness: { date: '2026-10-25', environment: 'dev', passed: 3, warned: 0, total: 3 },
     lastRun: run(1),
   },
   {
@@ -174,6 +180,7 @@ export const VALIDATION_SUBS: ValidationSub[] = [
       { label: 'List items', path: '/items', required: true },
       { label: 'Item stats', path: '/stats/items', required: true },
     ],
+    readiness: { date: '2026-10-25', environment: 'dev', passed: 2, warned: 0, total: 2 },
     lastRun: run(14),
   },
   {
@@ -193,6 +200,7 @@ export const VALIDATION_SUBS: ValidationSub[] = [
       { label: 'List maintenance records', path: '/admin/maintenance-records', required: true },
       { label: 'List maintenance schedules', path: '/admin/maintenance-schedules', required: true },
     ],
+    readiness: { date: '2026-10-25', environment: 'dev', passed: 2, warned: 0, total: 2 },
     lastRun: run(13),
   },
   {
@@ -212,6 +220,7 @@ export const VALIDATION_SUBS: ValidationSub[] = [
     readChecks: [
       { label: 'List storage units', path: '/storage', required: true },
     ],
+    readiness: { date: '2026-10-25', environment: 'dev', passed: 1, warned: 1, total: 2 },
     lastRun: run(6),
   },
   {
@@ -225,6 +234,7 @@ export const VALIDATION_SUBS: ValidationSub[] = [
       { label: 'Workbench summary', path: '/workbench/summary', required: true },
       { label: 'Workbench seasons', path: '/workbench/seasons', required: true },
     ],
+    readiness: { date: '2026-10-25', environment: 'dev', passed: 2, warned: 0, total: 2 },
     lastRun: run(1),
   },
 ];

@@ -1,5 +1,5 @@
 /**
- * Holiday readiness check (#680): one press runs a GET-only sweep of every sub's read routes with the admin's
+ * Environment health check (#680): one press runs a GET-only sweep of every sub's read routes with the admin's
  * own session and shows pass/warn/fail per sub plus an overall verdict. Shows labels, status and timing only.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -77,7 +77,7 @@ export default function ReadinessCheck() {
     <Card shadow="sm" className="mb-4">
       <CardHeader className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <p className="font-semibold">Holiday readiness check</p>
+          <p className="font-semibold">Environment health check</p>
           <p className="text-small text-default-500">
             Reads every sub&apos;s list routes with your session, right now. Read-only: it only sends GET requests and never shows record data.
           </p>
@@ -89,7 +89,7 @@ export default function ReadinessCheck() {
             </Button>
           )}
           <Button color="primary" isLoading={running} onPress={run}>
-            {report ? 'Re-run' : 'Run readiness check'}
+            {report ? 'Re-run' : 'Run health check'}
           </Button>
         </div>
       </CardHeader>
