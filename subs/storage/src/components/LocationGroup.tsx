@@ -38,7 +38,7 @@ export function LocationGroup({
               <button
                 key={item.id}
                 type="button"
-                onClick={() => window.location.assign(`${itemsAdminUrl}/items/${item.id}`)}
+                onClick={() => window.location.assign(`${itemsAdminUrl}/items/${encodeURIComponent(item.id)}`)}
                 className="flex items-center gap-3 rounded-lg border border-default-200 bg-content1 p-3 text-left hover:bg-content2/60"
               >
                 <div className="min-w-0 flex-1">

@@ -149,7 +149,7 @@ export default function ItemCostsPage() {
               <Button
                 variant="flat"
                 onPress={() => {
-                  window.location.href = `${resolveItemsAdminUrl(config.ITEMS_ADMIN)}/${itemId}`;
+                  window.location.href = `${resolveItemsAdminUrl(config.ITEMS_ADMIN)}/${encodeURIComponent(itemId)}`;
                 }}
               >
                 View Item Details →

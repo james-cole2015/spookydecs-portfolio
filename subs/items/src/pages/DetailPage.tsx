@@ -17,7 +17,7 @@ import {
   type Item, type MaintenanceRecord, type CascadePreview,
   type GenerationHistoryEntry,
 } from '../api/types';
-import { getClassIcon, getSeasonIcon, getStatusColor } from '../config/itemsConfig';
+import { getClassIcon, getSeasonIcon, getStatusColor, itemPath } from '../config/itemsConfig';
 import { MoreVertical, Pencil, Trash2, ExternalLink } from 'lucide-react';
 import { usePhotoUpload } from '@spookydecs/ui';
 
@@ -284,7 +284,7 @@ export default function DetailPage() {
                 </DropdownTrigger>
                 <DropdownMenu>
                   {canWrite ? (
-                    <DropdownItem key="edit" startContent={<Pencil size={14} />} onPress={() => navigate(`/${item.id}/edit`)}>
+                    <DropdownItem key="edit" startContent={<Pencil size={14} />} onPress={() => navigate(itemPath(item.id, '/edit'))}>
                       Edit Item
                     </DropdownItem>
                   ) : null}
@@ -605,7 +605,7 @@ export default function DetailPage() {
       {canWrite && (
         <div className="fixed bottom-6 right-6">
           <Button color="primary" size="lg" isIconOnly radius="full"
-            onPress={() => navigate(`/${item.id}/edit`)} className="shadow-lg">
+            onPress={() => navigate(itemPath(item.id, '/edit'))} className="shadow-lg">
             <Pencil size={20} />
           </Button>
         </div>
