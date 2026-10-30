@@ -34,7 +34,7 @@ const input: GraphInput = {
 describe('deriveItemList', () => {
   it('live: keeps PreDeployment/Deployed items with a placement or inbound connection', () => {
     const rows = deriveItemList(input, { applyStatusFilter: true });
-    expect(rows.map((r) => r.id).sort()).toEqual(['A', 'B', 'D']);
+    expect(rows.map((r) => r.id).sort()).toEqual(['A', 'B']);
   });
 
   it('live: never lists unplaced items or zone receptacles', () => {
@@ -43,11 +43,12 @@ describe('deriveItemList', () => {
     expect(ids).not.toContain('OUT-1');
   });
 
-  it('excludes cords and plugs, live and snapshot', () => {
+  it('excludes cords, plugs and lights, live and snapshot', () => {
     for (const applyStatusFilter of [true, false]) {
       const ids = deriveItemList(input, { applyStatusFilter }).map((r) => r.id);
       expect(ids).not.toContain('F');
       expect(ids).not.toContain('G');
+      expect(ids).not.toContain('D');
     }
   });
 
@@ -60,7 +61,6 @@ describe('deriveItemList', () => {
     const rows = Object.fromEntries(deriveItemList(input, { applyStatusFilter: true }).map((r) => [r.id, r]));
     expect(rows.A.photoIds).toEqual(['ph1']);
     expect(rows.B.photoIds).toEqual(['ph2', 'ph3']);
-    expect(rows.D.photoIds).toEqual([]);
   });
 });
 
@@ -72,11 +72,11 @@ describe('filters', () => {
     expect(filterItems(rows, 'BY', 'inflatable')).toEqual([]);
   });
   it('counts buckets under the active zone', () => {
-    expect(bucketCounts(rows, 'ALL')).toEqual({ animatronic: 1, inflatable: 1, lights: 1 });
-    expect(bucketCounts(rows, 'BY')).toEqual({ lights: 1 });
+    expect(bucketCounts(rows, 'ALL')).toEqual({ animatronic: 1, inflatable: 1 });
+    expect(bucketCounts(rows, 'BY')).toEqual({});
   });
-  it('buckets lights and ignores cords', () => {
-    expect(classBucket('Spot Light')).toBe('lights');
-    expect(classBucket('Cord')).toBeNull();
+  it('buckets the four decoration classes only', () => {
+    expect(classBucket('Inflatable')).toBe('inflatable');
+    expect(classBucket('Spot Light')).toBeNull();
   });
 });

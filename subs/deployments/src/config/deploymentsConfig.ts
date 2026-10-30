@@ -55,7 +55,6 @@ export const ZONE_LABELS: Record<string, string> = Object.fromEntries(
 
 /** Items & Photos class chips (#689): chip label → the item class_types it covers. */
 export const ITEM_CLASS_BUCKETS: { key: string; label: string; classTypes: string[] }[] = [
-  { key: 'lights', label: 'Lights', classTypes: ['String Light', 'Spot Light'] },
   { key: 'static', label: 'Static Props', classTypes: ['Static Prop'] },
   { key: 'inflatable', label: 'Inflatables', classTypes: ['Inflatable'] },
   { key: 'animatronic', label: 'Animatronics', classTypes: ['Animatronic'] },
