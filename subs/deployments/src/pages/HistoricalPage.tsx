@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Accordion, AccordionItem, Card, CardBody, Chip } from '@heroui/react';
+import { Accordion, AccordionItem, Button, Card, CardBody, Chip } from '@heroui/react';
 import { Breadcrumbs, EmptyState, ErrorState, LoadingState, PageHeader } from '@spookydecs/ui';
 import { listHistoricalDeployments, getHistoricalDeployment } from '../api/deploymentsApi';
 import { deploymentSpan, formatYmd, spanLabel } from '../lib/deploymentDates';
@@ -81,6 +81,7 @@ function Breakdown({ title, data }: { title: string; data?: Record<string, numbe
 }
 
 function HistoricalDetail({ data }: { data: any }) {
+  const navigate = useNavigate();
   const { metadata, zones } = data;
   const stats = metadata.statistics || {};
   const dates = [
@@ -98,9 +99,14 @@ function HistoricalDetail({ data }: { data: any }) {
           <h1 className="text-2xl font-semibold text-foreground">{metadata.deployment_id}</h1>
           <div className="text-default-500">{seasonLabel(metadata.season, metadata.year)}</div>
         </div>
-        <Chip color="secondary" variant="flat">
-          Archived
-        </Chip>
+        <div className="flex items-center gap-2">
+          <Button variant="flat" onPress={() => navigate(`/builder/${metadata.deployment_id}/items`)} data-testid="historical-items-photos">
+            Items &amp; Photos
+          </Button>
+          <Chip color="secondary" variant="flat">
+            Archived
+          </Chip>
+        </div>
       </div>
 
       <div className="mb-4 grid grid-cols-2 gap-4 lg:grid-cols-4">

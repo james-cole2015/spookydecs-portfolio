@@ -48,6 +48,22 @@ export const DEPLOYMENT_CONFIG = {
   },
 } as const;
 
+/** Zone code → display name (single source; derived from DEPLOYMENT_CONFIG.ZONES). */
+export const ZONE_LABELS: Record<string, string> = Object.fromEntries(
+  DEPLOYMENT_CONFIG.ZONES.map((z) => [z.zone_code, z.zone_name]),
+);
+
+/** Items & Photos class chips (#689): chip label → the item class_types it covers. */
+export const ITEM_CLASS_BUCKETS: { key: string; label: string; classTypes: string[] }[] = [
+  { key: 'lights', label: 'Lights', classTypes: ['String Light', 'Spot Light'] },
+  { key: 'static', label: 'Static Props', classTypes: ['Static Prop'] },
+  { key: 'inflatable', label: 'Inflatables', classTypes: ['Inflatable'] },
+  { key: 'animatronic', label: 'Animatronics', classTypes: ['Animatronic'] },
+];
+
+/** Live item statuses that count as part of a deployment's item list (#689). */
+export const LIVE_ITEM_STATUSES = ['PreDeployment', 'Deployed'];
+
 // Deployment graph (#466) — per-outlet amp rollup overload threshold.
 export const OVERLOAD_AMPS_THRESHOLD = 15;
 

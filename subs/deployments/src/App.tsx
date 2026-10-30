@@ -7,6 +7,7 @@ import { PageContainer, LoadingState, AppHeader } from '@spookydecs/ui';
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const BuilderPage = lazy(() => import('./pages/BuilderPage'));
 const DeploymentPage = lazy(() => import('./pages/DeploymentPage'));
+const ItemsPhotosPage = lazy(() => import('./pages/ItemsPhotosPage'));
 const StagingPage = lazy(() => import('./pages/StagingPage'));
 const CompletePage = lazy(() => import('./pages/CompletePage'));
 const TeardownPage = lazy(() => import('./pages/TeardownPage'));
@@ -40,6 +41,7 @@ export default function App() {
             {/* Deployment workspace: one graph per zone (#638). Sessions, the zone dashboard and the
                 standalone connection/session pages are retired. */}
             <Route path="/builder/:id" element={<DeploymentPage />} />
+            <Route path="/builder/:id/items" element={<ItemsPhotosPage />} />
             <Route path="/builder/:id/staging" element={<StagingPage />} />
             <Route path="/builder/:id/complete" element={<CompletePage />} />
             <Route path="/builder/:id/teardown" element={<TeardownPage />} />

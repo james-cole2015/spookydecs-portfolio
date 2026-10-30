@@ -53,6 +53,9 @@ export default function DeploymentPage() {
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <StatusChip status={status} size="md" />
+            <Button variant="flat" onPress={() => navigate(`/builder/${deploymentId}/items`)} data-testid="admin-card-items">
+              Items &amp; Photos
+            </Button>
             <Button variant="flat" onPress={() => navigate(`/builder/${deploymentId}/staging`)} data-testid="admin-card-staging">
               Staging
             </Button>
