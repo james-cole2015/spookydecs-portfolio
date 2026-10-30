@@ -142,7 +142,11 @@ export default function ItemsPhotosPage() {
   if (loading) return <LoadingState label="Loading items…" />;
   if (error || !loaded) return <ErrorState message={error || 'Deployment not found'} onRetry={() => navigate(`/builder/${deploymentId}`)} />;
 
-  const editable = loaded.mode === 'live' && EDITABLE_STATUSES.includes(loaded.status || '') && auth.hasMinRole('builder');
+  // Two distinct reasons the list can be view-only: the deployment is locked (completed/archived
+  // record) or the viewer lacks the builder role. The header says which.
+  const locked = !(loaded.mode === 'live' && EDITABLE_STATUSES.includes(loaded.status || ''));
+  const canWrite = auth.hasMinRole('builder');
+  const editable = !locked && canWrite;
   const withPhotos = rows.filter((r) => r.photoIds.length > 0).length;
 
   return (
@@ -160,10 +164,16 @@ export default function ItemsPhotosPage() {
         actions={
           <div className="flex items-center gap-2">
             {loaded.status && <StatusChip status={loaded.status} size="md" />}
-            {!editable && (
+            {locked ? (
               <Chip size="sm" variant="flat" color="secondary">
                 Read-only record
               </Chip>
+            ) : (
+              !canWrite && (
+                <Chip size="sm" variant="flat" color="warning">
+                  View only — builder role required
+                </Chip>
+              )
             )}
           </div>
         }
