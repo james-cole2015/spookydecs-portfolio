@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { Button, Chip, Tab, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, Tabs } from '@heroui/react';
+import { Button, Card, CardBody, Chip, Tab, Tabs } from '@heroui/react';
 import {
   Breadcrumbs,
   EmptyState,
@@ -44,37 +44,39 @@ function useItemPhotos(photoIds: string[]): LightboxPhoto[] {
   return photos;
 }
 
-// HeroUI collections need literal <TableRow>/<TableCell> children, so the per-row hook lives in the cell.
-function PhotosCell({ row, canAdd, onAdd }: { row: ItemRow; canAdd: boolean; onAdd: (id: string) => void }) {
+function ItemCard({ row, canAdd, onAdd }: { row: ItemRow; canAdd: boolean; onAdd: (id: string) => void }) {
   const photos = useItemPhotos(row.photoIds);
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <Chip size="sm" variant="flat" color={row.photoIds.length ? 'success' : 'warning'}>
-        {row.photoIds.length ? `${row.photoIds.length} photo${row.photoIds.length === 1 ? '' : 's'}` : 'No photos'}
-      </Chip>
-      {photos.length > 0 && (
-        <PhotoLightbox photos={photos} className="flex gap-1" thumbnailClassName="h-10 w-10 rounded-small object-cover" />
-      )}
-      {canAdd && (
-        <Button size="sm" variant="flat" color="primary" onPress={() => onAdd(row.id)} data-testid={`add-photo-${row.id}`}>
-          Add photo
-        </Button>
-      )}
-    </div>
-  );
-}
-
-function ItemCell({ row }: { row: ItemRow }) {
-  return (
-    <>
-      <div className="font-medium text-foreground">{row.name}</div>
-      <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-default-500">
-        <span>{row.classType || 'Unknown class'}</span>
-        <Chip size="sm" variant="flat">
-          {ZONE_LABELS[row.zone] || row.zone || 'No zone'}
-        </Chip>
-      </div>
-    </>
+    <Card data-testid={`item-row-${row.id}`}>
+      <CardBody className="gap-2 p-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <div className="truncate font-medium text-foreground">{row.name}</div>
+            <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-default-500">
+              <span>{row.classType || 'Unknown class'}</span>
+              <Chip size="sm" variant="flat">
+                {ZONE_LABELS[row.zone] || row.zone || 'No zone'}
+              </Chip>
+            </div>
+          </div>
+          <Chip size="sm" variant="flat" color={row.photoIds.length ? 'success' : 'warning'} className="shrink-0">
+            {row.photoIds.length ? `${row.photoIds.length} photo${row.photoIds.length === 1 ? '' : 's'}` : 'No photos'}
+          </Chip>
+        </div>
+        {(photos.length > 0 || canAdd) && (
+          <div className="flex flex-wrap items-center gap-2">
+            {photos.length > 0 && (
+              <PhotoLightbox photos={photos} className="flex flex-wrap gap-1" thumbnailClassName="h-12 w-12 rounded-small object-cover" />
+            )}
+            {canAdd && (
+              <Button size="sm" variant="flat" color="primary" onPress={() => onAdd(row.id)} data-testid={`add-photo-${row.id}`}>
+                Add photo
+              </Button>
+            )}
+          </div>
+        )}
+      </CardBody>
+    </Card>
   );
 }
 
@@ -191,24 +193,11 @@ export default function ItemsPhotosPage() {
       {visible.length === 0 ? (
         <EmptyState title="No items" message={rows.length ? 'No items match these filters.' : 'No items have been placed or connected in this deployment yet.'} />
       ) : (
-        <Table aria-label="Deployment items and photos" isCompact removeWrapper className="rounded-large border border-divider">
-          <TableHeader>
-            <TableColumn>Item</TableColumn>
-            <TableColumn>Photos</TableColumn>
-          </TableHeader>
-          <TableBody>
-            {visible.map((row) => (
-              <TableRow key={row.id} data-testid={`item-row-${row.id}`}>
-                <TableCell>
-                  <ItemCell row={row} />
-                </TableCell>
-                <TableCell>
-                  <PhotosCell row={row} canAdd={editable} onAdd={addPhoto} />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          {visible.map((row) => (
+            <ItemCard key={row.id} row={row} canAdd={editable} onAdd={addPhoto} />
+          ))}
+        </div>
       )}
       {editor}
     </>
