@@ -7,9 +7,7 @@ import {
   ErrorState,
   LoadingState,
   PageHeader,
-  PhotoLightbox,
   useAuth,
-  type LightboxPhoto,
 } from '@spookydecs/ui';
 import { fetchImageById } from '../api/deploymentsApi';
 import { ITEM_CLASS_BUCKETS, ZONE_LABELS } from '../config/deploymentsConfig';
@@ -18,9 +16,16 @@ import { EDITABLE_STATUSES, loadGraph, type LoadedGraph } from '../lib/loadGraph
 import { useAddItemPhoto } from '../lib/useAddItemPhoto';
 import { StatusChip } from '../components/StatusChip';
 
-/** Resolves an item's photo ids to lightbox photos (thumbnails open the full-size viewer). */
-function useItemPhotos(photoIds: string[]): LightboxPhoto[] {
-  const [photos, setPhotos] = useState<LightboxPhoto[]>([]);
+interface ItemPhoto {
+  /** Original image (what the tile links to). */
+  url: string;
+  thumbUrl?: string;
+  key: string;
+}
+
+/** Resolves an item's photo ids to their original and thumbnail URLs. */
+function useItemPhotos(photoIds: string[]): ItemPhoto[] {
+  const [photos, setPhotos] = useState<ItemPhoto[]>([]);
   const key = photoIds.join(',');
   useEffect(() => {
     let cancelled = false;
@@ -59,24 +64,11 @@ function ItemCard({ row, canAdd, onAdd }: { row: ItemRow; canAdd: boolean; onAdd
       }`}
     >
       {photos.length > 0 && (
-        <PhotoLightbox
-          photos={photos}
-          renderThumbnail={({ photo, index, ref, open }) =>
-            index === 0 ? (
-              <img
-                ref={ref as React.Ref<HTMLImageElement>}
-                onClick={open}
-                src={photo.thumbUrl ?? photo.url}
-                alt={row.name}
-                loading="lazy"
-                className="absolute inset-0 h-full w-full cursor-zoom-in object-cover"
-              />
-            ) : (
-              // Later photos only exist so the lightbox can page through them.
-              <img ref={ref as React.Ref<HTMLImageElement>} src={photo.thumbUrl ?? photo.url} alt="" className="hidden" />
-            )
-          }
-        />
+        // The lightbox rendered these skewed (no intrinsic dimensions), so the cover links straight
+        // to the original image instead.
+        <a href={photos[0].url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 cursor-zoom-in">
+          <img src={photos[0].thumbUrl ?? photos[0].url} alt={row.name} loading="lazy" className="h-full w-full object-cover" />
+        </a>
       )}
 
       {!hasPhotos && (
