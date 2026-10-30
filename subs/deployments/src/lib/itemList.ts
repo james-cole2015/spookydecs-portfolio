@@ -18,12 +18,15 @@ export interface ItemRow {
   photoIds: string[];
 }
 
+/** Pass-through wiring, not decorations — not worth photographing, so never listed. */
+const EXCLUDED_CLASS_TYPES = ['Cord', 'Plug'];
+
 export function classBucket(classType?: string): string | null {
   return ITEM_CLASS_BUCKETS.find((b) => b.classTypes.includes(classType || ''))?.key ?? null;
 }
 
 /**
- * An item is listed when it has an active placement or an inbound active connection — the same
+ * Cords and plugs are excluded. An item is listed when it has an active placement or an inbound active connection — the same
  * "deployed set" rule CompletePage uses. Photos come from the declaration and inbound connections.
  */
 export function deriveItemList(input: GraphInput, opts: { applyStatusFilter: boolean }): ItemRow[] {
@@ -35,6 +38,7 @@ export function deriveItemList(input: GraphInput, opts: { applyStatusFilter: boo
   const touch = (itemId: string, zone: string, photoIds: string[] = []) => {
     if (roots.has(itemId)) return;
     const item = input.items[itemId];
+    if (EXCLUDED_CLASS_TYPES.includes(item?.class_type || '')) return;
     if (opts.applyStatusFilter && !LIVE_ITEM_STATUSES.includes(item?.status || '')) return;
     const row =
       rows.get(itemId) ??

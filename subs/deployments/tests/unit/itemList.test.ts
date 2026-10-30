@@ -14,6 +14,8 @@ const input: GraphInput = {
     B: { id: 'B', short_name: 'Ghost', class_type: 'Inflatable', status: 'PreDeployment' },
     C: { id: 'C', short_name: 'Torn down', class_type: 'Static Prop', status: 'Stored' },
     D: { id: 'D', short_name: 'Lights', class_type: 'String Light', status: 'Deployed' },
+    F: { id: 'F', short_name: 'Extension', class: 'Accessory', class_type: 'Cord', status: 'Deployed' },
+    G: { id: 'G', short_name: 'Splitter', class: 'Accessory', class_type: 'Plug', status: 'Deployed' },
     E: { id: 'E', short_name: 'Orphan', class_type: 'Static Prop', status: 'Deployed' },
   },
   placements: [
@@ -23,6 +25,8 @@ const input: GraphInput = {
   ],
   connections: [
     { connection_id: 'c1', from_item_id: 'OUT-1', to_item_id: 'B', zone_code: 'FY', photo_ids: ['ph2', 'ph3'] },
+    { connection_id: 'c3', from_item_id: 'OUT-1', to_item_id: 'F', zone_code: 'FY' },
+    { connection_id: 'c4', from_item_id: 'F', to_item_id: 'G', zone_code: 'FY' },
     { connection_id: 'c2', from_item_id: 'OUT-2', to_item_id: 'D', zone_code: 'BY' },
   ],
 };
@@ -37,6 +41,14 @@ describe('deriveItemList', () => {
     const ids = deriveItemList(input, { applyStatusFilter: true }).map((r) => r.id);
     expect(ids).not.toContain('E');
     expect(ids).not.toContain('OUT-1');
+  });
+
+  it('excludes cords and plugs, live and snapshot', () => {
+    for (const applyStatusFilter of [true, false]) {
+      const ids = deriveItemList(input, { applyStatusFilter }).map((r) => r.id);
+      expect(ids).not.toContain('F');
+      expect(ids).not.toContain('G');
+    }
   });
 
   it('snapshot: no status filter, so teardown-rewritten statuses still list', () => {
