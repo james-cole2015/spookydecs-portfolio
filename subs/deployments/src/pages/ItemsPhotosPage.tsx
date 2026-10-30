@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { Button, Card, CardBody, Chip, Tab, Tabs } from '@heroui/react';
+import { Button, Chip, Tab, Tabs } from '@heroui/react';
 import {
   Breadcrumbs,
   EmptyState,
@@ -44,39 +44,82 @@ function useItemPhotos(photoIds: string[]): LightboxPhoto[] {
   return photos;
 }
 
+/**
+ * Photo-led tile (#689): the cover photo fills the tile, with the name on a bottom scrim. An item
+ * with no photo gets a dashed placeholder so coverage gaps stand out at a glance.
+ */
 function ItemCard({ row, canAdd, onAdd }: { row: ItemRow; canAdd: boolean; onAdd: (id: string) => void }) {
   const photos = useItemPhotos(row.photoIds);
+  const hasPhotos = row.photoIds.length > 0;
   return (
-    <Card data-testid={`item-row-${row.id}`}>
-      <CardBody className="gap-2 p-3">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <div className="truncate font-medium text-foreground">{row.name}</div>
-            <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-default-500">
-              <span>{row.classType || 'Unknown class'}</span>
-              <Chip size="sm" variant="flat">
-                {ZONE_LABELS[row.zone] || row.zone || 'No zone'}
-              </Chip>
-            </div>
-          </div>
-          <Chip size="sm" variant="flat" color={row.photoIds.length ? 'success' : 'warning'} className="shrink-0">
-            {row.photoIds.length ? `${row.photoIds.length} photo${row.photoIds.length === 1 ? '' : 's'}` : 'No photos'}
-          </Chip>
+    <div
+      data-testid={`item-row-${row.id}`}
+      className={`relative aspect-[4/3] overflow-hidden rounded-large ${
+        hasPhotos ? 'bg-default-100' : 'border-2 border-dashed border-default-300 bg-default-50'
+      }`}
+    >
+      {photos.length > 0 && (
+        <PhotoLightbox
+          photos={photos}
+          renderThumbnail={({ photo, index, ref, open }) =>
+            index === 0 ? (
+              <img
+                ref={ref as React.Ref<HTMLImageElement>}
+                onClick={open}
+                src={photo.thumbUrl ?? photo.url}
+                alt={row.name}
+                loading="lazy"
+                className="absolute inset-0 h-full w-full cursor-zoom-in object-cover"
+              />
+            ) : (
+              // Later photos only exist so the lightbox can page through them.
+              <img ref={ref as React.Ref<HTMLImageElement>} src={photo.thumbUrl ?? photo.url} alt="" className="hidden" />
+            )
+          }
+        />
+      )}
+
+      {!hasPhotos && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pb-10 text-default-400">
+          <span className="text-sm">No photos</span>
+          {canAdd && (
+            <Button size="sm" color="primary" variant="flat" onPress={() => onAdd(row.id)} data-testid={`add-photo-${row.id}`}>
+              Add photo
+            </Button>
+          )}
         </div>
-        {(photos.length > 0 || canAdd) && (
-          <div className="flex flex-wrap items-center gap-2">
-            {photos.length > 0 && (
-              <PhotoLightbox photos={photos} className="flex flex-wrap gap-1" thumbnailClassName="h-12 w-12 rounded-small object-cover" />
-            )}
-            {canAdd && (
-              <Button size="sm" variant="flat" color="primary" onPress={() => onAdd(row.id)} data-testid={`add-photo-${row.id}`}>
-                Add photo
-              </Button>
-            )}
-          </div>
-        )}
-      </CardBody>
-    </Card>
+      )}
+
+      {hasPhotos && (
+        <div className="absolute right-2 top-2 flex items-center gap-1">
+          {row.photoIds.length > 1 && (
+            <Chip size="sm" variant="solid" color="default" className="bg-black/60 text-white">
+              +{row.photoIds.length - 1}
+            </Chip>
+          )}
+          {canAdd && (
+            <Button
+              isIconOnly
+              size="sm"
+              variant="solid"
+              className="bg-black/60 text-white"
+              aria-label={`Add photo to ${row.name}`}
+              onPress={() => onAdd(row.id)}
+              data-testid={`add-photo-${row.id}`}
+            >
+              +
+            </Button>
+          )}
+        </div>
+      )}
+
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-3 pb-2 pt-8">
+        <div className="truncate text-sm font-medium text-white">{row.name}</div>
+        <div className="truncate text-xs text-white/75">
+          {row.classType || 'Unknown class'} · {ZONE_LABELS[row.zone] || row.zone || 'No zone'}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -203,7 +246,7 @@ export default function ItemsPhotosPage() {
       {visible.length === 0 ? (
         <EmptyState title="No items" message={rows.length ? 'No items match these filters.' : 'No items have been placed or connected in this deployment yet.'} />
       ) : (
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
           {visible.map((row) => (
             <ItemCard key={row.id} row={row} canAdd={editable} onAdd={addPhoto} />
           ))}
