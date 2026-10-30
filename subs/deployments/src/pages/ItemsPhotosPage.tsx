@@ -7,6 +7,7 @@ import {
   ErrorState,
   LoadingState,
   PageHeader,
+  PhotoLightbox,
   useAuth,
 } from '@spookydecs/ui';
 import { fetchImageById } from '../api/deploymentsApi';
@@ -17,29 +18,55 @@ import { useAddItemPhoto } from '../lib/useAddItemPhoto';
 import { StatusChip } from '../components/StatusChip';
 
 interface ItemPhoto {
-  /** Original image (what the tile links to). */
+  /** Original image (what the lightbox shows). */
   url: string;
   thumbUrl?: string;
   key: string;
+  /** Nominal full-size dimensions with the image's true aspect ratio (see probeRatio). */
+  width: number;
+  height: number;
 }
 
-/** Resolves an item's photo ids to their original and thumbnail URLs. */
+const NOMINAL_LONG_SIDE = 2400;
+
+/**
+ * The lightbox sizes its slide from width/height, and the image records don't store them.
+ * Thumbnails share the original's aspect ratio, so probe the small thumbnail and scale to a
+ * nominal size instead of downloading the multi-MB original just to measure it.
+ */
+function probeRatio(src: string): Promise<{ width: number; height: number }> {
+  return new Promise((resolve) => {
+    const img = new window.Image();
+    img.onload = () => {
+      const { naturalWidth: w, naturalHeight: h } = img;
+      const scale = NOMINAL_LONG_SIDE / Math.max(w, h);
+      resolve({ width: Math.round(w * scale), height: Math.round(h * scale) });
+    };
+    img.onerror = () => resolve({ width: NOMINAL_LONG_SIDE, height: NOMINAL_LONG_SIDE });
+    img.src = src;
+  });
+}
+
+/** Resolves an item's photo ids to lightbox photos with probed aspect ratios. */
 function useItemPhotos(photoIds: string[]): ItemPhoto[] {
   const [photos, setPhotos] = useState<ItemPhoto[]>([]);
   const key = photoIds.join(',');
   useEffect(() => {
     let cancelled = false;
-    Promise.all(photoIds.map((pid) => fetchImageById(pid))).then((imgs) => {
-      if (cancelled) return;
-      setPhotos(
-        imgs
-          .filter(Boolean)
-          .map((img: any) => ({
-            url: img.cloudfront_url,
-            thumbUrl: img.thumb_cloudfront_url || img.cloudfront_url,
-            key: img.photo_id || img.cloudfront_url,
-          })),
-      );
+    Promise.all(
+      photoIds.map(async (pid) => {
+        const img: any = await fetchImageById(pid);
+        if (!img?.cloudfront_url) return null;
+        const thumbUrl = img.thumb_cloudfront_url || img.cloudfront_url;
+        return {
+          url: img.cloudfront_url,
+          thumbUrl,
+          key: img.photo_id || img.cloudfront_url,
+          ...(await probeRatio(thumbUrl)),
+        } as ItemPhoto;
+      }),
+    ).then((list) => {
+      if (!cancelled) setPhotos(list.filter((p): p is ItemPhoto => !!p));
     });
     return () => {
       cancelled = true;
@@ -64,11 +91,24 @@ function ItemCard({ row, canAdd, onAdd }: { row: ItemRow; canAdd: boolean; onAdd
       }`}
     >
       {photos.length > 0 && (
-        // The lightbox rendered these skewed (no intrinsic dimensions), so the cover links straight
-        // to the original image instead.
-        <a href={photos[0].url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 cursor-zoom-in">
-          <img src={photos[0].thumbUrl ?? photos[0].url} alt={row.name} loading="lazy" className="h-full w-full object-cover" />
-        </a>
+        <PhotoLightbox
+          photos={photos}
+          renderThumbnail={({ photo, index, ref, open }) =>
+            index === 0 ? (
+              <img
+                ref={ref as React.Ref<HTMLImageElement>}
+                onClick={open}
+                src={photo.thumbUrl ?? photo.url}
+                alt={row.name}
+                loading="lazy"
+                className="absolute inset-0 h-full w-full cursor-zoom-in object-cover"
+              />
+            ) : (
+              // Later photos only exist so the lightbox can page through them.
+              <img ref={ref as React.Ref<HTMLImageElement>} src={photo.thumbUrl ?? photo.url} alt="" className="hidden" />
+            )
+          }
+        />
       )}
 
       {!hasPhotos && (
