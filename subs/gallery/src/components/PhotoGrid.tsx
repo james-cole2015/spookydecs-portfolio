@@ -8,9 +8,10 @@
  * Each rich caption (name, location, tags, season/year) is carried onto
  * LightboxPhoto.caption.
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { PhotoLightbox, type LightboxPhoto } from '@spookydecs/ui';
 import { GALLERY_CONFIG, capitalize, getSeasonEmoji, type GalleryPhoto } from '../config/galleryConfig';
+import { groupOf, sortIntoGroups } from '../lib/groupPhotos';
 import { PhotoCard } from './PhotoCard';
 
 /** Build a readable caption line from a photo's metadata. */
@@ -27,8 +28,48 @@ function buildCaption(photo: GalleryPhoto): string {
   return parts.join('  •  ');
 }
 
-function toLightboxPhoto(photo: GalleryPhoto): LightboxPhoto {
+type Dims = { width: number; height: number };
+
+const NOMINAL_LONG_SIDE = 2400;
+
+/**
+ * The lightbox sizes each slide from width/height and the image records don't store
+ * them, so without dimensions it renders photos skewed (worst on mobile). Thumbnails
+ * share the original's aspect ratio: probe the small thumbnail and scale to a nominal
+ * size instead of downloading every multi-MB original just to measure it.
+ */
+function probeRatio(src: string): Promise<Dims> {
+  return new Promise((resolve) => {
+    const img = new window.Image();
+    img.onload = () => {
+      const { naturalWidth: w, naturalHeight: h } = img;
+      const scale = NOMINAL_LONG_SIDE / Math.max(w, h);
+      resolve({ width: Math.round(w * scale), height: Math.round(h * scale) });
+    };
+    img.onerror = () => resolve({ width: NOMINAL_LONG_SIDE, height: NOMINAL_LONG_SIDE });
+    img.src = src;
+  });
+}
+
+/** Probed dimensions for the given photos, keyed by photo_id, filled in as they resolve. */
+function useProbedDims(photos: GalleryPhoto[]): Record<string, Dims> {
+  const [dims, setDims] = useState<Record<string, Dims>>({});
+  const requested = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    photos.forEach((p) => {
+      if (requested.current.has(p.photo_id)) return;
+      requested.current.add(p.photo_id);
+      probeRatio(p.thumb_cloudfront_url ?? p.cloudfront_url).then((d) =>
+        setDims((prev) => ({ ...prev, [p.photo_id]: d })),
+      );
+    });
+  }, [photos]);
+  return dims;
+}
+
+function toLightboxPhoto(photo: GalleryPhoto, dims?: Dims): LightboxPhoto {
   return {
+    ...dims,
     key: photo.photo_id,
     url: photo.cloudfront_url,
     thumbUrl: photo.thumb_cloudfront_url ?? photo.cloudfront_url,
@@ -41,7 +82,9 @@ interface Props {
   photos: GalleryPhoto[];
 }
 
-export function PhotoGrid({ photos }: Props) {
+export function PhotoGrid({ photos: apiPhotos }: Props) {
+  // Break into season/year groups (newest period first); newest upload first within each.
+  const photos = useMemo(() => sortIntoGroups(apiPhotos), [apiPhotos]);
   const [visible, setVisible] = useState<number>(GALLERY_CONFIG.BATCH_SIZE);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
@@ -78,7 +121,8 @@ export function PhotoGrid({ photos }: Props) {
   }
 
   const shown = photos.slice(0, visible);
-  const lightboxPhotos = shown.map(toLightboxPhoto);
+  const dims = useProbedDims(shown);
+  const lightboxPhotos = shown.map((p) => toLightboxPhoto(p, dims[p.photo_id]));
 
   return (
     <div>
@@ -91,9 +135,24 @@ export function PhotoGrid({ photos }: Props) {
         photos={lightboxPhotos}
         className="columns-1 gap-4 sm:columns-2 lg:columns-3 xl:columns-4"
         showCaptions
-        renderThumbnail={({ index, ref, open }) => (
-          <PhotoCard ref={ref as React.Ref<HTMLImageElement>} photo={shown[index]} onOpen={open} />
-        )}
+        // Keep the close/zoom/counter controls always visible: the default tap action hides
+        // them, and on mobile that left no obvious way to leave the viewer.
+        options={{ tapAction: false }}
+        renderThumbnail={({ index, ref, open }) => {
+          const group = groupOf(shown[index]);
+          const startsGroup = index === 0 || groupOf(shown[index - 1]).key !== group.key;
+          return (
+            <>
+              {startsGroup && (
+                // column-span spans the header across the masonry columns, breaking the grid.
+                <h2 className="mb-4 mt-2 border-b border-default-200 pb-2 text-xl font-semibold text-foreground [column-span:all]">
+                  {group.emoji} {group.label}
+                </h2>
+              )}
+              <PhotoCard ref={ref as React.Ref<HTMLImageElement>} photo={shown[index]} onOpen={open} />
+            </>
+          );
+        }}
       />
 
       {visible < photos.length ? (
