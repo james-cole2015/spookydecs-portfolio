@@ -81,9 +81,6 @@ export function ItemsCards({ items, onView, onEdit, onDelete, canWrite, canDelet
                       {item.operational_status === false && (
                         <Chip size="sm" variant="flat" color="danger">Non-Operational</Chip>
                       )}
-                      {item.deployment_data && (item.deployment_data as any).deployed && (
-                        <Chip size="sm" variant="flat" color="primary">Deployed</Chip>
-                      )}
                     </div>
                   </div>
                 </div>
