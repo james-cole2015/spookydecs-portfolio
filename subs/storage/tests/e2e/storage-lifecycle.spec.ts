@@ -60,6 +60,8 @@ test('storage lifecycle: create → pack → mark packed → mark stored → unp
       // Never pack another suite's throwaway record (items/maintenance/ideas sentinels get swept mid-flight).
       if (String((i as any).short_name ?? '').includes('SENTINEL')) return false;
       const sd = i.storage_data || {};
+      // #701: only Ready items can be packed; a Deployed/PreDeployment item is a 400 at the API.
+      if ((i as any).status && (i as any).status !== 'Ready') return false;
       return sd.packable !== false && sd.is_stored === false && sd.single_packed !== true;
     });
     test.skip(!candidate, 'dev has no packable unpacked item available — fixture gap, not a #589 regression');
@@ -85,10 +87,23 @@ test('storage lifecycle: create → pack → mark packed → mark stored → unp
     await expect(page.getByText('Stored', { exact: true })).toBeVisible();
   });
 
+  await test.step('Store — the item is now on the shelf via Item.Stored (#701)', async () => {
+    await expect.poll(async () => {
+      const r = await api('GET', `/items/${itemId}`);
+      return (r.data ?? r.body)?.storage_data?.is_stored;
+    }, { timeout: 60_000, intervals: [2_000] }).toBe(true);
+  });
+
   await test.step('Un-store — back to Packed (#634: items cannot be removed from a Stored tote)', async () => {
     await page.getByTestId('mark-packed-btn').click();
     await page.getByTestId('confirm-mark-packed').click();
     await expect(page.getByText('Packed', { exact: true })).toBeVisible();
+    // Un-store re-publishes Item.Packed (is_stored=false); there is no Item.Unstored event.
+    await expect.poll(async () => {
+      const r = await api('GET', `/items/${itemId}`);
+      const it = r.data ?? r.body;
+      return { stored: it?.storage_data?.is_stored, status: it?.status };
+    }, { timeout: 60_000, intervals: [2_000] }).toEqual({ stored: false, status: 'Packed' });
   });
 
   await test.step('Unpack — remove the item from the tote', async () => {
