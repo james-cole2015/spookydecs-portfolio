@@ -46,11 +46,11 @@ test('storage coverage: pack → Item.Packed event → views → edit → Stored
     await expect(page.getByTestId(`content-item-${item.id}`)).toBeVisible();
   });
 
-  await test.step('EDA — Item.Packed sets is_stored, status Packed and the tote link on the item', async () => {
+  await test.step('EDA — Item.Packed boxes the item: status Packed, tote link set, NOT yet on the shelf (#701)', async () => {
     await expect.poll(async () => {
       const it = await itemNow();
       return { stored: it?.storage_data?.is_stored, status: it?.status, tote: it?.storage_data?.tote_id };
-    }, { timeout: 60_000, intervals: [2_000] }).toEqual({ stored: true, status: 'Packed', tote: toteId });
+    }, { timeout: 60_000, intervals: [2_000] }).toEqual({ stored: false, status: 'Packed', tote: toteId });
   });
 
   await test.step('Unpacked view no longer lists the item', async () => {

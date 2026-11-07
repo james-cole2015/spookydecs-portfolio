@@ -56,14 +56,25 @@ function PackChooser() {
     [storage],
   );
 
-  // Single Pack: items flagged single_packed (pack in their original box), not yet stored.
+  // Items that already have a Self unit (created Empty, awaiting Mark as Packed, or packed).
+  const assignedItemIds = useMemo(() => {
+    const ids = new Set<string>();
+    storage.forEach((u) => {
+      const assigned = (u as Record<string, unknown>).assigned_item_id;
+      if (typeof assigned === 'string') ids.add(assigned);
+      ((u.contents as string[] | undefined) ?? []).forEach((c) => ids.add(c));
+    });
+    return ids;
+  }, [storage]);
+
+  // Single Pack: items flagged single_packed (pack in their original box), not yet in a unit.
   const singleItems = useMemo(
     () =>
       items.filter((i) => {
         const sd = storageData(i);
-        return sd.single_packed === true && sd.is_stored === false && canBePacked(i) && i.class_type !== 'Receptacle';
+        return sd.single_packed === true && sd.is_stored === false && canBePacked(i) && !assignedItemIds.has(i.id) && i.class_type !== 'Receptacle';
       }),
-    [items],
+    [items, assignedItemIds],
   );
 
   // Store: oversized / non-packable items (packable === false), not yet stored.
@@ -97,7 +108,11 @@ function PackChooser() {
       const ids = [...selected];
       if (kind === 'single') await storageAPI.packSingleItems(ids, location);
       else await itemsAPI.bulkStore(ids, location);
-      toast.showSuccess(`Successfully ${kind === 'single' ? 'packed' : 'stored'} ${ids.length} item(s) in ${location}!`);
+      toast.showSuccess(
+        kind === 'single'
+          ? `Created ${ids.length} box${ids.length === 1 ? '' : 'es'} in ${location}. Open each one and choose Mark as Packed when the item is boxed.`
+          : `Successfully stored ${ids.length} item(s) in ${location}!`,
+      );
       navigate('/storage');
     } catch (e: any) {
       toast.showError(e?.message ?? 'Failed to complete packing');
@@ -164,12 +179,12 @@ function PackChooser() {
         <Tab key="single" title={<span className="flex items-center gap-2"><MapPin size={18} /> Single Pack</span>}>
           <Card shadow="md" className="bg-content1">
             <CardBody className="gap-4">
-              <p className="text-default-500">Select items to pack in their original boxes, then choose a location.</p>
+              <p className="text-default-500">Select items that live in their original boxes, then choose a location. This creates an empty box for each item; open it and choose Mark as Packed once the item is boxed.</p>
               {locationSelect}
               <ItemPicker items={singleItems} selected={selected} onToggle={toggle} />
               <div className="flex items-center justify-between">
                 <span className="text-sm text-default-500">{selected.size} selected</span>
-                <Button color="primary" isLoading={busy} onPress={() => runFlow('single')}>Pack Items</Button>
+                <Button color="primary" isLoading={busy} onPress={() => runFlow('single')}>Create Boxes</Button>
               </div>
             </CardBody>
           </Card>
