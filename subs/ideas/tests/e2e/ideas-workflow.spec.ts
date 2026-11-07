@@ -196,12 +196,16 @@ test('ideas workflow: IdeaBuild.Complete → item vendor_metadata + finance acqu
 });
 
 /** Seeds an idea that already satisfies the Workbench gate and moves it there through the API. Needs room under the WIP cap. */
-async function seedWorkbenchIdea(api: any, label: string) {
+async function seedWorkbenchIdea(
+  api: any,
+  label: string,
+  steps: Array<{ title: string; description: string; status: string }> = [{ title: 'Cut pipe', description: 'Cut it', status: 'pending' }],
+) {
   const idea = await createIdea(api, label, {
     description: 'workbench build',
     link: 'https://example.com/wb',
     materials: [{ name: 'PVC pipe', done: false }],
-    build_instructions: [{ title: 'Cut pipe', description: 'Cut it', status: 'pending' }],
+    build_instructions: steps,
   });
   expect((await putIdea(api, idea, { status: 'Planning' })).status).toBeLessThan(300);
   const res = await putIdea(api, idea, { status: 'Workbench' });
@@ -211,7 +215,13 @@ async function seedWorkbenchIdea(api: any, label: string) {
 
 test('workbench: Complete Build wizard (2 units + remainder idea) → Built, items, remainder idea, events', async ({ page, ideas }) => {
   const { api } = ideas;
-  const idea = await seedWorkbenchIdea(api, 'Wizard');
+  // Mixed statuses so the remainder idea's carried-over progress (#592) is observable.
+  const steps = [
+    { title: 'Cut pipe', description: 'Cut it', status: 'done' },
+    { title: 'Prime', description: 'Prime it', status: 'in_progress' },
+    { title: 'Paint', description: 'Paint it', status: 'pending' },
+  ];
+  const idea = await seedWorkbenchIdea(api, 'Wizard', steps);
   const cost = await api('POST', '/finance/costs', {
     item_name: `${idea.title} materials`, cost_type: 'build', category: 'materials', total_cost: '12.35',
     cost_date: new Date().toISOString().slice(0, 10), vendor: 'E2E Hardware', class_type: 'item', no_receipt: true, related_idea_id: idea.id,
@@ -268,6 +278,15 @@ test('workbench: Complete Build wizard (2 units + remainder idea) → Built, ite
     expect(remainder, 'remainder idea').toBeTruthy();
     expect(remainder).toMatchObject({ status: 'Considering', remaining_units: 3 });
     expect(remainder.notes).toContain('shapes cut, unpainted');
+    // [592] Step progress carries over; step_ids are fresh (build_sessions anchor per idea).
+    const source = await getIdea(api, idea.id);
+    const carried = (await getIdea(api, remainder.id)).build_instructions;
+    expect(carried.map((s: any) => [s.title, s.status])).toEqual(steps.map((s) => [s.title, s.status]));
+    const sourceIds = new Set(source.build_instructions.map((s: any) => s.step_id));
+    for (const s of carried) {
+      expect(s.step_id).toBeTruthy();
+      expect(sourceIds.has(s.step_id)).toBe(false);
+    }
   });
 
   await test.step('Events — items get source_idea_id and the finance acquisition row appears', async () => {
