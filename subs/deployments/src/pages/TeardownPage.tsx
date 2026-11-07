@@ -18,12 +18,14 @@ import { Trash2 } from 'lucide-react';
 import { Breadcrumbs, ConfirmDialog, EmptyState, ErrorState, LoadingState, PageHeader, useToast } from '@spookydecs/ui';
 import {
   getDeployment,
-  searchItems,
+  getItem,
   apiTeardownStart,
   apiTeardownItem,
   apiTeardownComplete,
 } from '../api/deploymentsApi';
 import { StatusChip } from '../components/StatusChip';
+import { hydrateZones } from '../lib/teardownHydrate';
+import type { TItem, TZone } from '../lib/teardownHydrate';
 import type { Deployment } from '../config/deploymentsConfig';
 
 const ZONE_ORDER: Record<string, number> = { FY: 1, BY: 2, SY: 3 };
@@ -31,43 +33,6 @@ const ZONE_ICON: Record<string, string> = { FY: '🏡', BY: '🌳', SY: '🏠' }
 const CLASS_ORDER = ['Decoration', 'Light', 'Accessory'];
 /** Statuses that mean the item no longer needs tearing down. */
 const DONE_STATUSES = ['TearDown', 'Packed'];
-
-interface TItem {
-  id: string;
-  short_name?: string;
-  status?: string;
-  class?: string;
-}
-interface TZone {
-  zone_code: string;
-  zone_name: string;
-  items_deployed: TItem[];
-}
-
-async function hydrateZones(zones: any[]): Promise<TZone[]> {
-  // Packed is included so an item packed before/without teardown renders as done, not 'Unknown' (#698).
-  const [deployedRes, teardownRes, packedRes] = await Promise.all([
-    searchItems({ status: 'Deployed' }),
-    searchItems({ status: 'TearDown' }),
-    searchItems({ status: 'Packed' }),
-  ]);
-  const itemMap: Record<string, TItem> = {};
-  [
-    ...(deployedRes.data?.items || []),
-    ...(teardownRes.data?.items || []),
-    ...(packedRes.data?.items || []),
-  ].forEach((item: any) => {
-    itemMap[item.id] = item;
-  });
-  return zones.map((zone) => ({
-    ...zone,
-    items_deployed: (zone.items_deployed || []).map((idOrObj: any) =>
-      typeof idOrObj === 'object' && idOrObj !== null
-        ? idOrObj
-        : itemMap[idOrObj] || { id: idOrObj, short_name: idOrObj, status: 'Unknown', class: 'Unknown' },
-    ),
-  }));
-}
 
 export default function TeardownPage() {
   const { id } = useParams();
@@ -94,7 +59,7 @@ export default function TeardownPage() {
       const data = deploymentResponse.data;
       const dep = data.metadata && data.zones ? data.metadata : data;
       const rawZones = data.zones || [];
-      const hydrated = await hydrateZones(rawZones);
+      const hydrated = await hydrateZones(getItem, rawZones);
       const sorted = hydrated.sort(
         (a, b) => (ZONE_ORDER[a.zone_code] || 99) - (ZONE_ORDER[b.zone_code] || 99),
       );
