@@ -279,8 +279,13 @@ test('workbench: Complete Build wizard (2 units + remainder idea) → Built, ite
     expect(remainder).toMatchObject({ status: 'Considering', remaining_units: 3 });
     expect(remainder.notes).toContain('shapes cut, unpainted');
     // [592] Step progress carries over; step_ids are fresh (build_sessions anchor per idea).
-    const source = await getIdea(api, idea.id);
-    const carried = (await getIdea(api, remainder.id)).build_instructions;
+    // GET-one (not the list used by getIdea) — only it runs the step_id read-repair backfill.
+    const fetchOne = async (id: string) => {
+      const r = await api('GET', `/ideas/${encodeURIComponent(id)}`);
+      return r.data?.data ?? r.body?.data ?? r.data ?? r.body;
+    };
+    const source = await fetchOne(idea.id);
+    const carried = (await fetchOne(remainder.id)).build_instructions;
     expect(carried.map((s: any) => [s.title, s.status])).toEqual(steps.map((s) => [s.title, s.status]));
     const sourceIds = new Set(source.build_instructions.map((s: any) => s.step_id));
     for (const s of carried) {
