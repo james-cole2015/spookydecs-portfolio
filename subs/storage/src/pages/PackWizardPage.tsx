@@ -6,6 +6,7 @@ import { storageAPI, itemsAPI, type ItemRecord } from '../api/storageApi';
 import STORAGE_CONFIG, { type StorageUnit } from '../config/storageConfig';
 import { Breadcrumbs, PageHeader, LoadingState, ErrorState, useAuth } from '@spookydecs/ui';
 import { ItemPicker } from '../components/ItemPicker';
+import { canBePacked } from '../lib/packState';
 import { useToast } from '@spookydecs/ui';
 
 function storageData(item: ItemRecord): Record<string, unknown> {
@@ -60,7 +61,7 @@ function PackChooser() {
     () =>
       items.filter((i) => {
         const sd = storageData(i);
-        return sd.single_packed === true && sd.is_stored === false && i.class_type !== 'Receptacle';
+        return sd.single_packed === true && sd.is_stored === false && canBePacked(i) && i.class_type !== 'Receptacle';
       }),
     [items],
   );
@@ -229,7 +230,7 @@ function TotePackFlow({ id }: { id: string }) {
         const available = all.filter((item) => {
           if (!isRealItem(item)) return false;
           const sd = storageData(item);
-          return sd.packable !== false && sd.is_stored === false && sd.single_packed !== true && item.class_type !== 'Receptacle';
+          return sd.packable !== false && sd.is_stored === false && canBePacked(item) && sd.single_packed !== true && item.class_type !== 'Receptacle';
         });
         setTote(raw);
         setItems(available);
