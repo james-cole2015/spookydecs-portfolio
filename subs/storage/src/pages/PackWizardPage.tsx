@@ -6,7 +6,7 @@ import { storageAPI, itemsAPI, type ItemRecord } from '../api/storageApi';
 import STORAGE_CONFIG, { type StorageUnit } from '../config/storageConfig';
 import { Breadcrumbs, PageHeader, LoadingState, ErrorState, useAuth } from '@spookydecs/ui';
 import { ItemPicker } from '../components/ItemPicker';
-import { canBePacked } from '../lib/packState';
+import { canBePacked, itemIdsWithUnit } from '../lib/packState';
 import { useToast } from '@spookydecs/ui';
 
 function storageData(item: ItemRecord): Record<string, unknown> {
@@ -56,16 +56,7 @@ function PackChooser() {
     [storage],
   );
 
-  // Items that already have a Self unit (created Empty, awaiting Mark as Packed, or packed).
-  const assignedItemIds = useMemo(() => {
-    const ids = new Set<string>();
-    storage.forEach((u) => {
-      const assigned = (u as Record<string, unknown>).assigned_item_id;
-      if (typeof assigned === 'string') ids.add(assigned);
-      ((u.contents as string[] | undefined) ?? []).forEach((c) => ids.add(c));
-    });
-    return ids;
-  }, [storage]);
+  const assignedItemIds = useMemo(() => itemIdsWithUnit(storage), [storage]);
 
   // Single Pack: items flagged single_packed (pack in their original box), not yet in a unit.
   const singleItems = useMemo(
