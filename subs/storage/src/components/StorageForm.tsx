@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Input, Textarea, Select, SelectItem } from '@heroui/react';
 import STORAGE_CONFIG, { getFormFields, getFieldOptions, validateField, type FormField } from '../config/storageConfig';
-import { itemsAPI, type ItemRecord } from '../api/storageApi';
+import { itemsAPI, storageAPI, type ItemRecord } from '../api/storageApi';
+import { selfUnitCandidates } from '../lib/packState';
 
 export type FormData = Record<string, string>;
 
 /**
  * Renders the storage create/edit fields for a given class type, driven by
  * STORAGE_CONFIG.FORM_FIELDS. For Self units the `item-select` field is an
- * unpacked-items dropdown scoped to the chosen season.
+ * dropdown of the chosen season's single-packed items that have no unit yet.
  */
 export function StorageForm({
   classType,
@@ -28,9 +29,8 @@ export function StorageForm({
   useEffect(() => {
     let active = true;
     if (classType === 'Self' && season) {
-      itemsAPI
-        .getUnpacked(season)
-        .then((res) => active && setItems(res))
+      Promise.all([itemsAPI.getUnpacked(season), storageAPI.getAll({})])
+        .then(([unpacked, units]) => active && setItems(selfUnitCandidates(unpacked, units)))
         .catch(() => active && setItems([]));
     } else {
       setItems([]);
