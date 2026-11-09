@@ -18,3 +18,36 @@ body {
 #root {
   min-height: calc(100vh - 64px);
 }
+
+/* Label printing (#707): print only .print-area, one Letter page per .print-page,
+   backgrounds forced on so the season band prints. */
+@page {
+  size: letter;
+  margin: 0;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+  .print-page {
+    position: relative;
+    width: 8.5in;
+    height: 11in;
+    overflow: hidden;
+  }
+  .label-card,
+  .label-band {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

@@ -12,7 +12,7 @@ import {
   AccordionItem,
   useDisclosure,
 } from '@heroui/react';
-import { Package, BarChart3, Luggage, Plus, Archive } from 'lucide-react';
+import { Package, BarChart3, Luggage, Plus, Archive, Printer } from 'lucide-react';
 import { storageAPI, itemsAPI, photosAPI, type ItemRecord } from '../api/storageApi';
 import STORAGE_CONFIG, { type StorageUnit } from '../config/storageConfig';
 import { applyFilters, calculateStats, type StorageStats } from '../lib/stats';
@@ -197,6 +197,9 @@ export default function ListPage() {
               aria-label="View statistics"
             >
               Stats{unpackedBadge > 0 ? ` (${unpackedBadge})` : ''}
+            </Button>
+            <Button variant="flat" startContent={<Printer size={18} />} onPress={() => navigate('/storage/labels')} data-testid="print-labels-link">
+              Print labels
             </Button>
             <Button variant="flat" color="secondary" startContent={<Luggage size={18} />} onPress={() => navigate('/storage/pack')}>
               Pack
