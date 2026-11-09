@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Button, Input } from '@heroui/react';
+import { Button, Input, Tabs, Tab } from '@heroui/react';
 import { Printer, Plus, X, GripVertical } from 'lucide-react';
 import {
   DndContext,
@@ -27,6 +27,7 @@ import type { LabelItem } from '../lib/labelContents';
 const POOL_PREFIX = 'pool:';
 const SHEET_ID = 'sheet';
 const SCREEN_ZOOM = 0.42;
+const PREVIEW_ZOOM = 0.7;
 const PER_PAGE = AVERY_5889.perPage;
 
 interface Offsets {
@@ -97,6 +98,65 @@ function SheetTile({ unit, contents, onRemove }: { unit: StorageUnit; contents: 
   );
 }
 
+/**
+ * Real-size Letter pages with the cards placed at the current offsets. Used for both the
+ * on-screen preview (guides on, scaled by the caller) and the print-only area (guides off).
+ */
+function SheetPages({
+  pages,
+  offsets,
+  contentsById,
+  guides,
+}: {
+  pages: StorageUnit[][];
+  offsets: Offsets;
+  contentsById: Record<string, LabelItem[]>;
+  guides: boolean;
+}) {
+  const slotTop = (base: number, i: number, gap: number) => base + i * (LABEL_H_IN + gap);
+  return (
+    <>
+      {pages.map((page, pi) => (
+        <div
+          key={pi}
+          className={`print-page ${guides ? 'bg-white shadow-lg' : ''}`}
+          style={{
+            breakAfter: pi === pages.length - 1 ? 'auto' : 'page',
+            position: 'relative',
+            width: `${AVERY_5889.pageW}in`,
+            height: `${AVERY_5889.pageH}in`,
+            overflow: 'hidden',
+          }}
+          data-testid={guides ? `preview-page-${pi}` : undefined}
+        >
+          {guides &&
+            Array.from({ length: AVERY_5889.perPage }, (_, i) => (
+              <div
+                key={`guide-${i}`}
+                className="absolute border border-dashed border-primary"
+                style={{
+                  left: `${AVERY_5889.left}in`,
+                  top: `${slotTop(AVERY_5889.top, i, AVERY_5889.gap)}in`,
+                  width: `${LABEL_W_IN}in`,
+                  height: `${LABEL_H_IN}in`,
+                }}
+              />
+            ))}
+          {page.map((u, ci) => (
+            <div
+              key={u.id}
+              className={guides ? 'absolute outline outline-1 outline-neutral-300' : 'absolute'}
+              style={{ left: `${offsets.x}in`, top: `${slotTop(offsets.y, ci, offsets.gap)}in` }}
+            >
+              <LabelTemplate unit={u} contents={contentsById[u.id] ?? []} />
+            </div>
+          ))}
+        </div>
+      ))}
+    </>
+  );
+}
+
 function SheetDrop({ children, empty }: { children: React.ReactNode; empty: boolean }) {
   const { setNodeRef, isOver } = useDroppable({ id: SHEET_ID });
   return (
@@ -120,6 +180,7 @@ export default function LabelsPage() {
   const [search, setSearch] = useState('');
   const [activeId, setActiveId] = useState<string | null>(null);
   const [offsets, setOffsets] = useState<Offsets>(loadOffsets);
+  const [view, setView] = useState<'edit' | 'preview'>('edit');
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -253,9 +314,35 @@ export default function LabelsPage() {
               </div>
 
               <div className="flex flex-col gap-3">
+                <Tabs selectedKey={view} onSelectionChange={(k) => setView(k as 'edit' | 'preview')} aria-label="View" size="sm">
+                  <Tab key="edit" title="Arrange" />
+                  <Tab key="preview" title="Sheet preview" data-testid="tab-preview" />
+                </Tabs>
                 <Typography type="body-sm" className="text-default-500">
                   {sheetUnits.length} label{sheetUnits.length === 1 ? '' : 's'} · {pages.length} sheet{pages.length === 1 ? '' : 's'} · drag to reorder (2 per sheet, in order)
                 </Typography>
+                {view === 'preview' && (
+                  <div className="flex flex-col gap-4 rounded-xl bg-default-100 p-4" data-testid="sheet-preview">
+                    {pages.length === 0 ? (
+                      <Typography type="body-sm" className="text-default-500">Add labels to see the sheet.</Typography>
+                    ) : (
+                      pages.map((page, pi) => (
+                        <div key={pi}>
+                          <Typography type="body-xs" className="mb-1 text-default-500">Sheet {pi + 1} of {pages.length}</Typography>
+                          <div style={{ width: `${AVERY_5889.pageW * PREVIEW_ZOOM}in`, height: `${AVERY_5889.pageH * PREVIEW_ZOOM}in` }}>
+                            <div style={{ zoom: PREVIEW_ZOOM }}>
+                              <SheetPages pages={[page]} offsets={offsets} contentsById={contentsById} guides />
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                    <Typography type="body-xs" className="text-default-500">
+                      Dashed blue = Avery 5889 card outline. Gray outline = where your labels will print (follows the alignment offsets).
+                    </Typography>
+                  </div>
+                )}
+                <div className={view === 'preview' ? 'hidden' : ''}>
                 <SheetDrop empty={sheetUnits.length === 0}>
                   <SortableContext items={selected} strategy={rectSortingStrategy}>
                     <div className="flex flex-wrap gap-3">
@@ -265,6 +352,7 @@ export default function LabelsPage() {
                     </div>
                   </SortableContext>
                 </SheetDrop>
+                </div>
 
                 <details className="rounded-lg border border-default-200 p-3">
                   <summary className="cursor-pointer text-sm text-foreground">Print alignment (inches)</summary>
@@ -297,22 +385,7 @@ export default function LabelsPage() {
 
           {/* Print-only: real-size pages, two cards each. Everything else is hidden by index.css @media print. */}
           <div className="print-area hidden print:block" aria-hidden>
-            {pages.map((page, pi) => (
-              <div key={pi} className="print-page" style={{ breakAfter: pi === pages.length - 1 ? 'auto' : 'page' }}>
-                {page.map((u, ci) => (
-                  <div
-                    key={u.id}
-                    style={{
-                      position: 'absolute',
-                      left: `${offsets.x}in`,
-                      top: `${offsets.y + ci * (LABEL_H_IN + offsets.gap)}in`,
-                    }}
-                  >
-                    <LabelTemplate unit={u} contents={contentsById[u.id] ?? []} />
-                  </div>
-                ))}
-              </div>
-            ))}
+            <SheetPages pages={pages} offsets={offsets} contentsById={contentsById} guides={false} />
           </div>
         </>
       )}
