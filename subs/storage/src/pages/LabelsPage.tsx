@@ -38,9 +38,10 @@ interface Offsets {
 }
 // Defaults come from Avery's template. These are *adjustments* people tune per printer,
 // so the inputs show the absolute position but start at the template values.
-// inset 0.25in is a placeholder until the real perforation inset is measured off a sheet.
-const DEFAULT_OFFSETS: Offsets = { x: AVERY_5889.left, y: AVERY_5889.top, gap: AVERY_5889.gap, inset: 0.25 };
-const OFFSETS_KEY = 'storage.labelOffsets.v3'; // bumped when defaults/shape changed
+// inset 0.125in: a torn card measured ~5.95 x 3.9in from a photo of a real print (#707), i.e. the perforation
+// sits ~0.03-0.05in inside Avery's 6x4 outline; the rest covers printer drift. Re-measure with a ruler to tighten.
+const DEFAULT_OFFSETS: Offsets = { x: AVERY_5889.left, y: AVERY_5889.top, gap: AVERY_5889.gap, inset: 0.125 };
+const OFFSETS_KEY = 'storage.labelOffsets.v4'; // bumped when defaults/shape changed
 
 function loadOffsets(): Offsets {
   try {
