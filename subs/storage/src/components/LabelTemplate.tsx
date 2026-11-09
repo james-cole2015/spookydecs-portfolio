@@ -59,7 +59,7 @@ export function LabelTemplate({
       <div className={`label-band w-[0.45in] shrink-0 ${SEASON_BAND[season] ?? 'bg-slate-500'}`} />
       <div className="flex min-w-0 flex-1 flex-col p-[0.2in]">
         <div className="text-[11pt] font-semibold uppercase tracking-wide">{season}</div>
-        <div className="truncate text-[30pt] font-extrabold leading-none">{unit.short_name}</div>
+        <div className="line-clamp-2 text-[28pt] font-extrabold leading-tight">{unit.short_name}</div>
         <div className="mt-1 font-mono text-[11pt]">{unit.id}</div>
         <div className="mt-2 min-h-0 flex-1 overflow-hidden text-[12pt] leading-snug">
           {contents === null ? (
