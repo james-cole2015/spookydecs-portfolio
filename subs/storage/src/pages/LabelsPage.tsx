@@ -21,21 +21,23 @@ import { Breadcrumbs, PageHeader, LoadingState, ErrorState, EmptyState, Typograp
 import { storageAPI } from '../api/storageApi';
 import type { StorageUnit } from '../config/storageConfig';
 import { LabelTemplate, LABEL_H_IN, LABEL_W_IN } from '../components/LabelTemplate';
+import { AVERY_5889 } from '../lib/averySheet';
 import type { LabelItem } from '../lib/labelContents';
 
 const POOL_PREFIX = 'pool:';
 const SHEET_ID = 'sheet';
 const SCREEN_ZOOM = 0.42;
-const PER_PAGE = 2;
+const PER_PAGE = AVERY_5889.perPage;
 
 interface Offsets {
   x: number;
   y: number;
   gap: number;
 }
-// Avery 5889: two 6x4 cards stacked on Letter. Tweakable because printers drift.
-const DEFAULT_OFFSETS: Offsets = { x: 1.25, y: 1.5, gap: 0 };
-const OFFSETS_KEY = 'storage.labelOffsets';
+// Defaults come from Avery's template. These are *adjustments* people tune per printer,
+// so the inputs show the absolute position but start at the template values.
+const DEFAULT_OFFSETS: Offsets = { x: AVERY_5889.left, y: AVERY_5889.top, gap: AVERY_5889.gap };
+const OFFSETS_KEY = 'storage.labelOffsets.v2'; // v2: earlier guessed defaults (1.25/1.5/0) discarded
 
 function loadOffsets(): Offsets {
   try {
@@ -281,7 +283,7 @@ export default function LabelsPage() {
                     ))}
                   </div>
                   <Typography type="body-xs" className="mt-2 text-default-500">
-                    Print at 100% scale with margins set to none. Adjust these if the card edges drift on your printer.
+                    Defaults are Avery's 5889 template (1.25 in left and top, 0.5 in gap). Print at 100% scale with margins set to none; adjust only if the card edges drift on your printer.
                   </Typography>
                 </details>
               </div>

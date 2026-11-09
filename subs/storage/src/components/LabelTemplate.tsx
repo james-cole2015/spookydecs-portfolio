@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import type { StorageUnit } from '../config/storageConfig';
+import { AVERY_5889 } from '../lib/averySheet';
 import { capGroups, groupContents, type LabelItem } from '../lib/labelContents';
 
-/** Card size in inches. Avery 5889 postcards: 6" wide x 4" tall, 2 per Letter sheet. */
-export const LABEL_W_IN = 6;
-export const LABEL_H_IN = 4;
+/** Card size in inches, from the Avery 5889 template (lib/averySheet.ts). */
+export const LABEL_W_IN = AVERY_5889.cardW;
+export const LABEL_H_IN = AVERY_5889.cardH;
 const MAX_GROUPS = 14;
 
 const SEASON_BAND: Record<string, string> = {
