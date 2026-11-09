@@ -15,11 +15,11 @@ export interface ContentGroup {
   count: number;
 }
 
-/** Group packed items by item class ("Spider x6, Light x4"), biggest group first. */
+/** List packed items by short name, combining duplicates ("Spider Web x3"), biggest first. */
 export function groupContents(items: LabelItem[]): ContentGroup[] {
   const counts = new Map<string, number>();
   for (const item of items) {
-    const label = String(item.class_type || item.class || 'Other');
+    const label = String(item.short_name || item.id || item.class_type || item.class || 'Item');
     counts.set(label, (counts.get(label) ?? 0) + 1);
   }
   return [...counts.entries()]

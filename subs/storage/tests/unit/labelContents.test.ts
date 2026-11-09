@@ -2,17 +2,17 @@ import { describe, expect, it } from 'vitest';
 import { capGroups, groupContents } from '../../src/lib/labelContents';
 
 describe('groupContents', () => {
-  it('groups by class_type, falls back to class, then Other; biggest first', () => {
+  it('lists by short_name, combines duplicates, falls back to id; biggest first', () => {
     const groups = groupContents([
-      { id: '1', class_type: 'Spider' },
-      { id: '2', class_type: 'Spider' },
-      { id: '3', class: 'Light' },
-      { id: '4' },
+      { id: '1', short_name: 'Spider Web' },
+      { id: '2', short_name: 'Spider Web' },
+      { id: '3', short_name: 'Inflatable Ghost' },
+      { id: 'ITEM-4' },
     ]);
     expect(groups).toEqual([
-      { label: 'Spider', count: 2 },
-      { label: 'Light', count: 1 },
-      { label: 'Other', count: 1 },
+      { label: 'Spider Web', count: 2 },
+      { label: 'Inflatable Ghost', count: 1 },
+      { label: 'ITEM-4', count: 1 },
     ]);
   });
   it('returns empty for no items', () => {

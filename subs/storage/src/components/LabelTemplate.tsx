@@ -6,7 +6,7 @@ import { capGroups, groupContents, type LabelItem } from '../lib/labelContents';
 /** Card size in inches. Avery 5889 postcards: 6" wide x 4" tall, 2 per Letter sheet. */
 export const LABEL_W_IN = 6;
 export const LABEL_H_IN = 4;
-const MAX_GROUPS = 10;
+const MAX_GROUPS = 14;
 
 const SEASON_BAND: Record<string, string> = {
   Halloween: 'bg-orange-500',
