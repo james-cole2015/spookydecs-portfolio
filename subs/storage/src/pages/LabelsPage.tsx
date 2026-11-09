@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Button, Input } from '@heroui/react';
+import { Button, ButtonGroup, Input } from '@heroui/react';
 import { Printer, Plus, X, GripVertical, FilePlus2 } from 'lucide-react';
 import {
   DndContext,
@@ -19,7 +19,7 @@ import { Breadcrumbs, PageHeader, LoadingState, ErrorState, EmptyState, Typograp
 import { storageAPI } from '../api/storageApi';
 import type { StorageUnit } from '../config/storageConfig';
 import { LabelTemplate, LABEL_H_IN, LABEL_W_IN } from '../components/LabelTemplate';
-import { AVERY_5889 } from '../lib/averySheet';
+import { AVERY_5889, type LabelOrientation, type LabelRotation } from '../lib/averySheet';
 import { readQueue, writeQueue } from '../lib/labelQueue';
 import type { LabelItem } from '../lib/labelContents';
 
@@ -42,6 +42,7 @@ interface Offsets {
 // inset 0.125in: a torn card measured ~5.95 x 3.9in from a photo of a real print (#707), i.e. the perforation
 // sits ~0.03-0.05in inside Avery's 6x4 outline; the rest covers printer drift. Re-measure with a ruler to tighten.
 const DEFAULT_OFFSETS: Offsets = { x: AVERY_5889.left, y: AVERY_5889.top, gap: AVERY_5889.gap, inset: 0.125 };
+const slotTop = (base: number, i: number, gap: number) => base + i * (LABEL_H_IN + gap);
 const OFFSETS_KEY = 'storage.labelOffsets.v4';
 
 function loadOffsets(): Offsets {
@@ -54,7 +55,6 @@ function loadOffsets(): Offsets {
   return DEFAULT_OFFSETS;
 }
 
-const slotTop = (base: number, i: number, gap: number) => base + i * (LABEL_H_IN + gap);
 
 /** Slots are the model: index 2n = top card of sheet n, 2n+1 = bottom. null = blank card. */
 function normalize(slots: (string | null)[]): (string | null)[] {
@@ -93,6 +93,8 @@ function SheetSlot({
   contents,
   inset,
   offsets,
+  orientation,
+  rotation,
   onRemove,
 }: {
   index: number;
@@ -100,6 +102,8 @@ function SheetSlot({
   contents: LabelItem[] | null;
   inset: number;
   offsets: Offsets;
+  orientation: LabelOrientation;
+  rotation: LabelRotation;
   onRemove: () => void;
 }) {
   const ci = index % PER_PAGE;
@@ -122,7 +126,7 @@ function SheetSlot({
     >
       {unit ? (
         <>
-          <LabelTemplate unit={unit} contents={contents} inset={inset} />
+          <LabelTemplate unit={unit} contents={contents} inset={inset} orientation={orientation} rotation={rotation} />
           <div className="absolute right-[0.1in] top-[0.1in] flex gap-[0.08in]">
             <button
               type="button"
@@ -159,7 +163,11 @@ function PrintPages({
   byId,
   offsets,
   contentsById,
+  orientation,
+  rotation,
 }: {
+  orientation: LabelOrientation;
+  rotation: LabelRotation;
   slots: (string | null)[];
   byId: Map<string, StorageUnit>;
   offsets: Offsets;
@@ -184,14 +192,14 @@ function PrintPages({
             overflow: 'hidden',
           }}
         >
-          {page.map(
-            (u, ci) =>
-              u && (
-                <div key={u.id} className="absolute" style={{ left: `${offsets.x}in`, top: `${slotTop(offsets.y, ci, offsets.gap)}in` }}>
-                  <LabelTemplate unit={u} contents={contentsById[u.id] ?? []} inset={offsets.inset} />
-                </div>
-              ),
-          )}
+          {page.map((u, ci) => {
+            if (!u) return null;
+            return (
+              <div key={u.id} className="absolute" style={{ left: `${offsets.x}in`, top: `${slotTop(offsets.y, ci, offsets.gap)}in` }}>
+                <LabelTemplate unit={u} contents={contentsById[u.id] ?? []} inset={offsets.inset} orientation={orientation} rotation={rotation} />
+              </div>
+            );
+          })}
         </div>
       ))}
     </>
@@ -217,6 +225,9 @@ export default function LabelsPage() {
   const [search, setSearch] = useState('');
   const [activeId, setActiveId] = useState<string | null>(null);
   const [offsets, setOffsets] = useState<Offsets>(loadOffsets);
+  // Per print job (not persisted). Tall = label turned 90deg on the same wide stock.
+  const [orientation, setOrientation] = useState<LabelOrientation>('wide');
+  const [rotation, setRotation] = useState<LabelRotation>('cw');
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(KeyboardSensor));
 
@@ -390,6 +401,22 @@ export default function LabelsPage() {
                   <Typography type="body-sm" className="text-default-500">
                     {filledIds.length} label{filledIds.length === 1 ? '' : 's'} · {printSheets} sheet{printSheets === 1 ? '' : 's'} to print
                   </Typography>
+                  <ButtonGroup size="sm" variant="flat">
+                    {(['wide', 'tall'] as const).map((o) => (
+                      <Button key={o} color={orientation === o ? 'primary' : 'default'} onPress={() => setOrientation(o)} data-testid={`orientation-${o}`} aria-pressed={orientation === o}>
+                        {o === 'wide' ? 'Wide (6×4)' : 'Tall (turned)'}
+                      </Button>
+                    ))}
+                  </ButtonGroup>
+                  {orientation === 'tall' && (
+                    <ButtonGroup size="sm" variant="flat">
+                      {(['cw', 'ccw'] as const).map((r) => (
+                        <Button key={r} color={rotation === r ? 'primary' : 'default'} onPress={() => setRotation(r)} data-testid={`rotation-${r}`} aria-pressed={rotation === r}>
+                          {r === 'cw' ? 'Turn right' : 'Turn left'}
+                        </Button>
+                      ))}
+                    </ButtonGroup>
+                  )}
                   <Button size="sm" variant="flat" startContent={<FilePlus2 size={16} />} onPress={() => setSlots((p) => normalize([...p, null, null]))} data-testid="add-sheet">
                     Add sheet
                   </Button>
@@ -399,6 +426,11 @@ export default function LabelsPage() {
                     </Button>
                   )}
                 </div>
+                {orientation === 'tall' && (
+                  <Typography type="body-xs" className="text-default-500" data-testid="tall-hint">
+                    Tall turns each label 90° on the same 6×4 card. Peel it and stick it with the card's {rotation === 'cw' ? 'right' : 'left'} edge at the tote's top.
+                  </Typography>
+                )}
                 {filledIds.length > 0 && blankSlots > 0 && (
                   <Typography type="body-xs" className="text-warning-600" data-testid="blank-note">
                     {blankSlots === 1 ? '1 card slot stays' : `${blankSlots} card slots stay`} blank across {printSheets} sheet{printSheets === 1 ? '' : 's'}.
@@ -420,27 +452,22 @@ export default function LabelsPage() {
                           }}
                           data-testid={`preview-page-${p}`}
                         >
-                          {Array.from({ length: PER_PAGE }, (_, ci) => (
-                            <div key={`g${ci}`}>
-                              <div
-                                className="absolute border border-dashed border-primary"
-                                style={{
-                                  left: `${AVERY_5889.left}in`,
-                                  top: `${slotTop(AVERY_5889.top, ci, AVERY_5889.gap)}in`,
-                                  width: `${LABEL_W_IN}in`,
-                                  height: `${LABEL_H_IN}in`,
-                                }}
-                              >
-                                <div className="absolute border border-dotted border-danger" style={{ inset: `${offsets.inset}in` }} />
+                          {Array.from({ length: PER_PAGE }, (_, ci) => {
+                            const top = slotTop(AVERY_5889.top, ci, AVERY_5889.gap);
+                            return (
+                              <div key={`g${ci}`}>
+                                <div
+                                  className="absolute border border-dashed border-primary"
+                                  style={{ left: `${AVERY_5889.left}in`, top: `${top}in`, width: `${LABEL_W_IN}in`, height: `${LABEL_H_IN}in` }}
+                                >
+                                  <div className="absolute border border-dotted border-danger" style={{ inset: `${offsets.inset}in` }} />
+                                </div>
+                                <div className="absolute text-[12pt] text-neutral-500" style={{ left: `${AVERY_5889.left}in`, top: `${top - 0.3}in` }}>
+                                  {SLOT_NAMES[ci]} card
+                                </div>
                               </div>
-                              <div
-                                className="absolute text-[12pt] text-neutral-500"
-                                style={{ left: `${AVERY_5889.left}in`, top: `${slotTop(AVERY_5889.top, ci, AVERY_5889.gap) - 0.3}in` }}
-                              >
-                                {SLOT_NAMES[ci]} card
-                              </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                           {Array.from({ length: PER_PAGE }, (_, ci) => {
                             const index = p * PER_PAGE + ci;
                             const id = slots[index];
@@ -453,6 +480,8 @@ export default function LabelsPage() {
                                 contents={id ? contentsById[id] ?? null : null}
                                 inset={offsets.inset}
                                 offsets={offsets}
+                                orientation={orientation}
+                                rotation={rotation}
                                 onRemove={() => setSlots((prev) => prev.map((s, k) => (k === index ? null : s)))}
                               />
                             );
@@ -497,7 +526,7 @@ export default function LabelsPage() {
 
           {/* Print-only: real-size pages, blank slots left empty. Everything else is hidden by index.css @media print. */}
           <div className="print-area hidden print:block" aria-hidden>
-            <PrintPages slots={slots} byId={byId} offsets={offsets} contentsById={contentsById} />
+            <PrintPages orientation={orientation} rotation={rotation} slots={slots} byId={byId} offsets={offsets} contentsById={contentsById} />
           </div>
         </>
       )}
