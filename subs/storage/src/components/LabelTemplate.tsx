@@ -8,6 +8,7 @@ import { capGroups, groupContents, type LabelItem } from '../lib/labelContents';
 export const LABEL_W_IN = AVERY_5889.cardW;
 export const LABEL_H_IN = AVERY_5889.cardH;
 const MAX_GROUPS = 12;
+const PRINT_DATE = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
 const SEASON_BAND: Record<string, string> = {
   Halloween: 'bg-orange-500',
@@ -47,6 +48,10 @@ export function LabelTemplate({
 }) {
   const qr = useQr(unitUrl(unit.id));
   const season = String(unit.season ?? ''); // drives the color band only
+  // Prefer the live contents list; fall back to the unit's own count while it loads.
+  const itemCount = contents ? contents.length : typeof unit.contents_count === 'number' ? unit.contents_count : null;
+  // Printed date lets you spot a stale label; the QR always resolves to live data.
+  const printed = PRINT_DATE.format(new Date());
   const { shown, hidden } = capGroups(groupContents(contents ?? []), MAX_GROUPS);
 
   return (
@@ -64,6 +69,11 @@ export function LabelTemplate({
             <div className="line-clamp-2 text-[26pt] font-extrabold leading-[1.1]">{unit.short_name}</div>
           </div>
           <div className="h-[0.28in] shrink-0 font-mono text-[12pt] leading-[0.28in]">{unit.id}</div>
+          <div className="h-[0.24in] shrink-0 truncate text-[11pt] leading-[0.24in] text-neutral-700">
+            {[itemCount === null ? null : `${itemCount} ${itemCount === 1 ? 'item' : 'items'}`, unit.location ? String(unit.location) : null]
+              .filter(Boolean)
+              .join(' · ')}
+          </div>
           <div className="mt-[0.06in] shrink-0 border-t-2 border-black" />
           <div className="mt-[0.1in] min-h-0 flex-1 overflow-hidden text-[14pt] leading-snug">
             {contents === null ? (
@@ -85,6 +95,7 @@ export function LabelTemplate({
         </div>
       <div className="flex w-[1.7in] shrink-0 flex-col items-center justify-center pr-[0.2in]">
         {qr && <img src={qr} alt={`QR for ${unit.id}`} className="h-[1.5in] w-[1.5in]" />}
+        <div className="mt-1 text-[8pt] text-neutral-600">Printed {printed}</div>
       </div>
       </div>
     </div>
