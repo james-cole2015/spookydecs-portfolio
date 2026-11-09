@@ -59,7 +59,8 @@ export function LabelTemplate({ unit, contents }: { unit: StorageUnit; contents:
             <ul className="columns-2 gap-4">
               {shown.map((g) => (
                 <li key={g.label} className="break-inside-avoid truncate">
-                  {g.label} <span className="font-bold">×{g.count}</span>
+                  {g.label}
+                  {g.count > 1 && <span className="font-bold"> ×{g.count}</span>}
                 </li>
               ))}
               {hidden > 0 && <li className="break-inside-avoid">+{hidden} more</li>}
