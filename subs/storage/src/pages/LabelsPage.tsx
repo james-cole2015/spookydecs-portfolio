@@ -22,6 +22,7 @@ import { storageAPI } from '../api/storageApi';
 import type { StorageUnit } from '../config/storageConfig';
 import { LabelTemplate, LABEL_H_IN, LABEL_W_IN } from '../components/LabelTemplate';
 import { AVERY_5889 } from '../lib/averySheet';
+import { readQueue, writeQueue } from '../lib/labelQueue';
 import type { LabelItem } from '../lib/labelContents';
 
 const POOL_PREFIX = 'pool:';
@@ -111,7 +112,7 @@ function SheetPages({
   contentsById,
   guides,
 }: {
-  pages: StorageUnit[][];
+  pages: (StorageUnit | null)[][];
   offsets: Offsets;
   contentsById: Record<string, LabelItem[]>;
   guides: boolean;
@@ -151,7 +152,7 @@ function SheetPages({
                 />
               </div>
             ))}
-          {page.map((u, ci) => (
+          {page.map((u, ci) => u && (
             <div
               key={u.id}
               className={guides ? 'absolute outline outline-1 outline-neutral-300' : 'absolute'}
@@ -190,6 +191,8 @@ export default function LabelsPage() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [offsets, setOffsets] = useState<Offsets>(loadOffsets);
   const [view, setView] = useState<'edit' | 'preview'>('edit');
+  // Which card slot the first label lands in. 'bottom' = reusing a half sheet whose top card is gone.
+  const [firstSlot, setFirstSlot] = useState<'top' | 'bottom'>('top');
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -204,7 +207,8 @@ export default function LabelsPage() {
       setUnits(all);
       // Deep link from the list page: /storage/labels?ids=A,B
       const preset = (searchParams.get('ids') ?? '').split(',').filter(Boolean);
-      setSelected(preset.filter((id) => all.some((u) => u.id === id)));
+      const queued = readQueue();
+      setSelected([...new Set([...queued, ...preset])].filter((id) => all.some((u) => u.id === id)));
     } catch (e: any) {
       setError(e?.message ?? 'Failed to load storage units');
     } finally {
@@ -216,6 +220,11 @@ export default function LabelsPage() {
     loadUnits();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // The sheet is the queue: keep them in sync so detail-page adds and edits here agree.
+  useEffect(() => {
+    if (!loading) writeQueue(selected);
+  }, [selected, loading]);
 
   // Contents come from the unit detail endpoint (contents_details); fetch once per unit on the sheet.
   useEffect(() => {
@@ -254,10 +263,13 @@ export default function LabelsPage() {
 
   const sheetUnits = selected.map((id) => byId.get(id)).filter((u): u is StorageUnit => Boolean(u));
   const pages = useMemo(() => {
-    const out: StorageUnit[][] = [];
-    for (let i = 0; i < sheetUnits.length; i += PER_PAGE) out.push(sheetUnits.slice(i, i + PER_PAGE));
+    const slots: (StorageUnit | null)[] = [...(firstSlot === 'bottom' ? [null] : []), ...sheetUnits];
+    const out: (StorageUnit | null)[][] = [];
+    for (let i = 0; i < slots.length; i += PER_PAGE) out.push(slots.slice(i, i + PER_PAGE));
     return out;
-  }, [sheetUnits]);
+  }, [sheetUnits, firstSlot]);
+  // Blank slots across the whole run (leading skip plus a short last sheet), for the soft note.
+  const blankSlots = pages.length * PER_PAGE - sheetUnits.length;
 
   const add = (id: string, at?: number) =>
     setSelected((prev) => {
@@ -330,6 +342,30 @@ export default function LabelsPage() {
                 <Typography type="body-sm" className="text-default-500">
                   {sheetUnits.length} label{sheetUnits.length === 1 ? '' : 's'} · {pages.length} sheet{pages.length === 1 ? '' : 's'} · drag to reorder (2 per sheet, in order)
                 </Typography>
+                <div className="flex flex-wrap items-center gap-3" data-testid="slot-controls">
+                  <Typography type="body-sm" as="span" className="text-foreground">First card on the sheet:</Typography>
+                  <div className="flex gap-1">
+                    <Button size="sm" variant={firstSlot === 'top' ? 'solid' : 'flat'} color={firstSlot === 'top' ? 'primary' : 'default'} onPress={() => setFirstSlot('top')} data-testid="first-top">
+                      Top
+                    </Button>
+                    <Button size="sm" variant={firstSlot === 'bottom' ? 'solid' : 'flat'} color={firstSlot === 'bottom' ? 'primary' : 'default'} onPress={() => setFirstSlot('bottom')} data-testid="first-bottom">
+                      Bottom
+                    </Button>
+                  </div>
+                  <Typography type="body-xs" as="span" className="text-default-500">
+                    Choose Bottom to reuse a half sheet whose top card is already used.
+                  </Typography>
+                  {sheetUnits.length > 0 && (
+                    <Button size="sm" variant="light" color="danger" className="ml-auto" onPress={() => setSelected([])} data-testid="clear-sheet">
+                      Clear
+                    </Button>
+                  )}
+                </div>
+                {sheetUnits.length > 0 && blankSlots > 0 && (
+                  <Typography type="body-xs" className="text-warning-600" data-testid="blank-note">
+                    {blankSlots === 1 ? '1 card slot stays' : `${blankSlots} card slots stay`} blank across {pages.length} sheet{pages.length === 1 ? '' : 's'}.
+                  </Typography>
+                )}
                 {view === 'preview' && (
                   <div className="flex flex-col gap-4 rounded-xl bg-default-100 p-4" data-testid="sheet-preview">
                     {pages.length === 0 ? (
@@ -337,7 +373,7 @@ export default function LabelsPage() {
                     ) : (
                       pages.map((page, pi) => (
                         <div key={pi}>
-                          <Typography type="body-xs" className="mb-1 text-default-500">Sheet {pi + 1} of {pages.length}</Typography>
+                          <Typography type="body-xs" className="mb-1 text-default-500">Sheet {pi + 1} of {pages.length} · ▲ top of sheet is at the top of the page below</Typography>
                           <div style={{ width: `${AVERY_5889.pageW * PREVIEW_ZOOM}in`, height: `${AVERY_5889.pageH * PREVIEW_ZOOM}in` }}>
                             <div style={{ zoom: PREVIEW_ZOOM }}>
                               <SheetPages pages={[page]} offsets={offsets} contentsById={contentsById} guides />
