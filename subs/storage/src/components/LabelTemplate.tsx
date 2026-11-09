@@ -35,17 +35,27 @@ function useQr(text: string): string {
 }
 
 /** One 6x4 tote label. Pure presentation: unit + contents in, card out. */
-export function LabelTemplate({ unit, contents }: { unit: StorageUnit; contents: LabelItem[] | null }) {
+export function LabelTemplate({
+  unit,
+  contents,
+  inset = 0,
+}: {
+  unit: StorageUnit;
+  contents: LabelItem[] | null;
+  /** Inches pulled in from every card edge so nothing prints over the perforation. */
+  inset?: number;
+}) {
   const qr = useQr(unitUrl(unit.id));
   const season = String(unit.season ?? '');
   const { shown, hidden } = capGroups(groupContents(contents ?? []), MAX_GROUPS);
 
   return (
     <div
-      className="label-card relative flex overflow-hidden bg-white text-black"
-      style={{ width: `${LABEL_W_IN}in`, height: `${LABEL_H_IN}in` }}
+      className="label-card relative bg-white text-black"
+      style={{ width: `${LABEL_W_IN}in`, height: `${LABEL_H_IN}in`, padding: `${inset}in` }}
       data-testid={`label-${unit.id}`}
     >
+      <div className="flex h-full w-full overflow-hidden">
       <div className={`label-band w-[0.45in] shrink-0 ${SEASON_BAND[season] ?? 'bg-slate-500'}`} />
       <div className="flex min-w-0 flex-1 flex-col p-[0.2in]">
         <div className="text-[11pt] font-semibold uppercase tracking-wide">{season}</div>
@@ -71,6 +81,7 @@ export function LabelTemplate({ unit, contents }: { unit: StorageUnit; contents:
       </div>
       <div className="flex w-[1.7in] shrink-0 flex-col items-center justify-center pr-[0.2in]">
         {qr && <img src={qr} alt={`QR for ${unit.id}`} className="h-[1.5in] w-[1.5in]" />}
+      </div>
       </div>
     </div>
   );

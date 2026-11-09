@@ -34,11 +34,13 @@ interface Offsets {
   x: number;
   y: number;
   gap: number;
+  inset: number; // safe inset from the card edge, so content stays inside the perforation
 }
 // Defaults come from Avery's template. These are *adjustments* people tune per printer,
 // so the inputs show the absolute position but start at the template values.
-const DEFAULT_OFFSETS: Offsets = { x: AVERY_5889.left, y: AVERY_5889.top, gap: AVERY_5889.gap };
-const OFFSETS_KEY = 'storage.labelOffsets.v2'; // v2: earlier guessed defaults (1.25/1.5/0) discarded
+// inset 0.25in is a placeholder until the real perforation inset is measured off a sheet.
+const DEFAULT_OFFSETS: Offsets = { x: AVERY_5889.left, y: AVERY_5889.top, gap: AVERY_5889.gap, inset: 0.25 };
+const OFFSETS_KEY = 'storage.labelOffsets.v3'; // bumped when defaults/shape changed
 
 function loadOffsets(): Offsets {
   try {
@@ -73,7 +75,7 @@ function PoolRow({ unit, onAdd, disabled }: { unit: StorageUnit; onAdd: () => vo
   );
 }
 
-function SheetTile({ unit, contents, onRemove }: { unit: StorageUnit; contents: LabelItem[] | null; onRemove: () => void }) {
+function SheetTile({ unit, contents, inset, onRemove }: { unit: StorageUnit; contents: LabelItem[] | null; inset: number; onRemove: () => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: unit.id });
   return (
     <div
@@ -91,7 +93,7 @@ function SheetTile({ unit, contents, onRemove }: { unit: StorageUnit; contents: 
       </div>
       <div style={{ width: `${LABEL_W_IN * SCREEN_ZOOM}in`, height: `${LABEL_H_IN * SCREEN_ZOOM}in`, overflow: 'hidden' }}>
         <div style={{ zoom: SCREEN_ZOOM }}>
-          <LabelTemplate unit={unit} contents={contents} />
+          <LabelTemplate unit={unit} contents={contents} inset={inset} />
         </div>
       </div>
     </div>
@@ -140,7 +142,13 @@ function SheetPages({
                   width: `${LABEL_W_IN}in`,
                   height: `${LABEL_H_IN}in`,
                 }}
-              />
+              >
+                <div
+                  className="absolute border border-dotted border-danger"
+                  style={{ inset: `${offsets.inset}in` }}
+                  title="Safe area"
+                />
+              </div>
             ))}
           {page.map((u, ci) => (
             <div
@@ -148,7 +156,7 @@ function SheetPages({
               className={guides ? 'absolute outline outline-1 outline-neutral-300' : 'absolute'}
               style={{ left: `${offsets.x}in`, top: `${slotTop(offsets.y, ci, offsets.gap)}in` }}
             >
-              <LabelTemplate unit={u} contents={contentsById[u.id] ?? []} />
+              <LabelTemplate unit={u} contents={contentsById[u.id] ?? []} inset={offsets.inset} />
             </div>
           ))}
         </div>
@@ -338,7 +346,7 @@ export default function LabelsPage() {
                       ))
                     )}
                     <Typography type="body-xs" className="text-default-500">
-                      Dashed blue = Avery 5889 card outline. Gray outline = where your labels will print (follows the alignment offsets).
+                      Dashed blue = Avery 5889 card outline. Dotted red = safe area (content stays inside it, clear of the perforation). Gray outline = where your labels will print (follows the alignment offsets).
                     </Typography>
                   </div>
                 )}
@@ -347,7 +355,7 @@ export default function LabelsPage() {
                   <SortableContext items={selected} strategy={rectSortingStrategy}>
                     <div className="flex flex-wrap gap-3">
                       {sheetUnits.map((u) => (
-                        <SheetTile key={u.id} unit={u} contents={contentsById[u.id] ?? null} onRemove={() => setSelected((p) => p.filter((x) => x !== u.id))} />
+                        <SheetTile key={u.id} unit={u} contents={contentsById[u.id] ?? null} inset={offsets.inset} onRemove={() => setSelected((p) => p.filter((x) => x !== u.id))} />
                       ))}
                     </div>
                   </SortableContext>
@@ -357,14 +365,14 @@ export default function LabelsPage() {
                 <details className="rounded-lg border border-default-200 p-3">
                   <summary className="cursor-pointer text-sm text-foreground">Print alignment (inches)</summary>
                   <div className="mt-3 flex flex-wrap gap-3">
-                    {(['x', 'y', 'gap'] as const).map((k) => (
+                    {(['x', 'y', 'gap', 'inset'] as const).map((k) => (
                       <Input
                         key={k}
                         size="sm"
                         type="number"
                         step="0.05"
                         className="w-28"
-                        label={k === 'x' ? 'Left' : k === 'y' ? 'Top' : 'Gap'}
+                        label={k === 'x' ? 'Left' : k === 'y' ? 'Top' : k === 'gap' ? 'Gap' : 'Safe inset'}
                         value={String(offsets[k])}
                         onValueChange={(v) => updateOffset(k, v)}
                       />
