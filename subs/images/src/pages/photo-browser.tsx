@@ -16,6 +16,8 @@ import {
   PhotoLightbox,
   SeasonChip,
   type LightboxPhoto,
+  SpookyImage,
+  photoUrls,
 } from '@spookydecs/ui';
 import { fetchImages } from '../api/imagesApi';
 import { isOrphaned, canonicalSeason, readFilters, writeFilters, type Photo, type ImageUiFilters } from '../config/imagesConfig';
@@ -54,6 +56,7 @@ function toLightboxPhoto(photo: Photo): LightboxPhoto {
     key: photo.photo_id,
     url: photo.cloudfront_url,
     thumbUrl: photo.thumb_cloudfront_url || photo.cloudfront_url,
+    thumbCropped: true,
     alt: photo.caption || 'Photo',
     caption: photo.caption,
   };
@@ -134,13 +137,14 @@ export default function PhotoBrowser() {
                 <div
                   ref={ref as React.Ref<HTMLDivElement>}
                   onClick={open}
-                  className="group relative aspect-square cursor-zoom-in overflow-hidden rounded-medium bg-content2"
+                  className="group relative cursor-zoom-in overflow-hidden rounded-medium"
                 >
-                  <img
-                    src={photo.thumb_cloudfront_url || photo.cloudfront_url}
+                  <SpookyImage
+                    {...photoUrls(photo, 'thumb')}
                     alt={photo.caption || 'Photo'}
-                    loading="lazy"
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    ratio="4/5"
+                    fit="cover"
+                    imgClassName="duration-300 group-hover:scale-105"
                   />
                   <SeasonChip
                     size="sm"

@@ -31,6 +31,8 @@ import {
   usePhotoUpload,
   type UploadedPhoto,
   ConfirmDialog,
+  SpookyImage,
+  photoUrls,
 } from '@spookydecs/ui';
 import { deleteImage, fetchImages, patchImage, updateImage } from '../api/imagesApi';
 import { IMAGES_CONFIG, type GalleryData, type Photo } from '../config/imagesConfig';
@@ -394,10 +396,12 @@ export default function GalleryManager() {
             </p>
             {(postUpload ?? []).map((p) => (
               <div key={p.photo_id} className="flex items-center gap-3 border-b border-default-200 pb-3">
-                <img
-                  src={p.thumb_cloudfront_url || p.cloudfront_url}
+                <SpookyImage
+                  {...photoUrls(p, 'thumb')}
                   alt=""
-                  className="h-16 w-16 flex-shrink-0 rounded-medium object-cover"
+                  ratio="1/1"
+                  fit="cover"
+                  className="h-16 w-16 flex-shrink-0 rounded-medium"
                 />
                 <div className="flex flex-1 flex-col gap-2">
                   <Input
