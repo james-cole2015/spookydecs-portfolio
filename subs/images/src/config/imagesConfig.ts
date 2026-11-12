@@ -225,6 +225,12 @@ export function isOrphaned(photo: Photo): boolean {
   const hasDeploymentId = !!photo.deployment_id;
   const hasStorageId = !!photo.storage_id;
   const hasCostIds = !!(photo.cost_ids && photo.cost_ids.length > 0);
+  // Every FK sd_photos_confirm writes: also scalar item_id and record_id (maintenance).
+  const hasItemId = !!photo.item_id;
+  const hasRecordId = !!photo.record_id;
 
-  return !hasItemIds && !hasIdeaId && !hasDeploymentId && !hasStorageId && !hasCostIds;
+  return (
+    !hasItemIds && !hasItemId && !hasIdeaId && !hasDeploymentId &&
+    !hasStorageId && !hasCostIds && !hasRecordId
+  );
 }

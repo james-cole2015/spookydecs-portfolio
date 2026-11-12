@@ -18,48 +18,21 @@ import { Trash2 } from 'lucide-react';
 import { Breadcrumbs, ConfirmDialog, EmptyState, ErrorState, LoadingState, PageHeader, useToast } from '@spookydecs/ui';
 import {
   getDeployment,
-  searchItems,
+  getItem,
   apiTeardownStart,
   apiTeardownItem,
   apiTeardownComplete,
 } from '../api/deploymentsApi';
 import { StatusChip } from '../components/StatusChip';
+import { hydrateZones } from '../lib/teardownHydrate';
+import type { TItem, TZone } from '../lib/teardownHydrate';
 import type { Deployment } from '../config/deploymentsConfig';
 
 const ZONE_ORDER: Record<string, number> = { FY: 1, BY: 2, SY: 3 };
 const ZONE_ICON: Record<string, string> = { FY: '🏡', BY: '🌳', SY: '🏠' };
 const CLASS_ORDER = ['Decoration', 'Light', 'Accessory'];
-
-interface TItem {
-  id: string;
-  short_name?: string;
-  status?: string;
-  class?: string;
-}
-interface TZone {
-  zone_code: string;
-  zone_name: string;
-  items_deployed: TItem[];
-}
-
-async function hydrateZones(zones: any[]): Promise<TZone[]> {
-  const [deployedRes, teardownRes] = await Promise.all([
-    searchItems({ status: 'Deployed' }),
-    searchItems({ status: 'TearDown' }),
-  ]);
-  const itemMap: Record<string, TItem> = {};
-  [...(deployedRes.data?.items || []), ...(teardownRes.data?.items || [])].forEach((item: any) => {
-    itemMap[item.id] = item;
-  });
-  return zones.map((zone) => ({
-    ...zone,
-    items_deployed: (zone.items_deployed || []).map((idOrObj: any) =>
-      typeof idOrObj === 'object' && idOrObj !== null
-        ? idOrObj
-        : itemMap[idOrObj] || { id: idOrObj, short_name: idOrObj, status: 'Unknown', class: 'Unknown' },
-    ),
-  }));
-}
+/** Statuses that mean the item no longer needs tearing down. */
+const DONE_STATUSES = ['TearDown', 'Packed'];
 
 export default function TeardownPage() {
   const { id } = useParams();
@@ -86,7 +59,7 @@ export default function TeardownPage() {
       const data = deploymentResponse.data;
       const dep = data.metadata && data.zones ? data.metadata : data;
       const rawZones = data.zones || [];
-      const hydrated = await hydrateZones(rawZones);
+      const hydrated = await hydrateZones(getItem, rawZones);
       const sorted = hydrated.sort(
         (a, b) => (ZONE_ORDER[a.zone_code] || 99) - (ZONE_ORDER[b.zone_code] || 99),
       );
@@ -123,14 +96,18 @@ export default function TeardownPage() {
   async function handleTeardownItem(itemId: string, zoneCode: string) {
     setTearingDown(itemId);
     try {
-      await apiTeardownItem(deploymentId, itemId);
+      const res = await apiTeardownItem(deploymentId, itemId);
+      const newStatus: string = res?.data?.status || 'TearDown';
+      if (res?.data?.noop) {
+        toast.showInfo(`Item was already ${newStatus}; nothing changed.`);
+      }
       setZones((prev) =>
         prev.map((z) =>
           z.zone_code === zoneCode
             ? {
                 ...z,
                 items_deployed: z.items_deployed.map((i) =>
-                  i.id === itemId ? { ...i, status: 'TearDown' } : i,
+                  i.id === itemId ? { ...i, status: newStatus } : i,
                 ),
               }
             : z,
@@ -202,7 +179,7 @@ export default function TeardownPage() {
             className="mb-4"
           >
             {zones.map((zone) => {
-              const tornDown = zone.items_deployed.filter((i) => i.status === 'TearDown').length;
+              const tornDown = zone.items_deployed.filter((i) => DONE_STATUSES.includes(i.status || '')).length;
               const total = zone.items_deployed.length;
               const allDone = total > 0 && tornDown === total;
               return (
@@ -274,7 +251,7 @@ function ZonePanel({
   if (items.length === 0) {
     return <EmptyState icon="📦" title={`No items deployed in ${zone.zone_name}.`} />;
   }
-  const allDone = items.length > 0 && items.every((i) => i.status === 'TearDown');
+  const allDone = items.length > 0 && items.every((i) => DONE_STATUSES.includes(i.status || ''));
 
   const grouped: Record<string, TItem[]> = {};
   items.forEach((item) => {
@@ -306,7 +283,7 @@ function ZonePanel({
             </TableHeader>
             <TableBody>
               {grouped[cls].map((item) => {
-                const isTornDown = item.status === 'TearDown';
+                const isTornDown = DONE_STATUSES.includes(item.status || '');
                 return (
                   <TableRow key={item.id}>
                     <TableCell className="font-mono text-xs">{item.id}</TableCell>
@@ -318,7 +295,9 @@ function ZonePanel({
                     </TableCell>
                     <TableCell>
                       {isTornDown ? (
-                        <span className="text-sm text-success">✓ Torn Down</span>
+                        <span className="text-sm text-success">
+                          {item.status === 'Packed' ? '✓ Packed' : '✓ Torn Down'}
+                        </span>
                       ) : (
                         <Button
                           size="sm"

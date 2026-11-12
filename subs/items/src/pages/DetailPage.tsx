@@ -305,7 +305,6 @@ export default function DetailPage() {
 
           {/* Badges */}
           <div className="flex flex-wrap gap-2 mt-2">
-            {deploy.deployed && <Chip size="sm" color="primary">Deployed</Chip>}
             <Chip size="sm" style={{ backgroundColor: getStatusColor(item.status), color: 'white' }}>
               {item.status}
             </Chip>

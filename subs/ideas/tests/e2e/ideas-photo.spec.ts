@@ -73,22 +73,50 @@ test('ideas photo: create with a photo → stored and shown → cascade delete r
   });
 });
 
-// Igor and Renfield are agentic (recorded gaps): this only proves the entry points render for the right records. The
-// enrich worker updates the idea with no existence check, so triggering it would risk resurrecting a deleted idea.
-test('ideas agentic entry points render (Ask Igor on an idea, Quick add on acquisitions)', async ({ page, ideas }) => {
+// Igor and Renfield are agentic, so this asserts the request is ACCEPTED (202), not the fan-out result. Each record is
+// then deleted mid-run: the enrich workers' write-back is guarded (#661), so the late write must not resurrect a ghost.
+test('ideas agentic: Ask Igor and Quick add are accepted, and a delete mid-run leaves no ghost (#661)', async ({ page, ideas }) => {
   const { api } = ideas;
-  const title = sentinelName('Igor');
-  const res = await api('POST', '/ideas', { title, season: 'Halloween', status: 'Considering', tags: [] });
-  expect(res.status).toBeLessThan(300);
-  const idea = (await findSentinels(api)).find((i: any) => i.title === title);
+  const listOf = (r: any): any[] => {
+    const d = r.data ?? r.body?.data ?? r.body;
+    return Array.isArray(d) ? d : d?.acquisitions || d?.ideas || [];
+  };
 
-  await page.goto(`/${idea.id}`);
-  await expect(page.getByRole('button', { name: 'Ask Igor' })).toBeVisible();
+  await test.step('Ask Igor — enrich accepted, then delete the idea mid-run', async () => {
+    const title = sentinelName('Igor');
+    const res = await api('POST', '/ideas', { title, season: 'Halloween', status: 'Considering', tags: [] });
+    expect(res.status).toBeLessThan(300);
+    const idea = (await findSentinels(api)).find((i: any) => i.title === title);
+    expect(idea, 'idea created').toBeTruthy();
 
-  await page.goto('/acquisitions');
-  await page.getByRole('button', { name: 'Quick add acquisition from URL' }).click();
-  const dialog = page.getByRole('dialog');
-  await expect(dialog.getByLabel('Product URL')).toBeVisible();
-  await dialog.getByRole('button', { name: 'Cancel' }).click();
-  await expect(dialog).toBeHidden();
+    await page.goto(`/${idea.id}`);
+    const accepted = page.waitForResponse((r) => r.request().method() === 'POST' && r.url().includes(`${idea.id}/enrich`));
+    // The panel is a collapsed accordion: open it (the trigger button), then press the inner "Ask Igor" action button.
+    await page.getByRole('button', { name: 'Ask Igor' }).click();
+    await page.locator('button:not([data-slot="trigger"])', { hasText: 'Ask Igor' }).click();
+    expect((await accepted).status()).toBe(202);
+
+    expect((await api('DELETE', `/ideas/${idea.id}`)).status).toBeLessThan(300);
+    await expect.poll(async () => (await findSentinels(api)).some((i: any) => i.id === idea.id)).toBe(false);
+  });
+
+  await test.step('Quick add — enrich accepted, then delete the acquisition mid-run', async () => {
+    const url = `https://example.com/e2e-quick-add-${Date.now()}`;
+    await page.goto('/acquisitions');
+    await page.getByRole('button', { name: 'Quick add acquisition from URL' }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByLabel('Product URL').fill(url);
+    const accepted = page.waitForResponse((r) => r.request().method() === 'POST' && /\/acquisitions\/[^/]+\/enrich$/.test(r.url()));
+    await dialog.getByRole('button', { name: /Add & Enrich/ }).click();
+    expect((await accepted).status()).toBe(202);
+    await page.waitForURL(/\/acquisitions\/[^/]+$/, { timeout: 15_000 });
+
+    // The stub carries a placeholder title (not the sentinel), so find it by its unique URL and delete it here.
+    const stub = listOf(await api('GET', '/acquisitions')).find((a: any) => a.url === url);
+    expect(stub, 'quick-add stub created').toBeTruthy();
+    expect((await api('DELETE', `/acquisitions/${stub.acquisition_id}`)).status).toBeLessThan(300);
+    await expect
+      .poll(async () => listOf(await api('GET', '/acquisitions')).some((a: any) => a.acquisition_id === stub.acquisition_id))
+      .toBe(false);
+  });
 });

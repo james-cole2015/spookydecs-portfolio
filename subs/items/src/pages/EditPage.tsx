@@ -136,7 +136,7 @@ export default function EditPage() {
 
   async function onSubmit(data: ItemFormValues) {
     if (!item) return;
-    if (packModeChanged(data, item) && item.storage_data?.is_stored) {
+    if (packModeChanged(data, item) && (item.status === 'Packed' || item.storage_data?.is_stored)) {
       const ok = window.confirm(
         'This item is currently marked as stored. Changing its pack mode will not move it ' +
         'out of its current tote/location — you may need to update storage separately. Continue?'

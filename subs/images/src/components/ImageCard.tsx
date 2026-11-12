@@ -5,7 +5,7 @@
  * regardless of caption/metadata height).
  */
 import { Button, Card, CardBody, CardFooter, Chip } from '@heroui/react';
-import { SeasonChip } from '@spookydecs/ui';
+import { SeasonChip, SpookyImage, photoUrls } from '@spookydecs/ui';
 import { useNavigate } from 'react-router-dom';
 import { canonicalSeason, type Photo } from '../config/imagesConfig';
 
@@ -27,15 +27,10 @@ export function ImageCard({ photo }: { photo: Photo }) {
   return (
     <Card className="flex h-full flex-col overflow-hidden">
       <div
-        className="relative aspect-square w-full cursor-pointer overflow-hidden bg-content2"
+        className="relative w-full cursor-pointer overflow-hidden"
         onClick={() => navigate(`/${photo.photo_id}`)}
       >
-        <img
-          src={photo.thumb_cloudfront_url || photo.cloudfront_url}
-          alt={photo.caption || 'Image'}
-          loading="lazy"
-          className="h-full w-full object-cover"
-        />
+        <SpookyImage {...photoUrls(photo, 'thumb')} alt={photo.caption || 'Image'} ratio="4/5" fit="cover" />
         {orphaned && (
           <Chip size="sm" color="warning" variant="solid" className="absolute left-2 top-2">
             Orphaned

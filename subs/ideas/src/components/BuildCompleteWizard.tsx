@@ -264,6 +264,12 @@ export function BuildCompleteWizard({
                 typeof m === 'string' ? { name: m, done: false } : { name: m.name, done: false },
               ),
               notes: stateNote ? `${backlink}\n\n${stateNote}` : backlink,
+              // Carry step progress over so the remainder resumes where the
+              // original left off. step_id is dropped so the backend assigns
+              // fresh ones — build_sessions anchor to a step_id per idea.
+              build_instructions: (idea.build_instructions || []).map(
+                ({ step_id: _stepId, ...step }) => step,
+              ),
               remaining_units: remainder,
               status: 'Considering',
             });

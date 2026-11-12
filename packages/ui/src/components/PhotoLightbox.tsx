@@ -24,6 +24,7 @@ import { Gallery, Item } from 'react-photoswipe-gallery';
 import type PhotoSwipe from 'photoswipe';
 import type { PhotoSwipeOptions } from 'photoswipe';
 import pswpStyles from 'photoswipe/style.css?inline';
+import { SpookyImage } from './SpookyImage';
 
 /** Inject PhotoSwipe's CSS once, lazily, the first time a lightbox mounts. */
 let stylesInjected = false;
@@ -54,6 +55,12 @@ export interface LightboxPhoto {
    */
   width?: number;
   height?: number;
+  /**
+   * True when the grid thumbnail is cropped (e.g. `object-cover` in a square cell), so
+   * PhotoSwipe animates open from the cropped box instead of assuming the thumb's full
+   * aspect ratio. Set this for any grid that crops.
+   */
+  thumbCropped?: boolean;
   /** Stable React key. Defaults to `url`. */
   key?: string;
 }
@@ -73,7 +80,7 @@ export interface PhotoLightboxProps {
   photos: LightboxPhoto[];
   /** className for the grid container. Consumers own the grid layout. */
   className?: string;
-  /** className applied to each default `<img>` thumbnail. */
+  /** className applied to each default thumbnail cell. */
   thumbnailClassName?: string;
   /**
    * Auto-advance interval in ms while the lightbox is open. Omit (or 0) to
@@ -100,15 +107,24 @@ function backfillDimensions(pswp: PhotoSwipe) {
   pswp.on('contentLoad', (e: { content?: any }) => {
     const content = e.content;
     if (!content || content.type !== 'image') return;
-    if (content.data?.width && content.data?.height) return;
+    // PhotoSwipe slide data uses `w`/`h` (react-photoswipe-gallery maps width/height onto them).
+    if (content.data?.w && content.data?.h) return;
     const probe = new window.Image();
     probe.onload = () => {
       const { naturalWidth: w, naturalHeight: h } = probe;
-      content.data.width = w;
-      content.data.height = h;
+      if (!w || !h) return;
+      content.data.w = w;
+      content.data.h = h;
       content.width = w;
       content.height = h;
-      content.slide?.updateContentSize?.(true);
+      const slide = content.slide;
+      if (slide) {
+        slide.width = w;
+        slide.height = h;
+        // Recompute zoom levels for the real dimensions, re-fit to the pan area, re-apply size.
+        slide.resize?.();
+        slide.updateContentSize?.(true);
+      }
     };
     probe.src = content.data?.src;
   });
@@ -163,6 +179,7 @@ export function PhotoLightbox({
             thumbnail={photo.thumbUrl ?? photo.url}
             width={photo.width}
             height={photo.height}
+            cropped={photo.thumbCropped}
             caption={photo.caption}
             alt={photo.alt ?? photo.caption}
           >
@@ -170,15 +187,19 @@ export function PhotoLightbox({
               renderThumbnail ? (
                 <>{renderThumbnail({ photo, index, ref, open })}</>
               ) : (
-                <img
-                  ref={ref as Ref<HTMLImageElement>}
+                <div
+                  ref={ref as Ref<HTMLDivElement>}
                   onClick={open}
-                  src={photo.thumbUrl ?? photo.url}
-                  alt={photo.alt ?? photo.caption ?? ''}
-                  loading="lazy"
                   className={thumbnailClassName}
                   style={{ cursor: 'zoom-in' }}
-                />
+                >
+                  <SpookyImage
+                    src={photo.thumbUrl ?? photo.url}
+                    fallbackSrc={photo.thumbUrl ? photo.url : undefined}
+                    alt={photo.alt ?? photo.caption ?? ''}
+                    ratio="auto"
+                  />
+                </div>
               )
             }
           </Item>
