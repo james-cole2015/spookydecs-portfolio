@@ -17,7 +17,7 @@ import {
   SelectItem,
   Textarea,
 } from '@heroui/react';
-import { ConfirmDialog, LibraryImageEditor, useToast } from '@spookydecs/ui';
+import { ConfirmDialog, LibraryImageEditor, SpookyImage, useToast } from '@spookydecs/ui';
 import { IMAGES_CONFIG, validateCategory, type CategoryConfig, type Photo } from '../config/imagesConfig';
 import { deleteImage, presignReplace, reprocess, suggestTags, updateImage, type MatchedItem } from '../api/imagesApi';
 
@@ -127,10 +127,13 @@ export function ImageDetail({
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
       <div className="group relative">
         <a href={photo.cloudfront_url} target="_blank" rel="noopener noreferrer">
-          <img
+          <SpookyImage
             src={previewUrl ?? photo.cloudfront_url}
             alt={photo.caption || 'Image'}
-            className="w-full rounded-large object-contain"
+            ratio="auto"
+            fit="contain"
+            eager
+            className="rounded-large"
           />
         </a>
         {editMode && (

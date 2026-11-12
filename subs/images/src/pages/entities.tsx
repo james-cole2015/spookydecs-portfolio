@@ -6,7 +6,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, Card, CardBody, Chip } from '@heroui/react';
-import { Breadcrumbs, PageHeader, LoadingState, ErrorState, EmptyState, SeasonChip } from '@spookydecs/ui';
+import { Breadcrumbs, PageHeader, LoadingState, ErrorState, EmptyState, SeasonChip, SpookyImage } from '@spookydecs/ui';
 import { fetchImages, fetchIdeas } from '../api/imagesApi';
 import { canonicalSeason, type Photo } from '../config/imagesConfig';
 
@@ -154,9 +154,9 @@ export default function Entities() {
                   onPress={() => navigate(`/entities/${entity.id}?type=${entity.type}`)}
                   className="h-full"
                 >
-                  <div className="aspect-square w-full overflow-hidden bg-content2">
+                  <div className="w-full overflow-hidden">
                     {thumb ? (
-                      <img src={thumb} alt={entity.id} loading="lazy" className="h-full w-full object-cover" />
+                      <SpookyImage src={thumb} alt={entity.id} ratio="4/5" fit="cover" />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center text-default-400">
                         No Photo
