@@ -1,11 +1,12 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Card, CardBody, CardHeader, Chip, Image, Divider } from '@heroui/react';
-import { PackageCheck, Pencil, Printer, Trash2, Warehouse } from 'lucide-react';
+import { PackageCheck, Pencil, Printer, RotateCw, Trash2, Warehouse } from 'lucide-react';
 import { storageAPI, photosAPI } from '../api/storageApi';
 import { getPlaceholderImage, STORAGE_STATUS_COLORS, type StorageUnit, type SupplyEntry } from '../config/storageConfig';
 import { SupplyListEditor } from '../components/SupplyListEditor';
 import { LabelTemplate, LABEL_H_IN, LABEL_W_IN } from '../components/LabelTemplate';
+import { nextTurn, turnProps, TURN_LABEL, type LabelTurn } from '../lib/labelTurn';
 import { LidLabelTemplate, LID_H_IN, LID_W_IN } from '../components/LidLabelTemplate';
 import type { LabelItem } from '../lib/labelContents';
 import {
@@ -62,6 +63,7 @@ export default function DetailPage() {
   const toast = useToast();
 
   const [unit, setUnit] = useState<StorageUnit | null>(null);
+  const [turn, setTurn] = useState<LabelTurn>('wide');
   const [contents, setContents] = useState<ContentItem[]>([]);
   const [supplies, setSupplies] = useState<SupplyEntry[]>([]);
   const [savingSupplies, setSavingSupplies] = useState(false);
@@ -352,20 +354,34 @@ export default function DetailPage() {
       <Card shadow="md" className="mt-4 bg-content1" data-testid="label-card">
         <CardHeader className="flex flex-wrap items-center justify-between gap-2">
           <Typography type="h5" className="text-foreground">Label</Typography>
-          <Button size="sm" color="primary" variant="flat" startContent={<Printer size={16} />} onPress={() => navigate('/storage/labels')} data-testid="open-print-sheet">
-            Open label sheet
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm" variant="flat" startContent={<RotateCw size={16} />} onPress={() => setTurn(nextTurn(turn))} data-testid="rotate-label" aria-label={`Rotate label preview, now ${TURN_LABEL[turn]}`}>
+              Rotate
+            </Button>
+            <Button size="sm" color="primary" variant="flat" startContent={<Printer size={16} />} onPress={() => navigate('/storage/labels')} data-testid="open-print-sheet">
+              Open label sheet
+            </Button>
+          </div>
         </CardHeader>
         <Divider />
         <CardBody className="gap-2">
           <div className="flex flex-wrap items-end gap-6">
-            <LabelPreview caption="Wide (6×4)" w={LABEL_W_IN} h={LABEL_H_IN} scale={0.6}>
-              <LabelTemplate unit={unit} contents={labelContents} inset={0.125} />
-            </LabelPreview>
-            {/* Tall is laid out 4x6 then turned onto the 6x4 card; undo the turn here so it reads upright. */}
-            <LabelPreview caption="Tall (4×6)" w={LABEL_H_IN} h={LABEL_W_IN} scale={0.6} transform={`translateY(${LABEL_W_IN * 0.6}in) rotate(-90deg) scale(0.6)`}>
-              <LabelTemplate unit={unit} contents={labelContents} inset={0.125} orientation="tall" rotation="cw" />
-            </LabelPreview>
+            {turn === 'wide' ? (
+              <LabelPreview caption={TURN_LABEL.wide} w={LABEL_W_IN} h={LABEL_H_IN} scale={0.6}>
+                <LabelTemplate unit={unit} contents={labelContents} inset={0.125} />
+              </LabelPreview>
+            ) : (
+              // Tall is laid out 4x6 then turned onto the 6x4 card; undo that turn here so it reads upright.
+              <LabelPreview
+                caption={TURN_LABEL[turn]}
+                w={LABEL_H_IN}
+                h={LABEL_W_IN}
+                scale={0.6}
+                transform={turn === 'tall-cw' ? `translateY(${LABEL_W_IN * 0.6}in) rotate(-90deg) scale(0.6)` : `translateX(${LABEL_H_IN * 0.6}in) rotate(90deg) scale(0.6)`}
+              >
+                <LabelTemplate unit={unit} contents={labelContents} inset={0.125} {...turnProps(turn)} />
+              </LabelPreview>
+            )}
             <LabelPreview caption="Lid (1.75×0.5)" w={LID_W_IN} h={LID_H_IN} scale={1.5}>
               <LidLabelTemplate unit={unit} inset={0} />
             </LabelPreview>

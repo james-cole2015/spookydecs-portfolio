@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Button, ButtonGroup, Input } from '@heroui/react';
-import { Printer, Plus, X, GripVertical, FilePlus2 } from 'lucide-react';
+import { Printer, Plus, X, GripVertical, FilePlus2, RotateCw } from 'lucide-react';
 import {
   DndContext,
   DragOverlay,
@@ -22,6 +22,7 @@ import { LabelTemplate, LABEL_H_IN, LABEL_W_IN } from '../components/LabelTempla
 import { LidLabelTemplate, LID_W_IN, LID_H_IN } from '../components/LidLabelTemplate';
 import { AVERY_5889, AVERY_8167, type LabelKind, type LabelOrientation, type LabelRotation } from '../lib/averySheet';
 import { readQueue, writeQueue } from '../lib/labelQueue';
+import { nextTurn, turnProps, TURN_LABEL, type LabelTurn } from '../lib/labelTurn';
 import type { LabelItem } from '../lib/labelContents';
 
 const POOL_PREFIX = 'pool:';
@@ -284,8 +285,8 @@ export default function LabelsPage() {
   const scale = lid ? LID_PREVIEW_SCALE : PREVIEW_SCALE;
   const guideOff = lid ? LID_DEFAULT_OFFSETS : DEFAULT_OFFSETS;
   // Per print job (not persisted). Tall = label turned 90deg on the same wide stock.
-  const [orientation, setOrientation] = useState<LabelOrientation>('wide');
-  const [rotation, setRotation] = useState<LabelRotation>('cw');
+  const [turn, setTurn] = useState<LabelTurn>('wide');
+  const { orientation, rotation } = turnProps(turn);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(KeyboardSensor));
 
@@ -516,13 +517,9 @@ export default function LabelsPage() {
                     ))}
                   </ButtonGroup>
                   {!lid && (
-                  <ButtonGroup size="sm" variant="flat">
-                    {(['wide', 'tall'] as const).map((o) => (
-                      <Button key={o} color={orientation === o ? 'primary' : 'default'} onPress={() => setOrientation(o)} data-testid={`orientation-${o}`} aria-pressed={orientation === o}>
-                        {o === 'wide' ? 'Wide (6×4)' : 'Tall (turned)'}
-                      </Button>
-                    ))}
-                  </ButtonGroup>
+                    <Button size="sm" variant="flat" color="primary" startContent={<RotateCw size={16} />} onPress={() => setTurn(nextTurn(turn))} data-testid="rotate-label" aria-label={`Rotate label, now ${TURN_LABEL[turn]}`}>
+                      {TURN_LABEL[turn]}
+                    </Button>
                   )}
                   {lid && (
                     <Input
@@ -536,15 +533,6 @@ export default function LabelsPage() {
                       onValueChange={setStartAt}
                       data-testid="start-at"
                     />
-                  )}
-                  {!lid && orientation === 'tall' && (
-                    <ButtonGroup size="sm" variant="flat">
-                      {(['cw', 'ccw'] as const).map((r) => (
-                        <Button key={r} color={rotation === r ? 'primary' : 'default'} onPress={() => setRotation(r)} data-testid={`rotation-${r}`} aria-pressed={rotation === r}>
-                          {r === 'cw' ? 'Turn right' : 'Turn left'}
-                        </Button>
-                      ))}
-                    </ButtonGroup>
                   )}
                   <Button size="sm" variant="flat" startContent={<FilePlus2 size={16} />} onPress={() => setSlots((p) => normalize([...p, ...Array(perPage).fill(null)], perPage))} data-testid="add-sheet">
                     Add sheet
