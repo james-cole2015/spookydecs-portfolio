@@ -46,8 +46,12 @@ export function BasicFields({ register, setValue, watch, errors, showStatus }: B
           selectedKeys={status ? [status] : []}
           onChange={(e) => e.target.value && setValue('status', e.target.value, { shouldValidate: true })}
           disallowEmptySelection
+          // Retired is written only by the Retire action (#706): never offered, and locked once set.
+          isDisabled={status === 'Retired'}
+          description={status === 'Retired' ? 'Retired items cannot change status.' : undefined}
         >
-          {ITEM_STATUS.map((s) => <SelectItem key={s.value}>{s.label}</SelectItem>)}
+          {ITEM_STATUS.filter((s) => s.value !== 'Retired' || status === 'Retired')
+            .map((s) => <SelectItem key={s.value}>{s.label}</SelectItem>)}
         </Select>
       )}
       <Input label="Date Acquired" placeholder="Year (e.g. 2023)" {...register('date_acquired')} />

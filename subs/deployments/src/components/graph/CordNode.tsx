@@ -16,6 +16,7 @@ export default function CordNode({ data, selected }: NodeProps<Node<GraphNodeDat
       iconSize={16}
       width={100}
       selected={selected}
+      retired={data.retired}
       label={data.label}
       sublabel={parts.join(' · ') || undefined}
       sublabelClassName={data.throughAmps ? 'text-warning-600' : 'text-default-400'}

@@ -33,6 +33,25 @@ export const ITEM_STATUS = [
   { value: 'Retired',       label: 'Retired',        color: '#ef4444' },
 ] as const;
 
+// Retirement (#706) — mirrors shared/layers/item_retirement.py. beyond_repair presets disposal to trash.
+export const RETIRE_REASONS = [
+  { value: 'beyond_repair', label: 'Beyond repair' },
+  { value: 'sold',          label: 'Sold' },
+  { value: 'donated',       label: 'Donated' },
+  { value: 'lost',          label: 'Lost' },
+  { value: 'other',         label: 'Other' },
+] as const;
+export const DISPOSAL_METHODS = [
+  { value: 'trash',   label: 'Trash' },
+  { value: 'donate',  label: 'Donate' },
+  { value: 'salvage', label: 'Salvage' },
+] as const;
+export const DEFAULT_DISPOSAL: Record<string, string> = { beyond_repair: 'trash' };
+
+export function labelFor(list: ReadonlyArray<{ value: string; label: string }>, value?: string): string {
+  return list.find((o) => o.value === value)?.label ?? value ?? '—';
+}
+
 // Pack mode — a 3-way choice over storage_data's two independent booleans
 // (packable, single_packed). Tote-packed is the create default (#619).
 export const PACK_MODES = [

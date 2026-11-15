@@ -195,3 +195,23 @@ describe('deriveGraph — inactive records excluded', () => {
     expect(nodes.find((n) => n.id === 'LOAD-1')).toBeUndefined();
   });
 });
+
+describe('deriveGraph — retired items (#706)', () => {
+  it('flags a node from the item\'s current status and keeps its connection', () => {
+    const { nodes, edges } = deriveGraph(
+      baseInput({
+        items: {
+          LIGHT1: { id: 'LIGHT1', class: 'Light', status: 'Retired' },
+          LIGHT2: { id: 'LIGHT2', class: 'Light', status: 'Deployed' },
+        },
+        connections: [
+          { connection_id: 'c1', zone_code: 'FY', from_item_id: 'REC-FY-001', from_port: 'Female_1', to_item_id: 'LIGHT1', to_port: 'Power_Inlet' },
+          { connection_id: 'c2', zone_code: 'FY', from_item_id: 'REC-FY-001', from_port: 'Female_2', to_item_id: 'LIGHT2', to_port: 'Power_Inlet' },
+        ] as GraphInput['connections'],
+      }),
+    );
+    expect(nodes.find((n) => n.id === 'LIGHT1')?.data.retired).toBe(true);
+    expect(nodes.find((n) => n.id === 'LIGHT2')?.data.retired).toBeUndefined();
+    expect(edges).toHaveLength(2);
+  });
+});
