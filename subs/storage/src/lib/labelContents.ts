@@ -13,6 +13,23 @@ export interface LabelItem {
 export interface ContentGroup {
   label: string;
   count: number;
+  /** Free-text quantity from a supply entry ("2 rolls"); shown instead of the numeric count. */
+  qty?: string;
+}
+
+export interface SupplyLike {
+  name: string;
+  quantity?: string;
+}
+
+/** Supply tote contents (#708): one row per named supply, in entered order, quantity kept as typed. */
+export function supplyGroups(supplies: SupplyLike[] | undefined): ContentGroup[] {
+  return (supplies ?? [])
+    .filter((s) => s.name && s.name.trim())
+    .map((s) => {
+      const qty = (s.quantity ?? '').trim();
+      return { label: s.name.trim(), count: 1, ...(qty ? { qty } : {}) };
+    });
 }
 
 /** List packed items by short name, combining duplicates ("Spider Web x3"), biggest first. */
