@@ -30,6 +30,20 @@ const SLOT_PREFIX = 'slot:';
 const POOL_DROP = 'pool-drop';
 const PREVIEW_SCALE = 0.7;
 const SLOT_NAMES = ['Top', 'Bottom'];
+// Side labels are usually stuck on two faces of a tote, so each add places a pair by default.
+const COPIES_KEY = 'storage.labelCopies.v1';
+const DEFAULT_COPIES = 2;
+const MAX_COPIES = 10;
+
+function loadCopies(): number {
+  try {
+    const n = Math.floor(Number(localStorage.getItem(COPIES_KEY)));
+    if (n >= 1 && n <= MAX_COPIES) return n;
+  } catch {
+    /* storage unavailable — use default */
+  }
+  return DEFAULT_COPIES;
+}
 
 interface Offsets {
   x: number;
@@ -75,12 +89,12 @@ function normalize(slots: (string | null)[], perPage: number = AVERY_5889.perPag
   return out;
 }
 
-function PoolRow({ unit, onAdd, disabled }: { unit: StorageUnit; onAdd: () => void; disabled: boolean }) {
+function PoolRow({ unit, onAdd, onSheet }: { unit: StorageUnit; onAdd: () => void; onSheet: number }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: POOL_PREFIX + unit.id });
   return (
     <div
       ref={setNodeRef}
-      className={`flex items-center gap-2 rounded-lg border border-default-200 p-2 ${isDragging ? 'opacity-40' : ''} ${disabled ? 'opacity-60' : ''}`}
+      className={`flex items-center gap-2 rounded-lg border border-default-200 p-2 ${isDragging ? 'opacity-40' : ''} ${onSheet > 0 ? 'bg-default-50' : ''}`}
       data-testid={`pool-${unit.id}`}
     >
       <button type="button" className="cursor-grab text-default-400" aria-label={`Drag ${unit.short_name}`} {...attributes} {...listeners}>
@@ -88,10 +102,10 @@ function PoolRow({ unit, onAdd, disabled }: { unit: StorageUnit; onAdd: () => vo
       </button>
       <div className="min-w-0 flex-1">
         <Typography type="body-sm" as="div" className="truncate text-foreground">{unit.short_name}</Typography>
-        <Typography type="body-xs" as="div" className="truncate text-default-500">{unit.id}{disabled ? ' · on sheet' : ''}</Typography>
+        <Typography type="body-xs" as="div" className="truncate text-default-500">{unit.id}{onSheet > 0 ? ` · ×${onSheet} on sheet` : ''}</Typography>
       </div>
       <SeasonChip value={String(unit.season ?? '')} label={String(unit.season ?? '—')} />
-      <Button isIconOnly size="sm" variant="flat" isDisabled={disabled} aria-label={`Add ${unit.short_name}`} onPress={onAdd}>
+      <Button isIconOnly size="sm" variant="flat" aria-label={`Add ${unit.short_name}`} onPress={onAdd}>
         <Plus size={16} />
       </Button>
     </div>
@@ -226,7 +240,7 @@ function PrintPages({
             if (!u) return null;
             const pos = cellPos(kind, ci, offsets);
             return (
-              <div key={u.id} className="absolute" style={{ left: `${pos.left}in`, top: `${pos.top}in` }}>
+              <div key={ci} className="absolute" style={{ left: `${pos.left}in`, top: `${pos.top}in` }}>
                 {kind === 'lid' ? (
                   <LidLabelTemplate unit={u} inset={offsets.inset} />
                 ) : (
@@ -258,6 +272,7 @@ export default function LabelsPage() {
   const [slots, setSlots] = useState<(string | null)[]>(normalize([]));
   const [contentsById, setContentsById] = useState<Record<string, LabelItem[]>>({});
   const [search, setSearch] = useState('');
+  const [copies, setCopies] = useState<number>(loadCopies);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [sideOffsets, setSideOffsets] = useState<Offsets>(() => loadOffsets());
   const [lidOffsets, setLidOffsets] = useState<Offsets>(() => loadOffsets(LID_OFFSETS_KEY, LID_DEFAULT_OFFSETS));
@@ -284,7 +299,9 @@ export default function LabelsPage() {
       setUnits(all);
       // Queue (from detail pages) plus a deep link from elsewhere: /storage/labels?ids=A,B
       const preset = (searchParams.get('ids') ?? '').split(',').filter(Boolean);
-      const ids = [...new Set([...readQueue(), ...preset])].filter((id) => all.some((u) => u.id === id));
+      const queued = readQueue();
+      // Repeats in the queue are copies; a deep-link id only adds one if it isn't already queued.
+      const ids = [...queued, ...preset.filter((id) => !queued.includes(id))].filter((id) => all.some((u) => u.id === id));
       setSlots(normalize(ids, perPage));
     } catch (e: any) {
       setError(e?.message ?? 'Failed to load storage units');
@@ -306,7 +323,7 @@ export default function LabelsPage() {
   // Contents come from the unit detail endpoint (contents_details); fetch once per unit on the sheet.
   useEffect(() => {
     if (lid) return; // lid labels carry no contents
-    const missing = filledIds.filter((id) => !(id in contentsById));
+    const missing = [...new Set(filledIds)].filter((id) => !(id in contentsById));
     if (missing.length === 0) return;
     let live = true;
     missing.forEach(async (id) => {
@@ -361,15 +378,34 @@ export default function LabelsPage() {
   ).length;
   const blankSlots = printSheets * perPage - filledIds.length;
 
-  const place = (id: string, at?: number) =>
+  // Adds `count` copies of a tote, filling the next free slots (a new sheet is added when full).
+  const place = (id: string, count = 1) =>
     setSlots((prev) => {
-      if (prev.includes(id)) return prev;
       const next = [...prev];
-      const target = at ?? next.indexOf(null);
-      if (target >= 0 && target < next.length) next[target] = id;
-      else next.push(id);
+      for (let c = 0; c < count; c++) {
+        const target = next.indexOf(null);
+        if (target >= 0) next[target] = id;
+        else next.push(id);
+      }
       return normalize(next, perPage);
     });
+
+  const copiesPerAdd = lid ? 1 : copies;
+  const onSheetCount = useMemo(() => {
+    const m = new Map<string, number>();
+    filledIds.forEach((id) => m.set(id, (m.get(id) ?? 0) + 1));
+    return m;
+  }, [filledIds]);
+
+  function updateCopies(v: string) {
+    const n = Math.min(Math.max(Math.floor(Number(v)) || 1, 1), MAX_COPIES);
+    setCopies(n);
+    try {
+      localStorage.setItem(COPIES_KEY, String(n));
+    } catch {
+      /* ignore */
+    }
+  }
 
   function onDragStart(e: DragStartEvent) {
     setActiveId(String(e.active.id));
@@ -387,8 +423,8 @@ export default function LabelsPage() {
       if (!to.startsWith(SLOT_PREFIX)) return;
       const j = Number(to.slice(SLOT_PREFIX.length));
       setSlots((prev) => {
-        const next = prev.map((s) => (s === id ? null : s)); // moving an already-placed label
-        next[j] = id; // anything that was in the slot returns to the list
+        const next = [...prev];
+        next[j] = id; // drops one copy here; anything that was in the slot returns to the list
         return normalize(next, perPage);
       });
       return;
@@ -445,11 +481,23 @@ export default function LabelsPage() {
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[20rem_1fr]">
               <div className="flex flex-col gap-2">
                 <Input size="sm" placeholder="Search units" value={search} onValueChange={setSearch} aria-label="Search units" />
-                <Typography type="body-xs" className="text-default-500">Drag a unit onto a card slot, or press +. Drop a placed label here to take it off the sheet.</Typography>
+                {!lid && (
+                  <Input
+                    size="sm"
+                    type="number"
+                    min={1}
+                    max={MAX_COPIES}
+                    label="Copies per add"
+                    value={String(copies)}
+                    onValueChange={updateCopies}
+                    data-testid="copies"
+                  />
+                )}
+                <Typography type="body-xs" className="text-default-500">Press + to add {copiesPerAdd === 1 ? 'a label' : `${copiesPerAdd} copies`}, or drag a unit onto a card slot to place one. Drop a placed label here to take it off the sheet.</Typography>
                 <PoolDrop>
                   <div className="flex max-h-[70vh] flex-col gap-2 overflow-y-auto">
                     {pool.map((u) => (
-                      <PoolRow key={u.id} unit={u} disabled={filledIds.includes(u.id)} onAdd={() => place(u.id)} />
+                      <PoolRow key={u.id} unit={u} onSheet={onSheetCount.get(u.id) ?? 0} onAdd={() => place(u.id, copiesPerAdd)} />
                     ))}
                   </div>
                 </PoolDrop>

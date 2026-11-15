@@ -20,7 +20,8 @@ export function readQueue(): string[] {
 
 export function writeQueue(ids: string[]): void {
   try {
-    localStorage.setItem(KEY, JSON.stringify([...new Set(ids)]));
+    // Repeats are meaningful: the same tote twice = two copies on the sheet.
+    localStorage.setItem(KEY, JSON.stringify(ids));
   } catch {
     /* storage unavailable — queue simply won't persist */
   }
