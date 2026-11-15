@@ -17,3 +17,14 @@ export const TURN_LABEL: Record<LabelTurn, string> = {
   'tall-cw': 'Tall · turned right',
   'tall-ccw': 'Tall · turned left',
 };
+
+/** A card position holding a tote's label and how that label is turned; null = blank card. */
+export type Slot = { id: string; turn: LabelTurn } | null;
+
+/** Saved form: a plain id means wide (so queues saved before per-label turns still load); turned labels carry a suffix. */
+export const encodeSlot = (s: NonNullable<Slot>): string => (s.turn === 'wide' ? s.id : `${s.id}|${s.turn}`);
+
+export function decodeSlot(raw: string): NonNullable<Slot> {
+  const [id, t] = raw.split('|');
+  return { id, turn: t === 'tall-cw' || t === 'tall-ccw' ? t : 'wide' };
+}
