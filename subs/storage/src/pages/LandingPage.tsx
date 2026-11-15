@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Card, CardBody, CardHeader } from '@heroui/react';
-import { Package, Plus, BarChart3, Luggage, Ruler, Search, type LucideIcon } from 'lucide-react';
+import { Package, Plus, BarChart3, Luggage, Ruler, Search, Printer, type LucideIcon } from 'lucide-react';
 import { PageHeader, Typography } from '@spookydecs/ui';
 
 interface HubCard {
@@ -18,6 +18,7 @@ const CARDS: HubCard[] = [
   { id: 'pack', icon: Luggage, title: 'Packing Wizard', description: 'Step through the packing workflow to assign items to storage units efficiently.', route: '/storage/pack' },
   { id: 'non-packable', icon: Ruler, title: 'Large & Oversized', description: 'Track oversized items stored directly by location — not packed in totes or boxes.', route: '/storage/non-packable' },
   { id: 'unpacked', icon: Search, title: 'Unpacked Items', description: 'Post-pack audit — see which items are not yet in storage, scoped by season.', route: '/storage/unpacked' },
+  { id: 'labels', icon: Printer, title: 'Print Labels', description: 'Build and print tote labels and lid labels on Avery sheets.', route: '/storage/labels' },
 ];
 
 export default function LandingPage() {
