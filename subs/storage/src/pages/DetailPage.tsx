@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Card, CardBody, CardHeader, Chip, Image, Divider } from '@heroui/react';
-import { PackageCheck, Pencil, Trash2, Warehouse } from 'lucide-react';
+import { PackageCheck, Pencil, Printer, Trash2, Warehouse } from 'lucide-react';
 import { storageAPI, photosAPI } from '../api/storageApi';
 import { getPlaceholderImage, STORAGE_STATUS_COLORS, type StorageUnit, type SupplyEntry } from '../config/storageConfig';
 import { SupplyListEditor } from '../components/SupplyListEditor';
+import { LabelTemplate, LABEL_H_IN, LABEL_W_IN } from '../components/LabelTemplate';
+import { useLabelQueue } from '../lib/labelQueue';
+import type { LabelItem } from '../lib/labelContents';
 import {
   Breadcrumbs,
   LoadingState,
@@ -41,6 +44,7 @@ export default function DetailPage() {
   const [confirm, setConfirm] = useState<null | 'delete' | 'store' | 'markPacked' | { type: 'remove'; itemId: string }>(null);
   const [busy, setBusy] = useState(false);
 
+  const labelQueue = useLabelQueue();
   const canWrite = hasMinRole('builder');
   const canDelete = hasMinRole('admin');
 
@@ -315,6 +319,44 @@ export default function DetailPage() {
           </Card>
         )}
       </div>
+
+      <Card shadow="md" className="mt-4 bg-content1" data-testid="label-card">
+        <CardHeader className="flex flex-wrap items-center justify-between gap-2">
+          <Typography type="h5" className="text-foreground">Label</Typography>
+          <div className="flex flex-wrap items-center gap-2">
+            {labelQueue.ids.length > 0 && (
+              <Button size="sm" variant="light" onPress={() => navigate('/storage/labels')} data-testid="open-print-sheet">
+                Print sheet ({labelQueue.ids.length})
+              </Button>
+            )}
+            {labelQueue.has(unit.id) ? (
+              <Button size="sm" variant="flat" onPress={() => labelQueue.remove(unit.id)} data-testid="remove-from-sheet">
+                Added · Remove
+              </Button>
+            ) : (
+              <Button size="sm" color="primary" variant="flat" startContent={<Printer size={16} />} onPress={() => labelQueue.add(unit.id)} data-testid="add-to-sheet">
+                Add to print sheet
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <Divider />
+        <CardBody className="gap-2">
+          {unit.is_supply_tote && (
+            <Typography type="body-xs" className="text-warning-600">
+              Supply tote labels don't list supplies yet (tracked as issue 708); this preview shows no contents.
+            </Typography>
+          )}
+          <div style={{ width: `${LABEL_W_IN * 0.6}in`, height: `${LABEL_H_IN * 0.6}in`, overflow: 'hidden' }} className="rounded border border-default-300">
+            <div style={{ zoom: 0.6 }}>
+              <LabelTemplate unit={unit} contents={unit.is_supply_tote ? [] : (contents as LabelItem[])} inset={0.125} />
+            </div>
+          </div>
+          <Typography type="body-xs" className="text-default-500">
+            Labels print two per sheet. Add a few totes, then print from the sheet.
+          </Typography>
+        </CardBody>
+      </Card>
 
       <ConfirmDialog
         isOpen={confirm === 'delete'}

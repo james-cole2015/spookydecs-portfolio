@@ -94,7 +94,7 @@ export default function NonPackablePage() {
                 isPressable
                 isHoverable
                 shadow="md"
-                onPress={() => window.location.assign(`${itemsAdminUrl}/items/${item.id}`)}
+                onPress={() => window.location.assign(`${itemsAdminUrl}/items/${encodeURIComponent(item.id)}`)}
                 className="bg-content1"
               >
                 <CardBody className="flex flex-row gap-3">

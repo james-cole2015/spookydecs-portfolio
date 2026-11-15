@@ -12,7 +12,7 @@ import {
   AccordionItem,
   useDisclosure,
 } from '@heroui/react';
-import { Package, BarChart3, Luggage, Plus } from 'lucide-react';
+import { Package, BarChart3, Luggage, Plus, Archive, Printer } from 'lucide-react';
 import { storageAPI, itemsAPI, photosAPI, type ItemRecord } from '../api/storageApi';
 import STORAGE_CONFIG, { type StorageUnit } from '../config/storageConfig';
 import { applyFilters, calculateStats, type StorageStats } from '../lib/stats';
@@ -59,6 +59,7 @@ export default function ListPage() {
   const [stats, setStats] = useState<StorageStats | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<StorageUnit | null>(null);
   const [busy, setBusy] = useState(false);
+  const [bulkStoreOpen, setBulkStoreOpen] = useState(false);
 
   const statsDrawer = useDisclosure();
   const filters = readFilters(searchParams);
@@ -149,6 +150,36 @@ export default function ListPage() {
     }
   }
 
+  // Units that are boxed but not yet on the shelf. Bulk Store is operator-driven; nothing auto-stores (#701).
+  const packedUnits = useMemo(() => allStorage.filter((u) => u.status === 'Packed'), [allStorage]);
+
+  async function confirmBulkStore() {
+    setBusy(true);
+    const queue = [...packedUnits];
+    const failures: string[] = [];
+    let stored = 0;
+    // Small fixed pool: each PUT guards its own transition and fans out Item.Stored per item.
+    const worker = async () => {
+      for (let u = queue.shift(); u; u = queue.shift()) {
+        try {
+          await storageAPI.update(u.id, { status: 'Stored' });
+          stored += 1;
+        } catch (e: any) {
+          failures.push(`${u.id}: ${e?.message ?? 'failed'}`);
+        }
+      }
+    };
+    try {
+      await Promise.all(Array.from({ length: 4 }, worker));
+      if (failures.length === 0) toast.showSuccess(`Stored ${stored} unit${stored === 1 ? '' : 's'}`);
+      else toast.showError(`Stored ${stored}, ${failures.length} failed. ${failures.slice(0, 3).join('; ')}`);
+      setBulkStoreOpen(false);
+      await loadData();
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const unpackedBadge = stats?.unpacked_items ?? 0;
 
   return (
@@ -167,9 +198,17 @@ export default function ListPage() {
             >
               Stats{unpackedBadge > 0 ? ` (${unpackedBadge})` : ''}
             </Button>
+            <Button variant="flat" startContent={<Printer size={18} />} onPress={() => navigate('/storage/labels')} data-testid="print-labels-link">
+              Print labels
+            </Button>
             <Button variant="flat" color="secondary" startContent={<Luggage size={18} />} onPress={() => navigate('/storage/pack')}>
               Pack
             </Button>
+            {canWrite && packedUnits.length > 0 && (
+              <Button variant="flat" color="primary" startContent={<Archive size={18} />} onPress={() => setBulkStoreOpen(true)} data-testid="bulk-store">
+                Store all Packed ({packedUnits.length})
+              </Button>
+            )}
             {canWrite && (
               <Button color="primary" variant="shadow" startContent={<Plus size={18} />} onPress={() => navigate('/storage/create')}>
                 Create
@@ -279,6 +318,21 @@ export default function ListPage() {
         </DrawerContent>
       </Drawer>
 
+      <ConfirmDialog
+        isOpen={bulkStoreOpen}
+        title="Mark all Packed units as Stored?"
+        body={
+          <p>
+            Moves <strong>{packedUnits.length}</strong> Packed unit{packedUnits.length === 1 ? '' : 's'} (totes and
+            self-contained boxes) to Stored and marks their items as on the shelf.
+          </p>
+        }
+        confirmLabel="Store all"
+        confirmTestId="confirm-bulk-store"
+        isLoading={busy}
+        onConfirm={confirmBulkStore}
+        onClose={() => setBulkStoreOpen(false)}
+      />
       <ConfirmDialog
         isOpen={Boolean(deleteTarget)}
         title="Delete storage unit?"

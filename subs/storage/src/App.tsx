@@ -13,6 +13,7 @@ const PackWizardPage = lazy(() => import('./pages/PackWizardPage'));
 const StatisticsPage = lazy(() => import('./pages/StatisticsPage'));
 const NonPackablePage = lazy(() => import('./pages/NonPackablePage'));
 const UnpackedPage = lazy(() => import('./pages/UnpackedPage'));
+const LabelsPage = lazy(() => import('./pages/LabelsPage'));
 
 export default function App() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
             <Route path="/statistics" element={<StatisticsPage />} />
             <Route path="/storage/non-packable" element={<NonPackablePage />} />
             <Route path="/storage/unpacked" element={<UnpackedPage />} />
+            <Route path="/storage/labels" element={<LabelsPage />} />
             <Route path="/storage/pack" element={<PackWizardPage />} />
             <Route path="/storage/pack/:id" element={<PackWizardPage />} />
             <Route path="/storage/:id/edit" element={<EditPage />} />

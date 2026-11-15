@@ -12,8 +12,7 @@ import {
 import { StatusChip } from '../components/StatusChip';
 import type { GraphInput } from '../lib/graphDerivation';
 import { zoneSummary } from '../lib/graphPorts';
-
-const ZONE_LABELS: Record<string, string> = { FY: 'Front Yard', BY: 'Back Yard', SY: 'Side Yard' };
+import { ZONE_LABELS } from '../config/deploymentsConfig';
 
 interface EnrichedItem {
   id: string;

@@ -13,6 +13,7 @@ import {
   FILTER_LABELS,
   CLASS_HIERARCHY,
   readFilters,
+  itemPath,
 } from '../config/itemsConfig';
 import { ItemsCards } from '../components/ItemsCards';
 
@@ -112,8 +113,8 @@ export default function ListPage() {
       />
       <ItemsCards
         items={filtered}
-        onView={(id) => navigate(`/${id}`)}
-        onEdit={(id) => navigate(`/${id}/edit`)}
+        onView={(id) => navigate(itemPath(id))}
+        onEdit={(id) => navigate(itemPath(id, '/edit'))}
         onDelete={async (id) => {
           const { deleteItem } = await import('../api/itemsApi');
           try {

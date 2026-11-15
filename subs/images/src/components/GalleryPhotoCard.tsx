@@ -6,7 +6,7 @@
  */
 import { useRef } from 'react';
 import { Button, Card, Chip, Input } from '@heroui/react';
-import { SeasonChip } from '@spookydecs/ui';
+import { SeasonChip, SpookyImage, photoUrls } from '@spookydecs/ui';
 import { Pencil, Star, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { canonicalSeason, type GalleryData, type Photo } from '../config/imagesConfig';
@@ -44,13 +44,8 @@ export function GalleryPhotoCard({ photo, onUpdate, onDelete }: Props) {
 
   return (
     <Card className="overflow-hidden">
-      <div className="relative aspect-video w-full overflow-hidden bg-content2">
-        <img
-          src={photo.thumb_cloudfront_url || photo.cloudfront_url}
-          alt={displayName}
-          loading="lazy"
-          className="h-full w-full object-cover"
-        />
+      <div className="relative w-full overflow-hidden">
+        <SpookyImage {...photoUrls(photo, 'thumb')} alt={displayName} ratio="16/9" fit="cover" />
         {isFeatured && (
           <Chip size="sm" color="primary" variant="solid" className="absolute right-2 top-2">
             ⭐ Featured

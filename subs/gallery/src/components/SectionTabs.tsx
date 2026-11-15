@@ -32,6 +32,9 @@ export function SectionTabs() {
       }}
       variant="underlined"
       color="primary"
+      // The three tabs are wider than a phone. Without this the tab strip widens the whole page,
+      // mobile browsers zoom the layout out, and the fixed full-screen lightbox is sized wrong.
+      classNames={{ base: 'w-full max-w-full', tabList: 'max-w-full overflow-x-auto' }}
     >
       {SECTION_TABS.map((tab) => (
         <Tab

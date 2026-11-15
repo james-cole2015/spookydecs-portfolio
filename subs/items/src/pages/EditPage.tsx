@@ -10,7 +10,7 @@ import { fetchItemById, updateItem } from '../api/itemsApi';
 import { type Item, type StorageData } from '../api/types';
 import { BasicFields, ClassSpecificFields, VendorFields, StorageFields } from '../components/ItemFormFields';
 import { type ItemFormValues, DEFAULT_VALUES } from '../components/ItemFormSchema';
-import { packModeToStorageFlags, storageFlagsToPackMode } from '../config/itemsConfig';
+import { itemPath, packModeToStorageFlags, storageFlagsToPackMode } from '../config/itemsConfig';
 
 function itemToFormValues(item: Item): Partial<ItemFormValues> {
   const storage = item.storage_data ?? {} as StorageData;
@@ -48,7 +48,8 @@ function buildUpdatePayload(data: ItemFormValues, existing: Item): Record<string
   const payload: Record<string, any> = {
     short_name:    data.short_name,
     season:        data.season,
-    status:        data.status,
+    // PATCH rejects status=Retired; retired items keep their status untouched (#706).
+    ...(existing.status === 'Retired' ? {} : { status: data.status }),
     date_acquired: data.date_acquired || undefined,
     general_notes: data.general_notes || undefined,
   };
@@ -136,7 +137,7 @@ export default function EditPage() {
 
   async function onSubmit(data: ItemFormValues) {
     if (!item) return;
-    if (packModeChanged(data, item) && item.storage_data?.is_stored) {
+    if (packModeChanged(data, item) && (item.status === 'Packed' || item.storage_data?.is_stored)) {
       const ok = window.confirm(
         'This item is currently marked as stored. Changing its pack mode will not move it ' +
         'out of its current tote/location — you may need to update storage separately. Continue?'
@@ -148,7 +149,7 @@ export default function EditPage() {
       const payload = buildUpdatePayload(data, item);
       const updated = await updateItem(item.id, payload);
       toast.showSuccess('Saved.');
-      setTimeout(() => navigate(`/${(updated as any).id ?? item.id}`), 800);
+      setTimeout(() => navigate(itemPath((updated as any).id ?? item.id)), 800);
     } catch (e: any) {
       toast.showError(e?.message ?? 'Save failed.');
     } finally {
@@ -204,7 +205,7 @@ export default function EditPage() {
         </Card>
 
         <div className="flex gap-3 justify-end">
-          <Button variant="flat" type="button" onPress={() => navigate(`/${item.id}`)}>Cancel</Button>
+          <Button variant="flat" type="button" onPress={() => navigate(itemPath(item.id))}>Cancel</Button>
           <Button color="primary" type="submit" isLoading={saving}>Save Changes</Button>
         </div>
       </form>

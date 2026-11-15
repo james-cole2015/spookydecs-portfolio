@@ -13,21 +13,18 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Autocomplete, AutocompleteItem, AutocompleteSection, Chip, Tab, Tabs } from '@heroui/react';
-import { Breadcrumbs, ConfirmDialog, EmptyState, ErrorState, LoadingState, PageHeader, useAuth, useToast, usePhotoUpload } from '@spookydecs/ui';
+import { Breadcrumbs, ConfirmDialog, EmptyState, ErrorState, LoadingState, PageHeader, useAuth, useToast } from '@spookydecs/ui';
 import {
   createConnection,
   createPlacement,
-  getDeployment,
-  getDeploymentGraph,
-  getHistoricalDeployment,
   getStagingTotes,
   removeConnection,
   searchItems,
   updateConnection,
-  updateConnectionPhotos,
   updatePlacement,
 } from '../api/deploymentsApi';
 import { DEPLOYMENT_CONFIG } from '../config/deploymentsConfig';
+import { EDITABLE_STATUSES, loadGraph, type LoadedGraph, type RenderMode } from '../lib/loadGraph';
 import type { GraphItem } from '../lib/graphDerivation';
 import { deriveGraph, type GraphInput, type GraphNodeData, type GraphEdgeData } from '../lib/graphDerivation';
 import { layoutGraph } from '../lib/graphLayout';
@@ -50,6 +47,7 @@ import GraphLegend from '../components/graph/GraphLegend';
 import DetailPanel, { type GraphSelection, type RemoveRequest } from '../components/graph/DetailPanel';
 import AssistantPanel from '../components/assistant/AssistantPanel';
 import ProposalReview from '../components/assistant/ProposalReview';
+import { useAddItemPhoto } from '../lib/useAddItemPhoto';
 import { useAssistant } from '../components/assistant/useAssistant';
 import { applyProposal, type RowResult } from '../lib/applyProposal';
 import { applyProposalToGraph, styleGhosts } from '../lib/proposalGhosts';
@@ -77,31 +75,6 @@ function styleEdges(edges: Edge<GraphEdgeData>[]): Edge<GraphEdgeData>[] {
   }));
 }
 
-// Pre-#466 archives have no graph key at all, so this synthesizes an empty
-// zone-root per zone for that (very old, best-effort) fallback. DEPLOYMENT_CONFIG
-// no longer carries a receptacle_id (#582 — receptacles self-register), so a
-// placeholder root id is synthesized here instead; no live receptacle data
-// exists for these archives regardless.
-function zonesRecord(): GraphInput['zones'] {
-  const record: GraphInput['zones'] = {};
-  DEPLOYMENT_CONFIG.ZONES.forEach((z) => {
-    record[z.zone_code] = { ...z, receptacle_ids: [`ROOT-${z.zone_code}`] };
-  });
-  return record;
-}
-
-type RenderMode = 'live' | 'snapshot' | 'best-effort';
-
-interface LoadedGraph {
-  mode: RenderMode;
-  input: GraphInput;
-  /** Deployment status — authoring is only offered while the deployment is still being set up. */
-  status?: string;
-  season?: string;
-  year?: number | string;
-}
-
-const EDITABLE_STATUSES = ['pre-deployment', 'active_setup'];
 // Lurch (the deployments assistant) is open by default for builders on desktop widths. An explicit
 // open/close is remembered per browser; storage may be unavailable, so every access is guarded.
 const ASSISTANT_PREF_KEY = 'deployments-assistant-open';
@@ -154,27 +127,6 @@ function savePositions(id: string, positions: Positions) {
   }
 }
 
-async function loadGraph(deploymentId: string): Promise<LoadedGraph> {
-  const depRes = await getDeployment(deploymentId);
-  // getDeployment always wraps the record as { metadata }; read status/season from there.
-  const meta = depRes?.data?.metadata ?? depRes?.data;
-  const status = meta?.status;
-  const season = meta?.season;
-  const year = meta?.year;
-
-  if (status === 'archived') {
-    const histRes = await getHistoricalDeployment(deploymentId);
-    const graph = histRes?.data?.graph;
-    if (graph?.snapshot) return { mode: 'snapshot', input: graph.snapshot };
-    if (graph?.live) return { mode: 'best-effort', input: graph.live };
-    // No graph key at all (very old archive, pre-#466 historical handler) — treat as empty.
-    return { mode: 'best-effort', input: { zones: zonesRecord(), items: {}, connections: [], placements: [] } };
-  }
-
-  const graphRes = await getDeploymentGraph(deploymentId);
-  return { mode: 'live', input: graphRes.data as GraphInput, status, season, year };
-}
-
 function ModeChip({ mode }: { mode: RenderMode }) {
   if (mode === 'snapshot') {
     return (
@@ -200,7 +152,6 @@ function ModeChip({ mode }: { mode: RenderMode }) {
 export default function DeploymentSchematic({ embedded = false }: { embedded?: boolean }) {
   const { id } = useParams<{ id: string }>();
   const toast = useToast();
-  const photoUpload = usePhotoUpload();
   const auth = useAuth();
   const [params, setParams] = useSearchParams();
 
@@ -343,6 +294,14 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
       toast.showError(err?.message || 'Failed to refresh the graph');
     }
   }, [id, toast]);
+
+  const { addPhoto, editor: photoEditor } = useAddItemPhoto({
+    deploymentId: id,
+    input: loaded?.input,
+    season: loaded?.season,
+    year: loaded?.year,
+    onAdded: refresh,
+  });
 
   async function onApplyProposal() {
     if (!id || !assistant.proposal || zone === 'ALL') return;
@@ -509,43 +468,6 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
   function pickItem(key: string) {
     if (availableStaged.some((s) => s.id === key)) addStaged(key);
     else addAccessory(key);
-  }
-
-  // Photos attach to the item's declaration, or — for items wired without ever being declared —
-  // to its inbound connection.
-  async function addPhoto(itemId: string) {
-    if (!id || !loaded) return;
-    const placement = loaded.input.placements.find(
-      (p) => p.item_id === itemId && (p.placement_type ?? 'deployment') === 'deployment',
-    );
-    const inbound = loaded.input.connections.find(
-      (c) => c.to_item_id === itemId && (c.connection_type ?? 'deployment') === 'deployment',
-    );
-    if (!placement?.placement_id && !inbound?.connection_id) {
-      toast.showError('Declare or connect this item before adding a photo');
-      return;
-    }
-    try {
-      const photos = await photoUpload.openWithEditor({
-        context: 'deployment',
-        photo_type: 'deployment',
-        season: loaded.season || '',
-        year: Number(loaded.year),
-        // entityId maps to the context's id field (deployment_id), so it is the deployment;
-        // the item travels as item_ids (#682).
-        entityId: id,
-        metadata: { item_ids: [itemId] },
-      });
-      if (photos.length === 0) return;
-      const photoIds = photos.map((p) => p.photo_id);
-      // The routes append to the record's existing photos, so only the new ids are sent.
-      if (placement?.placement_id) await updatePlacement(id, placement.placement_id, { photo_ids: photoIds });
-      else await updateConnectionPhotos(id, inbound!.connection_id!, photoIds);
-      toast.showSuccess(photos.length === 1 ? 'Photo added' : `${photos.length} photos added`);
-      await refresh();
-    } catch (err: any) {
-      toast.showError(err?.message || 'Failed to add photo');
-    }
   }
 
   function addAccessory(itemId: string) {
@@ -769,7 +691,7 @@ export default function DeploymentSchematic({ embedded = false }: { embedded?: b
           />
         </div>
       )}
-      {photoUpload.editor}
+      {photoEditor}
       <ConfirmDialog
         isOpen={!!removeTarget}
         title={

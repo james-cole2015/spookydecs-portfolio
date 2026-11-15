@@ -357,7 +357,7 @@ export default function ViolationDetail() {
                 <>
                   <dt className="text-default-500">Quick Links:</dt>
                   <dd className="flex flex-wrap gap-3">
-                    <Link href={`/items/${violation.entity_id}`} isExternal size="sm">
+                    <Link href={`/items/${encodeURIComponent(violation.entity_id)}`} isExternal size="sm">
                       Inspector Detail ↗
                     </Link>
                     {itemsAdminUrl && (

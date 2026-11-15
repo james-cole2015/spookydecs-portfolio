@@ -1,5 +1,6 @@
 import type { StorageUnit } from '../config/storageConfig';
 import type { ItemRecord } from '../api/storageApi';
+import { isUnpacked } from './packState';
 
 export interface SeasonStat {
   storage: number;
@@ -27,14 +28,14 @@ export function calculateStats(storage: StorageUnit[], items: ItemRecord[]): Sto
     total_storage: storage.length,
     unpacked_storage: storage.filter((u) => u.packed === false).length,
     total_items: items.length,
-    unpacked_items: items.filter((i) => storageData(i).is_stored === false).length,
+    unpacked_items: items.filter(isUnpacked).length,
     by_season: {},
   };
 
   SEASONS.forEach((season) => {
     const seasonStorage = storage.filter((u) => u.season === season);
     const seasonItems = items.filter((i) => i.season === season);
-    const unpacked = seasonItems.filter((i) => storageData(i).is_stored === false);
+    const unpacked = seasonItems.filter(isUnpacked);
     if (seasonStorage.length > 0 || seasonItems.length > 0) {
       stats.by_season[season] = {
         storage: seasonStorage.length,

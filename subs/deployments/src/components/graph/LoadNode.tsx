@@ -17,6 +17,7 @@ export default function LoadNode({ data, selected }: NodeProps<Node<GraphNodeDat
       iconSize={38}
       width={140}
       selected={selected}
+      retired={data.retired}
       label={data.label}
       sublabel={powered ? `${amps}A${watts != null ? ` · ${watts}W` : ''}` : 'no power_data'}
       sublabelClassName={powered ? 'font-semibold text-primary' : 'text-default-400'}

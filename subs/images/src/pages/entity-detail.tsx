@@ -21,6 +21,8 @@ import {
   SeasonChip,
   useToast,
   type LightboxPhoto,
+  SpookyImage,
+  photoUrls,
 } from '@spookydecs/ui';
 import { fetchImages, fetchIdeas, setPrimaryPhoto } from '../api/imagesApi';
 import { canonicalSeason, type Photo } from '../config/imagesConfig';
@@ -190,6 +192,7 @@ export default function EntityDetail() {
     key: p.photo_id,
     url: p.cloudfront_url,
     thumbUrl: p.thumb_cloudfront_url || p.cloudfront_url,
+    thumbCropped: true,
     alt: p.photo_id,
     caption: p.caption,
   }));
@@ -249,14 +252,9 @@ export default function EntityDetail() {
               <div
                 ref={ref as React.Ref<HTMLDivElement>}
                 onClick={open}
-                className="relative aspect-square cursor-zoom-in overflow-hidden bg-content2"
+                className="relative cursor-zoom-in overflow-hidden"
               >
-                <img
-                  src={photo.thumb_cloudfront_url || photo.cloudfront_url}
-                  alt={photo.photo_id}
-                  loading="lazy"
-                  className="h-full w-full object-cover"
-                />
+                <SpookyImage {...photoUrls(photo, 'thumb')} alt={photo.photo_id} ratio="4/5" fit="cover" />
                 {photo.is_primary && (
                   <Chip size="sm" color="primary" variant="solid" className="absolute left-2 top-2">
                     Primary

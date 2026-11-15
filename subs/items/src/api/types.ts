@@ -91,6 +91,18 @@ export interface Item {
   search_text?: string;
   source_idea_id?: string;
   deployment_data?: DeploymentData;
+  // Written only by POST /items/{id}/retire (#706)
+  retirement_reason?: string;
+  retirement_disposal_method?: string;
+  retirement_notes?: string;
+  retired_at?: string;
+  retired_by?: string;
+}
+
+export interface RetirePayload {
+  reason: string;
+  disposal_method?: string;
+  notes?: string;
 }
 
 export interface CascadePreview {

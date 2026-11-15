@@ -83,6 +83,7 @@ export interface GalleryPhoto {
   season?: string;
   year?: string | number;
   is_featured?: boolean;
+  created_at?: string;
 }
 
 /** The three section tabs, in display order. */

@@ -35,6 +35,7 @@ app_docs/
 !packages/*/package-lock.json
 
 CLAUDE.md
+AGENTS.md
 .env.example
 scripts/backfill_tasks.py
 scripts/seed_epics.py

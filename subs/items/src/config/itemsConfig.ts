@@ -7,6 +7,10 @@ export const CLASS_HIERARCHY: Record<string, { types: string[]; icon: string }> 
   Accessory:  { types: ['Cord', 'Plug'], icon: '🔌' },
 };
 
+// In-app route for an item. Ids from batch builds contain '#', which navigate() would otherwise
+// treat as a URL fragment and truncate the path (#687).
+export const itemPath = (id: string, suffix = '') => `/${encodeURIComponent(id)}${suffix}`;
+
 export const ALLOWED_CLASSES = ['Decoration', 'Light', 'Accessory'] as const;
 export type ItemClass = typeof ALLOWED_CLASSES[number];
 
@@ -28,6 +32,25 @@ export const ITEM_STATUS = [
   { value: 'TearDown',      label: 'Tear Down',      color: '#f97316' },
   { value: 'Retired',       label: 'Retired',        color: '#ef4444' },
 ] as const;
+
+// Retirement (#706) — mirrors shared/layers/item_retirement.py. beyond_repair presets disposal to trash.
+export const RETIRE_REASONS = [
+  { value: 'beyond_repair', label: 'Beyond repair' },
+  { value: 'sold',          label: 'Sold' },
+  { value: 'donated',       label: 'Donated' },
+  { value: 'lost',          label: 'Lost' },
+  { value: 'other',         label: 'Other' },
+] as const;
+export const DISPOSAL_METHODS = [
+  { value: 'trash',   label: 'Trash' },
+  { value: 'donate',  label: 'Donate' },
+  { value: 'salvage', label: 'Salvage' },
+] as const;
+export const DEFAULT_DISPOSAL: Record<string, string> = { beyond_repair: 'trash' };
+
+export function labelFor(list: ReadonlyArray<{ value: string; label: string }>, value?: string): string {
+  return list.find((o) => o.value === value)?.label ?? value ?? '—';
+}
 
 // Pack mode — a 3-way choice over storage_data's two independent booleans
 // (packable, single_packed). Tote-packed is the create default (#619).

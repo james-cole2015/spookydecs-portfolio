@@ -4,6 +4,7 @@ import { BarChart3, Package, Tag } from 'lucide-react';
 import { storageAPI, itemsAPI, type ItemRecord } from '../api/storageApi';
 import { Typography, Breadcrumbs, PageHeader, LoadingState, ErrorState } from '@spookydecs/ui';
 import type { StorageUnit } from '../config/storageConfig';
+import { isPackedOrStored } from '../lib/packState';
 
 function sd(item: ItemRecord): Record<string, unknown> {
   return (item.storage_data as Record<string, unknown>) ?? {};
@@ -30,7 +31,7 @@ function calculateStats(storage: StorageUnit[], items: ItemRecord[]): Stats {
     total_storage: storage.length,
     packed_storage: storage.filter((u) => u.packed !== false).length,
     total_items: items.length,
-    packed_items: items.filter((i) => sd(i).is_stored !== false).length,
+    packed_items: items.filter(isPackedOrStored).length,
     by_season: {},
   };
   ['Halloween', 'Christmas', 'Shared'].forEach((season) => {
@@ -40,7 +41,7 @@ function calculateStats(storage: StorageUnit[], items: ItemRecord[]): Stats {
       stats.by_season[season] = {
         storage: seasonStorage.length,
         items: seasonItems.length,
-        packed_items: seasonItems.filter((i) => sd(i).is_stored !== false).length,
+        packed_items: seasonItems.filter(isPackedOrStored).length,
       };
     }
   });
