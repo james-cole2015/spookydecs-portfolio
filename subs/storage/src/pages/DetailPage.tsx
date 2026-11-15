@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Card, CardBody, CardHeader, Chip, Image, Divider } from '@heroui/react';
 import { PackageCheck, Pencil, Printer, Trash2, Warehouse } from 'lucide-react';
@@ -6,6 +6,7 @@ import { storageAPI, photosAPI } from '../api/storageApi';
 import { getPlaceholderImage, STORAGE_STATUS_COLORS, type StorageUnit, type SupplyEntry } from '../config/storageConfig';
 import { SupplyListEditor } from '../components/SupplyListEditor';
 import { LabelTemplate, LABEL_H_IN, LABEL_W_IN } from '../components/LabelTemplate';
+import { LidLabelTemplate, LID_H_IN, LID_W_IN } from '../components/LidLabelTemplate';
 import { useLabelQueue } from '../lib/labelQueue';
 import type { LabelItem } from '../lib/labelContents';
 import {
@@ -27,6 +28,32 @@ interface ContentItem {
   season?: string;
   images?: { primary_photo_id?: string; photo_url?: string | null };
   [key: string]: unknown;
+}
+
+/** A scaled, bordered preview of one label. `transform` overrides the default top-left scale (used to stand the tall label upright). */
+function LabelPreview({
+  caption,
+  w,
+  h,
+  scale,
+  transform,
+  children,
+}: {
+  caption: string;
+  w: number;
+  h: number;
+  scale: number;
+  transform?: string;
+  children: ReactNode;
+}) {
+  return (
+    <figure className="m-0">
+      <div style={{ width: `${w * scale}in`, height: `${h * scale}in`, overflow: 'hidden', position: 'relative' }} className="rounded border border-default-300">
+        <div style={{ position: 'absolute', left: 0, top: 0, transformOrigin: 'top left', transform: transform ?? `scale(${scale})` }}>{children}</div>
+      </div>
+      <figcaption className="mt-1 text-xs text-default-500">{caption}</figcaption>
+    </figure>
+  );
 }
 
 export default function DetailPage() {
@@ -187,6 +214,8 @@ export default function DetailPage() {
   if (loading) return <LoadingState label="Loading storage unit…" />;
   if (error || !unit) return <ErrorState message={error ?? 'Not found'} onRetry={load} />;
 
+  // Supply totes label from unit.supplies, not packed contents.
+  const labelContents = unit.is_supply_tote ? [] : (contents as LabelItem[]);
   const images = (unit.images as Record<string, string> | undefined) ?? {};
   const hero = images.photo_url || images.thumb_cloudfront_url || getPlaceholderImage();
   const status = String(unit.status ?? 'Empty');
@@ -344,15 +373,17 @@ export default function DetailPage() {
         </CardHeader>
         <Divider />
         <CardBody className="gap-2">
-          {unit.is_supply_tote && (
-            <Typography type="body-xs" className="text-warning-600">
-              Supply tote labels don't list supplies yet (tracked as issue 708); this preview shows no contents.
-            </Typography>
-          )}
-          <div style={{ width: `${LABEL_W_IN * 0.6}in`, height: `${LABEL_H_IN * 0.6}in`, overflow: 'hidden' }} className="rounded border border-default-300">
-            <div style={{ zoom: 0.6 }}>
-              <LabelTemplate unit={unit} contents={unit.is_supply_tote ? [] : (contents as LabelItem[])} inset={0.125} />
-            </div>
+          <div className="flex flex-wrap items-end gap-6">
+            <LabelPreview caption="Wide (6×4)" w={LABEL_W_IN} h={LABEL_H_IN} scale={0.6}>
+              <LabelTemplate unit={unit} contents={labelContents} inset={0.125} />
+            </LabelPreview>
+            {/* Tall is laid out 4x6 then turned onto the 6x4 card; undo the turn here so it reads upright. */}
+            <LabelPreview caption="Tall (4×6)" w={LABEL_H_IN} h={LABEL_W_IN} scale={0.6} transform={`translateY(${LABEL_W_IN * 0.6}in) rotate(-90deg) scale(0.6)`}>
+              <LabelTemplate unit={unit} contents={labelContents} inset={0.125} orientation="tall" rotation="cw" />
+            </LabelPreview>
+            <LabelPreview caption="Lid (1.75×0.5)" w={LID_W_IN} h={LID_H_IN} scale={1.5}>
+              <LidLabelTemplate unit={unit} inset={0} />
+            </LabelPreview>
           </div>
           <Typography type="body-xs" className="text-default-500">
             Labels print two per sheet. Add a few totes, then print from the sheet.
