@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { capGroups, groupContents } from '../../src/lib/labelContents';
+import { capGroups, groupContents, supplyGroups } from '../../src/lib/labelContents';
 
 describe('groupContents', () => {
   it('lists by short_name, combines duplicates, falls back to id; biggest first', () => {
@@ -31,5 +31,25 @@ describe('capGroups', () => {
   });
   it('rolls the overflow into a hidden item count', () => {
     expect(capGroups(groups, 1)).toEqual({ shown: [groups[0]], hidden: 5 });
+  });
+});
+
+describe('supplyGroups (#708)', () => {
+  it('maps supplies to rows in entered order, keeping quantity as typed', () => {
+    expect(
+      supplyGroups([
+        { name: ' Zip ties ', quantity: '2 bags' },
+        { name: 'Tape', quantity: '' },
+        { name: 'Extension cord' },
+      ]),
+    ).toEqual([
+      { label: 'Zip ties', count: 1, qty: '2 bags' },
+      { label: 'Tape', count: 1 },
+      { label: 'Extension cord', count: 1 },
+    ]);
+  });
+  it('drops blank names and handles undefined', () => {
+    expect(supplyGroups([{ name: '  ' }, { name: '' }])).toEqual([]);
+    expect(supplyGroups(undefined)).toEqual([]);
   });
 });

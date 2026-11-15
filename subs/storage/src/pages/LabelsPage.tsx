@@ -19,7 +19,8 @@ import { Breadcrumbs, PageHeader, LoadingState, ErrorState, EmptyState, Typograp
 import { storageAPI } from '../api/storageApi';
 import type { StorageUnit } from '../config/storageConfig';
 import { LabelTemplate, LABEL_H_IN, LABEL_W_IN } from '../components/LabelTemplate';
-import { AVERY_5889, type LabelOrientation, type LabelRotation } from '../lib/averySheet';
+import { LidLabelTemplate, LID_W_IN, LID_H_IN } from '../components/LidLabelTemplate';
+import { AVERY_5889, AVERY_8167, type LabelKind, type LabelOrientation, type LabelRotation } from '../lib/averySheet';
 import { readQueue, writeQueue } from '../lib/labelQueue';
 import type { LabelItem } from '../lib/labelContents';
 
@@ -28,7 +29,6 @@ const ITEM_PREFIX = 'item:';
 const SLOT_PREFIX = 'slot:';
 const POOL_DROP = 'pool-drop';
 const PREVIEW_SCALE = 0.7;
-const PER_PAGE = AVERY_5889.perPage;
 const SLOT_NAMES = ['Top', 'Bottom'];
 
 interface Offsets {
@@ -44,22 +44,34 @@ interface Offsets {
 const DEFAULT_OFFSETS: Offsets = { x: AVERY_5889.left, y: AVERY_5889.top, gap: AVERY_5889.gap, inset: 0.125 };
 const slotTop = (base: number, i: number, gap: number) => base + i * (LABEL_H_IN + gap);
 const OFFSETS_KEY = 'storage.labelOffsets.v4';
+// Lid labels (#716) tune separately: rows touch on 8167, so the inset is small and only x/y nudges apply.
+const LID_DEFAULT_OFFSETS: Offsets = { x: AVERY_8167.left, y: AVERY_8167.top, gap: 0, inset: 0.03 };
+const LID_OFFSETS_KEY = 'storage.lidLabelOffsets.v1';
+const LID_PREVIEW_SCALE = 0.9;
 
-function loadOffsets(): Offsets {
+const perPageOf = (kind: LabelKind) => (kind === 'lid' ? AVERY_8167.perPage : AVERY_5889.perPage);
+const labelSize = (kind: LabelKind) => (kind === 'lid' ? { w: LID_W_IN, h: LID_H_IN } : { w: LABEL_W_IN, h: LABEL_H_IN });
+/** Top-left of cell `ci` (0-based within a sheet) in inches. Side: two stacked cards. Lid: 4x20 grid, row-major. */
+function cellPos(kind: LabelKind, ci: number, off: Offsets) {
+  if (kind === 'lid') return { left: off.x + (ci % AVERY_8167.cols) * AVERY_8167.pitchX, top: off.y + Math.floor(ci / AVERY_8167.cols) * AVERY_8167.pitchY };
+  return { left: off.x, top: slotTop(off.y, ci, off.gap) };
+}
+
+function loadOffsets(key = OFFSETS_KEY, defaults = DEFAULT_OFFSETS): Offsets {
   try {
-    const raw = localStorage.getItem(OFFSETS_KEY);
-    if (raw) return { ...DEFAULT_OFFSETS, ...JSON.parse(raw) };
+    const raw = localStorage.getItem(key);
+    if (raw) return { ...defaults, ...JSON.parse(raw) };
   } catch {
     /* storage unavailable — use defaults */
   }
-  return DEFAULT_OFFSETS;
+  return defaults;
 }
 
 
 /** Slots are the model: index 2n = top card of sheet n, 2n+1 = bottom. null = blank card. */
-function normalize(slots: (string | null)[]): (string | null)[] {
+function normalize(slots: (string | null)[], perPage: number = AVERY_5889.perPage): (string | null)[] {
   const out = [...slots];
-  while (out.length < PER_PAGE || out.length % PER_PAGE !== 0) out.push(null);
+  while (out.length < perPage || out.length % perPage !== 0) out.push(null);
   return out;
 }
 
@@ -88,6 +100,7 @@ function PoolRow({ unit, onAdd, disabled }: { unit: StorageUnit; onAdd: () => vo
 
 /** One card position on a sheet: a drop target; when filled, also draggable to another slot. */
 function SheetSlot({
+  kind,
   index,
   unit,
   contents,
@@ -97,6 +110,7 @@ function SheetSlot({
   rotation,
   onRemove,
 }: {
+  kind: LabelKind;
   index: number;
   unit: StorageUnit | null;
   contents: LabelItem[] | null;
@@ -106,7 +120,10 @@ function SheetSlot({
   rotation: LabelRotation;
   onRemove: () => void;
 }) {
-  const ci = index % PER_PAGE;
+  const ci = index % perPageOf(kind);
+  const lid = kind === 'lid';
+  const size = labelSize(kind);
+  const pos = cellPos(kind, ci, offsets);
   const drop = useDroppable({ id: SLOT_PREFIX + index });
   const drag = useDraggable({ id: ITEM_PREFIX + index, disabled: !unit });
   return (
@@ -116,15 +133,25 @@ function SheetSlot({
         drag.setNodeRef(node);
       }}
       className={`absolute ${drag.isDragging ? 'opacity-40' : ''} ${unit ? '' : `border-2 border-dashed ${drop.isOver ? 'border-primary bg-primary-50' : 'border-default-300'}`} ${unit && drop.isOver ? 'outline outline-4 outline-primary' : ''}`}
-      style={{
-        left: `${offsets.x}in`,
-        top: `${slotTop(offsets.y, ci, offsets.gap)}in`,
-        width: `${LABEL_W_IN}in`,
-        height: `${LABEL_H_IN}in`,
-      }}
+      style={{ left: `${pos.left}in`, top: `${pos.top}in`, width: `${size.w}in`, height: `${size.h}in` }}
       data-testid={`slot-${index}`}
+      {...(lid && unit ? { ...drag.attributes, ...drag.listeners } : {})}
     >
-      {unit ? (
+      {unit && lid ? (
+        <>
+          <LidLabelTemplate unit={unit} inset={inset} />
+          <button
+            type="button"
+            className="absolute right-[0.02in] top-[0.02in] flex h-[0.14in] w-[0.14in] items-center justify-center rounded-full bg-neutral-900/80 text-white"
+            aria-label={`Remove ${unit.short_name}`}
+            data-testid={`remove-${unit.id}`}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={onRemove}
+          >
+            <X className="h-[0.1in] w-[0.1in]" />
+          </button>
+        </>
+      ) : unit ? (
         <>
           <LabelTemplate unit={unit} contents={contents} inset={inset} orientation={orientation} rotation={rotation} />
           <div className="absolute right-[0.1in] top-[0.1in] flex gap-[0.08in]">
@@ -149,8 +176,8 @@ function SheetSlot({
           </div>
         </>
       ) : (
-        <div className="flex h-full items-center justify-center text-[16pt] text-neutral-500">
-          Blank card · drop a label here
+        <div className={`flex h-full items-center justify-center text-neutral-500 ${lid ? 'text-[7pt]' : 'text-[16pt]'}`}>
+          {lid ? 'blank' : 'Blank card · drop a label here'}
         </div>
       )}
     </div>
@@ -159,6 +186,7 @@ function SheetSlot({
 
 /** Real-size print pages: only pages that have at least one label, blank slots left empty. */
 function PrintPages({
+  kind,
   slots,
   byId,
   offsets,
@@ -166,6 +194,7 @@ function PrintPages({
   orientation,
   rotation,
 }: {
+  kind: LabelKind;
   orientation: LabelOrientation;
   rotation: LabelRotation;
   slots: (string | null)[];
@@ -173,9 +202,10 @@ function PrintPages({
   offsets: Offsets;
   contentsById: Record<string, LabelItem[]>;
 }) {
+  const perPage = perPageOf(kind);
   const pages: (StorageUnit | null)[][] = [];
-  for (let i = 0; i < slots.length; i += PER_PAGE) {
-    const page = slots.slice(i, i + PER_PAGE).map((id) => (id ? byId.get(id) ?? null : null));
+  for (let i = 0; i < slots.length; i += perPage) {
+    const page = slots.slice(i, i + perPage).map((id) => (id ? byId.get(id) ?? null : null));
     if (page.some(Boolean)) pages.push(page);
   }
   return (
@@ -194,9 +224,14 @@ function PrintPages({
         >
           {page.map((u, ci) => {
             if (!u) return null;
+            const pos = cellPos(kind, ci, offsets);
             return (
-              <div key={u.id} className="absolute" style={{ left: `${offsets.x}in`, top: `${slotTop(offsets.y, ci, offsets.gap)}in` }}>
-                <LabelTemplate unit={u} contents={contentsById[u.id] ?? []} inset={offsets.inset} orientation={orientation} rotation={rotation} />
+              <div key={u.id} className="absolute" style={{ left: `${pos.left}in`, top: `${pos.top}in` }}>
+                {kind === 'lid' ? (
+                  <LidLabelTemplate unit={u} inset={offsets.inset} />
+                ) : (
+                  <LabelTemplate unit={u} contents={contentsById[u.id] ?? []} inset={offsets.inset} orientation={orientation} rotation={rotation} />
+                )}
               </div>
             );
           })}
@@ -224,7 +259,15 @@ export default function LabelsPage() {
   const [contentsById, setContentsById] = useState<Record<string, LabelItem[]>>({});
   const [search, setSearch] = useState('');
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [offsets, setOffsets] = useState<Offsets>(loadOffsets);
+  const [sideOffsets, setSideOffsets] = useState<Offsets>(() => loadOffsets());
+  const [lidOffsets, setLidOffsets] = useState<Offsets>(() => loadOffsets(LID_OFFSETS_KEY, LID_DEFAULT_OFFSETS));
+  // Which stock this print job targets (#716). Not persisted, like orientation.
+  const [kind, setKind] = useState<LabelKind>('side');
+  const lid = kind === 'lid';
+  const offsets = lid ? lidOffsets : sideOffsets;
+  const perPage = perPageOf(kind);
+  const scale = lid ? LID_PREVIEW_SCALE : PREVIEW_SCALE;
+  const guideOff = lid ? LID_DEFAULT_OFFSETS : DEFAULT_OFFSETS;
   // Per print job (not persisted). Tall = label turned 90deg on the same wide stock.
   const [orientation, setOrientation] = useState<LabelOrientation>('wide');
   const [rotation, setRotation] = useState<LabelRotation>('cw');
@@ -242,7 +285,7 @@ export default function LabelsPage() {
       // Queue (from detail pages) plus a deep link from elsewhere: /storage/labels?ids=A,B
       const preset = (searchParams.get('ids') ?? '').split(',').filter(Boolean);
       const ids = [...new Set([...readQueue(), ...preset])].filter((id) => all.some((u) => u.id === id));
-      setSlots(normalize(ids));
+      setSlots(normalize(ids, perPage));
     } catch (e: any) {
       setError(e?.message ?? 'Failed to load storage units');
     } finally {
@@ -262,6 +305,7 @@ export default function LabelsPage() {
 
   // Contents come from the unit detail endpoint (contents_details); fetch once per unit on the sheet.
   useEffect(() => {
+    if (lid) return; // lid labels carry no contents
     const missing = filledIds.filter((id) => !(id in contentsById));
     if (missing.length === 0) return;
     let live = true;
@@ -277,13 +321,13 @@ export default function LabelsPage() {
     return () => {
       live = false;
     };
-  }, [filledIds, contentsById]);
+  }, [filledIds, contentsById, lid]);
 
   function updateOffset(key: keyof Offsets, value: string) {
     const next = { ...offsets, [key]: Number(value) || 0 };
-    setOffsets(next);
+    (lid ? setLidOffsets : setSideOffsets)(next);
     try {
-      localStorage.setItem(OFFSETS_KEY, JSON.stringify(next));
+      localStorage.setItem(lid ? LID_OFFSETS_KEY : OFFSETS_KEY, JSON.stringify(next));
     } catch {
       /* ignore */
     }
@@ -292,15 +336,30 @@ export default function LabelsPage() {
   const byId = useMemo(() => new Map(units.map((u) => [u.id, u])), [units]);
   const pool = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return units.filter((u) => !q || `${u.short_name} ${u.id} ${u.season}`.toLowerCase().includes(q));
-  }, [units, search]);
+    // Self units (shelving) have no lid, so lid mode lists totes only.
+    return units.filter((u) => (!lid || u.class_type === 'Tote') && (!q || `${u.short_name} ${u.id} ${u.season}`.toLowerCase().includes(q)));
+  }, [units, search, lid]);
+
+  function switchKind(next: LabelKind) {
+    if (next === kind) return;
+    const keep = filledIds.filter((id) => next === 'side' || byId.get(id)?.class_type === 'Tote');
+    setKind(next);
+    setSlots(normalize(keep, perPageOf(next)));
+  }
+
+  // Lid sheets are 80-up, so reusing a partly peeled sheet matters: leading blanks = labels already used.
+  const startAt = Math.max(0, slots.findIndex(Boolean)) + 1;
+  function setStartAt(v: string) {
+    const n = Math.min(Math.max(Math.floor(Number(v)) || 1, 1), AVERY_8167.perPage);
+    setSlots(normalize([...Array(n - 1).fill(null), ...filledIds], perPage));
+  }
 
   // Sheets that will actually print = those holding at least one label.
-  const sheetCount = Math.ceil(slots.length / PER_PAGE);
-  const printSheets = Array.from({ length: sheetCount }, (_, p) => slots.slice(p * PER_PAGE, p * PER_PAGE + PER_PAGE)).filter((pg) =>
+  const sheetCount = Math.ceil(slots.length / perPage);
+  const printSheets = Array.from({ length: sheetCount }, (_, p) => slots.slice(p * perPage, p * perPage + perPage)).filter((pg) =>
     pg.some(Boolean),
   ).length;
-  const blankSlots = printSheets * PER_PAGE - filledIds.length;
+  const blankSlots = printSheets * perPage - filledIds.length;
 
   const place = (id: string, at?: number) =>
     setSlots((prev) => {
@@ -309,7 +368,7 @@ export default function LabelsPage() {
       const target = at ?? next.indexOf(null);
       if (target >= 0 && target < next.length) next[target] = id;
       else next.push(id);
-      return normalize(next);
+      return normalize(next, perPage);
     });
 
   function onDragStart(e: DragStartEvent) {
@@ -330,7 +389,7 @@ export default function LabelsPage() {
       setSlots((prev) => {
         const next = prev.map((s) => (s === id ? null : s)); // moving an already-placed label
         next[j] = id; // anything that was in the slot returns to the list
-        return normalize(next);
+        return normalize(next, perPage);
       });
       return;
     }
@@ -402,13 +461,35 @@ export default function LabelsPage() {
                     {filledIds.length} label{filledIds.length === 1 ? '' : 's'} · {printSheets} sheet{printSheets === 1 ? '' : 's'} to print
                   </Typography>
                   <ButtonGroup size="sm" variant="flat">
+                    {(['side', 'lid'] as const).map((k) => (
+                      <Button key={k} color={kind === k ? 'primary' : 'default'} onPress={() => switchKind(k)} data-testid={`kind-${k}`} aria-pressed={kind === k}>
+                        {k === 'side' ? 'Side card (6×4)' : 'Lid (8167)'}
+                      </Button>
+                    ))}
+                  </ButtonGroup>
+                  {!lid && (
+                  <ButtonGroup size="sm" variant="flat">
                     {(['wide', 'tall'] as const).map((o) => (
                       <Button key={o} color={orientation === o ? 'primary' : 'default'} onPress={() => setOrientation(o)} data-testid={`orientation-${o}`} aria-pressed={orientation === o}>
                         {o === 'wide' ? 'Wide (6×4)' : 'Tall (turned)'}
                       </Button>
                     ))}
                   </ButtonGroup>
-                  {orientation === 'tall' && (
+                  )}
+                  {lid && (
+                    <Input
+                      size="sm"
+                      type="number"
+                      min={1}
+                      max={AVERY_8167.perPage}
+                      className="w-36"
+                      label="Start at label"
+                      value={String(startAt)}
+                      onValueChange={setStartAt}
+                      data-testid="start-at"
+                    />
+                  )}
+                  {!lid && orientation === 'tall' && (
                     <ButtonGroup size="sm" variant="flat">
                       {(['cw', 'ccw'] as const).map((r) => (
                         <Button key={r} color={rotation === r ? 'primary' : 'default'} onPress={() => setRotation(r)} data-testid={`rotation-${r}`} aria-pressed={rotation === r}>
@@ -417,16 +498,16 @@ export default function LabelsPage() {
                       ))}
                     </ButtonGroup>
                   )}
-                  <Button size="sm" variant="flat" startContent={<FilePlus2 size={16} />} onPress={() => setSlots((p) => normalize([...p, null, null]))} data-testid="add-sheet">
+                  <Button size="sm" variant="flat" startContent={<FilePlus2 size={16} />} onPress={() => setSlots((p) => normalize([...p, ...Array(perPage).fill(null)], perPage))} data-testid="add-sheet">
                     Add sheet
                   </Button>
                   {filledIds.length > 0 && (
-                    <Button size="sm" variant="light" color="danger" className="ml-auto" onPress={() => setSlots(normalize([]))} data-testid="clear-sheet">
+                    <Button size="sm" variant="light" color="danger" className="ml-auto" onPress={() => setSlots(normalize([], perPage))} data-testid="clear-sheet">
                       Clear
                     </Button>
                   )}
                 </div>
-                {orientation === 'tall' && (
+                {!lid && orientation === 'tall' && (
                   <Typography type="body-xs" className="text-default-500" data-testid="tall-hint">
                     Tall turns each label 90° on the same 6×4 card. Peel it and stick it with the card's {rotation === 'cw' ? 'right' : 'left'} edge at the tote's top.
                   </Typography>
@@ -441,40 +522,44 @@ export default function LabelsPage() {
                   {Array.from({ length: sheetCount }, (_, p) => (
                     <div key={p}>
                       <Typography type="body-xs" className="mb-1 text-default-500">Sheet {p + 1} · top edge is at the top</Typography>
-                      <div style={{ width: `${AVERY_5889.pageW * PREVIEW_SCALE}in`, height: `${AVERY_5889.pageH * PREVIEW_SCALE}in` }}>
+                      <div style={{ width: `${AVERY_5889.pageW * scale}in`, height: `${AVERY_5889.pageH * scale}in` }}>
                         <div
                           className="relative bg-white shadow-lg"
                           style={{
                             width: `${AVERY_5889.pageW}in`,
                             height: `${AVERY_5889.pageH}in`,
-                            transform: `scale(${PREVIEW_SCALE})`,
+                            transform: `scale(${scale})`,
                             transformOrigin: 'top left',
                           }}
                           data-testid={`preview-page-${p}`}
                         >
-                          {Array.from({ length: PER_PAGE }, (_, ci) => {
-                            const top = slotTop(AVERY_5889.top, ci, AVERY_5889.gap);
+                          {Array.from({ length: perPage }, (_, ci) => {
+                            const g = cellPos(kind, ci, guideOff);
+                            const size = labelSize(kind);
                             return (
                               <div key={`g${ci}`}>
                                 <div
                                   className="absolute border border-dashed border-primary"
-                                  style={{ left: `${AVERY_5889.left}in`, top: `${top}in`, width: `${LABEL_W_IN}in`, height: `${LABEL_H_IN}in` }}
+                                  style={{ left: `${g.left}in`, top: `${g.top}in`, width: `${size.w}in`, height: `${size.h}in` }}
                                 >
                                   <div className="absolute border border-dotted border-danger" style={{ inset: `${offsets.inset}in` }} />
                                 </div>
-                                <div className="absolute text-[12pt] text-neutral-500" style={{ left: `${AVERY_5889.left}in`, top: `${top - 0.3}in` }}>
-                                  {SLOT_NAMES[ci]} card
-                                </div>
+                                {!lid && (
+                                  <div className="absolute text-[12pt] text-neutral-500" style={{ left: `${g.left}in`, top: `${g.top - 0.3}in` }}>
+                                    {SLOT_NAMES[ci]} card
+                                  </div>
+                                )}
                               </div>
                             );
                           })}
-                          {Array.from({ length: PER_PAGE }, (_, ci) => {
-                            const index = p * PER_PAGE + ci;
+                          {Array.from({ length: perPage }, (_, ci) => {
+                            const index = p * perPage + ci;
                             const id = slots[index];
                             const unit = id ? byId.get(id) ?? null : null;
                             return (
                               <SheetSlot
                                 key={index}
+                                kind={kind}
                                 index={index}
                                 unit={unit}
                                 contents={id ? contentsById[id] ?? null : null}
@@ -492,13 +577,15 @@ export default function LabelsPage() {
                   ))}
                 </div>
                 <Typography type="body-xs" className="text-default-500">
-                  Dashed blue = Avery 5889 card outline. Dotted red = safe area (content stays inside it, clear of the perforation). To reuse a half sheet, put your labels in the cards that are still attached and leave the others blank.
+                  {lid
+                    ? 'Dashed blue = Avery 8167 label outline. Dotted red = safe area. Rows touch on this stock, so a vertical misalignment clips text. To reuse a partly used sheet, set "Start at label" to the first label still on the sheet.'
+                    : 'Dashed blue = Avery 5889 card outline. Dotted red = safe area (content stays inside it, clear of the perforation). To reuse a half sheet, put your labels in the cards that are still attached and leave the others blank.'}
                 </Typography>
 
                 <details className="rounded-lg border border-default-200 p-3">
                   <summary className="cursor-pointer text-sm text-foreground">Print alignment (inches)</summary>
                   <div className="mt-3 flex flex-wrap gap-3">
-                    {(['x', 'y', 'gap', 'inset'] as const).map((k) => (
+                    {((lid ? ['x', 'y', 'inset'] : ['x', 'y', 'gap', 'inset']) as ('x' | 'y' | 'gap' | 'inset')[]).map((k) => (
                       <Input
                         key={k}
                         size="sm"
@@ -512,7 +599,9 @@ export default function LabelsPage() {
                     ))}
                   </div>
                   <Typography type="body-xs" className="mt-2 text-default-500">
-                    Defaults are Avery's 5889 template (1.25 in left and top, 0.5 in gap). Print at 100% scale with margins set to none; adjust only if the card edges drift on your printer.
+                    {lid
+                      ? "Defaults are Avery's 8167 template (0.3 in left, 0.5 in top). Print at 100% scale with margins set to none; adjust only if the labels drift on your printer."
+                      : "Defaults are Avery's 5889 template (1.25 in left and top, 0.5 in gap). Print at 100% scale with margins set to none; adjust only if the card edges drift on your printer."}
                   </Typography>
                 </details>
               </div>
@@ -526,7 +615,7 @@ export default function LabelsPage() {
 
           {/* Print-only: real-size pages, blank slots left empty. Everything else is hidden by index.css @media print. */}
           <div className="print-area hidden print:block" aria-hidden>
-            <PrintPages orientation={orientation} rotation={rotation} slots={slots} byId={byId} offsets={offsets} contentsById={contentsById} />
+            <PrintPages kind={kind} orientation={orientation} rotation={rotation} slots={slots} byId={byId} offsets={offsets} contentsById={contentsById} />
           </div>
         </>
       )}
