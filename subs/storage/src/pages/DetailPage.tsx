@@ -159,6 +159,8 @@ export default function DetailPage() {
       const cleaned = supplies.filter((s) => s.name.trim());
       await storageAPI.update(unit.id, { supplies: cleaned });
       setSupplies(cleaned);
+      // The label preview reads unit.supplies, so keep it in sync without a reload.
+      setUnit((u) => (u ? { ...u, supplies: cleaned } : u));
       toast.showSuccess('Supplies updated');
     } catch (e: any) {
       toast.showError(e?.message ?? 'Failed to update supplies');
