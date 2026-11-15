@@ -7,7 +7,6 @@ import { getPlaceholderImage, STORAGE_STATUS_COLORS, type StorageUnit, type Supp
 import { SupplyListEditor } from '../components/SupplyListEditor';
 import { LabelTemplate, LABEL_H_IN, LABEL_W_IN } from '../components/LabelTemplate';
 import { LidLabelTemplate, LID_H_IN, LID_W_IN } from '../components/LidLabelTemplate';
-import { useLabelQueue } from '../lib/labelQueue';
 import type { LabelItem } from '../lib/labelContents';
 import {
   Breadcrumbs,
@@ -71,7 +70,6 @@ export default function DetailPage() {
   const [confirm, setConfirm] = useState<null | 'delete' | 'store' | 'markPacked' | { type: 'remove'; itemId: string }>(null);
   const [busy, setBusy] = useState(false);
 
-  const labelQueue = useLabelQueue();
   const canWrite = hasMinRole('builder');
   const canDelete = hasMinRole('admin');
 
@@ -354,22 +352,9 @@ export default function DetailPage() {
       <Card shadow="md" className="mt-4 bg-content1" data-testid="label-card">
         <CardHeader className="flex flex-wrap items-center justify-between gap-2">
           <Typography type="h5" className="text-foreground">Label</Typography>
-          <div className="flex flex-wrap items-center gap-2">
-            {labelQueue.ids.length > 0 && (
-              <Button size="sm" variant="light" onPress={() => navigate('/storage/labels')} data-testid="open-print-sheet">
-                Print sheet ({labelQueue.ids.length})
-              </Button>
-            )}
-            {labelQueue.has(unit.id) ? (
-              <Button size="sm" variant="flat" onPress={() => labelQueue.remove(unit.id)} data-testid="remove-from-sheet">
-                Added · Remove
-              </Button>
-            ) : (
-              <Button size="sm" color="primary" variant="flat" startContent={<Printer size={16} />} onPress={() => labelQueue.add(unit.id)} data-testid="add-to-sheet">
-                Add to print sheet
-              </Button>
-            )}
-          </div>
+          <Button size="sm" color="primary" variant="flat" startContent={<Printer size={16} />} onPress={() => navigate('/storage/labels')} data-testid="open-print-sheet">
+            Open label sheet
+          </Button>
         </CardHeader>
         <Divider />
         <CardBody className="gap-2">
@@ -386,7 +371,7 @@ export default function DetailPage() {
             </LabelPreview>
           </div>
           <Typography type="body-xs" className="text-default-500">
-            Labels print two per sheet. Add a few totes, then print from the sheet.
+            Build and print label sheets from the Labels page.
           </Typography>
         </CardBody>
       </Card>
