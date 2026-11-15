@@ -85,6 +85,8 @@ export interface GraphNodeData extends Record<string, unknown> {
   /** Light nodes: how many decorations this light illuminates. */
   litCount?: number;
   overloaded?: boolean;
+  /** Derived from the item's current status (#706) — never stored on the connection/placement. */
+  retired?: boolean;
   /** Authoring affordances (#638) — set by decorateNodes() in graphPorts.ts, never by deriveGraph. */
   editable?: boolean;
   /** Has a free female port to drag a power connection FROM. */
@@ -210,6 +212,7 @@ export function deriveGraph(input: GraphInput): { nodes: Node<GraphNodeData>[]; 
       hasPowerData,
       item,
       femaleEnds: kind === 'branch' ? femaleEnds : undefined,
+      retired: item!.status === 'Retired' || undefined,
     });
   };
 

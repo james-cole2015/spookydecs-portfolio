@@ -48,7 +48,8 @@ function buildUpdatePayload(data: ItemFormValues, existing: Item): Record<string
   const payload: Record<string, any> = {
     short_name:    data.short_name,
     season:        data.season,
-    status:        data.status,
+    // PATCH rejects status=Retired; retired items keep their status untouched (#706).
+    ...(existing.status === 'Retired' ? {} : { status: data.status }),
     date_acquired: data.date_acquired || undefined,
     general_notes: data.general_notes || undefined,
   };

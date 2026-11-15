@@ -17,6 +17,7 @@ export default function LightNode({ data, selected }: NodeProps<Node<GraphNodeDa
       iconSize={28}
       width={130}
       selected={selected}
+      retired={data.retired}
       label={data.label}
       corner={data.litCount ? data.litCount : undefined}
       sublabel={powered ? `${amps}A${watts != null ? ` · ${watts}W` : ''}` : 'no power_data'}
