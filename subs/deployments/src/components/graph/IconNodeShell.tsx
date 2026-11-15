@@ -18,6 +18,7 @@ export default function IconNodeShell({
   sublabelClassName = 'text-default-500',
   corner,
   width,
+  retired,
   children,
 }: {
   Icon: LucideIcon;
@@ -33,10 +34,12 @@ export default function IconNodeShell({
   /** Small count / status pip on the badge's top-right. */
   corner?: ReactNode;
   width: number;
+  /** Retired item (#706): muted badge plus a Retired chip. */
+  retired?: boolean;
   children?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center gap-1 text-center" style={{ width }}>
+    <div className={`flex flex-col items-center gap-1 text-center ${retired ? 'opacity-60 grayscale' : ''}`} style={{ width }}>
       <div
         className={`relative flex items-center justify-center border-2 ${
           rounded === 'full' ? 'rounded-full' : 'rounded-xl'
@@ -54,6 +57,9 @@ export default function IconNodeShell({
       <span className="w-full truncate text-xs font-medium text-foreground" title={label}>
         {label}
       </span>
+      {retired && (
+        <span className="rounded-full border border-default-300 bg-default-100 px-1.5 text-[10px] font-medium text-default-600">Retired</span>
+      )}
       {sublabel && <span className={`w-full truncate text-[10px] ${sublabelClassName}`}>{sublabel}</span>}
     </div>
   );

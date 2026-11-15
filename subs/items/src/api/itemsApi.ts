@@ -7,7 +7,7 @@
  *
  * Framework-agnostic: calls window.SpookyConfig / window.SpookyAuth directly.
  */
-import { type Item, type CascadePreview } from './types';
+import { type Item, type CascadePreview, type RetirePayload } from './types';
 import { ALLOWED_CLASSES, packModeToStorageFlags } from '../config/itemsConfig';
 
 function auth() { return window.SpookyAuth; }
@@ -205,6 +205,20 @@ export async function deleteItem(itemId: string): Promise<void> {
     headers: auth().buildHeaders(),
   });
   await handleResponse(res);
+}
+
+/** POST /items/{id}/retire — the only path that sets status=Retired (#706). Returns the retired item. */
+export async function retireItem(itemId: string, payload: RetirePayload): Promise<Item> {
+  if (!auth().hasMinRole('builder')) throw new Error('Insufficient permissions');
+  const API = await getApiEndpoint();
+  const res = await fetch(`${API}/items/${encodeURIComponent(itemId)}/retire`, {
+    method: 'POST',
+    headers: { ...auth().buildHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (res.status === 409) throw new Error('This item is already retired. Reload to see its current state.');
+  const body = await handleResponse(res);
+  return body?.data?.item ?? body?.data ?? body;
 }
 
 export async function cascadePreview(itemId: string): Promise<CascadePreview> {

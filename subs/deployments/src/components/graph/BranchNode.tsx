@@ -15,6 +15,7 @@ export default function BranchNode({ data, selected }: NodeProps<Node<GraphNodeD
       iconSize={26}
       width={120}
       selected={selected}
+      retired={data.retired}
       label={data.label}
       corner={data.femaleEnds}
       sublabel={data.throughAmps ? `${data.throughAmps}A through` : 'splitter'}

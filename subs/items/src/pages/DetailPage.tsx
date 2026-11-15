@@ -17,8 +17,11 @@ import {
   type Item, type MaintenanceRecord, type CascadePreview,
   type GenerationHistoryEntry,
 } from '../api/types';
-import { getClassIcon, getSeasonIcon, getStatusColor, itemPath } from '../config/itemsConfig';
-import { MoreVertical, Pencil, Trash2, ExternalLink } from 'lucide-react';
+import {
+  getClassIcon, getSeasonIcon, getStatusColor, itemPath, labelFor, RETIRE_REASONS, DISPOSAL_METHODS,
+} from '../config/itemsConfig';
+import RetireItemModal from '../components/RetireItemModal';
+import { MoreVertical, Pencil, Trash2, ExternalLink, Archive } from 'lucide-react';
 import { usePhotoUpload } from '@spookydecs/ui';
 
 interface RelatedUrls {
@@ -58,6 +61,7 @@ export default function DetailPage() {
   const [showCascade, setShowCascade] = useState(false);
   const [deleting, setDeleting]       = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [showRetire, setShowRetire]   = useState(false);
 
   const canWrite = hasMinRole('builder');
   const canAdmin = hasMinRole('admin');
@@ -293,6 +297,11 @@ export default function DetailPage() {
                       Upload Photo
                     </DropdownItem>
                   ) : null}
+                  {canWrite && item.status !== 'Retired' ? (
+                    <DropdownItem key="retire" startContent={<Archive size={14} />} color="danger" className="text-danger" onPress={() => setShowRetire(true)}>
+                      Retire Item
+                    </DropdownItem>
+                  ) : null}
                   {canAdmin ? (
                     <DropdownItem key="delete" startContent={<Trash2 size={14} />} color="danger" className="text-danger" onPress={openCascade}>
                       Delete (Cascade)
@@ -364,6 +373,21 @@ export default function DetailPage() {
           )}
         </SectionCard>
       </section>
+
+      {/* ── Retirement (#706) ──────────────────────────────────────────────── */}
+      {item.status === 'Retired' && (
+        <section id="retirement" className="mb-4">
+          <SectionCard title="Retirement">
+            <div className="grid grid-cols-2 gap-x-6 gap-y-1">
+              <Field label="Reason"   value={labelFor(RETIRE_REASONS, item.retirement_reason)} />
+              <Field label="Disposal" value={labelFor(DISPOSAL_METHODS, item.retirement_disposal_method)} />
+              <Field label="Retired"  value={item.retired_at ? new Date(item.retired_at).toLocaleString() : '—'} />
+              <Field label="Retired by" value={item.retired_by || '—'} />
+              {item.retirement_notes && <Field label="Notes" value={item.retirement_notes} />}
+            </div>
+          </SectionCard>
+        </section>
+      )}
 
       {/* ── Storage ────────────────────────────────────────────────────────── */}
       <section id="storage" className="mb-4">
@@ -599,6 +623,8 @@ export default function DetailPage() {
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      <RetireItemModal item={item} isOpen={showRetire} onClose={() => setShowRetire(false)} onRetired={loadItem} />
 
       {/* ── FAB edit ──────────────────────────────────────────────────────── */}
       {canWrite && (
