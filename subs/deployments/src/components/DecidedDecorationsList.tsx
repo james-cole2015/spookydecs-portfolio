@@ -9,7 +9,7 @@ const GROUPS: { decision: StagedDecision; label: string; hint: string }[] = [
 /** Staged decorations a human marked unused, grouped by decision (#714), for the Complete review. */
 export function DecidedDecorationsList({ items, baseUrl }: { items: DecidedDecoration[]; baseUrl: string }) {
   return (
-    <div className="mb-6 flex flex-col gap-4" data-testid="decided-lists">
+    <div className="mb-6 grid grid-cols-1 items-start gap-4 md:grid-cols-2" data-testid="decided-lists">
       {GROUPS.map((g) => {
         const rows = items.filter((i) => i.decision === g.decision);
         if (rows.length === 0) return null;
@@ -23,7 +23,7 @@ export function DecidedDecorationsList({ items, baseUrl }: { items: DecidedDecor
                 </Chip>
               </div>
               <p className="text-sm text-default-500">{g.hint}</p>
-              <ul className="flex flex-col gap-1">
+              <ul className="grid grid-cols-1 gap-x-4 gap-y-1 sm:grid-cols-2">
                 {rows.map((r) => (
                   <li key={r.item_id} className="flex flex-wrap items-center gap-2 text-sm">
                     <HeroLink href={`${baseUrl}/${r.item_id}`} isExternal size="sm" className="text-foreground">
