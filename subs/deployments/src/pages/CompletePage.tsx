@@ -325,9 +325,9 @@ export default function CompletePage() {
                       <div className="mb-2 text-sm font-semibold text-default-600">
                         {g.label} <span className="text-default-400">{g.items.length}</span>
                       </div>
-                      <ul className="flex flex-col gap-1">
+                      <ul className="grid grid-cols-2 gap-x-4 gap-y-1 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                         {g.items.map((item) => (
-                          <li key={item.id}>
+                          <li key={item.id} className="min-w-0">
                             <HeroLink
                               href={`${itemsAdminUrl}/${item.id}`}
                               isExternal
@@ -335,7 +335,7 @@ export default function CompletePage() {
                               className="flex items-center gap-2 text-foreground"
                             >
                               <span>{g.icon}</span>
-                              {item.short_name || item.id}
+                              <span className="truncate">{item.short_name || item.id}</span>
                             </HeroLink>
                           </li>
                         ))}
