@@ -122,12 +122,23 @@ export interface UnresolvedDecoration {
   tote_id?: string | null;
 }
 
+export interface DecidedDecoration {
+  item_id: string;
+  short_name?: string;
+  class_type?: string;
+  decision: StagedDecision;
+  repair_record_id?: string | null;
+}
+
 export interface StagingSummary {
   staged: number;
   placed: number;
   resolved: number;
+  not_deployed: number;
+  needs_repair: number;
   unresolved: number;
   unresolved_items: UnresolvedDecoration[];
+  resolved_items: DecidedDecoration[];
   rejected_resolutions?: { item_id: string; reason: string }[];
 }
 
