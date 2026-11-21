@@ -15,6 +15,7 @@ import {
 } from '../api/deploymentsApi';
 import { StatusChip } from '../components/StatusChip';
 import { StagedDecorationsPanel } from '../components/StagedDecorationsPanel';
+import { DecidedDecorationsList } from '../components/DecidedDecorationsList';
 import type { GraphInput } from '../lib/graphDerivation';
 import { zoneSummary } from '../lib/graphPorts';
 import { ZONE_LABELS } from '../config/deploymentsConfig';
@@ -245,11 +246,13 @@ export default function CompletePage() {
         ))}
       </div>
       {summary && summary.staged > 0 && (
-        <div className="mb-4 grid grid-cols-3 gap-4" data-testid="staging-counts">
+        <div className="mb-4 grid grid-cols-2 gap-4 sm:grid-cols-5" data-testid="staging-counts">
           {[
             { label: 'Staged decorations', value: summary.staged },
             { label: 'Placed', value: summary.placed },
             { label: 'Needs decision', value: summary.unresolved },
+            { label: 'Not deployed', value: summary.not_deployed },
+            { label: 'Needs repair', value: summary.needs_repair },
           ].map((s) => (
             <Card key={s.label}>
               <CardBody className="items-center">
@@ -267,6 +270,9 @@ export default function CompletePage() {
           onNeedsRepair={handleNeedsRepair}
           deploymentLabel={`${metadata.season} ${metadata.year} (${deploymentId})`}
         />
+      )}
+      {summary && summary.resolved_items.length > 0 && (
+        <DecidedDecorationsList items={summary.resolved_items} baseUrl={itemsAdminUrl} />
       )}
       {Object.keys(byClass).length > 0 && (
         <div className="mb-6 flex flex-wrap gap-2">
