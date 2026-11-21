@@ -321,7 +321,7 @@ export default function CompletePage() {
                 ]
                   .filter((g) => g.items.length > 0)
                   .map((g) => (
-                    <div key={g.label}>
+                    <div key={g.label} className="rounded-medium border border-default-200 p-3">
                       <div className="mb-2 text-sm font-semibold text-default-600">
                         {g.label} <span className="text-default-400">{g.items.length}</span>
                       </div>
