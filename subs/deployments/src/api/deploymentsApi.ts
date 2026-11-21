@@ -20,6 +20,17 @@ export async function getItemsAdminUrl(): Promise<string> {
   return (cfg.ITEMS_ADMIN as string) || '';
 }
 
+/** API error that keeps the response `details` (e.g. the 409 unresolved-decoration list, #714). */
+export class ApiError extends Error {
+  status: number;
+  details?: any;
+  constructor(message: string, status: number, details?: any) {
+    super(message);
+    this.status = status;
+    this.details = details;
+  }
+}
+
 async function apiCall(
   endpoint: string,
   method: string = 'GET',
@@ -37,7 +48,7 @@ async function apiCall(
   }
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || `API error: ${response.status}`);
+    throw new ApiError(errorData.error || `API error: ${response.status}`, response.status, errorData.details);
   }
   return await response.json();
 }
@@ -93,6 +104,49 @@ export async function checkDeploymentExists(
 export async function completeDeployment(deploymentId: string): Promise<any> {
   if (!auth().hasMinRole('builder')) throw new Error('Insufficient permissions');
   return await apiCall(`/deployments/${deploymentId}/complete`, 'POST');
+}
+
+export type StagedDecision = 'not_deployed' | 'needs_repair';
+
+export interface StagedDecorationResolution {
+  decision: StagedDecision;
+  repair_record_id?: string;
+}
+
+export interface UnresolvedDecoration {
+  item_id: string;
+  short_name?: string;
+  class_type?: string;
+  status?: string;
+  staging_id?: string;
+  tote_id?: string | null;
+}
+
+export interface StagingSummary {
+  staged: number;
+  placed: number;
+  resolved: number;
+  unresolved: number;
+  unresolved_items: UnresolvedDecoration[];
+  rejected_resolutions?: { item_id: string; reason: string }[];
+}
+
+/**
+ * Record "Not deployed" / "Needs repair" decisions without completing (#714). Same route as
+ * completeDeployment with `resolve_only`, so there is no extra API Gateway route. Returns the
+ * refreshed summary.
+ */
+export async function resolveStagedDecorations(
+  deploymentId: string,
+  resolutions: Record<string, StagedDecorationResolution>,
+): Promise<StagingSummary> {
+  if (!auth().hasMinRole('builder')) throw new Error('Insufficient permissions');
+  const res = await apiCall(`/deployments/${deploymentId}/complete`, 'POST', { resolutions, resolve_only: true });
+  const summary: StagingSummary = res.data.summary;
+  if (summary.rejected_resolutions?.length) {
+    throw new Error(summary.rejected_resolutions.map((r) => `${r.item_id}: ${r.reason}`).join('; '));
+  }
+  return summary;
 }
 
 // Historical Deployments

@@ -6,10 +6,15 @@ import {
   getDeployment,
   getDeploymentGraph,
   completeDeployment,
+  getStagingTotes,
+  resolveStagedDecorations,
+  ApiError,
+  type StagingSummary,
   getItemsAdminUrl,
   fetchImageById,
 } from '../api/deploymentsApi';
 import { StatusChip } from '../components/StatusChip';
+import { StagedDecorationsPanel } from '../components/StagedDecorationsPanel';
 import type { GraphInput } from '../lib/graphDerivation';
 import { zoneSummary } from '../lib/graphPorts';
 import { ZONE_LABELS } from '../config/deploymentsConfig';
@@ -123,6 +128,7 @@ export default function CompletePage() {
   const [itemsAdminUrl, setItemsAdminUrl] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const [summary, setSummary] = useState<StagingSummary | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -130,10 +136,12 @@ export default function CompletePage() {
       setLoading(true);
       setError(null);
       try {
-        const [metaResponse, adminUrl, graphResponse] = await Promise.all([
+        const [metaResponse, adminUrl, graphResponse, stagingResponse] = await Promise.all([
           getDeployment(deploymentId, ['zones']),
           getItemsAdminUrl(),
           getDeploymentGraph(deploymentId),
+          // Counts are additive and non-fatal: without them the server gate still protects Complete.
+          getStagingTotes(deploymentId).catch(() => null),
         ]);
         const meta = metaResponse.data?.metadata || metaResponse.data;
         const enrichedZones = buildZones(graphResponse.data as GraphInput);
@@ -142,6 +150,7 @@ export default function CompletePage() {
         setMetadata(meta);
         setZones(enrichedZones);
         setItemsAdminUrl(adminUrl || '');
+        setSummary(stagingResponse?.data?.staging_summary ?? null);
       } catch (e: any) {
         if (!cancelled) setError(e?.message || 'Failed to load deployment review.');
       } finally {
@@ -152,6 +161,15 @@ export default function CompletePage() {
       cancelled = true;
     };
   }, [deploymentId]);
+
+  async function handleNotDeployed(itemId: string) {
+    try {
+      setSummary(await resolveStagedDecorations(deploymentId, { [itemId]: { decision: 'not_deployed' } }));
+    } catch (e: any) {
+      toast.showError(`Could not save decision: ${e?.message}`);
+      throw e;
+    }
+  }
 
   async function handleConfirm() {
     setConfirming(true);
@@ -167,6 +185,12 @@ export default function CompletePage() {
       console.error('[Complete] Error:', e);
       let msg = `Failed to complete deployment: ${e?.message}`;
       if (e?.message?.includes('already completed')) msg = 'This deployment is already completed.';
+      // Staging changed elsewhere since the page loaded: refresh the list instead of a generic failure.
+      if (e instanceof ApiError && e.details?.code === 'UNRESOLVED_STAGED_DECORATIONS') {
+        setSummary(e.details.summary);
+        setConfirmOpen(false);
+        msg = 'Some staged decorations still need a decision.';
+      }
       toast.showError(msg);
       setConfirming(false);
     }
@@ -179,6 +203,7 @@ export default function CompletePage() {
   const totalItems = zones.reduce((sum, z) => sum + z.items.length, 0);
   const totalConnections = zones.reduce((sum, z) => sum + z.connectionCount, 0);
   const totalUnwired = zones.reduce((sum, z) => sum + z.unwired, 0);
+  const unresolvedCount = summary?.unresolved ?? 0;
   const byClass: Record<string, number> = {};
   zones.forEach((z) => z.items.forEach((i) => (byClass[i.class || 'Other'] = (byClass[i.class || 'Other'] || 0) + 1)));
 
@@ -211,6 +236,23 @@ export default function CompletePage() {
           </Card>
         ))}
       </div>
+      {summary && summary.staged > 0 && (
+        <div className="mb-4 grid grid-cols-3 gap-4" data-testid="staging-counts">
+          {[
+            { label: 'Staged decorations', value: summary.staged },
+            { label: 'Placed', value: summary.placed },
+            { label: 'Needs decision', value: summary.unresolved },
+          ].map((s) => (
+            <Card key={s.label}>
+              <CardBody className="items-center">
+                <div className="text-2xl font-semibold text-foreground">{s.value}</div>
+                <div className="text-xs text-default-500">{s.label}</div>
+              </CardBody>
+            </Card>
+          ))}
+        </div>
+      )}
+      {summary && <StagedDecorationsPanel unresolved={summary.unresolved_items} onNotDeployed={handleNotDeployed} />}
       {Object.keys(byClass).length > 0 && (
         <div className="mb-6 flex flex-wrap gap-2">
           {Object.entries(byClass).map(([cls, count]) => (
@@ -297,6 +339,7 @@ export default function CompletePage() {
             <Button
               color="primary"
               onPress={() => setConfirmOpen(true)}
+              isDisabled={unresolvedCount > 0}
               data-testid="complete-trigger"
             >
               Confirm &amp; Complete Deployment
