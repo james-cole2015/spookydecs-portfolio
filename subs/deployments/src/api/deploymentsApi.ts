@@ -131,6 +131,32 @@ export interface StagingSummary {
   rejected_resolutions?: { item_id: string; reason: string }[];
 }
 
+export type RepairCriticality = 'low' | 'medium' | 'high' | 'critical';
+
+export interface RepairRecordInput {
+  item_id: string;
+  title: string;
+  description: string;
+  performed_by: string;
+  criticality?: RepairCriticality;
+}
+
+/**
+ * Create a scheduled repair record through the maintenance API (#714). Returns its record_id.
+ * Repair is orthogonal to item status (maintenance.repair_data syncs via the items consumer).
+ */
+export async function createRepairRecord(input: RepairRecordInput): Promise<string> {
+  if (!auth().hasMinRole('builder')) throw new Error('Insufficient permissions');
+  const res = await apiCall('/admin/maintenance-records', 'POST', {
+    ...input,
+    record_type: 'repair',
+    status: 'scheduled',
+  });
+  const recordId = res?.data?.record_id;
+  if (!recordId) throw new Error('Repair record created but no record_id was returned');
+  return recordId;
+}
+
 /**
  * Record "Not deployed" / "Needs repair" decisions without completing (#714). Same route as
  * completeDeployment with `resolve_only`, so there is no extra API Gateway route. Returns the

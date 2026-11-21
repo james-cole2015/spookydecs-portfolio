@@ -2,19 +2,25 @@ import { useState } from 'react';
 import { Button, Card, CardBody, Chip } from '@heroui/react';
 import { ConfirmDialog } from '@spookydecs/ui';
 import type { UnresolvedDecoration } from '../api/deploymentsApi';
+import { NeedsRepairModal } from './NeedsRepairModal';
 
 interface Props {
   unresolved: UnresolvedDecoration[];
   /** Persist a "Not deployed" decision for one item. Rejects on failure. */
   onNotDeployed: (itemId: string) => Promise<void>;
+  /** Persist a "Needs repair" decision once the repair record exists. Rejects on failure. */
+  onNeedsRepair: (itemId: string, repairRecordId: string) => Promise<void>;
+  /** e.g. "Halloween 2026 (DEP-HAL-2026)", used in the repair record's description. */
+  deploymentLabel: string;
 }
 
 /**
  * Staged decorations with no placement, connection or decision (#714). Complete stays disabled
- * until this list is empty. "Needs repair" is added by the repair modal (task 8).
+ * until this list is empty.
  */
-export function StagedDecorationsPanel({ unresolved, onNotDeployed }: Props) {
+export function StagedDecorationsPanel({ unresolved, onNotDeployed, onNeedsRepair, deploymentLabel }: Props) {
   const [pending, setPending] = useState<UnresolvedDecoration | null>(null);
+  const [repairing, setRepairing] = useState<UnresolvedDecoration | null>(null);
   const [busy, setBusy] = useState(false);
 
   if (unresolved.length === 0) return null;
@@ -56,9 +62,20 @@ export function StagedDecorationsPanel({ unresolved, onNotDeployed }: Props) {
                   {[d.class_type, d.status].filter(Boolean).join(' · ')}
                 </div>
               </div>
-              <Button size="sm" variant="flat" onPress={() => setPending(d)} data-testid={`not-deployed-${d.item_id}`}>
-                Not deployed
-              </Button>
+              <div className="flex gap-2">
+                <Button size="sm" variant="flat" onPress={() => setPending(d)} data-testid={`not-deployed-${d.item_id}`}>
+                  Not deployed
+                </Button>
+                <Button
+                  size="sm"
+                  variant="flat"
+                  color="warning"
+                  onPress={() => setRepairing(d)}
+                  data-testid={`needs-repair-${d.item_id}`}
+                >
+                  Needs repair
+                </Button>
+              </div>
             </li>
           ))}
         </ul>
@@ -78,6 +95,13 @@ export function StagedDecorationsPanel({ unresolved, onNotDeployed }: Props) {
         isLoading={busy}
         onConfirm={confirm}
         onClose={() => setPending(null)}
+      />
+
+      <NeedsRepairModal
+        item={repairing}
+        deploymentLabel={deploymentLabel}
+        onSaved={onNeedsRepair}
+        onClose={() => setRepairing(null)}
       />
     </Card>
   );

@@ -171,6 +171,14 @@ export default function CompletePage() {
     }
   }
 
+  async function handleNeedsRepair(itemId: string, repairRecordId: string) {
+    setSummary(
+      await resolveStagedDecorations(deploymentId, {
+        [itemId]: { decision: 'needs_repair', repair_record_id: repairRecordId },
+      }),
+    );
+  }
+
   async function handleConfirm() {
     setConfirming(true);
     try {
@@ -252,7 +260,14 @@ export default function CompletePage() {
           ))}
         </div>
       )}
-      {summary && <StagedDecorationsPanel unresolved={summary.unresolved_items} onNotDeployed={handleNotDeployed} />}
+      {summary && (
+        <StagedDecorationsPanel
+          unresolved={summary.unresolved_items}
+          onNotDeployed={handleNotDeployed}
+          onNeedsRepair={handleNeedsRepair}
+          deploymentLabel={`${metadata.season} ${metadata.year} (${deploymentId})`}
+        />
+      )}
       {Object.keys(byClass).length > 0 && (
         <div className="mb-6 flex flex-wrap gap-2">
           {Object.entries(byClass).map(([cls, count]) => (
