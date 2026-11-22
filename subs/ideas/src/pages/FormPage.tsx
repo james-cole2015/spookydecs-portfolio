@@ -14,7 +14,7 @@ import {
   CardHeader,
 } from '@heroui/react';
 import { ArrowLeft, X } from 'lucide-react';
-import { useToast, usePhotoUpload } from '@spookydecs/ui';
+import { useToast, usePhotoUpload, SpookyImage } from '@spookydecs/ui';
 import { createIdea } from '../api/ideasApi';
 import { SEASONS, USER_STATUSES, type Idea } from '../config/ideasConfig';
 
@@ -284,7 +284,7 @@ function ImagePicker({ files, setFiles }: { files: File[]; setFiles: (v: File[])
 function Thumb({ src, onRemove }: { src: string; onRemove: () => void }) {
   return (
     <div className="group relative aspect-square overflow-hidden rounded-medium">
-      <img src={src} alt="preview" loading="lazy" className="h-full w-full object-cover" />
+      <SpookyImage src={src} alt="preview" ratio="auto" fit="cover" className="h-full w-full" />
       <button
         type="button"
         onClick={onRemove}

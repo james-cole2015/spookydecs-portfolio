@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Card, CardBody, Chip, Link as HeroLink } from '@heroui/react';
-import { Breadcrumbs, ConfirmDialog, ErrorState, LoadingState, PageHeader, useToast } from '@spookydecs/ui';
+import { Breadcrumbs, ConfirmDialog, ErrorState, LoadingState, PageHeader, useToast, SpookyImage } from '@spookydecs/ui';
 import {
   getDeployment,
   getDeploymentGraph,
@@ -97,7 +97,7 @@ function DecorationCard({ item, baseUrl }: { item: EnrichedItem; baseUrl: string
         <CardBody className="gap-2 p-2">
           <div className="relative flex h-24 items-center justify-center rounded-medium bg-default-100">
             {thumb ? (
-              <img src={thumb} alt={item.short_name || item.id} className="h-full w-full rounded-medium object-cover" />
+              <SpookyImage src={thumb} alt={item.short_name || item.id} ratio="auto" fit="cover" className="h-full w-full rounded-medium" />
             ) : (
               <span className="text-3xl">{decorationIcon(item.class_type)}</span>
             )}

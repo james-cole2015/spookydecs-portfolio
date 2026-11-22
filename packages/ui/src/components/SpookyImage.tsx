@@ -34,6 +34,8 @@ export interface SpookyImageProps {
   retryDelayMs?: number;
   /** Eager-load (above-the-fold / lightbox). Default lazy. */
   eager?: boolean;
+  /** Ref to the underlying <img> (e.g. PhotoSwipe's thumbnail ref for the open animation). */
+  imgRef?: React.Ref<HTMLImageElement>;
   /** Called once the displayed image has loaded, with its natural size. */
   onImageLoad?: (dims: { width: number; height: number; src: string }) => void;
 }
@@ -54,6 +56,7 @@ export function SpookyImage({
   imgClassName,
   retryDelayMs = 3000,
   eager = false,
+  imgRef,
   onImageLoad,
 }: SpookyImageProps) {
   const [stage, setStage] = useState<Stage>('primary');
@@ -109,6 +112,7 @@ export function SpookyImage({
     <div className={`relative overflow-hidden bg-content2 ${className ?? ''}`} style={boxStyle}>
       {!loaded && <Skeleton className="absolute inset-0 h-full w-full rounded-none" />}
       <img
+        ref={imgRef}
         key={shown}
         src={shown}
         alt={alt}

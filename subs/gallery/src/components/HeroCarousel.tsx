@@ -10,6 +10,7 @@
 import useEmblaCarousel from 'embla-carousel-react';
 import AutoScroll from 'embla-carousel-auto-scroll';
 import type { GalleryPhoto } from '../config/galleryConfig';
+import { SpookyImage, photoUrls } from '@spookydecs/ui';
 
 interface Props {
   photos: GalleryPhoto[];
@@ -33,11 +34,13 @@ export function HeroCarousel({ photos }: Props) {
             key={photo.photo_id}
             className="group relative ml-3 h-full flex-[0_0_auto] first:ml-0"
           >
-            <img
-              src={photo.cloudfront_url}
+            <SpookyImage
+              {...photoUrls(photo, 'full')}
               alt={photo.display_name || 'Featured display'}
-              loading="lazy"
-              className="h-full w-auto rounded-large object-cover"
+              ratio="auto"
+              fit="cover"
+              className="h-full w-auto rounded-large"
+              imgClassName="h-full w-auto"
             />
             <div className="pointer-events-none absolute inset-0 flex flex-col justify-end rounded-large bg-gradient-to-t from-black/70 via-black/10 to-transparent p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
               <div className="mb-1 inline-flex w-fit items-center gap-1 rounded-full bg-primary/90 px-2 py-0.5 text-xs font-medium text-white">

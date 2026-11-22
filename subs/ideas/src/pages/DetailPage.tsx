@@ -19,6 +19,7 @@ import {
   type LightboxPhoto,
   type PhotoGalleryPhoto,
   useConfirm,
+  SpookyImage,
 } from '@spookydecs/ui';
 import {
   getIdea,
@@ -392,7 +393,7 @@ export default function DetailPage() {
       <Card className="mb-4 overflow-hidden">
         <div className="aspect-video w-full bg-default-100">
           {hero ? (
-            <img src={hero} alt={idea.title} className="h-full w-full object-cover" />
+            <SpookyImage src={hero} alt={idea.title} ratio="auto" fit="cover" eager className="h-full w-full" />
           ) : (
             <div
               className="flex h-full w-full items-center justify-center p-12 text-default-300 [&_svg]:h-24 [&_svg]:w-24"
