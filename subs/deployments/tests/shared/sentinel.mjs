@@ -50,6 +50,24 @@ function ddb(args, stage) {
   return out.stdout ? JSON.parse(out.stdout || '{}') : {};
 }
 
+// #715 interplay: advancing an item to PreDeployment removes it from its tote's `contents` and clears
+// storage_data.tote_id; restore those too, or each run drains dev inventory.
+function toteExtra(toteId, stage) {
+  const r = ddb(['get-item', '--table-name', `sd_storage_records_${stage}`,
+    '--key', JSON.stringify({ id: { S: toteId } })], stage);
+  return {
+    contents: (r?.Item?.contents?.L || []).map((v) => v.S),
+    staged_deployment_id: r?.Item?.staged_deployment_id?.S ?? null,
+  };
+}
+
+function itemExtra(itemId, stage) {
+  const r = ddb(['get-item', '--table-name', `sd_items_records_${stage}`,
+    '--key', JSON.stringify({ id: { S: itemId } })], stage);
+  const sd = r?.Item?.storage_data?.M || {};
+  return { tote_id: sd.tote_id?.S ?? null, is_stored: sd.is_stored?.BOOL ?? null };
+}
+
 function toteStatus(toteId, stage) {
   const r = ddb(['get-item', '--table-name', `sd_storage_records_${stage}`,
     '--key', JSON.stringify({ id: { S: toteId } })], stage);
@@ -82,15 +100,19 @@ export async function createSentinelDeployment(api, season, { notes } = {}) {
 export function createLedger() {
   const items = new Map();
   const totes = new Map();
+  const extraItems = new Map();
+  const extraTotes = new Map();
 
   return {
-    async rememberItem(api, itemId) {
+    async rememberItem(api, itemId, stage = 'dev') {
       if (items.has(itemId)) return;
+      try { extraItems.set(itemId, itemExtra(itemId, stage)); } catch { /* status restore still runs */ }
       const res = await api('GET', `/items/${itemId}`);
       items.set(itemId, (res.data ?? res.body)?.status);
     },
     rememberTote(toteId, stage) {
       if (totes.has(toteId)) return;
+      try { extraTotes.set(toteId, toteExtra(toteId, stage)); } catch { /* status restore still runs */ }
       totes.set(toteId, toteStatus(toteId, stage));
     },
     async restoreAll(api, stage) {
@@ -100,16 +122,34 @@ export function createLedger() {
         if (!original) { failed.push(`${itemId} (no snapshot)`); continue; }
         const res = await api('PATCH', `/items/${itemId}`, { status: original });
         if (res.status >= 200 && res.status < 300) restored++;
-        else failed.push(`${itemId} (HTTP ${res.status})`);
+        else { failed.push(`${itemId} (HTTP ${res.status})`); continue; }
+        const extra = extraItems.get(itemId);
+        if (extra?.tote_id) {
+          try {
+            ddb(['update-item', '--table-name', `sd_items_records_${stage}`,
+              '--key', JSON.stringify({ id: { S: itemId } }),
+              '--update-expression', 'SET storage_data.tote_id = :t, storage_data.is_stored = :i',
+              '--expression-attribute-values', JSON.stringify({ ':t': { S: extra.tote_id }, ':i': { BOOL: extra.is_stored === true } })], stage);
+          } catch (err) { failed.push(`${itemId} tote pointer (${err.message})`); }
+        }
       }
       for (const [toteId, original] of totes) {
         if (!original) { failed.push(`${toteId} (no snapshot)`); continue; }
         try {
+          const extra = extraTotes.get(toteId);
+          const values = { ':s': { S: original } };
+          let expr = 'SET #s = :s';
+          if (extra) {
+            expr += ', contents = :c';
+            values[':c'] = { L: extra.contents.map((v) => ({ S: v })) };
+            if (extra.staged_deployment_id) { expr += ', staged_deployment_id = :d'; values[':d'] = { S: extra.staged_deployment_id }; }
+            else expr += ' REMOVE staged_deployment_id';
+          }
           ddb(['update-item', '--table-name', `sd_storage_records_${stage}`,
             '--key', JSON.stringify({ id: { S: toteId } }),
-            '--update-expression', 'SET #s = :s',
+            '--update-expression', expr,
             '--expression-attribute-names', JSON.stringify({ '#s': 'status' }),
-            '--expression-attribute-values', JSON.stringify({ ':s': { S: original } })], stage);
+            '--expression-attribute-values', JSON.stringify(values)], stage);
           restored++;
         } catch (err) {
           failed.push(`${toteId} (${err.message})`);
