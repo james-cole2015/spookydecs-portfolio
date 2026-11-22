@@ -1022,6 +1022,23 @@ async function main() {
     const deployedIds = await phase(14, 'Complete — status completed, items Deployed', async () => {
       const preGraph = await fetchGraph();
       const derivedBeforeComplete = new Set(['FY', 'BY', 'SY'].flatMap((z) => [...zoneSet(preGraph, z)]));
+      // #714 gate: staged decorations this run never placed block Complete until each has a decision.
+      const gate = await api('POST', `/deployments/${DEPLOYMENT_ID}/complete`, { resolve_only: true });
+      assertStatus(gate, 200, 'POST /complete resolve_only (summary)');
+      const open = gate.data?.summary?.unresolved_items || [];
+      if (open.length) {
+        const blocked = await api('POST', `/deployments/${DEPLOYMENT_ID}/complete`);
+        assertStatus(blocked, 409, 'POST /complete with unresolved staged decorations');
+        assertEq(blocked.body?.details?.code, 'UNRESOLVED_STAGED_DECORATIONS', '409 code');
+        assertEq(blocked.body?.details?.unresolved?.length, open.length, '409 lists every unresolved decoration');
+        const resolutions = Object.fromEntries(open.map((i) => [i.item_id, { decision: 'not_deployed' }]));
+        const saved = await api('POST', `/deployments/${DEPLOYMENT_ID}/complete`, { resolutions, resolve_only: true });
+        assertStatus(saved, 200, 'POST /complete resolve_only (decisions)');
+        assertEq(saved.data?.summary?.unresolved, 0, 'unresolved after deciding every staged decoration');
+        const still = await api('GET', `/deployments/${DEPLOYMENT_ID}`);
+        assert((still.data.status ?? still.data.metadata?.status) !== 'completed', 'resolve_only must not complete the deployment');
+      }
+
       const res = await api('POST', `/deployments/${DEPLOYMENT_ID}/complete`);
       assertStatus(res, 200, 'POST /complete');
 
