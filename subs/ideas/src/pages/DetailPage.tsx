@@ -140,7 +140,9 @@ export default function DetailPage() {
     const ok = await confirm({ title, body: message, confirmLabel: title });
     if (!ok) return;
     try {
-      await updateIdea({ ...idea, status: newStatus });
+      // Minimal patch only (#605): spreading the full idea sends prep_start/build_start
+      // as explicit '' keys, which defeats the backend's "absent from body" auto-date-fill.
+      await updateIdea({ id: idea.id, season: idea.season, title: idea.title, status: newStatus });
       toast.showSuccess(`Moved to ${newStatus}`);
       const refreshed = await getIdea(idea.id);
       if (refreshed) setIdea(refreshed);

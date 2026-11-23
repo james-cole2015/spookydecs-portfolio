@@ -79,6 +79,8 @@ test('ideas workflow: inline edit → gated Planning transition → server gate 
     await page.getByRole('button', { name: /Move to Planning/ }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Move to Planning' }).click();
     await expect.poll(async () => (await getIdea(api, idea.id))?.status).toBe('Planning');
+    // #605: the UI transition must not send a blank prep_start, so the backend auto-fills it.
+    await expect.poll(async () => (await getIdea(api, idea.id))?.prep_start).toMatch(/^\d{4}-\d{2}-\d{2}/);
     await expect(page.getByText(/Missing for Workbench:.*Materials.*Build Instructions/)).toBeVisible();
     await expect(page.getByRole('button', { name: /Move to Workbench|Build Limit Reached/ })).toBeDisabled();
   });
