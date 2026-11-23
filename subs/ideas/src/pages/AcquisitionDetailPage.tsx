@@ -16,6 +16,7 @@ import {
   useToast,
   useConfirm,
   useAuth,
+  SpookyImage,
 } from '@spookydecs/ui';
 import { getAcquisition, updateAcquisition, deleteAcquisition } from '../api/acquisitionsApi';
 import {
@@ -172,7 +173,7 @@ export default function AcquisitionDetailPage() {
       <Card className="mb-4 overflow-hidden">
         <div className="aspect-video w-full bg-default-100">
           {hero ? (
-            <img src={hero} alt={displayTitle} className="h-full w-full object-cover" />
+            <SpookyImage src={hero} alt={displayTitle} ratio="auto" fit="cover" eager className="h-full w-full" />
           ) : (
             <div
               className="flex h-full w-full items-center justify-center p-12 text-default-300 [&_svg]:h-24 [&_svg]:w-24"

@@ -11,7 +11,7 @@ import {
   Spinner,
   Textarea,
 } from '@heroui/react';
-import { ErrorState, useToast, usePhotoUpload, stateChipColor } from '@spookydecs/ui';
+import { ErrorState, useToast, usePhotoUpload, stateChipColor, SpookyImage, photoUrls } from '@spookydecs/ui';
 import TrackerApi from '../api/trackerApi';
 import { asArray, asItem } from '../lib/unwrap';
 import {
@@ -358,11 +358,12 @@ export default function IssueDetailPage() {
                 photos.map((a) => (
                   <div key={a.id} className="relative">
                     <a href={a.url} target="_blank" rel="noopener noreferrer">
-                      <img
-                        src={a.thumb_url || a.url}
+                      <SpookyImage
+                        {...photoUrls({ url: a.url, thumbUrl: a.thumb_url })}
                         alt="screenshot"
-                        loading="lazy"
-                        className="h-20 w-20 rounded-lg border border-divider object-cover"
+                        ratio="1/1"
+                        fit="cover"
+                        className="h-20 w-20 rounded-lg border border-divider"
                       />
                     </a>
                     <button

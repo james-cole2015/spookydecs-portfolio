@@ -1,7 +1,7 @@
 // ItemsCards — grid of item cards (#332)
 import { Card, CardBody, CardFooter, Button, Chip } from '@heroui/react';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
-import { EmptyState, useToast, Typography, ConfirmDialog } from '@spookydecs/ui';
+import { EmptyState, useToast, Typography, ConfirmDialog, SpookyImage, photoUrls } from '@spookydecs/ui';
 import { type Item } from '../api/types';
 import { getPlaceholderIcon, getSeasonIcon, getStatusColor } from '../config/itemsConfig';
 import { useState } from 'react';
@@ -62,7 +62,7 @@ export function ItemsCards({ items, onView, onEdit, onDelete, canWrite, canDelet
               <CardBody className="p-0">
                 <div className="flex items-start gap-3 p-4">
                   {photo ? (
-                    <img src={photo} alt={item.short_name} className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
+                    <SpookyImage {...photoUrls(item.images)} alt={item.short_name} ratio="1/1" fit="cover" className="w-16 h-16 rounded-lg flex-shrink-0" />
                   ) : (
                     <div className="w-16 h-16 rounded-lg bg-default-100 flex items-center justify-center text-3xl flex-shrink-0">
                       {placeholder}

@@ -3,7 +3,7 @@
 // (StatusChip + colorMap / SeasonChip) rather than the ideas-local chips.tsx.
 import { Card, CardBody, Chip } from '@heroui/react';
 import { useNavigate } from 'react-router-dom';
-import { SeasonChip, StatusChip } from '@spookydecs/ui';
+import { SeasonChip, StatusChip, SpookyImage } from '@spookydecs/ui';
 import {
   ACQ_STATUS_COLOR,
   SEASON_PLACEHOLDERS,
@@ -40,7 +40,7 @@ export function AcquisitionCard({ acquisition }: { acquisition: Acquisition }) {
     >
       <div className="aspect-video w-full overflow-hidden bg-default-100">
         {img ? (
-          <img src={img} alt={a.title} loading="lazy" className="h-full w-full object-cover" />
+          <SpookyImage src={img} alt={a.title} ratio="auto" fit="cover" className="h-full w-full" />
         ) : (
           <Placeholder season={a.season} />
         )}
