@@ -100,13 +100,12 @@ test('ideas workflow: Build Season (bucket) is editable from the detail page (#6
   const { api } = ideas;
   const idea = await createIdea(api, 'BuildSeason');
   const target = `${new Date().getFullYear() + 1} Christmas`;
-  // The sidebar value is a role=button; empty reads "—" until a season is chosen.
-  const trigger = page.getByText('Build Season').locator('xpath=following-sibling::*[1]');
+  const trigger = page.getByRole('button', { name: /Build Season/ });
+  const pick = (option: string) => selectOption(page, 'Build Season', option);
 
   await test.step('Set Build Season; it persists after reload', async () => {
     await page.goto(`/${idea.id}`);
-    await trigger.click();
-    await page.locator('[data-slot="listbox"] [role="option"]').filter({ hasText: target }).click();
+    await pick(target);
     await expect.poll(async () => (await getIdea(api, idea.id))?.bucket).toBe(target);
     await page.reload();
     await expect(trigger).toContainText(target);
@@ -120,11 +119,10 @@ test('ideas workflow: Build Season (bucket) is editable from the detail page (#6
 
   await test.step('Clearing is allowed and shows empty', async () => {
     await page.goto(`/${idea.id}`);
-    await trigger.click();
-    await page.locator('[data-slot="listbox"] [role="option"]').filter({ hasText: /^None$/ }).click();
+    await pick('None');
     await expect.poll(async () => (await getIdea(api, idea.id))?.bucket ?? '').toBe('');
     await page.reload();
-    await expect(trigger).toContainText('—');
+    await expect(trigger).toContainText('None');
   });
 });
 
