@@ -96,7 +96,7 @@ test('ideas agentic: Ask Igor and Quick add are accepted, and a delete mid-run l
     await page.locator('button:not([data-slot="trigger"])', { hasText: 'Ask Igor' }).click();
     expect((await accepted).status()).toBe(202);
 
-    expect((await api('DELETE', `/ideas/${idea.id}`)).status).toBeLessThan(300);
+    expect((await api('DELETE', `/ideas/${idea.id}/cascade`)).status).toBeLessThan(300);
     await expect.poll(async () => (await findSentinels(api)).some((i: any) => i.id === idea.id)).toBe(false);
   });
 
