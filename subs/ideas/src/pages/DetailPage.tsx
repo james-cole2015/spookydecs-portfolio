@@ -42,6 +42,7 @@ import {
   type StepStatus,
   type InstructionReviewResult,
   STEP_STATUSES,
+  bucketOptions,
 } from '../config/ideasConfig';
 import { blockedStatuses, fieldMode, missingGateLabels, nextStatusOptions } from '../config/fieldAvailability';
 import { formatDate, formatDuration, heroImageUrl, normalizeMaterials } from '../lib/format';
@@ -861,7 +862,20 @@ export default function DetailPage() {
                   onSave={(v) => patchIdea({ season: v })}
                 />
               </div>
-              {idea.bucket && <SidebarField label="Build Season" value={idea.bucket} />}
+              <div className="flex items-center justify-between">
+                <span className="text-default-500">Build Season</span>
+                {fieldMode('bucket', idea.status) === 'editable' ? (
+                  <InlineSelectEdit
+                    value={idea.bucket ?? ''}
+                    options={bucketOptions(idea.bucket)}
+                    clearLabel="None"
+                    placeholder="—"
+                    onSave={(v) => patchIdea({ bucket: v })}
+                  />
+                ) : (
+                  <span>{idea.bucket || '—'}</span>
+                )}
+              </div>
               <div className="flex items-center justify-between">
                 <span className="text-default-500">Status</span>
                 <StatusEdit

@@ -96,6 +96,38 @@ test('ideas workflow: inline edit → gated Planning transition → server gate 
   });
 });
 
+test('ideas workflow: Build Season (bucket) is editable from the detail page (#625)', async ({ page, ideas }) => {
+  const { api } = ideas;
+  const idea = await createIdea(api, 'BuildSeason');
+  const target = `${new Date().getFullYear() + 1} Christmas`;
+  // The sidebar value is a role=button; empty reads "—" until a season is chosen.
+  const trigger = page.getByText('Build Season').locator('xpath=following-sibling::*[1]');
+
+  await test.step('Set Build Season; it persists after reload', async () => {
+    await page.goto(`/${idea.id}`);
+    await trigger.click();
+    await page.locator('[data-slot="listbox"] [role="option"]').filter({ hasText: target }).click();
+    await expect.poll(async () => (await getIdea(api, idea.id))?.bucket).toBe(target);
+    await page.reload();
+    await expect(trigger).toContainText(target);
+  });
+
+  await test.step('Value survives a status change (Considering → Planning)', async () => {
+    const res = await putIdea(api, idea, { status: 'Planning', description: 'e2e', link: 'https://example.com/e2e-bucket' });
+    expect(res.status, JSON.stringify(res.body).slice(0, 200)).toBeLessThan(300);
+    expect((await getIdea(api, idea.id)).bucket).toBe(target);
+  });
+
+  await test.step('Clearing is allowed and shows empty', async () => {
+    await page.goto(`/${idea.id}`);
+    await trigger.click();
+    await page.locator('[data-slot="listbox"] [role="option"]').filter({ hasText: /^None$/ }).click();
+    await expect.poll(async () => (await getIdea(api, idea.id))?.bucket ?? '').toBe('');
+    await page.reload();
+    await expect(trigger).toContainText('—');
+  });
+});
+
 test('ideas workflow: Workbench WIP cap is enforced in the UI and by the API', async ({ page, ideas }) => {
   const { api } = ideas;
   const idea = await createIdea(api, 'Cap', {
