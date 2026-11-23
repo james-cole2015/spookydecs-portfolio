@@ -52,6 +52,7 @@ import { CostsSection } from '../components/CostsSection';
 import { CostLogModal } from '../components/CostLogModal';
 import { InlineEdit } from '../components/InlineEdit';
 import { InlineSelectEdit } from '../components/InlineSelectEdit';
+import { BuildSeasonSelect } from '../components/BuildSeasonSelect';
 import { InlineTagsEdit } from '../components/InlineTagsEdit';
 import { DeferModal } from '../components/DeferModal';
 import { StatusEdit } from '../components/StatusEdit';
@@ -865,11 +866,9 @@ export default function DetailPage() {
               <div className="flex items-center justify-between">
                 <span className="text-default-500">Build Season</span>
                 {fieldMode('bucket', idea.status) === 'editable' ? (
-                  <InlineSelectEdit
+                  <BuildSeasonSelect
                     value={idea.bucket ?? ''}
                     options={bucketOptions(idea.bucket)}
-                    clearLabel="None"
-                    placeholder="—"
                     onSave={(v) => patchIdea({ bucket: v })}
                   />
                 ) : (
