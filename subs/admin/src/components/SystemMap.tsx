@@ -4,17 +4,29 @@
  * config); the Iris-admin tile navigates internally; items carries live stats.
  * Placeholder/Coming-Soon tiles (audit, or any sub with no URL) are dimmed.
  */
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button, Card, CardBody, CardFooter, CardHeader } from '@heroui/react';
-import { calculateSystemHealth, fetchSubStats, getSubdomainUrls } from '../api/adminApi';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Button,
+  Card,
+  CardBody,
+  CardFooter,
+  CardHeader,
+  Chip,
+} from "@heroui/react";
+import { Typography } from "@spookydecs/ui";
+import {
+  calculateSystemHealth,
+  fetchSubStats,
+  getSubdomainUrls,
+} from "../api/adminApi";
 import {
   SUBDOMAINS,
   type SubStats,
   type Subdomain,
   type SubdomainUrls,
   type SystemHealth,
-} from '../config/adminConfig';
+} from "../config/adminConfig";
 
 export function SystemMap() {
   const navigate = useNavigate();
@@ -37,7 +49,13 @@ export function SystemMap() {
         // Fan out to /stats/{key} for every tile that declares a statsKey.
         const withStats = SUBDOMAINS.filter((s) => s.statsKey);
         const results = await Promise.all(
-          withStats.map(async (s) => [s.statsKey as string, await fetchSubStats(s.statsKey as string)] as const),
+          withStats.map(
+            async (s) =>
+              [
+                s.statsKey as string,
+                await fetchSubStats(s.statsKey as string),
+              ] as const,
+          ),
         );
         if (cancelled) return;
         const next: Record<string, SubStats> = {};
@@ -46,7 +64,7 @@ export function SystemMap() {
         }
         setStats(next);
       } catch (err) {
-        console.error('Failed to load system data:', err);
+        console.error("Failed to load system data:", err);
       }
     })();
     return () => {
@@ -54,21 +72,75 @@ export function SystemMap() {
     };
   }, []);
 
+  const tools = SUBDOMAINS.filter((s) => s.kind === "tool");
+  const subs = SUBDOMAINS.filter((s) => s.kind === "sub");
+
   return (
-    <section className="mt-6">
-      <h2 className="mb-4 text-lg font-semibold text-foreground">System Map</h2>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {SUBDOMAINS.map((sub) => (
-          <SystemCard
-            key={sub.id}
-            sub={sub}
-            url={sub.urlKey ? urls?.[sub.urlKey] || '' : ''}
-            stats={sub.statsKey ? stats[sub.statsKey] : undefined}
-            onInternalNavigate={navigate}
-          />
-        ))}
-      </div>
-    </section>
+    <>
+      <section className="mt-6">
+        <Typography type="h4" className="mb-4">
+          Tools
+        </Typography>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {tools.map((tool) => (
+            <ToolCard key={tool.id} tool={tool} onNavigate={navigate} />
+          ))}
+        </div>
+      </section>
+      <section className="mt-8">
+        <Typography type="h4" className="mb-4">
+          System Map
+        </Typography>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {subs.map((sub) => (
+            <SystemCard
+              key={sub.id}
+              sub={sub}
+              url={sub.urlKey ? urls?.[sub.urlKey] || "" : ""}
+              stats={sub.statsKey ? stats[sub.statsKey] : undefined}
+            />
+          ))}
+        </div>
+      </section>
+    </>
+  );
+}
+
+function ToolCard({
+  tool,
+  onNavigate,
+}: {
+  tool: Subdomain;
+  onNavigate: (route: string) => void;
+}) {
+  return (
+    <Card
+      shadow="md"
+      className="h-full border-l-4 border-secondary bg-secondary/10"
+    >
+      <CardHeader className="justify-between gap-2">
+        <h3 className="text-medium font-semibold text-foreground">
+          {tool.title}
+        </h3>
+        <Chip color="secondary" variant="flat" size="sm">
+          Tool
+        </Chip>
+      </CardHeader>
+      <CardBody className="grow">
+        <p className="text-small text-default-500">{tool.description}</p>
+      </CardBody>
+      <CardFooter>
+        <Button
+          color="secondary"
+          variant="flat"
+          size="sm"
+          fullWidth
+          onPress={() => onNavigate(tool.internalRoute as string)}
+        >
+          Open {tool.title} →
+        </Button>
+      </CardFooter>
+    </Card>
   );
 }
 
@@ -76,42 +148,36 @@ function SystemCard({
   sub,
   url,
   stats,
-  onInternalNavigate,
 }: {
   sub: Subdomain;
   url: string;
   stats?: SubStats;
-  onInternalNavigate: (route: string) => void;
 }) {
-  const isInternal = !!sub.internalRoute;
-  const isPlaceholder = !isInternal && (sub.placeholder || !url);
+  const isPlaceholder = sub.placeholder || !url;
 
   // h-full + the grid's default stretch makes every card in a row equal height;
   // CardBody grows and the CardFooter button pins to the bottom regardless of how
   // long the description runs.
   return (
-    <Card shadow="md" className={`h-full bg-content1 ${isPlaceholder ? 'opacity-60' : ''}`}>
+    <Card
+      shadow="md"
+      className={`h-full bg-content1 ${isPlaceholder ? "opacity-60" : ""}`}
+    >
       <CardHeader>
-        <h3 className="text-medium font-semibold text-foreground">{sub.title}</h3>
+        <h3 className="text-medium font-semibold text-foreground">
+          {sub.title}
+        </h3>
       </CardHeader>
       <CardBody className="grow gap-3">
         <p className="text-small text-default-500">{sub.description}</p>
         {stats && stats.total_items !== undefined && (
-          <p className="text-small text-default-600">{stats.total_items} total items</p>
+          <p className="text-small text-default-600">
+            {stats.total_items} total items
+          </p>
         )}
       </CardBody>
       <CardFooter>
-        {isInternal ? (
-          <Button
-            color="secondary"
-            variant="flat"
-            size="sm"
-            fullWidth
-            onPress={() => onInternalNavigate(sub.internalRoute as string)}
-          >
-            Open {sub.title} →
-          </Button>
-        ) : isPlaceholder ? (
+        {isPlaceholder ? (
           <Button variant="flat" size="sm" fullWidth isDisabled>
             Coming Soon
           </Button>

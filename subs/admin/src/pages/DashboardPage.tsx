@@ -3,8 +3,8 @@
  * System Map full-width below. Ported from pages/dashboard.js (same layout; the
  * components now own their own data loading instead of the page orchestrating it).
  */
-import { Button, Card, CardBody, Chip } from '@heroui/react';
-import { Camera, ClipboardCheck } from 'lucide-react';
+import { Card, CardBody, Chip } from '@heroui/react';
+import { ClipboardCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader, isDemoEnv } from '@spookydecs/ui';
 import { ActionCenter } from '../components/ActionCenter';
@@ -20,11 +20,6 @@ export default function DashboardPage() {
       <PageHeader
         title="SpookyDecs Admin"
         subtitle="Operational overview across every subdomain."
-        actions={
-          <Button color="primary" variant="flat" startContent={<Camera size={16} />} onPress={() => navigate('/place-photo')}>
-            Place photo
-          </Button>
-        }
       />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">

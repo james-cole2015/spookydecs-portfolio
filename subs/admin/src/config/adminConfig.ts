@@ -34,6 +34,8 @@ export const DEPLOYMENT_ZONES: ZoneOption[] = [
 /** A System Map tile. Either an external sub link (urlKey) or an internal route. */
 export interface Subdomain {
   id: string;
+  /** 'tool' = in-app action (Tools section); 'sub' = link to a subdomain (System Map). */
+  kind: 'tool' | 'sub';
   title: string;
   description: string;
   /** Key into the resolved subdomain-URL map (external link). */
@@ -48,10 +50,11 @@ export interface Subdomain {
   placeholder?: boolean;
 }
 
-/** The 13 System Map tiles, ported verbatim from SystemMap.js. */
+/** Dashboard tiles: 'sub' entries form the System Map, 'tool' entries the Tools section. */
 export const SUBDOMAINS: Subdomain[] = [
   {
     id: 'ideas',
+    kind: 'sub',
     title: 'Ideas',
     description: 'Brainstorm and plan future decoration projects and seasonal themes.',
     urlKey: 'ideas',
@@ -59,6 +62,7 @@ export const SUBDOMAINS: Subdomain[] = [
   },
   {
     id: 'items',
+    kind: 'sub',
     title: 'Items',
     description: 'Manage your decoration, light, and accessory inventory.',
     urlKey: 'items',
@@ -67,6 +71,7 @@ export const SUBDOMAINS: Subdomain[] = [
   },
   {
     id: 'storage',
+    kind: 'sub',
     title: 'Storage',
     description: 'Organize totes, bins, and storage locations across shed and garage.',
     urlKey: 'storage',
@@ -74,6 +79,7 @@ export const SUBDOMAINS: Subdomain[] = [
   },
   {
     id: 'deployments',
+    kind: 'sub',
     title: 'Deployments',
     description: "Track what's out and when for each holiday season.",
     urlKey: 'deployments',
@@ -81,6 +87,7 @@ export const SUBDOMAINS: Subdomain[] = [
   },
   {
     id: 'finance',
+    kind: 'sub',
     title: 'Finance',
     description: 'Track costs, receipts, and spending across all seasons.',
     urlKey: 'finance',
@@ -88,6 +95,7 @@ export const SUBDOMAINS: Subdomain[] = [
   },
   {
     id: 'maintenance',
+    kind: 'sub',
     title: 'Maintenance',
     description: 'Schedule repairs, inspections, and maintenance tasks for your items.',
     urlKey: 'maintenance',
@@ -95,6 +103,7 @@ export const SUBDOMAINS: Subdomain[] = [
   },
   {
     id: 'workbench',
+    kind: 'sub',
     title: 'Workbench',
     description: 'Project workspace for repairs, modifications, and custom builds.',
     urlKey: 'workbench',
@@ -102,6 +111,7 @@ export const SUBDOMAINS: Subdomain[] = [
   },
   {
     id: 'images',
+    kind: 'sub',
     title: 'Images',
     description: 'Visual catalog and documentation for all items.',
     urlKey: 'images',
@@ -109,6 +119,7 @@ export const SUBDOMAINS: Subdomain[] = [
   },
   {
     id: 'gallery',
+    kind: 'sub',
     title: 'Gallery',
     description: 'Gallery of Previous Displays, Community Displays, and Project Builds.',
     urlKey: 'gallery',
@@ -116,6 +127,7 @@ export const SUBDOMAINS: Subdomain[] = [
   },
   {
     id: 'audit',
+    kind: 'sub',
     title: 'Audit',
     description: 'Review system logs, changes, and activity across all subdomains.',
     urlKey: 'audit',
@@ -123,6 +135,7 @@ export const SUBDOMAINS: Subdomain[] = [
   },
   {
     id: 'inspector',
+    kind: 'sub',
     title: 'Inspector',
     description: 'Data quality checks to identify and correct data integrity issues.',
     urlKey: 'inspector',
@@ -130,18 +143,28 @@ export const SUBDOMAINS: Subdomain[] = [
   },
   {
     id: 'tracker',
+    kind: 'sub',
     title: 'Tracker',
     description: 'Manage epics, issues, and tasks for the SpookyDecs project.',
     urlKey: 'tracker',
   },
   {
+    id: 'place-photo',
+    kind: 'tool',
+    title: 'Place Photo',
+    description: 'Attach a photo to an item or record by placing it on the right entity.',
+    internalRoute: '/place-photo',
+  },
+  {
     id: 'iris-admin',
+    kind: 'tool',
     title: 'Iris Admin',
     description: 'Edit item search text and trigger vector index rebuilds for Iris.',
     internalRoute: '/search-text',
   },
   {
     id: 'add-outlet',
+    kind: 'tool',
     title: 'Add Outlet',
     description: 'Register a new power receptacle in a deployment zone (self-registering outlets).',
     internalRoute: '/add-outlet',
