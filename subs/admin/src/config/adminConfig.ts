@@ -149,6 +149,13 @@ export const SUBDOMAINS: Subdomain[] = [
     urlKey: 'tracker',
   },
   {
+    id: 'validation',
+    kind: 'tool',
+    title: 'Run Validation',
+    description: 'Check that each sub still works end to end before the season.',
+    internalRoute: '/validation',
+  },
+  {
     id: 'place-photo',
     kind: 'tool',
     title: 'Place Photo',

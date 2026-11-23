@@ -4,29 +4,20 @@
  * config); the Iris-admin tile navigates internally; items carries live stats.
  * Placeholder/Coming-Soon tiles (audit, or any sub with no URL) are dimmed.
  */
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  Button,
-  Card,
-  CardBody,
-  CardFooter,
-  CardHeader,
-  Chip,
-} from "@heroui/react";
-import { Typography } from "@spookydecs/ui";
-import {
-  calculateSystemHealth,
-  fetchSubStats,
-  getSubdomainUrls,
-} from "../api/adminApi";
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button, Card, CardBody, CardFooter, CardHeader, Chip } from '@heroui/react';
+import { Typography, isDemoEnv } from '@spookydecs/ui';
+import { Camera, ClipboardCheck, PlugZap, Search, type LucideIcon } from 'lucide-react';
+import { calculateSystemHealth, fetchSubStats, getSubdomainUrls } from '../api/adminApi';
 import {
   SUBDOMAINS,
   type SubStats,
   type Subdomain,
   type SubdomainUrls,
   type SystemHealth,
-} from "../config/adminConfig";
+} from '../config/adminConfig';
+import { overallStatus } from '../config/validationRegistry';
 
 export function SystemMap() {
   const navigate = useNavigate();
@@ -38,10 +29,7 @@ export function SystemMap() {
     let cancelled = false;
     (async () => {
       try {
-        const [healthData, urlData] = await Promise.all([
-          calculateSystemHealth(),
-          getSubdomainUrls(),
-        ]);
+        const [healthData, urlData] = await Promise.all([calculateSystemHealth(), getSubdomainUrls()]);
         if (cancelled) return;
         setHealth(healthData);
         setUrls(urlData);
@@ -49,13 +37,7 @@ export function SystemMap() {
         // Fan out to /stats/{key} for every tile that declares a statsKey.
         const withStats = SUBDOMAINS.filter((s) => s.statsKey);
         const results = await Promise.all(
-          withStats.map(
-            async (s) =>
-              [
-                s.statsKey as string,
-                await fetchSubStats(s.statsKey as string),
-              ] as const,
-          ),
+          withStats.map(async (s) => [s.statsKey as string, await fetchSubStats(s.statsKey as string)] as const),
         );
         if (cancelled) return;
         const next: Record<string, SubStats> = {};
@@ -64,7 +46,7 @@ export function SystemMap() {
         }
         setStats(next);
       } catch (err) {
-        console.error("Failed to load system data:", err);
+        console.error('Failed to load system data:', err);
       }
     })();
     return () => {
@@ -72,8 +54,8 @@ export function SystemMap() {
     };
   }, []);
 
-  const tools = SUBDOMAINS.filter((s) => s.kind === "tool");
-  const subs = SUBDOMAINS.filter((s) => s.kind === "sub");
+  const tools = SUBDOMAINS.filter((s) => s.kind === 'tool' && !(s.id === 'validation' && isDemoEnv()));
+  const subs = SUBDOMAINS.filter((s) => s.kind === 'sub');
 
   return (
     <>
@@ -96,7 +78,7 @@ export function SystemMap() {
             <SystemCard
               key={sub.id}
               sub={sub}
-              url={sub.urlKey ? urls?.[sub.urlKey] || "" : ""}
+              url={sub.urlKey ? urls?.[sub.urlKey] || '' : ''}
               stats={sub.statsKey ? stats[sub.statsKey] : undefined}
             />
           ))}
@@ -106,74 +88,65 @@ export function SystemMap() {
   );
 }
 
-function ToolCard({
-  tool,
-  onNavigate,
-}: {
-  tool: Subdomain;
-  onNavigate: (route: string) => void;
-}) {
+const TOOL_ICONS: Record<string, LucideIcon> = {
+  validation: ClipboardCheck,
+  'place-photo': Camera,
+  'iris-admin': Search,
+  'add-outlet': PlugZap,
+};
+
+function ToolCard({ tool, onNavigate }: { tool: Subdomain; onNavigate: (route: string) => void }) {
+  const Icon = TOOL_ICONS[tool.id] ?? PlugZap;
   return (
     <Card
-      shadow="md"
-      className="h-full border-l-4 border-secondary bg-secondary/10"
+      isPressable
+      onPress={() => onNavigate(tool.internalRoute as string)}
+      shadow="none"
+      className="border-l-4 border-default-300 bg-content2"
     >
-      <CardHeader className="justify-between gap-2">
-        <h3 className="text-medium font-semibold text-foreground">
-          {tool.title}
-        </h3>
-        <Chip color="secondary" variant="flat" size="sm">
-          Tool
-        </Chip>
-      </CardHeader>
-      <CardBody className="grow">
-        <p className="text-small text-default-500">{tool.description}</p>
+      <CardBody className="flex flex-row items-center gap-3 py-3">
+        <Icon size={20} className="shrink-0 text-secondary" aria-hidden />
+        <div className="min-w-0 text-left">
+          <p className="text-small font-semibold text-foreground">{tool.title}</p>
+          <p className="truncate text-tiny text-default-500">{tool.description}</p>
+        </div>
+        {tool.id === 'validation' && <ValidationStatus />}
       </CardBody>
-      <CardFooter>
-        <Button
-          color="secondary"
-          variant="flat"
-          size="sm"
-          fullWidth
-          onPress={() => onNavigate(tool.internalRoute as string)}
-        >
-          Open {tool.title} →
-        </Button>
-      </CardFooter>
     </Card>
   );
 }
 
-function SystemCard({
-  sub,
-  url,
-  stats,
-}: {
-  sub: Subdomain;
-  url: string;
-  stats?: SubStats;
-}) {
+/** Pass/fail roll-up for the Run Validation tool. Status chip color follows §5 (success/warning). */
+function ValidationStatus() {
+  const { passing, total, latest } = overallStatus();
+  return (
+    <Chip
+      size="sm"
+      variant="flat"
+      color={passing === total ? 'success' : 'warning'}
+      className="ml-auto shrink-0"
+      title={`Last run ${latest}`}
+    >
+      {passing}/{total} passing
+    </Chip>
+  );
+}
+
+function SystemCard({ sub, url, stats }: { sub: Subdomain; url: string; stats?: SubStats }) {
   const isPlaceholder = sub.placeholder || !url;
 
   // h-full + the grid's default stretch makes every card in a row equal height;
   // CardBody grows and the CardFooter button pins to the bottom regardless of how
   // long the description runs.
   return (
-    <Card
-      shadow="md"
-      className={`h-full bg-content1 ${isPlaceholder ? "opacity-60" : ""}`}
-    >
+    <Card shadow="md" className={`h-full bg-content1 ${isPlaceholder ? 'opacity-60' : ''}`}>
       <CardHeader>
-        <h3 className="text-medium font-semibold text-foreground">
-          {sub.title}
-        </h3>
+        <h3 className="text-medium font-semibold text-foreground">{sub.title}</h3>
       </CardHeader>
       <CardBody className="grow gap-3">
         <p className="text-small text-default-500">{sub.description}</p>
         {stats && stats.total_items !== undefined && (
-          <p className="text-small text-default-600">
-            {stats.total_items} total items
-          </p>
+          <p className="text-small text-default-600">{stats.total_items} total items</p>
         )}
       </CardBody>
       <CardFooter>
