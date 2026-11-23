@@ -250,3 +250,12 @@ export function isDeferred(idea: Pick<Idea, 'status' | 'bucket' | 'prep_start'>)
   const enteredYear = idea.prep_start ? Number.parseInt(idea.prep_start, 10) : new Date().getFullYear();
   return Number.isFinite(bucketYear) && bucketYear > enteredYear;
 }
+
+// Build Season (#625) choices for the detail-page editor: this year and next
+// year's seasons, plus the stored value if it falls outside that window so an
+// existing bucket always renders as a selected option.
+export function bucketOptions(current?: string, now: Date = new Date()): string[] {
+  const y = now.getFullYear();
+  const opts = [y, y + 1].flatMap((yr) => DEFER_SEASON_LABELS.map((s) => `${yr} ${s}`));
+  return current && !opts.includes(current) ? [current, ...opts] : opts;
+}
