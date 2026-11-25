@@ -78,7 +78,9 @@ export function BuildCompleteWizard({
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [completeDate, setCompleteDate] = useState(idea.build_complete || todayIso());
-  const [units, setUnits] = useState('1');
+  const [units, setUnits] = useState(
+    idea.remaining_units && idea.remaining_units >= 1 ? String(Math.min(idea.remaining_units, MAX_UNITS)) : '1',
+  );
   const [shortName, setShortName] = useState(idea.title);
   const [cls, setCls] = useState('');
   const [classType, setClassType] = useState('');
@@ -372,7 +374,7 @@ export function BuildCompleteWizard({
                   step={1}
                   className="w-32"
                   label="Units built"
-                  description={`1–${MAX_UNITS}`}
+                  description={`1–${MAX_UNITS}${idea.remaining_units ? ` · ${idea.remaining_units} planned` : ''}`}
                   value={units}
                   onValueChange={setUnits}
                 />

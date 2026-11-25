@@ -196,12 +196,12 @@ export default function FormPage() {
                 {...register('estimated_cost')}
               />
               <Input
-                label="Remaining Units"
+                label="Units Planned"
                 type="number"
                 min="0"
                 step="1"
                 placeholder="e.g. 6"
-                description="Units still unfinished from a prior partial build, if any."
+                description="How many units you plan to build (e.g. 4 zombie hands). Defaults the Build Complete count."
                 {...register('remaining_units')}
               />
             </div>
