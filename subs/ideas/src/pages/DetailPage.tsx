@@ -923,7 +923,7 @@ export default function DetailPage() {
                 )}
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-default-500">Remaining Units</span>
+                <span className="text-default-500" title="How many units you plan to build">Units Planned</span>
                 {fieldMode('remaining_units', idea.status) === 'editable' ? (
                   <InlineEdit
                     value={idea.remaining_units != null ? String(idea.remaining_units) : ''}

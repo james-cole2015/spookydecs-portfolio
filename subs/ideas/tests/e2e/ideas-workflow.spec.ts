@@ -254,6 +254,8 @@ test('workbench: Complete Build wizard (2 units + remainder idea) → Built, ite
     { title: 'Paint', description: 'Paint it', status: 'pending' },
   ];
   const idea = await seedWorkbenchIdea(api, 'Wizard', steps);
+  // [607] Units Planned is editable in Workbench; the wizard's Units built defaults to it.
+  expect((await putIdea(api, idea, { remaining_units: 2 })).status).toBeLessThan(300);
   const cost = await api('POST', '/finance/costs', {
     item_name: `${idea.title} materials`, cost_type: 'build', category: 'materials', total_cost: '12.35',
     cost_date: new Date().toISOString().slice(0, 10), vendor: 'E2E Hardware', class_type: 'item', no_receipt: true, related_idea_id: idea.id,
@@ -273,6 +275,9 @@ test('workbench: Complete Build wizard (2 units + remainder idea) → Built, ite
     await expect(wizard.getByText(/Logged costs: \$12\.35 across 1 record/)).toBeVisible();
     await wizard.getByRole('button', { name: /Review/ }).click();
     await expect(wizard.getByText('Class is required.')).toBeVisible();
+    await expect(wizard.getByLabel('Units built')).toHaveValue('2');
+    await expect(wizard.getByText(/2 planned/)).toBeVisible();
+    await wizard.getByLabel('Units built').fill('3'); // overshoot (planned 2) must not be blocked
     await wizard.getByLabel('Units built').fill('2');
     await selectOption(page, 'Class', 'Decoration');
     await selectOption(page, 'Type', 'Static Prop');
