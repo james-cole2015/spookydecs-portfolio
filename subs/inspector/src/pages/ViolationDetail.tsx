@@ -308,7 +308,7 @@ export default function ViolationDetail() {
 
       {igRunning && (
         <div className="flex items-center gap-2">
-          <p className="text-small text-secondary">Inspector Gadget is analyzing this violation…</p>
+          <p className="text-small text-primary">Inspector Gadget is analyzing this violation…</p>
           {pastCeiling && (
             <>
               <span className="text-small text-default-400">— taking longer than usual.</span>

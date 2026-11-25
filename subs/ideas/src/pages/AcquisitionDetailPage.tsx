@@ -335,7 +335,7 @@ export default function AcquisitionDetailPage() {
             <CardHeader className="flex items-center justify-between font-semibold">
               Description
               {descFromRenfield && (
-                <Chip size="sm" variant="flat" color="secondary">
+                <Chip size="sm" variant="flat" color="primary">
                   Suggested by Renfield
                 </Chip>
               )}
