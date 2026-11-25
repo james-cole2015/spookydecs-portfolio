@@ -63,7 +63,7 @@ export function SystemMap() {
         <Typography type="h4" className="mb-4">
           Tools
         </Typography>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {tools.map((tool) => (
             <ToolCard key={tool.id} tool={tool} onNavigate={navigate} />
           ))}
@@ -108,7 +108,7 @@ function ToolCard({ tool, onNavigate }: { tool: Subdomain; onNavigate: (route: s
         <Icon size={20} className="shrink-0 text-secondary" aria-hidden />
         <div className="min-w-0 text-left">
           <p className="text-small font-semibold text-foreground">{tool.title}</p>
-          <p className="truncate text-tiny text-default-500">{tool.description}</p>
+          <p className="line-clamp-2 text-tiny text-default-500">{tool.description}</p>
         </div>
         {tool.id === 'validation' && <ValidationStatus />}
       </CardBody>
