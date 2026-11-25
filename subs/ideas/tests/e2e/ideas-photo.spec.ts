@@ -11,17 +11,15 @@ const photosOf = (r: any): any[] => {
   return d?.photos || d?.images || (Array.isArray(d) ? d : []);
 };
 
-/** Keys under the idea's S3 prefix (read-only); null when the aws CLI is not usable here. */
-function s3Keys(ideaId: string): string[] | null {
+/** Whether an S3 object exists (read-only head-object); null when the aws CLI is not usable here. Keys are not under an
+ *  idea-id prefix any more (images/items/dev/misc/...), so the photo's own s3_key / thumb_s3_key are checked (#732). */
+function s3Exists(key: string): boolean | null {
   try {
-    const out = execFileSync('aws', [
-      's3api', 'list-objects-v2', '--region', 'us-east-2', '--bucket', 'spooky-decs-shared-assets',
-      '--prefix', `images/ideas/dev/${ideaId}/`, '--query', 'Contents[].Key', '--output', 'json',
-    ], { encoding: 'utf8', timeout: 30_000 });
-    const parsed = JSON.parse(out);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return null;
+    execFileSync('aws', ['s3api', 'head-object', '--region', 'us-east-2', '--bucket', 'spooky-decs-shared-assets', '--key', key],
+      { encoding: 'utf8', timeout: 30_000, stdio: ['ignore', 'pipe', 'pipe'] });
+    return true;
+  } catch (e: any) {
+    return /404|Not Found/i.test(String(e?.stderr ?? e?.message)) ? false : null;
   }
 }
 
@@ -45,30 +43,34 @@ test('ideas photo: create with a photo → stored and shown → cascade delete r
     id = found.id;
   });
 
-  let photoId = '';
+  let photoKeys: string[] = [];
   await test.step('Photo record exists for the idea and the detail page renders it', async () => {
     await expect.poll(async () => photosOf(await api('GET', `/admin/images?idea_id=${encodeURIComponent(id)}`)).length, { timeout: 30_000 }).toBeGreaterThan(0);
     const photo = photosOf(await api('GET', `/admin/images?idea_id=${encodeURIComponent(id)}`))[0];
-    photoId = photo.photo_id;
+    photoKeys = [photo.s3_key, photo.thumb_s3_key].filter(Boolean);
+    expect(photoKeys.length, 'photo record carries s3_key').toBeGreaterThan(0);
     expect(photo).toMatchObject({ idea_id: id });
     expect(photo.cloudfront_url).toBeTruthy();
     await page.goto(`/${id}`);
     await expect(page.getByRole('heading', { name: 'Photos' }).or(page.getByText('Photos', { exact: true })).first()).toBeVisible();
-    await expect(page.locator(`img[src*="${photoId}"], img[src*="${id}"]`).first()).toBeVisible({ timeout: 20_000 });
+    // Keys are `images/items/dev/misc/image-<Season>-idea-<ts>-<rand>.jpeg` (the thumb adds a `thumb-` prefix), so neither
+    // photo_id nor the idea id appears in the URL (#732). Match the stored file's unique stem instead.
+    const stem = String(photo.cloudfront_url).split('/').pop()!.replace(/^(image|thumb)-/, '').replace(/\.[^.]+$/, '');
+    await expect(page.locator(`img[src*="${stem}"]`).first()).toBeVisible({ timeout: 20_000 });
   });
 
   await test.step('Cascade delete removes the photo record and its S3 objects, including the generated thumbnail', async () => {
-    const before = s3Keys(id);
+    // The thumbnail is generated asynchronously after confirm: wait until every key exists so the post-delete check is meaningful.
+    const s3Usable = s3Exists(photoKeys[0]) !== null;
+    if (s3Usable) await expect.poll(() => photoKeys.every((k) => s3Exists(k) === true), { timeout: 45_000, message: 'photo + thumbnail objects exist before delete' }).toBe(true);
     await page.getByRole('button', { name: 'Delete', exact: true }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Delete', exact: true }).click();
     await page.waitForURL(/\/list$/, { timeout: 30_000 });
     await expect.poll(async () => photosOf(await api('GET', `/admin/images?idea_id=${encodeURIComponent(id)}`)).length, { timeout: 30_000 }).toBe(0);
-    const after = s3Keys(id);
-    if (before !== null && after !== null) {
-      expect(before.length, 'objects existed before delete').toBeGreaterThan(0);
-      expect(after, `leftover S3 objects under images/ideas/dev/${id}/`).toEqual([]);
+    if (s3Usable) {
+      await expect.poll(() => photoKeys.filter((k) => s3Exists(k) !== false), { timeout: 30_000, message: `leftover S3 objects: ${photoKeys.join(', ')}` }).toEqual([]);
     } else {
-      test.info().annotations.push({ type: 'note', description: 'aws CLI unavailable — S3 prefix not checked' });
+      test.info().annotations.push({ type: 'note', description: 'aws CLI unavailable — S3 objects not checked' });
     }
   });
 });
