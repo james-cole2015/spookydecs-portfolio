@@ -257,7 +257,7 @@ export default function DetailPage() {
   ];
 
   return (
-    <div className="p-4 max-w-3xl mx-auto pb-24">
+    <div className="pb-24">
       <Breadcrumbs crumbs={[{ label: 'Items', to: '/' }, { label: 'All Items', to: '/items' }, { label: item.short_name }]} />
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
