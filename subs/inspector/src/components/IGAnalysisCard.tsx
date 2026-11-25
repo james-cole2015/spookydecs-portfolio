@@ -12,7 +12,7 @@ export function IGAnalysisCard({ violation }: { violation: Violation }) {
   if (!agent_notes) return null;
 
   return (
-    <Card className="border border-secondary/40 bg-content1" shadow="sm">
+    <Card className="border border-primary/40 bg-content1" shadow="sm">
       <CardHeader className="flex items-center justify-between gap-2">
         <h3 className="text-lg font-semibold text-foreground">IG Analysis</h3>
         <div className="flex flex-wrap gap-2">
@@ -27,7 +27,7 @@ export function IGAnalysisCard({ violation }: { violation: Violation }) {
             </Chip>
           )}
           {awaiting_confirmation === 'true' && (
-            <Chip size="sm" variant="flat" color="secondary">
+            <Chip size="sm" variant="flat" color="primary">
               Awaiting confirmation
             </Chip>
           )}
