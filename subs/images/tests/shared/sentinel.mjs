@@ -4,8 +4,8 @@
  * docs-spookydecs/photo-service.md), so the UI journeys run against a genuine S3 object + DDB record.
  *
  * Server-generated photo IDs → marker+sweep. Every sentinel image is linked to the fake idea id
- * SENTINEL_IDEA_ID (context 'idea' → S3 path images/ideas/{stage}/{idea_id}/, stage-scoped so it
- * cannot collide with another environment), and carries SENTINEL_MARKER in its caption. Sweep lists
+ * SENTINEL_IDEA_ID (context 'idea'; the S3 key is images/items/{stage}/misc/image-<Season>-<ctx>-<ts>-<rand>.jpeg, so
+ * it carries NO id — never match photos by id in a URL/prefix, use the record's s3_key/thumb_s3_key, #734), and carries SENTINEL_MARKER in its caption. Sweep lists
  * by idea_id and DELETEs each via the API, which removes the S3 object, thumbnail and DDB record.
  */
 export { makeApiClient } from '../../../storage/tests/shared/sentinel.mjs';
