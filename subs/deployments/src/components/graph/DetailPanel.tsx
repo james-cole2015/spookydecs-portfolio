@@ -3,7 +3,7 @@ import type { Node, Edge } from '@xyflow/react';
 import { Button } from '@heroui/react';
 import { Camera, X } from 'lucide-react';
 import { nodeIcon } from './graphIcons';
-import { PhotoLightbox, type LightboxPhoto } from '@spookydecs/ui';
+import { PhotoLightbox, type LightboxPhoto, SpookyImage, photoUrls } from '@spookydecs/ui';
 import { fetchImageById } from '../../api/deploymentsApi';
 import type { GraphConnection, GraphPlacement, GraphNodeData, GraphEdgeData } from '../../lib/graphDerivation';
 
@@ -236,7 +236,7 @@ function NodeDetail({
     <div className="grid gap-4 md:grid-cols-[200px_minmax(0,1fr)_minmax(0,1fr)]">
       <div className="flex flex-col gap-2">
         {photoUrl || declaredPhotos[0]?.url ? (
-          <img src={photoUrl || declaredPhotos[0]?.url} alt={data.label} className="h-32 w-full rounded-medium object-cover" />
+          <SpookyImage {...photoUrls({ url: photoUrl || declaredPhotos[0]?.url, thumbUrl: declaredPhotos[0]?.thumbUrl })} alt={data.label} ratio="auto" fit="cover" className="h-32 w-full rounded-medium" />
         ) : (
           <div className="flex h-32 items-center justify-center rounded-medium bg-default-100 text-default-400">
             {(() => {

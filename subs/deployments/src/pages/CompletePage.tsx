@@ -1,15 +1,21 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Card, CardBody, Chip, Link as HeroLink } from '@heroui/react';
-import { Breadcrumbs, ConfirmDialog, ErrorState, LoadingState, PageHeader, useToast } from '@spookydecs/ui';
+import { Breadcrumbs, ConfirmDialog, ErrorState, LoadingState, PageHeader, useToast, SpookyImage } from '@spookydecs/ui';
 import {
   getDeployment,
   getDeploymentGraph,
   completeDeployment,
+  getStagingTotes,
+  resolveStagedDecorations,
+  ApiError,
+  type StagingSummary,
   getItemsAdminUrl,
   fetchImageById,
 } from '../api/deploymentsApi';
 import { StatusChip } from '../components/StatusChip';
+import { StagedDecorationsPanel } from '../components/StagedDecorationsPanel';
+import { DecidedDecorationsList } from '../components/DecidedDecorationsList';
 import type { GraphInput } from '../lib/graphDerivation';
 import { zoneSummary } from '../lib/graphPorts';
 import { ZONE_LABELS } from '../config/deploymentsConfig';
@@ -91,7 +97,7 @@ function DecorationCard({ item, baseUrl }: { item: EnrichedItem; baseUrl: string
         <CardBody className="gap-2 p-2">
           <div className="relative flex h-24 items-center justify-center rounded-medium bg-default-100">
             {thumb ? (
-              <img src={thumb} alt={item.short_name || item.id} className="h-full w-full rounded-medium object-cover" />
+              <SpookyImage src={thumb} alt={item.short_name || item.id} ratio="auto" fit="cover" className="h-full w-full rounded-medium" />
             ) : (
               <span className="text-3xl">{decorationIcon(item.class_type)}</span>
             )}
@@ -123,6 +129,7 @@ export default function CompletePage() {
   const [itemsAdminUrl, setItemsAdminUrl] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const [summary, setSummary] = useState<StagingSummary | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -130,10 +137,12 @@ export default function CompletePage() {
       setLoading(true);
       setError(null);
       try {
-        const [metaResponse, adminUrl, graphResponse] = await Promise.all([
+        const [metaResponse, adminUrl, graphResponse, stagingResponse] = await Promise.all([
           getDeployment(deploymentId, ['zones']),
           getItemsAdminUrl(),
           getDeploymentGraph(deploymentId),
+          // Counts are additive and non-fatal: without them the server gate still protects Complete.
+          getStagingTotes(deploymentId).catch(() => null),
         ]);
         const meta = metaResponse.data?.metadata || metaResponse.data;
         const enrichedZones = buildZones(graphResponse.data as GraphInput);
@@ -142,6 +151,7 @@ export default function CompletePage() {
         setMetadata(meta);
         setZones(enrichedZones);
         setItemsAdminUrl(adminUrl || '');
+        setSummary(stagingResponse?.data?.staging_summary ?? null);
       } catch (e: any) {
         if (!cancelled) setError(e?.message || 'Failed to load deployment review.');
       } finally {
@@ -152,6 +162,23 @@ export default function CompletePage() {
       cancelled = true;
     };
   }, [deploymentId]);
+
+  async function handleNotDeployed(itemId: string) {
+    try {
+      setSummary(await resolveStagedDecorations(deploymentId, { [itemId]: { decision: 'not_deployed' } }));
+    } catch (e: any) {
+      toast.showError(`Could not save decision: ${e?.message}`);
+      throw e;
+    }
+  }
+
+  async function handleNeedsRepair(itemId: string, repairRecordId: string) {
+    setSummary(
+      await resolveStagedDecorations(deploymentId, {
+        [itemId]: { decision: 'needs_repair', repair_record_id: repairRecordId },
+      }),
+    );
+  }
 
   async function handleConfirm() {
     setConfirming(true);
@@ -167,6 +194,12 @@ export default function CompletePage() {
       console.error('[Complete] Error:', e);
       let msg = `Failed to complete deployment: ${e?.message}`;
       if (e?.message?.includes('already completed')) msg = 'This deployment is already completed.';
+      // Staging changed elsewhere since the page loaded: refresh the list instead of a generic failure.
+      if (e instanceof ApiError && e.details?.code === 'UNRESOLVED_STAGED_DECORATIONS') {
+        setSummary(e.details.summary);
+        setConfirmOpen(false);
+        msg = 'Some staged decorations still need a decision.';
+      }
       toast.showError(msg);
       setConfirming(false);
     }
@@ -179,6 +212,7 @@ export default function CompletePage() {
   const totalItems = zones.reduce((sum, z) => sum + z.items.length, 0);
   const totalConnections = zones.reduce((sum, z) => sum + z.connectionCount, 0);
   const totalUnwired = zones.reduce((sum, z) => sum + z.unwired, 0);
+  const unresolvedCount = summary?.unresolved ?? 0;
   const byClass: Record<string, number> = {};
   zones.forEach((z) => z.items.forEach((i) => (byClass[i.class || 'Other'] = (byClass[i.class || 'Other'] || 0) + 1)));
 
@@ -211,6 +245,35 @@ export default function CompletePage() {
           </Card>
         ))}
       </div>
+      {summary && summary.staged > 0 && (
+        <div className="mb-4 grid grid-cols-2 gap-4 sm:grid-cols-5" data-testid="staging-counts">
+          {[
+            { label: 'Staged decorations', value: summary.staged },
+            { label: 'Placed', value: summary.placed },
+            { label: 'Needs decision', value: summary.unresolved },
+            { label: 'Not deployed', value: summary.not_deployed },
+            { label: 'Needs repair', value: summary.needs_repair },
+          ].map((s) => (
+            <Card key={s.label}>
+              <CardBody className="items-center">
+                <div className="text-2xl font-semibold text-foreground">{s.value}</div>
+                <div className="text-xs text-default-500">{s.label}</div>
+              </CardBody>
+            </Card>
+          ))}
+        </div>
+      )}
+      {summary && (
+        <StagedDecorationsPanel
+          unresolved={summary.unresolved_items}
+          onNotDeployed={handleNotDeployed}
+          onNeedsRepair={handleNeedsRepair}
+          deploymentLabel={`${metadata.season} ${metadata.year} (${deploymentId})`}
+        />
+      )}
+      {summary && summary.resolved_items.length > 0 && (
+        <DecidedDecorationsList items={summary.resolved_items} baseUrl={itemsAdminUrl} />
+      )}
       {Object.keys(byClass).length > 0 && (
         <div className="mb-6 flex flex-wrap gap-2">
           {Object.entries(byClass).map(([cls, count]) => (
@@ -258,13 +321,13 @@ export default function CompletePage() {
                 ]
                   .filter((g) => g.items.length > 0)
                   .map((g) => (
-                    <div key={g.label}>
+                    <div key={g.label} className="rounded-medium border border-default-200 p-3">
                       <div className="mb-2 text-sm font-semibold text-default-600">
                         {g.label} <span className="text-default-400">{g.items.length}</span>
                       </div>
-                      <ul className="flex flex-col gap-1">
+                      <ul className="grid grid-cols-2 gap-x-4 gap-y-1 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                         {g.items.map((item) => (
-                          <li key={item.id}>
+                          <li key={item.id} className="min-w-0">
                             <HeroLink
                               href={`${itemsAdminUrl}/${item.id}`}
                               isExternal
@@ -272,7 +335,7 @@ export default function CompletePage() {
                               className="flex items-center gap-2 text-foreground"
                             >
                               <span>{g.icon}</span>
-                              {item.short_name || item.id}
+                              <span className="truncate">{item.short_name || item.id}</span>
                             </HeroLink>
                           </li>
                         ))}
@@ -297,6 +360,7 @@ export default function CompletePage() {
             <Button
               color="primary"
               onPress={() => setConfirmOpen(true)}
+              isDisabled={unresolvedCount > 0}
               data-testid="complete-trigger"
             >
               Confirm &amp; Complete Deployment

@@ -201,7 +201,7 @@ function ReviewBody({
         </p>
       </ModalHeader>
       <ModalBody>
-        <div className="mb-2 flex flex-wrap gap-6 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 px-5 py-3 text-white">
+        <div className="mb-2 flex flex-wrap gap-6 rounded-lg bg-gradient-to-br from-primary-600 to-primary-400 px-5 py-3 text-white">
           <SummaryItem label="Vendor" value={receiptMeta.vendor || 'N/A'} />
           <SummaryItem label="Date" value={fmtDate(receiptMeta.purchase_date)} />
           <SummaryItem label="Receipt Total" value={fmtCurrency(receiptMeta.receipt_total)} />

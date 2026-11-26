@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Button, ButtonGroup, Input } from '@heroui/react';
-import { Printer, Plus, X, GripVertical, FilePlus2 } from 'lucide-react';
+import { Printer, Plus, X, GripVertical, FilePlus2, RotateCw } from 'lucide-react';
 import {
   DndContext,
   DragOverlay,
@@ -19,8 +19,10 @@ import { Breadcrumbs, PageHeader, LoadingState, ErrorState, EmptyState, Typograp
 import { storageAPI } from '../api/storageApi';
 import type { StorageUnit } from '../config/storageConfig';
 import { LabelTemplate, LABEL_H_IN, LABEL_W_IN } from '../components/LabelTemplate';
-import { AVERY_5889, type LabelOrientation, type LabelRotation } from '../lib/averySheet';
+import { LidLabelTemplate, LID_W_IN, LID_H_IN } from '../components/LidLabelTemplate';
+import { AVERY_5889, AVERY_8167, type LabelKind } from '../lib/averySheet';
 import { readQueue, writeQueue } from '../lib/labelQueue';
+import { nextTurn, turnProps, TURN_LABEL, encodeSlot, decodeSlot, type LabelTurn, type Slot } from '../lib/labelTurn';
 import type { LabelItem } from '../lib/labelContents';
 
 const POOL_PREFIX = 'pool:';
@@ -28,8 +30,21 @@ const ITEM_PREFIX = 'item:';
 const SLOT_PREFIX = 'slot:';
 const POOL_DROP = 'pool-drop';
 const PREVIEW_SCALE = 0.7;
-const PER_PAGE = AVERY_5889.perPage;
 const SLOT_NAMES = ['Top', 'Bottom'];
+// Side labels are usually stuck on two faces of a tote, so each add places a pair by default.
+const COPIES_KEY = 'storage.labelCopies.v1';
+const DEFAULT_COPIES = 2;
+const MAX_COPIES = 10;
+
+function loadCopies(): number {
+  try {
+    const n = Math.floor(Number(localStorage.getItem(COPIES_KEY)));
+    if (n >= 1 && n <= MAX_COPIES) return n;
+  } catch {
+    /* storage unavailable — use default */
+  }
+  return DEFAULT_COPIES;
+}
 
 interface Offsets {
   x: number;
@@ -44,31 +59,43 @@ interface Offsets {
 const DEFAULT_OFFSETS: Offsets = { x: AVERY_5889.left, y: AVERY_5889.top, gap: AVERY_5889.gap, inset: 0.125 };
 const slotTop = (base: number, i: number, gap: number) => base + i * (LABEL_H_IN + gap);
 const OFFSETS_KEY = 'storage.labelOffsets.v4';
+// Lid labels (#716) tune separately: rows touch on 8167, so the inset is small and only x/y nudges apply.
+const LID_DEFAULT_OFFSETS: Offsets = { x: AVERY_8167.left, y: AVERY_8167.top, gap: 0, inset: 0.03 };
+const LID_OFFSETS_KEY = 'storage.lidLabelOffsets.v1';
+const LID_PREVIEW_SCALE = 0.9;
 
-function loadOffsets(): Offsets {
+const perPageOf = (kind: LabelKind) => (kind === 'lid' ? AVERY_8167.perPage : AVERY_5889.perPage);
+const labelSize = (kind: LabelKind) => (kind === 'lid' ? { w: LID_W_IN, h: LID_H_IN } : { w: LABEL_W_IN, h: LABEL_H_IN });
+/** Top-left of cell `ci` (0-based within a sheet) in inches. Side: two stacked cards. Lid: 4x20 grid, row-major. */
+function cellPos(kind: LabelKind, ci: number, off: Offsets) {
+  if (kind === 'lid') return { left: off.x + (ci % AVERY_8167.cols) * AVERY_8167.pitchX, top: off.y + Math.floor(ci / AVERY_8167.cols) * AVERY_8167.pitchY };
+  return { left: off.x, top: slotTop(off.y, ci, off.gap) };
+}
+
+function loadOffsets(key = OFFSETS_KEY, defaults = DEFAULT_OFFSETS): Offsets {
   try {
-    const raw = localStorage.getItem(OFFSETS_KEY);
-    if (raw) return { ...DEFAULT_OFFSETS, ...JSON.parse(raw) };
+    const raw = localStorage.getItem(key);
+    if (raw) return { ...defaults, ...JSON.parse(raw) };
   } catch {
     /* storage unavailable — use defaults */
   }
-  return DEFAULT_OFFSETS;
+  return defaults;
 }
 
 
 /** Slots are the model: index 2n = top card of sheet n, 2n+1 = bottom. null = blank card. */
-function normalize(slots: (string | null)[]): (string | null)[] {
+function normalize(slots: Slot[], perPage: number = AVERY_5889.perPage): Slot[] {
   const out = [...slots];
-  while (out.length < PER_PAGE || out.length % PER_PAGE !== 0) out.push(null);
+  while (out.length < perPage || out.length % perPage !== 0) out.push(null);
   return out;
 }
 
-function PoolRow({ unit, onAdd, disabled }: { unit: StorageUnit; onAdd: () => void; disabled: boolean }) {
+function PoolRow({ unit, onAdd, onSheet }: { unit: StorageUnit; onAdd: () => void; onSheet: number }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: POOL_PREFIX + unit.id });
   return (
     <div
       ref={setNodeRef}
-      className={`flex items-center gap-2 rounded-lg border border-default-200 p-2 ${isDragging ? 'opacity-40' : ''} ${disabled ? 'opacity-60' : ''}`}
+      className={`flex items-center gap-2 rounded-lg border border-default-200 p-2 ${isDragging ? 'opacity-40' : ''} ${onSheet > 0 ? 'bg-default-50' : ''}`}
       data-testid={`pool-${unit.id}`}
     >
       <button type="button" className="cursor-grab text-default-400" aria-label={`Drag ${unit.short_name}`} {...attributes} {...listeners}>
@@ -76,10 +103,10 @@ function PoolRow({ unit, onAdd, disabled }: { unit: StorageUnit; onAdd: () => vo
       </button>
       <div className="min-w-0 flex-1">
         <Typography type="body-sm" as="div" className="truncate text-foreground">{unit.short_name}</Typography>
-        <Typography type="body-xs" as="div" className="truncate text-default-500">{unit.id}{disabled ? ' · on sheet' : ''}</Typography>
+        <Typography type="body-xs" as="div" className="truncate text-default-500">{unit.id}{onSheet > 0 ? ` · ×${onSheet} on sheet` : ''}</Typography>
       </div>
       <SeasonChip value={String(unit.season ?? '')} label={String(unit.season ?? '—')} />
-      <Button isIconOnly size="sm" variant="flat" isDisabled={disabled} aria-label={`Add ${unit.short_name}`} onPress={onAdd}>
+      <Button isIconOnly size="sm" variant="flat" aria-label={`Add ${unit.short_name}`} onPress={onAdd}>
         <Plus size={16} />
       </Button>
     </div>
@@ -88,25 +115,30 @@ function PoolRow({ unit, onAdd, disabled }: { unit: StorageUnit; onAdd: () => vo
 
 /** One card position on a sheet: a drop target; when filled, also draggable to another slot. */
 function SheetSlot({
+  kind,
   index,
   unit,
   contents,
   inset,
   offsets,
-  orientation,
-  rotation,
+  turn,
+  onRotate,
   onRemove,
 }: {
+  kind: LabelKind;
   index: number;
   unit: StorageUnit | null;
   contents: LabelItem[] | null;
   inset: number;
   offsets: Offsets;
-  orientation: LabelOrientation;
-  rotation: LabelRotation;
+  turn: LabelTurn;
+  onRotate: () => void;
   onRemove: () => void;
 }) {
-  const ci = index % PER_PAGE;
+  const ci = index % perPageOf(kind);
+  const lid = kind === 'lid';
+  const size = labelSize(kind);
+  const pos = cellPos(kind, ci, offsets);
   const drop = useDroppable({ id: SLOT_PREFIX + index });
   const drag = useDraggable({ id: ITEM_PREFIX + index, disabled: !unit });
   return (
@@ -116,18 +148,37 @@ function SheetSlot({
         drag.setNodeRef(node);
       }}
       className={`absolute ${drag.isDragging ? 'opacity-40' : ''} ${unit ? '' : `border-2 border-dashed ${drop.isOver ? 'border-primary bg-primary-50' : 'border-default-300'}`} ${unit && drop.isOver ? 'outline outline-4 outline-primary' : ''}`}
-      style={{
-        left: `${offsets.x}in`,
-        top: `${slotTop(offsets.y, ci, offsets.gap)}in`,
-        width: `${LABEL_W_IN}in`,
-        height: `${LABEL_H_IN}in`,
-      }}
+      style={{ left: `${pos.left}in`, top: `${pos.top}in`, width: `${size.w}in`, height: `${size.h}in` }}
       data-testid={`slot-${index}`}
+      {...(lid && unit ? { ...drag.attributes, ...drag.listeners } : {})}
     >
-      {unit ? (
+      {unit && lid ? (
         <>
-          <LabelTemplate unit={unit} contents={contents} inset={inset} orientation={orientation} rotation={rotation} />
+          <LidLabelTemplate unit={unit} inset={inset} />
+          <button
+            type="button"
+            className="absolute right-[0.02in] top-[0.02in] flex h-[0.14in] w-[0.14in] items-center justify-center rounded-full bg-neutral-900/80 text-white"
+            aria-label={`Remove ${unit.short_name}`}
+            data-testid={`remove-${unit.id}`}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={onRemove}
+          >
+            <X className="h-[0.1in] w-[0.1in]" />
+          </button>
+        </>
+      ) : unit ? (
+        <>
+          <LabelTemplate unit={unit} contents={contents} inset={inset} {...turnProps(turn)} />
           <div className="absolute right-[0.1in] top-[0.1in] flex gap-[0.08in]">
+            <button
+              type="button"
+              className="flex h-[0.4in] w-[0.4in] items-center justify-center rounded bg-neutral-900/80 text-white"
+              aria-label={`Rotate ${unit.short_name} label, now ${TURN_LABEL[turn]}`}
+              data-testid={`rotate-${index}`}
+              onClick={onRotate}
+            >
+              <RotateCw className="h-[0.28in] w-[0.28in]" />
+            </button>
             <button
               type="button"
               className="flex h-[0.4in] w-[0.4in] cursor-grab items-center justify-center rounded bg-neutral-900/80 text-white"
@@ -149,8 +200,8 @@ function SheetSlot({
           </div>
         </>
       ) : (
-        <div className="flex h-full items-center justify-center text-[16pt] text-neutral-500">
-          Blank card · drop a label here
+        <div className={`flex h-full items-center justify-center text-neutral-500 ${lid ? 'text-[7pt]' : 'text-[16pt]'}`}>
+          {lid ? 'blank' : 'Blank card · drop a label here'}
         </div>
       )}
     </div>
@@ -159,23 +210,25 @@ function SheetSlot({
 
 /** Real-size print pages: only pages that have at least one label, blank slots left empty. */
 function PrintPages({
+  kind,
   slots,
   byId,
   offsets,
   contentsById,
-  orientation,
-  rotation,
 }: {
-  orientation: LabelOrientation;
-  rotation: LabelRotation;
-  slots: (string | null)[];
+  kind: LabelKind;
+  slots: Slot[];
   byId: Map<string, StorageUnit>;
   offsets: Offsets;
   contentsById: Record<string, LabelItem[]>;
 }) {
-  const pages: (StorageUnit | null)[][] = [];
-  for (let i = 0; i < slots.length; i += PER_PAGE) {
-    const page = slots.slice(i, i + PER_PAGE).map((id) => (id ? byId.get(id) ?? null : null));
+  const perPage = perPageOf(kind);
+  const pages: ({ unit: StorageUnit; turn: LabelTurn } | null)[][] = [];
+  for (let i = 0; i < slots.length; i += perPage) {
+    const page = slots.slice(i, i + perPage).map((sl) => {
+      const unit = sl ? byId.get(sl.id) : undefined;
+      return sl && unit ? { unit, turn: sl.turn } : null;
+    });
     if (page.some(Boolean)) pages.push(page);
   }
   return (
@@ -192,11 +245,17 @@ function PrintPages({
             overflow: 'hidden',
           }}
         >
-          {page.map((u, ci) => {
-            if (!u) return null;
+          {page.map((cell, ci) => {
+            if (!cell) return null;
+            const { unit: u, turn } = cell;
+            const pos = cellPos(kind, ci, offsets);
             return (
-              <div key={u.id} className="absolute" style={{ left: `${offsets.x}in`, top: `${slotTop(offsets.y, ci, offsets.gap)}in` }}>
-                <LabelTemplate unit={u} contents={contentsById[u.id] ?? []} inset={offsets.inset} orientation={orientation} rotation={rotation} />
+              <div key={ci} className="absolute" style={{ left: `${pos.left}in`, top: `${pos.top}in` }}>
+                {kind === 'lid' ? (
+                  <LidLabelTemplate unit={u} inset={offsets.inset} />
+                ) : (
+                  <LabelTemplate unit={u} contents={contentsById[u.id] ?? []} inset={offsets.inset} {...turnProps(turn)} />
+                )}
               </div>
             );
           })}
@@ -220,18 +279,28 @@ export default function LabelsPage() {
   const [units, setUnits] = useState<StorageUnit[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [slots, setSlots] = useState<(string | null)[]>(normalize([]));
+  const [slots, setSlots] = useState<Slot[]>(normalize([]));
   const [contentsById, setContentsById] = useState<Record<string, LabelItem[]>>({});
   const [search, setSearch] = useState('');
+  const [copies, setCopies] = useState<number>(loadCopies);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [offsets, setOffsets] = useState<Offsets>(loadOffsets);
+  const [sideOffsets, setSideOffsets] = useState<Offsets>(() => loadOffsets());
+  const [lidOffsets, setLidOffsets] = useState<Offsets>(() => loadOffsets(LID_OFFSETS_KEY, LID_DEFAULT_OFFSETS));
+  // Which stock this print job targets (#716). Not persisted, like orientation.
+  const [kind, setKind] = useState<LabelKind>('side');
+  const lid = kind === 'lid';
+  const offsets = lid ? lidOffsets : sideOffsets;
+  const perPage = perPageOf(kind);
+  const scale = lid ? LID_PREVIEW_SCALE : PREVIEW_SCALE;
+  const guideOff = lid ? LID_DEFAULT_OFFSETS : DEFAULT_OFFSETS;
   // Per print job (not persisted). Tall = label turned 90deg on the same wide stock.
-  const [orientation, setOrientation] = useState<LabelOrientation>('wide');
-  const [rotation, setRotation] = useState<LabelRotation>('cw');
+  // Default turn for newly added labels; the rotate button also applies it to every label already on the sheet.
+  const [turn, setTurn] = useState<LabelTurn>('wide');
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(KeyboardSensor));
 
-  const filledIds = useMemo(() => slots.filter((s): s is string => Boolean(s)), [slots]);
+  const filled = useMemo(() => slots.filter((s): s is NonNullable<Slot> => Boolean(s)), [slots]);
+  const filledIds = useMemo(() => filled.map((s) => s.id), [filled]);
 
   async function loadUnits() {
     setLoading(true);
@@ -241,8 +310,10 @@ export default function LabelsPage() {
       setUnits(all);
       // Queue (from detail pages) plus a deep link from elsewhere: /storage/labels?ids=A,B
       const preset = (searchParams.get('ids') ?? '').split(',').filter(Boolean);
-      const ids = [...new Set([...readQueue(), ...preset])].filter((id) => all.some((u) => u.id === id));
-      setSlots(normalize(ids));
+      const queued = readQueue().map(decodeSlot);
+      // Repeats in the queue are copies; a deep-link id only adds one if it isn't already queued.
+      const entries = [...queued, ...preset.filter((id) => !queued.some((q) => q.id === id)).map((id) => decodeSlot(id))].filter((e) => all.some((u) => u.id === e.id));
+      setSlots(normalize(entries, perPage));
     } catch (e: any) {
       setError(e?.message ?? 'Failed to load storage units');
     } finally {
@@ -257,12 +328,13 @@ export default function LabelsPage() {
 
   // The queue mirrors what is on the sheet (positions are session-only; blanks are not saved).
   useEffect(() => {
-    if (!loading) writeQueue(filledIds);
-  }, [filledIds, loading]);
+    if (!loading) writeQueue(filled.map(encodeSlot));
+  }, [filled, loading]);
 
   // Contents come from the unit detail endpoint (contents_details); fetch once per unit on the sheet.
   useEffect(() => {
-    const missing = filledIds.filter((id) => !(id in contentsById));
+    if (lid) return; // lid labels carry no contents
+    const missing = [...new Set(filledIds)].filter((id) => !(id in contentsById));
     if (missing.length === 0) return;
     let live = true;
     missing.forEach(async (id) => {
@@ -277,13 +349,13 @@ export default function LabelsPage() {
     return () => {
       live = false;
     };
-  }, [filledIds, contentsById]);
+  }, [filledIds, contentsById, lid]);
 
   function updateOffset(key: keyof Offsets, value: string) {
     const next = { ...offsets, [key]: Number(value) || 0 };
-    setOffsets(next);
+    (lid ? setLidOffsets : setSideOffsets)(next);
     try {
-      localStorage.setItem(OFFSETS_KEY, JSON.stringify(next));
+      localStorage.setItem(lid ? LID_OFFSETS_KEY : OFFSETS_KEY, JSON.stringify(next));
     } catch {
       /* ignore */
     }
@@ -292,25 +364,68 @@ export default function LabelsPage() {
   const byId = useMemo(() => new Map(units.map((u) => [u.id, u])), [units]);
   const pool = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return units.filter((u) => !q || `${u.short_name} ${u.id} ${u.season}`.toLowerCase().includes(q));
-  }, [units, search]);
+    // Self units (shelving) have no lid, so lid mode lists totes only.
+    return units.filter((u) => (!lid || u.class_type === 'Tote') && (!q || `${u.short_name} ${u.id} ${u.season}`.toLowerCase().includes(q)));
+  }, [units, search, lid]);
+
+  function switchKind(next: LabelKind) {
+    if (next === kind) return;
+    const keep = filled.filter((s) => next === 'side' || byId.get(s.id)?.class_type === 'Tote');
+    setKind(next);
+    setSlots(normalize(keep, perPageOf(next)));
+  }
+
+  // Lid sheets are 80-up, so reusing a partly peeled sheet matters: leading blanks = labels already used.
+  const startAt = Math.max(0, slots.findIndex(Boolean)) + 1;
+  function setStartAt(v: string) {
+    const n = Math.min(Math.max(Math.floor(Number(v)) || 1, 1), AVERY_8167.perPage);
+    setSlots(normalize([...Array(n - 1).fill(null), ...filled], perPage));
+  }
 
   // Sheets that will actually print = those holding at least one label.
-  const sheetCount = Math.ceil(slots.length / PER_PAGE);
-  const printSheets = Array.from({ length: sheetCount }, (_, p) => slots.slice(p * PER_PAGE, p * PER_PAGE + PER_PAGE)).filter((pg) =>
+  const sheetCount = Math.ceil(slots.length / perPage);
+  const printSheets = Array.from({ length: sheetCount }, (_, p) => slots.slice(p * perPage, p * perPage + perPage)).filter((pg) =>
     pg.some(Boolean),
   ).length;
-  const blankSlots = printSheets * PER_PAGE - filledIds.length;
+  const blankSlots = printSheets * perPage - filledIds.length;
 
-  const place = (id: string, at?: number) =>
+  // Adds `count` copies of a tote, filling the next free slots (a new sheet is added when full).
+  const place = (id: string, count = 1) =>
     setSlots((prev) => {
-      if (prev.includes(id)) return prev;
       const next = [...prev];
-      const target = at ?? next.indexOf(null);
-      if (target >= 0 && target < next.length) next[target] = id;
-      else next.push(id);
-      return normalize(next);
+      for (let c = 0; c < count; c++) {
+        const target = next.indexOf(null);
+        if (target >= 0) next[target] = { id, turn: lid ? 'wide' : turn };
+        else next.push({ id, turn: lid ? 'wide' : turn });
+      }
+      return normalize(next, perPage);
     });
+
+  const copiesPerAdd = lid ? 1 : copies;
+  const onSheetCount = useMemo(() => {
+    const m = new Map<string, number>();
+    filledIds.forEach((id) => m.set(id, (m.get(id) ?? 0) + 1));
+    return m;
+  }, [filledIds]);
+
+  function rotateAt(index: number) {
+    setSlots((prev) => prev.map((s, k) => (k === index && s ? { ...s, turn: nextTurn(s.turn) } : s)));
+  }
+  function rotateAll() {
+    const t = nextTurn(turn);
+    setTurn(t);
+    setSlots((prev) => prev.map((s) => (s ? { ...s, turn: t } : s)));
+  }
+
+  function updateCopies(v: string) {
+    const n = Math.min(Math.max(Math.floor(Number(v)) || 1, 1), MAX_COPIES);
+    setCopies(n);
+    try {
+      localStorage.setItem(COPIES_KEY, String(n));
+    } catch {
+      /* ignore */
+    }
+  }
 
   function onDragStart(e: DragStartEvent) {
     setActiveId(String(e.active.id));
@@ -328,9 +443,9 @@ export default function LabelsPage() {
       if (!to.startsWith(SLOT_PREFIX)) return;
       const j = Number(to.slice(SLOT_PREFIX.length));
       setSlots((prev) => {
-        const next = prev.map((s) => (s === id ? null : s)); // moving an already-placed label
-        next[j] = id; // anything that was in the slot returns to the list
-        return normalize(next);
+        const next = [...prev];
+        next[j] = { id, turn: lid ? 'wide' : turn }; // drops one copy here; anything that was in the slot returns to the list
+        return normalize(next, perPage);
       });
       return;
     }
@@ -355,7 +470,7 @@ export default function LabelsPage() {
     if (!activeId) return null;
     if (activeId.startsWith(POOL_PREFIX)) return byId.get(activeId.slice(POOL_PREFIX.length)) ?? null;
     if (activeId.startsWith(ITEM_PREFIX)) {
-      const id = slots[Number(activeId.slice(ITEM_PREFIX.length))];
+      const id = slots[Number(activeId.slice(ITEM_PREFIX.length))]?.id;
       return id ? byId.get(id) ?? null : null;
     }
     return null;
@@ -386,11 +501,23 @@ export default function LabelsPage() {
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[20rem_1fr]">
               <div className="flex flex-col gap-2">
                 <Input size="sm" placeholder="Search units" value={search} onValueChange={setSearch} aria-label="Search units" />
-                <Typography type="body-xs" className="text-default-500">Drag a unit onto a card slot, or press +. Drop a placed label here to take it off the sheet.</Typography>
+                {!lid && (
+                  <Input
+                    size="sm"
+                    type="number"
+                    min={1}
+                    max={MAX_COPIES}
+                    label="Copies per add"
+                    value={String(copies)}
+                    onValueChange={updateCopies}
+                    data-testid="copies"
+                  />
+                )}
+                <Typography type="body-xs" className="text-default-500">Press + to add {copiesPerAdd === 1 ? 'a label' : `${copiesPerAdd} copies`}, or drag a unit onto a card slot to place one. Drop a placed label here to take it off the sheet.</Typography>
                 <PoolDrop>
                   <div className="flex max-h-[70vh] flex-col gap-2 overflow-y-auto">
                     {pool.map((u) => (
-                      <PoolRow key={u.id} unit={u} disabled={filledIds.includes(u.id)} onAdd={() => place(u.id)} />
+                      <PoolRow key={u.id} unit={u} onSheet={onSheetCount.get(u.id) ?? 0} onAdd={() => place(u.id, copiesPerAdd)} />
                     ))}
                   </div>
                 </PoolDrop>
@@ -402,33 +529,42 @@ export default function LabelsPage() {
                     {filledIds.length} label{filledIds.length === 1 ? '' : 's'} · {printSheets} sheet{printSheets === 1 ? '' : 's'} to print
                   </Typography>
                   <ButtonGroup size="sm" variant="flat">
-                    {(['wide', 'tall'] as const).map((o) => (
-                      <Button key={o} color={orientation === o ? 'primary' : 'default'} onPress={() => setOrientation(o)} data-testid={`orientation-${o}`} aria-pressed={orientation === o}>
-                        {o === 'wide' ? 'Wide (6×4)' : 'Tall (turned)'}
+                    {(['side', 'lid'] as const).map((k) => (
+                      <Button key={k} color={kind === k ? 'primary' : 'default'} onPress={() => switchKind(k)} data-testid={`kind-${k}`} aria-pressed={kind === k}>
+                        {k === 'side' ? 'Side card (6×4)' : 'Lid (8167)'}
                       </Button>
                     ))}
                   </ButtonGroup>
-                  {orientation === 'tall' && (
-                    <ButtonGroup size="sm" variant="flat">
-                      {(['cw', 'ccw'] as const).map((r) => (
-                        <Button key={r} color={rotation === r ? 'primary' : 'default'} onPress={() => setRotation(r)} data-testid={`rotation-${r}`} aria-pressed={rotation === r}>
-                          {r === 'cw' ? 'Turn right' : 'Turn left'}
-                        </Button>
-                      ))}
-                    </ButtonGroup>
+                  {!lid && (
+                    <Button size="sm" variant="flat" color="primary" startContent={<RotateCw size={16} />} onPress={rotateAll} data-testid="rotate-label" aria-label={`Rotate all labels, now ${TURN_LABEL[turn]}`}>
+                      Rotate all · {TURN_LABEL[turn]}
+                    </Button>
                   )}
-                  <Button size="sm" variant="flat" startContent={<FilePlus2 size={16} />} onPress={() => setSlots((p) => normalize([...p, null, null]))} data-testid="add-sheet">
+                  {lid && (
+                    <Input
+                      size="sm"
+                      type="number"
+                      min={1}
+                      max={AVERY_8167.perPage}
+                      className="w-36"
+                      label="Start at label"
+                      value={String(startAt)}
+                      onValueChange={setStartAt}
+                      data-testid="start-at"
+                    />
+                  )}
+                  <Button size="sm" variant="flat" startContent={<FilePlus2 size={16} />} onPress={() => setSlots((p) => normalize([...p, ...Array(perPage).fill(null)], perPage))} data-testid="add-sheet">
                     Add sheet
                   </Button>
                   {filledIds.length > 0 && (
-                    <Button size="sm" variant="light" color="danger" className="ml-auto" onPress={() => setSlots(normalize([]))} data-testid="clear-sheet">
+                    <Button size="sm" variant="light" color="danger" className="ml-auto" onPress={() => setSlots(normalize([], perPage))} data-testid="clear-sheet">
                       Clear
                     </Button>
                   )}
                 </div>
-                {orientation === 'tall' && (
+                {!lid && filled.some((sl) => sl.turn !== 'wide') && (
                   <Typography type="body-xs" className="text-default-500" data-testid="tall-hint">
-                    Tall turns each label 90° on the same 6×4 card. Peel it and stick it with the card's {rotation === 'cw' ? 'right' : 'left'} edge at the tote's top.
+                    Tall labels turn 90° on the same 6×4 card. Stick a right-turned one with the card's right edge at the tote's top, a left-turned one with its left edge. Use the rotate button on a label to turn just that one.
                   </Typography>
                 )}
                 {filledIds.length > 0 && blankSlots > 0 && (
@@ -441,47 +577,52 @@ export default function LabelsPage() {
                   {Array.from({ length: sheetCount }, (_, p) => (
                     <div key={p}>
                       <Typography type="body-xs" className="mb-1 text-default-500">Sheet {p + 1} · top edge is at the top</Typography>
-                      <div style={{ width: `${AVERY_5889.pageW * PREVIEW_SCALE}in`, height: `${AVERY_5889.pageH * PREVIEW_SCALE}in` }}>
+                      <div style={{ width: `${AVERY_5889.pageW * scale}in`, height: `${AVERY_5889.pageH * scale}in` }}>
                         <div
                           className="relative bg-white shadow-lg"
                           style={{
                             width: `${AVERY_5889.pageW}in`,
                             height: `${AVERY_5889.pageH}in`,
-                            transform: `scale(${PREVIEW_SCALE})`,
+                            transform: `scale(${scale})`,
                             transformOrigin: 'top left',
                           }}
                           data-testid={`preview-page-${p}`}
                         >
-                          {Array.from({ length: PER_PAGE }, (_, ci) => {
-                            const top = slotTop(AVERY_5889.top, ci, AVERY_5889.gap);
+                          {Array.from({ length: perPage }, (_, ci) => {
+                            const g = cellPos(kind, ci, guideOff);
+                            const size = labelSize(kind);
                             return (
                               <div key={`g${ci}`}>
                                 <div
                                   className="absolute border border-dashed border-primary"
-                                  style={{ left: `${AVERY_5889.left}in`, top: `${top}in`, width: `${LABEL_W_IN}in`, height: `${LABEL_H_IN}in` }}
+                                  style={{ left: `${g.left}in`, top: `${g.top}in`, width: `${size.w}in`, height: `${size.h}in` }}
                                 >
                                   <div className="absolute border border-dotted border-danger" style={{ inset: `${offsets.inset}in` }} />
                                 </div>
-                                <div className="absolute text-[12pt] text-neutral-500" style={{ left: `${AVERY_5889.left}in`, top: `${top - 0.3}in` }}>
-                                  {SLOT_NAMES[ci]} card
-                                </div>
+                                {!lid && (
+                                  <div className="absolute text-[12pt] text-neutral-500" style={{ left: `${g.left}in`, top: `${g.top - 0.3}in` }}>
+                                    {SLOT_NAMES[ci]} card
+                                  </div>
+                                )}
                               </div>
                             );
                           })}
-                          {Array.from({ length: PER_PAGE }, (_, ci) => {
-                            const index = p * PER_PAGE + ci;
-                            const id = slots[index];
+                          {Array.from({ length: perPage }, (_, ci) => {
+                            const index = p * perPage + ci;
+                            const slot = slots[index];
+                            const id = slot?.id;
                             const unit = id ? byId.get(id) ?? null : null;
                             return (
                               <SheetSlot
                                 key={index}
+                                kind={kind}
                                 index={index}
                                 unit={unit}
                                 contents={id ? contentsById[id] ?? null : null}
                                 inset={offsets.inset}
                                 offsets={offsets}
-                                orientation={orientation}
-                                rotation={rotation}
+                                turn={slot?.turn ?? 'wide'}
+                                onRotate={() => rotateAt(index)}
                                 onRemove={() => setSlots((prev) => prev.map((s, k) => (k === index ? null : s)))}
                               />
                             );
@@ -492,13 +633,15 @@ export default function LabelsPage() {
                   ))}
                 </div>
                 <Typography type="body-xs" className="text-default-500">
-                  Dashed blue = Avery 5889 card outline. Dotted red = safe area (content stays inside it, clear of the perforation). To reuse a half sheet, put your labels in the cards that are still attached and leave the others blank.
+                  {lid
+                    ? 'Dashed blue = Avery 8167 label outline. Dotted red = safe area. Rows touch on this stock, so a vertical misalignment clips text. To reuse a partly used sheet, set "Start at label" to the first label still on the sheet.'
+                    : 'Dashed blue = Avery 5889 card outline. Dotted red = safe area (content stays inside it, clear of the perforation). To reuse a half sheet, put your labels in the cards that are still attached and leave the others blank.'}
                 </Typography>
 
                 <details className="rounded-lg border border-default-200 p-3">
                   <summary className="cursor-pointer text-sm text-foreground">Print alignment (inches)</summary>
                   <div className="mt-3 flex flex-wrap gap-3">
-                    {(['x', 'y', 'gap', 'inset'] as const).map((k) => (
+                    {((lid ? ['x', 'y', 'inset'] : ['x', 'y', 'gap', 'inset']) as ('x' | 'y' | 'gap' | 'inset')[]).map((k) => (
                       <Input
                         key={k}
                         size="sm"
@@ -512,7 +655,9 @@ export default function LabelsPage() {
                     ))}
                   </div>
                   <Typography type="body-xs" className="mt-2 text-default-500">
-                    Defaults are Avery's 5889 template (1.25 in left and top, 0.5 in gap). Print at 100% scale with margins set to none; adjust only if the card edges drift on your printer.
+                    {lid
+                      ? "Defaults are Avery's 8167 template (0.3 in left, 0.5 in top). Print at 100% scale with margins set to none; adjust only if the labels drift on your printer."
+                      : "Defaults are Avery's 5889 template (1.25 in left and top, 0.5 in gap). Print at 100% scale with margins set to none; adjust only if the card edges drift on your printer."}
                   </Typography>
                 </details>
               </div>
@@ -526,7 +671,7 @@ export default function LabelsPage() {
 
           {/* Print-only: real-size pages, blank slots left empty. Everything else is hidden by index.css @media print. */}
           <div className="print-area hidden print:block" aria-hidden>
-            <PrintPages orientation={orientation} rotation={rotation} slots={slots} byId={byId} offsets={offsets} contentsById={contentsById} />
+            <PrintPages kind={kind} slots={slots} byId={byId} offsets={offsets} contentsById={contentsById} />
           </div>
         </>
       )}

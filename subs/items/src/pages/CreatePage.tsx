@@ -40,7 +40,7 @@ export default function CreatePage() {
 
   if (!hasMinRole('builder')) {
     return (
-      <div className="p-4 max-w-xl mx-auto">
+      <div>
         <p className="text-danger">Insufficient permissions to create items.</p>
         <Button className="mt-4" onPress={() => navigate('/')}>Go Back</Button>
       </div>
@@ -83,7 +83,7 @@ export default function CreatePage() {
   const classTypes = selectedClass ? CLASS_HIERARCHY[selectedClass]?.types ?? [] : [];
 
   return (
-    <div className="p-4 max-w-2xl mx-auto">
+    <div>
       <Breadcrumbs crumbs={[{ label: 'Items', to: '/' }, { label: 'Create Item' }]} />
       <PageHeader title="Create Item" />
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import type { StorageUnit } from '../config/storageConfig';
 import { AVERY_5889, type LabelOrientation, type LabelRotation } from '../lib/averySheet';
-import { capGroups, groupContents, type LabelItem } from '../lib/labelContents';
+import { capGroups, groupContents, supplyGroups, type LabelItem } from '../lib/labelContents';
 
 /** Card size in inches, from the Avery 5889 template (lib/averySheet.ts). */
 export const LABEL_W_IN = AVERY_5889.cardW;
@@ -10,7 +10,7 @@ export const LABEL_H_IN = AVERY_5889.cardH;
 const MAX_GROUPS = 12;
 const PRINT_DATE = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
-const SEASON_BAND: Record<string, string> = {
+export const SEASON_BAND: Record<string, string> = {
   Halloween: 'bg-orange-500',
   Christmas: 'bg-green-600',
   Shared: 'bg-slate-500',
@@ -54,18 +54,27 @@ export function LabelTemplate({
 }) {
   const qr = useQr(unitUrl(unit.id));
   const season = String(unit.season ?? ''); // drives the color band only
+  // Supply totes carry a supplies list, not packed items (#708).
+  const isSupply = Boolean(unit.is_supply_tote);
+  const allGroups = isSupply ? supplyGroups(unit.supplies) : groupContents(contents ?? []);
   // Prefer the live contents list; fall back to the unit's own count while it loads.
-  const itemCount = contents ? contents.length : typeof unit.contents_count === 'number' ? unit.contents_count : null;
+  const itemCount = isSupply
+    ? allGroups.length
+    : contents
+      ? contents.length
+      : typeof unit.contents_count === 'number'
+        ? unit.contents_count
+        : null;
   // Printed date lets you spot a stale label; the QR always resolves to live data.
   const printed = PRINT_DATE.format(new Date());
-  const { shown, hidden } = capGroups(groupContents(contents ?? []), MAX_GROUPS);
+  const { shown, hidden } = capGroups(allGroups, MAX_GROUPS);
 
-  const counts = [itemCount === null ? null : `${itemCount} ${itemCount === 1 ? 'item' : 'items'}`, unit.location ? String(unit.location) : null]
+  const counts = [itemCount === null ? null : `${itemCount} ${isSupply ? (itemCount === 1 ? 'supply' : 'supplies') : itemCount === 1 ? 'item' : 'items'}`, unit.location ? String(unit.location) : null]
     .filter(Boolean)
     .join(' · ');
 
   if (orientation === 'tall') {
-    const tallGroups = capGroups(groupContents(contents ?? []), 16);
+    const tallGroups = capGroups(allGroups, 16);
     // The stock is only ever 6x4. Lay the label out 4x6, then turn it 90deg inside the 6x4 card.
     const turn = rotation === 'cw' ? 'translateX(6in) rotate(90deg)' : 'translateY(4in) rotate(-90deg)';
     return (
@@ -87,7 +96,7 @@ export function LabelTemplate({
             <div className="h-[0.24in] shrink-0 truncate text-[11pt] leading-[0.24in] text-neutral-700">{counts}</div>
             <div className="mt-[0.06in] shrink-0 border-t-2 border-black" />
             <div className="mt-[0.1in] min-h-0 flex-1 overflow-hidden text-[14pt] leading-snug">
-              {contents === null ? (
+              {!isSupply && contents === null ? (
                 <span className="text-neutral-500">Loading contents…</span>
               ) : tallGroups.shown.length === 0 ? (
                 <span className="text-neutral-500">Empty</span>
@@ -96,7 +105,7 @@ export function LabelTemplate({
                   {tallGroups.shown.map((gr) => (
                     <li key={gr.label} className="truncate">
                       {gr.label}
-                      {gr.count > 1 && <span className="font-bold"> ×{gr.count}</span>}
+                      {gr.qty ? <span className="font-bold"> ×{gr.qty}</span> : gr.count > 1 && <span className="font-bold"> ×{gr.count}</span>}
                     </li>
                   ))}
                   {tallGroups.hidden > 0 && <li>+{tallGroups.hidden} more</li>}
@@ -134,7 +143,7 @@ export function LabelTemplate({
           </div>
           <div className="mt-[0.06in] shrink-0 border-t-2 border-black" />
           <div className="mt-[0.1in] min-h-0 flex-1 overflow-hidden text-[14pt] leading-snug">
-            {contents === null ? (
+            {!isSupply && contents === null ? (
               <span className="text-neutral-500">Loading contents…</span>
             ) : shown.length === 0 ? (
               <span className="text-neutral-500">Empty</span>
@@ -143,7 +152,7 @@ export function LabelTemplate({
                 {shown.map((g) => (
                   <li key={g.label} className="break-inside-avoid truncate">
                     {g.label}
-                    {g.count > 1 && <span className="font-bold"> ×{g.count}</span>}
+                    {g.qty ? <span className="font-bold"> ×{g.qty}</span> : g.count > 1 && <span className="font-bold"> ×{g.count}</span>}
                   </li>
                 ))}
                 {hidden > 0 && <li className="break-inside-avoid">+{hidden} more</li>}

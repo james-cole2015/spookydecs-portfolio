@@ -9,6 +9,7 @@ import {
   PageHeader,
   PhotoLightbox,
   useAuth,
+  SpookyImage, photoUrls,
 } from '@spookydecs/ui';
 import { fetchImageById } from '../api/deploymentsApi';
 import { ITEM_CLASS_BUCKETS, ZONE_LABELS } from '../config/deploymentsConfig';
@@ -95,17 +96,19 @@ function ItemCard({ row, canAdd, onAdd }: { row: ItemRow; canAdd: boolean; onAdd
           photos={photos}
           renderThumbnail={({ photo, index, ref, open }) =>
             index === 0 ? (
-              <img
-                ref={ref as React.Ref<HTMLImageElement>}
-                onClick={open}
-                src={photo.thumbUrl ?? photo.url}
-                alt={row.name}
-                loading="lazy"
-                className="absolute inset-0 h-full w-full cursor-zoom-in object-cover"
-              />
+              <div onClick={open} className="absolute inset-0 cursor-zoom-in">
+                <SpookyImage
+                  imgRef={ref as React.Ref<HTMLImageElement>}
+                  {...photoUrls(photo)}
+                  alt={row.name}
+                  ratio="auto"
+                  fit="cover"
+                  className="h-full w-full"
+                />
+              </div>
             ) : (
               // Later photos only exist so the lightbox can page through them.
-              <img ref={ref as React.Ref<HTMLImageElement>} src={photo.thumbUrl ?? photo.url} alt="" className="hidden" />
+              <SpookyImage imgRef={ref as React.Ref<HTMLImageElement>} {...photoUrls(photo)} alt="" ratio="auto" className="hidden" />
             )
           }
         />

@@ -263,9 +263,33 @@ function stagedItemIds(staginKey) {
 const ledger = new Map(); // item_id -> original status  (items table)
 const toteLedger = new Map(); // tote_id -> original status  (storage table)
 
+// #715 interplay: advancing an item to PreDeployment removes it from its tote's `contents` and clears
+// storage_data.tote_id. Restoring `status` alone leaves the item Packed but detached from its tote, which
+// drains dev's inventory a little more on every run. So also snapshot/restore the tote pointer and each
+// tote's `contents` / `staged_deployment_id`.
+const itemExtra = new Map(); // item_id -> { tote_id, is_stored }
+const toteExtra = new Map(); // tote_id -> { contents: string[], staged_deployment_id: string|null }
+
+function snapshotItemExtra(itemId) {
+  const r = ddb(['get-item', '--table-name', `sd_items_records_${ARGS.stage}`,
+    '--key', JSON.stringify({ id: { S: itemId } })]);
+  const sd = r?.Item?.storage_data?.M || {};
+  return { tote_id: sd.tote_id?.S ?? null, is_stored: sd.is_stored?.BOOL ?? null };
+}
+
+function snapshotToteExtra(toteId) {
+  const r = ddb(['get-item', '--table-name', `sd_storage_records_${ARGS.stage}`,
+    '--key', JSON.stringify({ id: { S: toteId } })]);
+  return {
+    contents: (r?.Item?.contents?.L || []).map((v) => v.S),
+    staged_deployment_id: r?.Item?.staged_deployment_id?.S ?? null,
+  };
+}
+
 async function remember(itemId) {
   if (ledger.has(itemId)) return;
   try {
+    itemExtra.set(itemId, snapshotItemExtra(itemId));
     ledger.set(itemId, await itemStatus(itemId));
   } catch (err) {
     console.log(`${C.yellow}        ! could not snapshot ${itemId}: ${err.message}${C.reset}`);
@@ -275,6 +299,7 @@ async function remember(itemId) {
 function rememberTote(toteId) {
   if (toteLedger.has(toteId)) return;
   try {
+    toteExtra.set(toteId, snapshotToteExtra(toteId));
     toteLedger.set(toteId, toteStatus(toteId));
   } catch (err) {
     console.log(`${C.yellow}        ! could not snapshot tote ${toteId}: ${err.message}${C.reset}`);
@@ -292,17 +317,36 @@ async function restoreAll() {
     // audit-only and no longer read (#469), so leaving it is harmless.
     const res = await api('PATCH', `/items/${itemId}`, { status: original });
     if (res.status >= 200 && res.status < 300) restored++;
-    else failed.push(`${itemId} (HTTP ${res.status})`);
+    else { failed.push(`${itemId} (HTTP ${res.status})`); continue; }
+    const extra = itemExtra.get(itemId);
+    if (extra?.tote_id) {  // put the item back in its tote (#715 release cleared the pointer)
+      try {
+        ddb(['update-item', '--table-name', `sd_items_records_${ARGS.stage}`,
+          '--key', JSON.stringify({ id: { S: itemId } }),
+          '--update-expression', 'SET storage_data.tote_id = :t, storage_data.is_stored = :i',
+          '--expression-attribute-values', JSON.stringify({ ':t': { S: extra.tote_id }, ':i': { BOOL: extra.is_stored === true } })]);
+      } catch (err) { failed.push(`${itemId} tote pointer (${err.message})`); }
+    }
   }
 
   for (const [toteId, original] of toteLedger) {
     if (!original) { failed.push(`${toteId} (no snapshot)`); continue; }
     try {
+      const extra = toteExtra.get(toteId);
+      const names = { '#s': 'status' };
+      const values = { ':s': { S: original } };
+      let expr = 'SET #s = :s';
+      if (extra) {
+        expr += ', contents = :c';
+        values[':c'] = { L: extra.contents.map((v) => ({ S: v })) };
+        if (extra.staged_deployment_id) { expr += ', staged_deployment_id = :d'; values[':d'] = { S: extra.staged_deployment_id }; }
+        else expr += ' REMOVE staged_deployment_id';
+      }
       ddb(['update-item', '--table-name', `sd_storage_records_${ARGS.stage}`,
         '--key', JSON.stringify({ id: { S: toteId } }),
-        '--update-expression', 'SET #s = :s',
-        '--expression-attribute-names', JSON.stringify({ '#s': 'status' }),
-        '--expression-attribute-values', JSON.stringify({ ':s': { S: original } })]);
+        '--update-expression', expr,
+        '--expression-attribute-names', JSON.stringify(names),
+        '--expression-attribute-values', JSON.stringify(values)]);
       restored++;
     } catch (err) {
       failed.push(`${toteId} (${err.message})`);
@@ -1022,6 +1066,23 @@ async function main() {
     const deployedIds = await phase(14, 'Complete — status completed, items Deployed', async () => {
       const preGraph = await fetchGraph();
       const derivedBeforeComplete = new Set(['FY', 'BY', 'SY'].flatMap((z) => [...zoneSet(preGraph, z)]));
+      // #714 gate: staged decorations this run never placed block Complete until each has a decision.
+      const gate = await api('POST', `/deployments/${DEPLOYMENT_ID}/complete`, { resolve_only: true });
+      assertStatus(gate, 200, 'POST /complete resolve_only (summary)');
+      const open = gate.data?.summary?.unresolved_items || [];
+      if (open.length) {
+        const blocked = await api('POST', `/deployments/${DEPLOYMENT_ID}/complete`);
+        assertStatus(blocked, 409, 'POST /complete with unresolved staged decorations');
+        assertEq(blocked.body?.details?.code, 'UNRESOLVED_STAGED_DECORATIONS', '409 code');
+        assertEq(blocked.body?.details?.unresolved?.length, open.length, '409 lists every unresolved decoration');
+        const resolutions = Object.fromEntries(open.map((i) => [i.item_id, { decision: 'not_deployed' }]));
+        const saved = await api('POST', `/deployments/${DEPLOYMENT_ID}/complete`, { resolutions, resolve_only: true });
+        assertStatus(saved, 200, 'POST /complete resolve_only (decisions)');
+        assertEq(saved.data?.summary?.unresolved, 0, 'unresolved after deciding every staged decoration');
+        const still = await api('GET', `/deployments/${DEPLOYMENT_ID}`);
+        assert((still.data.status ?? still.data.metadata?.status) !== 'completed', 'resolve_only must not complete the deployment');
+      }
+
       const res = await api('POST', `/deployments/${DEPLOYMENT_ID}/complete`);
       assertStatus(res, 200, 'POST /complete');
 
@@ -1061,11 +1122,14 @@ async function main() {
         assertEq(await itemStatus(id), 'TearDown', `item ${id} status after teardown`);
       }
 
-      // Same item twice must be rejected — it is no longer Deployed.
+      // Same item twice is an idempotent no-op (#698): 200 with noop:true, status unchanged.
+      // A different non-Deployed state would still be a 400; this only covers the retry case.
       const repeat = await api('POST', `/deployments/${DEPLOYMENT_ID}/teardown/item`, {
         item_id: deployedIds[0],
       });
-      assertStatus(repeat, 400, 'repeat teardown/item');
+      assertStatus(repeat, 200, 'repeat teardown/item');
+      assertEq(repeat.data?.noop, true, 'repeat teardown/item is a noop');
+      assertEq(await itemStatus(deployedIds[0]), 'TearDown', 'status unchanged after the repeat');
     }, { critical: true });
 
     // ── 17 ───────────────────────────────────────────────────────────────────

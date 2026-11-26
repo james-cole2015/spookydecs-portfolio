@@ -15,7 +15,7 @@ import { Chip, type ChipProps } from '@heroui/react';
 
 export type ChipColor = 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger';
 
-/** Season → color. Halloween=orange, Christmas=green, Shared/generic=violet. */
+/** Season → color. Halloween=orange, Christmas=green, Shared/generic=muted blue-gray (secondary). */
 export function seasonChipColor(season?: string): ChipColor {
   switch (season) {
     case 'Halloween':

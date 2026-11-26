@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { SeasonChip, StatusChip } from './chips';
 import { PIPELINE_STAGES, SEASON_PLACEHOLDERS, TERMINAL_STATUSES, type Idea } from '../config/ideasConfig';
 import { heroImageUrl } from '../lib/format';
+import { SpookyImage } from '@spookydecs/ui';
 
 function Placeholder({ season }: { season: string }) {
   const key = (season || 'shared').toLowerCase();
@@ -58,7 +59,7 @@ export function IdeaCard({ idea }: { idea: Idea }) {
     >
       <div className="aspect-video w-full overflow-hidden bg-default-100">
         {img ? (
-          <img src={img} alt={idea.title} loading="lazy" className="h-full w-full object-cover" />
+          <SpookyImage src={img} alt={idea.title} ratio="auto" fit="cover" className="h-full w-full" />
         ) : (
           <Placeholder season={idea.season} />
         )}

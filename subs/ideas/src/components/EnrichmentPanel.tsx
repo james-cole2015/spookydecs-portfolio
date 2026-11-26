@@ -195,7 +195,7 @@ function TagsBlock({ tags }: { tags: string[] }) {
     <Block label="AI-Suggested Tags">
       <div className="flex flex-wrap gap-1.5">
         {tags.map((t) => (
-          <Chip key={t} size="sm" variant="flat" color="secondary">
+          <Chip key={t} size="sm" variant="flat" color="primary">
             {t}
           </Chip>
         ))}
@@ -283,7 +283,7 @@ export function EnrichmentPanel({
   const header = (
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-2">
-        <Wand2 size={18} className="text-secondary" />
+        <Wand2 size={18} className="text-primary" />
         <h3 className="text-medium font-semibold text-foreground">Ask Igor</h3>
       </div>
       {status === 'in_progress' && (
@@ -321,7 +321,7 @@ export function EnrichmentPanel({
               </p>
               {!readOnly && (
                 <Button
-                  color="secondary"
+                  color="primary"
                   startContent={<Wand2 size={16} />}
                   onPress={handleEnrich}
                   isLoading={starting}
@@ -397,7 +397,7 @@ export function EnrichmentPanel({
               </p>
               {!readOnly && (
                 <Button
-                  color="secondary"
+                  color="primary"
                   startContent={<RefreshCw size={16} />}
                   onPress={handleEnrich}
                   isLoading={starting}
