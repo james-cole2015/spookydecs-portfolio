@@ -79,6 +79,8 @@ test('ideas workflow: inline edit → gated Planning transition → server gate 
     await page.getByRole('button', { name: /Move to Planning/ }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Move to Planning' }).click();
     await expect.poll(async () => (await getIdea(api, idea.id))?.status).toBe('Planning');
+    // #605: the UI transition must not send a blank prep_start, so the backend auto-fills it.
+    await expect.poll(async () => (await getIdea(api, idea.id))?.prep_start).toMatch(/^\d{4}-\d{2}-\d{2}/);
     await expect(page.getByText(/Missing for Workbench:.*Materials.*Build Instructions/)).toBeVisible();
     await expect(page.getByRole('button', { name: /Move to Workbench|Build Limit Reached/ })).toBeDisabled();
   });
@@ -93,6 +95,36 @@ test('ideas workflow: inline edit → gated Planning transition → server gate 
     await page.getByRole('button', { name: /Back to Considering/ }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Back to Considering' }).click();
     await expect.poll(async () => (await getIdea(api, idea.id))?.status).toBe('Considering');
+  });
+});
+
+test('ideas workflow: Build Season (bucket) is editable from the detail page (#625)', async ({ page, ideas }) => {
+  const { api } = ideas;
+  const idea = await createIdea(api, 'BuildSeason');
+  const target = `${new Date().getFullYear() + 1} Christmas`;
+  const trigger = page.getByRole('button', { name: /Build Season/ });
+  const pick = (option: string) => selectOption(page, 'Build Season', option);
+
+  await test.step('Set Build Season; it persists after reload', async () => {
+    await page.goto(`/${idea.id}`);
+    await pick(target);
+    await expect.poll(async () => (await getIdea(api, idea.id))?.bucket).toBe(target);
+    await page.reload();
+    await expect(trigger).toContainText(target);
+  });
+
+  await test.step('Value survives a status change (Considering → Planning)', async () => {
+    const res = await putIdea(api, idea, { status: 'Planning', description: 'e2e', link: 'https://example.com/e2e-bucket' });
+    expect(res.status, JSON.stringify(res.body).slice(0, 200)).toBeLessThan(300);
+    expect((await getIdea(api, idea.id)).bucket).toBe(target);
+  });
+
+  await test.step('Clearing is allowed and shows empty', async () => {
+    await page.goto(`/${idea.id}`);
+    await pick('None');
+    await expect.poll(async () => (await getIdea(api, idea.id))?.bucket ?? '').toBe('');
+    await page.reload();
+    await expect(trigger).toContainText('None');
   });
 });
 
@@ -222,6 +254,8 @@ test('workbench: Complete Build wizard (2 units + remainder idea) → Built, ite
     { title: 'Paint', description: 'Paint it', status: 'pending' },
   ];
   const idea = await seedWorkbenchIdea(api, 'Wizard', steps);
+  // [607] Units Planned is editable in Workbench; the wizard's Units built defaults to it.
+  expect((await putIdea(api, idea, { remaining_units: 2 })).status).toBeLessThan(300);
   const cost = await api('POST', '/finance/costs', {
     item_name: `${idea.title} materials`, cost_type: 'build', category: 'materials', total_cost: '12.35',
     cost_date: new Date().toISOString().slice(0, 10), vendor: 'E2E Hardware', class_type: 'item', no_receipt: true, related_idea_id: idea.id,
@@ -241,6 +275,9 @@ test('workbench: Complete Build wizard (2 units + remainder idea) → Built, ite
     await expect(wizard.getByText(/Logged costs: \$12\.35 across 1 record/)).toBeVisible();
     await wizard.getByRole('button', { name: /Review/ }).click();
     await expect(wizard.getByText('Class is required.')).toBeVisible();
+    await expect(wizard.getByLabel('Units built')).toHaveValue('2');
+    await expect(wizard.getByText(/2 planned/)).toBeVisible();
+    await wizard.getByLabel('Units built').fill('3'); // overshoot (planned 2) must not be blocked
     await wizard.getByLabel('Units built').fill('2');
     await selectOption(page, 'Class', 'Decoration');
     await selectOption(page, 'Type', 'Static Prop');

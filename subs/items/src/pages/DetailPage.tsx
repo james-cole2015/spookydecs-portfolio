@@ -10,6 +10,7 @@ import {
 } from '@heroui/react';
 import {
   Breadcrumbs, PhotoGallery, useToast, useAuth, Typography,
+  SpookyImage, photoUrls,
 } from '@spookydecs/ui';
 import { fetchItemById, cascadePreview, cascadeDelete } from '../api/itemsApi';
 import { getMaintenanceRecords, getMaintenancePageUrl } from '../api/maintenanceApi';
@@ -256,16 +257,19 @@ export default function DetailPage() {
   ];
 
   return (
-    <div className="p-4 max-w-3xl mx-auto pb-24">
+    <div className="pb-24">
       <Breadcrumbs crumbs={[{ label: 'Items', to: '/' }, { label: 'All Items', to: '/items' }, { label: item.short_name }]} />
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex gap-4 mb-6">
         {item.images?.cloudfront_url ? (
-          <img
-            src={item.images.cloudfront_url}
+          <SpookyImage
+            {...photoUrls(item.images)}
             alt={item.short_name}
-            className="w-24 h-24 rounded-xl object-cover flex-shrink-0"
+            ratio="1/1"
+            fit="cover"
+            eager
+            className="w-24 h-24 rounded-xl flex-shrink-0"
           />
         ) : (
           <div className="w-24 h-24 rounded-xl bg-default-100 flex items-center justify-center text-4xl flex-shrink-0">

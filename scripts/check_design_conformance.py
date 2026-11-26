@@ -74,6 +74,7 @@ FILTER_BAR = "filter-bar"
 APP_SHELL = "app-shell"
 SEASON_CASING = "season-casing"
 MODAL_PLACEMENT = "modal-placement"
+RAW_IMG = "raw-img"
 
 CHECK_TITLES = {
     ROOT_TOKENS: "F7 · no per-sub :root token block",
@@ -84,6 +85,7 @@ CHECK_TITLES = {
     APP_SHELL: "F4 · AppHeader outside PageContainer",
     SEASON_CASING: "§5 · canonical season casing",
     MODAL_PLACEMENT: "<Modal> requires explicit placement",
+    RAW_IMG: "#705 · no raw <img> in .tsx (use SpookyImage)",
 }
 
 # design.md §5 canonical season vocabulary.
@@ -354,6 +356,27 @@ def _check_modal_placement(ts_sources: list[Source], report: DesignReport) -> No
             )
 
 
+# #705: photos render through SpookyImage (@spookydecs/ui). A raw <img> is allowed
+# only for non-photo uses (QR codes, data URLs) listed per-file in the manifest as
+# `raw-img:<FileName.tsx>`; a bare `raw-img` suppresses the rule for the whole sub.
+RAW_IMG_RE = re.compile(r"<img\b")
+
+
+def _check_raw_img(ts_sources: list[Source], report: DesignReport, suppressed: list[str]) -> None:
+    allowed = {x.split(":", 1)[1] for x in suppressed if x.startswith(RAW_IMG + ":")}
+    for s in ts_sources:
+        if s.suffix != ".tsx" or s.path.name in allowed:
+            continue
+        for m in RAW_IMG_RE.finditer(s.text):
+            lineno = s.text.count("\n", 0, m.start()) + 1
+            report.flag(
+                RAW_IMG, "fail",
+                f"raw <img> at {s.path.relative_to(ROOT)}:{lineno} — render photos with "
+                f"<SpookyImage {{...photoUrls(photo)}} /> from @spookydecs/ui, or add "
+                f"'raw-img:{s.path.name}' to scripts/design-conformance.yaml for a non-photo use (#705).",
+            )
+
+
 # ---------------------------------------------------------------------------
 # Manifest + analysis
 # ---------------------------------------------------------------------------
@@ -403,6 +426,7 @@ def analyze(sub: str, manifest: dict[str, list[str]], strict: bool = False) -> D
     _check_app_shell(ts_sources, report)
     _check_season_casing(ts_sources, report)
     _check_modal_placement(ts_sources, report)
+    _check_raw_img(ts_sources, report, suppressed)
 
     _apply_manifest(report, suppressed)
     return report

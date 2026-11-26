@@ -1,5 +1,6 @@
 import { test, expect, SEASON, STAGE } from './fixtures';
 import { STORAGE_STATE_PATH } from './global-setup';
+import { resolveStagedDecorations, cleanupRepairs } from './complete-gate';
 import { createSentinelImage } from '../../../images/tests/shared/sentinel.mjs';
 
 // First Playwright spec in the fleet (#554). One sequential test, not independent
@@ -7,6 +8,10 @@ import { createSentinelImage } from '../../../images/tests/shared/sentinel.mjs';
 // previous one (a fresh deployment, a staged tote, declared items), exactly like
 // the API pre-season gate it complements (tests/preseason/lifecycle.e2e.mjs).
 test.use({ storageState: STORAGE_STATE_PATH });
+
+// #714: repair records created through the Needs-repair modal; removed in afterEach, even on failure.
+const repairIds: string[] = [];
+test.afterEach(async ({ deployment }) => cleanupRepairs(deployment.api, repairIds));
 
 function idFromTestId(prefix: string, testId: string | null): string {
   if (!testId) throw new Error(`Expected a data-testid starting with "${prefix}"`);
@@ -22,6 +27,8 @@ test('deployment lifecycle: builder → staging → declare + connect → comple
   // static prop (no power ports) — lets the later "deploy a static prop" step assert a
   // real deploy instead of falling back to Cancel (#579).
   let staticPropCandidateId: string | undefined;
+  // #714: repair records created through the Needs-repair modal; removed in afterEach.
+  let decidedCounts = { notDeployed: 0, needsRepair: 0 };
 
   await test.step('Builder — create the deployment through the UI', async () => {
     await page.goto('/builder');
@@ -185,16 +192,21 @@ test('deployment lifecycle: builder → staging → declare + connect → comple
     // the loose-item staging step above still exercised stage_loose_items.
   });
 
+  await test.step('Complete — resolve staged-but-unplaced decorations through the gate (#714)', async () => {
+    decidedCounts = await resolveStagedDecorations(page, api, deploymentId, repairIds);
+  });
+
   await test.step('Complete — finalize the deployment', async () => {
-    await page.goto(`/builder/${deploymentId}`);
-    await page.getByTestId('admin-card-complete').click();
-    await page.waitForURL(`**/builder/${deploymentId}/complete`);
     await page.getByTestId('complete-trigger').click();
     await page.getByTestId('complete-confirm').click();
     await page.waitForURL(`**/builder/${deploymentId}`, { timeout: 10_000 });
 
     const dep = await api('GET', `/deployments/${deploymentId}`);
     expect(dep.data?.metadata?.status ?? dep.data?.status).toBe('completed');
+    // The decisions are recorded in the deployment's statistics.
+    const stats = dep.data?.metadata?.statistics ?? dep.data?.statistics ?? {};
+    expect(stats.not_deployed_count).toBe(decidedCounts.notDeployed + decidedCounts.needsRepair);
+    expect(stats.needs_repair_count).toBe(decidedCounts.needsRepair);
   });
 
   await test.step('Teardown — tear down every deployed item, then complete', async () => {

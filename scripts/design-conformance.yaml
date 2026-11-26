@@ -39,3 +39,12 @@ auth:
 # theming, not an ad-hoc token override.
 landing:
   - root-tokens
+
+# #705: raw <img> is allowed only for non-photo uses. Per-file form `raw-img:<File>`.
+# storage: printed-label QR codes are data-URL images, not photos.
+storage:
+  - raw-img:LabelTemplate.tsx
+# ideas: AcquisitionEnrichPanel previews the scraped external product image; it hides
+# itself on error (no thumb/full pair, no skeleton wanted in the enrich panel).
+ideas:
+  - raw-img:AcquisitionEnrichPanel.tsx

@@ -153,7 +153,7 @@ export function AcquisitionEnrichPanel({
   const header = (
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-2">
-        <Wand2 size={18} className="text-secondary" />
+        <Wand2 size={18} className="text-primary" />
         <h3 className="text-medium font-semibold text-foreground">Ask Renfield</h3>
       </div>
       {status === 'in_progress' && (
@@ -199,7 +199,7 @@ export function AcquisitionEnrichPanel({
                 wizard — class, type, price, manufacturer, and specs.
               </p>
               <Button
-                color="secondary"
+                color="primary"
                 startContent={<Wand2 size={16} />}
                 onPress={handleEnrich}
                 isLoading={starting}
@@ -327,7 +327,7 @@ export function AcquisitionEnrichPanel({
                 Renfield hit a snag{enrichment?.error ? `: ${enrichment.error}` : '.'} Try again.
               </p>
               <Button
-                color="secondary"
+                color="primary"
                 startContent={<RefreshCw size={16} />}
                 onPress={handleEnrich}
                 isLoading={starting}

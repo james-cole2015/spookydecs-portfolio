@@ -36,7 +36,7 @@ export const FIELD_AVAILABILITY: Record<FieldKey, Record<Status, FieldMode>> = {
   materials:           { Considering: E, Planning: E, Workbench: E, Built: R, Abandoned: R },
   build_instructions:  { Considering: E, Planning: E, Workbench: E, Built: R, Abandoned: R },
   estimated_cost:      { Considering: E, Planning: E, Workbench: R, Built: R, Abandoned: R },
-  remaining_units:     { Considering: E, Planning: E, Workbench: R, Built: R, Abandoned: R },
+  remaining_units:     { Considering: E, Planning: E, Workbench: E, Built: R, Abandoned: R },
   agent_enrichment:    { Considering: E, Planning: E, Workbench: R, Built: R, Abandoned: R },
   costs:               { Considering: H, Planning: E, Workbench: E, Built: R, Abandoned: R },
   build_sessions:      { Considering: H, Planning: H, Workbench: E, Built: R, Abandoned: R },

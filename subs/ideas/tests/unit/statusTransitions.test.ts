@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { blockedStatuses, nextStatusOptions } from '../../src/config/fieldAvailability';
-import { deferTargets, isDeferred, type Idea } from '../../src/config/ideasConfig';
+import { bucketOptions, deferTargets, isDeferred, type Idea } from '../../src/config/ideasConfig';
 
 // #683 — sidebar Status offers only legal next states; Defer reuses the bucket field.
 const idea = (over: Partial<Idea>): Idea =>
@@ -45,5 +45,17 @@ describe('defer', () => {
     expect(isDeferred({ status: 'Planning', bucket: '2027 Off-Season', prep_start: '2026-03-01' })).toBe(true);
     expect(isDeferred({ status: 'Planning', bucket: '2026 Off-Season', prep_start: '2026-03-01' })).toBe(false);
     expect(isDeferred({ status: 'Workbench', bucket: '2027 Off-Season', prep_start: '2026-03-01' })).toBe(false);
+  });
+});
+
+describe('bucketOptions (#625)', () => {
+  it('offers this and next year, six seasons', () => {
+    expect(bucketOptions(undefined, new Date('2026-11-22'))).toEqual([
+      '2026 Off-Season', '2026 Halloween', '2026 Christmas',
+      '2027 Off-Season', '2027 Halloween', '2027 Christmas',
+    ]);
+  });
+  it('keeps an out-of-window stored value selectable', () => {
+    expect(bucketOptions('2024 Off-Season', new Date('2026-11-22'))[0]).toBe('2024 Off-Season');
   });
 });

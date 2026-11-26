@@ -8,7 +8,7 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@heroui/react';
 import { ArrowUpRight } from 'lucide-react';
-import { useConfig } from '@spookydecs/ui';
+import { useConfig, SpookyImage, photoUrls } from '@spookydecs/ui';
 import { DEMO_GALLERY_URL, GALLERY_TILES } from '../config/landingConfig';
 
 /** Minimal public-photo shape returned by `GET /gallery/images` (see gallery sub). */
@@ -75,11 +75,13 @@ export function GalleryPreview() {
                   rel="noreferrer"
                   className="group relative aspect-[4/3] overflow-hidden rounded-xl bg-default-100"
                 >
-                  <img
-                    src={photo.thumb_cloudfront_url || photo.cloudfront_url}
+                  <SpookyImage
+                    {...photoUrls(photo)}
                     alt={label || 'SpookyDecs display'}
-                    loading="lazy"
-                    className="absolute inset-0 h-full w-full object-cover transition-transform group-hover:scale-110"
+                    ratio="auto"
+                    fit="cover"
+                    className="absolute inset-0 h-full w-full"
+                    imgClassName="transition-transform group-hover:scale-110"
                   />
                   {label && (
                     <span className="absolute inset-x-0 bottom-0 bg-black/40 px-2 py-1 text-xs font-medium text-white">

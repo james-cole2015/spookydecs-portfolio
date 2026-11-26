@@ -19,6 +19,7 @@ import {
   type LightboxPhoto,
   type PhotoGalleryPhoto,
   useConfirm,
+  SpookyImage,
 } from '@spookydecs/ui';
 import {
   getIdea,
@@ -41,6 +42,7 @@ import {
   type StepStatus,
   type InstructionReviewResult,
   STEP_STATUSES,
+  bucketOptions,
 } from '../config/ideasConfig';
 import { blockedStatuses, fieldMode, missingGateLabels, nextStatusOptions } from '../config/fieldAvailability';
 import { formatDate, formatDuration, heroImageUrl, normalizeMaterials } from '../lib/format';
@@ -50,6 +52,7 @@ import { CostsSection } from '../components/CostsSection';
 import { CostLogModal } from '../components/CostLogModal';
 import { InlineEdit } from '../components/InlineEdit';
 import { InlineSelectEdit } from '../components/InlineSelectEdit';
+import { BuildSeasonSelect } from '../components/BuildSeasonSelect';
 import { InlineTagsEdit } from '../components/InlineTagsEdit';
 import { DeferModal } from '../components/DeferModal';
 import { StatusEdit } from '../components/StatusEdit';
@@ -137,7 +140,9 @@ export default function DetailPage() {
     const ok = await confirm({ title, body: message, confirmLabel: title });
     if (!ok) return;
     try {
-      await updateIdea({ ...idea, status: newStatus });
+      // Minimal patch only (#605): spreading the full idea sends prep_start/build_start
+      // as explicit '' keys, which defeats the backend's "absent from body" auto-date-fill.
+      await updateIdea({ id: idea.id, season: idea.season, title: idea.title, status: newStatus });
       toast.showSuccess(`Moved to ${newStatus}`);
       const refreshed = await getIdea(idea.id);
       if (refreshed) setIdea(refreshed);
@@ -392,7 +397,7 @@ export default function DetailPage() {
       <Card className="mb-4 overflow-hidden">
         <div className="aspect-video w-full bg-default-100">
           {hero ? (
-            <img src={hero} alt={idea.title} className="h-full w-full object-cover" />
+            <SpookyImage src={hero} alt={idea.title} ratio="auto" fit="cover" eager className="h-full w-full" />
           ) : (
             <div
               className="flex h-full w-full items-center justify-center p-12 text-default-300 [&_svg]:h-24 [&_svg]:w-24"
@@ -860,7 +865,18 @@ export default function DetailPage() {
                   onSave={(v) => patchIdea({ season: v })}
                 />
               </div>
-              {idea.bucket && <SidebarField label="Build Season" value={idea.bucket} />}
+              <div className="flex items-center justify-between">
+                <span className="text-default-500">Build Season</span>
+                {fieldMode('bucket', idea.status) === 'editable' ? (
+                  <BuildSeasonSelect
+                    value={idea.bucket ?? ''}
+                    options={bucketOptions(idea.bucket)}
+                    onSave={(v) => patchIdea({ bucket: v })}
+                  />
+                ) : (
+                  <span>{idea.bucket || '—'}</span>
+                )}
+              </div>
               <div className="flex items-center justify-between">
                 <span className="text-default-500">Status</span>
                 <StatusEdit
@@ -907,7 +923,7 @@ export default function DetailPage() {
                 )}
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-default-500">Remaining Units</span>
+                <span className="text-default-500" title="How many units you plan to build">Units Planned</span>
                 {fieldMode('remaining_units', idea.status) === 'editable' ? (
                   <InlineEdit
                     value={idea.remaining_units != null ? String(idea.remaining_units) : ''}

@@ -8,6 +8,7 @@
 import { forwardRef } from 'react';
 import { Chip } from '@heroui/react';
 import type { GalleryPhoto } from '../config/galleryConfig';
+import { SpookyImage, photoUrls } from '@spookydecs/ui';
 
 interface Props {
   photo: GalleryPhoto;
@@ -23,12 +24,13 @@ export const PhotoCard = forwardRef<HTMLImageElement, Props>(function PhotoCard(
       className="group relative mb-4 block w-full cursor-zoom-in overflow-hidden rounded-large bg-content2 shadow-sm break-inside-avoid"
       onClick={onOpen}
     >
-      <img
-        ref={ref}
-        src={photo.thumb_cloudfront_url || photo.cloudfront_url}
+      <SpookyImage
+        imgRef={ref}
+        {...photoUrls(photo)}
         alt={photo.display_name || 'Display photo'}
-        loading="lazy"
-        className="w-full transition-transform duration-300 group-hover:scale-105"
+        ratio="auto"
+        className="w-full"
+        imgClassName="transition-transform duration-300 group-hover:scale-105"
       />
 
       {photo.is_featured && (

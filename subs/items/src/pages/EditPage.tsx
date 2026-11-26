@@ -158,7 +158,7 @@ export default function EditPage() {
   }
 
   return (
-    <div className="p-4 max-w-2xl mx-auto">
+    <div>
       <Breadcrumbs crumbs={[{ label: 'Items', to: '/' }, { label: item.short_name, to: `/${item.id}` }, { label: 'Edit' }]} />
       <div className="flex items-center gap-4 mb-6">
         {item.images?.cloudfront_url ? (

@@ -85,7 +85,7 @@ export function IrisPanel() {
         aria-expanded={expanded}
       >
         <span className="flex items-center gap-3">
-          <MessageCircle size={20} className="text-secondary" />
+          <MessageCircle size={20} className="text-primary" />
           <span className="flex flex-col">
             <span className="font-semibold text-foreground">Iris Assistant</span>
             <span className="text-tiny text-default-500">
@@ -128,7 +128,7 @@ export function IrisPanel() {
               isDisabled={loading}
               size="sm"
             />
-            <Button type="submit" color="secondary" isLoading={loading} isDisabled={!input.trim()}>
+            <Button type="submit" color="primary" isLoading={loading} isDisabled={!input.trim()}>
               Send
             </Button>
           </form>
@@ -154,7 +154,7 @@ function MessageBubble({ message }: { message: IrisMessage }) {
     <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
       <div
         className={`max-w-[85%] whitespace-pre-wrap rounded-large px-3 py-2 text-small ${
-          isUser ? 'bg-secondary text-secondary-foreground' : 'bg-content2 text-foreground'
+          isUser ? 'bg-primary text-primary-foreground' : 'bg-content2 text-foreground'
         }`}
       >
         {message.content}
