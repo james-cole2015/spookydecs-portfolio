@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Button, ButtonGroup, Input } from '@heroui/react';
-import { Printer, Plus, X, GripVertical, FilePlus2, RotateCw } from 'lucide-react';
+import { Printer, Plus, X, GripVertical, FilePlus2, RotateCw, Trash2 } from 'lucide-react';
 import {
   DndContext,
   DragOverlay,
@@ -557,8 +557,8 @@ export default function LabelsPage() {
                     Add sheet
                   </Button>
                   {filledIds.length > 0 && (
-                    <Button size="sm" variant="light" color="danger" className="ml-auto" onPress={() => setSlots(normalize([], perPage))} data-testid="clear-sheet">
-                      Clear
+                    <Button size="sm" variant="bordered" color="danger" className="ml-auto" startContent={<Trash2 size={16} />} onPress={() => setSlots(normalize([], perPage))} data-testid="clear-sheet">
+                      Clear sheet
                     </Button>
                   )}
                 </div>
