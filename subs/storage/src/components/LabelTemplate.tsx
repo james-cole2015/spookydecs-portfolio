@@ -8,6 +8,8 @@ import { capGroups, groupContents, supplyGroups, type LabelItem } from '../lib/l
 export const LABEL_W_IN = AVERY_5889.cardW;
 export const LABEL_H_IN = AVERY_5889.cardH;
 const MAX_GROUPS = 12;
+/** Contents cells that fit on the tall label (4x6 layout): 6 rows of 14pt (one spare row of breathing room) between the divider and the QR, in 2 columns. */
+const TALL_LINES = 12;
 const PRINT_DATE = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
 export const SEASON_BAND: Record<string, string> = {
@@ -84,7 +86,9 @@ export function LabelTemplate({
     .join(' · ');
 
   if (orientation === 'tall') {
-    const tallGroups = capGroups(allGroups, 16);
+    // The tall list is two columns of fixed-height rows and only TALL_LINES cells fit above the QR; a longer list used
+    // to be clipped silently, hiding the "+N more" line. Reserve the last row for it when the list overflows (#751).
+    const tallGroups = allGroups.length <= TALL_LINES ? { shown: allGroups, hidden: 0 } : capGroups(allGroups, TALL_LINES - 1);
     // The stock is only ever 6x4. Lay the label out 4x6, then turn it 90deg inside the 6x4 card.
     // Rotate about the box centre and centre that box on the card, so the 4x6 layout box overhangs the card
     // by 1in each side instead of 2in off the bottom. A box hanging below the card crossed the page edge on
@@ -114,14 +118,14 @@ export function LabelTemplate({
               ) : tallGroups.shown.length === 0 ? (
                 <span className="text-neutral-500">Empty</span>
               ) : (
-                <ul>
+                <ul className="columns-2 gap-4">
                   {tallGroups.shown.map((gr) => (
-                    <li key={gr.label} className="truncate">
+                    <li key={gr.label} className="break-inside-avoid truncate">
                       {gr.label}
                       {gr.qty ? <span className="font-bold"> ×{gr.qty}</span> : gr.count > 1 && <span className="font-bold"> ×{gr.count}</span>}
                     </li>
                   ))}
-                  {tallGroups.hidden > 0 && <li>+{tallGroups.hidden} more</li>}
+                  {tallGroups.hidden > 0 && <li className="break-inside-avoid">+{tallGroups.hidden} more</li>}
                 </ul>
               )}
             </div>
