@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import QRCode from 'qrcode';
 import type { StorageUnit } from '../config/storageConfig';
 import { AVERY_5889, type LabelOrientation, type LabelRotation } from '../lib/averySheet';
@@ -20,19 +20,29 @@ export function unitUrl(id: string): string {
   return `${window.location.origin}/storage/${encodeURIComponent(id)}`;
 }
 
-function useQr(text: string): string {
-  const [src, setSrc] = useState('');
-  useEffect(() => {
-    let live = true;
-    // Error correction M survives scuffs; margin 0 so the card controls the quiet zone.
-    QRCode.toDataURL(text, { errorCorrectionLevel: 'M', margin: 0, width: 360 })
-      .then((url) => live && setSrc(url))
-      .catch(() => live && setSrc(''));
-    return () => {
-      live = false;
-    };
+/**
+ * QR as inline SVG, built synchronously from the QR module matrix. The print area is a hidden
+ * duplicate of the sheet, and an async data-URL <img> in it can still be undecoded when the print
+ * dialog opens, so later labels printed without a QR (#751). SVG needs no load/decode step.
+ * Error correction M survives scuffs; no quiet-zone margin so the card controls it.
+ */
+function QrCode({ text, className, alt }: { text: string; className?: string; alt: string }) {
+  const { size, path } = useMemo(() => {
+    const { modules } = QRCode.create(text, { errorCorrectionLevel: 'M' });
+    const n = modules.size;
+    let d = '';
+    for (let y = 0; y < n; y++) {
+      for (let x = 0; x < n; x++) {
+        if (modules.get(y, x)) d += `M${x} ${y}h1v1h-1z`;
+      }
+    }
+    return { size: n, path: d };
   }, [text]);
-  return src;
+  return (
+    <svg viewBox={`0 0 ${size} ${size}`} className={className} role="img" aria-label={alt} shapeRendering="crispEdges" xmlns="http://www.w3.org/2000/svg">
+      <path d={path} fill="currentColor" />
+    </svg>
+  );
 }
 
 /** One 6x4 tote label. Pure presentation: unit + contents in, card out. */
@@ -52,7 +62,7 @@ export function LabelTemplate({
   /** Which way Tall is turned: cw puts the label's top at the card's right edge. */
   rotation?: LabelRotation;
 }) {
-  const qr = useQr(unitUrl(unit.id));
+  const qrText = unitUrl(unit.id);
   const season = String(unit.season ?? ''); // drives the color band only
   // Supply totes carry a supplies list, not packed items (#708).
   const isSupply = Boolean(unit.is_supply_tote);
@@ -76,7 +86,10 @@ export function LabelTemplate({
   if (orientation === 'tall') {
     const tallGroups = capGroups(allGroups, 16);
     // The stock is only ever 6x4. Lay the label out 4x6, then turn it 90deg inside the 6x4 card.
-    const turn = rotation === 'cw' ? 'translateX(6in) rotate(90deg)' : 'translateY(4in) rotate(-90deg)';
+    // Rotate about the box centre and centre that box on the card, so the 4x6 layout box overhangs the card
+    // by 1in each side instead of 2in off the bottom. A box hanging below the card crossed the page edge on
+    // the lower card and the print engine pushed its bottom (QR + printed date) onto a page that never prints (#751).
+    const turn = rotation === 'cw' ? 'rotate(90deg)' : 'rotate(-90deg)';
     return (
       <div
         className="label-card relative overflow-hidden bg-white text-black"
@@ -84,7 +97,7 @@ export function LabelTemplate({
         data-testid={`label-${unit.id}`}
         data-orientation="tall"
       >
-       <div className="absolute left-0 top-0 bg-white" style={{ width: '4in', height: '6in', padding: `${inset}in`, transformOrigin: 'top left', transform: turn }}>
+       <div className="absolute bg-white" style={{ left: '1in', top: '-1in', width: '4in', height: '6in', padding: `${inset}in`, transformOrigin: 'center', transform: turn }}>
         <div className="flex h-full w-full overflow-hidden">
           <div className={`label-band w-[0.4in] shrink-0 ${SEASON_BAND[season] ?? 'bg-slate-500'}`} />
           <div className="flex min-w-0 flex-1 flex-col py-[0.1in] pl-[0.18in] pr-[0.1in]">
@@ -113,7 +126,7 @@ export function LabelTemplate({
               )}
             </div>
             <div className="flex shrink-0 flex-col items-center pt-[0.1in]">
-              {qr && <img src={qr} alt={`QR for ${unit.id}`} className="h-[1.4in] w-[1.4in]" />}
+              <QrCode text={qrText} alt={`QR for ${unit.id}`} className="h-[1.4in] w-[1.4in]" />
               <div className="mt-1 text-[8pt] text-neutral-600">Printed {printed}</div>
             </div>
           </div>
@@ -161,7 +174,7 @@ export function LabelTemplate({
           </div>
         </div>
       <div className="flex w-[1.7in] shrink-0 flex-col items-center justify-center pr-[0.2in]">
-        {qr && <img src={qr} alt={`QR for ${unit.id}`} className="h-[1.5in] w-[1.5in]" />}
+        <QrCode text={qrText} alt={`QR for ${unit.id}`} className="h-[1.5in] w-[1.5in]" />
         <div className="mt-1 text-[8pt] text-neutral-600">Printed {printed}</div>
       </div>
       </div>
